@@ -13,8 +13,8 @@
         <div class="flex pt-10 relative events-at-a-glance-container">
             <template v-if="eventsAtAGlanceRef">
                 <div v-for="room in computedRooms">
-                    <div :class="isSearchingForProject ? '' : 'sticky'"
-                         class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg top-[4.5rem] z-40 mb-7">
+                    <div :class="isSearchingForProject ? '' : 'sticky' + (isCalendarViewRoute ? ' top-[4.5rem] mt-7' : '')"
+                         class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg z-40">
                         <div class="flex calendarRoomHeader font-semibold items-center ml-4">
                             {{ room.name }}
                         </div>
@@ -24,19 +24,16 @@
                             <div v-if="event.roomId === room.id" class="min-h-[46px]">
                                 <div class="at-a-glance-event-container py-0.5 pr-1"
                                      :data-event-id="event.id">
-
-                                    <SingleCalendarEvent
-                                        v-if="currentEventsInView.has(String(event.id))"
-                                        :atAGlance="true"
-                                        :multiEdit="multiEdit"
-                                        :project="project ? project : false"
-                                        :zoom-factor="1"
-                                        :width="204"
-                                        :event="event"
-                                        :event-types="props.eventTypes"
-                                        @open-edit-event-modal="openEditEventModal"
-                                        :first_project_tab_id="props.first_project_tab_id"
-                                    />
+                                    <SingleCalendarEvent v-if="currentEventsInView.has(String(event.id))"
+                                                         :atAGlance="true"
+                                                         :multiEdit="multiEdit"
+                                                         :project="project ? project : false"
+                                                         :zoom-factor="1"
+                                                         :width="204"
+                                                         :event="event"
+                                                         :event-types="props.eventTypes"
+                                                         :first_project_tab_id="props.first_project_tab_id"
+                                                         @open-edit-event-modal="openEditEventModal"/>
                                 </div>
                             </div>
                         </template>
@@ -122,7 +119,8 @@ const {hasAdminRole} = usePermission(usePage().props),
         'first_project_tab_id',
         'first_project_calendar_tab_id',
         'projectNameUsedForProjectTimePeriod',
-        'eventStatuses'
+        'eventStatuses',
+        'isCalendarViewRoute'
     ]),
     showEventsWithoutRoomComponent = ref(false),
     eventsWithoutRoom = ref([]),

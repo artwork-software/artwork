@@ -289,5 +289,19 @@ return [
     'file_upload' => [
         'max_size' => 'Die maximal freigegebene Dateigröße ist aktuell :size MB, lasse es entweder von einem Admin hochsetzen oder versuche es mit einer kleineren Datei',
         'invalid_file_type' => 'Dieses Dateiformat :format ist nicht freigegeben, bitte einen Admin es freizugeben oder nutze ein anderes Format',
-    ]
+    ],
+    'timeline' => [
+        'name_required' => 'Der Name des Zeitplans ist erforderlich.',
+        'name_string' => 'Der Name muss eine Zeichenkette sein.',
+        'name_max' => 'Der Name darf maximal 255 Zeichen enthalten.',
+        'dataset_required' => 'Das Datenset ist erforderlich.',
+        'dataset_array' => 'Das Datenset muss ein Array sein.',
+        'start_required' => 'Die Startzeit ist erforderlich.',
+        'start_date_format' => 'Die Startzeit muss im Format HH:MM angegeben werden.',
+        'end_required' => 'Die Endzeit ist erforderlich.',
+        'end_date_format' => 'Die Endzeit muss im Format HH:MM angegeben werden.',
+        'end_after_start' => 'Die Endzeit muss nach der Startzeit liegen.',
+        'description_string' => 'Die Beschreibung muss eine Zeichenkette sein.',
+        'description_max' => 'Die Beschreibung darf maximal 500 Zeichen enthalten.',
+    ],
 ];

@@ -375,25 +375,25 @@ class Event extends Model
     public function scopeStartAndEndTimeOverlap(Builder $builder, Carbon $start, Carbon $end): Builder
     {
         return $builder->where(
-            function ($query) use ($start, $end): void {
+            function (Builder $query) use ($start, $end): void {
                 // Events, die innerhalb des gegebenen Zeitraums starten und enden
                 $query->whereBetween('start_time', [$start, $end])
                     ->whereBetween('end_time', [$start, $end]);
             }
         )->orWhere(
-            function ($query) use ($start, $end): void {
+            function (Builder $query) use ($start, $end): void {
                 // Events, die vor dem gegebenen Startdatum beginnen und nach dem gegebenen Enddatum enden
                 $query->where('start_time', '<', $start)
                     ->where('end_time', '>', $end);
             }
         )->orWhere(
-            function ($query) use ($start, $end): void {
+            function (Builder $query) use ($start, $end): void {
                 // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
                 $query->where('start_time', '<', $start)
                     ->whereBetween('end_time', [$start, $end]);
             }
         )->orWhere(
-            function ($query) use ($start, $end): void {
+            function (Builder $query) use ($start, $end): void {
                 // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden
                 $query->whereBetween('start_time', [$start, $end])
                     ->where('end_time', '>', $end);

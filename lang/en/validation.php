@@ -289,5 +289,19 @@ return [
     'file_upload' => [
         'max_size' => 'The maximum shared file size is currently :size MB, either have an admin increase it or try a smaller file',
         'invalid_file_type' => 'This file format is not released :format, please ask an admin to release it or use another format',
-    ]
+    ],
+    'timeline' => [
+        'name_required' => 'The timeline name is required.',
+        'name_string' => 'The name must be a string.',
+        'name_max' => 'The name may not be greater than 255 characters.',
+        'dataset_required' => 'The dataset is required.',
+        'dataset_array' => 'The dataset must be an array.',
+        'start_required' => 'The start time is required.',
+        'start_date_format' => 'The start time must be in the format HH:MM.',
+        'end_required' => 'The end time is required.',
+        'end_date_format' => 'The end time must be in the format HH:MM.',
+        'end_after_start' => 'The end time must be after the start time.',
+        'description_string' => 'The description must be a string.',
+        'description_max' => 'The description may not exceed 500 characters.',
+    ],
 ];

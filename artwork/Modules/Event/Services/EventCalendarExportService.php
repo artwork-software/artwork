@@ -125,10 +125,6 @@ class EventCalendarExportService extends EventExportService
             count($desiredRoomAttributes) > 0 ? $desiredRoomAttributes : null,
             count($desiredAreaIds) > 0 ? $desiredAreaIds : null,
             count($desiredRoomCategories) > 0 ? $desiredRoomCategories : null,
-            null,
-            null,
-            null,
-            null
         );
     }
 

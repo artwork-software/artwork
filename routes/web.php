@@ -46,6 +46,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PermissionPresetController;
 use App\Http\Controllers\PresetShiftController;
 use App\Http\Controllers\PresetTimeLineController;
+use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
@@ -76,6 +77,7 @@ use App\Http\Controllers\SumDetailsController;
 use App\Http\Controllers\System\FileSettingsController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
+use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
@@ -717,6 +719,40 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         UserCommentedBudgetItemsSettingController::class
     )->only(['store', 'update']);
 
+    Route::group(['timeline-preset'], function (): void {
+        //shifts.timeline-presets.index
+        Route::get('/', [TimelinePresetController::class, 'index'])
+            ->name('shifts.timeline-presets.index');
+
+        // post: timeline-presets.store
+        Route::post('/store', [TimelinePresetController::class, 'store'])
+            ->name('timeline-presets.store');
+
+        // patch timeline-presets.update
+        Route::patch('/{shiftPresetTimeline}', [TimelinePresetController::class, 'update'])
+            ->name('timeline-presets.update');
+
+        // POST: timeline-preset.copy
+        Route::post('/{shiftPresetTimeline}/duplicate', [TimelinePresetController::class, 'duplicate'])
+            ->name('timeline-preset.duplicate');
+
+        // delete timeline-preset.destroy
+        Route::delete('/{shiftPresetTimeline}', [TimelinePresetController::class, 'destroy'])
+            ->name('timeline-preset.destroy');
+
+        // timeline-preset.time.delete
+        Route::delete('/{presetTimelineTime}/time/destroy', [PresetTimelineTimeController::class, 'destroy'])
+            ->name('timeline-preset.time.destroy');
+
+        // post timeline-preset.import
+        Route::post('/import/{event}/{shiftPresetTimeline}', [ShiftController::class, 'importTimelinePreset'])
+            ->name('timeline-preset.import');
+
+        // post timeline-preset.store
+        Route::post('/{event}/timeline-preset/store', [ShiftController::class, 'storeTimelinePresetFormEvent'])
+            ->name('timeline-preset.store.form.event');
+    });
+
     // Project Routes
     Route::group(['prefix' => 'project'], function (): void {
 
@@ -759,6 +795,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('shift.assignUserByType');
 
         Route::post('/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
+        Route::post('/timeline/update/magic/{event}', [ShiftController::class, 'updateTimeLine'])
+            ->name('edit.timeline.event');
+        Route::post('/timeline/add/magic/{event}', [ShiftController::class, 'addTimeLine'])
+            ->name('create.timeline.event');
         Route::post('/{event}/shift/store', [ShiftController::class, 'store'])->name('event.shift.store');
         Route::post('/sums/money-source', [SumDetailsController::class, 'store'])
             ->name('project.sum.money.source.store');

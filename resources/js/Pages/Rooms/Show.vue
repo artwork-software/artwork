@@ -117,9 +117,7 @@
         <!-- Raum Bearbeiten-->
         <BaseModal @closed="closeEditRoomModal" v-if="showEditRoomModal" modal-image="/Svgs/Overlays/illu_room_edit.svg">
                 <div class="mx-3">
-                    <ModalHeader
-                        :title="$t('Edit room')"
-                    />
+                    <ModalHeader :title="$t('Edit room')"/>
                     <form @submit.prevent="editRoom" class="grid grid-cols-1 gap-4">
                         <div>
                             <TextInputComponent

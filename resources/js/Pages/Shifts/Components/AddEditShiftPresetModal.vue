@@ -1,171 +1,150 @@
 <template>
-    <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-50" @close="closeModal">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
-            </TransitionChild>
-            <div class="fixed inset-0 z-50 overflow-y-auto">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
-                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-                            <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
-                                    <span class="sr-only">Close</span>
-                                    <XIcon class="h-6 w-6" aria-hidden="true" />
-                                </button>
-                            </div>
-                            <div class="relative z-40">
-                                <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    {{ $t('Organize shift')}}
-                                </div>
-                                <p class="xsLight subpixel-antialiased">
-                                    {{ $t('Determine how long your shift lasts and how many people should work in your shift.')}}
-                                </p>
-                                <div class="mt-10">
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                                        <div class="flex flex-row">
-                                            <TimeInputComponent v-model="shiftForm.start"
-                                                                :label="$t('Start-Time')"
-                                                                @change="validateShiftDates()" id=""/>
-                                        </div>
-                                        <div class="flex flex-row">
-                                            <TimeInputComponent v-model="shiftForm.end"
-                                                                :label="$t('End-Time')"
-                                                                @change="validateShiftDates()"
-                                                                id=""/>
-                                        </div>
-                                        <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
+<BaseModal @closed="$emit('closed')">
+    <div>
+        <ModalHeader
+            :title="$t('Organize shift')"
+            :description="$t('Determine how long your shift lasts and how many people should work in your shift.')"
+        />
+    </div>
+    <form @submit.prevent="saveShift">
+        <div class="mt-10">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                <div class="flex flex-row">
+                    <TimeInputComponent v-model="shiftForm.start"
+                                        :label="$t('Start-Time')"
+                                        @change="validateShiftDates()" id=""/>
+                </div>
+                <div class="flex flex-row">
+                    <TimeInputComponent v-model="shiftForm.end"
+                                        :label="$t('End-Time')"
+                                        @change="validateShiftDates()"
+                                        id=""/>
+                </div>
+                <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
                                                     this.validationMessages.errors.shift_start.length > 0 ||
                                                     this.validationMessages.warnings.shift_end.length > 0 ||
                                                     this.validationMessages.errors.shift_end.length > 0">
-                                            <div v-if="this.validationMessages.warnings.shift_start.length > 0"
-                                                 class="flex flex-col">
+                    <div v-if="this.validationMessages.warnings.shift_start.length > 0"
+                         class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.shift_start"
                                                       class="text-xs text-orange-500">
                                                     {{ warning }}
                                                 </span>
-                                            </div>
-                                            <div v-if="this.validationMessages.errors.shift_start.length > 0"
-                                                 class="flex flex-col">
+                    </div>
+                    <div v-if="this.validationMessages.errors.shift_start.length > 0"
+                         class="flex flex-col">
                                                 <span v-for="error in this.validationMessages.errors.shift_start"
                                                       class="text-xs errorText">
                                                     {{ error }}
                                                 </span>
-                                            </div>
-                                        </div>
-                                        <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
+                    </div>
+                </div>
+                <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
                                                     this.validationMessages.errors.shift_start.length > 0 ||
                                                     this.validationMessages.warnings.shift_end.length > 0 ||
                                                     this.validationMessages.errors.shift_end.length > 0">
-                                            <div v-if="this.validationMessages.warnings.shift_end.length > 0"
-                                                 class="flex flex-col">
+                    <div v-if="this.validationMessages.warnings.shift_end.length > 0"
+                         class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.shift_end"
                                                       class="text-xs text-orange-500">
                                                     {{ warning }}
                                                 </span>
-                                            </div>
-                                            <div v-if="this.validationMessages.errors.shift_end.length > 0"
-                                                 class="flex flex-col">
+                    </div>
+                    <div v-if="this.validationMessages.errors.shift_end.length > 0"
+                         class="flex flex-col">
                                                 <span v-for="error in this.validationMessages.errors.shift_end"
                                                       class="text-xs errorText">
                                                     {{ error }}
                                                 </span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <NumberComponent id="shift-break-minutes-input"
-                                                             :label="$t('Length of break in minutes*')"
-                                                             v-model="shiftForm.break_minutes"
-                                                             @change="validateShiftBreak()"
-                                            />
-                                        </div>
-                                        <div>
-                                            <SelectComponent id="addShiftCraftSelectComponent"
-                                                             :label="$t('Craft') + '*'"
-                                                             v-model="this.selectedCraft"
-                                                             :options="this.crafts"
-                                                             selected-property-to-display="name"
-                                                             :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
-                                            />
-                                        </div>
-                                        <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
+                    </div>
+                </div>
+                <div>
+                    <NumberComponent id="shift-break-minutes-input"
+                                     :label="$t('Length of break in minutes*')"
+                                     v-model="shiftForm.break_minutes"
+                                     @change="validateShiftBreak()"
+                    />
+                </div>
+                <div>
+                    <SelectComponent id="addShiftCraftSelectComponent"
+                                     :label="$t('Craft') + '*'"
+                                     v-model="this.selectedCraft"
+                                     :options="this.crafts"
+                                     selected-property-to-display="name"
+                                     :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
+                    />
+                </div>
+                <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
                                                     this.validationMessages.errors.break_length.length > 0 ||
                                                     this.validationMessages.warnings.craft.length > 0 ||
                                                     this.validationMessages.errors.craft.length > 0">
-                                            <div v-if="this.validationMessages.warnings.break_length.length > 0"
-                                                 class="flex flex-col">
+                    <div v-if="this.validationMessages.warnings.break_length.length > 0"
+                         class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.break_length"
                                                       class="text-xs text-orange-500">
                                                     {{ warning }}
                                                 </span>
-                                            </div>
-                                            <div v-if="this.validationMessages.errors.break_length.length > 0"
-                                                 class="flex flex-col">
+                    </div>
+                    <div v-if="this.validationMessages.errors.break_length.length > 0"
+                         class="flex flex-col">
                                                 <span v-for="error in this.validationMessages.errors.break_length"
                                                       class="text-xs errorText">
                                                     {{ error }}
                                                 </span>
-                                            </div>
-                                        </div>
-                                        <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
+                    </div>
+                </div>
+                <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
                                                     this.validationMessages.errors.break_length.length > 0 ||
                                                     this.validationMessages.warnings.craft.length > 0 ||
                                                     this.validationMessages.errors.craft.length > 0">
-                                            <div v-if="this.validationMessages.warnings.craft.length > 0"
-                                                 class="flex flex-col">
+                    <div v-if="this.validationMessages.warnings.craft.length > 0"
+                         class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.craft"
                                                       class="text-xs text-orange-500">
                                                     {{ warning }}
                                                 </span>
-                                            </div>
-                                            <div v-if="this.validationMessages.errors.craft.length > 0"
-                                                 class="flex flex-col">
+                    </div>
+                    <div v-if="this.validationMessages.errors.craft.length > 0"
+                         class="flex flex-col">
                                                 <span v-for="error in this.validationMessages.errors.craft"
                                                       class="text-xs errorText">
                                                     {{ error }}
                                                 </span>
-                                            </div>
-                                        </div>
-                                        <div v-for="(computedShiftQualification, index) in this.computedShiftQualifications"
-                                             v-show="this.canComputedShiftQualificationBeShown(computedShiftQualification)">
-                                            <NumberComponent v-if="this.canComputedShiftQualificationBeShown(computedShiftQualification)"
-                                                             v-model="computedShiftQualification.value"
-                                                             :id="'shift-qualification-' + index"
-                                                             :label="$t('Amount {0}', [computedShiftQualification.name])"
-                                                             @change="this.validateShiftsQualification(computedShiftQualification)"/>
-                                            <div v-if="computedShiftQualification.warning || computedShiftQualification.error"
-                                                 class="mt-2 space-y-2"
-                                            >
-                                                <div v-if="computedShiftQualification.warning" class="flex flex-col">
+                    </div>
+                </div>
+                <div v-for="(computedShiftQualification, index) in this.computedShiftQualifications"
+                     v-show="this.canComputedShiftQualificationBeShown(computedShiftQualification)">
+                    <NumberComponent v-if="this.canComputedShiftQualificationBeShown(computedShiftQualification)"
+                                     v-model="computedShiftQualification.value"
+                                     :id="'shift-qualification-' + index"
+                                     :label="$t('Amount {0}', [computedShiftQualification.name])"
+                                     @change="this.validateShiftsQualification(computedShiftQualification)"/>
+                    <div v-if="computedShiftQualification.warning || computedShiftQualification.error"
+                         class="mt-2 space-y-2"
+                    >
+                        <div v-if="computedShiftQualification.warning" class="flex flex-col">
                                                     <span class="text-xs errorText">
                                                         {{ computedShiftQualification.warning }}
                                                     </span>
-                                                </div>
-                                                <div v-if="computedShiftQualification.error" class="flex flex-col">
+                        </div>
+                        <div v-if="computedShiftQualification.error" class="flex flex-col">
                                                     <span class="text-xs errorText">
                                                         {{ computedShiftQualification.error }}
                                                     </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-span-2">
-                                            <textarea v-model="shiftForm.description" :placeholder="$t('Is there any important information about this shift?')" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex justify-between">
-                                <FormButton
-                                    :text="$t('Save')"
-                                    @click="saveShift" />
-                            </div>
-                        </DialogPanel>
-                    </TransitionChild>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-span-2">
+                    <TextareaComponent v-model="shiftForm.description" :label="$t('Is there any important information about this shift?')" rows="4" name="comment" id="comment" />
                 </div>
             </div>
-        </Dialog>
-    </TransitionRoot>
+        </div>
+        <div class="flex justify-center">
+            <FormButton :text="$t('Save')" type="submit" />
+        </div>
+    </form>
+
+</BaseModal>
 </template>
 <script>
 import {defineComponent, reactive} from 'vue'
@@ -191,11 +170,17 @@ import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import NumberComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import SelectComponent from "@/Components/Inputs/SelectComponent.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default defineComponent({
     name: "AddEditShiftPresetModal",
     mixins: [Permissions],
     components: {
+        TextareaComponent,
+        ModalHeader,
+        BaseModal,
         SelectComponent,
         NumberComponent,
         DateInputComponent, TimeInputComponent,

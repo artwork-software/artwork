@@ -660,11 +660,12 @@ export default class {
     }
 
     setElementMarginTop(element, marginTop) {
-        element.style.marginTop = marginTop + 'px';
+        element.style.marginTop = Math.max(marginTop, 0) + 'px';
     }
 
     getElementMarginTop(element) {
-        return Number(element.style.marginTop.replace('px', ''));
+        const marginTop = Number(element.style.marginTop.replace('px', ''));
+        return Math.max(marginTop, 0);
     }
 
     getElementsHeightInPixelPerMinuteDependantOnShift(shift) {

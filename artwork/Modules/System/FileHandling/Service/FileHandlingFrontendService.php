@@ -18,12 +18,11 @@ class FileHandlingFrontendService
     public function createFileHandingDto(ArtworkFileTypes $fileType): FileHandlingDto
     {
         $data = $this->retrieveSettingsForFileType($fileType);
-        
+
         return new FileHandlingDto(
             fileTypes: array_map(static fn($type) => ['name' => $type], $data['mime_types']),
             name: $fileType->value,
             fileSize: $data['file_size']
         );
     }
-    
 }

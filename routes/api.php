@@ -17,3 +17,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
+// search timeline preset timeline-preset.search
+Route::get('/timeline-preset/search', [
+    \App\Http\Controllers\TimelinePresetController::class,
+    'search'
+])->name('timeline-preset.search');

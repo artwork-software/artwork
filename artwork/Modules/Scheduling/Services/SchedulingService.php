@@ -108,7 +108,7 @@ class SchedulingService
                     }
                     $notificationTitle = __(
                         'notification.scheduling.changes_project',
-                        ['project' => $project->name],
+                        ['project' => $project?->name ?? 'Project name not found'],
                         $user->language
                     );
                     $broadcastMessage = [

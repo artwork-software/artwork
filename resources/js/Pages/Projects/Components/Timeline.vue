@@ -1,34 +1,83 @@
 <template>
-    <div class="w-72">
-        <div class="h-9 bg-gray-800/60 flex items-center px-4 rounded-lg mb-0.5">
+    <div class="w-60">
+        <div class="h-9 bg-gray-500 px-4 rounded-lg mb-2 flex items-center justify-between shadow-md">
             <div class="uppercase text-white text-xs">
                 {{ $t('Timeline') }}
+            </div>
+            <div class="flex items-center gap-x-2">
+                <ToolTipComponent
+                    icon="IconClipboard"
+                    icon-size="w-5 h-5"
+                    white-icon
+                    :tooltip-text="$t('Copy timeline to clipboard')"
+                    @click="copyTimelineToClipboard"
+                    direction="bottom"
+                />
+                <ToolTipComponent
+                    icon="IconWand"
+                    icon-size="w-5 h-5"
+                    white-icon
+                    :tooltip-text="$t('Create new timeline')"
+                    @click="openTimelineModal(false)"
+                    direction="bottom"
+                />
+                <BaseMenu has-no-offset white-icon>
+                    <BaseMenuItem title="Read from template" icon="IconFileImport" @click="showSearchTimelinePresetModal = true" />
+                    <BaseMenuItem title="Save as template" icon="IconFileExport" @click="showCreateTimelinePresetModal = true" />
+                    <BaseMenuItem title="Edit" @click="openTimelineModal(true)" />
+                </BaseMenu>
             </div>
         </div>
 
         <div>
-            <div v-if="(timeLine?.length === 0 || timeLine === null) && (this.$can('can plan shifts') || this.hasAdminRole())" class="text-xs bg-gray-900 p-2 text-white my-1 cursor-pointer hidden" @click="showAddTimeLineModal = true">
-                <p class="text-xs">
-                    {{ $t('Click here to add a timeline') }}
-                </p>
-            </div>
-
             <template v-for="(time) in timeLine">
                 <NewSingleTimeline :time="time" :event="event" @wantsFreshPlacements="this.$emit('wantsFreshPlacements')"/>
             </template>
 
             <div>
-                <div class="flex items-center justify-center mt-1 py-2 rounded-lg cursor-pointer border-2 border-dashed group" @click="addEmptyTimeline">
-                    <IconCirclePlus class="h-6 w-6 text-artwork-buttons-context group-hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" stroke-width="2" />
+                <div class="flex items-center justify-center mt-1 py-5 rounded-lg cursor-pointer border-2 border-dashed group btn-border-hover" @click="addEmptyTimeline">
+                    <component is="IconCircleDashedPlus" class="h-6 w-6 text-artwork-buttons-context/30 btn-group-hover" stroke-width="1.5" />
                 </div>
             </div>
         </div>
     </div>
 
-    <AddTimeLineModal v-if="showAddTimeLineModal"
+    <transition name="fade" appear>
+        <div class="pointer-events-none fixed inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="successCopied">
+            <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
+                <p class="text-sm/6 text-white">
+                    {{ $t('Timeline copied to clipboard') }}
+                </p>
+                <button type="button" class="-m-1.5 flex-none p-1.5">
+                    <span class="sr-only">Dismiss</span>
+                    <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="successCopied = false" />
+                </button>
+            </div>
+        </div>
+    </transition>
+
+    <AddEditTimelineModal
+        v-if="showAddTimeLineModal"
+        :timeline-to-edit="addTimelineToEdit ? timeLine : null"
+        :event="event"
+        @close="closeModal()"/>
+
+    <SearchTimelinePresetModal
+        v-if="showSearchTimelinePresetModal"
+        :event="event"
+        @close="closeSearchTimelinePresetModal"
+    />
+
+    <CreateTimelinePresetFormEvent
+        :event="event"
+        v-if="showCreateTimelinePresetModal"
+        @close="closeModalShowCreateTimelinePresetModal()"
+    />
+
+    <!--<AddTimeLineModal v-if="showAddTimeLineModal"
                       :event="event"
                       :timeLine="timeLine"
-                      @closed="this.closeModal()"/>
+                      @closed="this.closeModal()"/>-->
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -38,6 +87,13 @@ import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import {router} from "@inertiajs/vue3";
 import NewSingleTimeline from "@/Pages/Projects/Components/TimelineComponents/NewSingleTimeline.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import AddEditTimelineModal from "@/Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import SearchTimelinePresetModal from "@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue";
+import CreateTimelinePresetFormEvent
+    from "@/Pages/Projects/Components/TimelineComponents/CreateTimelinePresetFormEvent.vue";
 
 export default defineComponent({
     name: "Timeline",
@@ -47,6 +103,12 @@ export default defineComponent({
         }
     },
     components: {
+        CreateTimelinePresetFormEvent,
+        SearchTimelinePresetModal,
+        ToolTipComponent,
+        AddEditTimelineModal,
+        BaseMenuItem,
+        BaseMenu,
         NewSingleTimeline,
         AddTimeLineModal
     },
@@ -63,7 +125,11 @@ export default defineComponent({
     ],
     data(){
         return {
-            showAddTimeLineModal: false
+            showAddTimeLineModal: false,
+            addTimelineToEdit: false,
+            successCopied: false,
+            showSearchTimelinePresetModal: false,
+            showCreateTimelinePresetModal: false
         }
     },
     methods: {
@@ -71,21 +137,54 @@ export default defineComponent({
             this.$emit('wantsFreshPlacements');
             this.showAddTimeLineModal = false;
         },
-        openTimelineModal() {
+        openTimelineModal(boolean) {
             if(this.$can('can plan shifts') || this.hasAdminRole()) {
                 this.showAddTimeLineModal = true;
+                this.addTimelineToEdit = boolean;
             }
         },
         addEmptyTimeline(){
             router.post(route('add.timeline.row', {event: this.event.id}), {
             }, {
                 preserveScroll: true,
-                preserveState: true,
+                preserveState: false,
                 onSuccess: () => {
                     this.$emit('wantsFreshPlacements');
                 }
             })
+        },
+        closeSearchTimelinePresetModal() {
+            this.$emit('wantsFreshPlacements');
+            this.showSearchTimelinePresetModal = false;
+        },
+        closeModalShowCreateTimelinePresetModal() {
+            this.$emit('wantsFreshPlacements');
+            this.showCreateTimelinePresetModal = false;
+        },
+        copyTimelineToClipboard(){
+            let text = '';
+            this.timeLine.forEach((time) => {
+                text += `${time.start} - ${time.end} ${time.description}\n`
+            })
+            navigator.clipboard.writeText(text);
+
+            this.successCopied = true;
+            setTimeout(() => {
+                this.successCopied = false;
+            }, 1000)
         }
     }
 });
 </script>
+
+
+<style>
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.2s;
+}
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+</style>

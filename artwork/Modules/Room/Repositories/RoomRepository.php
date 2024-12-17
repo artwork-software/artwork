@@ -50,10 +50,10 @@ class RoomRepository extends BaseRepository
         ?array $roomAttributeIds,
         ?array $areaIds,
         ?array $roomCategoryIds,
-        ?bool $adjoiningNotLoud,
-        ?bool $adjoiningNoAudience,
-        ?Carbon $startDate,
-        ?Carbon $endDate
+        ?bool $adjoiningNotLoud = null,
+        ?bool $adjoiningNoAudience = null,
+        ?Carbon $startDate = null,
+        ?Carbon $endDate = null
     ): Collection {
         return Room::query()
             ->unlessRoomIds($roomIds)

@@ -45,7 +45,7 @@
                         <div v-for="room in computedCalendarData.value"
                              :key="room.id"
                              class="relative">
-                            <div v-if="room[day.full_day].events.length > 1" class="absolute bottom-2 right-4 z-50">
+                            <div v-if="room[day.full_day].events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
                                 <component is="IconChevronDown" @click="scrollToNextEventInDay(day.without_format, room[day.full_day].events.length)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
                             </div>
                             <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"

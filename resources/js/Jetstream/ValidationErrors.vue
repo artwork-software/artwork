@@ -3,7 +3,7 @@
         <div class="font-medium text-red-600">Upps! Das hat nicht geklappt.</div>
 
         <ul class="mt-3 list-disc list-inside text-sm text-red-600">
-            <li v-for="(error, key) in errors" :key="key">{{ error }}</li>
+            <li v-for="(error, key) in errors" :key="key">{{ $t(error) }}</li>
         </ul>
     </div>
 </template>

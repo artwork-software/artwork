@@ -15,17 +15,15 @@
                     :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personalFilters"
                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                    :event-statuses="eventStatuses"
-                />
+                    :event-statuses="eventStatuses"/>
             </div>
-
             <div v-else class="pl-16">
                 <BaseCalendar v-if="!atAGlance"
                               :project="project ?? headerObject.project"
                               :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
                               :days="days ?? loadedProjectInformation['CalendarTab'].days"
                               :calendar-data="calendar ?? loadedProjectInformation['CalendarTab'].calendar"
-                                :event-statuses="eventStatuses"
+                              :event-statuses="eventStatuses"
                               :events-without-room="eventsWithoutRoom ?? loadedProjectInformation['CalendarTab'].eventsWithoutRoom"
                 />
                 <IndividualCalendarAtGlanceComponent v-else
@@ -40,7 +38,8 @@
                                                      :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personalFilters"
                                                      :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
                                                      :first_project_tab_id="first_project_tab_id ?? loadedProjectInformation['CalendarTab'].first_project_tab_id"
-                                                     :first_project_calendar_tab_id="first_project_calendar_tab_id ?? loadedProjectInformation['CalendarTab'].first_project_calendar_tab_id"/>
+                                                     :first_project_calendar_tab_id="first_project_calendar_tab_id ?? loadedProjectInformation['CalendarTab'].first_project_calendar_tab_id"
+                                                     :isCalendarViewRoute="false"/>
             </div>
         </div>
     </div>

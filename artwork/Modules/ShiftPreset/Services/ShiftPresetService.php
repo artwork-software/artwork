@@ -82,6 +82,8 @@ readonly class ShiftPresetService
             }
         }
 
+        /*
+        // INFO: If we want to store the timeline in the new timeline preset, we need to uncomment this code
         // store timeline in new timeline preset
         $eventTimeline = $event->timelines;
         $newTimelinePreset = ShiftPresetTimeline::create([
@@ -93,10 +95,6 @@ readonly class ShiftPresetService
                 'end' => $timeline->end,
                 'description' => $timeline->description
             ]);
-        }
-
-        /*foreach ($event->timelines as $timeline) {
-            $shiftPresetTimelineService->createFromExistingTimeline($shiftPreset->id, $timeline);
         }*/
     }
 

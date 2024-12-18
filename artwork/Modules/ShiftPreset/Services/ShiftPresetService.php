@@ -8,6 +8,7 @@ use Artwork\Modules\PresetShift\Services\PresetShiftService;
 use Artwork\Modules\PresetShift\Services\PresetShiftsShiftsQualificationsService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftPreset\Repositories\ShiftPresetRepository;
+use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
 use Artwork\Modules\ShiftPresetTimeline\Services\ShiftPresetTimelineService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -81,9 +82,22 @@ readonly class ShiftPresetService
             }
         }
 
-        foreach ($event->timelines as $timeline) {
-            $shiftPresetTimelineService->createFromExistingTimeline($shiftPreset->id, $timeline);
+        // store timeline in new timeline preset
+        $eventTimeline = $event->timelines;
+        $newTimelinePreset = ShiftPresetTimeline::create([
+            'name' => $request->get('name') . ' - Timeline'
+        ]);
+        foreach ($eventTimeline as $timeline) {
+            $newTimelinePreset->times()->create([
+                'start' => $timeline->start,
+                'end' => $timeline->end,
+                'description' => $timeline->description
+            ]);
         }
+
+        /*foreach ($event->timelines as $timeline) {
+            $shiftPresetTimelineService->createFromExistingTimeline($shiftPreset->id, $timeline);
+        }*/
     }
 
     public function duplicateShiftPreset(

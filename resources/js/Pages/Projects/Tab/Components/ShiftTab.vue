@@ -4,7 +4,7 @@
             <div class="flex justify-between items-center mt-4 stickyHeader p-4">
                 <div class="flex items-center justify-between gap-6">
                     <div class="flex w-full justify-between">
-                        <SwitchGroup as="div" class="flex items-center" v-if="checkCommitted && (this.$can('can commit shifts') || this.hasAdminRole())">
+                        <SwitchGroup as="div" class="flex items-center" v-if="this.loadedProjectInformation['ShiftTab'].events_with_relevant.length > 0 && checkCommitted && (this.$can('can commit shifts') || this.hasAdminRole())">
                             <Switch v-model="hasUncommittedShift"
                                     @update:modelValue="updateCommitmentOfShifts"
                                     :class="[!hasUncommittedShift ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
@@ -188,7 +188,7 @@
                 </transition>
                 <!-- user window end -->
                 <div class="xsDark" v-if="loadedProjectInformation['ShiftTab'].events_with_relevant.length === 0">
-                    {{ $t('So far, there are no shift-relevant dates for this project.') }}
+                    {{ $t('So far, there are no shift-relevant events for this project.') }}
                 </div>
                 <SingleRelevantEvent v-for="event in loadedProjectInformation['ShiftTab'].events_with_relevant"
                                      :crafts="loadedProjectInformation['ShiftTab'].crafts"

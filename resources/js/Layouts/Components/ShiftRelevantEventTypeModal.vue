@@ -1,7 +1,7 @@
 <template>
     <BaseModal @closed="$emit('closeModal')" v-if="show" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
         <ModalHeader
-            :title="$t('Shift-relevant dates')"
+            :title="$t('Shift-relevant events')"
             :description="$t('Define the appointment types for which shifts are to be assigned in this project.')"
         />
         <Menu as="div" class="inline-block text-left relative w-full">
@@ -44,8 +44,8 @@
                 </MenuItems>
             </transition>
         </Menu>
-        <div>
-            <div class="flex py-2">
+        <div class="flex">
+            <div class="py-2">
                 <div v-for="id in shiftRelevantEventTypeIds">
                     <TagComponent :displayed-text="this.eventTypes.find(eventType => eventType.id === id).name"
                                   hideX="true"

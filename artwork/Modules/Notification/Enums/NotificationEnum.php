@@ -68,6 +68,8 @@ enum NotificationEnum: string
 
     case NOTIFICATION_SHIFT_CONFLICT = 'NOTICATION_SHIFT_CONFLICT';
 
+    case NOTIFICATION_REMINDER_ROOM_REQUEST = 'NOTIFICATION_REMINDER_ROOM_REQUEST';
+
     public function groupType(): string
     {
         return match ($this) {
@@ -85,6 +87,7 @@ enum NotificationEnum: string
 
             self::NOTIFICATION_UPSERT_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_ANSWER,
+            self::NOTIFICATION_REMINDER_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_CHANGED => "ROOMS",
 
             self::NOTIFICATION_NEW_TASK,
@@ -134,6 +137,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_LOCKED,
             self::NOTIFICATION_SHIFT_AVAILABLE,
             self::NOTIFICATION_SHIFT_OPEN_DEMAND,
+            self::NOTIFICATION_REMINDER_ROOM_REQUEST,
             self::NOTIFICATION_SHIFT_CONFLICT => ShiftNotification::class,
         };
     }
@@ -172,6 +176,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_AVAILABLE => "Availabilities",
             self::NOTIFICATION_SHIFT_OPEN_DEMAND => "Open demands",
             self::NOTIFICATION_SHIFT_CONFLICT => "Availabilities & Conflicts",
+            self::NOTIFICATION_REMINDER_ROOM_REQUEST => "Room request reminder",
         };
     }
 
@@ -208,6 +213,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_AVAILABLE => "Find out if someone has made changes to your availability.",
             self::NOTIFICATION_SHIFT_CONFLICT => "Find out if an employee has a new availability or you need to fill someone new.",
             self::NOTIFICATION_SHIFT_OPEN_DEMAND => "Find out if there are any open demands for your shifts.",
+            self::NOTIFICATION_REMINDER_ROOM_REQUEST => "Find out if there are any room requests that need to be confirmed or declined.",
         };
     }
 

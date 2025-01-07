@@ -1,6 +1,6 @@
 <template>
     <div v-if="type === 'gray'"
-         class="rounded-full items-center font-medium text-secondary border bg-tagBgGray border-gray-500 px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+         class="rounded-full items-center font-medium text-secondary border bg-tagBgGray border-gray-500 px-3 text-sm mr-1 mb-1 min-h-8 inline-flex">
         <img v-if="icon === 'audience'" src="/Svgs/IconSvgs/icon_public.svg" class=" h-6 w-6 mx-2"
              alt="audienceIcon"/>
         {{ displayedText }}

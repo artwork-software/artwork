@@ -1,8 +1,19 @@
 #!/usr/bin/env bash
 
-#Install base software
-sudo apt-get update
-sudo NEEDRESTART_MODE=a apt-get install -y curl \
+set -euo pipefail
+
+# Funktion zum Ausgeben von Nachrichten
+log() {
+    echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*"
+}
+
+# Setze die Umgebungsvariable für nicht-interaktive Installationen
+export DEBIAN_FRONTEND=noninteractive
+
+# Aktualisiere und installiere Basissoftware
+log "Aktualisiere Paketlisten und installiere Basissoftware..."
+sudo apt-get update -y
+sudo apt-get install -y curl \
  git \
  python3 \
  gcc \
@@ -22,21 +33,65 @@ sudo NEEDRESTART_MODE=a apt-get install -y curl \
  libpng-dev \
  dnsutils \
  librsvg2-bin \
- fswatch
+ fswatch \
+ ufw \
+ fail2ban \
+ unattended-upgrades \
+ apparmor-profiles \
+ apt-transport-https
 
-#Collect all the custom repositories
-##Node
+# Einrichten automatischer Sicherheitsupdates
+log "Konfiguriere automatische Sicherheitsupdates..."
+sudo dpkg-reconfigure -f noninteractive unattended-upgrades
+
+# Firewall konfigurieren mit UFW
+log "Konfiguriere Firewall mit UFW..."
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'
+sudo ufw --force enable
+
+# Fail2Ban installieren und konfigurieren
+log "Installiere und konfiguriere Fail2Ban..."
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+# Sicherung und bedingte Änderung der SSH-Konfiguration
+log "Sichere und konfiguriere SSH..."
+read -p "Change SSH auth to keys only? [y/N]: " change_ssh_auth
+if [[ "$change_ssh_auth" =~ ^[Yy]$ ]]; then
+    log "Ändere SSH-Authentifizierung zu nur Schlüssel..."
+    sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+    sudo sed -i 's/^#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+    sudo sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+    sudo systemctl reload sshd
+    log "SSH-Authentifizierung auf Schlüssel umgestellt."
+else
+    log "Änderung der SSH-Authentifizierung übersprungen."
+fi
+
+# Installiere nur notwendige Pakete von Repositories
+log "Füge benutzerdefinierte Repositories hinzu..."
+## Node.js
+log "Füge Node.js Repository hinzu..."
 sudo mkdir -p /etc/apt/keyrings
-sudo curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-sudo echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-##PHP
-sudo curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c' | sudo gpg --dearmor | sudo tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null
-sudo echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" | sudo tee /etc/apt/sources.list.d/ppa_ondrej_php.list
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+
+## PHP
+log "Füge PHP Repository hinzu..."
+curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c' | sudo gpg --dearmor | sudo tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" | sudo tee /etc/apt/sources.list.d/ppa_ondrej_php.list
+
 ## Meilisearch
-sudo echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | sudo tee /etc/apt/sources.list.d/fury.list
-# Install new packages
-sudo apt-get update
-sudo NEEDRESTART_MODE=a apt-get install -y php8.2-cli php8.2-dev php8.2-fpm \
+log "Füge Meilisearch Repository hinzu..."
+echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | sudo tee /etc/apt/sources.list.d/fury.list
+
+# Installiere neue Pakete
+log "Aktualisiere Paketlisten und installiere zusätzliche Pakete..."
+sudo apt-get update -y
+sudo apt-get install -y php8.2-cli php8.2-dev php8.2-fpm \
        php8.2-pgsql php8.2-sqlite3 php8.2-gd php8.2-imagick \
        php8.2-curl \
        php8.2-imap php8.2-mysql php8.2-mbstring \
@@ -48,35 +103,60 @@ sudo NEEDRESTART_MODE=a apt-get install -y php8.2-cli php8.2-dev php8.2-fpm \
        meilisearch=1.9.* \
        nodejs
 
-#Cleanup apt
+# Sicherheit für MariaDB konfigurieren
+log "Konfiguriere MariaDB für sichere Verbindungen..."
+sudo sed -i "s/^bind-address\s*=.*/bind-address = 127.0.0.1/" /etc/mysql/mariadb.conf.d/50-server.cnf
+sudo systemctl restart mariadb
 
+# Sicherheit für Redis konfigurieren
+log "Konfiguriere Redis für sichere Verbindungen..."
+sudo sed -i "s/^bind .*/bind 127.0.0.1/" /etc/redis/redis.conf
+REDIS_PASSWORD=$(openssl rand -hex 16)
+echo "requirepass $REDIS_PASSWORD" | sudo tee -a /etc/redis/redis.conf
+sudo systemctl restart redis
+
+# Cleanup apt
+log "Bereinige APT..."
 sudo apt-get -y autoremove
 sudo apt-get clean
 
-#Install artwork
-
-##Delete existing stuff for a clean install
+# Installiere Artwork
+log "Installiere Artwork..."
+# Lösche bestehende Dateien für eine saubere Installation
 sudo rm -rf /var/www/html/
 sudo mkdir /var/www/html
 
-##Clone repo and set it up
+# Klone das Repository und richte es ein
 sudo git clone https://github.com/artwork-software/artwork.git /var/www/html/
 sudo cp /var/www/html/.env.standalone.example /var/www/html/.env
 
-## nginx config
+# Nginx konfigurieren
+log "Konfiguriere Nginx..."
 sudo cp -rf /var/www/html/.install/artwork.vhost.conf /etc/nginx/sites-available/default
+
+# Härte Nginx-Konfiguration mit Sicherheits-Headern (HSTS auskommentiert)
+sudo bash -c 'cat >> /etc/nginx/sites-available/default <<EOL
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src '\''self'\'';" always;
+    # add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+EOL'
 sudo systemctl restart nginx
 
-## Composer
-sudo wget -O /var/www/html/composer.phar https://getcomposer.org/download/2.6.5/composer.phar
-sudo COMPOSER_ALLOW_SUPERUSER=1 php /var/www/html/composer.phar -d /var/www/html --no-interaction install
+# Hinweis: SSL kann später mit Certbot oder einem anderen Tool konfiguriert werden, sobald die Domain bekannt ist.
+# Sobald SSL konfiguriert ist, kann die HSTS-Zeile entkommentiert werden, um die Sicherheit weiter zu erhöhen.
 
-## Setup db
+
+# Setup DB
+log "Richte die Datenbank ein..."
 MYSQL_PASSWORD=$(openssl rand -hex 24)
-sudo mysql -uroot -e "CREATE DATABASE artwork_tools;CREATE USER artwork@\"%\" IDENTIFIED BY \"$MYSQL_PASSWORD\"; GRANT ALL PRIVILEGES ON *.* TO \"artwork\"@\"%\" WITH GRANT OPTION;FLUSH PRIVILEGES;"
+sudo mysql -uroot -e "CREATE DATABASE artwork_tools;CREATE USER artwork@\"localhost\" IDENTIFIED BY \"$MYSQL_PASSWORD\"; GRANT ALL PRIVILEGES ON artwork_tools.* TO \"artwork\"@\"localhost\"; FLUSH PRIVILEGES;"
 sudo sed -i "s/DB_PASSWORD=/DB_PASSWORD=$MYSQL_PASSWORD/g" /var/www/html/.env
 
-#Setup Meilisearch
+# Setup Meilisearch
+log "Richte Meilisearch ein..."
 sudo useradd -d /var/lib/meilisearch -s /bin/false -m -r meilisearch
 sudo mkdir /var/lib/meilisearch/data /var/lib/meilisearch/dumps /var/lib/meilisearch/snapshots
 sudo chown -R meilisearch:meilisearch /var/lib/meilisearch
@@ -94,10 +174,19 @@ sudo cp /var/www/html/.install/meilisearch.service /etc/systemd/system/meilisear
 sudo systemctl enable meilisearch
 sudo systemctl start meilisearch
 
-#Set Permissions
-sudo chown -R www-data:www-data /var/www/html
+# Composer installieren
+log "Installiere Composer..."
+sudo wget -O /var/www/html/composer.phar https://getcomposer.org/download/2.6.5/composer.phar
+sudo COMPOSER_ALLOW_SUPERUSER=1 php /var/www/html/composer.phar -d /var/www/html --no-interaction install
 
-#Setup Soketi (pusher)
+# Set Permissions
+log "Setze Dateiberechtigungen..."
+sudo chown -R www-data:www-data /var/www/html
+sudo chmod -R 750 /var/www/html
+sudo chmod 640 /var/www/html/.env
+
+# Setup Soketi (pusher)
+log "Richte Soketi ein..."
 PUSHER_KEY=$(openssl rand -hex 16)
 PUSHER_SECRET=$(openssl rand -hex 16)
 PUSHER_ID=$(openssl rand -hex 16)
@@ -112,24 +201,33 @@ sudo sed -i "s/__ID/$PUSHER_ID/g" /var/www/html/soketi.config.json
 sudo sed -i "s/__KEY/$PUSHER_KEY/g" /var/www/html/soketi.config.json
 sudo sed -i "s/__SECRET/$PUSHER_SECRET/g" /var/www/html/soketi.config.json
 
-## Setup laravel
+#Set Redis Password
+sudo sed -i "s/REDIS_PASSWORD=null/REDIS_PASSWORD=$REDIS_PASSWORD/g" /var/www/html/.env
+
+# Setup Laravel
+log "Richte Laravel ein..."
 sudo php /var/www/html/artisan key:generate --force
 sudo php /var/www/html/artisan storage:link
 sudo php /var/www/html/artisan optimize
 sudo php /var/www/html/artisan migrate:fresh --force
 sudo php /var/www/html/artisan db:seed:production
 
-## Setup js
+# Setup JS
+log "Installiere und baue JavaScript-Abhängigkeiten..."
 sudo npm --prefix /var/www/html install
 sudo npm --prefix /var/www/html run build
 
 sudo chown -R www-data:www-data /var/www/html
 
-## Queue Worker
+# Queue Worker
+log "Richte Queue Worker ein..."
 sudo cp /var/www/html/.install/artwork-worker.service /etc/systemd/system/artwork-worker.service
 sudo systemctl daemon-reload
 sudo systemctl enable artwork-worker
 sudo systemctl enable artwork-sockets
+
+# Indexieren mit Laravel Scout
+log "Starte Laravel Scout Indexierung..."
 sudo php /var/www/html/artisan scout:index departments
 sudo php /var/www/html/artisan scout:index moneysources
 sudo php /var/www/html/artisan scout:index shifpresets
@@ -145,5 +243,17 @@ sudo php /var/www/html/artisan scout:import Artwork\\Modules\\MoneySource\\Model
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\Freelancer\\Models\\Freelancer
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\ServiceProvider\\Models\\ServiceProvider
 
-## Scheduler (cron)
-(sudo crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run") | sudo crontab -
+# Scheduler (cron)
+log "Richte Scheduler ein..."
+(crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run >> /dev/null 2>&1") | sudo crontab -
+
+# AppArmor-Profil für Nginx hinzufügen
+log "Füge AppArmor-Profil für Nginx hinzu..."
+sudo systemctl enable apparmor
+sudo systemctl start apparmor
+# Beispiel: Aktivieren eines vordefinierten Profils oder Erstellen eines benutzerdefinierten Profils
+# Hier wird ein Standardprofil angenommen
+sudo aa-enforce /etc/apparmor.d/usr.sbin.nginx
+
+# Abschlussmeldung
+log "Installation und Sicherheitskonfiguration abgeschlossen!"

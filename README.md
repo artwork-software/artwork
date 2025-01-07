@@ -277,4 +277,24 @@ To be able to invite new Users you need to update the .env file with your mail c
 
 If you have questions, feel free to open an issue :) 
 
+Caldero Systems hosted Test Server:
+
+Caldero Systems also hosts a Test Server which can be reached under https://artwork.caldero-systems.de/
+
+On this server several people will use it, so dont use confidential data there. 
+
+login data for this server is:
+
+Mail: max.mustermann@artwork.software
+Password:TestPass1234!$
+
+For the user accounts (with limited permissions, fell free to edit the permissions of these 2 users when testing):
+Mail: anna.musterfrau@artwork.software
+Password: TestPass1234!$
+
+Mail: lisa.musterfrau@artwork.software
+Password: TestPass1234!$
+
+NOTE: the Mailing of this test-instance will always end in a mailtrap which is setup by us. so there wont be outgoing mails to your emails.
+
 Feel free to explore the features of Artwork and manage your projects effectively!

@@ -50,7 +50,7 @@
                             </div>
                             <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                  :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
-                                 class="group/container border-b-2 border-gray-400 border-dashed" :id="'scroll_container-' + day.without_format">
+                                 class="group/container border-t-2 border-gray-400 border-dashed" :id="'scroll_container-' + day.without_format">
                                 <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="(event, index) in room[day.full_day].events">
                                     <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.without_format">
                                         <AsyncSingleEventInCalendar

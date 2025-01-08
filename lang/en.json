@@ -2264,5 +2264,6 @@
     "Configure the order of the first two columns in the budget. This sorting is only used when displaying columns. The first column is always considered the 'Debit account' and the second the 'Cost center'.": "Configure the order of the first two columns in the budget. This sorting is only used when displaying columns. The first column is always considered the \"Debit account\" and the second the \"Cost center\".",
     "Column order": "Column order",
     "Column 1": "Column 1 ({0})",
-    "Column 2": "Column 2 ({0})"
+    "Column 2": "Column 2 ({0})",
+    "Display Settings": "Display Settings"
 }

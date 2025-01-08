@@ -2265,5 +2265,6 @@
     "Configure the order of the first two columns in the budget. This sorting is only used when displaying columns. The first column is always considered the 'Debit account' and the second the 'Cost center'.": "Konfiguriere die Reihenfolge der ersten beiden Spalten im Budget. Diese Sortierung wird ausschließlich für die Anzeige verwendet. Die erste Spalte wird immer als \"Soll-Konto\" und die zweite als \"Kostenstelle\" betrachtet.",
     "Column order": "Spaltenreihenfolge",
     "Column 1": "Spalte 1 ({0})",
-    "Column 2": "Spalte 2 ({0})"
+    "Column 2": "Spalte 2 ({0})",
+    "Display Settings": "Anzeige-Einstellungen"
 }

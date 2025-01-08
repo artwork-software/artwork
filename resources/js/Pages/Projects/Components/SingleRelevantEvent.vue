@@ -23,21 +23,21 @@
             <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="mt-1">
                 <BaseMenu dots-size="h-4 w-4" dots-color="text-white">
                     <MenuItem v-slot="{ active }">
-                        <a href="#" @click="openDeleteConfirmModal"
+                        <a @click="openDeleteConfirmModal"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconTrash stroke-width="1.5" class="w-5 h-5 mr-3" />
                             {{ $t('Delete shift planning') }}
                         </a>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
-                        <a href="#" @click="saveShiftAsPreset"
+                        <a @click="saveShiftAsPreset"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconFilePlus stroke-width="1.5" class="w-5 h-5 mr-3" />
                             {{ $t('Save shift planning as a template') }}
                         </a>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
-                        <a href="#" @click="showImportShiftTemplateModal = true"
+                        <a @click="showImportShiftTemplateModal = true"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconFileImport stroke-width="1.5" class="w-5 h-5 mr-3" />
                             {{ $t('Import shift planning from template') }}
@@ -153,7 +153,9 @@ export default defineComponent({
             this.showConfirmDeleteModal = false
         },
         deleteShift() {
-            this.$inertia.delete(`/events/${this.event.event.id}/shifts`)
+            this.$inertia.delete(`/events/${this.event.event.id}/shifts`, {
+                preserveScroll: true
+            });
             this.showConfirmDeleteModal = false
         },
         saveShiftAsPreset() {

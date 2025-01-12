@@ -455,7 +455,7 @@
                             <table class="w-full text-white overflow-y-scroll z-10">
                                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                                 <div class="z-10">
-                                    <tbody class="w-full pt-3" v-for="craft in reComputedCraftsToDisplay">
+                                    <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
                                     <tr class="stickyYAxisNoMarginLeft pl-2 cursor-pointer w-48 xsLight flex justify-between pb-1"
                                         @click="changeCraftVisibility(craft.id)">
                                         {{ craft.name }}
@@ -739,14 +739,6 @@ import DeleteCalendarMultiEditEntities from "@/Pages/Shifts/Components/DeleteCal
 import DeleteCalendarRoomShiftEntriesModal from "@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue";
 import { useShiftCalendarListener } from "@/Composeables/useShiftCalendarListener.js";
 const {getSortEnumTranslation} = useSortEnumTranslation();
-const {getDaysOfEvent, formatEventDateByDayJs, useShiftPlanReload} = useEvent(),
-    {
-        hasReceivedNewShiftPlanData,
-        hasReceivedNewShiftPlanWorkerData,
-        receivedRoomData,
-        receivedWorkerData,
-        handleReload,
-    } = useShiftPlanReload();
 
 export default {
     name: "ShiftPlan",
@@ -919,89 +911,6 @@ export default {
         window.addEventListener("resize", this.updateHeight);
     },
     computed: {
-        reComputedCraftsToDisplay() {
-            if (!hasReceivedNewShiftPlanWorkerData.value) {
-                return this.craftsToDisplay;
-            }
-
-            receivedWorkerData.value.forEach((workerData) => {
-                if (workerData.type === 'user') {
-                    this.usersForShifts[this.usersForShifts.findIndex(
-                        (userWithPlannedWorkingHours) =>
-                            userWithPlannedWorkingHours.user.id === workerData.user.id
-                    )] = workerData;
-
-                    if (this.userForMultiEdit && this.userForMultiEdit.id === workerData.user.id) {
-                        this.addUserToMultiEdit(
-                            {
-                                id: workerData.user.id,
-                                type: this.userForMultiEdit.type,
-                                craftId: this.userForMultiEdit.craftId,
-                                display_name: workerData.user.first_name + ' ' + workerData.user.last_name,
-                                profile_photo_url: workerData.user.profile_photo_url,
-                                assigned_craft_ids: workerData.user.assigned_craft_ids,
-                                shift_ids: workerData.user.shift_ids,
-                                shift_qualifications: workerData.user.shift_qualifications,
-                                craft_are_universally_applicable: this.userForMultiEdit?.universally_applicable ?? false,
-                                craft_abbreviation: this.userForMultiEdit.craft_abbreviation
-                            }
-                        );
-                    }
-                }
-
-                if (workerData.type === 'freelancer') {
-                    this.freelancersForShifts[this.freelancersForShifts.findIndex(
-                        (freelancerWithPlannedWorkingHours) =>
-                            freelancerWithPlannedWorkingHours.freelancer.id === workerData.freelancer.id
-                    )] = workerData;
-
-                    if (this.userForMultiEdit && this.userForMultiEdit.id === workerData.freelancer.id) {
-                        this.addUserToMultiEdit(
-                            {
-                                id: workerData.freelancer.id,
-                                type: this.userForMultiEdit.type,
-                                craftId: this.userForMultiEdit.craftId,
-                                display_name: workerData.freelancer.first_name + ' ' + workerData.freelancer.last_name,
-                                profile_photo_url: workerData.freelancer.profile_photo_url,
-                                assigned_craft_ids: workerData.freelancer.assigned_craft_ids,
-                                shift_ids: workerData.freelancer.shift_ids,
-                                shift_qualifications: workerData.freelancer.shift_qualifications,
-                                craft_are_universally_applicable: this.userForMultiEdit?.universally_applicable ?? false,
-                                craft_abbreviation: this.userForMultiEdit.craft_abbreviation
-                            }
-                        );
-                    }
-                }
-
-                if (workerData.type === 'service_provider') {
-                    this.serviceProvidersForShifts[this.serviceProvidersForShifts.findIndex(
-                        (serviceProviderWithPlannedWorkingHours) =>
-                            serviceProviderWithPlannedWorkingHours.service_provider.id === workerData.service_provider.id
-                    )] = workerData;
-
-                    if (this.userForMultiEdit && this.userForMultiEdit.id === workerData.service_provider.id) {
-                        this.addUserToMultiEdit(
-                            {
-                                id: workerData.service_provider.id,
-                                type: this.userForMultiEdit.type,
-                                craftId: this.userForMultiEdit.craftId,
-                                display_name: workerData.service_provider.provider_name,
-                                profile_photo_url: workerData.service_provider.profile_photo_url,
-                                assigned_craft_ids: workerData.service_provider.assigned_craft_ids,
-                                shift_ids: workerData.service_provider.shift_ids,
-                                shift_qualifications: workerData.service_provider.shift_qualifications,
-                                craft_are_universally_applicable: this.userForMultiEdit?.universally_applicable ?? false,
-                                craft_abbreviation: this.userForMultiEdit.craft_abbreviation
-                            }
-                        );
-                    }
-                }
-            });
-
-            hasReceivedNewShiftPlanWorkerData.value = false;
-
-            return this.craftsToDisplay;
-        },
         craftsToDisplay() {
             const crafts = this.crafts
                 .map(
@@ -1339,85 +1248,10 @@ export default {
         },
         getSortEnumTranslation,
         userShiftModalDesiresReload(shiftId, userId, userType, desiredDay) {
-            /*let desiredRoomIds = new Set();
 
-            if (shiftId) {
-                //find shift room ids
-                this.shiftPlanRef.forEach(room => {
-                    this.days.forEach(day => {
-                        if (day.full_day !== desiredDay) {
-                            return;
-                        }
-                        room[day.full_day].events.forEach(event => {
-                            event.shifts.forEach(shift => {
-                                if (shift.id === shiftId) {
-                                    desiredRoomIds.add(room[day.full_day].roomId);
-                                }
-                            });
-                        });
-                    });
-                });
-
-                handleReload(
-                    Array.from(desiredRoomIds),
-                    [desiredDay],
-                    [
-                        {
-                            id: userId,
-                            type: userType
-                        }
-                    ]
-                );
-
-                return;
-            }
-
-            desiredRoomIds = this.rooms.map((room) => room.id);
-
-            handleReload(
-                Array.from(desiredRoomIds),
-                [desiredDay],
-                [
-                    {
-                        id: userId,
-                        type: userType
-                    }
-                ]
-            );*/
         },
         eventDesiresReload(userId, userType, event, seriesShiftData) {
-            /*let desiredDates = seriesShiftData && seriesShiftData.onlyThisDay === false ?
-                getDaysOfEvent(
-                    formatEventDateByDayJs(seriesShiftData.start),
-                    formatEventDateByDayJs(seriesShiftData.end)
-                ) :
-                getDaysOfEvent(
-                    formatEventDateByDayJs(event.start),
-                    formatEventDateByDayJs(event.end)
-                );
 
-            handleReload(
-                [event.roomId],
-                desiredDates,
-                [
-                    {
-                        id: userId,
-                        type: userType,
-                    }
-                ]
-            );*/
-        },
-        shiftDesiresReload(userId, roomId, desiredDay, userType = 0) {
-            handleReload(
-                [roomId],
-                [desiredDay],
-                [
-                    {
-                        id: userId,
-                        type: userType
-                    }
-                ]
-            );
         },
         getDropWorkers() {
             const users = [];
@@ -1785,24 +1619,12 @@ export default {
         closeMultiEditCellModal(bool){
             this.showCellMultiEditModal = false;
 
-            handleReload(
-                this.rooms.map(room => room.id),
-                this.days.map(day => day.full_day),
-                Object.values(this.multiEditCellByDayAndUser).map(user => {
-                    return {
-                        id: user.id,
-                        type: user.type
-                    }
-                })
-            );
 
             if (bool) {
                 this.multiEditCellByDayAndUser = {};
             }
         },
         closeCellMultiEditDelete(boolean) {
-
-
             if(boolean.closing) {
                 this.openCellMultiEditDelete = false;
                 return;
@@ -1813,18 +1635,6 @@ export default {
             if(boolean) {
                 this.showCellMultiEditModal = true;
             }
-
-            handleReload(
-                this.rooms.map(room => room.id),
-                this.days.map(day => day.full_day),
-                Object.values(this.multiEditCellByDayAndUser).map(user => {
-                    return {
-                        id: user.id,
-                        type: user.type
-                    }
-                })
-            );
-
             if (!boolean) {
                 this.multiEditCellByDayAndUser = {};
             }
@@ -1953,41 +1763,6 @@ export default {
                 this.resetMultiEditMode();
                 return;
             }
-
-            let desiredRoomIds = new Set(),
-                desiredDays = new Set(),
-                desiredUser = {
-                    id: this.userForMultiEdit.id,
-                    type: this.userForMultiEdit.type
-                };
-
-            /*this.userToMultiEditCheckedShiftsAndEvents.forEach((shiftAndEvent) => {
-                let desiredShift = shiftAndEvent.shift;
-                let desiredEvent = shiftAndEvent.event;
-
-               /* this.shiftsToHandleOnMultiEdit.assignToShift.forEach((shiftToAssign) => {
-                    if (desiredShift.id === shiftToAssign.shiftId) {
-                        desiredRoomIds.add(desiredEvent.roomId);
-                        getDaysOfEvent(
-                            formatEventDateByDayJs(desiredEvent.start),
-                            formatEventDateByDayJs(desiredEvent.end)
-                        ).forEach((desiredDay) => desiredDays.add(desiredDay));
-                    }
-                });
-
-                this.shiftsToHandleOnMultiEdit.removeFromShift.forEach((shiftIdToRemove) => {
-                    if (desiredShift.id === shiftIdToRemove) {
-                        desiredRoomIds.add(desiredEvent.roomId);
-
-                        getDaysOfEvent(
-                            formatEventDateByDayJs(desiredEvent.start),
-                            formatEventDateByDayJs(desiredEvent.end)
-                        ).forEach((desiredDay) => desiredDays.add(desiredDay));
-                    }
-                });
-            });*/
-
-
             axios.post(route('shift.multi.edit.save'), {
                 userType: this.userForMultiEdit.type,
                 userTypeId: this.userForMultiEdit.id,

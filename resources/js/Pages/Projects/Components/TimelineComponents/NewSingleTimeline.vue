@@ -19,14 +19,21 @@
                     </SwitchGroup>
                 </div>
                 <div class="cursor-pointer">
-                    <div v-if="!time.clicked"  @click="openCloseTimeEditor(true)">
-                        <div v-if="time.start_date === time.end_date">
-                            {{ timeLineForm.start }} - {{ timeLineForm.end }}
+                    <div v-if="!time.clicked" @click="openCloseTimeEditor(true)">
+                        <div v-if="time.start_or_end && time.start === time.end && time.start_date === time.end_date">
+                            <p class="text-xs">{{ $t('From') }} {{ time.start }}</p>
+                        </div>
+                        <div v-else-if="!time.start_or_end && time.start === time.end && time.start_date === time.end_date">
+                            <p class="text-xs">{{ $t('Until') }} {{ time.end }}</p>
+                        </div>
+                        <div v-else-if="time.start_date !== time.end_date">
+                            <p class="text-xs">{{ time.formatted_dates.start_date }} {{ time.start }} - {{ time.formatted_dates.end_date }} {{ time.end }}</p>
                         </div>
                         <div v-else>
-                            {{ timeLineForm.formatted_dates.start_date }} {{ timeLineForm.start }} - {{ timeLineForm.formatted_dates.end_date }} {{ timeLineForm.end }}
+                            <p class="text-xs">{{ time.start }} - {{ time.end }}</p>
                         </div>
                     </div>
+
                     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div v-if="!automaticMode">
                             <DateInputComponent :id="'start_date_' + timeLineForm.id" v-model="timeLineForm.start_date" :label="$t('Start date')" is-dark is-small />

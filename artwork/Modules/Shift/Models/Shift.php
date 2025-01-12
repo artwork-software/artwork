@@ -7,7 +7,9 @@ use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
@@ -72,7 +74,8 @@ class Shift extends Model
         'shift_uuid',
         'event_start_day',
         'event_end_day',
-        'committing_user_id'
+        'committing_user_id',
+        'room_id'
     ];
 
     protected $casts = [
@@ -127,6 +130,11 @@ class Shift extends Model
             'id',
             'crafts'
         )->without(['users']);
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class, 'room_id', 'id', 'rooms');
     }
 
     public function users(): BelongsToMany
@@ -260,7 +268,25 @@ class Shift extends Model
             });
     }
 
-    public function scopeEventIdInArray(Builder $builder, array $eventIds): Builder
+    public function scopeStartAndEndDateOverlap(Builder $builder, string $start, string $end): Builder
+    {
+        return $builder
+            ->whereBetween('start_date', [$start, $end])
+            ->orWhereBetween('end_date', [$start, $end])
+            ->orWhere(function (Builder $builder) use ($start, $end): void {
+                $builder
+                    ->where('start_date', '>', $start)
+                    ->where('end_date', '<', $end);
+            })
+            ->orWhere(function (Builder $builder) use ($start, $end): void {
+                $builder
+                    ->where('start_date', '<', $start)
+                    ->where('end_date', '>', $end);
+            });
+    }
+
+
+    public function scopeEventIdInArray(Builder $builder, ?array $eventIds = []): Builder
     {
         return $builder->whereIntegerInRaw('event_id', $eventIds);
     }

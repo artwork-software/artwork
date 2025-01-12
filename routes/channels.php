@@ -41,3 +41,24 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 
 Broadcast::channel('room.{roomId}.day.{dayString}', function ($user, $roomId, $dayString): void {
 });
+
+
+Broadcast::channel('shift-plan.room.{roomId}', function ($roomId) {
+    return Auth::check();
+});
+
+Broadcast::channel('destroy.events.room.{roomId}', function ($roomId) {
+    return Auth::check();
+});
+
+Broadcast::channel('shift-plan.shift.{shiftId}', function ($shiftId) {
+    return Auth::check();
+});
+
+Broadcast::channel('shift-plan.multi-shifts', function () {
+    return Auth::check();
+});
+
+Broadcast::channel('event.room.{roomId}', function ($roomId) {
+    return Auth::check();
+});

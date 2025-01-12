@@ -135,6 +135,10 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
 
 
+Route::get('/test', function (): void {
+    broadcast(new \Artwork\Modules\Shift\Events\CreatedShiftInShiftPlan(Artwork\Modules\Shift\Models\Shift::find(23), 5));
+});
+
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
@@ -533,6 +537,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])
         ->name('shifts.plan')
         ->can('can view shift plan');
+
+
+    Route::post('/shift/delete/calendar/cell', [ShiftController::class, 'deleteCalendarCell'])
+        ->name('multi-edit.calendar.cell.delete');
+
+    Route::group(['prefix' => 'shift-plan'], function (): void {
+        // POST event.shift.store.without.event
+        Route::post('/event/shift/store/without/event', [ShiftController::class, 'storeShiftWithoutEvent'])
+            ->name('event.shift.store.without.event');
+    });
+
+
     Route::get('/shifts/view/events-and-workers', [EventController::class, 'getEventsForRoomsByDaysWithUser'])
         ->name('shifts.events.for-rooms-by-days-and-project');
     Route::get('/shifts/view/events-and-no-workers', [EventController::class, 'getEventsForRoomsByDaysWithoutUser'])
@@ -554,6 +570,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/shiftplan/multi/edit/cell/delete', [ShiftController::class, 'deleteMultiEditCell'])
         ->name('multi-edit.cell.delete');
 
+    // event.shift.store.multi.add
+    Route::post('/event/shift/store/multi/add', [ShiftController::class, 'storeShiftMultiAdd'])
+        ->name('event.shift.store.multi.add');
 
 
     Route::group(['prefix' => 'settings'], function (): void {
@@ -1440,7 +1459,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::post(
                 '/{projectTabSidebarTab}/add/component/sidebar',
                 [ProjectTabController::class,
-                'addComponentSidebar']
+                    'addComponentSidebar']
             )
                 ->name('tab.add.component.sidebar');
             // tab.add.component.with.scopes
@@ -1798,6 +1817,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             [EventListOrCalendarExportController::class, 'downloadCalendarXlsx']
         )->name('export.download-calendar-xlsx');
     });
+
 });
 
 Route::get(

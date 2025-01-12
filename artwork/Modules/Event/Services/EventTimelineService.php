@@ -94,11 +94,13 @@ readonly class EventTimelineService
      */
     private function createTimeline(Event $event, array $timeline): void
     {
+
         [$startTime, $endTime, $allDay] = $this->eventService->processEventTimesForTimeline(
             Carbon::parse($event->start_time),
             $timeline['start'] ?? null,
             $timeline['end'] ?? null
         );
+
 
         $event->timelines()->create([
             'start_date' => Carbon::parse($startTime)->format('Y-m-d'),
@@ -106,6 +108,7 @@ readonly class EventTimelineService
             'start' => Carbon::parse($startTime)->format('H:i:s'),
             'end' => Carbon::parse($endTime)->format('H:i:s'),
             'description' => $timeline['description'],
+            'start_or_end' => (bool)$timeline['start'],
         ]);
     }
 }

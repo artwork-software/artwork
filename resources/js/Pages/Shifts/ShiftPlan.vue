@@ -15,18 +15,73 @@
                                       :crafts="crafts"
                                       @select-go-to-next-mode="selectGoToNextMode"
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
-                />
+                >
+                    <template #multiEditCalendar>
+                        <div v-if="multiEditModeCalendar">
+                            <div class="flex items-center justify-center gap-x-4">
+                                <button type="button"
+                                        @click="initializeCalendarMultiEditSave"
+                                        :disabled="multiEditCalendarDays.length === 0"
+                                        class="pointer-events-auto"
+                                        :class="[
+                                                multiEditCalendarDays.length === 0 ?
+                                                'bg-gray-600' :
+                                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create',
+                                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                                            ]">
+                                    {{ $t('Create') }}
+                                </button>
+                                <button type="button"
+                                        @click="openCellMultiEditCalendarDelete = true"
+                                        :disabled="multiEditCalendarDays.length === 0"
+                                        class="pointer-events-auto"
+                                        :class="[
+                                                multiEditCalendarDays.length === 0 ?
+                                                'bg-gray-600' :
+                                                'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
+                                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                                            ]">
+                                    {{ $t('Delete Entries') }}
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                    <template #moreButtons>
+                        <Switch @click="toggleMultiEditModeCalendar" v-model="multiEditModeCalendar" :class="[multiEditModeCalendar ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                            <span :class="[multiEditModeCalendar ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                <span :class="[multiEditModeCalendar ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent
+                                        icon="IconPencil"
+                                        icon-size="h-4 w-4"
+                                        :tooltip-text="$t('Edit')"
+                                        direction="left"
+                                    />
+                                </span>
+                                <span :class="[multiEditModeCalendar ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent
+                                        icon="IconPencil"
+                                        icon-size="h-4 w-4"
+                                        :tooltip-text="$t('Edit')"
+                                        direction="left"
+                                    />
+                                </span>
+                            </span>
+                        </Switch>
+                    </template>
+                </ShiftPlanFunctionBar>
             </div>
+
+
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
                     <Table>
                         <template #head>
-                            <div class="stickyHeader">
+                            <div class="stickyHeader sticky top-0 z-30">
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
                                     <th  v-for="day in days" :id="day.is_extra_row ? 'extra_row_' + day.week_number : day.full_day" style="max-width: 204px"
-                                        class="z-20 h-8 py-2 border-r-2 border-secondaryHover truncate">
+                                         class="z-20 h-8 py-2 border-r-2 border-secondaryHover truncate">
                                         <div v-if="day.is_extra_row" style="width:37px">
                                             <span class="text-[9px] font-bold">KW{{day.week_number }}</span>
                                         </div>
@@ -58,20 +113,30 @@
                         </template>
                         <template #body>
                             <TableBody class="eventByDaysContainer">
-                                <tr v-for="(room,index) in computedShiftPlan" class="w-full flex">
-                                    <th :id="'roomNameContainer_' + index" class="xsDark flex items-center h-28 w-48" :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
+                                <tr v-for="(room,index) in newShiftPlanData" class="w-full table-row" :class="$page.props.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
+                                    <th :id="'roomNameContainer_' + index"
+                                        class="xsDark w-48 table-cell align-middle"
+                                        :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                                         <div class="flex font-semibold items-center ml-4">
-                                            {{ renderRoomName(room) }}
+                                            {{ room.roomName }}
                                         </div>
                                     </th>
-                                    <td :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', day.is_sunday ? '' : 'border-dashed' ]"
-                                        class="border-r-2 border-gray-400 day-container h-28"
+                                    <td :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', day.is_sunday ? '' : 'border-dashed', multiEditModeCalendar ? '' : 'border-r-2 ', $page.props.user.calendar_settings.expand_days ? '' : 'h-28']"
+                                        class="border-gray-400 day-container relative table-cell align-top"
                                         v-for="day in days" :data-day="day.full_day">
+                                        <div
+                                            v-if="!day.is_extra_row && multiEditModeCalendar"
+                                            :class="[multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.full_day, room.roomId) ?
+                                            'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create' : '',
+                                            checkIfRoomAndDayIsInMultiEditCalendar(day.full_day, room.roomId) ? 'border' : '']"
+                                            class="absolute w-full h-full"
+                                            @click="addDayAndRoomToMultiEditCalendar(day.full_day, room.roomId)">
+                                        </div>
                                         <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.is_extra_row">
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
-                                        <div v-else style="width: 200px" class="max-h-28 h-28 overflow-y-auto cell ">
-                                            <div v-for="event in room[day.full_day].events" class="mb-1">
+                                        <div v-else style="width: 200px" class="cell group " :class="$page.props.user.calendar_settings.expand_days ? '' : 'max-h-28 h-28 overflow-y-auto'">
+                                            <div v-for="event in room.content[day.full_day].events" class="mb-1">
                                                 <SingleShiftPlanEvent
                                                     v-if="checkIfEventHasShiftsToDisplay(event)"
                                                     :multiEditMode="multiEditMode"
@@ -86,11 +151,46 @@
                                                     @dropFeedback="showDropFeedback"
                                                     @event-desires-reload="this.eventDesiresReload"
                                                     @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
+                                                    @click-on-edit="openEditShiftModal"
                                                 />
                                                 <SingleEventInShiftPlan v-else
                                                                         :event="event"
                                                                         :day="day"
                                                                         :firstProjectShiftTabId="firstProjectShiftTabId"/>
+                                            </div>
+                                            <div class="space-y-0.5">
+                                                <div v-for="shift in room.content[day.full_day].shifts">
+                                                    <div class="bg-gray-50 rounded-lg border border-gray-100 py-0.5"
+                                                         v-if="shift.days_of_shift.includes(day.full_day)">
+                                                        <SingleShiftInRoom
+                                                            :multiEditMode="multiEditMode"
+                                                            :user-for-multi-edit="userForMultiEdit"
+                                                            :highlightMode="highlightMode"
+                                                            :highlighted-id="idToHighlight"
+                                                            :highlighted-type="typeToHighlight"
+                                                            :shift="shift"
+                                                            :shift-qualifications="shiftQualifications"
+                                                            :day-string="day"
+                                                            :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                            @dropFeedback="showDropFeedback"
+                                                            @event-desires-reload="this.eventDesiresReload"
+                                                            @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
+                                                            @click-on-edit="openEditShiftModal"
+
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div v-if="!multiEditModeCalendar"
+                                                 class="invisible group-hover:visible absolute bottom-2 left-2 cursor-pointer rounded-full p-0.5 bg-white shadow-md border-2 border-dashed border-artwork-buttons-create"
+                                                 @click="openAddShiftForRoomAndDay(day.without_format, room.roomId)">
+                                                <ToolTipComponent
+                                                    :tooltip-text="$t('Add shift')"
+                                                    direction="bottom"
+                                                    icon="IconPlus"
+                                                    icon-size="h-4 w-4"
+                                                    classes="text-artwork-buttons-create"
+                                                />
                                             </div>
                                         </div>
 
@@ -322,30 +422,30 @@
                                               v-slot="{ active }">
                                         <div @click="this.applySort(computedShiftPlanWorkerSortEnum)"
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                                <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
+                                            <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
                                                     <span :class="this.$page.props.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                         {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                     </span>
-                                                    <IconArrowUp class="w-5 h-5"/>
-                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'" class="w-5 h-5"/>
-                                                </template>
-                                                <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_DESCENDING'">
+                                                <IconArrowUp class="w-5 h-5"/>
+                                                <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'" class="w-5 h-5"/>
+                                            </template>
+                                            <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_DESCENDING'">
                                                     <span :class="this.$page.props.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                         {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                     </span>
-                                                    <IconArrowDown class="w-5 h-5"/>
-                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'" class="w-5 h-5"/>
-                                                </template>
-                                                <template v-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_ASCENDING'">
-                                                    {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!this.useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
-                                                    <IconArrowUp class="w-5 h-5"/>
-                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'" class="w-5 h-5"/>
-                                                </template>
-                                                <template v-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_DESCENDING'">
-                                                    {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!this.useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
-                                                    <IconArrowDown class="w-5 h-5"/>
-                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'" class="w-5 h-5"/>
-                                                </template>
+                                                <IconArrowDown class="w-5 h-5"/>
+                                                <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'" class="w-5 h-5"/>
+                                            </template>
+                                            <template v-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_ASCENDING'">
+                                                {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!this.useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
+                                                <IconArrowUp class="w-5 h-5"/>
+                                                <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'" class="w-5 h-5"/>
+                                            </template>
+                                            <template v-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_DESCENDING'">
+                                                {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!this.useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
+                                                <IconArrowDown class="w-5 h-5"/>
+                                                <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'" class="w-5 h-5"/>
+                                            </template>
                                         </div>
                                     </MenuItem>
                                 </BaseMenu>
@@ -409,9 +509,9 @@
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     multiEditMode && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : ''
                                                 ]"
-                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-y-scroll hover:opacity-100"
-                                                :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
-                                                @click="handleCellClick(user, day)">
+                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-y-scroll hover:opacity-100"
+                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
+                                                 @click="handleCellClick(user, day)">
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
@@ -484,22 +584,20 @@
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
                                             <div v-if="!day.is_extra_row"
-                                                :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : '',
                                                     multiEditMode ? '!overflow-hidden' : '']"
-                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll hover:opacity-100"
-                                                @click="handleCellClick(user, day)"
-                                                :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
+                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll hover:opacity-100"
+                                                 @click="handleCellClick(user, day)"
+                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-20' : '']"/>
                                             </div>
-                                            <div v-else
-                                                 class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
-                                                 style="width: 39px"
+                                            <div v-else class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 39px"
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <span v-if="user.type === 0">
-                                                    {{ user?.weeklyWorkingHours[day.week_number]?.difference }}
+                                                    {{ user?.weeklyWorkingHours[day.week_number].difference }}
                                                 </span>
                                             </div>
                                             <div
@@ -523,32 +621,72 @@
                     </div>
                 </div>
             </div>
-            <show-user-shifts-modal v-if="showUserShifts"
-                                    @closed="showUserShifts = false"
-                                    :user="userToShow"
-                                    :day="dayToShow"
-                                    @desires-reload="userShiftModalDesiresReload"/>
-            <ShiftHistoryModal v-if="showHistoryModal"
-                               :history="history"
-                               @closed="showHistoryModal = false"/>
+            <show-user-shifts-modal
+                v-if="showUserShifts"
+                @closed="showUserShifts = false"
+                :user="userToShow"
+                :day="dayToShow"
+                @desires-reload="userShiftModalDesiresReload"
+            />
+
+            <ShiftHistoryModal
+                v-if="showHistoryModal"
+                :history="history"
+                @closed="showHistoryModal = false"
+            />
+
         </ShiftHeader>
 
     </div>
-    <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
-    <ShiftsQualificationsAssignmentModal v-if="this.showShiftsQualificationsAssignmentModal"
-                                         :show="this.showShiftsQualificationsAssignmentModal"
-                                         :user="this.userForMultiEdit"
-                                         :shifts="this.showShiftsQualificationsAssignmentModalShifts"
-                                         @close="this.closeShiftsQualificationsAssignmentModal"
+    <SideNotification
+        v-if="dropFeedback"
+        type="error"
+        :text="dropFeedback"
+        @close="dropFeedback = null"
     />
-    <CellMultiEditModal v-if="showCellMultiEditModal"
-                        :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
-                        @close="closeMultiEditCellModal"
-                        />
+
+    <ShiftsQualificationsAssignmentModal
+        v-if="this.showShiftsQualificationsAssignmentModal"
+        :show="this.showShiftsQualificationsAssignmentModal"
+        :user="this.userForMultiEdit"
+        :shifts="this.showShiftsQualificationsAssignmentModalShifts"
+        @close="this.closeShiftsQualificationsAssignmentModal"
+    />
+
+    <CellMultiEditModal
+        v-if="showCellMultiEditModal"
+        :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
+        @close="closeMultiEditCellModal"
+    />
+
     <DeleteEntriesModal
         v-if="openCellMultiEditDelete"
         :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
         @close="closeCellMultiEditDelete"
+    />
+
+    <DeleteCalendarRoomShiftEntriesModal
+        v-if="openCellMultiEditCalendarDelete"
+        :multi-edit-cell-by-room-and-dates="multiEditCalendarDays"
+        @close="closeCellMultiEditCalendarDelete"
+    />
+
+    <AddShiftModal
+        v-if="showAddShiftModal"
+        :crafts="$page.props.crafts"
+        :event="null"
+        :shift="shiftToEdit"
+        :currentUserCrafts="$page.props.currentUserCrafts"
+        :buffer="null"
+        :shift-qualifications="$page.props.shiftQualifications"
+        @closed="closeAddShiftModal"
+        :shift-time-presets="$page.props.shiftTimePresets"
+        :room="roomForShiftAdd"
+        :day="dayForShiftAdd"
+        :shift-plan-modal="true"
+        :edit="shiftToEdit !== null"
+        :multi-add-mode="multiEditModeCalendar"
+        :rooms-and-dates-for-multi-edit="multiEditCalendarDays"
     />
 </template>
 <script>
@@ -583,7 +721,7 @@ import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShift
 import IconLib from "@/Mixins/IconLib.vue";
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 import {useEvent} from "@/Composeables/Event.js";
-import {ref} from "vue";
+import {reactive, ref} from "vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
 import dayjs from "dayjs";
@@ -593,9 +731,14 @@ import debounce from "lodash.debounce";
 import CellMultiEditModal from "@/Pages/Shifts/Components/CellMultiEditModal.vue";
 import DeleteEntriesModal from "@/Pages/Shifts/Components/DeleteEntriesModal.vue";
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
-
+import NewShiftWithoutEventModal
+    from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/NewShiftWithoutEventModal.vue";
+import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue";
+import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
+import DeleteCalendarMultiEditEntities from "@/Pages/Shifts/Components/DeleteCalendarMultiEditEntities.vue";
+import DeleteCalendarRoomShiftEntriesModal from "@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue";
+import { useShiftCalendarListener } from "@/Composeables/useShiftCalendarListener.js";
 const {getSortEnumTranslation} = useSortEnumTranslation();
-
 const {getDaysOfEvent, formatEventDateByDayJs, useShiftPlanReload} = useEvent(),
     {
         hasReceivedNewShiftPlanData,
@@ -609,6 +752,11 @@ export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        DeleteCalendarRoomShiftEntriesModal,
+        DeleteCalendarMultiEditEntities,
+        AddShiftModal,
+        SingleShiftInRoom,
+        NewShiftWithoutEventModal,
         HolidayToolTip,
         DeleteEntriesModal,
         CellMultiEditModal,
@@ -671,7 +819,8 @@ export default {
         'firstProjectShiftTabId',
         'shiftPlanWorkerSortEnums',
         'useFirstNameForSort',
-        'userShiftPlanShiftQualificationFilters'
+        'userShiftPlanShiftQualificationFilters',
+        'mappedRooms'
     ],
     data() {
         return {
@@ -716,27 +865,22 @@ export default {
             waitForModalClose: false,
             navigationGuardActive: true,
             originalVisit: null,
-            showShiftQualificationFilter: false
+            showShiftQualificationFilter: false,
+            multiEditModeCalendar: false,
+            multiEditCalendarDays: [],
+            dayForShiftAdd: null,
+            roomForShiftAdd: null,
+            showAddShiftModal: false,
+            shiftToEdit: null,
+            newShiftPlanData: ref(this.mappedRooms),
+            openCellMultiEditCalendarDelete: false
         }
     },
     mounted() {
-        Echo.private('shifts').listen('.shift.assigned', (e) => {
-          const event = e.event;
-          event.start = formatEventDateByDayJs(event.formattedDates.start)
-          event.end = formatEventDateByDayJs(event.formattedDates.end)
-          this.eventDesiresReload(e.user.id,0, event, []);
-        }).listen('.shift.updated', (e) => {
-          const event = e.event;
-          event.start = formatEventDateByDayJs(event.formatted_dates.start)
-          event.end = formatEventDateByDayJs(event.formatted_dates.end)
-          handleReload(
-              e.event.room_id,
-              getDaysOfEvent(
-                  formatEventDateByDayJs(event.start_time),
-                  formatEventDateByDayJs(event.end_time)
-              ), []
-          );
-        });
+
+        const ShiftCalendarListener = useShiftCalendarListener(this.newShiftPlanData);
+        ShiftCalendarListener.init();
+
         // Listen for scroll events on both sections
         this.$refs.shiftPlan?.addEventListener('scroll', this.syncScrollShiftPlan);
         this.$refs.userOverview?.addEventListener('scroll', this.syncScrollUserOverview);
@@ -858,45 +1002,24 @@ export default {
 
             return this.craftsToDisplay;
         },
-        computedShiftPlan() {
-            if (!hasReceivedNewShiftPlanData.value) {
-                return this.shiftPlanRef;
-            }
-
-            for (const [day, rooms] of Object.entries(receivedRoomData.value)) {
-                for (const [roomId, events] of Object.entries(rooms)) {
-                    this.shiftPlanRef.forEach(
-                        (roomWithEvents) => {
-                            if (roomWithEvents[day]?.roomId === Number(roomId)) {
-                                roomWithEvents[day].events = JSON.parse(JSON.stringify(events));
-                            }
-                        }
-                    );
-                }
-            }
-
-            hasReceivedNewShiftPlanData.value = false;
-
-            return this.shiftPlanRef;
-        },
         craftsToDisplay() {
             const crafts = this.crafts
-                    .map(
-                        (craft) => {
-                            return {
-                                id: craft.id,
-                                name: craft.name,
-                                abbreviation: craft.abbreviation,
-                                users: this.filterAndSortWorkersOfCraft(craft),
-                                color: craft?.color,
-                                universally_applicable: craft.universally_applicable,
-                            };
-                        }
-                    );
+                .map(
+                    (craft) => {
+                        return {
+                            id: craft.id,
+                            name: craft.name,
+                            abbreviation: craft.abbreviation,
+                            users: this.filterAndSortWorkersOfCraft(craft),
+                            color: craft?.color,
+                            universally_applicable: craft.universally_applicable,
+                        };
+                    }
+                );
 
-                crafts.forEach((craft) => {
-                    crafts.users = craft.users;
-                });
+            crafts.forEach((craft) => {
+                crafts.users = craft.users;
+            });
 
             if (this.$page.props.user.show_crafts?.length === 0 || this.$page.props.user.show_crafts === null) {
                 return crafts;
@@ -974,9 +1097,52 @@ export default {
             sortConfig.push('ALPHABETICALLY_NAME_ASCENDING');
 
             return sortConfig;
-        }
+        },
     },
     methods: {
+        initializeCalendarMultiEditSave() {
+            this.showAddShiftModal = true
+        },
+        closeCellMultiEditCalendarDelete(boolean) {
+            if(boolean){
+                this.openCellMultiEditCalendarDelete = false;
+                this.showAddShiftModal = true;
+            } else {
+                this.openCellMultiEditCalendarDelete = false;
+            }
+        },
+        openEditShiftModal(shift) {
+            this.shiftToEdit = shift;
+            this.showAddShiftModal = true;
+
+        },
+        openAddShiftForRoomAndDay(day, roomId){
+            this.shiftToEdit = null;
+            this.roomForShiftAdd = roomId;
+            this.dayForShiftAdd = day;
+            this.showAddShiftModal = true;
+        },
+        closeAddShiftModal() {
+            this.showAddShiftModal = false;
+            this.roomForShiftAdd = null;
+            this.dayForShiftAdd = null;
+        },
+        checkIfRoomAndDayIsInMultiEditCalendar(day, roomId){
+            return this.multiEditCalendarDays.some((dayAndRoom) => dayAndRoom.day === day && dayAndRoom.roomId === roomId)
+        },
+        addDayAndRoomToMultiEditCalendar(day, roomId){
+            const exists = this.multiEditCalendarDays.some(
+                (dayAndRoom) => dayAndRoom.day === day && dayAndRoom.roomId === roomId
+            );
+
+            if (exists) {
+                this.multiEditCalendarDays = this.multiEditCalendarDays.filter(
+                    (dayAndRoom) => !(dayAndRoom.day === day && dayAndRoom.roomId === roomId)
+                );
+            } else {
+                this.multiEditCalendarDays.push({ day: day, roomId: roomId });
+            }
+        },
         setupInertiaNavigationGuard() {
             this.originalVisit = router.visit;
             router.visit = async (url, options = {}) => {
@@ -1171,16 +1337,9 @@ export default {
                 )
             );
         },
-        renderRoomName(room){
-            const firstDayWhereAreNotExtraRows = this.days.find(day => !day.is_extra_row);
-            const firstDayIndex = this.days.indexOf(firstDayWhereAreNotExtraRows);
-            const firstDay = this.days[firstDayIndex].full_day;
-
-            return room[firstDay].roomName;
-        },
         getSortEnumTranslation,
         userShiftModalDesiresReload(shiftId, userId, userType, desiredDay) {
-            let desiredRoomIds = new Set();
+            /*let desiredRoomIds = new Set();
 
             if (shiftId) {
                 //find shift room ids
@@ -1224,10 +1383,10 @@ export default {
                         type: userType
                     }
                 ]
-            );
+            );*/
         },
         eventDesiresReload(userId, userType, event, seriesShiftData) {
-            let desiredDates = seriesShiftData && seriesShiftData.onlyThisDay === false ?
+            /*let desiredDates = seriesShiftData && seriesShiftData.onlyThisDay === false ?
                 getDaysOfEvent(
                     formatEventDateByDayJs(seriesShiftData.start),
                     formatEventDateByDayJs(seriesShiftData.end)
@@ -1244,6 +1403,18 @@ export default {
                     {
                         id: userId,
                         type: userType,
+                    }
+                ]
+            );*/
+        },
+        shiftDesiresReload(userId, roomId, desiredDay, userType = 0) {
+            handleReload(
+                [roomId],
+                [desiredDay],
+                [
+                    {
+                        id: userId,
+                        type: userType
                     }
                 ]
             );
@@ -1417,9 +1588,9 @@ export default {
         },
         checkIfEventHasShiftsToDisplay(event) {
             if (this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null || this.$page.props.user?.show_crafts === undefined) {
-                return event.shifts.length > 0;
+                return event.shifts?.length > 0;
             } else {
-                return event.shifts.length > 0 && event.shifts.some(shift => this.$page.props.user.show_crafts?.includes(shift.craft.id));
+                return event.shifts?.length > 0 && event.shifts.some(shift => this.$page.props.user.show_crafts?.includes(shift.craft.id));
             }
         },
         showDropFeedback(feedback) {
@@ -1602,6 +1773,15 @@ export default {
                 this.multiEditCellByDayAndUser = {};
             }
         },
+        toggleMultiEditModeCalendar() {
+            this.highlightMode = false;
+            this.dayServiceMode = false;
+            this.multiEditModeCalendar = !this.multiEditModeCalendar;
+
+            if (!this.multiEditModeCalendar){
+                this.multiEditCalendarDays = [];
+            }
+        },
         closeMultiEditCellModal(bool){
             this.showCellMultiEditModal = false;
 
@@ -1781,11 +1961,11 @@ export default {
                     type: this.userForMultiEdit.type
                 };
 
-            this.userToMultiEditCheckedShiftsAndEvents.forEach((shiftAndEvent) => {
+            /*this.userToMultiEditCheckedShiftsAndEvents.forEach((shiftAndEvent) => {
                 let desiredShift = shiftAndEvent.shift;
                 let desiredEvent = shiftAndEvent.event;
 
-                this.shiftsToHandleOnMultiEdit.assignToShift.forEach((shiftToAssign) => {
+               /* this.shiftsToHandleOnMultiEdit.assignToShift.forEach((shiftToAssign) => {
                     if (desiredShift.id === shiftToAssign.shiftId) {
                         desiredRoomIds.add(desiredEvent.roomId);
                         getDaysOfEvent(
@@ -1805,7 +1985,8 @@ export default {
                         ).forEach((desiredDay) => desiredDays.add(desiredDay));
                     }
                 });
-            });
+            });*/
+
 
             axios.post(route('shift.multi.edit.save'), {
                 userType: this.userForMultiEdit.type,
@@ -1813,11 +1994,6 @@ export default {
                 craft_abbreviation: this.userForMultiEdit.craft_abbreviation,
                 shiftsToHandle: this.shiftsToHandleOnMultiEdit
             }).then(() => {
-                handleReload(
-                    Array.from(desiredRoomIds),
-                    Array.from(desiredDays),
-                    [desiredUser]
-                );
                 this.resetMultiEditMode(false);
             });
         },
@@ -1868,7 +2044,7 @@ export default {
         },
         stopResize(event) {
             event.preventDefault();
-            //this.saveUserOverviewHeight();
+            this.saveUserOverviewHeight();
             document.removeEventListener('mousemove', this.resizing);
             document.removeEventListener('mouseup', this.stopResize);
         },

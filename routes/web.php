@@ -134,11 +134,6 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
 
-
-Route::get('/test', function (): void {
-    broadcast(new \Artwork\Modules\Shift\Events\CreatedShiftInShiftPlan(Artwork\Modules\Shift\Models\Shift::find(23), 5));
-});
-
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
@@ -1817,7 +1812,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             [EventListOrCalendarExportController::class, 'downloadCalendarXlsx']
         )->name('export.download-calendar-xlsx');
     });
-
 });
 
 Route::get(

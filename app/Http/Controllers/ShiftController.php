@@ -6,6 +6,7 @@ use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Services\EventTimelineService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
@@ -56,7 +57,7 @@ class ShiftController extends Controller
         private readonly ShiftPlanCommentService $shiftPlanCommentService,
         private readonly VacationService $vacationService,
         private readonly EventTimelineService $eventTimelineService,
-        private readonly UserService $userService
+        private readonly EventService $eventService,
     ) {
     }
 
@@ -68,6 +69,7 @@ class ShiftController extends Controller
         Event $event,
         ShiftsQualificationsService $shiftsQualificationsService
     ): void {
+
         $shift = $this->shiftService->createAutomatic(
             event: $event,
             craftId: $request->craft_id,

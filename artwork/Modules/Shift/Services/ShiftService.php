@@ -106,8 +106,8 @@ class ShiftService
         $shift = new Shift();
         $shift->start_date = $this->convertStartEndTime($data, $event)->start;
         $shift->end_date = $this->convertStartEndTime($data, $event)->end;
-        $shift->start = $data['start'];
-        $shift->end = $data['end'];
+        $shift->start = Carbon::parse($data['start'])->format('H:i');
+        $shift->end =  Carbon::parse($data['end'])->format('H:i');
         $shift->break_minutes = $data['break_minutes'];
         $shift->description = $data['description'];
         $shift->event()->associate($event);
@@ -138,8 +138,8 @@ class ShiftService
         $shift = new Shift();
         $shift->start_date = $day;
         $shift->end_date = $day;
-        $shift->start = $data['start'];
-        $shift->end = $data['end'];
+        $shift->start = Carbon::parse($data['start'])->format('H:i');
+        $shift->end =  Carbon::parse($data['end'])->format('H:i');
         $shift->break_minutes = $data['break_minutes'];
         $shift->description = $data['description'];
         $shift->craft()->associate($craftId);

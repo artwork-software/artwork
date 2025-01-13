@@ -48,6 +48,9 @@ const handleSubmit = (preserveState) => {
         onSuccess: () => {
             emit("close", preserveState)
         },
+        onFinish: () => {
+            emit("close", preserveState)
+        }
     });
 };
 </script>

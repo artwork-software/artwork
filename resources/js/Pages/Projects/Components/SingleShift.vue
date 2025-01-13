@@ -1,5 +1,5 @@
 <template>
-    <div :class="[highlight, 'w-[190px] flex flex-col relative']" :id="'shift-container-' + event.id + '-' + shift.id">
+    <div :class="[highlight, 'flex flex-col relative']" :id="'shift-container-' + event.id + '-' + shift.id" class="w-56">
         <div class="h-[36px] rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative shadow-md"
              :class="[
                  this.computedMaxWorkerCount === this.computedUsedWorkerCount ?
@@ -32,15 +32,133 @@
             </div>
         </div>
         <div class="mt-1 rounded-b-lg bg-gray-200 px-1 py-2 overflow-y-scroll h-full w-full">
-            <p class="text-xs mb-1">
+            <div class="text-xs mb-1 hover:bg-gray-50 cursor-pointer px-1 py-0.5 rounded-lg w-fit" v-if="!editTimes" @click="openEditInLineTimes()">
                 <span v-if="shift.start_date && shift.end_date && shift.start_date !== shift.end_date">
                     {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.formatted_dates.end }} {{ shift.end }}
                 </span>
                 <span v-if="shift.start_date && shift.end_date && shift.start_date === shift.end_date">
                     {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.end }}
                 </span>
-                <span v-if="shift.break_minutes"> | {{ shift.break_formatted }}</span>
-            </p>
+            </div>
+            <div v-else>
+                <div class="absolute right-4 cursor-pointer hover:text-red-600 duration-300 ease-in-out">
+                    <component is="IconX" @click="resetForm" class="h-4 w-4" />
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2" :id="'container-' + this.shift.id">
+                    <TimeInputComponent
+                        v-model="updateTimeForm.start"
+                        :label="$t('Start-Time')"
+                        :id="'shift-start' + this.shift.id"
+                        required
+                        is-small
+                        @focusout="checkFocus"
+                        @change="validateShiftDates"
+                        classes="h-8 peer-placeholder-shown:top-[8px] text-xs -top-5"
+                    />
+                    <TimeInputComponent
+                        v-model="updateTimeForm.end"
+                        :label="$t('End-Time')"
+                        :id="'shift-end' + this.shift.id"
+                        required
+                        @focusout="checkFocus"
+                        @change="validateShiftDates"
+                        classes="h-8 peer-placeholder-shown:top-[8px] text-xs -top-5"
+                    />
+                </div>
+                <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
+                                                    this.validationMessages.errors.shift_start.length > 0 ||
+                                                    this.validationMessages.warnings.shift_end.length > 0 ||
+                                                    this.validationMessages.errors.shift_end.length > 0">
+                    <div v-if="this.validationMessages.warnings.shift_start.length > 0"
+                         class="flex flex-col">
+                                                <span v-for="warning in this.validationMessages.warnings.shift_start"
+                                                      class="text-xs text-orange-500">
+                                                    {{ warning }}
+                                                </span>
+                    </div>
+                    <div v-if="this.validationMessages.errors.shift_start.length > 0"
+                         class="flex flex-col">
+                                                <span v-for="error in this.validationMessages.errors.shift_start"
+                                                      class="text-xs errorText">
+                                                    {{ error }}
+                                                </span>
+                    </div>
+                </div>
+                <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
+                                                    this.validationMessages.errors.shift_start.length > 0 ||
+                                                    this.validationMessages.warnings.shift_end.length > 0 ||
+                                                    this.validationMessages.errors.shift_end.length > 0">
+                    <div v-if="this.validationMessages.warnings.shift_end.length > 0"
+                         class="flex flex-col">
+                                                <span v-for="warning in this.validationMessages.warnings.shift_end"
+                                                      class="text-xs text-orange-500">
+                                                    {{ warning }}
+                                                </span>
+                    </div>
+                    <div v-if="this.validationMessages.errors.shift_end.length > 0"
+                         class="flex flex-col">
+                                                <span v-for="error in this.validationMessages.errors.shift_end"
+                                                      class="text-xs errorText">
+                                                    {{ error }}
+                                                </span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-xs mb-1 hover:bg-gray-50 cursor-pointer px-1 py-0.5 rounded-lg w-fit" v-if="!editBreakTime" @click="editBreakTime = true">
+                <span v-if="shift.break_minutes">{{ shift.break_formatted }}</span>
+            </div>
+            <div v-else class="pt-1">
+                <div class="absolute right-4 cursor-pointer hover:text-red-600 duration-300 ease-in-out">
+                    <component is="IconX" @click="resetForm" class="h-4 w-4" />
+                </div>
+                <NumberInputComponent
+                    v-model="updateTimeForm.break_minutes"
+                    :label="$t('Length of break in minutes*')"
+                    id="break"
+                    required
+                    @focusout="saveTimeChanges"
+                    @change="validateShiftBreak"
+                    classes="h-8 peer-placeholder-shown:top-[8px] text-xs -top-5"
+                />
+                <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
+                                                    this.validationMessages.errors.break_length.length > 0 ||
+                                                    this.validationMessages.warnings.craft.length > 0 ||
+                                                    this.validationMessages.errors.craft.length > 0">
+                    <div v-if="this.validationMessages.warnings.break_length.length > 0"
+                         class="flex flex-col">
+                                                <span v-for="warning in this.validationMessages.warnings.break_length"
+                                                      class="text-xs text-orange-500">
+                                                    {{ warning }}
+                                                </span>
+                    </div>
+                    <div v-if="this.validationMessages.errors.break_length.length > 0"
+                         class="flex flex-col">
+                                                <span v-for="error in this.validationMessages.errors.break_length"
+                                                      class="text-xs errorText">
+                                                    {{ error }}
+                                                </span>
+                    </div>
+                </div>
+                <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
+                                                    this.validationMessages.errors.break_length.length > 0 ||
+                                                    this.validationMessages.warnings.craft.length > 0 ||
+                                                    this.validationMessages.errors.craft.length > 0">
+                    <div v-if="this.validationMessages.warnings.craft.length > 0"
+                         class="flex flex-col">
+                                                <span v-for="warning in this.validationMessages.warnings.craft"
+                                                      class="text-xs text-orange-500">
+                                                    {{ warning }}
+                                                </span>
+                    </div>
+                    <div v-if="this.validationMessages.errors.craft.length > 0"
+                         class="flex flex-col">
+                                                <span v-for="error in this.validationMessages.errors.craft"
+                                                      class="text-xs errorText">
+                                                    {{ error }}
+                                                </span>
+                    </div>
+                </div>
+            </div>
             <ShiftNoteComponent :shift="shift" />
             <div v-for="user in shift.users">
                 <ShiftBookedElementComponent
@@ -134,7 +252,7 @@
     />
 </template>
 <script>
-import {defineComponent} from 'vue'
+import {defineComponent, nextTick} from 'vue'
 import {XIcon} from "@heroicons/vue/solid";
 import DropElement from "@/Pages/Projects/Components/DropElement.vue";
 import dayjs from "dayjs";
@@ -145,7 +263,7 @@ import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import ChooseDeleteUserShiftModal from "@/Pages/Projects/Components/ChooseDeleteUserShiftModal.vue";
 import ShiftsQualificationsDropElement from "@/Pages/Projects/Components/ShiftsQualificationsDropElement.vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
-import {router} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -153,11 +271,17 @@ import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import AddShiftQualificationToShiftModel from "@/Pages/Projects/Components/AddShiftQualificationToShiftModel.vue";
 import ShiftBookedElementComponent from "@/Pages/Projects/Components/ShiftBookedElementComponent.vue";
+import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
+import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 export default defineComponent({
     name: "SingleShift",
     components: {
+        ToolTipComponent,
+        NumberInputComponent,
+        TimeInputComponent,
         BaseMenuItem,
         ShiftBookedElementComponent,
         AddShiftQualificationToShiftModel,
@@ -201,7 +325,30 @@ export default defineComponent({
             usersPivotIdToDelete: null,
             highlight: null,
             anyoneHasVacation: false,
-            showAddShiftQualificationModal: false
+            showAddShiftQualificationModal: false,
+            editTimes: false,
+            updateTimeForm: useForm({
+                start: this.shift.start,
+                end: this.shift.end,
+                break_minutes: this.shift.break_minutes,
+                closeEditAfterSave: false,
+            }),
+            validationMessages: {
+                warnings: {
+                    shift_start: [],
+                    shift_end: [],
+                    break_length: [],
+                    craft: [],
+                },
+                errors: {
+                    shift_start: [],
+                    shift_end: [],
+                    break_length: [],
+                    craft: [],
+                }
+            },
+            isFocused: false,
+            editBreakTime: false,
         }
     },
     mounted() {
@@ -288,6 +435,121 @@ export default defineComponent({
         }
     },
     methods: {
+        checkFocus(event) {
+            nextTick(() => {
+                const startField = document.getElementById('shift-start' + this.shift.id);
+                const endField = document.getElementById('shift-end' + this.shift.id);
+
+                // Prüfen, ob das Ziel des Fokusverlusts eines der relevanten Felder ist
+                if (event.relatedTarget === startField || event.relatedTarget === endField) {
+                    return;
+                }
+                this.saveTimeChanges();
+            })
+        },
+        saveTimeChanges(){
+            if (this.validateShiftBreak() || this.validateShiftDates()) {
+                return;
+            }
+
+            if (this.updateTimeForm.isDirty){
+                this.updateTimeForm.patch(
+                    route('event.shift.update.updateTime', {shift: this.shift.id}),
+                    {
+                        preserveScroll: true,
+                        preserveState: true,
+                        onSuccess: () => {
+                            this.editTimes = false;
+                            this.editBreakTime = false;
+                            this.wantsFreshPlacements();
+                        }
+                    }
+                );
+            }
+        },
+        resetForm(){
+            this.editTimes = false;
+            this.editBreakTime = false;
+            this.updateTimeForm.reset();
+        },
+        validateShiftDates() {
+            this.validationMessages.warnings.shift_start = [];
+            this.validationMessages.warnings.shift_end = [];
+            this.validationMessages.errors.shift_start = [];
+            this.validationMessages.errors.shift_end = [];
+
+            let eventStartDateTime = new Date(this.event.start_time);
+            let eventEndDateTime = new Date(this.event.end_time);
+            let shiftStartDateTime = new Date(this.shift.start_date + 'T' + this.updateTimeForm.start);
+            let shiftEndDateTime = new Date(this.shift.end_date + 'T' + this.updateTimeForm.end);
+
+            let hasErrors = false;
+
+            //check warnings
+            if (shiftStartDateTime < eventStartDateTime) {
+                this.validationMessages.warnings.shift_start.push(
+                    this.$t('The shift starts before the event starts!')
+                );
+            }
+            if (shiftStartDateTime > eventEndDateTime) {
+                this.validationMessages.warnings.shift_start.push(
+                    this.$t('The shift starts after the event ends!')
+                );
+            }
+            if (((shiftEndDateTime - shiftStartDateTime) / 60000) > 600) {
+                this.validationMessages.warnings.shift_start.push(this.$t('The shift is over 10 hours long!'));
+            }
+            if (shiftStartDateTime > shiftEndDateTime) {
+                this.validationMessages.warnings.shift_end.push(this.$t('The shift ends before it starts!'));
+            }
+            if (shiftEndDateTime < eventStartDateTime) {
+                this.validationMessages.warnings.shift_end.push(this.$t('The shift ends before the event starts!'));
+            }
+            if (shiftStartDateTime > shiftEndDateTime) {
+                this.validationMessages.warnings.shift_end.push(
+                    this.$t('The end time must be after the start time.')
+                );
+            }
+
+            return hasErrors;
+        },
+        validateShiftBreak() {
+            this.validationMessages.warnings.break_length = [];
+            this.validationMessages.errors.break_length = [];
+
+            let shiftStartDateTime = new Date(this.shift.start_date + 'T' + this.updateTimeForm.start);
+            let shiftEndDateTime = new Date(this.shift.end_date + 'T' + this.updateTimeForm.end);
+
+            let hasErrors = false;
+
+            //check warnings
+            if (((shiftEndDateTime - shiftStartDateTime) / 60000) > 360 && this.updateTimeForm.break_minutes < 30) {
+                this.validationMessages.warnings.break_length.push(
+                    this.$t('The break is shorter than required by law!')
+                );
+            }
+
+            //check errors
+            if (this.updateTimeForm.break_minutes === null || this.updateTimeForm.break_minutes === '') {
+                this.validationMessages.errors.break_length.push(this.$t('Please enter a break time.'));
+
+                hasErrors = true;
+            }
+
+            return hasErrors;
+        },
+        openEditInLineTimes(){
+            if(!this.$can('can plan shifts') || !this.hasAdminRole()){
+                return;
+            }
+            this.editTimes = true;
+
+            nextTick(() => {
+                const container = document.getElementById('container-' + this.shift.id); // Container-Element, das beide Felder umfasst
+                container.addEventListener('focusout', this.checkFocus.bind(this));
+            })
+
+        },
         wantsFreshPlacements() {
             this.$emit('wantsFreshPlacements');
         },

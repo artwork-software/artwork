@@ -595,17 +595,23 @@ export default defineComponent({
             this.shiftForm.craft_id = this.selectedCraft?.id;
             this.appendComputedShiftQualificationsToShiftForm();
 
-            let onSuccess = () => {
-                this.shiftForm.reset();
-                this.closeModal(true);
-            };
 
             if(this.multiAddMode){
                 this.shiftForm.post(
                     route('event.shift.store.multi.add'), {
                         preserveScroll: true,
                         preserveState: true,
-                        onSuccess: onSuccess
+                        onSuccess: () => {
+                            this.shiftForm.reset();
+                            this.closeModal(true);
+                        },
+                        onError: (error) => {
+                            console.log(error);
+                        },
+                        onFinish: () => {
+                            this.shiftForm.reset();
+                            this.closeModal(true);
+                        }
                     }
                 );
             } else {
@@ -614,7 +620,17 @@ export default defineComponent({
                         route('event.shift.store.without.event'), {
                             preserveScroll: true,
                             preserveState: true,
-                            onSuccess: onSuccess
+                            onSuccess: () => {
+                                this.shiftForm.reset();
+                                this.closeModal(true);
+                            },
+                            onError: (error) => {
+                                console.log(error);
+                            },
+                            onFinish: () => {
+                                this.shiftForm.reset();
+                                this.closeModal(true);
+                            }
                         }
                     );
                 } else {
@@ -623,7 +639,17 @@ export default defineComponent({
                             route('event.shift.update', this.shift.id), {
                                 preserveScroll: true,
                                 preserveState: true,
-                                onSuccess: onSuccess
+                                onSuccess: () => {
+                                    this.shiftForm.reset();
+                                    this.closeModal(true);
+                                },
+                                onError: (error) => {
+                                    console.log(error);
+                                },
+                                onFinish: () => {
+                                    this.shiftForm.reset();
+                                    this.closeModal(true);
+                                }
                             }
                         );
                     } else {
@@ -631,7 +657,17 @@ export default defineComponent({
                             route('event.shift.store', this.event.id), {
                                 preserveScroll: true,
                                 preserveState: true,
-                                onSuccess: onSuccess
+                                onSuccess: () => {
+                                    this.shiftForm.reset();
+                                    this.closeModal(true);
+                                },
+                                onError: (error) => {
+                                    console.log(error);
+                                },
+                                onFinish: () => {
+                                    this.shiftForm.reset();
+                                    this.closeModal(true);
+                                }
                             }
                         );
                     }

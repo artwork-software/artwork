@@ -43,6 +43,8 @@ class UserCalendarSettings extends Model
         'high_contrast',
         'expand_days',
         'use_event_status_color',
+        'show_qualifications',
+        'shift_notes'
     ];
 
     protected $casts = [
@@ -58,6 +60,8 @@ class UserCalendarSettings extends Model
         'high_contrast' => 'boolean',
         'expand_days' => 'boolean',
         'use_event_status_color' => 'boolean',
+        'show_qualifications' => 'boolean',
+        'shift_notes' => 'boolean'
     ];
 
     public function user(): BelongsTo

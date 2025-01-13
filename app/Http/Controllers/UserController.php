@@ -716,6 +716,8 @@ class UserController extends Controller
             'high_contrast',
             'expand_days',
             'use_event_status_color',
+            'show_qualifications',
+            'shift_notes'
         ]));
     }
 

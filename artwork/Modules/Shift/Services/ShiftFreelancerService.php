@@ -280,6 +280,16 @@ readonly class ShiftFreelancerService
         }
     }
 
+    public function getShiftByUserPivotId(int $usersPivot): Shift
+    {
+        $shiftUserPivot = !$usersPivot instanceof ShiftFreelancer ?
+            $this->shiftFreelancerRepository->getById($usersPivot) :
+            $usersPivot;
+
+        /** @var Shift $shiftUserPivot */
+        return $shiftUserPivot->shift;
+    }
+
     public function removeAllFreelancersFromShift(
         Shift $shift,
         NotificationService $notificationService,

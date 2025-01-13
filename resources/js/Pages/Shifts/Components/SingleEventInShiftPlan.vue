@@ -2,7 +2,7 @@
     <div>
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 rounded-lg"
-                 :style="{backgroundColor: backgroundColorWithOpacity(event.eventTypeColor, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventTypeColor, percentage))}">
+                 :style="{backgroundColor: backgroundColorWithOpacity(event.eventTypeColor, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventTypeColor, usePage().props.high_contrast_percent))}">
                 <a v-if="event.projectId" :href="route('projects.tab', {project: event.projectId, projectTab: firstProjectShiftTabId})" class="w-40 truncate cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
                     {{ event.eventTypeAbbreviation }}: {{ event.eventName ?? event.projectName }}
                 </a>
@@ -26,6 +26,7 @@
 </template>
 
 <script setup>
+
 
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import {usePage} from "@inertiajs/vue3";

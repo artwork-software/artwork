@@ -26,18 +26,16 @@ export function useShiftCalendarListener(newShiftPlanData) {
             const shiftsAtDay = room.content[day].shifts;
 
             if (data.shift.event_id) {
-                // 1. Wenn die Schicht eine event_id hat, füge sie dem entsprechenden Event hinzu
                 const event = eventsAtDay.find((event) => event.id === data.shift.event_id);
                 if (event) {
                     const shiftIndex = event.shifts.findIndex((shift) => shift.id === data.shift.id);
                     if (shiftIndex !== -1) {
-                        event.shifts[shiftIndex] = data.shift; // Update bestehende Schicht im Event
+                        event.shifts[shiftIndex] = data.shift;
                     } else {
-                        event.shifts.push(data.shift); // Füge neue Schicht dem Event hinzu
+                        event.shifts.push(data.shift);
                     }
                 }
             } else {
-                // 2. Falls die Schicht keine event_id hat, überprüfe und füge sie den direkten Schichten des Tages hinzu
                 updateOrAddShift(shiftsAtDay, data);
             }
         });
@@ -58,7 +56,6 @@ export function useShiftCalendarListener(newShiftPlanData) {
             });
         });
 
-        // Finde den Raum und füge das Event hinzu
         const room = findRoomById(eventData.room_id);
         if (!room) return;
 
@@ -124,17 +121,15 @@ export function useShiftCalendarListener(newShiftPlanData) {
                 const shiftsAtDay = room.content[day].shifts;
                 const eventsAtDay = room.content[day].events;
 
-                // 1. Aktualisiere die Schicht in den direkten Schichten des Tages
                 const shiftIndex = shiftsAtDay.findIndex((existingShift) => existingShift.id === shift.id);
                 if (shiftIndex !== -1) {
-                    shiftsAtDay[shiftIndex] = shift; // Schicht mit neuen Daten aktualisieren
+                    shiftsAtDay[shiftIndex] = shift;
                 }
 
-                // 2. Aktualisiere die Schicht in den Events, falls vorhanden
                 eventsAtDay.forEach((event) => {
                     const eventShiftIndex = event.shifts.findIndex((existingShift) => existingShift.id === shift.id);
                     if (eventShiftIndex !== -1) {
-                        event.shifts[eventShiftIndex] = shift; // Schicht im Event aktualisieren
+                        event.shifts[eventShiftIndex] = shift;
                     }
                 });
             });
@@ -156,13 +151,11 @@ export function useShiftCalendarListener(newShiftPlanData) {
             const shiftsAtDay = room.content[day].shifts;
             const eventsAtDay = room.content[day].events;
 
-            // 1. Entferne die Schicht aus den direkten Schichten des Tages
             const shiftIndex = shiftsAtDay.findIndex((existingShift) => existingShift.id === shift.id);
             if (shiftIndex !== -1) {
                 shiftsAtDay.splice(shiftIndex, 1);
             }
 
-            // 2. Entferne die Schicht aus den Events
             eventsAtDay.forEach((event) => {
                 if (event.id === shift.event_id) {
                     const eventShiftIndex = event.shifts.findIndex((existingShift) => existingShift.id === shift.id);

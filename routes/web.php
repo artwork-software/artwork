@@ -822,6 +822,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('update.timeline');
         Route::patch('/shifts/commit', [ShiftController::class, 'updateCommitments'])->name('update.shift.commitment');
         Route::patch('/{shift}/update', [ShiftController::class, 'updateShift'])->name('event.shift.update');
+
+        // shifts.updateTime
+        Route::patch('/{shift}/update/time', [ShiftController::class, 'updateTime'])
+            ->name('event.shift.update.updateTime');
         Route::patch('/{shift}/update/description', [ShiftController::class, 'updateDescription'])
             ->name('event.shift.update.updateDescription');
         Route::patch('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'update'])

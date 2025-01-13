@@ -135,7 +135,7 @@
                                         <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.is_extra_row">
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
-                                        <div v-else style="width: 200px" class="cell group " :class="$page.props.user.calendar_settings.expand_days ? '' : 'max-h-28 h-28 overflow-y-auto'">
+                                        <div v-else style="width: 200px" class="cell group " :class="$page.props.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
                                             <div v-for="event in room.content[day.full_day].events" class="mb-1">
                                                 <SingleShiftPlanEvent
                                                     v-if="checkIfEventHasShiftsToDisplay(event)"
@@ -182,7 +182,7 @@
                                                 </div>
                                             </div>
                                             <div v-if="!multiEditModeCalendar"
-                                                 class="invisible group-hover:visible absolute bottom-2 left-2 cursor-pointer rounded-full p-0.5 bg-white shadow-md border-2 border-dashed border-artwork-buttons-create"
+                                                 class="invisible group-hover:visible absolute top-2 right-2 cursor-pointer rounded-full p-0.5 bg-white shadow-md border-2 border-dashed border-artwork-buttons-create"
                                                  @click="openAddShiftForRoomAndDay(day.without_format, room.roomId)">
                                                 <ToolTipComponent
                                                     :tooltip-text="$t('Add shift')"

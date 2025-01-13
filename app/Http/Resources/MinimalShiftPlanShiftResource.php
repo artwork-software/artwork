@@ -49,6 +49,8 @@ class MinimalShiftPlanShiftResource extends JsonResource
                     ];
                 }
             ),
+            'break_minutes' => $this->getAttribute('break_minutes'),
+            'description' => $this->getAttribute('description'),
             'formatted_dates' => $this->getAttribute('formatted_dates'),
             'shifts_qualifications' => $this->getAttribute('shiftsQualifications')->map(
                 function (ShiftsQualifications $shiftsQualifications): array {

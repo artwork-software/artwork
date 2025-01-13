@@ -93,6 +93,8 @@ readonly class ShiftServiceProviderService
                 $changeService
             );
         }
+
+
     }
 
     private function handleSeriesShiftData(
@@ -236,6 +238,16 @@ readonly class ShiftServiceProviderService
                 }
             }
         }
+    }
+
+    public function getShiftByUserPivotId(int $usersPivot): Shift
+    {
+        $shiftUserPivot = !$usersPivot instanceof ShiftServiceProvider ?
+            $this->shiftServiceProviderRepository->getById($usersPivot) :
+            $usersPivot;
+
+        /** @var Shift $shiftUserPivot */
+        return $shiftUserPivot->shift;
     }
 
     public function removeAllServiceProvidersFromShift(

@@ -35,6 +35,7 @@ class Timeline extends Model
         'start',
         'end',
         'description',
+        'start_or_end'
     ];
 
     protected $casts = [
@@ -42,6 +43,7 @@ class Timeline extends Model
         'end_date' => 'date:Y-m-d',
         'start' => TimeWithoutSeconds::class,
         'end' => TimeWithoutSeconds::class,
+        'start_or_end' => 'boolean',
     ];
 
     protected $appends = [

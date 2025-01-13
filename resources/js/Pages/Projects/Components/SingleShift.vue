@@ -24,33 +24,9 @@
                 </div>
                 <div>
                     <BaseMenu v-if="this.$can('can plan shifts') || this.hasAdminRole()" dots-size="h-5 w-5 text-white">
-                        <MenuItem v-slot="{ active }">
-                            <div @click="editShift"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <IconEdit
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                                {{ $t('Edit') }}
-                            </div>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <div @click="this.clearShiftUsers(shift)"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <IconCircleX
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                                {{ $t('Clear') }}
-                            </div>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <div @click="deleteShift(shift.id)"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <IconTrash
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                                {{ $t('Delete') }}
-                            </div>
-                        </MenuItem>
+                        <BaseMenuItem title="Edit" icon="IconEdit" @click="editShift"/>
+                        <BaseMenuItem title="Clear" icon="IconCircleX" @click="clearShiftUsers(shift)"/>
+                        <BaseMenuItem title="Delete" icon="IconTrash" @click="deleteShift(shift.id)"/>
                     </BaseMenu>
                 </div>
             </div>
@@ -147,6 +123,7 @@
                    :edit="true"
                    :shift-qualifications="shiftQualifications"
                    :shift-time-presets="shiftTimePresets"
+                   :shift-plan-modal="false"
     />
 
     <AddShiftQualificationToShiftModel
@@ -176,10 +153,12 @@ import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import AddShiftQualificationToShiftModel from "@/Pages/Projects/Components/AddShiftQualificationToShiftModel.vue";
 import ShiftBookedElementComponent from "@/Pages/Projects/Components/ShiftBookedElementComponent.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 export default defineComponent({
     name: "SingleShift",
     components: {
+        BaseMenuItem,
         ShiftBookedElementComponent,
         AddShiftQualificationToShiftModel,
         ShiftNoteComponent,
@@ -227,7 +206,7 @@ export default defineComponent({
     },
     mounted() {
         if (parseInt(this.$page.props?.urlParameters?.shiftId) === this.shift.id) {
-           this.highlight = 'border-2 border-orange-300 rounded-md p-1';
+            this.highlight = 'border-2 border-orange-300 rounded-md p-1';
         }
 
         setTimeout(() => {
@@ -342,7 +321,7 @@ export default defineComponent({
             }
         },
         deleteShift(shift_id) {
-            this.$inertia.delete(
+            router.delete(
                 route('shifts.destroy', {shift: shift_id}),
                 {
                     preserveScroll: true,

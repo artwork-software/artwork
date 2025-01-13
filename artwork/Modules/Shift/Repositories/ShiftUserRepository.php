@@ -24,6 +24,11 @@ class ShiftUserRepository extends BaseRepository
         return $shiftUser;
     }
 
+    public function getShiftByUserPivotId(int $pivotId): ?ShiftUser
+    {
+        return ShiftUser::find($pivotId);
+    }
+
     public function getById(int $modelId): ?ShiftUser
     {
         return ShiftUser::find($modelId);

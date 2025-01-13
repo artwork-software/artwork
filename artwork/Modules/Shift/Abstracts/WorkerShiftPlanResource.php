@@ -54,7 +54,7 @@ class WorkerShiftPlanResource extends JsonResource
         return $this->getAttribute('shifts')->map(
             function (Shift $shift): array {
                 $event = $shift->getAttribute('event');
-
+                $room = $event?->getAttribute('room') ?? $shift->getAttribute('room');
                 return [
                     'id' => $shift->getAttribute('id'),
                     'pivotId' => $shift->getRelation('pivot')->getAttribute('id'),
@@ -65,9 +65,9 @@ class WorkerShiftPlanResource extends JsonResource
                     'craftAbbreviation' => $shift->getAttribute('craft')->getAttribute('abbreviation'),
                     'days_of_shift' => $shift->getAttribute('days_of_shift'),
                     'start_of_shift' => $shift->getAttribute('start_date')->format('d.m.Y'),
-                    'roomName' => $event->getAttribute('room')?->getAttribute('name'),
-                    'eventName' => $event->getAttribute('name') ?? $event->getAttribute('eventName'),
-                    'eventTypeAbbreviation' => $event->getAttribute('event_type')->getAttribute('abbreviation'),
+                    'roomName' => $room?->getAttribute('name'),
+                    'eventName' => $event?->getAttribute('name') ?? $event?->getAttribute('eventName'),
+                    'eventTypeAbbreviation' => $event?->getAttribute('event_type')->getAttribute('abbreviation'),
                 ];
             }
         );

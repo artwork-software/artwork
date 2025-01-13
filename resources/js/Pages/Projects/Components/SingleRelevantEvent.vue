@@ -1,5 +1,5 @@
 <template>
-    <div class="mb-3 flex flex-col gap-2">
+    <div class="mb-3 flex flex-col gap-2" :id="'event-' + event.event.id">
         <!-- Event Header -->
         <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm rounded-lg bg-opacity-50"
              :style="{backgroundColor: backgroundColorWithOpacity(event.event_type.hex_code, 50), color: TextColorWithDarken(event.event_type.hex_code, 100)}">
@@ -22,27 +22,9 @@
             </div>
             <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="mt-1">
                 <BaseMenu dots-size="h-4 w-4" dots-color="text-white">
-                    <MenuItem v-slot="{ active }">
-                        <a href="#" @click="openDeleteConfirmModal"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                            <IconTrash stroke-width="1.5" class="w-5 h-5 mr-3" />
-                            {{ $t('Delete shift planning') }}
-                        </a>
-                    </MenuItem>
-                    <MenuItem v-slot="{ active }">
-                        <a href="#" @click="saveShiftAsPreset"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                            <IconFilePlus stroke-width="1.5" class="w-5 h-5 mr-3" />
-                            {{ $t('Save shift planning as a template') }}
-                        </a>
-                    </MenuItem>
-                    <MenuItem v-slot="{ active }">
-                        <a href="#" @click="showImportShiftTemplateModal = true"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                            <IconFileImport stroke-width="1.5" class="w-5 h-5 mr-3" />
-                            {{ $t('Import shift planning from template') }}
-                        </a>
-                    </MenuItem>
+                    <BaseMenuItem title="Delete shift planning" icon="IconTrash" @click="openDeleteConfirmModal" />
+                    <BaseMenuItem title="Save shift planning as a template" icon="IconFilePlus" @click="saveShiftAsPreset" />
+                    <BaseMenuItem title="Import shift planning from template" icon="IconFileImport" @click="showImportShiftTemplateModal = true" />
                 </BaseMenu>
             </div>
         </div>
@@ -98,6 +80,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 export default defineComponent({
     name: "SingleRelevantEvent",
@@ -112,6 +95,7 @@ export default defineComponent({
     emits: ['dropFeedback'],
     mixins: [IconLib, Permissions, ColorHelper],
     components: {
+        BaseMenuItem,
         BaseMenu,
         SvgCollection,
         ImportShiftTemplate,
@@ -153,7 +137,9 @@ export default defineComponent({
             this.showConfirmDeleteModal = false
         },
         deleteShift() {
-            this.$inertia.delete(`/events/${this.event.event.id}/shifts`)
+            this.$inertia.delete(`/events/${this.event.event.id}/shifts`, {
+                preserveScroll: true
+            });
             this.showConfirmDeleteModal = false
         },
         saveShiftAsPreset() {

@@ -1,9 +1,11 @@
 <template>
-    <div class="w-full cursor-pointer group/shift">
+    <div class="w-full group/shift bg-backgroundGray hover:bg-gray-50 duration-300 ease-in-out cursor-pointer">
         <div :class="[!highlightMode || !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30 px-1' : 'bg-pink-500 !text-white px-1', multiEditMode ?'text-[10px]' : '']"
              class="flex items-center xsLight text-shiftText subpixel-antialiased"
              @dragover="onDragOver"
-             @drop="onDrop">
+             @drop="onDrop"
+            @click="handleClickEvent"
+        >
             <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
                 <input v-model="userForMultiEdit.shift_ids"
                        @change="(e) => handleShiftAndEventForMultiEdit(e.target.checked, shift, event)"
@@ -25,10 +27,6 @@
                     <div v-if="computedUsedWorkerCount >= computedMaxWorkerCount">
                         <IconCheck stroke-width="1.5" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                     </div>
-                </div>
-
-                <div class="hidden group-hover/shift:block" v-if="$can('can plan shifts') || this.hasAdminRole()">
-                    <component is="IconEdit" class="h-5 w-5 " stroke-width="1.5" @click="$emit('clickOnEdit', shift)"/>
                 </div>
             </div>
         </div>
@@ -213,6 +211,11 @@ export default defineComponent({
         },
     },
     methods: {
+        handleClickEvent(){
+            if ( this.$can('can plan shifts') || this.hasAdminRole() ){
+                this.$emit('clickOnEdit', this.shift)
+            }
+        },
         usePage,
         onDragOver(event) {
             event.preventDefault();

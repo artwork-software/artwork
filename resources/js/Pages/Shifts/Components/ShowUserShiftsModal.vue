@@ -278,6 +278,9 @@ export default defineComponent({
                 preserveState: true,
                 onSuccess: () => {
                     document.getElementById('shift-' + shiftId).remove();
+                },
+                onFinish: () => {
+                    document.getElementById('shift-' + shiftId).remove();
                 }
             });
         },

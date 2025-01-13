@@ -388,6 +388,9 @@ export default defineComponent({
             router.delete(route('shifts.destroy', { shift: this.shift.id}), {
                 onSuccess: () => {
                     this.closeModal(true);
+                },
+                onFinish: () => {
+                    this.closeModal(true);
                 }
             });
         },

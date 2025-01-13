@@ -2,8 +2,8 @@
     <div>
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center rounded-t-lg"
-                 :style="{backgroundColor: backgroundColorWithOpacity(event.eventTypeColor ?? eventType?.hex_code, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventTypeColor ?? eventType?.hex_code, percentage))}">
-                <a :href="route('projects.tab', {project: event.projectId, projectTab: firstProjectShiftTabId})" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
+                 :style="{backgroundColor: backgroundColorWithOpacity(event.eventTypeColor ?? eventType?.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventTypeColor ?? eventType?.hex_code, usePage().props.high_contrast_percent))}">
+                <a :href="route('projects.tab', {project: event.projectId, projectTab: firstProjectShiftTabId}) + '?scrollToEvent=' + event.id" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
                     {{ event.eventTypeAbbreviation ?? eventType?.abbreviation }}: {{ event.projectName }}
                 </a>
                 <div v-if="areAllShiftsCommitted(event)">
@@ -29,6 +29,7 @@
                                   @drop-feedback="getDropFeedback"
                                   @desires-reload="dropElementDesiresReload"
                                   @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
+                                  @click-on-edit="clickOnEdit"
                 />
             </div>
         </div>
@@ -48,7 +49,7 @@ const {
 } = useColorHelper();
 
 // Define emits
-const emit = defineEmits(['dropFeedback', 'eventDesiresReload', 'handleShiftAndEventForMultiEdit']);
+const emit = defineEmits(['dropFeedback', 'eventDesiresReload', 'handleShiftAndEventForMultiEdit', 'clickOnEdit']);
 
 // Define props
 const props = defineProps({
@@ -70,6 +71,10 @@ const props = defineProps({
 // Methods converted to functions
 const getDropFeedback = (event) => {
     emit('dropFeedback', event);
+}
+
+const clickOnEdit = (shift) => {
+    emit('clickOnEdit', shift);
 }
 
 const areAllShiftsCommitted = (event) => {

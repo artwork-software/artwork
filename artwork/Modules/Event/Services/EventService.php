@@ -4,9 +4,11 @@ namespace Artwork\Modules\Event\Services;
 
 use Antonrom\ModelChangesHistory\Models\Change;
 use App\Http\Controllers\ShiftFilterController;
+use App\Http\Resources\MinimalShiftPlanShiftResource;
 use App\Settings\EventSettings;
 use App\Settings\ShiftSettings;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Core\Services\CollectionService;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
@@ -16,9 +18,9 @@ use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
-use Artwork\Modules\Event\Events\EventDeleted;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
+use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
@@ -40,6 +42,7 @@ use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
@@ -51,6 +54,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
 use Artwork\Modules\SubEvent\Models\SubEvent;
 use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Timeline\Models\Timeline;
@@ -68,11 +72,15 @@ use Throwable;
 
 readonly class EventService
 {
+    private ?Collection $cachedData;
     public function __construct(
         private EventRepository $eventRepository,
         private CalendarDataService $calendarDataService,
-        private readonly WorkingHourService $workingHourService
+        private readonly WorkingHourService $workingHourService,
+        private ShiftTimePresetService $shiftTimePresetService,
+        private CollectionService $collectionService,
     ) {
+        $this->cachedData = null;
     }
 
     public function importShiftPreset(
@@ -81,9 +89,9 @@ readonly class EventService
         TimelineService $timelineService,
         ShiftService $shiftService,
         ShiftQualificationService $shiftQualificationService,
-        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftsQualificationsService $shiftsQualificationsService
     ): void {
-        $timelineService->forceDeleteTimelines($event->timelines);
+        //$timelineService->forceDeleteTimelines($event->timelines);
         /*foreach ($shiftPreset->timeline as $shiftPresetTimeline) {
             $timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $event);
         }*/
@@ -181,15 +189,8 @@ readonly class EventService
 
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
-        $deletedEvent = new EventDeleted(
-            $event->room_id,
-            $event->start_time,
-            $event->is_series ?
-                $event->series->end_date :
-                $event->end_time
-        );
         $this->eventRepository->delete($event);
-        broadcast($deletedEvent)->toOthers();
+        broadcast(new RemoveEvent($event, $event->room_id));
     }
 
     public function deleteAll(
@@ -615,6 +616,7 @@ readonly class EventService
         ];
     }
 
+
     public function getShiftPlanDto(
         UserService $userService,
         FreelancerService $freelancerService,
@@ -626,12 +628,43 @@ readonly class EventService
         ShiftQualificationService $shiftQualificationService,
         DayServicesService $dayServicesService,
         User $user,
-        ProjectTabService $projectTabService,
+        ProjectTabService $projectTabService
     ): ShiftPlanDto {
         [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($user);
 
+        $periodArray = $this->generatePeriodArray($startDate, $endDate);
+
+        $rooms = $this->fetchFilteredRooms($userService, $startDate, $endDate);
+
+        $this->filterRoomsEventsAndShifts($rooms, $userService, $startDate, $endDate);
+
+        $mappedRooms = $this->mapRoomsToContent($rooms, $startDate, $endDate);
+
+
+        return $this->buildShiftPlanDto(
+            $periodArray,
+            $userService,
+            $craftService,
+            $filterService,
+            $shiftFilterController,
+            $freelancerService,
+            $serviceProviderService,
+            $shiftQualificationService,
+            $dayServicesService,
+            $projectTabService,
+            $startDate,
+            $endDate,
+            $user,
+            $mappedRooms
+        );
+    }
+
+    private function generatePeriodArray($startDate, $endDate): array
+    {
         $periodArray = [];
-        foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
+        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+
+        foreach ($calendarPeriod as $period) {
             if ($period->isMonday()) {
                 $periodArray[] = [
                     'is_extra_row' => true,
@@ -639,16 +672,8 @@ readonly class EventService
                 ];
             }
 
-            $holidays = Holiday::where(function ($query) use ($period): void {
-                $query->where(function ($q) use ($period): void {
-                    $q->whereDate('date', '<=', $period->format('Y-m-d'))
-                        ->whereDate('end_date', '>=', $period->format('Y-m-d'));
-                })->orWhere(function ($q) use ($period): void {
-                    $q->where('yearly', true)
-                        ->whereMonth('date', $period->month)
-                        ->whereDay('end_date', $period->day);
-                });
-            })->with('subdivisions')->get();
+            $holidays = $this->getHolidaysForPeriod($period);
+
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
                 'day_string' => $period->shortDayName,
@@ -662,60 +687,205 @@ readonly class EventService
                 'is_sunday' => $period->isSunday(),
                 'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
                 'add_week_separator' => $period->isSunday(),
-                'holidays' => $holidays->map(function ($holiday) {
-                    return [
-                        'name' => $holiday->name,
-                        'type' => $holiday->type,
-                        'start_date' => $holiday->startDate,
-                        'end_date' => $holiday->endDate,
-                        'color' => $holiday->color,
-                        'subdivisions' => $holiday->subdivisions->pluck('name'), // Subdivision-Namen sammeln
-                    ];
-                }),
+                'holidays' => $holidays,
             ];
         }
 
-        $events = $this->eventRepository->getEventsWhereHasShiftsStartAndEndTimeOverlapWithUsers(
-            $startDate,
-            $endDate
-        );
+        return $periodArray;
+    }
 
-        // filter by EventTypeId
-        if ($userService->getAuthUser()->shift_calendar_filter->event_types) {
-            $events = $events->filter(function (Event $event) use ($userService): bool {
-                return in_array($event->event_type_id, $userService->getAuthUser()->shift_calendar_filter->event_types);
+    private function getHolidaysForPeriod($period): array
+    {
+        return Holiday::where(function ($query) use ($period): void {
+            $query->where(function ($q) use ($period): void {
+                $q->whereDate('date', '<=', $period->format('Y-m-d'))
+                    ->whereDate('end_date', '>=', $period->format('Y-m-d'));
+            })->orWhere(function ($q) use ($period): void {
+                $q->where('yearly', true)
+                    ->whereMonth('date', $period->month)
+                    ->whereDay('end_date', $period->day);
             });
+        })->with('subdivisions')->get()->map(function ($holiday) {
+            return [
+                'name' => $holiday->name,
+                'type' => $holiday->type,
+                'start_date' => $holiday->startDate,
+                'end_date' => $holiday->endDate,
+                'color' => $holiday->color,
+                'subdivisions' => $holiday->subdivisions->pluck('name'),
+            ];
+        })->toArray();
+    }
+
+    private function fetchFilteredRooms(UserService $userService, $startDate, $endDate)
+    {
+        $userCalendarFilter = $userService->getAuthUser()->shift_calendar_filter;
+
+        return Room::with([
+            'events.shifts',
+            'events.shifts.craft',
+            'events.project',
+            'events.event_type',
+            'events.eventStatus'
+        ])->unlessRoomIds($userCalendarFilter?->rooms)
+            ->unlessRoomAttributeIds($userCalendarFilter?->room_attributes)
+            ->unlessAreaIds($userCalendarFilter?->areas)
+            ->unlessRoomCategoryIds($userCalendarFilter?->room_categories)
+            ->whenFilterAdjoiningWithStartAndEndDate(
+                $userCalendarFilter?->adjoining_not_loud,
+                $userCalendarFilter?->adjoining_no_audience,
+                $startDate,
+                $endDate
+            )->get();
+    }
+
+    private function filterRoomsEventsAndShifts($rooms, UserService $userService, $startDate, $endDate): void
+    {
+        $rooms->each(function ($room) use ($userService, $startDate, $endDate): void {
+            // Filtere die Schichten
+            $room->shifts = $room->shifts->filter(function ($shift) use ($startDate, $endDate) {
+                /** @var Shift $shift */
+                return ($shift->start_date <= $endDate && $shift->end_date >= $startDate);
+            });
+
+            // Filtere die Events nach der Logik von startAndEndTimeOverlap
+            $room->events = $room->events->filter(function ($event) use ($userService, $startDate, $endDate) {
+                /** @var Event $event */
+                $eventTypeFilter = $userService->getAuthUser()->shift_calendar_filter->event_types ?? [];
+
+                return (
+                    (
+                        // Events, die innerhalb des gegebenen Zeitraums starten und enden
+                        ($event->start_time >= $startDate && $event->start_time <= $endDate &&
+                            $event->end_time >= $startDate && $event->end_time <= $endDate)
+                        ||
+                        // Events, die vor dem gegebenen Startdatum beginnen und nach dem gegebenen Enddatum enden
+                        ($event->start_time < $startDate && $event->end_time > $endDate)
+                        ||
+                        // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
+                        (
+                            $event->start_time < $startDate &&
+                            $event->end_time >= $startDate &&
+                            $event->end_time <= $endDate
+                        )
+                        ||
+                        // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden
+                        (
+                            $event->start_time >= $startDate &&
+                            $event->start_time <= $endDate &&
+                            $event->end_time > $endDate
+                        )
+                    )
+                    &&
+                    // Filtere die Events nach den gewünschten Event-Typen
+                    (empty($eventTypeFilter) || in_array($event->event_type_id, $eventTypeFilter))
+                );
+            })->map(function ($event) {
+                $startTime = Carbon::parse($event->start_time);
+                $eventType = $event->event_type; // Angenommen, die Beziehung ist geladen
+
+                return [
+                    'id' => $event->id,
+                    'start' => $startTime,
+                    'startTime' => Carbon::parse($event->start_time, 'Europe/Berlin')->format('Y-m-d H:i:s'),
+                    'end' => Carbon::parse($event->end_time, 'Europe/Berlin')->format('Y-m-d H:i:s'),
+                    'eventName' => $event->eventName,
+                    'description' => $event->description,
+                    'audience' => $event->audience,
+                    'isLoud' => $event->is_loud,
+                    'projectId' => $event->project_id,
+                    'projectName' => $event->project?->name,
+                    'eventTypeId' => $event->event_type_id,
+                    'eventStatusId' => $event->event_status_id,
+                    'eventStatusColor' => $event->eventStatus?->color,
+                    'eventTypeName' => $eventType?->name,
+                    'eventTypeAbbreviation' => $eventType?->abbreviation,
+                    'eventTypeColor' => $eventType?->hex_code,
+                    'created_at' => $event->created_at?->format('d.m.Y, H:i'),
+                    'occupancy_option' => $event->occupancy_option,
+                    'allDay' => $event->allDay,
+                    'shifts' => MinimalShiftPlanShiftResource::collection($event->shifts)->resolve(),
+                    'days_of_event' => $event->days_of_event,
+                    'days_of_shifts' => $event->getDaysOfShifts($event->shifts),
+                    'option_string' => $event->option_string,
+                    'formatted_dates' => $event->formatted_dates,
+                    'timesWithoutDates' => $event->timesWithoutDates,
+                    'is_series' => $event->is_series,
+                ];
+            });
+        });
+    }
+
+    private function mapRoomsToContent($rooms, $startDate, $endDate): array
+    {
+        return $rooms->map(function ($room) use ($startDate, $endDate) {
+            $content = $this->initializeContentArray($startDate, $endDate);
+
+            foreach ($room->shifts as $shift) {
+                $shiftDate = Carbon::parse($shift->start_date)->format('d.m.Y');
+                if (isset($content[$shiftDate])) {
+                    $content[$shiftDate]['shifts'][] = $shift;
+                }
+            }
+
+            foreach ($room->events as $event) {
+                $eventDate = Carbon::parse($event['startTime'])->format('d.m.Y');
+                if (isset($content[$eventDate])) {
+                    $content[$eventDate]['events'][] = $event;
+                }
+            }
+
+            return [
+                'roomId' => $room->id,
+                'roomName' => $room->name,
+                'content' => $content,
+            ];
+        })->toArray();
+    }
+
+    private function initializeContentArray($startDate, $endDate): array
+    {
+        $content = [];
+        $period = CarbonPeriod::create($startDate, '1 day', $endDate);
+
+        foreach ($period as $date) {
+            $formattedDate = $date->format('d.m.Y');
+            $content[$formattedDate] = [
+                'events' => [],
+                'shifts' => [],
+            ];
         }
 
-        $filteredRooms = $roomService->getFilteredRooms(
-            $startDate,
-            $endDate,
-            $userService->getAuthUser()->shift_calendar_filter
-        );
+        return $content;
+    }
 
+    private function buildShiftPlanDto(
+        array $periodArray,
+        UserService $userService,
+        CraftService $craftService,
+        FilterService $filterService,
+        ShiftFilterController $shiftFilterController,
+        FreelancerService $freelancerService,
+        ServiceProviderService $serviceProviderService,
+        ShiftQualificationService $shiftQualificationService,
+        DayServicesService $dayServicesService,
+        ProjectTabService $projectTabService,
+        $startDate,
+        $endDate,
+        User $user,
+        array $mappedRooms
+    ): ShiftPlanDto {
         return ShiftPlanDto::newInstance()
             ->setHistory($this->getEventShiftsHistoryChanges())
             ->setCrafts(
-                $craftService->getAll(
-                    [
-                        'managingUsers',
-                        'managingFreelancers',
-                        'managingServiceProviders'
-                    ]
-                )
+                $craftService->getAll([
+                    'managingUsers',
+                    'managingFreelancers',
+                    'managingServiceProviders'
+                ])
             )
-            ->setShiftPlan(
-                $roomService->collectEventsForRoomsShift(
-                    $filteredRooms,
-                    $events,
-                    $calendarPeriod
-                )
-            )
-            ->setRooms($filteredRooms)
             ->setDays($periodArray)
-            ->setFilterOptions(
-                $filterService->getCalendarFilterDefinitions()
-            )
+            ->setFilterOptions($filterService->getCalendarFilterDefinitions())
             ->setUserFilters($userService->getAuthUser()->shift_calendar_filter)
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setPersonalFilters($shiftFilterController->index())
@@ -744,6 +914,10 @@ readonly class EventService
                     $user
                 )
             )
+            ->setCurrentUserCrafts(
+                $userService->getAuthUserCrafts()->merge($craftService->getAssignableByAllCrafts())
+            )
+            ->setShiftTimePresets($this->shiftTimePresetService->getAll())
             ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
             ->setDayServices($dayServicesService->getAll())
             ->setFirstProjectShiftTabId(
@@ -757,10 +931,11 @@ readonly class EventService
                         return $enum->name;
                     },
                     ShiftPlanWorkerSortEnum::cases()
-                ),
+                )
             )
             ->setUseFirstNameForSort((new ShiftSettings())->use_first_name_for_sort)
-            ->setUserShiftPlanShiftQualificationFilters($user->getAttribute('show_qualifications'));
+            ->setUserShiftPlanShiftQualificationFilters($user->getAttribute('show_qualifications'))
+            ->setMappedRooms($mappedRooms);
     }
 
     /**
@@ -1214,16 +1389,22 @@ readonly class EventService
             $startTime = $startTime ? Carbon::parse($startTime) : null;
             $endTime = $endTime ? Carbon::parse($endTime) : null;
 
-            // Start- oder Endzeitpunkt fehlen
+            // Wenn Startzeit oder Endzeit leer ist, beides gleichsetzen
             if (!$startTime && $endTime) {
                 $startTime = clone $endTime;
             } elseif (!$endTime && $startTime) {
                 $endTime = clone $startTime;
-            } elseif ($startTime && $endTime) {
-                if ($endTime->lt($startTime) || $endTime->eq($startTime)) {
+            }
+
+            // Wenn beide Zeiten vorhanden sind
+            if ($startTime && $endTime) {
+                if ($endTime->lt($startTime)) {
+                    // Wenn Endzeit vor Startzeit liegt, nächsten Tag für Endzeit setzen
                     $endDay->addDay();
                 }
             }
+
+            // Setze Start- und Endzeiten im Tag-Objekt
             if ($startTime) {
                 $day->setTimeFromTimeString($startTime->toTimeString());
             }
@@ -1240,7 +1421,7 @@ readonly class EventService
         array $event,
         Project $project,
         int $userId,
-    ): void {
+    ): Event {
 
         $day = Carbon::parse($event['day']);
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
@@ -1248,7 +1429,7 @@ readonly class EventService
             $event['start_time'] ?? null,
             $event['end_time'] ?? null
         );
-
+        /** @var Event $createdEvent */
         $createdEvent  = $project->events()->create([
             'eventName' => $event['name'] ?? '',
             'user_id' => $userId,
@@ -1266,6 +1447,8 @@ readonly class EventService
                 'event_status_id' => $event['status']['id']
             ]);
         }
+
+        return $createdEvent;
     }
 
     public function updateBulkEvent(
@@ -1288,6 +1471,20 @@ readonly class EventService
             'event_type_id' => $data['type']['id'],
             'room_id' => $data['room']['id'],
         ]);
+
+
+        // verschiebe schichten wenn event verschoben wird
+        $shifts = $event->shifts;
+        foreach ($shifts as $shift) {
+            $shiftStart = Carbon::parse($shift->start_date);
+            $shiftEnd = Carbon::parse($shift->end_date);
+            $shiftDurationInDays = $shiftStart->diffInDays($shiftEnd);
+            $shift->update([
+                'start_date' => $startTime->format('Y-m-d'),
+                'end_date' => $startTime->copy()->addDays($shiftDurationInDays)->format('Y-m-d')
+            ]);
+        }
+
 
         $eventStatusSetting = app(EventSettings::class);
 

@@ -51,9 +51,34 @@ class ShiftPlanDto extends BaseDto
 
     public ?array $userShiftPlanShiftQualificationFilters = null;
 
+    public ?Collection $currentUserCrafts = null;
+
+    public ?Collection $shiftTimePresets = null;
+
+    public ?array $mappedRooms = null;
+
+    public function getMappedRooms(): ?array
+    {
+        return $this->mappedRooms;
+    }
+
+    public function setMappedRooms(?array $mappedRooms): self
+    {
+        $this->mappedRooms = $mappedRooms;
+
+        return $this;
+    }
+
     public function setDayServices(?Collection $dayServices): self
     {
         $this->dayServices = $dayServices;
+
+        return $this;
+    }
+
+    public function setShiftTimePresets(?Collection $shiftTimePresets): self
+    {
+        $this->shiftTimePresets = $shiftTimePresets;
 
         return $this;
     }
@@ -156,6 +181,13 @@ class ShiftPlanDto extends BaseDto
         return $this;
     }
 
+
+    public function setCurrentUserCrafts(?Collection $currentUserCrafts): self
+    {
+        $this->currentUserCrafts = $currentUserCrafts;
+
+        return $this;
+    }
     public function setServiceProvidersForShifts(?array $serviceProvidersForShifts): self
     {
         $this->serviceProvidersForShifts = $serviceProvidersForShifts;
@@ -330,6 +362,18 @@ class ShiftPlanDto extends BaseDto
         return $this->userShiftPlanShiftQualificationFilters;
     }
 
+
+    public function getCurrentUserCrafts(): ?Collection
+    {
+        return $this->currentUserCrafts;
+    }
+
+
+    public function getShiftTimePresets(): ?Collection
+    {
+        return $this->shiftTimePresets;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -356,7 +400,10 @@ class ShiftPlanDto extends BaseDto
             'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
             'shiftPlanWorkerSortEnums' => $this->getShiftPlanWorkerSortEnumNames(),
             'useFirstNameForSort' => $this->getUseFirstNameForSort(),
-            'userShiftPlanShiftQualificationFilters' => $this->getUserShiftPlanShiftQualificationFilters()
+            'userShiftPlanShiftQualificationFilters' => $this->getUserShiftPlanShiftQualificationFilters(),
+            'currentUserCrafts' => $this->getCurrentUserCrafts(),
+            'shiftTimePresets' => $this->getShiftTimePresets(),
+            'mappedRooms' => $this->getMappedRooms()
         ];
     }
 }

@@ -386,6 +386,7 @@ const userCalendarSettings = useForm({
     use_event_status_color: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.use_event_status_color : false,
 });
 
+
 const projectSearch = ref('');
 const projectSearchResults = ref([]);
 const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {

@@ -90,6 +90,10 @@
     .btn-border-hover {
         @apply hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out
     }
+
+    .btn-group-border-hover {
+        @apply group-hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out
+    }
 }
 
 

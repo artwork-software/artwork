@@ -20,7 +20,7 @@ readonly class ShiftCountService
     ) {
     }
 
-    private function getPossiblyCollidingShifts(Shift $shift): Collection
+    private function getPossiblyCollidingShifts(Shift $shift): Collection|null
     {
         return $this
             ->shiftRepository
@@ -29,7 +29,7 @@ readonly class ShiftCountService
                 Carbon::parse($shift->event_end_day),
                 $shift->start,
                 $shift->end,
-                $shift->event->project->events()->get('id')->pluck('id')->toArray()
+                $shift->event?->project?->events()->get('id')->pluck('id')->toArray() ?? []
             );
     }
 

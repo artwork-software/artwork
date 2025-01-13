@@ -5,14 +5,14 @@
                @input="this.$emit('update:modelValue', $event.target.value)"
                type="number"
                class="input peer"
-               :class="isSmall ? '' : 'h-12'"
+               :class="[isSmall ? '' : 'h-12', classes]"
                placeholder="placeholder"
                :min="min"
                 :max="max"
                 :maxlength="maxlength"
                :step="step"
         :required="required"/>
-        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall"/>
+        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall" :classes="classes"/>
     </PlaceholderInputLabelContainer>
 </template>
 
@@ -59,6 +59,10 @@ export default defineComponent({
         step: {
             type: Number,
             default: 1
+        },
+        classes: {
+            type: String,
+            default: ''
         }
     },
     emits: [

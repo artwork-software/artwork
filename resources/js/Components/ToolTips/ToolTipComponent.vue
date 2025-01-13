@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-center group relative">
+    <div class="flex items-center group " :class="noRelative ? '' : 'relative' ">
         <button class="focus:outline-none" :class="classes" :disabled="disabled">
             <component :is="icon" class=" cursor-pointer" :class="[iconSize, classes, whiteIcon ? 'text-white' : 'text-artwork-buttons-context']" :stroke-width="stroke"/>
         </button>
@@ -61,6 +61,10 @@ const props = defineProps({
         default: '1'
     },
     whiteIcon: {
+        type: Boolean,
+        default: false
+    },
+    noRelative: {
         type: Boolean,
         default: false
     }

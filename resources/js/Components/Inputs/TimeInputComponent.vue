@@ -10,7 +10,7 @@
                class="input peer"
                :class="[isSmall ? '' : 'h-12', classes]"
                placeholder="placeholder"/>
-        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall" :is-dark="isDark" v-if="showLabel"/>
+        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall" :is-dark="isDark" v-if="showLabel" :classes="classes"/>
     </PlaceholderInputLabelContainer>
 </template>
 

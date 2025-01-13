@@ -2266,5 +2266,7 @@
     "Column order": "Spaltenreihenfolge",
     "Column 1": "Spalte 1 ({0})",
     "Column 2": "Spalte 2 ({0})",
-    "Display Settings": "Anzeige-Einstellungen"
+    "Display Settings": "Anzeige-Einstellungen",
+    "Break length*": "Pausenlänge*",
+    "Should the editing window be closed after saving?": "Soll das Bearbeitungsfenster nach dem Speichern geschlossen werden?"
 }

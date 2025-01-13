@@ -334,6 +334,23 @@ class ShiftController extends Controller
         $this->notificationService->clearNotificationData();
     }
 
+    public function updateTime(Request $request, Shift $shift): void
+    {
+        [$start, $end] = $this->eventService->processEventTimesForTimeline(
+            Carbon::parse($shift->start_date),
+            $request->get('start') ?? null,
+            $request->get('end') ?? null
+        );
+
+        $shift->start_date = Carbon::parse($start)->format('Y-m-d');
+        $shift->end_date = Carbon::parse($end)->format('Y-m-d');
+        $shift->start = Carbon::parse($start)->format('H:i:s');
+        $shift->end = Carbon::parse($end)->format('H:i:s');
+        $shift->break_minutes = $request->get('break_minutes');
+
+        $shift->save();
+    }
+
     private function setConflictNotificationHeaderAndData(Shift $shift): void
     {
         $this->notificationService->setIcon('red');

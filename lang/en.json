@@ -2265,5 +2265,7 @@
     "Column order": "Column order",
     "Column 1": "Column 1 ({0})",
     "Column 2": "Column 2 ({0})",
-    "Display Settings": "Display Settings"
+    "Display Settings": "Display Settings",
+    "Break length*": "Break length*",
+    "Should the editing window be closed after saving?": "Should the editing window be closed after saving?"
 }

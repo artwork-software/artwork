@@ -1,5 +1,5 @@
 <template>
-    <label :for="this.for" class="input-label" :class="[isSmall ? ' peer-placeholder-shown:top-3' : ' peer-placeholder-shown:top-4', isDark ? '!text-gray-600' : '']">
+    <label :for="this.for" class="input-label" :class="[isSmall ? ' peer-placeholder-shown:top-3' : ' peer-placeholder-shown:top-4', isDark ? '!text-gray-600' : '', classes]">
         {{ this.label }}
     </label>
 </template>
@@ -24,6 +24,10 @@ export default defineComponent({
         isDark: {
             type: Boolean,
             default: false
+        },
+        classes: {
+            type: String,
+            default: ''
         }
     },
     methods: {

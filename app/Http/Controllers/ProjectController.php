@@ -2132,7 +2132,7 @@ class ProjectController extends Controller
 
     private function loadProjectTeamData(&$headerObject, $project): void
     {
-        $headerObject->project->usersArray = $project->users->map(fn (User $user) => [
+        $headerObject->project->usersArray = $project->users()->get()->map(fn (User $user) => [
             'id' => $user->id,
             'first_name' => $user->first_name,
             'last_name' => $user->last_name,

@@ -62,8 +62,8 @@ export default {
                     </div>
                 </div>
                 <IconDragDrop class="xsDark h-5 w-5 hidden group-hover:block cursor-pointer relative z-100"/>
-                <div  class="hidden group-hover:block">
-                    <BaseMenu>
+                <div  class="invisible group-hover:visible">
+                    <BaseMenu has-no-offset>
                         <MenuItem v-slot="{ active }">
                             <a href="#" @click="removeComponentFromTab(element.id)"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">

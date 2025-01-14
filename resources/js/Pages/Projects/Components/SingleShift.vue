@@ -33,11 +33,8 @@
         </div>
         <div class="mt-1 rounded-b-lg bg-gray-200 px-1 py-2 overflow-y-scroll h-full w-full">
             <div class="text-xs mb-1 hover:bg-gray-50 cursor-pointer px-1 py-0.5 rounded-lg w-fit" v-if="!editTimes" @click="openEditInLineTimes()">
-                <span v-if="shift.start_date && shift.end_date && shift.start_date !== shift.end_date">
-                    {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.formatted_dates.end }} {{ shift.end }}
-                </span>
-                <span v-if="shift.start_date && shift.end_date && shift.start_date === shift.end_date">
-                    {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.end }}
+                <span>
+                    {{ shift.start }} - {{ shift.end }}
                 </span>
             </div>
             <div v-else>

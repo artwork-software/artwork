@@ -50,6 +50,7 @@ use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\ProjectManagementBuilderController;
 use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\ProjectTabController;
@@ -1815,6 +1816,24 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/calendar-xlsx/{cacheToken}',
             [EventListOrCalendarExportController::class, 'downloadCalendarXlsx']
         )->name('export.download-calendar-xlsx');
+    });
+
+
+    Route::group(['prefix' => 'project-management-builder'], function (): void {
+        Route::get('/', [ProjectManagementBuilderController::class, 'index'])
+            ->name('project-management-builder.index');
+
+        // patch: project-management-builder.update.order
+        Route::patch('/update/order', [ProjectManagementBuilderController::class, 'updateOrder'])
+            ->name('project-management-builder.update.order');
+
+        // post project-management-builder.store
+        Route::post('/store/{component}', [ProjectManagementBuilderController::class, 'store'])
+            ->name('project-management-builder.store');
+
+        // delete project-management-builder.destroy
+        Route::delete('/destroy/{component}', [ProjectManagementBuilderController::class, 'destroy'])
+            ->name('project-management-builder.destroy');
     });
 });
 

@@ -2273,9 +2273,10 @@
     "Delete shift without Event": "Schicht ohne Termin löschen",
     "Do you really want to delete this shift?": "Möchtest du diese Schicht wirklich löschen?",
     "Delete shift": "Schicht löschen",
-    "Display Settings": "Anzeige-Einstellungen",
     "Show notes": "Notizen einblenden",
     "Show qualifications": "Qualifikationen einblenden",
     "From": "Ab",
-    "Until": "Bis"
+    "Until": "Bis",
+    "Project overview builder": "Projektübersicht-Builder",
+    "Actions": "Aktionen"
 }

@@ -92,6 +92,8 @@ use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Artwork\Modules\Project\Services\ProjectStateService;
+use Artwork\Modules\ProjectManagementBuilder\Models\ProjectManagementBuilder;
+use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -171,6 +173,7 @@ class ProjectController extends Controller
         private readonly UserService $userService,
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly TimelineService $timelineService,
+        private readonly ProjectManagementBuilderService $projectManagementBuilderService,
     ) {
     }
 
@@ -200,8 +203,41 @@ class ProjectController extends Controller
             ->getFromUser($this->userService->getAuthUser())
             ->getAttribute('settings');
 
-        return inertia('Projects/ProjectManagement', [
-            'projects' => $this->projectService->paginateProjects(
+        $projects = $this->projectService->paginateProjects(
+            $saveFilterAndSort,
+            $request->string('query'),
+            $request->integer('entitiesPerPage', 10),
+            $saveFilterAndSort ?
+                $request->enum('sort', ProjectSortEnum::class) :
+                (
+                $userProjectManagementSetting['sort_by'] ?
+                    ProjectSortEnum::from($userProjectManagementSetting['sort_by']) :
+                    null
+                ),
+            $saveFilterAndSort ?
+                $request->collect('project_state_ids')->map(fn(string $id) => (int)$id) :
+                Collection::make($userProjectManagementSetting['project_state_ids']),
+            $saveFilterAndSort ? $request
+                ->collect('project_filters')
+                ->mapWithKeys(
+                    function (string $filter, string $key): array {
+                        return [
+                            $key => (bool)$filter,
+                        ];
+                    }
+                ) :
+                Collection::make($userProjectManagementSetting['project_filters'])
+        );
+
+        $components = $this->projectManagementBuilderService->getProjectManagementBuilder();
+        
+        return inertia('Projects/NewProjectManagement', [
+
+            'components' => $this->projectManagementBuilderService->getProjectManagementBuilder(),
+            'projects' => $projects
+
+
+            /*'projects' => $this->projectService->paginateProjects(
                 $saveFilterAndSort,
                 $request->string('query'),
                 $request->integer('entitiesPerPage', 10),
@@ -246,7 +282,7 @@ class ProjectController extends Controller
             'userProjectManagementSetting' => $this->userProjectManagementSettingService
                 ->getFromUser($this->userService->getAuthUser())
                 ->getAttribute('settings'),
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
+            'eventStatuses' => EventStatus::orderBy('order')->get(),*/
         ]);
     }
 

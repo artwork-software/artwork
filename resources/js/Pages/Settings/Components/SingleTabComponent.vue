@@ -7,7 +7,7 @@
                 <IconChevronDown v-if="tabClosed" class="h-5 w-5 text-gray-600"/>
                 <IconChevronUp v-else class="h-5 w-5 text-gray-600"/>
             </div>
-            <BaseMenu>
+            <BaseMenu has-no-offset>
                 <MenuItem v-slot="{ active }">
                     <a href="#" @click="editTab"
                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">

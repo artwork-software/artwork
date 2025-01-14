@@ -1167,6 +1167,7 @@ readonly class EventService
                 'calendarType' => 'individual',
                 'selectedDate' => '',
                 'eventsWithoutRoom' => [],
+                'months' => [],
                 'filterOptions' => $filterService->getCalendarFilterDefinitions(),
                 'personalFilters' => $filterService->getPersonalFilter(),
                 'user_filters' => $userService->getAuthUser()->calendar_filter,

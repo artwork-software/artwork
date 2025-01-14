@@ -129,13 +129,13 @@
                         :extern-updated="externUpdate"/>
                     <Menu as="div" class="relative inline-block items-center text-left">
                         <div class="flex items-center">
-                            <MenuButton>
+                            <MenuButton id="displaySettings">
                             <span class="items-center flex">
                                 <button type="button"
                                         class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
                                     <ToolTipComponent
                                         direction="bottom"
-                                        tooltip-text="Anzeige"
+                                        :tooltip-text="$t('Display Settings')"
                                         icon="IconSettings"
                                         icon-size="h-7 w-7"
                                     />
@@ -386,6 +386,7 @@ const userCalendarSettings = useForm({
     use_event_status_color: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.use_event_status_color : false,
 });
 
+
 const projectSearch = ref('');
 const projectSearchResults = ref([]);
 const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
@@ -580,6 +581,7 @@ const saveUserCalendarSettings = () => {
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}), {
         preserveScroll: true,
     })
+    document.getElementById('displaySettings').click();
 }
 
 const jumpToDayOfMonth = (day) => {

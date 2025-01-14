@@ -9,39 +9,49 @@
                      class="object-cover h-10 w-10 rounded-full" alt="">
             </div>
             <div class="ml-3 text-sm font-bold">
-                                        <span v-if="user.element.type === 'service_provider'">
-                                            {{ user.element.provider_name }} ({{ $t('Service provider') }})
-                                        </span>
+                <span v-if="user.element.type === 'service_provider'">
+                    {{ user.element.provider_name }} ({{ $t('Service provider') }})
+                </span>
                 <span v-else>
-                                            {{ user.element.first_name }} {{ user.element.last_name }}
-                                            <span v-if="user.element.type === 'freelancer'">
-                                                ({{ $t('external') }})
-                                            </span>
-                                            <span v-else>
-                                                ({{ $t('internal') }})
-                                            </span>
-                                        </span>
+                    {{ user.element.first_name }} {{ user.element.last_name }}
+                    <span v-if="user.element.type === 'freelancer'">
+                        ({{ $t('external') }})
+                    </span>
+                    <span v-else>
+                        ({{ $t('internal') }})
+                    </span>
+                </span>
             </div>
         </div>
-        <div v-for="shift in user.element.shifts">
-            <div v-if="shift.days_of_shift?.includes(day.full_day)"
-                 class="flex items-center justify-between group mb-2" :id="'shift-' + shift.id">
-                <div>
-                    <div class="flex text-sm">
-                        {{ shift.craftAbbreviation }}
-                        <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser" class="mx-1">
-                                                    [{{ shift.craftAbbreviationUser }}]
-                                                </span>
-                        {{ shift.start }} - {{ shift.end }} |
-                        {{ shift.roomName }} | {{ shift.eventTypeAbbreviation }}:
-                        {{ shift.eventName }}
+        <div class="space-y-2">
+            <div v-for="shift in user.element.shifts" class="">
+                <div v-if="shift.days_of_shift?.includes(day.full_day)" class="flex items-center justify-between group" :id="'shift-' + shift.id">
+                    <div>
+                        <div class="flex text-sm space-x-1 divide-x divide-gray-600 ">
+                            <div>
+                                {{ shift.craftAbbreviation }}
+                                <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser" class="mx-1">
+                                [{{ shift.craftAbbreviationUser }}]
+                            </span>
+                            </div>
+                            <div class="pl-1">
+                                {{ shift.start }} - {{ shift.end }}
+                            </div>
+                            <div class="pl-1">
+                                {{ shift.roomName }}
+                            </div>
+                            <div class="pl-1" v-if="shift.eventTypeAbbreviation">
+                                {{ shift.eventTypeAbbreviation }}:
+                                {{ shift.eventName }}
+                            </div>
+                        </div>
+                        <p class="text-sm" v-if="shift.description">&bdquo;{{ shift.description }}&rdquo;</p>
                     </div>
-                    <p class="text-sm" v-if="shift.description">&bdquo;{{ shift.description }}&rdquo;</p>
-                </div>
-                <div class="hidden group-hover:block cursor-pointer">
-                    <button type="button" @click="openConfirmDeleteModal(shift.id, shift.pivotId)">
-                        <SvgCollection svg-name="xMarkIcon"/>
-                    </button>
+                    <div class="invisible group-hover:visible cursor-pointer">
+                        <button type="button" @click="openConfirmDeleteModal(shift.id, shift.pivotId)">
+                            <Component is="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -221,18 +231,14 @@ export default defineComponent({
     props: ['user', 'day'],
     emits: ['closed', 'delete', 'desiresReload'],
     mounted() {
-        // Find if there is any vacation for the current day
         const vacation = this.user.vacations?.find(v => v.date === this.day.without_format);
-
-        // If a vacation is found, find the corresponding name from vacationTypes
         if (vacation) {
             const vacationType = this.vacationTypes.find(type => type.type === vacation.type);
-            this.checked =  vacationType ? vacationType : this.vacationTypes[0]; // Return the name or 'Unknown' if not found
-            this.vacationTypeBeforeUpdate =  vacationType ? vacationType : this.vacationTypes[0]; // Return the name or 'Unknown' if not found
+            this.checked =  vacationType ? vacationType : this.vacationTypes[0];
+            this.vacationTypeBeforeUpdate =  vacationType ? vacationType : this.vacationTypes[0];
         } else {
-            // If no vacation is found, return a default value
-            this.checked = this.vacationTypes[0]; // Or any default vacation type if not found
-            this.vacationTypeBeforeUpdate = this.vacationTypes[0]; // Or any default vacation type if not found
+            this.checked = this.vacationTypes[0];
+            this.vacationTypeBeforeUpdate = this.vacationTypes[0];
         }
     },
     computed: {
@@ -264,22 +270,18 @@ export default defineComponent({
             this.$emit('closed', bool)
         },
         removeUserFromShift(shiftId, usersPivotId) {
-            let user = this.user;
-            axios.delete(
-                route(
-                    'shift.removeUserByType',
-                    {
-                        usersPivotId: usersPivotId,
-                        userType: this.user.type
-                    }
-                ),
-                {
-                    data: {
-                        removeFromSingleShift: true
-                    }
-                }).then(() => {
-                document.getElementById('shift-' + shiftId).remove();
-                this.$emit('desiresReload', shiftId, user.element.id, user.type, this.day.full_day);
+            router.delete(route('shift.removeUserByType', {usersPivotId: usersPivotId, userType: this.user.type}), {
+                data: {
+                    removeFromSingleShift: true
+                },
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    document.getElementById('shift-' + shiftId).remove();
+                },
+                onFinish: () => {
+                    document.getElementById('shift-' + shiftId).remove();
+                }
             });
         },
         submitDeleteUserFromShift() {
@@ -296,20 +298,9 @@ export default defineComponent({
         },
         checkVacation() {
             let callback = (afterRequest) => {
-                if (afterRequest) {
-                    this.$emit(
-                        'desiresReload',
-                        null,
-                        this.user.element.id,
-                        this.user.type,
-                        this.day.full_day
-                    );
-                }
                 this.closeModal(true);
             };
 
-            // wenn in einer individuellen Schichtzeit ein start eingetragen ist muss auch ein ende eingetragen sein andersrum auch
-            // falls irgendwo eine zeit fehlt breche ab und zeige eine Fehlermeldung
             for (let individualTime of this.user.individual_times) {
                 if (individualTime.start_time && !individualTime.end_time) {
                     individualTime.error = $t('Please also enter an end time here.');
@@ -332,21 +323,29 @@ export default defineComponent({
             });
 
             if (this.user.type === 0) {
-                axios.patch(route('user.check.vacation', {user: this.user.element.id}), {
+                router.patch(route('user.check.vacation', {user: this.user.element.id}), {
                     checked: this.checked,
                     day: this.day.full_day,
                     vacationTypeBeforeUpdate: this.vacationTypeBeforeUpdate,
-                }).then(() => {
-                    callback(true);
-                });
+                }, {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        callback(true);
+                    }
+                })
             } else if (this.user.type === 1) {
-                axios.patch(route('freelancer.check.vacation', {freelancer: this.user.element.id}), {
+                router.patch(route('service_provider.check.vacation', {service_provider: this.user.element.id}), {
                     checked: this.checked,
                     day: this.day.full_day,
                     vacationTypeBeforeUpdate: this.vacationTypeBeforeUpdate,
-                }).then(() => {
-                    callback(true);
-                });
+                }, {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        callback(true);
+                    }
+                })
             } else {
                 callback(false);
             }

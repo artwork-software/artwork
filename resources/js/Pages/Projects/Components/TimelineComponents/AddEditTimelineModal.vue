@@ -100,12 +100,8 @@ const createOrUpdateForm = useForm({
 })
 
 const isValidTime = (time) => {
-    const match = time.match(/^(\d{1,2}):(\d{2})$/);
-    if (!match) return false;
-
-    const hour = parseInt(match[1], 10);
-    const minute = parseInt(match[2], 10);
-    return hour >= 0 && hour < 24 && minute >= 0 && minute < 60;
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60;
 };
 
 const parseTextToDataset = (text) => {
@@ -113,52 +109,66 @@ const parseTextToDataset = (text) => {
     const dataset = [];
 
     for (const line of lines) {
-        if (/(ab|from)\s*(\d{1,2}[:h.]\d{2})\s*(bis|to)\s*(\d{1,2}[:h.]\d{2})\s*(.*)/i.test(line)) {
+        // Entferne "Uhr" unabhängig davon, ob es mit oder ohne Leerzeichen hinter der Zeit steht
+        const cleanedLine = line.replace(/(\d{1,2}[:h.]\d{2}|\d{1,2})\s*Uhr\b/gi, "$1").trim();
+
+        if (/(ab|from)\s*(\d{1,2}[:h.]\d{2})\s*(bis|to)\s*(\d{1,2}[:h.]\d{2})\s*(.*)/i.test(cleanedLine)) {
             // Format: "ab 14:45 bis 16:00 Beschreibung"
-            const matches = line.match(/(ab|from)\s*(\d{1,2}[:h.]\d{2})\s*(bis|to)\s*(\d{1,2}[:h.]\d{2})\s*(.*)/i);
+            const matches = cleanedLine.match(/(ab|from)\s*(\d{1,2}[:h.]\d{2})\s*(bis|to)\s*(\d{1,2}[:h.]\d{2})\s*(.*)/i);
             const start = matches[2].replace(/[h.]/g, ":");
             const end = matches[4].replace(/[h.]/g, ":");
+            let description = matches[5].trim();
 
             if (isValidTime(start) && isValidTime(end)) {
-                dataset.push({ start, end, description: matches[5].trim() });
+                dataset.push({ start, end, description });
             }
-        } else if (/(\d{1,2}[:h.]\d{2})\s*[–\-]\s*(\d{1,2}[:h.]\d{2})\s*(.*)/i.test(line)) {
-            // Format: "14:45 - 16:00 Beschreibung"
-            const matches = line.match(/(\d{1,2}[:h.]\d{2})\s*[–\-]\s*(\d{1,2}[:h.]\d{2})\s*(.*)/i);
-            const start = matches[1].replace(/[h.]/g, ":");
-            const end = matches[2].replace(/[h.]/g, ":");
+        } else if (/(\d{1,2}[:h.]\d{2}|\d{1,2})\s*[–\-]\s*(\d{1,2}[:h.]\d{2}|\d{1,2})\s*(.*)/i.test(cleanedLine)) {
+            // Format: "14:45 - 16:00 Beschreibung" oder "14 - 16 Beschreibung"
+            const matches = cleanedLine.match(/(\d{1,2}[:h.]\d{2}|\d{1,2})\s*[–\-]\s*(\d{1,2}[:h.]\d{2}|\d{1,2})\s*(.*)/i);
+            const start = formatTime(matches[1]);
+            const end = formatTime(matches[2]);
+            let description = matches[3].trim();
 
             if (isValidTime(start) && isValidTime(end)) {
-                dataset.push({ start, end, description: matches[3].trim() });
+                dataset.push({ start, end, description });
             }
-        } else if (/(ab|from)\s*(\d{1,2}[:h.]\d{2})\s*(.*)/i.test(line)) {
-            // Format: "ab 14:45 Beschreibung"
-            const matches = line.match(/(ab|from)\s*(\d{1,2}[:h.]\d{2})\s*(.*)/i);
-            const start = matches[2].replace(/[h.]/g, ":");
+        } else if (/(ab|from)\s*(\d{1,2}[:h.]\d{2}|\d{1,2})\s*(.*)/i.test(cleanedLine)) {
+            // Format: "ab 14:45 Beschreibung" oder "ab 14 Beschreibung"
+            const matches = cleanedLine.match(/(ab|from)\s*(\d{1,2}[:h.]\d{2}|\d{1,2})\s*(.*)/i);
+            const start = formatTime(matches[2]);
+            let description = matches[3].trim();
 
             if (isValidTime(start)) {
-                dataset.push({ start, end: null, description: matches[3].trim() });
+                dataset.push({ start, end: null, description });
             }
-        } else if (/(bis|to|-)\s*(\d{1,2}[:h.]\d{2})\s*(.*)?/i.test(line)) {
-            // Format: "bis 16:00 Beschreibung" oder "- 16:00 Beschreibung"
-            const matches = line.match(/(bis|to|-)\s*(\d{1,2}[:h.]\d{2})\s*(.*)?/i);
-            const end = matches[2].replace(/[h.]/g, ":");
+        } else if (/(bis|to|-)\s*(\d{1,2}[:h.]\d{2}|\d{1,2})\s*(.*)?/i.test(cleanedLine)) {
+            // Format: "bis 16:00 Beschreibung" oder "- 16 Beschreibung"
+            const matches = cleanedLine.match(/(bis|to|-)\s*(\d{1,2}[:h.]\d{2}|\d{1,2})\s*(.*)?/i);
+            const end = formatTime(matches[2]);
+            let description = matches[3]?.trim() || "";
 
             if (isValidTime(end)) {
-                dataset.push({ start: null, end, description: matches[3]?.trim() || "" });
+                dataset.push({ start: null, end, description });
             }
-        } else if (/^(\d{1,2}[:h.]\d{2})\s+(.*)$/i.test(line)) {
-            // Format: "14:45 Beschreibung" (interpretiert als "ab 14:45 Beschreibung")
-            const matches = line.match(/^(\d{1,2}[:h.]\d{2})\s+(.*)$/i);
-            const start = matches[1].replace(/[h.]/g, ":");
+        } else if (/^(\d{1,2}[:h.]\d{2}|\d{1,2})\s+(.*)$/i.test(cleanedLine)) {
+            // Format: "14:45 Beschreibung" oder "14 Beschreibung" (interpretiert als "ab 14:45 Beschreibung")
+            const matches = cleanedLine.match(/^(\d{1,2}[:h.]\d{2}|\d{1,2})\s+(.*)$/i);
+            const start = formatTime(matches[1]);
+            let description = matches[2].trim();
 
             if (isValidTime(start)) {
-                dataset.push({ start, end: null, description: matches[2].trim() });
+                dataset.push({ start, end: null, description });
             }
         }
     }
 
     return dataset;
+};
+
+
+// Hilfsfunktion zur Formatierung der Zeit
+const formatTime = (time) => {
+    return time.includes(":") ? time.replace(/[h.]/g, ":") : `${time.padStart(2, "0")}:00`;
 };
 
 

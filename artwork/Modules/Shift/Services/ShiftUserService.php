@@ -126,7 +126,7 @@ class ShiftUserService
                 ->setTranslationKeyPlaceholderValues([
                     $user->getFullNameAttribute(),
                     $shift->craft->abbreviation,
-                    $shift->event->eventName,
+                    $shift->event->eventName ?? '',
                     $shiftQualification->name
                 ])
         );
@@ -144,14 +144,14 @@ class ShiftUserService
 
         $vacationConflictService->checkVacationConflictsShifts($shift, $notificationService, $user);
         $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $notificationService, $user);
-        
+
         broadcast(new ShiftAssigned($user, $shift));
     }
 
     private function assignUserToProjectIfNecessary(Shift $shift, User $user): void
     {
-        $project = $shift->event->project;
-        if (!$project->users->contains($user->id)) {
+        $project = $shift->event?->project;
+        if ($project && !$project->users->contains($user->id)) {
             $project->users()->attach($user->id);
         }
     }
@@ -161,11 +161,11 @@ class ShiftUserService
         User $user,
         NotificationService $notificationService
     ): void {
-        $notificationService->setProjectId($shift->event->project->id);
+        $notificationService->setProjectId($shift->event?->project->id);
         $notificationService->setEventId($shift->event->id);
         $notificationService->setShiftId($shift->id);
         $notificationTitle = __('notification.shift.new_shift_add', [
-            'projectName' => $shift->event->project->name,
+            'projectName' => $shift->event?->project->name ?? '',
             'craftAbbreviation' => $shift->craft->abbreviation
         ], $user->language);
         $notificationService->setTitle($notificationTitle);
@@ -260,10 +260,10 @@ class ShiftUserService
                 1 => [
                     'type' => 'string',
                     'title' => __(
-                        'notification.keyWords.concerns',
-                        [],
-                        $user->language
-                    ) . $user->getFullNameAttribute(),
+                            'notification.keyWords.concerns',
+                            [],
+                            $user->language
+                        ) . $user->getFullNameAttribute(),
                     'href' => null
                 ],
                 2 => [
@@ -296,10 +296,10 @@ class ShiftUserService
                     1 => [
                         'type' => 'string',
                         'title' => __(
-                            'notification.keyWords.concerns',
-                            [],
-                            $adminUser->language
-                        ) . $user->getFullNameAttribute(),
+                                'notification.keyWords.concerns',
+                                [],
+                                $adminUser->language
+                            ) . $user->getFullNameAttribute(),
                         'href' => null
                     ],
                     2 => [
@@ -336,10 +336,10 @@ class ShiftUserService
                     1 => [
                         'type' => 'string',
                         'title' => __(
-                            'notification.keyWords.concerns',
-                            [],
-                            $craftUser->language
-                        ) . $user->getFullNameAttribute(),
+                                'notification.keyWords.concerns',
+                                [],
+                                $craftUser->language
+                            ) . $user->getFullNameAttribute(),
                         'href' => null
                     ],
                     2 => [
@@ -388,10 +388,10 @@ class ShiftUserService
                 1 => [
                     'type' => 'string',
                     'title' => __(
-                        'notification.keyWords.concerns',
-                        [],
-                        $user->language
-                    ) . $user->getFullNameAttribute(),
+                            'notification.keyWords.concerns',
+                            [],
+                            $user->language
+                        ) . $user->getFullNameAttribute(),
                     'href' => null
                 ],
                 2 => [
@@ -432,10 +432,10 @@ class ShiftUserService
                     1 => [
                         'type' => 'string',
                         'title' => __(
-                            'notification.keyWords.concerns',
-                            [],
-                            $user->language
-                        ) . $user->getFullNameAttribute(),
+                                'notification.keyWords.concerns',
+                                [],
+                                $user->language
+                            ) . $user->getFullNameAttribute(),
                         'href' => null
                     ],
                     2 => [
@@ -478,10 +478,10 @@ class ShiftUserService
                         1 => [
                             'type' => 'string',
                             'title' => __(
-                                'notification.keyWords.concerns',
-                                [],
-                                $craftUser->language
-                            ) . $user->getFullNameAttribute(),
+                                    'notification.keyWords.concerns',
+                                    [],
+                                    $craftUser->language
+                                ) . $user->getFullNameAttribute(),
                             'href' => null
                         ],
                         2 => [
@@ -588,15 +588,15 @@ class ShiftUserService
         int $shiftQualificationId
     ): int {
         return $this->shiftUserRepository->getCountForShiftIdAndShiftQualificationId(
-            $shiftId,
-            $shiftQualificationId
-        ) + $this->shiftFreelancerRepository->getCountForShiftIdAndShiftQualificationId(
-            $shiftId,
-            $shiftQualificationId
-        ) + $this->shiftServiceProviderRepository->getCountForShiftIdAndShiftQualificationId(
-            $shiftId,
-            $shiftQualificationId
-        );
+                $shiftId,
+                $shiftQualificationId
+            ) + $this->shiftFreelancerRepository->getCountForShiftIdAndShiftQualificationId(
+                $shiftId,
+                $shiftQualificationId
+            ) + $this->shiftServiceProviderRepository->getCountForShiftIdAndShiftQualificationId(
+                $shiftId,
+                $shiftQualificationId
+            );
     }
 
     public function removeFromShift(
@@ -630,7 +630,7 @@ class ShiftUserService
                 $changeService
             );
         }
-        broadcast(new ShiftAssigned($user, $shift));
+        //broadcast(new ShiftAssigned($user, $shift));
         if (!$removeFromSingleShift) {
             foreach ($this->shiftRepository->getShiftsByUuid($shift->shift_uuid) as $shiftByUuid) {
                 if ($shiftByUuid->id === $shift->id) {
@@ -654,6 +654,16 @@ class ShiftUserService
                 }
             }
         }
+    }
+
+    public function getShiftByUserPivotId(int $usersPivot): Shift
+    {
+        $shiftUserPivot = !$usersPivot instanceof ShiftUser ?
+            $this->shiftUserRepository->getById($usersPivot) :
+            $usersPivot;
+
+        /** @var Shift $shiftUserPivot */
+        return $shiftUserPivot->shift;
     }
 
     public function removeAllUsersFromShift(

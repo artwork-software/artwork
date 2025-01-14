@@ -69,9 +69,91 @@
             </div>
         </div>
 
+        <slot name="multiEditCalendar" />
+
         <div class="flex items-center">
             <div class="flex items-center gap-x-3">
+                <slot name="moreButtons">
 
+                </slot>
+                <Menu as="div" class="relative inline-block items-center text-left">
+                    <div class="flex items-center">
+                        <MenuButton id="displaySettings">
+                            <span class="items-center flex">
+                                <button type="button"
+                                        class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
+                                    <ToolTipComponent
+                                        direction="bottom"
+                                        :tooltip-text="$t('Display Settings')"
+                                        icon="IconSettings"
+                                        icon-size="h-7 w-7"
+                                    />
+                                </button>
+                            </span>
+                        </MenuButton>
+                    </div>
+                    <transition
+                        enter-active-class="transition duration-50 ease-out"
+                        enter-from-class="transform scale-100 opacity-100"
+                        enter-to-class="transform scale-100 opacity-100"
+                        leave-active-class="transition duration-75 ease-in"
+                        leave-from-class="transform scale-100 opacity-100"
+                        leave-to-class="transform scale-95 opacity-0">
+                        <MenuItems
+                            class="w-80 absolute right-0 top-12 origin-top-right shadow-lg bg-artwork-navigation-background rounded-lg ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            <div class="w-76 p-6">
+                                <div class="flex items-center py-1">
+                                    <input id="cb-high-contrast"
+                                           v-model="userCalendarSettings.high_contrast"
+                                           type="checkbox"
+                                           class="input-checklist"/>
+                                    <label for="cb-high-contrast"
+                                           :class="userCalendarSettings.high_contrast ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary cursor-pointer">
+                                        {{ $t('High contrast') }}
+                                    </label>
+                                </div>
+                                <div class="flex items-center py-1">
+                                    <input id="cb-project-artists"
+                                           v-model="userCalendarSettings.show_qualifications"
+                                           type="checkbox"
+                                           class="input-checklist"/>
+                                    <label for="cb-project-artists"
+                                           :class="userCalendarSettings.show_qualifications ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary cursor-pointer">
+                                        {{ $t('Show qualifications') }}
+                                    </label>
+                                </div>
+                                <div class="flex items-center py-1">
+                                    <input id="cb-project-status"
+                                           v-model="userCalendarSettings.shift_notes"
+                                           type="checkbox"
+                                           class="input-checklist"/>
+                                    <label for="cb-project-status"
+                                           :class="userCalendarSettings.shift_notes ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary cursor-pointer">
+                                        {{ $t('Show notes') }}
+                                    </label>
+                                </div>
+                                <div class="flex items-center py-1">
+                                    <input id="cb-expand-days" v-model="userCalendarSettings.expand_days"
+                                           type="checkbox"
+                                           class="input-checklist"/>
+                                    <label for="cb-expand-days"
+                                           :class="userCalendarSettings.expand_days ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary cursor-pointer">
+                                        {{ $t('Expand days') }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex justify-end">
+                                <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">
+                                    {{ $t('Save') }}
+                                </button>
+                            </div>
+                        </MenuItems>
+                    </transition>
+                </Menu>
                 <ToolTipComponent v-if="this.$can('can commit shifts') || this.hasAdminRole()" direction="bottom" :tooltip-text="$t('Lock all shifts')" icon="IconCalendarCheck" icon-size="h-7 w-7" @click="openHistoryModal()"/>
                 <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory" icon-size="h-7 w-7" @click="openHistoryModal()"/>
                 <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal" icon-size="h-7 w-7" v-if="!isFullscreen" @click="enterFullscreenMode"/>
@@ -125,17 +207,19 @@ import Permissions from "@/Mixins/Permissions.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {router} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import Input from "@/Jetstream/Input.vue";
 
 export default {
     name: "ShiftPlanFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
+        Input,
         ToolTipComponent,
         BaseButton,
         AddButtonSmall,
@@ -173,26 +257,32 @@ export default {
         'user_filters',
         'crafts'
     ],
-    emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode'],
+    emits: ['enterFullscreenMode', 'previousTimeRange', 'nextTimeRange', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode'],
     data() {
         return {
             //activeFilters: [],
             showConfirmCommitModal: false,
             scrollDays: 1,
+            userCalendarSettings: useForm({
+                show_qualifications: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.show_qualifications : false,
+                shift_notes: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.shift_notes : false,
+                high_contrast: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.high_contrast : false,
+                expand_days: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.expand_days : false,
+            })
         }
     },
     computed: {
-        activeFilters(){
+        activeFilters() {
             let activeFiltersArray = []
             this.filterOptions.rooms.forEach((room) => {
-                if(this.user_filters.rooms?.includes(room.id)){
+                if (this.user_filters.rooms?.includes(room.id)) {
                     activeFiltersArray.push(room)
                 }
             })
 
 
             this.filterOptions.eventTypes.forEach((eventType) => {
-                if(this.user_filters.event_types?.includes(eventType.id)){
+                if (this.user_filters.event_types?.includes(eventType.id)) {
                     activeFiltersArray.push(eventType)
                 }
             })
@@ -200,24 +290,31 @@ export default {
         }
     },
     methods: {
-        changeUserSelectedGoTo(type){
+        saveUserCalendarSettings() {
+            this.userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}), {
+                preserveScroll: true
+            })
+            document.getElementById('displaySettings').click();
+        },
+        usePage,
+        changeUserSelectedGoTo(type) {
             axios.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.user.id}), {
                 goto_mode: type,
             }).then(() => {
                 this.$page.props.user.goto_mode = type;
             });
         },
-        removeFilter(filter){
-            if(filter.value === 'rooms'){
+        removeFilter(filter) {
+            if (filter.value === 'rooms') {
                 this.user_filters.rooms.splice(this.user_filters.rooms.indexOf(filter.id), 1);
                 this.updateFilterValue('rooms', this.user_filters.rooms.length > 0 ? this.user_filters.rooms : null)
             }
-            if(filter.value === 'event_types'){
+            if (filter.value === 'event_types') {
                 this.user_filters.event_types.splice(this.user_filters.event_types.indexOf(filter.id), 1);
                 this.updateFilterValue('event_types', this.user_filters.event_types.length > 0 ? this.user_filters.event_types : null)
             }
         },
-        updateFilterValue(key, value){
+        updateFilterValue(key, value) {
             router.patch(route('user.shift.calendar.filter.single.value.update', {user: this.$page.props.user.id}), {
                 key: key,
                 value: value
@@ -226,21 +323,21 @@ export default {
                 preserveState: false
             });
         },
-        scrollToNextDay(){
+        scrollToNextDay() {
             this.$emit('selectGoToNextMode')
         },
 
-        scrollToPreviousDay(){
+        scrollToPreviousDay() {
             this.$emit('selectGoToPreviousMode')
         },
 
         enterFullscreenMode() {
             this.$emit('enterFullscreenMode')
         },
-        previousTimeRange(){
+        previousTimeRange() {
             this.$emit('previousTimeRange')
         },
-        nextTimeRange(){
+        nextTimeRange() {
             this.$emit('nextTimeRange')
         },
         filtersChanged(activeFilters) {
@@ -249,7 +346,7 @@ export default {
         openHistoryModal() {
             this.$emit('openHistoryModal')
         },
-        commitAllShifts(){
+        commitAllShifts() {
             let filteredEvents = [];
 
             // Loop through each room in the shiftPlan array
@@ -257,7 +354,7 @@ export default {
                 // Loop through each day in the room object
                 Object.values(room).forEach(day => {
                     // Check if day has an 'events' property, and it has a 'data' property
-                    if(day.events) {
+                    if (day.events) {
                         // Add the events to the allEvents array
                         filteredEvents = filteredEvents.concat(day.events);
                     }
@@ -265,8 +362,7 @@ export default {
             });
 
 
-
-            router.post('/shifts/commit', { events: filteredEvents }, {
+            router.post('/shifts/commit', {events: filteredEvents}, {
                 onSuccess: () => {
                     this.showConfirmCommitModal = false;
                 },

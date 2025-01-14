@@ -1,9 +1,9 @@
 <template>
-    <div class="flex items-center group relative">
+    <div class="flex items-center group/tooltip" :class="noRelative ? '' : 'relative' ">
         <button class="focus:outline-none" :class="classes" :disabled="disabled">
             <component :is="icon" class=" cursor-pointer" :class="[iconSize, classes, whiteIcon ? 'text-white' : 'text-artwork-buttons-context']" :stroke-width="stroke"/>
         </button>
-        <div class="hidden group-hover:block">
+        <div class="hidden group-hover/tooltip:block">
             <div v-if="direction === 'top'" class="absolute z-50 -top-3 text-center w-fit text-nowrap p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-x-1/2 -translate-y-full left-1/2">
                 {{ tooltipText }}
                 <div class="absolute bg-black h-3 w-3 transform rounded-sm rotate-45 left-1/2 -translate-x-1/2 -bottom-1.5"></div>
@@ -61,6 +61,10 @@ const props = defineProps({
         default: '1'
     },
     whiteIcon: {
+        type: Boolean,
+        default: false
+    },
+    noRelative: {
         type: Boolean,
         default: false
     }

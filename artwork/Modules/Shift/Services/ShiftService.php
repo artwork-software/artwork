@@ -7,27 +7,19 @@ use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
-use Artwork\Modules\Shift\Events\ShiftAssigned;
-use Artwork\Modules\Shift\Events\ShiftUpdated;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Freelancer\Models\Freelancer;
-use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\Role\Enums\RoleEnum;
-use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
-use Artwork\Modules\ShiftPlanComment\Services\ShiftPlanCommentService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
-use Artwork\Modules\Vacation\Services\VacationSeriesService;
-use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Routing\Redirector;
 use stdClass;
 
 class ShiftService
@@ -114,8 +106,8 @@ class ShiftService
         $shift = new Shift();
         $shift->start_date = $this->convertStartEndTime($data, $event)->start;
         $shift->end_date = $this->convertStartEndTime($data, $event)->end;
-        $shift->start = $data['start'];
-        $shift->end = $data['end'];
+        $shift->start = Carbon::parse($data['start'])->format('H:i');
+        $shift->end =  Carbon::parse($data['end'])->format('H:i');
         $shift->break_minutes = $data['break_minutes'];
         $shift->description = $data['description'];
         $shift->event()->associate($event);
@@ -139,6 +131,34 @@ class ShiftService
 
         $this->shiftRepository->save($shift);
         return $shift;
+    }
+
+    public function createShiftWithoutEventAutomatic(int $craftId, array $data, string $day)
+    {
+        $shift = new Shift();
+        $shift->start_date = $day;
+        $shift->end_date = $day;
+        $shift->start = Carbon::parse($data['start'])->format('H:i');
+        $shift->end =  Carbon::parse($data['end'])->format('H:i');
+        $shift->break_minutes = $data['break_minutes'];
+        $shift->description = $data['description'];
+        $shift->craft()->associate($craftId);
+        $shift->room_id = $data['room_id'];
+        return $this->save($shift);
+    }
+
+    public function createShiftWithoutEvent(int $craftId, array $data)
+    {
+        $shift = new Shift();
+        $shift->start_date = $data['start_date'];
+        $shift->end_date = $data['end_date'];
+        $shift->start = $data['start'];
+        $shift->end = $data['end'];
+        $shift->break_minutes = $data['break_minutes'];
+        $shift->description = $data['description'];
+        $shift->craft()->associate($craftId);
+        $shift->room_id = $data['room_id'];
+        return $this->save($shift);
     }
 
     public function createRemovedAllUsersFromShiftHistoryEntry(Shift $shift, ChangeService $changeService): void
@@ -235,7 +255,8 @@ class ShiftService
     public function forceDelete(Shift $shift): bool
     {
         //relations are deleted on cascade
-        broadcast(new ShiftUpdated($shift))->toOthers();
+        //broadcast(new ShiftUpdated($shift))->toOthers();
+
         return $this->shiftRepository->forceDelete($shift);
     }
 
@@ -284,10 +305,9 @@ class ShiftService
             $this->notificationService->createNotification();
         }
     }
-    
+
     public function save(Shift $shift): Shift
     {
-        broadcast(new ShiftUpdated($shift))->toOthers();
         return $this->shiftRepository->save($shift);
     }
 
@@ -324,6 +344,6 @@ class ShiftService
                 ),
             };
         }
-        broadcast(new ShiftAssigned($entityModel, $shift))->toOthers();
+        //broadcast(new ShiftAssigned($entityModel, $shift))->toOthers();
     }
 }

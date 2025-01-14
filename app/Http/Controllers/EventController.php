@@ -14,6 +14,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
+use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Requests\EventBulkCreateRequest;
@@ -240,7 +241,7 @@ class EventController extends Controller
                 )
         ];
     }
-    
+
     public function getEventsForRoomsByDaysWithoutUser(
         Request $request,
         UserService $userService
@@ -302,7 +303,7 @@ class EventController extends Controller
         //get date for humans of today with weekday
         $todayDate = Carbon::now()->locale(
             \session()->get('locale') ??
-                config('app.fallback_locale')
+            config('app.fallback_locale')
         )->isoFormat('dddd, DD.MM.YYYY');
 
         $notification = $user
@@ -513,6 +514,9 @@ class EventController extends Controller
         if ($request->boolean('showProjectPeriodInCalendar')) {
             return $this->redirector->back();
         }
+
+        broadcast(new EventCreated($firstEvent, $firstEvent->room_id));
+
         return new CalendarEventResource($firstEvent);
     }
 
@@ -595,7 +599,7 @@ class EventController extends Controller
                                             'start' =>
                                                 Carbon::parse($firstShift->event_start_day . '
                                                  ' . $firstShift->start)
-                                                ->format('d.m.Y H:i'),
+                                                    ->format('d.m.Y H:i'),
                                             'end' =>
                                                 Carbon::parse($lastShift->event_end_day . '
                                                 ' . $lastShift->end)->format('d.m.Y H:i')
@@ -2704,6 +2708,9 @@ class EventController extends Controller
             $event
         );
 
+        $freshEvent = $event->fresh();
+        broadcast(new EventCreated($event->load('project'), $event->room_id));
+
         return Redirect::back();
     }
 
@@ -2712,11 +2719,14 @@ class EventController extends Controller
         Project $project
     ): RedirectResponse {
         $data =  $request->input('event', []);
-        $this->eventService->createBulkEvent(
+        $event = $this->eventService->createBulkEvent(
             $data,
             $project,
             $this->authManager->id()
         );
+
+
+        broadcast(new EventCreated($event, $event->room_id));
 
         return Redirect::back();
     }
@@ -2735,4 +2745,6 @@ class EventController extends Controller
 
         return $this->redirector->back();
     }
+
+
 }

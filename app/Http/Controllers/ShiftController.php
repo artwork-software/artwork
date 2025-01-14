@@ -13,8 +13,15 @@ use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\Shift\Events\ShiftAssigned;
+use Artwork\Modules\Shift\Events\AssignUserToShift;
+use Artwork\Modules\Shift\Events\CreatedShiftInShiftPlan;
+use Artwork\Modules\Shift\Events\DestroyShift;
+use Artwork\Modules\Shift\Events\MultiShiftCreateInShiftPlan;
+use Artwork\Modules\Shift\Events\RemoveEntityFormShiftEvent;
+use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
+use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -23,10 +30,9 @@ use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftPlanComment\Services\ShiftPlanCommentService;
-use Artwork\Modules\ShiftPresetTimeline\Http\Requests\TimelinePresetStoreRequest;
-use Artwork\Modules\ShiftPresetTimeline\Models\PresetTimelineTime;
 use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationService;
@@ -50,8 +56,8 @@ class ShiftController extends Controller
         private readonly IndividualTimeService $individualTimeService,
         private readonly ShiftPlanCommentService $shiftPlanCommentService,
         private readonly VacationService $vacationService,
+        private readonly EventTimelineService $eventTimelineService,
         private readonly EventService $eventService,
-        private EventTimelineService $eventTimelineService
     ) {
     }
 
@@ -63,19 +69,16 @@ class ShiftController extends Controller
         Event $event,
         ShiftsQualificationsService $shiftsQualificationsService
     ): void {
-        if ($request->automaticMode) {
-            $shift = $this->shiftService->createAutomatic(
-                event: $event,
-                craftId: $request->craft_id,
-                data: $request->all(),
-            );
-        } else {
-            $shift = $this->shiftService->createShiftByRequest($request->all(), $event);
-        }
+
+        $shift = $this->shiftService->createAutomatic(
+            event: $event,
+            craftId: $request->craft_id,
+            data: $request->all(),
+        );
 
         $shift->event_start_day = Carbon::parse($event->start_time)->format('Y-m-d');
         $shift->event_end_day = Carbon::parse($event->end_time)->format('Y-m-d');
-        
+
         $this->shiftService->save($shift);
         foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
             $shiftsQualificationsService->createShiftsQualificationForShift($shift->id, $shiftsQualification);
@@ -135,6 +138,17 @@ class ShiftController extends Controller
                 ->setTranslationKey('Shift of event was created')
                 ->setTranslationKeyPlaceholderValues([$event->eventName])
         );
+
+        broadcast(new UpdateEventShiftInShiftPlan(
+            $shift->load([
+                'craft',
+                'users',
+                'freelancer',
+                'serviceProvider',
+                'committedBy'
+            ]),
+            $shift->event->room_id
+        ));
     }
 
     public function show(): void
@@ -173,10 +187,10 @@ class ShiftController extends Controller
             'number_masters',
             'description',
         ]));
-        
+
         $this->shiftService->save($shift);
 
-         return $this->redirector->route('shifts.plan');
+        return $this->redirector->route('shifts.plan');
     }
 
     public function updateShift(
@@ -185,7 +199,7 @@ class ShiftController extends Controller
         ShiftsQualificationsService $shiftsQualificationsService,
         ProjectTabService $projectTabService
     ): RedirectResponse {
-        $projectId =  $shift->event()->first()->project()->first()->id;
+        $projectId =  $shift->event()->first()?->project()?->first()->id;
         if ($shift->is_committed) {
             $event = $shift->event;
 
@@ -208,8 +222,8 @@ class ShiftController extends Controller
                 $notificationTitle = __(
                     'notification.shift.locked_changes',
                     [
-                    'projectName' => $shift->event()->first()->project()->first()->name,
-                    'craftAbbreviation' => $shift->craft()->first()->abbreviation
+                        'projectName' => $shift->event()->first()->project()->first()->name,
+                        'craftAbbreviation' => $shift->craft()->first()->abbreviation
                     ],
                     $user->language
                 );
@@ -282,16 +296,29 @@ class ShiftController extends Controller
             'number_masters',
             'description',
         ]));
-        
+
         $this->shiftService->save($shift);
+
+
 
         foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
             $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
         }
 
-        if ($projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent()) {
+        $projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent();
+
+        if ($shift->event_id) {
+            broadcast(new UpdateEventShiftInShiftPlan($shift, $shift->event->room_id));
+        } else {
+            broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id));
+        }
+
+
+        if ($projectTab && $projectId && !$request->boolean('updateOrCreateInShiftPlan')) {
             return $this->redirector->route('projects.tab', [$projectId, $projectTab->id]);
         }
+
+
 
         return $this->redirector->back();
     }
@@ -332,6 +359,23 @@ class ShiftController extends Controller
         $this->notificationService->setNotificationTo($user);
         $this->notificationService->createNotification();
         $this->notificationService->clearNotificationData();
+    }
+
+    public function updateTime(Request $request, Shift $shift): void
+    {
+        [$start, $end] = $this->eventService->processEventTimesForTimeline(
+            Carbon::parse($shift->start_date),
+            $request->get('start') ?? null,
+            $request->get('end') ?? null
+        );
+
+        $shift->start_date = Carbon::parse($start)->format('Y-m-d');
+        $shift->end_date = Carbon::parse($end)->format('Y-m-d');
+        $shift->start = Carbon::parse($start)->format('H:i:s');
+        $shift->end = Carbon::parse($end)->format('H:i:s');
+        $shift->break_minutes = $request->get('break_minutes');
+
+        $shift->save();
     }
 
     private function setConflictNotificationHeaderAndData(Shift $shift): void
@@ -666,7 +710,17 @@ class ShiftController extends Controller
                 $conflict->delete();
             });
         }
-
+        if ($shift->event_id){
+            broadcast(new DestroyShift(
+                $shift,
+                $shift->event->room_id
+            ));
+        } else {
+            broadcast(new DestroyShift(
+                $shift,
+                $shift->room_id
+            ));
+        }
         $this->shiftService->forceDelete($shift);
     }
 
@@ -720,6 +774,21 @@ class ShiftController extends Controller
                 $availabilityConflictService,
                 $changeService
             );
+            $shift = $shiftService->getById($shiftIdToRemove);
+
+            broadcast(new RemoveEntityFormShiftEvent(
+                $shift->load([
+                    'craft',
+                    'users',
+                    'freelancer',
+                    'serviceProvider',
+                    'committedBy'
+                ]),
+                $shift?->room_id ?? $shift?->event?->room_id,
+                $request->get('userTypeId'),
+                $request->get('userType')
+            ));
+
         }
 
         foreach ($shiftsToHandle['assignToShift'] as $shiftToAssign) {
@@ -753,6 +822,19 @@ class ShiftController extends Controller
                 $availabilityConflictService,
                 $changeService
             );
+
+            broadcast(new AssignUserToShift(
+                $shift->load([
+                    'craft',
+                    'users',
+                    'freelancer',
+                    'serviceProvider',
+                    'committedBy'
+                ]),
+                $shift?->room_id ?? $shift?->event?->room_id,
+                $request->get('userTypeId'),
+                $request->get('userType')
+            ));
         }
 
         return true;
@@ -770,7 +852,6 @@ class ShiftController extends Controller
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService,
     ): bool|RedirectResponse {
-
 
         $isShiftTab = $request->boolean('isShiftTab');
         $serviceToUse = match ($request->get('userType')) {
@@ -810,7 +891,36 @@ class ShiftController extends Controller
             $changeService,
             $request->get('seriesShiftData')
         );
-        broadcast(new ShiftAssigned(User::find($request->get('userId')), $shift));
+
+
+        if (!$shift->event_id) {
+            broadcast(new AssignUserToShift(
+                $shift->load([
+                    'craft',
+                    'users',
+                    'freelancer',
+                    'serviceProvider',
+                    'committedBy'
+                ]),
+                $shift->room_id,
+                $request->get('userId'),
+                $request->get('userType')
+            ));
+        } else {
+            broadcast(new AssignUserToShift(
+                $shift->load([
+                    'craft',
+                    'users',
+                    'freelancer',
+                    'serviceProvider',
+                    'committedBy'
+                ]),
+                $shift->event->room_id,
+                $request->get('userId'),
+                $request->get('userType')
+            ));
+        }
+
         return $isShiftTab ? $this->redirector->back() : true;
     }
 
@@ -826,7 +936,7 @@ class ShiftController extends Controller
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
-    ): bool|RedirectResponse {
+    ): bool|RedirectResponse|null {
         $isShiftTab = $request->boolean('isShiftTab');
         $serviceToUse = match ($userType) {
             0 => $shiftUserService,
@@ -835,8 +945,10 @@ class ShiftController extends Controller
             default => null
         };
 
+        $shift = $serviceToUse->getShiftByUserPivotId($usersPivotId);
+
         if ($serviceToUse === null) {
-            return $isShiftTab ? $this->redirector->back() : false;
+            return $isShiftTab ? $this->redirector->back() : null;
         }
 
         if ($serviceToUse instanceof ShiftServiceProviderService) {
@@ -847,7 +959,7 @@ class ShiftController extends Controller
                 $changeService
             );
 
-            return $isShiftTab ? $this->redirector->back() : true;
+            return $isShiftTab ? $this->redirector->back() : null;
         }
 
         $serviceToUse->removeFromShift(
@@ -860,7 +972,39 @@ class ShiftController extends Controller
             $changeService
         );
 
-        return $isShiftTab ? $this->redirector->back() : true;
+
+        // create broadcast event for shift plan update
+
+        if (!$shift->event_id) {
+            broadcast(new RemoveEntityFormShiftEvent(
+                $shift->load([
+                    'craft',
+                    'users',
+                    'freelancer',
+                    'serviceProvider',
+                    'committedBy'
+                ]),
+                $shift->room_id,
+                $usersPivotId,
+                $userType
+            ));
+        } else {
+            broadcast(new RemoveEntityFormShiftEvent(
+                $shift->load([
+                    'craft',
+                    'users',
+                    'freelancer',
+                    'serviceProvider',
+                    'committedBy'
+                ]),
+                $shift->event->room_id,
+                $usersPivotId,
+                $userType
+            ));
+        }
+
+
+        return $isShiftTab ? $this->redirector->back() : null;
     }
 
     public function removeAllShiftUsers(
@@ -999,5 +1143,88 @@ class ShiftController extends Controller
     public function storeTimelinePresetFormEvent(Event $event, Request $request): void
     {
         $this->eventTimelineService->storeTimelinePresetFromEvent($event, $request->get('name'));
+    }
+
+    public function storeShiftWithoutEvent(
+        Request $request,
+        ShiftsQualificationsService $shiftsQualificationsService
+    ): void {
+        $shift = $this->shiftService->createShiftWithoutEventAutomatic(
+            craftId: $request->craft_id,
+            data: $request->all(),
+            day: $request->string('day'),
+        );
+        $shiftUuid = Str::uuid();
+        $shift->shift_uuid = $shiftUuid;
+
+        $this->shiftService->save($shift);
+
+        $shiftSave = $shift->fresh();
+
+        foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
+            $shiftsQualificationsService->createShiftsQualificationForShift($shift->id, $shiftsQualification);
+        }
+        /** @var Shift $shiftSave */
+        broadcast(new CreatedShiftInShiftPlan($shiftSave, $shiftSave->room_id));
+    }
+
+    public function deleteCalendarCell(Request $request): void
+    {
+
+        $entities = $request->get('entities');
+        foreach ($entities as $entity) {
+            $room = Room::findOrFail($entity['roomId']);
+
+            // find room shift by date
+            $roomShifts = $room->shifts()
+                ->where('start_date', Carbon::parse($entity['day'])->format('Y-m-d'))
+                ->get();
+
+            $roomShifts->each(function ($roomShift) use ($entity): void {
+                $roomShift->users()->detach();
+                $roomShift->freelancer()->detach();
+                $roomShift->serviceProvider()->detach();
+                $roomShift->shiftsQualifications()->delete();
+
+                $roomShift->delete();
+            });
+        }
+    }
+
+    public function storeShiftMultiAdd(
+        Request $request,
+        ShiftsQualificationsService $shiftsQualificationsService
+    ): void {
+        $roomsAndDatesForMultiEdit = $request->get('roomsAndDatesForMultiEdit');
+        $createdShifts = collect();
+        foreach ($roomsAndDatesForMultiEdit as $roomAndDate) {
+            $data = [
+                'start' => $request->get('start'),
+                'end' => $request->get('end'),
+                'break_minutes' => $request->get('break_minutes'),
+                'description' => $request->get('description'),
+                'room_id' => $roomAndDate['roomId'],
+            ];
+
+            $shift = $this->shiftService->createShiftWithoutEventAutomatic(
+                craftId: $request->get('craft_id'),
+                data: $data,
+                day: Carbon::parse($roomAndDate['day'])->format('Y-m-d'),
+            );
+
+            $shiftUuid = Str::uuid();
+            $shift->shift_uuid = $shiftUuid;
+            $this->shiftService->save($shift);
+            $createdShifts->add($shift->fresh());
+        }
+
+        foreach ($createdShifts as $shiftSave) {
+            foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
+                $shiftsQualificationsService->createShiftsQualificationForShift($shiftSave->id, $shiftsQualification);
+            }
+        }
+
+        //dd($createdShifts);
+        broadcast(new MultiShiftCreateInShiftPlan($createdShifts));
     }
 }

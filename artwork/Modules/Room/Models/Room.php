@@ -11,6 +11,7 @@ use Artwork\Modules\RoomAttribute\Models\RoomAttribute;
 use Artwork\Modules\RoomCategory\Models\RoomCategory;
 use Artwork\Modules\RoomRoomAttributeMapping\Models\RoomRoomAttributeMapping;
 use Artwork\Modules\RoomRoomCategoryMapping\Models\RoomRoomCategoryMapping;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\Traits\BelongsToUser;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
@@ -94,6 +95,11 @@ class Room extends Model
             'id',
             'areas'
         );
+    }
+
+    public function shifts(): HasMany
+    {
+        return $this->hasMany(Shift::class, 'room_id', 'id');
     }
 
     public function creator(): BelongsTo

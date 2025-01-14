@@ -1,16 +1,10 @@
 <template>
-    <div class="w-full cursor-pointer">
-        <div :class="[
-                !highlightMode || !isIdHighlighted(highlightedId, highlightedType) ?
-                    'opacity-30 px-1' :
-                    'bg-pink-500 !text-white px-1',
-                multiEditMode ?
-                'text-[10px]' :
-                ''
-             ]"
+    <div class="w-full group/shift bg-backgroundGray hover:bg-gray-50 duration-300 ease-in-out cursor-pointer">
+        <div :class="[!highlightMode || !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30 px-1' : 'bg-pink-500 !text-white px-1', multiEditMode ?'text-[10px]' : '']"
              class="flex items-center xsLight text-shiftText subpixel-antialiased"
              @dragover="onDragOver"
              @drop="onDrop"
+            @click="handleClickEvent"
         >
             <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
                 <input v-model="userForMultiEdit.shift_ids"
@@ -19,9 +13,8 @@
                        :value="shift.id"
                        class="input-checklist mr-1"/>
             </div>
-            <div class="flex items-center justify-between"
-                 @click="this.showQualificationRowExpander = !this.showQualificationRowExpander">
-                <div class="flex items-center">
+            <div class="flex items-center justify-between w-full">
+                <div class="flex items-center"> <!--@click="this.showQualificationRowExpander = !this.showQualificationRowExpander"-->
                     <div>
                         {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
                     </div>
@@ -31,16 +24,16 @@
                     <div v-else-if="room" class="truncate">
                         , {{room?.name}}
                     </div>
-                </div>
-                <div v-if="computedUsedWorkerCount >= computedMaxWorkerCount">
-                    <IconCheck stroke-width="1.5" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                    <div v-if="computedUsedWorkerCount >= computedMaxWorkerCount">
+                        <IconCheck stroke-width="1.5" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="w-full px-1" v-if="showQualificationRowExpander">
+        <div class="w-full px-1" v-if="usePage().props.user.calendar_settings.show_qualifications">
             <div class="w-full flex flex-row flex-wrap">
                 <div v-for="(computedShiftsQualificationWithWorkerCount) in this.computedShiftsQualificationsWithWorkerCount"
-                    class="flex xsLight items-center">
+                     class="flex xsLight items-center">
                     {{computedShiftsQualificationWithWorkerCount.workerCount}}/{{computedShiftsQualificationWithWorkerCount.maxWorkerCount}}
                     <ShiftQualificationIconCollection
                         class="text-black mx-1" :classes="['h-4', 'w-4', 'text-black', 'mx-0.5']"
@@ -48,6 +41,9 @@
                     />
                 </div>
             </div>
+        </div>
+        <div v-if="usePage().props.user.calendar_settings.shift_notes" class="px-1 xsLight">
+            {{ shift.description }}
         </div>
     </div>
     <ChooseUserSeriesShift
@@ -74,6 +70,9 @@ import MultipleShiftQualificationSlotsAvailable
     from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import axios from "axios";
+import Permissions from "@/Mixins/Permissions.vue";
+import {usePage} from "@inertiajs/vue3";
+
 
 export default defineComponent({
     components: {
@@ -100,8 +99,8 @@ export default defineComponent({
         'userForMultiEdit',
         'shiftQualifications'
     ],
-    emits: ['dropFeedback', 'desiresReload', 'handleShiftAndEventForMultiEdit'],
-    mixins: [IconLib],
+    emits: ['dropFeedback', 'desiresReload', 'handleShiftAndEventForMultiEdit', 'clickOnEdit'],
+    mixins: [IconLib, Permissions],
     data() {
         return {
             showChooseUserSeriesShiftModal: false,
@@ -212,6 +211,12 @@ export default defineComponent({
         },
     },
     methods: {
+        handleClickEvent(){
+            if ( this.$can('can plan shifts') || this.hasAdminRole() ){
+                this.$emit('clickOnEdit', this.shift)
+            }
+        },
+        usePage,
         onDragOver(event) {
             event.preventDefault();
         },
@@ -220,7 +225,7 @@ export default defineComponent({
 
             this.droppedUser = JSON.parse(event.dataTransfer.getData('application/json'));
 
-            if (this.event.is_series) {
+            if (this.event?.is_series) {
                 this.showChooseUserSeriesShiftModal = true;
                 return;
             }

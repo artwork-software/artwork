@@ -9,44 +9,7 @@
             </div>
             <div class="mt-10">
                 <div class="bg-lightBackgroundGray px-6 py-2 mb-3">
-                    <div class="flex items-center justify-between my-2">
-                        <div>
-                            <SwitchGroup as="div" class="flex items-center" v-if="!event?.is_series">
-                                <SwitchLabel as="span" class="mr-3 text-sm" :class="shiftForm.automaticMode ? 'font-bold' : 'text-gray-400'">
-                                    {{ $t('Automatic mode')}}
-                                </SwitchLabel>
-                                <Switch v-model="shiftForm.automaticMode" :disabled="buffer?.cameFormBuffer" :class="[shiftForm.automaticMode ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', buffer?.cameFormBuffer ? 'bg-artwork-context-dark cursor-not-allowed' : ' cursor-pointer', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
-                                    <span aria-hidden="true" :class="[!shiftForm.automaticMode  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
-                                </Switch>
-                                <SwitchLabel as="span" class="ml-3 text-sm" :class="!shiftForm.automaticMode? 'font-bold' : 'text-gray-400'">
-                                    {{ $t('Manual mode') }}
-                                </SwitchLabel>
-                            </SwitchGroup>
-                            <AlertComponent
-                                type="info"
-                                show-icon
-                                icon-size="w-4 h-4"
-                                v-if="!buffer?.cameFormBuffer && shiftForm.automaticMode"
-                                :text="$t('Automatic mode is activated. The shift times are calculated automatically.')"
-                                class="mt-1"
-                            />
-                            <AlertComponent
-                                type="info"
-                                show-icon
-                                icon-size="w-4 h-4"
-                                v-if="!buffer?.cameFormBuffer && !shiftForm.automaticMode"
-                                :text="$t('Manual mode is activated. The shift times must be entered manually.')"
-                                class="mt-1"
-                            />
-                            <AlertComponent
-                                type="info"
-                                show-icon
-                                icon-size="w-4 h-4"
-                                :text="$t('Manual mode is deactivated as the date is from the repeat event.')"
-                                v-if="buffer?.cameFormBuffer"
-                                class="mt-1"
-                            />
-                        </div>
+                    <div class="flex items-center justify-end my-2">
                         <div class="flex items-center justify-end">
                             <button type="button" class="text-xs text-artwork-buttons-create underline cursor-pointer" @click="showPresetBox = !showPresetBox">
                                 {{ showPresetBox ? $t('Hide time presets') : $t('Show time presets') }}
@@ -260,11 +223,24 @@
                     </div>
                 </div>
             </div>
-            <div class="flex justify-center px-6">
+            <div class="flex w-full items-center px-6" :class="!shift?.room_id ? 'justify-center' : 'justify-between'">
                 <FormButton :text="$t('Save')" type="submit"/>
+
+                <div @click="showComfirmDeleteModal = true" class="text-sm underline cursor-pointer hover:text-red-600 ease-in-out duration-300 transition-colors" v-if="shift?.room_id">
+                    {{ $t('Delete shift without Event') }}
+                </div>
             </div>
         </form>
+        <ConfirmDeleteModal
+            v-if="showComfirmDeleteModal"
+            @closed="showComfirmDeleteModal = false"
+            @delete="deleteShift"
+            :description="$t('Do you really want to delete this shift?')"
+            :title="$t('Delete shift')"
+        />
     </BaseModal>
+
+
 </template>
 <script>
 import {defineComponent, reactive} from 'vue'
@@ -286,7 +262,7 @@ import {
     ChevronDownIcon,
     PlusCircleIcon
 } from "@heroicons/vue/outline";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -303,11 +279,13 @@ import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import SelectComponent from "@/Components/Inputs/SelectComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 export default defineComponent({
     name: "AddShiftModal",
     mixins: [Permissions, IconLib],
     components: {
+        ConfirmDeleteModal,
         BaseModal,
         ModalHeader,
         SelectComponent,
@@ -346,13 +324,19 @@ export default defineComponent({
         'buffer',
         'currentUserCrafts',
         'shiftQualifications',
-        'shiftTimePresets'
+        'shiftTimePresets',
+        'room',
+        'day',
+        'shiftPlanModal',
+        'multiAddMode',
+        'roomsAndDatesForMultiEdit'
     ],
     data(){
         return {
             showPresetBox: false,
             searchPreset: '',
             showSearchbar: false,
+            showComfirmDeleteModal: false,
             open: true,
             shiftForm: useForm({
                 id: this.shift ? this.shift.id : null,
@@ -363,13 +347,17 @@ export default defineComponent({
                 break_minutes: this.shift ? this.shift.break_minutes : 30,
                 craft_id: this.shift ? this.shift.craft.id : null,
                 description: this.shift ? this.shift.description : '',
-                event_id: this.event.id,
+                event_id: this.event ? this.event.id : null,
                 changeAll: false,
                 seriesId: null,
                 changes_start: null,
                 changes_end: null,
                 shiftsQualifications: [],
                 automaticMode: true,
+                room_id: this.room ? this.room : null,
+                day: this.day ? this.day : null,
+                roomsAndDatesForMultiEdit: this.roomsAndDatesForMultiEdit ? this.roomsAndDatesForMultiEdit : null,
+                updateOrCreateInShiftPlan: this.shiftPlanModal
             }),
             selectedCraft: this.shift ? this.shift.craft : null,
             validationMessages: {
@@ -396,6 +384,16 @@ export default defineComponent({
         }
     },
     methods: {
+        deleteShift() {
+            router.delete(route('shifts.destroy', { shift: this.shift.id}), {
+                onSuccess: () => {
+                    this.closeModal(true);
+                },
+                onFinish: () => {
+                    this.closeModal(true);
+                }
+            });
+        },
         takePreset(shiftTimePreset) {
             this.shiftForm.start = shiftTimePreset.start_time;
             this.shiftForm.end = shiftTimePreset.end_time;
@@ -445,32 +443,39 @@ export default defineComponent({
             this.validationMessages.errors.shift_start = [];
             this.validationMessages.errors.shift_end = [];
 
-            let eventStartDateTime = new Date(this.event.start_time);
-            let eventEndDateTime = new Date(this.event.end_time);
+
             let shiftStartDateTime = new Date(this.shiftForm.start_date + 'T' + this.shiftForm.start);
             let shiftEndDateTime = new Date(this.shiftForm.end_date + 'T' + this.shiftForm.end);
 
             let hasErrors = false;
 
-            //check warnings
-            if (shiftStartDateTime < eventStartDateTime) {
-                this.validationMessages.warnings.shift_start.push(
-                    this.$t('The shift starts before the event starts!')
-                );
-            }
-            if (shiftStartDateTime > eventEndDateTime) {
-                this.validationMessages.warnings.shift_start.push(
-                    this.$t('The shift starts after the event ends!')
-                );
-            }
+
             if (((shiftEndDateTime - shiftStartDateTime) / 60000) > 600) {
                 this.validationMessages.warnings.shift_start.push(this.$t('The shift is over 10 hours long!'));
             }
             if (shiftStartDateTime > shiftEndDateTime) {
                 this.validationMessages.warnings.shift_end.push(this.$t('The shift ends before it starts!'));
             }
-            if (shiftEndDateTime < eventStartDateTime) {
-                this.validationMessages.warnings.shift_end.push(this.$t('The shift ends before the event starts!'));
+
+            if(!this.shiftPlanModal){
+                // check warnings
+                let eventStartDateTime = new Date(this.event.start_time);
+                let eventEndDateTime = new Date(this.event.end_time);
+                if (shiftStartDateTime < eventStartDateTime) {
+                    this.validationMessages.warnings.shift_start.push(
+                        this.$t('The shift starts before the event starts!')
+                    );
+                }
+
+                if (shiftStartDateTime > eventEndDateTime) {
+                    this.validationMessages.warnings.shift_start.push(
+                        this.$t('The shift starts after the event ends!')
+                    );
+                }
+
+                if (shiftEndDateTime < eventStartDateTime) {
+                    this.validationMessages.warnings.shift_end.push(this.$t('The shift ends before the event starts!'));
+                }
             }
             if (shiftStartDateTime > shiftEndDateTime) {
                 this.validationMessages.warnings.shift_end.push(
@@ -581,7 +586,7 @@ export default defineComponent({
                 return;
             }
 
-            if (this.event.is_series) {
+            if (!this.shiftPlanModal && this.event?.is_series) {
                 if (!this.buffer?.onlyThisDay) {
                     this.shiftForm.changeAll = true;
                     this.shiftForm.seriesId = this.event.series_id;
@@ -593,27 +598,83 @@ export default defineComponent({
             this.shiftForm.craft_id = this.selectedCraft?.id;
             this.appendComputedShiftQualificationsToShiftForm();
 
-            let onSuccess = () => {
-                this.shiftForm.reset();
-                this.closeModal(true);
-            };
 
-            if (this.shiftForm.id) {
-                this.shiftForm.patch(
-                    route('event.shift.update', this.shift.id), {
+            if(this.multiAddMode){
+                this.shiftForm.post(
+                    route('event.shift.store.multi.add'), {
                         preserveScroll: true,
                         preserveState: true,
-                        onSuccess: onSuccess
+                        onSuccess: () => {
+                            this.shiftForm.reset();
+                            this.closeModal(true);
+                        },
+                        onError: (error) => {
+                            console.log(error);
+                        },
+                        onFinish: () => {
+                            this.shiftForm.reset();
+                            this.closeModal(true);
+                        }
                     }
                 );
             } else {
-                this.shiftForm.post(
-                    route('event.shift.store', this.event.id), {
-                        preserveScroll: true,
-                        preserveState: true,
-                        onSuccess: onSuccess
+                if(this.shiftPlanModal && !this.shiftForm.id){
+                    this.shiftForm.post(
+                        route('event.shift.store.without.event'), {
+                            preserveScroll: true,
+                            preserveState: true,
+                            onSuccess: () => {
+                                this.shiftForm.reset();
+                                this.closeModal(true);
+                            },
+                            onError: (error) => {
+                                console.log(error);
+                            },
+                            onFinish: () => {
+                                this.shiftForm.reset();
+                                this.closeModal(true);
+                            }
+                        }
+                    );
+                } else {
+                    if (this.shiftForm.id) {
+                        this.shiftForm.patch(
+                            route('event.shift.update', this.shift.id), {
+                                preserveScroll: true,
+                                preserveState: true,
+                                onSuccess: () => {
+                                    this.shiftForm.reset();
+                                    this.closeModal(true);
+                                },
+                                onError: (error) => {
+                                    console.log(error);
+                                },
+                                onFinish: () => {
+                                    this.shiftForm.reset();
+                                    this.closeModal(true);
+                                }
+                            }
+                        );
+                    } else {
+                        this.shiftForm.post(
+                            route('event.shift.store', this.event.id), {
+                                preserveScroll: true,
+                                preserveState: true,
+                                onSuccess: () => {
+                                    this.shiftForm.reset();
+                                    this.closeModal(true);
+                                },
+                                onError: (error) => {
+                                    console.log(error);
+                                },
+                                onFinish: () => {
+                                    this.shiftForm.reset();
+                                    this.closeModal(true);
+                                }
+                            }
+                        );
                     }
-                );
+                }
             }
         },
         closeSearchbar() {
@@ -632,6 +693,7 @@ export default defineComponent({
                         (shiftsQualification) => shiftsQualification.shift_qualification_id === shiftQualification.id
                     ) :
                     undefined;
+
                 //push with given value or empty string
                 computedShiftQualifications.push({
                     id: shiftQualification.id,
@@ -640,6 +702,8 @@ export default defineComponent({
                     value: typeof foundShiftsQualification !== 'undefined' ? foundShiftsQualification.value : ''
                 });
             });
+
+            //console.log(computedShiftQualifications)
 
             return reactive(computedShiftQualifications);
         },
@@ -651,7 +715,7 @@ export default defineComponent({
 
                 this.currentUserCrafts.forEach((userCraft) => {
                     if (userCraft.id === this.selectedCraft.id) {
-                       selectedCraftIncluded = true;
+                        selectedCraftIncluded = true;
                     }
                 });
 

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ArtistResidency\Models;
 
+use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -46,6 +47,13 @@ class ArtistResidency extends Model
         'daily_allowance',
         'additional_daily_allowance',
         'description',
+    ];
+
+    protected $casts = [
+        'arrival_date' => 'date',
+        'arrival_time' => TimeWithoutSeconds::class,
+        'departure_date' => 'date',
+        'departure_time' => TimeWithoutSeconds::class,
     ];
 
     protected $appends = ['formatted_dates'];

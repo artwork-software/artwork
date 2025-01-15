@@ -1920,7 +1920,7 @@ class ProjectController extends Controller
         ProjectCreateSettings $projectCreateSettings
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
-        $headerObject->project = $project;
+        $headerObject->project = (object) $project->getAttributes();
         $headerObject->project->cost_center = $project->costCenter; // needed for the ProjectShowHeaderComponent
         $loadedProjectInformation = [];
 
@@ -2130,7 +2130,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function loadProjectTeamData(&$headerObject, $project): void
+    private function loadProjectTeamData($headerObject, $project): void
     {
         $headerObject->project->usersArray = $project->users()->get()->map(fn (User $user) => [
             'id' => $user->id,

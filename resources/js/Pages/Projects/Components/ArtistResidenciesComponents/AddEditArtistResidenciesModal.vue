@@ -310,9 +310,8 @@ const calculateTotalCost = computed(() => {
 })
 
 const calculateTotalDailyAllowance = computed(() => {
-    const totalCost = isNaN(calculateTotalCost.value) ? 0 : calculateTotalCost.value
 
-    return ((Math.floor(artistResidency.daily_allowance) * Math.floor(artistResidency.additional_daily_allowance)) + Math.floor(totalCost)).toFixed(2)
+    return (Math.floor(artistResidency.daily_allowance) * (calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance)))
 })
 
 

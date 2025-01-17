@@ -1,6 +1,13 @@
 <template>
-    <div  draggable="true" @dragstart="onDragStart"  class="bg-gray-100 rounded-lg px-4 py-3 h-24 flex items-center justify-center w-full">
-        {{ $t(component.name) ?? component.name }}
+    <div  draggable="true" @dragstart="onDragStart"  class="bg-gray-100 rounded-lg px-4 py-3 h-32 flex items-center justify-center w-full">
+        <div>
+            <div class="xsDark">
+                {{ $t(component.name) ?? component.name }}
+            </div>
+            <div class="xsLight">
+                {{ $t(component.type) ?? component.type }}
+            </div>
+        </div>
     </div>
 </template>
 

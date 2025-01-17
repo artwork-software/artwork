@@ -50,6 +50,7 @@ use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\ProjectManagementBuilderController;
 use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\ProjectTabController;
@@ -311,7 +312,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.update_description');
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
-    Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
 
     Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])
         ->name('projects.update_team');
@@ -1815,6 +1816,24 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/calendar-xlsx/{cacheToken}',
             [EventListOrCalendarExportController::class, 'downloadCalendarXlsx']
         )->name('export.download-calendar-xlsx');
+    });
+
+
+    Route::group(['prefix' => 'project-management-builder'], function (): void {
+        Route::get('/', [ProjectManagementBuilderController::class, 'index'])
+            ->name('project-management-builder.index');
+
+        // patch: project-management-builder.update.order
+        Route::patch('/update/order', [ProjectManagementBuilderController::class, 'updateOrder'])
+            ->name('project-management-builder.update.order');
+
+        // post project-management-builder.store
+        Route::post('/store/{component}', [ProjectManagementBuilderController::class, 'store'])
+            ->name('project-management-builder.store');
+
+        // delete project-management-builder.destroy
+        Route::delete('/destroy/{component}', [ProjectManagementBuilderController::class, 'destroy'])
+            ->name('project-management-builder.destroy');
     });
 });
 

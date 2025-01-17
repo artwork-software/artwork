@@ -32,12 +32,17 @@ const messages = {
 };
 
 const i18n = VueI18n.createI18n({
-    legacy: false,
-    locale: document.documentElement.lang,
-    fallbackLocale: 'en',
+    legacy: false, // Verwende die Composition API
+    locale: document.documentElement.lang || 'de', // Standard-Sprache
+    fallbackLocale: 'en', // Fallback-Sprache
     messages,
+    missingWarn: false, // Deaktiviert Warnungen für fehlende Schlüssel
+    fallbackWarn: false, // Deaktiviert Warnungen für Fallback-Schlüssel
+    missing: (locale, key) => {
+        // Gibt den Schlüssel zurück, wenn keine Übersetzung gefunden wurde
+        return key;
+    },
 });
-
 const pages = import.meta.glob('./Pages/**/*.vue');
 
 createInertiaApp({

@@ -9,8 +9,8 @@ readonly class ProjectManagementBuilderRepository
 {
     // Add repository logic here
 
-    public function getProjectManagementBuilder(): Collection
+    public function getProjectManagementBuilder(array $with = []): Collection
     {
-        return ProjectManagementBuilder::orderBy('order')->get();
+        return ProjectManagementBuilder::with($with)->orderBy('order')->get();
     }
 }

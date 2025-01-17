@@ -14,9 +14,9 @@ readonly class ProjectManagementBuilderService
     {
     }
 
-    public function getProjectManagementBuilder(): Collection
+    public function getProjectManagementBuilder(array $with = []): Collection
     {
-        return $this->projectManagementBuilderRepository->getProjectManagementBuilder();
+        return $this->projectManagementBuilderRepository->getProjectManagementBuilder($with);
     }
 
     public function updateOrder(SupportCollection $components): void

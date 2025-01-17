@@ -24,14 +24,14 @@ export function usePermission(pageProps) {
     function canSeeComponent(component) {
         if (
             hasAdminRole() ||
-            component.permission_type === null ||
-            component.permission_type === 'allSeeAndEdit' ||
-            component.permission_type === 'allSeeSomeEdit'
+            component?.permission_type === null ||
+            component?.permission_type === 'allSeeAndEdit' ||
+            component?.permission_type === 'allSeeSomeEdit'
         ) {
             return true;
         }
 
-        if (component.permission_type === 'someSeeSomeEdit') {
+        if (component?.permission_type === 'someSeeSomeEdit') {
             return isCurrentUserInComponentUsers(component.users) ||
                 isCurrentUserInComponentDepartments(component.departments);
         }

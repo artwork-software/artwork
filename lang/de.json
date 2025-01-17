@@ -2278,5 +2278,6 @@
     "From": "Ab",
     "Until": "Bis",
     "Project overview builder": "Projektübersicht-Builder",
-    "Actions": "Aktionen"
+    "Actions": "Aktionen",
+    "ActionsComponent": "Aktionen-Komponente"
 }

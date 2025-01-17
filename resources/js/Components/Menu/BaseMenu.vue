@@ -2,31 +2,33 @@
     <Menu as="div" class="inline-block" :class="!noRelative ? 'relative' : ''">
         <Float auto-placement portal :offset="{ mainAxis: hasNoOffset ? 5 : -10, crossAxis: hasNoOffset ? 25 : 75}">
             <div class="font-semibold text-artwork-buttons-context flex items-center justify-center" ref="menuButtonRef">
-                <MenuButton>
-                    <IconDotsVertical
-                        v-if="!showSortIcon && !showCustomIcon"
-                        stroke-width="1.5"
-                        class="flex-shrink-0"
-                        aria-hidden="true"
-                        :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
-                    />
-                    <ToolTipComponent
-                        v-else-if="!showCustomIcon"
-                        direction="bottom"
-                        :tooltip-text="$t('Sorting')"
-                        icon="IconSortDescending"
-                        icon-size="h-8 w-8"
-                        :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
-                    />
+                <MenuButton :id="buttonId">
+                   <div v-if="showIcon">
+                       <IconDotsVertical
+                           v-if="!showSortIcon && !showCustomIcon"
+                           stroke-width="1.5"
+                           class="flex-shrink-0"
+                           aria-hidden="true"
+                           :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
+                       />
+                       <ToolTipComponent
+                           v-else-if="!showCustomIcon"
+                           direction="bottom"
+                           :tooltip-text="$t('Sorting')"
+                           icon="IconSortDescending"
+                           icon-size="h-8 w-8"
+                           :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
+                       />
 
-                    <ToolTipComponent
-                        v-if="showCustomIcon"
-                        direction="bottom"
-                        :tooltip-text="$t(translationKey)"
-                        :icon="icon"
-                        :icon-size="dotsSize"
-                        :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
-                    />
+                       <ToolTipComponent
+                           v-if="showCustomIcon"
+                           direction="bottom"
+                           :tooltip-text="$t(translationKey)"
+                           :icon="icon"
+                           :icon-size="dotsSize"
+                           :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
+                       />
+                   </div>
                 </MenuButton>
             </div>
 
@@ -109,6 +111,16 @@ export default defineComponent({
             type: String,
             required: false,
             default: 'Sorting',
+        },
+        buttonId: {
+            type: String,
+            required: false,
+            default: 'menuButton',
+        },
+        showIcon: {
+            type: Boolean,
+            required: false,
+            default: true,
         },
     },
 

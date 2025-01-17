@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Artwork\Modules\ProjectManagementBuilder\Models\ProjectManagementBuilder;
+use Artwork\Modules\ProjectTab\Models\Component;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -19,15 +20,17 @@ class ProjectManagementBuilderSeed extends Seeder
                 'name' => 'Project Title',
                 'order' => 1,
                 'is_active' => true,
-                'component' => 'ProjectTitleComponent',
-                'deletable' => false
+                'type' => 'ProjectTitleComponent',
+                'deletable' => false,
+                'component_id' => Component::where('type', 'ProjectTitleComponent')->first()->id
             ],
             [
                 'name' => 'Actions',
                 'order' => 2,
                 'is_active' => true,
-                'component' => 'ActionsComponent',
-                'deletable' => false
+                'type' => 'ActionsComponent',
+                'deletable' => false,
+                'component_id' => null
             ],
         ];
 

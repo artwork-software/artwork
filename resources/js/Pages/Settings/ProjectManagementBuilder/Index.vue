@@ -56,8 +56,9 @@
                     </div>
                 </div>
             </div>
-
         </div>
+
+
     </AppLayout>
 </template>
 
@@ -98,6 +99,8 @@ const computedAvailableComponents = computed(() => {
         return (
             component.sidebar_enabled &&
             component.type !== 'SeparatorComponent' &&
+            component.type !== 'Title' &&
+            props.componentsInGrid.every((componentInGrid) => componentInGrid.component_id !== component.id) &&
             translatedName.toLowerCase().includes(searchText)
         );
     });

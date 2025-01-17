@@ -312,7 +312,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.update_description');
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
-    Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
 
     Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])
         ->name('projects.update_team');

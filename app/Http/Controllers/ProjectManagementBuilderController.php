@@ -42,7 +42,8 @@ class ProjectManagementBuilderController extends Controller
             'name' => $component->name,
             'order' => $request->integer('order'),
             'is_active' => true,
-            'component' => $component->type,
+            'type' => $component->type,
+            'component_id' => $component->id,
             'deletable' => true
         ]);
 

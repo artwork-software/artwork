@@ -2,7 +2,11 @@
     <div
         class="bg-gray-100 rounded-lg px-4 py-3 cursor-grab flex items-center justify-center w-fit" :key="element.id">
         <div class="flex items-center gap-x-5">
-            {{ $t(element.name) }}
+            <div>
+                <div class="xsDark">{{ $t(element.name) }}</div>
+                <div class="xsLight">{{ $t(element.type) }}</div>
+            </div>
+
             <div class="flex items-center" v-if="element.deletable">
                 <BaseMenu has-no-offset>
                     <BaseMenuItem title="Delete" icon="IconTrash" @click="showDeleteConfirmationModal = true" />

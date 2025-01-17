@@ -16,8 +16,13 @@ return new class extends Migration
             $table->string('name');
             $table->smallInteger('order');
             $table->boolean('is_active')->default(true);
-            $table->string('component');
+            $table->string('type');
             $table->boolean('deletable')->default(true);
+            // component_id
+            $table->foreignId('component_id')->nullable()
+                ->references('id')
+                ->on('components')
+                ->nullOnDelete();
             $table->timestamps();
         });
     }

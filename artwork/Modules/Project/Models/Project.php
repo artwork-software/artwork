@@ -102,6 +102,7 @@ class Project extends Model
         'pinned_by_users' => 'array',
         'live_music' => 'boolean',
         'own_copyright' => 'boolean',
+        'is_group' => 'boolean'
     ];
 
     protected $with = [

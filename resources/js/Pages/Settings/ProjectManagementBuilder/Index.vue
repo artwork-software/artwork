@@ -22,7 +22,7 @@
                         @change="updateProjectManagementOrder(componentsInGrid)"
                     >
                         <template #item="{ element }" :key="element.id">
-                            <div class="flex items-center gap-x-4 w-fit">
+                            <div class="flex items-center w-fit">
                                 <SingleComponentInGrid :element="element" />
                                 <DropComponentInGrid :order="element.order"/>
                             </div>
@@ -49,7 +49,7 @@
                 <div>
                     <TinyPageHeadline :title="$t('Components')" :description="$t('Available components')" />
 
-                    <div v-if="availableComponents.length" class="flex overflow-x-auto gap-4 mt-4">
+                    <div v-if="availableComponents.length" class="flex flex-wrap gap-4 mt-4">
                         <div v-for="availableComponent in computedAvailableComponents" :key="availableComponent.id">
                             <DragComponent :component="availableComponent" />
                         </div>

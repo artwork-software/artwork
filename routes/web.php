@@ -839,7 +839,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('delete.timeline.row');
         Route::delete('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'destroy'])
             ->name('project.sum.money.source.destroy');
-        Route::delete('/group', [ProjectController::class, 'deleteProjectFromGroup'])->name('projects.group.delete');
+        Route::delete('/group/{project}/{projectGroup}', [ProjectController::class, 'deleteProjectFromGroup'])
+            ->name('projects.group.delete');
+        Route::post('/group/{projectGroup}/add/projects', [ProjectController::class, 'addProjectsToGroup'])
+            ->name('project-group.add-projects');
         Route::delete('/{project}/delete/keyVisual', [ProjectController::class, 'deleteKeyVisual'])
             ->name('project.delete.keyVisual');
         Route::delete('/removeFromShift/{usersPivotId}/type/{userType}', [ShiftController::class, 'removeFromShift'])

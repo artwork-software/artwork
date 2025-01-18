@@ -1,5 +1,5 @@
 <template>
-    <div  @dragover="onDragOver" @drop="onDrop" @dragleave="dropOver = false" class="w-2 h-full rounded-lg" :class="dropOver ? 'bg-gray-100' : ''">
+    <div  @dragover="onDragOver" @drop="onDrop" @dragleave="dropOver = false" class="w-4 h-full rounded-lg" :class="dropOver ? 'bg-gray-100' : ''">
 
     </div>
 </template>

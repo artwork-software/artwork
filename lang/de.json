@@ -2281,5 +2281,11 @@
     "Actions": "Aktionen",
     "ActionsComponent": "Aktionen-Komponente",
     "Available components": "Verfügbare Komponenten",
-    "Components": "Komponenten"
+    "Components": "Komponenten",
+    "Projects in this group": "Projekte in dieser Gruppe",
+    "Project Information": "Projektinformationen",
+    "Add project to group": "Projekt zur Gruppe hinzufügen",
+    "Add projects to group": "Projekte zur Gruppe hinzufügen",
+    "Select a project to add to this group.": "Wähle ein Projekt aus, um es zu dieser Gruppe hinzuzufügen.",
+    "Please note: If you remove and save a project here, the project will be removed from the group": "Bitte beachte: Wenn du ein Projekt hier entfernst und speicherst, wird das Projekt aus der Gruppe entfernt"
 }

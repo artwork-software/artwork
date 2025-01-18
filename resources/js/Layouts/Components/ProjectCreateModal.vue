@@ -247,13 +247,13 @@
                                     </div>
                                 </div>
                             </div>
+
                             <div v-if="createSettings.budget_deadline" class="px-6 py-2">
                                 <DateInputComponent
                                     id="budgetDeadline"
                                     v-model="createProjectForm.budget_deadline"
                                     :label="$t('Budget deadline')" />
                             </div>
-
                         </div>
                         <div class="w-full flex items-center justify-end gap-x-4 pb-6 px-6">
                             <BaseButton
@@ -419,21 +419,25 @@
                             <div class="relative w-full">
                                 <ProjectSearch :noProjectGroups="createProjectGroup" @project-selected="addProjectToProjectGroup" v-model="projectGroupQuery" />
                             </div>
-                            <div v-if="projectGroupProjects.length > 0" class="mt-2 mb-4 flex items-center">
-                                <span v-for="(projectGroupProject, index) in projectGroupProjects"
-                                      class="flex rounded-full items-center font-bold text-primary">
-                                    <span
-                                        class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                        {{ projectGroupProject.name }}
-                                        <button type="button"
-                                                @click="this.deleteProjectFromProjectGroup(index)">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-                                </span>
+                            <div v-if="projectGroupProjects.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-3">
+                                <div v-for="(groupProject, index) in projectGroupProjects" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                                    <div class="flex items-center">
+                                        <div>
+                                            <img class="inline-block size-9 rounded-full object-cover" :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject?.key_visual_path : '/storage/logo/artwork_logo_small.svg'" alt="" />
+                                        </div>
+                                        <div class="mx-2">
+                                            <p class="xsDark group-hover:text-gray-900">{{ groupProject.name}}</p>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <button type="button" @click="deleteProjectFromProjectGroup(index)">
+                                                <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="w-full flex items-center justify-end gap-x-4 pb-6 px-6">
+                        <div class="w-full flex items-center justify-end gap-x-4 pb-6">
                             <BaseButton
                                 v-if="!project"
                                 @click="addProject(true)"

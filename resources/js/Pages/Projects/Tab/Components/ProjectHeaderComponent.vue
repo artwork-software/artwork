@@ -231,7 +231,7 @@ export default {
                                     <img class="inline-block size-9 rounded-full object-cover" src="/storage/logo/artwork_logo_small.svg" alt="" />
                                 </div>
                                 <div class="mx-2">
-                                    <p class="xsDark group-hover:text-gray-900">{{ $t('Add project to group') }}</p>
+                                    <p class="xsDark group-hover:text-gray-900">{{ $t('Add projects to group') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -244,7 +244,7 @@ export default {
                                 <img class="inline-block size-9 rounded-full object-cover" src="/storage/logo/artwork_logo_small.svg" alt="" />
                             </div>
                             <div class="mx-2">
-                                <p class="xsDark group-hover:text-gray-900">{{ $t('Add project to group') }}</p>
+                                <p class="xsDark group-hover:text-gray-900">{{ $t('Add projects to group') }}</p>
                             </div>
                         </div>
                     </div>

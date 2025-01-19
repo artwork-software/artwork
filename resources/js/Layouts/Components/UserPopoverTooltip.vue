@@ -1,5 +1,5 @@
 <template>
-    <Popover v-slot="{ open }" class="!ring-0">
+    <Popover v-slot="{ open }" class="!ring-0 flex items-center justify-center">
         <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0" @click="calculatePopoverPosition">
             <template v-if="useSlotInsteadOfIcon">
                 <slot/>

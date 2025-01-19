@@ -8,6 +8,7 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -25,8 +26,19 @@ class ProjectFile extends Model
     use BelongsToProject;
     use SoftDeletes;
 
+    protected $fillable = [
+        'tab_id',
+        'name',
+        'basename',
+        'project_id',
+    ];
+
     protected $guarded = [
         'id',
+    ];
+
+    protected $appends = [
+        'file_size',
     ];
 
     public function accessingUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -37,5 +49,12 @@ class ProjectFile extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function getFileSizeAttribute(): string
+    {
+        $fileSizeInBytes = Storage::fileSize('project_files/' . $this->basename);
+        $fileSizeInKB = $fileSizeInBytes / 1024; // Bytes zu MB
+        return number_format($fileSizeInKB, 2) . ' Kb'; // Formatieren auf 2 Nachkommastellen
     }
 }

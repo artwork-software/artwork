@@ -2286,5 +2286,9 @@
     "Add project to group": "Add project to group",
     "Add projects to group": "Add projects to group",
     "Select a project to add to this group.": "Select a project to add to this group.",
-    "Please note: If you remove and save a project here, the project will be removed from the group": "Please note: If you remove and save a project here, the project will be removed from the group"
+    "Please note: If you remove and save a project here, the project will be removed from the group": "Please note: If you remove and save a project here, the project will be removed from the group",
+    "So far, there are no shift-relevant events for this project.": "So far, there are no shift-relevant events for this project.",
+    "wrote": "wrote",
+    "Here you can upload and download documents for the project.": "Here you can upload and download documents for the project.",
+    "Download": "Download"
 }

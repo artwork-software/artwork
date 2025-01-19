@@ -44,11 +44,10 @@ class Comment extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime: d. M Y H:i:s',
+        'created_at' => 'datetime: d. M Y H:i',
         'updated_at' => 'datetime',
     ];
 
-    protected $appends = ['written_before'];
 
     //@todo: fix phpcs error - refactor function name to projectFile
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
@@ -62,21 +61,5 @@ class Comment extends Model
     public function money_source_file(): BelongsTo
     {
         return $this->belongsTo(MoneySourceFile::class, 'money_source_file_id', 'id', 'money_source_file');
-    }
-
-
-    public function getWrittenBeforeAttribute(): string
-    {
-        $now = now();
-        $created = $this->created_at;
-        $diff = $now->diffInMinutes($created);
-
-        if ($diff < 60) {
-            // Lokalisierung verwenden
-            return trans_choice('messages.minutes_ago', $diff, ['minutes' => $diff]);
-        }
-
-        // Älter als eine Stunde: Datum und Zeit zurückgeben
-        return $created->format('d.m.Y H:i');
     }
 }

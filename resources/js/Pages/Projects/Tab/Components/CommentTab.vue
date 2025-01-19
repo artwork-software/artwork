@@ -29,14 +29,14 @@
 
                 <!-- new comment layout -->
 
-                <div v-if="sortedComments?.length > 0" class="my-6" v-for="comment in sortedComments">
+                <div v-if="newCommentList?.length > 0" class="my-6" v-for="comment in newCommentList">
                     <div class="group flex items-center justify-between">
                         <div class="">
                             <div class="flex items-center gap-x-2">
                                 <UserPopoverTooltip :user="comment.user" height="9" width="9" :id="comment.id"/>
                                 <div class="xsDark">
                                     <div class="xxsLight">
-                                        {{ comment.written_before }}
+                                        {{ comment.created_at }}
                                     </div>
                                     <div>
                                         {{ comment.user.full_name }} {{ $t('wrote') }}:
@@ -58,6 +58,7 @@
                     {{ $t('No comments yet') }}
                 </div>
             </div>
+
         </div>
     </div>
 </template>
@@ -74,6 +75,8 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import Button from "@/Jetstream/Button.vue";
+import {useCommentListener} from "@/Composeables/useCommentListener.js";
+import {ref} from "vue";
 
 export default {
     components: {
@@ -93,6 +96,10 @@ export default {
         'tab_id',
         'canEditComponent'
     ],
+    mounted() {
+        const useCommentListener1 = useCommentListener(this.newCommentList, this.project.id);
+        useCommentListener1.init();
+    },
     computed:{
         sortedComments: function () {
             let commentCopy = this.project.comments.slice();
@@ -123,6 +130,7 @@ export default {
                 tab_id: this.tab_id ? this.tab_id : null,
             }),
             commentHovered: null,
+            newCommentList: ref(this.project.comments)
         }
     },
     methods: {

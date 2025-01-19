@@ -2157,10 +2157,16 @@ class ProjectController extends Controller
                     break;
                 case ProjectTabComponentEnum::COMMENT_TAB->value:
                     $headerObject->project->comments = $project->comments()
-                        ->whereIn('tab_id', $componentInTab->scope)->with('user')->get();
+                        ->whereIn('tab_id', $componentInTab->scope)
+                        ->with('user')
+                        ->orderBy('created_at', 'DESC')
+                        ->get();
                     break;
                 case ProjectTabComponentEnum::COMMENT_ALL_TAB->value:
-                    $headerObject->project->comments_all = $project->comments()->with('user')->get();
+                    $headerObject->project->comments_all = $project->comments()
+                        ->with('user')
+                        ->orderBy('created_at', 'DESC')
+                        ->get();
                     break;
                 case ProjectTabComponentEnum::PROJECT_DOCUMENTS->value:
                     $headerObject->project->project_files_tab = $project->project_files()

@@ -237,7 +237,7 @@ export default {
                         </div>
                     </div>
                 </div>
-                <div v-else-if="headerObject.projectsOfGroup.length <= 0 && headerObject.project.is_group">
+                <div v-else-if="headerObject.projectsOfGroup.length <= 0 && headerObject.project.is_group" class="my-3">
                     <div class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300 cursor-pointer hover:bg-gray-200 duration-300 ease-in-out" v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.user.id) || headerObject.projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')" @click="showAddProjectToGroup = true">
                         <div class="flex items-center">
                             <div>

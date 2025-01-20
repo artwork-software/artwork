@@ -63,6 +63,6 @@ Broadcast::channel('event.room.{roomId}', function ($roomId) {
     return Auth::check();
 });
 
-Broadcast::channel('project.comment.{projectId}', function ($projectId) {
+Broadcast::channel('project.{projectId}', function ($projectId) {
     return Auth::check();
 });

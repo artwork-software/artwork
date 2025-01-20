@@ -9,6 +9,8 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Project\Events\DeleteDocumentInProject;
+use Artwork\Modules\Project\Events\UploadNewDocumentInProject;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
@@ -38,7 +40,7 @@ class ProjectFileController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function store(FileUpload $request, Project $project, ProjectController $projectController): RedirectResponse
+    public function store(FileUpload $request, Project $project, ProjectController $projectController): void
     {
         $this->authorize('view', $project);
 
@@ -136,7 +138,8 @@ class ProjectFileController extends Controller
             $this->notificationService->createNotification();
         }
 
-        return Redirect::back();
+        //return Redirect::back();
+        broadcast(new UploadNewDocumentInProject($projectFile, $project->id));
     }
 
     public function download(ProjectFile $projectFile): StreamedResponse
@@ -223,7 +226,7 @@ class ProjectFileController extends Controller
         return Redirect::back();
     }
 
-    public function destroy(ProjectFile $projectFile, ProjectController $projectController): RedirectResponse
+    public function destroy(ProjectFile $projectFile, ProjectController $projectController): void
     {
         $this->authorize('view', $projectFile->project);
         $project = $projectFile->project()->first();
@@ -283,8 +286,10 @@ class ProjectFileController extends Controller
             $this->notificationService->setNotificationTo($projectFileUser);
             $this->notificationService->createNotification();
         }
+        broadcast(new DeleteDocumentInProject($projectFile, $project->id));
+
         $projectFile->delete();
-        return Redirect::back();
+        //return Redirect::back();
     }
 
     public function forceDelete(int $id): RedirectResponse

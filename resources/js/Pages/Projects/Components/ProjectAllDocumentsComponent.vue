@@ -33,8 +33,8 @@
 
 
             <div class="my-4">
-                <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200"  v-if="project?.project_files_all?.length > 0">
-                    <li class="flex items-center justify-between py-4 pl-4 pr-5 text-sm/6 group" v-for="project_file in project.project_files_all">
+                <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200"  v-if="documents.length > 0">
+                    <li class="flex items-center justify-between py-4 pl-4 pr-5 text-sm/6 group" v-for="project_file in documents">
                         <div class="flex w-0 flex-1 items-center">
                             <component is="IconFileText" class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
                             <div class="ml-4 flex min-w-0 flex-1 gap-2">
@@ -52,7 +52,7 @@
                         </div>
                     </li>
                 </ul>
-                <div v-if="project?.project_files_all?.length === 0" class="xsDark">
+                <div v-if="documents.length === 0" class="xsDark">
                     {{ $t('No files available') }}
                 </div>
             </div>
@@ -76,6 +76,8 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {useForm} from "@inertiajs/vue3";
 import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
+
+import { useProjectDocumentListener } from "@/Composeables/Listener/useProjectDocumentListener.js";
 
 export default defineComponent({
     mixins: [
@@ -103,7 +105,11 @@ export default defineComponent({
                 tabId: this.tab_id ? this.tab_id : null
             }),
             deletingFile: false,
+            documents: this.project?.project_files_all ?? []
         };
+    },
+    mounted() {
+        useProjectDocumentListener(this.documents, this.project.id).init();
     },
     methods: {
         uploadChosenDocuments(event) {
@@ -115,7 +121,7 @@ export default defineComponent({
         uploadDocumentToProject(file) {
             this.documentForm.file = file
 
-            this.documentForm.post(`/projects/${this.project.id}/files`, {
+            this.documentForm.post(route('project_files.store', {project: this.project.id}), {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {

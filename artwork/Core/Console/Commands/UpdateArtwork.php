@@ -33,6 +33,14 @@ class UpdateArtwork extends Command
             $this->info('Project Management Builder Seed already exists');
         }
 
+        $this->info('Permissions Update Command is running');
+        $this->call('artwork:update-permissions');
+        $this->info('Permissions Update Command has been called');
+
+        $this->info('Artwork Add New Components Command is running');
+        $this->call('artwork:add-new-components');
+        $this->info('Artwork Add New Components Command has been called');
+
         $this->info('Artwork Update Command has finished');
     }
 }

@@ -45,8 +45,8 @@ class DatabaseNotificationRepository extends BaseRepository
     public function findOlderThan(Carbon $carbon): Collection
     {
         return $this->getNewModelQuery()
-            ->whereNull('read_at')
-            ->where('created_at', '<', $carbon)
+            ->whereNotNull('read_at')
+            ->where('read_at', '<', $carbon)
             ->get();
     }
 }

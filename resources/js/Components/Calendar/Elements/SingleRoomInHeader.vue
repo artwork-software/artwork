@@ -1,5 +1,5 @@
 <template>
-    <Link :style="textStyle" class="flex font-semibold text-calendarText items-center px-8" :href="route('rooms.show', { room: room.id })">
+    <Link :style="textStyle" class="flex font-semibold xsDark items-center px-8 mt-1.5" :href="route('rooms.show', { room: room.id })">
         {{ room.name }}
     </Link>
 </template>

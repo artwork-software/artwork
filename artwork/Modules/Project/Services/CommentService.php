@@ -5,6 +5,7 @@ namespace Artwork\Modules\Project\Services;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\MoneySourceFile\Models\MoneySourceFile;
+use Artwork\Modules\Project\Events\DeleteCommendInProject;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
@@ -108,6 +109,7 @@ readonly class CommentService
     public function forceDelete(Comment $comment): void
     {
         //$this->historyService->createHistory($comment->project->id, 'Comment force deleted');
+        broadcast(new DeleteCommendInProject($comment, $comment->project->id));
         $comment->forceDelete();
     }
 }

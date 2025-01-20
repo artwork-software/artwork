@@ -2128,7 +2128,7 @@ class ProjectController extends Controller
         ProjectCreateSettings $projectCreateSettings
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
-        $headerObject->project = (object) $project->getAttributes();
+        $headerObject->project = $project;
         $headerObject->project->cost_center = $project->costCenter; // needed for the ProjectShowHeaderComponent
         $loadedProjectInformation = [];
 
@@ -2157,10 +2157,16 @@ class ProjectController extends Controller
                     break;
                 case ProjectTabComponentEnum::COMMENT_TAB->value:
                     $headerObject->project->comments = $project->comments()
-                        ->whereIn('tab_id', $componentInTab->scope)->with('user')->get();
+                        ->whereIn('tab_id', $componentInTab->scope)
+                        ->with('user')
+                        ->orderBy('created_at', 'DESC')
+                        ->get();
                     break;
                 case ProjectTabComponentEnum::COMMENT_ALL_TAB->value:
-                    $headerObject->project->comments_all = $project->comments()->with('user')->get();
+                    $headerObject->project->comments_all = $project->comments()
+                        ->with('user')
+                        ->orderBy('created_at', 'DESC')
+                        ->get();
                     break;
                 case ProjectTabComponentEnum::PROJECT_DOCUMENTS->value:
                     $headerObject->project->project_files_tab = $project->project_files()
@@ -2652,10 +2658,16 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($projectId);
     }
 
-    public function deleteProjectFromGroup(Request $request): void
+    public function deleteProjectFromGroup(Project $project, Project $projectGroup): void
     {
-        $group = Project::find($request->groupId);
-        $group->projectsOfGroup()->detach($request->projectIdToDelete);
+        //dd($project, $projectGroup);
+        $project->projectsOfGroup()->detach($projectGroup->id);
+    }
+
+    public function addProjectsToGroup(Request $request, Project $projectGroup): void
+    {
+        $projectIdsToAdd = $request->collect('projectIdsToAdd')->pluck('id');
+        $projectGroup->projectsOfGroup()->sync($projectIdsToAdd);
     }
 
     private function checkProjectGenreChanges($projectId, $oldGenres, $newGenres): void

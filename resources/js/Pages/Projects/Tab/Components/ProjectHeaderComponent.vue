@@ -14,11 +14,16 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
+import {XIcon} from "@heroicons/vue/outline";
+import Button from "@/Jetstream/Button.vue";
+import ProjectGroupAddProject from "@/Pages/Projects/Components/Modals/ProjectGroupAddProject.vue";
 
 export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib, ColorHelper],
     components: {
+        ProjectGroupAddProject,
+        Button, XIcon,
         ProjectCreateModal,
         TagComponent,
         BaseModal,
@@ -63,7 +68,13 @@ export default {
             showProjectHistory: false,
             editingProject: false,
             deletingProject: false,
-            projectToDelete: null
+            projectToDelete: null,
+            showAddProjectToGroup: false,
+        }
+    },
+    computed: {
+        projectState(){
+            return this.headerObject.states.find(state => state.id === this.project?.state)
         }
     },
     methods: {
@@ -94,14 +105,14 @@ export default {
             this.projectToDelete = null;
         },
         deleteProjectFromGroup(projectGroupId) {
-            axios.delete(route('projects.group.delete'), {
-                params: {
-                    projectIdToDelete: projectGroupId.id,
-                    groupId: this.headerObject.project.id
+            router.delete(route('projects.group.delete', {
+                project: this.project.id,
+                projectGroup: projectGroupId
+            }), {
+                onSuccess: () => {
+                    this.headerObject.projectGroups.splice(this.headerObject.projectGroups.findIndex(index => index.id === projectGroupId.id), 1)
                 }
-            }).finally(() => {
-                this.headerObject.projectGroups.splice(this.headerObject.projectGroups.findIndex(index => index.id === projectGroupId.id), 1)
-            })
+            });
         },
         deleteProject() {
             this.nameOfDeletedProject = this.projectToDelete.name;
@@ -155,8 +166,8 @@ export default {
                                  class="mx-auto w-8 h-8 rounded-full object-cover mr-2">
                         </span>
                         {{ project?.name }}
-                        <span v-if="project?.state" class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex border" :style="{backgroundColor: backgroundColorWithOpacity(project?.state?.color), color: TextColorWithDarken(project?.state?.color), borderColor: TextColorWithDarken(project?.state?.color)}">
-                            {{ project?.state?.name }}
+                        <span v-if="projectState" class="rounded-full items-center font-medium px-3 py-1 text-sm ml-2 mb-1 inline-flex border" :style="{backgroundColor: backgroundColorWithOpacity(projectState.color), color: TextColorWithDarken(projectState.color), borderColor: TextColorWithDarken(projectState.color)}">
+                            {{ projectState.name }}
                         </span>
                     </h2>
                     <BaseMenu class="mt-3" v-if="$can('write projects') || $role('artwork admin') || headerObject.projectManagerIds.includes(this.$page.props.user.id) || headerObject.projectWriteIds.includes(this.$page.props.user.id)">
@@ -193,35 +204,74 @@ export default {
                         </MenuItem>
                     </BaseMenu>
                 </div>
-                <div class="mt-3" v-if="headerObject.projectsOfGroup.length > 0">
-                    <TagComponent v-for="projectGroup in headerObject.projectsOfGroup" :method="deleteProjectFromGroup"
-                                  :displayed-text="projectGroup.name" :property="projectGroup"></TagComponent>
+
+                <div class="my-3" v-if="headerObject.projectsOfGroup.length > 0">
+                    <div class="text-secondary xsDark">
+                        {{ $t('Projects in this group') }}:
+                    </div>
+                    <div class="mt-2 inline-flex gap-2">
+                        <div v-for="(groupProject, index) in headerObject.projectsOfGroup" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                            <div class="flex items-center">
+                                <div>
+                                    <img class="inline-block size-9 rounded-full object-cover" :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject?.key_visual_path : '/storage/logo/artwork_logo_small.svg'" alt="" />
+                                </div>
+                                <div class="mx-2">
+                                    <p class="xsDark group-hover:text-gray-900">{{ groupProject.name}}</p>
+                                </div>
+                                <div class="flex items-center">
+                                    <button type="button" @click="deleteProjectFromGroup(groupProject.id)">
+                                        <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300 cursor-pointer hover:bg-gray-200 duration-300 ease-in-out" @click="showAddProjectToGroup = true" v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.user.id) || headerObject.projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')">
+                            <div class="flex items-center">
+                                <div>
+                                    <img class="inline-block size-9 rounded-full object-cover" src="/storage/logo/artwork_logo_small.svg" alt="" />
+                                </div>
+                                <div class="mx-2">
+                                    <p class="xsDark group-hover:text-gray-900">{{ $t('Add projects to group') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="w-full mt-1 text-secondary subpixel-antialiased">
+                <div v-else-if="headerObject.projectsOfGroup.length <= 0 && headerObject.project.is_group" class="my-3">
+                    <div class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300 cursor-pointer hover:bg-gray-200 duration-300 ease-in-out" v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.user.id) || headerObject.projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')" @click="showAddProjectToGroup = true">
+                        <div class="flex items-center">
+                            <div>
+                                <img class="inline-block size-9 rounded-full object-cover" src="/storage/logo/artwork_logo_small.svg" alt="" />
+                            </div>
+                            <div class="mx-2">
+                                <p class="xsDark group-hover:text-gray-900">{{ $t('Add projects to group') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full my-1 text-secondary xsDark">
                     <div v-if="headerObject.firstEventInProject && headerObject.lastEventInProject">
                         {{ $t('Time period/opening hours') }}: {{ headerObject.firstEventInProject?.start_time }}
                         <span v-if="headerObject.firstEventInProject?.start_time">{{ $t('Clock') }} -</span>
                         {{ headerObject.lastEventInProject?.end_time }}
                         <span v-if="headerObject.lastEventInProject?.end_time">{{ $t('Clock') }}</span>
                     </div>
-                    <div v-if="headerObject.roomsWithAudience">
+                    <div v-if="headerObject.roomsWithAudience.length > 0">
                         {{ $t('Appointments with audience in') }}: <span>{{ locationString() }}</span>
                     </div>
-                    <div v-if="!headerObject.roomsWithAudience && !(headerObject.firstEventInProject && headerObject.lastEventInProject)">
+                    <div v-if="headerObject.roomsWithAudience.length <= 0 && !(headerObject.firstEventInProject && headerObject.lastEventInProject)">
                         {{ $t('No appointments within this project yet') }}
                     </div>
                 </div>
-                <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center"
-                     v-if="headerObject.project_history.length">
+                <div class="mt-2 subpixel-antialiased xxsLight flex items-center" v-if="headerObject.project_history.length">
                     <div>
                         {{ $t('last modified') }}:
                     </div>
-                    <UserPopoverTooltip :user="headerObject.project_history[0]?.changer"
-                                        :id="headerObject.project_history[0]?.changer.id" height="4" width="4"
-                                        class="ml-2"/>
+                    <UserPopoverTooltip :user="headerObject.project_history[0]?.changer" :id="headerObject.project_history[0]?.changer.id" height="4" width="4" class="ml-2"/>
                     <span class="ml-2 subpixel-antialiased">
-                    {{ headerObject.project_history[0]?.created_at }}
-                </span>
+                        {{ headerObject.project_history[0]?.created_at }}
+                    </span>
                     <button class="ml-4 subpixel-antialiased text-artwork-buttons-create flex items-center cursor-pointer"
                             @click="openProjectHistoryModal()">
                         <IconChevronRight
@@ -234,24 +284,22 @@ export default {
         </div>
 
         <!-- tabs -->
-        <div class="w-full h-full">
+        <div class="w-full h-full border-b-2 border-dashed pb-5 border-gray-100">
             <div class="ml-14">
                 <div class="hidden sm:block">
                     <div class="border-gray-200">
-                        <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
+                        <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-12" aria-label="Tabs">
                             <Link v-for="tab in headerObject.tabs" :key="tab?.name"
                                   :href="route('projects.tab', {project: headerObject.project.id, projectTab: tab.id})"
-                                  :class="[tab.id === headerObject.currentTabId ? 'border-artwork-buttons-hover text-artwork-buttons-hover' : 'border-transparent hover:text-gray-600 hover:border-gray-300 text-artwork-context-dark', 'whitespace-nowrap py-4 px-1 border-b-2 font-black']"
+                                  :class="[tab.id === headerObject.currentTabId ? 'border-artwork-buttons-hover text-artwork-buttons-hover' : 'border-transparent hover:text-gray-600 hover:border-gray-300 text-artwork-context-dark', 'whitespace-nowrap py-2 px-1 border-b-2 font-black duration-300 ease-in-out']"
                                   :aria-current="tab.id === headerObject.currentTabId ? 'page' : undefined">
-                                {{ tab.name }}
+                                {{ $t(tab.name) }}
                             </Link>
                         </nav>
                     </div>
                 </div>
             </div>
         </div>
-
-
         <!-- Tab Content -->
         <div class="ml-14">
             <slot />
@@ -309,6 +357,13 @@ export default {
                     </div>
                 </div>
         </BaseModal>
+
+        <ProjectGroupAddProject
+            :project="headerObject.project"
+            v-if="showAddProjectToGroup"
+            @close="showAddProjectToGroup = false"
+            :projects-in-group="headerObject.projectsOfGroup"
+        />
     </AppLayout>
 </template>
 

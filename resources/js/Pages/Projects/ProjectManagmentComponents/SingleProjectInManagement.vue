@@ -216,10 +216,10 @@ const openProjectInNewTab = (component, project) => {
 const gridTemplateColumns = computed(() =>
     props.components
         .map((component) => {
-            if (component.component === 'ProjectTitleComponent') {
+            if (component.type === 'ProjectTitleComponent') {
                 return '20rem'; // w-80
-            } else if (component.component === 'ActionsComponent') {
-                return 'auto'; // Automatisch anpassen
+            } else if (component.type === 'ActionsComponent') {
+                return '5rem'; // Automatisch anpassen
             } else {
                 return '14rem'; // w-56
             }

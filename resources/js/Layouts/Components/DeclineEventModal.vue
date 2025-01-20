@@ -142,8 +142,12 @@ export default {
             this.$emit('closed', bool)
         },
         declineRequest() {
-            axios.put(route('events.decline', this.requestToDecline.id))
-                .finally(() => {
+            axios.put(
+                route('events.decline', this.requestToDecline.id),
+                {
+                    comment: this.declineEvent.comment
+                }
+            ).finally(() => {
                     this.closeDeclineRequestModal();
                     this.$emit(
                         'declined',

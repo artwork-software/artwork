@@ -2290,5 +2290,9 @@
     "So far, there are no shift-relevant events for this project.": "So far, there are no shift-relevant events for this project.",
     "wrote": "wrote",
     "Here you can upload and download documents for the project.": "Here you can upload and download documents for the project.",
-    "Download": "Download"
+    "Download": "Download",
+    "Delete {0}": "Delete {0}",
+    "Are you sure you want to delete the selected component from the project?": "Are you sure you want to delete the selected component from the project?",
+    "Set up the project overview for your artwork. To do this, drag and drop the components from the lower area into the project overview. You can also adjust the order of the components using drag & drop.": "Set up the project overview for your artwork. To do this, drag and drop the components from the lower area into the project overview. You can also adjust the order of the components using drag & drop.",
+    "Drop here": "Drop here"
 }

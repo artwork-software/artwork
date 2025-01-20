@@ -23,6 +23,7 @@ use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Http\Resources\EventShowResource;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\EventService;
@@ -367,6 +368,7 @@ class EventController extends Controller
                 ];
             })),
             'historyObjects' => $historyObjects,
+            'eventStatuses' => EventStatus::orderBy('order')->get(),
             'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
             'first_project_shift_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
@@ -908,6 +910,7 @@ class EventController extends Controller
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->setNotificationKey(Str::random(15));
                 $this->notificationService->setNotificationTo($admin);
                 $this->notificationService->createNotification();
             }
@@ -956,6 +959,7 @@ class EventController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setNotificationKey(Str::random(15));
             $this->notificationService->setNotificationTo($user);
             $this->notificationService->createNotification();
         }

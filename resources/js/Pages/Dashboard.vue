@@ -131,6 +131,7 @@
                                                            :event="event"
                                                            :event-types="eventTypes"
                                                            :rooms="rooms"
+                                                           :event-statuses="this.eventStatuses"
                                                            :first_project_shift_tab_id="first_project_shift_tab_id"
                                                            :first_project_budget_tab_id="first_project_budget_tab_id"
                                                            :first_project_calendar_tab_id="first_project_calendar_tab_id"
@@ -251,6 +252,7 @@ export default defineComponent({
         'rooms',
         'historyObjects',
         'users_day_services_of_day',
+        'eventStatuses',
         'first_project_tab_id',
         'first_project_shift_tab_id',
         'first_project_tasks_tab_id',

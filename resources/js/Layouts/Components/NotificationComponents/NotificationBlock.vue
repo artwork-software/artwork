@@ -346,7 +346,7 @@ export default {
             }
         },
         checkNotificationKey(key){
-            return key !== null || key !== '' || key.length > 0;
+            return key !== null && key.length > 0;
         },
         openProjectBudget(projectId) {
             if (this.first_project_budget_tab_id) {

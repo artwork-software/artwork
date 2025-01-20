@@ -3,7 +3,9 @@
 namespace Artwork\Modules\DatabaseNotification\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Notifications\DatabaseNotification;
 use Throwable;
@@ -38,5 +40,13 @@ class DatabaseNotificationRepository extends BaseRepository
         )->first();
 
         return $this->deleteOrFail($databaseNotification);
+    }
+
+    public function findOlderThan(Carbon $carbon): Collection
+    {
+        return $this->getNewModelQuery()
+            ->whereNull('read_at')
+            ->where('created_at', '<', $carbon)
+            ->get();
     }
 }

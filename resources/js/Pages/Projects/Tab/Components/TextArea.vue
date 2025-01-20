@@ -6,7 +6,7 @@
         <span v-if="descriptionClicked === false"
               class="mt-2 subpixel-antialiased text-secondary"
               @click="handleDescriptionClick()"
-              v-html="data.project_value?.data.text ? data.project_value?.data.text : (this.canEditComponent ? $t('Click here to add text') : '')">
+              v-html="projectData.project_value.data.text ? projectData.project_value.data.text : (this.canEditComponent ? $t('Click here to add text') : '')">
         </span>
         <TextareaComponent
             v-else
@@ -18,7 +18,7 @@
             :show-label="false"
             no-margin-top
             @focusout="updateTextData()"
-            v-model="textData.text"
+            v-model="text"
             :maxlength="2000"
         >
         </TextareaComponent>
@@ -26,9 +26,10 @@
 </template>
 
 <script>
-import {nextTick} from "vue";
+import {nextTick, ref} from "vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js";
 
 export default {
     name: "TextArea",
@@ -40,16 +41,33 @@ export default {
             textData: {
                 text: this.data.project_value ? this.data.project_value.text_without_html : this.data.data.text,
             },
-            descriptionClicked: false
+            descriptionClicked: false,
+            projectData: this.data,
+            text: this.data.project_value.text_without_html ? this.data.project_value.text_without_html : this.data.data.text,
+        }
+    },
+    mounted() {
+        useProjectDataListener(this.projectData, this.projectId).init();
+    },
+    watch: {
+        // if the data changes, update the text
+        projectData: {
+            handler: function (newVal, oldVal) {
+                this.text = newVal.project_value.text_without_html ? newVal.project_value.text_without_html : newVal.data.text
+            },
+            deep: true
         }
     },
     methods: {
         updateTextData() {
             this.$inertia.patch(route('project.tab.component.update', {project: this.projectId, component: this.data.id}), {
-                data: this.textData
+                data: {
+                    text: this.text
+                }
             }, {
                 preserveScroll: true,
-                preserveState: false
+                preserveState: true,
+                onFinish: () => this.descriptionClicked = false
             })
         },
         handleDescriptionClick() {

@@ -2,6 +2,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems,Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
 } from '@headlessui/vue'
 import IconLib from "@/Mixins/IconLib.vue";
+import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
 export default {
     name: "DropDown",
     mixins: [IconLib],
@@ -34,8 +35,12 @@ export default {
         return {
             checkedData: {
                 selected: this.data.project_value ? this.data.project_value.data.selected : this.data.data.selected
-            }
+            },
+            projectData: this.data
         }
+    },
+    mounted() {
+        useProjectDataListener(this.projectData, this.projectId).init();
     },
     methods: {
         updateTextData(value) {
@@ -44,10 +49,10 @@ export default {
                 data: this.checkedData,
             }, {
                 preserveScroll: true,
-                preserveState: false
+                preserveState: true
             }, {
                 preserveScroll: true,
-                preserveState: false
+                preserveState: true
             })
         }
     }

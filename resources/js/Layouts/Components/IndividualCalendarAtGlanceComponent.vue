@@ -1,6 +1,6 @@
 <template>
     <div class="bg-white">
-        <div class="w-full z-50" :class="project ? '-mt-10 -ml-6' : 'sticky -ml-2 -mt-1'">
+        <div class="w-full z-[100]" :class="project ? '-mt-10 -ml-6' : 'sticky -ml-2 -mt-1'">
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :rooms="rooms"

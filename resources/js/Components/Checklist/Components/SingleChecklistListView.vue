@@ -1,12 +1,12 @@
 <template>
     <div class="bg-white px-5 py-7 rounded-lg border-l-8 " :class="$page.props.user.opened_checklists.includes(checklist?.id) ? 'border-artwork-buttons-create' : 'border-gray-400'">
         <div class="flex items-center justify-between">
-            <div class="flex items-center gap-x-3" @click="changeChecklistStatus(checklist)">
+            <div class="flex items-center gap-x-3 cursor-pointer" @click="changeChecklistStatus(checklist)">
                 <div class="font-bold">
                     {{ checklist?.name }}
                 </div>
                 <div>
-                    <component is="IconChevronDown" class="h-6 w-6 cursor-pointer" :class="$page.props.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
+                    <component is="IconChevronDown" class="h-6 w-6" :class="$page.props.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
                 </div>
             </div>
 

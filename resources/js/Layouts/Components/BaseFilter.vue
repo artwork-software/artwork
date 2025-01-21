@@ -13,6 +13,7 @@
                     :tooltip-text="$t('Filter')"
                     icon="IconFilter"
                     :whiteIcon="whiteIcon"
+                    :grayIcon="grayIcon"
                     icon-size="h-7 w-7"/>
             </MenuButton>
         </div>
@@ -57,6 +58,6 @@ export default {
         MenuButton,
         ChevronDownIcon
     },
-    props:['onlyIcon', 'left', 'whiteIcon']
+    props:['onlyIcon', 'left', 'whiteIcon', 'grayIcon']
 }
 </script>

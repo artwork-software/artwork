@@ -171,6 +171,10 @@
         .inventory-top-bar-container {
             @apply flex items-center gap-x-2 justify-end rounded-t-md subpixel-antialiased;
 
+            svg {
+                @apply hover:text-blue-500;
+            }
+
             .inventory-top-bar-filter-container {
                 @apply flex flex-col w-full gap-y-2;
 

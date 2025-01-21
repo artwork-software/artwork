@@ -1,6 +1,5 @@
 <template>
     <td :class="getCellCls()" class="relative">
-
         <span v-if="hasCellValue()" :class="getCellValueCls()" @click="toggleCellEdit()">
             <template v-if="isTextColumn() || isSelectColumn() || isNumberColumn()">
                 <span v-if="isTextColumn()" :title="cell.cell_value">
@@ -174,7 +173,6 @@ const emits = defineEmits(['isEditingCellValue']),
         return props.cell.cell_value.length > 0;
     },
     getCellValueCls = () => {
-
         return isDateColumn() || isCheckboxColumn() ? 'text-center block cursor-text' : 'cursor-text';
     },
     isTextColumn = () => {
@@ -199,8 +197,7 @@ const emits = defineEmits(['isEditingCellValue']),
         return props.cell.column.type === 99;
     },
     toggleCellEdit = () => {
-
-        if(!can('can manage inventory stock') || !hasAdminRole()){
+        if (!can('can manage inventory stock') || !hasAdminRole()) {
             return;
         }
 

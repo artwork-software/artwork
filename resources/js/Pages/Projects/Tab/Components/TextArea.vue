@@ -6,7 +6,7 @@
         <span v-if="descriptionClicked === false"
               class="mt-2 subpixel-antialiased text-secondary"
               @click="handleDescriptionClick()"
-              v-html="projectData.project_value.data.text ? projectData.project_value.data.text : (this.canEditComponent ? $t('Click here to add text') : '')">
+              v-html="projectData.project_value?.data?.text ? projectData.project_value.data.text : (this.canEditComponent ? $t('Click here to add text') : '')">
         </span>
         <TextareaComponent
             v-else
@@ -43,7 +43,7 @@ export default {
             },
             descriptionClicked: false,
             projectData: this.data,
-            text: this.data.project_value.text_without_html ? this.data.project_value.text_without_html : this.data.data.text,
+            text: this.data.project_value?.text_without_html ? this.data.project_value.text_without_html : this.data.data.text,
         }
     },
     mounted() {

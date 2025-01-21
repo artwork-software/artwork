@@ -1,18 +1,21 @@
 import { ref } from "vue";
 
-export function EventListenerForDragging() {
+export function EventListenerForDragging(event) {
     const isDragging = ref(false);
 
-    function dispatchEventStart() {
+    function dispatchEventStart(content = null) {
         window.dispatchEvent(new CustomEvent("dragging-started", {
-            detail: { message: "Drag operation started" }
+            detail: { message: "Drag operation started", content: content },
         }));
+
         isDragging.value = true; // Wert aktualisieren
+        console.log("dispatchEventStart: isDragging", isDragging.value, content);
     }
 
-    function dispatchEventEnd() {
+    function dispatchEventEnd(event) {
         window.dispatchEvent(new Event("dragging-ended"));
         isDragging.value = false; // Wert zurücksetzen
+        console.log("dispatchEventEnd: isDragging", isDragging.value);
     }
 
     function addEventListenerForDraggingStart() {

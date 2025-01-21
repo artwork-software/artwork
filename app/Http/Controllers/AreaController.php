@@ -19,8 +19,10 @@ use Inertia\ResponseFactory;
 
 class AreaController extends Controller
 {
-    public function __construct(private readonly AreaService $areaService)
-    {
+    public function __construct(
+        private readonly AreaService $areaService,
+        private readonly RoomService $roomService
+    ) {
         $this->authorizeResource(Area::class);
     }
 
@@ -60,6 +62,9 @@ class AreaController extends Controller
 
     public function destroy(Area $area): RedirectResponse
     {
+        foreach ($area->rooms() as $room) {
+            $this->roomService->delete($room);
+        }
         $this->areaService->delete($area);
         return Redirect::route('areas.management');
     }
@@ -76,7 +81,7 @@ class AreaController extends Controller
         /** @var Area $area */
         $area = Area::onlyTrashed()->findOrFail($id);
         $area->restore();
-        foreach ($area->rooms() as $room) {
+        foreach ($area->trashedRooms() as $room) {
             $room->restore();
         }
         return Redirect::route('areas.trashed');

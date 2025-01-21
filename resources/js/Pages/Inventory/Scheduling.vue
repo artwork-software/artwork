@@ -136,7 +136,41 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="mr-20 flex items-center">
+                        <div class="mr-20 flex items-center gap-1">
+                            <BaseFilter :only-icon="true" :gray-icon="true">
+                                <div class="flex flex-col w-full gap-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-xs flex justify-between">{{ $t('Filter') }}</span>
+                                        <span class="xxsLight cursor-pointer text-right w-full" @click="resetFilters()">
+                                        {{ $t('Reset') }}
+                                    </span>
+                                    </div>
+                                    <div class="text-xs border-b">{{ $t('Crafts') }}</div>
+                                    <div class="flex flex-col gap-0">
+                                        <BaseFilterCheckboxList :list="getCraftFilters()"
+                                                                filter-name="inventory-scheduling-crafts-filter"
+                                                                @change-filter-items="updateCraftFilters"/>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-xs !border-0"
+                                     @click="showAmountFilter = !showAmountFilter">
+                                    <div>{{ $t('Mengen') }}</div>
+                                    <IconChevronDown v-if="!showAmountFilter"
+                                                     stroke-width="1.5" class="h-5 w-5 cursor-pointer"
+                                                     aria-hidden="true"/>
+                                    <IconChevronUp v-if="showAmountFilter"
+                                                   stroke-width="1.5"
+                                                   class="h-5 w-5 cursor-pointer"
+                                                   aria-hidden="true"/>
+                                </div>
+                                <div>
+                                <input v-if="showAmountFilter"
+                                       type="number"
+                                       class="input mt-1 h-7 text-xs text-black placeholder:text-gray-500"
+                                       placeholder="Mindestens verfügbare Menge..."
+                                       v-model="amountFilterValue"/>
+                                </div>
+                            </BaseFilter>
                             <input v-if="searchOpened"
                                    class="w-60 h-10 bg-artwork-navigation-background border text-white border-gray-500 rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary"
                                    type="text"
@@ -154,7 +188,7 @@
                                 @click="toggleSearch"
                             />
                             <IconX v-else
-                                   class="h-7 w-7 ml-3 cursor-pointer hover:text-blue-500 text-white"
+                                   class="h-5 w-5 cursor-pointer hover:text-blue-500 text-white"
                                    @click="toggleSearch(true)"/>
                         </div>
                     </div>
@@ -180,7 +214,12 @@
 <script setup>
 import {onMounted, onUpdated, ref, watch} from "vue";
 import {Link, router} from "@inertiajs/vue3";
-import {IconCaretUpDown, IconChevronsDown, IconPencil, IconSearch, IconX} from "@tabler/icons-vue";
+import {
+    IconChevronDown,
+    IconChevronsDown,
+    IconChevronUp,
+    IconX
+} from "@tabler/icons-vue";
 import {Switch} from "@headlessui/vue";
 
 import InventoryHeader from "@/Pages/Inventory/InventoryHeader.vue";
@@ -201,6 +240,9 @@ import {usePage} from "@inertiajs/vue3";
 import debounce from "lodash.debounce";
 import dayjs from "dayjs";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
+import Input from "@/Jetstream/Input.vue";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props);
 const $t = useTranslation(),
     props = defineProps({
@@ -218,6 +260,10 @@ const $t = useTranslation(),
         },
         crafts: {
             type: Object,
+            required: true
+        },
+        craftFilters: {
+            type: Array,
             required: true
         }
     });
@@ -240,10 +286,23 @@ const selectedEvents = ref([]);
 const showMultiEditModal = ref(false);
 const selectedEventsForMultiEdit = ref([]);
 const errorMessagesMultiEdit = ref('');
-const { searchValue, crafts, filteredCrafts } = useCraftFilterAndSearch()
+const { searchValue, crafts, craftFilters, filteredCrafts, amountFilterValue } = useCraftFilterAndSearch();
 const searchOpened = ref(false);
+const showAmountFilter = ref(true );
+
 const  setSearchData = () => {
     crafts.value = props.crafts;
+    craftFilters.value = props.craftFilters;
+};
+
+const getCraftFilters = () => {
+    return props.crafts.map((craft) => {
+        return {
+            id: craft.id,
+            name: craft.name,
+            checked: props.craftFilters.includes(craft.id)
+        };
+    });
 };
 
 const toggleSearch = (close = false) => {
@@ -524,8 +583,6 @@ const goToPeriod = (period, type) => {
     }
 };
 
-
-
 const applyUserOverviewHeight = () => {
     router.patch(route('user.update.userOverviewHeight', {user: usePage().props.user.id}), {
         drawer_height: userOverviewHeight.value
@@ -535,8 +592,39 @@ const applyUserOverviewHeight = () => {
     });
 };
 
-
 const debounceApplyUserOverviewHeight = debounce(applyUserOverviewHeight, 500);
+
+const updateCraftFilters = (args = {list: []}) => {
+    router.patch(
+        route('inventory-management.inventory.filter.update'),
+        {
+            filter: args.list
+                .filter((arg) => arg.checked === true)
+                .map((arg) => {
+                    return {craftId: arg.id}
+                })
+        },
+        {
+            preserveScroll: true
+        }
+    );
+};
+
+const resetFilters = () => {
+    searchValue.value = '';
+    craftFilters.value = [];
+    router.patch(
+        route('inventory-management.inventory.filter.update'),
+        {
+            filter: []
+        },
+        {
+            preserveScroll: true
+        }
+    );
+    amountFilterValue.value = null;
+};
+
 watch(
     () => filteredCrafts,
     (newCrafts) => {

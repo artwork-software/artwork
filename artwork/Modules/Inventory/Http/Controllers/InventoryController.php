@@ -75,7 +75,9 @@ class InventoryController extends Controller
             'dateValue' => $showCalendar['dateValue'],
             'calendar' => $showCalendar['roomsWithEvents'],
             'days' => $showCalendar['days'],
-            'crafts' => $crafts
+            'crafts' => $crafts,
+            'craftFilters' => $this->inventoryManagementUserFilterService
+                ->getFilterOfUser($this->authManager->id())
         ]);
     }
 

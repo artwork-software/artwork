@@ -4,30 +4,31 @@ namespace Artwork\Modules\Project\Events;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Comment;
+use Artwork\Modules\ProjectTab\Models\ProjectComponentValue;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class DeleteCommendInProject implements ShouldBroadcastNow
+class UpdateProjectComponentData implements ShouldBroadcastNow
 {
     use Dispatchable;
     use InteractsWithSockets;
     use SerializesModels;
 
-    public $comment;
+    public $data;
     public $projectId;
 
-    public function __construct(Comment $comment, int $projectId)
+    public function __construct(ProjectComponentValue $data, int $projectId)
     {
-        $this->comment = $comment;
+        $this->data = $data;
         $this->projectId = $projectId;
     }
 
     public function broadcastAs()
     {
-        return 'comment.delete';
+        return 'data.updated';
     }
 
     public function broadcastOn(): PrivateChannel
@@ -38,7 +39,7 @@ class DeleteCommendInProject implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'comment' => $this->comment,
+            'data' => $this->data,
         ];
     }
 }

@@ -357,6 +357,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/checklists/{checklist}', [ChecklistController::class, 'update'])->name('checklists.update');
     Route::delete('/checklists/{checklist}', [ChecklistController::class, 'destroy'])->name('checklist.destroy');
 
+    // route change.task.checklist
+    Route::patch('/checklists/{checklist}/change/task/{task}', [TaskController::class, 'changeTaskChecklist'])
+        ->name('checklists.change.task');
+
 
     //checklist.done.all.tasks
     Route::patch('/checklists/{checklist}/doneOrUndone/all/tasks', [ChecklistController::class, 'doneOrUndoneAllTasks'])

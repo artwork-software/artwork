@@ -9,6 +9,13 @@
             </div>
             <ProjectTabs />
 
+            <div>
+                <TinyPageHeadline
+                    :title="$t('Project overview builder')"
+                    :description="$t('Set up the project overview for your artwork. To do this, drag and drop the components from the lower area into the project overview. You can also adjust the order of the components using drag & drop.')"
+                />
+            </div>
+
             <div class="pt-5">
                 <div class="overflow-x-auto">
                     <draggable
@@ -37,7 +44,7 @@
                         <div>
                             <div class="relative rounded-md shadow-sm">
                                 <input type="text" name="search" v-model="searchComponent" :placeholder="$t('Search')" class="block w-full rounded-md border-0 py-1.5 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                                <div class=" absolute inset-y-0 right-0 flex items-center pr-3">
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                                     <IconSearch class="h-5 w-5 text-gray-400 pointer-events-none" aria-hidden="true" v-if="searchComponent.length === 0" />
                                     <IconCircleX class="h-5 w-5 text-gray-400 cursor-pointer hover:text-red-400" aria-hidden="true" v-else @click="searchComponent = ''" />
                                 </div>

@@ -32,7 +32,7 @@ class NewCommentInProject implements ShouldBroadcastNow
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('project.comment.' . $this->projectId);
+        return new PrivateChannel('project.' . $this->projectId);
     }
 
     public function broadcastWith(): array

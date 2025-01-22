@@ -87,47 +87,47 @@ export default function useCraftFilterAndSearch() {
                 let filteredCategories = [];
 
                 craft.filtered_inventory_categories.forEach(category => {
-                    let matchedGroups = category.groups.filter(group => {
-                        let matchedFolders = group.folders.filter(folder =>
-                                folder.items.some(item =>
-                                    item.cells.some(
-                                        (cell) => {
-                                            return Number.parseInt(cell.cell_value) >= amountFilterValue.value;
+                    category.groups.forEach(
+                        (group) => {
+                            group.folders = group.folders.forEach(
+                                (folder) => {
+                                    folder.items.filter(
+                                        (item) => {
+                                            return item.cells.some(
+                                                (cell) => {
+                                                    return !isNaN(cell.cell_value) &&
+                                                        Number.parseInt(cell.cell_value) >= amountFilterValue.value;
+                                                }
+                                            )
                                         }
                                     )
-                                )
-                            );
-
-                        if (matchedFolders.length > 0) {
-                            group.folders = matchedFolders;
-                            return true;
-                        }
-
-                        group.items = group.items.filter(item =>
-                            item.cells.some(
-                                (cell) => {
-                                    return Number.parseInt(cell.cell_value) >= amountFilterValue.value;
                                 }
                             )
-                        );
 
-                        return group.items.length > 0;
-                    });
+                            group.items = group.items.filter(
+                                (item) => {
+                                    return item.cells.some(
+                                        (cell) => {
+                                            return !isNaN(cell.cell_value) &&
+                                                Number.parseInt(cell.cell_value) >= amountFilterValue.value;
+                                        }
+                                    );
+                                }
+                            );
+                        }
+                    );
 
-                    if (matchedGroups.length > 0) {
-                        category.groups = matchedGroups;
-                        filteredCategories.push(category);
-                    }
+                    filteredCategories.push(category);
                 });
-
                 craft.filtered_inventory_categories = filteredCategories;
             });
         }
 
         return filteringCrafts.map(
-        (craft) => {
-            return ref(craft);
-        });
+            (craft) => {
+                return ref(craft);
+            }
+        );
     });
 
     return { searchValue, craftFilters, crafts, filteredCrafts, amountFilterValue };

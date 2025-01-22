@@ -2290,5 +2290,9 @@
     "So far, there are no shift-relevant events for this project.": "So far, there are no shift-relevant events for this project.",
     "wrote": "wrote",
     "Here you can upload and download documents for the project.": "Here you can upload and download documents for the project.",
-    "Download": "Download"
+    "Download": "Download",
+    "Quantity": "Quantity",
+    "Minimum available quantity...": "Minimum available quantity...",
+    "No permissions": "No permissions",
+    "Contact your administrator so that you can plan the inventory.": "Contact your administrator so that you can plan the inventory."
 }

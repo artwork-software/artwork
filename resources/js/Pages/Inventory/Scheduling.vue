@@ -100,30 +100,30 @@
                     <div class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background px-3"
                         :style="{ top: calculateTopPositionOfUserOverView }">
                         <Switch @click="toggleMultiEditMode" v-model="multiEditMode" :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                                    <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                        <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                            <ToolTipComponent
-                                                icon="IconPencil"
-                                                icon-size="h-4 w-4"
-                                                :tooltip-text="$t('Edit')"
-                                                direction="right"
-                                            />
-                                        </span>
-                                        <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                            <ToolTipComponent
-                                                icon="IconPencil"
-                                                icon-size="h-4 w-4"
-                                                :tooltip-text="$t('Edit')"
-                                                direction="right"
-                                            />
-                                        </span>
-                                    </span>
+                            <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent
+                                        icon="IconPencil"
+                                        icon-size="h-4 w-4"
+                                        :tooltip-text="$t('Edit')"
+                                        direction="right"
+                                    />
+                                </span>
+                                <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent
+                                        icon="IconPencil"
+                                        icon-size="h-4 w-4"
+                                        :tooltip-text="$t('Edit')"
+                                        direction="right"
+                                    />
+                                </span>
+                            </span>
                         </Switch>
                         <div v-if="multiEditMode" class="pointer-events-none">
                             <div class="w-full -mt-2.5">
                                 <div class="flex items-center justify-center h-full gap-x-2">
                                     <div>
-                                        <AddButtonSmall type="cancel" no-icon @click="toggleMultiEditMode" text="Abbrechen" class="text-xs pointer-events-auto" />
+                                        <AddButtonSmall type="cancel" no-icon @click="toggleMultiEditMode" :text="$t('Cancel')" class="text-xs pointer-events-auto" />
                                     </div>
                                     <div>
                                         <AddButtonSmall
@@ -154,7 +154,7 @@
                                 </div>
                                 <div class="flex justify-between text-xs !border-0"
                                      @click="showAmountFilter = !showAmountFilter">
-                                    <div>{{ $t('Mengen') }}</div>
+                                    <div>{{ $t('Quantity') }}</div>
                                     <IconChevronDown v-if="!showAmountFilter"
                                                      stroke-width="1.5" class="h-5 w-5 cursor-pointer"
                                                      aria-hidden="true"/>
@@ -165,10 +165,10 @@
                                 </div>
                                 <div>
                                 <input v-if="showAmountFilter"
+                                       v-model="amountFilterValue"
                                        type="number"
                                        class="input mt-1 h-7 text-xs text-black placeholder:text-gray-500"
-                                       placeholder="Mindestens verfügbare Menge..."
-                                       v-model="amountFilterValue"/>
+                                       :placeholder="$t('Minimum available quantity...')"/>
                                 </div>
                             </BaseFilter>
                             <input v-if="searchOpened"
@@ -288,7 +288,7 @@ const selectedEventsForMultiEdit = ref([]);
 const errorMessagesMultiEdit = ref('');
 const { searchValue, crafts, craftFilters, filteredCrafts, amountFilterValue } = useCraftFilterAndSearch();
 const searchOpened = ref(false);
-const showAmountFilter = ref(true );
+const showAmountFilter = ref(false );
 
 const  setSearchData = () => {
     crafts.value = props.crafts;
@@ -335,6 +335,11 @@ const toggleMultiEditMode = () => {
         filteredCrafts.value.forEach((craft) => {
             craft.value.filtered_inventory_categories.forEach((category) => {
                 category.groups.forEach((group) => {
+                    group.folders.forEach((folder) => {
+                        folder.items.forEach((item) => {
+                            item.checked = false;
+                        });
+                    });
                     group.items.forEach((item) => {
                         item.checked = false;
                     });
@@ -631,9 +636,32 @@ watch(
         newCrafts.value.forEach((craft) => {
             craft.value.filtered_inventory_categories.forEach((category) => {
                 category.groups.forEach((group) => {
+                    group.folders.forEach((folder) => {
+                        folder.items.forEach((item) => {
+                            if (!checkedItems.value.find((checkedItem) => checkedItem.id === item.id)) {
+                                if (item.checked) {
+                                    checkedItems.value.push({
+                                        id: item.id,
+                                        name: item.name,
+                                        craft: craft.value.name,
+                                        category: category.name,
+                                        group: group.name
+                                    });
+                                    itemIsSelectedForMultiEdit.value = true;
+                                }
+                            } else {
+                                if (!item.checked) {
+                                    checkedItems.value = checkedItems.value.filter((checkedItem) => checkedItem.id !== item.id);
+                                }
+                                if (checkedItems.value.length === 0) {
+                                    itemIsSelectedForMultiEdit.value = false;
+                                }
+                            }
+                        })
+                    });
                     group.items.forEach((item) => {
                         if (!checkedItems.value.find((checkedItem) => checkedItem.id === item.id)) {
-                            if(item.checked){
+                            if (item.checked) {
                                 checkedItems.value.push({
                                     id: item.id,
                                     name: item.name,
@@ -656,7 +684,7 @@ watch(
             });
         });
     },
-    { deep: true }
+    {deep: true}
 );
 </script>
 

@@ -9,6 +9,7 @@ use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
+use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
@@ -20,6 +21,7 @@ readonly class CalendarDataService
         private RoomRepository $roomRepository,
         private EventCollectionService $eventCollectionService,
         private FilterService $filterService,
+        private UserService $userService
     ) {
     }
 
@@ -44,6 +46,7 @@ readonly class CalendarDataService
         ?bool $desiresInventorySchedulingResource = null
     ): array {
         $periodArray = [];
+        $user = $this->userService->getAuthUser();
         foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
             $holidays = Holiday::where(function ($query) use ($period): void {
                 $query->where(function ($q) use ($period): void {
@@ -77,6 +80,11 @@ readonly class CalendarDataService
                         'subdivisions' => $holiday->subdivisions->pluck('name'), // Subdivision-Namen sammeln
                     ];
                 }),
+                'hours_of_day' => $user->getAttribute('daily_view')
+                    ? collect(range(0, 23))->map(function ($hour) {
+                        return Carbon::createFromTime($hour)->format('H:i');
+                    })->toArray()
+                    : [],
             ];
         }
 

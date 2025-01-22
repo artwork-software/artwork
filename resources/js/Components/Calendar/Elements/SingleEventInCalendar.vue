@@ -2,7 +2,7 @@
     <div
         :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
         class="rounded-lg group event-item relative"
-        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '']">
+        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '', isHeightFull ? 'h-full' : '']">
         <div v-if="zoom_factor > 0.4 && multiEdit"
              class="absolute w-full h-full z-10 rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
@@ -427,6 +427,11 @@ const props = defineProps({
         type: [Number, String],
         required: false,
         default: null
+    },
+    isHeightFull: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 });
 

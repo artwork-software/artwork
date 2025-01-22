@@ -729,6 +729,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::patch('/user/{user}/update/bulk/sort_id', [UserController::class, 'updateBulkSortId'])
         ->name('user.update_bulk_sort_id');
+
+    // user.update.daily_view
+    Route::patch('/user/{user}/update/daily_view', [UserController::class, 'updateDailyView'])
+        ->name('user.update.daily_view');
+
     Route::resource(
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class

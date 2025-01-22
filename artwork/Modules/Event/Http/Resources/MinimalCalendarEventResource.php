@@ -77,7 +77,11 @@ class MinimalCalendarEventResource extends JsonResource
             'projectStateColor' => $projectStateColor,
             'projectLeaders' => $projectLeaders,
             'subEvents' => SubEventResource::collection($this->getAttribute('subEvents'))->resolve(),
-            'shifts' => $this->aggregateEventShifts($this->getAttribute('shifts')->all())
+            'shifts' => $this->aggregateEventShifts($this->getAttribute('shifts')->all()),
+            'start_hour' => $this->getAttribute('start_hour') . ':00',
+            'event_length_in_hours' => $this->getAttribute('event_length_in_hours'),
+            'hours_to_next_day' => $this->getAttribute('hours_to_next_day'),
+            'minutes_form_start_hour_to_start' => $this->getAttribute('minutes_form_start_hour_to_start'),
         ];
     }
 

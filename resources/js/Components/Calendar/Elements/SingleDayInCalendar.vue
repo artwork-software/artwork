@@ -1,6 +1,6 @@
 <template>
-    <div :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays'" class="bg-userBg text-calendarText text-right">
-        <div :style="textStyle" class="mt-3 mr-2">
+    <div :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="[isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays', hour ? '!bg-gray-200' : '']" class=" text-calendarText text-right">
+        <div :style="textStyle" class="mt-3 mr-2" v-if="day">
             <div>
                 {{ zoom_factor >= 0.8 ? day.day_string : '' }}
             </div>
@@ -24,7 +24,11 @@
                 </div>
             </HolidayToolTip>
         </div>
-
+        <div :style="textStyle" class="mt-3 mr-2" v-else>
+            <div class="xsDark">
+                {{ hour }}
+            </div>
+        </div>
     </div>
 </template>
 
@@ -37,12 +41,18 @@ import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 const props = defineProps({
     day: {
         type: Object,
-        required: true
+        required: false,
+        default: null
     },
     isFullscreen: {
         type: Boolean,
         required: false,
         default: false
+    },
+    hour: {
+        type: String,
+        required: false,
+        default: null
     }
 })
 
@@ -56,6 +66,8 @@ const textStyle = computed(() => {
         lineHeight,
     };
 })
+
+
 
 </script>
 

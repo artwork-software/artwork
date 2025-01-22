@@ -124,7 +124,11 @@ class Event extends Model
         'event_date_without_time',
         'formatted_dates',
         'dates_for_series_event',
-        'times_without_dates'
+        'times_without_dates',
+        'start_hour',
+        'event_length_in_hours',
+        'hours_to_next_day',
+        'minutes_form_start_hour_to_start',
     ];
 
     public static function boot(): void
@@ -445,5 +449,28 @@ class Event extends Model
             ->whereRaw('`projects`.`id` = `events`.`project_id`')
             ->orderBy($columnToOrderBy, $direction)
             ->take(1);
+    }
+
+    public function getStartHourAttribute(): string
+    {
+        return Carbon::parse($this->start_time)->format('H');
+    }
+
+    public function getEventLengthInHoursAttribute(): int
+    {
+
+        return Carbon::parse($this->start_time)->isSameDay(Carbon::parse($this->end_time)) ?
+            Carbon::parse($this->end_time)->diffInHours(Carbon::parse($this->start_time)) :
+            Carbon::parse($this->start_time)->endOfDay()->diffInHours(Carbon::parse($this->start_time));
+    }
+
+    public function getHoursToNextDayAttribute(): int
+    {
+        return Carbon::parse($this->end_time)->diffInHours(Carbon::parse($this->start_time)->endOfDay());
+    }
+
+    public function getMinutesFormStartHourToStartAttribute(): int
+    {
+        return Carbon::parse($this->start_time)->diffInMinutes(Carbon::parse($this->start_time)->startOfHour());
     }
 }

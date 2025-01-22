@@ -95,7 +95,9 @@
                        @focusout="applyCellValueChange()"/>
             </div>
             <div v-else-if="isSelectColumn()" :class="getInputCls()">
-                <select ref="cellValueInputRef" class="select-input" v-model="cellValue" @focusout="applyCellValueChange()">
+                <select ref="cellValueInputRef"
+                        class="select-input"
+                        v-model="cellValue" @focusout="applyCellValueChange()">
                     <option v-for="(option) in cell.column.type_options">
                         {{ option }}
                     </option>
@@ -145,7 +147,9 @@ const emits = defineEmits(['isEditingCellValue']),
 
         return [
             getBackgroundCls(),
-            'max-w-40 h-10 px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap ' + addedClasses
+            'max-w-40 h-10 px-3 border subpixel-antialiased relative text-xs ' +
+                'overflow-ellipsis overflow-hidden whitespace-nowrap ' +
+                addedClasses
         ].join(' ');
     },
     getBackgroundCls = () => {

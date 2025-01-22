@@ -1825,7 +1825,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->name('export.download-calendar-xlsx');
     });
 
-
     Route::group(['prefix' => 'project-management-builder'], function (): void {
         Route::get('/', [ProjectManagementBuilderController::class, 'index'])
             ->name('project-management-builder.index');
@@ -1841,6 +1840,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // delete project-management-builder.destroy
         Route::delete('/destroy/{component}', [ProjectManagementBuilderController::class, 'destroy'])
             ->name('project-management-builder.destroy');
+    });
+
+    Route::group(['prefix' => 'event-property'], function (): void {
+
     });
 });
 

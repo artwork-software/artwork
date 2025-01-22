@@ -1,36 +1,36 @@
 <template>
     <div
+        v-if="isDragging || dropOver"
         @dragover="onDragOver"
         @drop="onDrop"
         @dragleave="dragLeave"
-        class="mx-2 h-full rounded-lg duration-100 ease-in-out border-2 border-dashed"
+        class="rounded-lg duration-100 ease-in-out border-2 border-dashed w-full mb-4"
         :class="{
-        'bg-artwork-buttons-create/30 border-artwork-buttons-create w-44': dropOver,
-        'bg-artwork-buttons-create/10 border-artwork-buttons-create w-8': isDragging,
-        'border-transparent': !dropOver && !isDragging,
+        'bg-artwork-buttons-create/10 border-artwork-buttons-create h-12 xsDark': dropOver,
+        'bg-gray-50 border-gray-400 h-12 xsLight': isDragging,
+        'border-transparent xsLight': !dropOver && !isDragging,
     }">
-        <div class="flex items-center justify-center pointer-events-none h-full xsDark" v-show="dropOver">
-            {{ $t("Drop here") }}
+        <div class="flex items-center justify-center pointer-events-none h-full ">
+            {{ $t("Add the task here") }}
         </div>
     </div>
 </template>
 
 <script setup>
 
-import { ref, onMounted, onUnmounted } from "vue";
+import {ref, onMounted, onUnmounted, watch} from "vue";
 import { router } from "@inertiajs/vue3";
 import { EventListenerForDragging } from "@/Composeables/EventListenerForDragging.js";
 const { isDragging, addEventListenerForDraggingStart, removeEventListenerForDraggingStart } = EventListenerForDragging();
 
 const props = defineProps({
-    order: {
+    checklistId: {
         type: Number,
         required: true,
     }
 });
 
 const dropOver = ref(false);
-
 
 const onDragOver = (event) => {
     dropOver.value = true;
@@ -46,15 +46,16 @@ const dragLeave = () => {
 const onDrop = (event) => {
     event.preventDefault();
     try {
-        const component = JSON.parse(event.dataTransfer.getData("component"));
-        if (!component || !component.id) {
-            console.warn("Component data is invalid", component);
+        const task = JSON.parse(event.dataTransfer.getData("task"));
+        if (!task || !task.id) {
+            console.warn("Component data is invalid", task);
             return;
         }
         dropOver.value = false;
-        router.post(route("project-management-builder.store", { component: component.id }), {
-            order: props.order,
-        });
+        if(task.checklist_id === props.checklistId) {
+            return;
+        }
+        router.patch(route("checklists.change.task", { task: task.id, checklist: props.checklistId }));
     } catch (error) {
         console.error("Invalid JSON in drag data", error);
         dropOver.value = false;
@@ -68,5 +69,4 @@ onMounted(() => {
         removeEventListenerForDraggingStart(listeners);
     });
 });
-
 </script>

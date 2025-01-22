@@ -1,6 +1,6 @@
 export function useCommentListener(commentList, projectId) {
     function init() {
-        Echo.private('project.comment.' + projectId)
+        Echo.private('project.' + projectId)
             .listen('.comment.add', (data) => {
                 const newComment = data.comment;
 

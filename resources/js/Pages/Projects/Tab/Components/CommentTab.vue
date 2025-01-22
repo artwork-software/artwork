@@ -75,7 +75,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import Button from "@/Jetstream/Button.vue";
-import {useCommentListener} from "@/Composeables/useCommentListener.js";
+import {useCommentListener} from "@/Composeables/Listener/useCommentListener.js";
 import {ref} from "vue";
 
 export default {

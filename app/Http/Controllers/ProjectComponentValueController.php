@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Project\Events\UpdateProjectComponentData;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ProjectComponentValue;
@@ -68,7 +69,7 @@ class ProjectComponentValueController extends Controller
         }
 
         if ($value === null) {
-            ProjectComponentValue::create([
+            $value = ProjectComponentValue::create([
                 'project_id' => $project->id,
                 'component_id' => $component->id,
                 'data' => $valueInput,
@@ -78,6 +79,8 @@ class ProjectComponentValueController extends Controller
                 'data' => $valueInput,
             ]);
         }
+
+        broadcast(new UpdateProjectComponentData($value, $project->id));
     }
 
     /**

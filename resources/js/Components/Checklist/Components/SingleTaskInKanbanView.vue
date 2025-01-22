@@ -1,5 +1,9 @@
 <template>
-    <div class="px-4 py-3 group rounded-lg shadow bg-white my-3">
+    <div class="px-4 py-3 group rounded-lg shadow bg-white my-3"
+         draggable="true"
+         @dragstart="onDragStart"
+         @dragend="onDragEnd"
+    >
         <div class="flex items-start justify-between">
             <div class="flex items-start">
                 <div class="mr-3">
@@ -15,26 +19,28 @@
 
                 </div>
             </div>
-            <BaseMenu class="ml-3" v-if="(canEditComponent && (projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds?.includes($page.props.user.id) || isAdmin)) || isInOwnTaskManagement">
-                <MenuItem v-slot="{ active }">
-                    <div @click="openEditTaskModal = true"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                        <IconEdit stroke-width="1.5"
-                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                  aria-hidden="true"/>
-                        {{ $t('Edit') }}
-                    </div>
-                </MenuItem>
-                <MenuItem v-slot="{ active }">
-                    <a @click="openDeleteTaskModal = true"
-                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                        <IconTrash stroke-width="1.5"
-                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                   aria-hidden="true"/>
-                        {{ $t('Delete') }}
-                    </a>
-                </MenuItem>
-            </BaseMenu>
+            <div>
+                <BaseMenu class="ml-3" v-if="(canEditComponent && (projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds?.includes($page.props.user.id) || isAdmin)) || isInOwnTaskManagement">
+                    <MenuItem v-slot="{ active }">
+                        <div @click="openEditTaskModal = true"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                            <IconEdit stroke-width="1.5"
+                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                      aria-hidden="true"/>
+                            {{ $t('Edit') }}
+                        </div>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }">
+                        <a @click="openDeleteTaskModal = true"
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                            <IconTrash stroke-width="1.5"
+                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                       aria-hidden="true"/>
+                            {{ $t('Delete') }}
+                        </a>
+                    </MenuItem>
+                </BaseMenu>
+            </div>
         </div>
         <div class="xxsLight mt-1">
             {{ task.description }}
@@ -96,6 +102,8 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {IconEdit, IconTrash, IconCalendar} from "@tabler/icons-vue";
 import {MenuItem} from "@headlessui/vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import { EventListenerForDragging } from "@/Composeables/EventListenerForDragging.js";
+const { dispatchEventStart, dispatchEventEnd } = EventListenerForDragging();
 
 const props = defineProps({
     task: {
@@ -151,6 +159,17 @@ const updateTaskStatus = () => {
         preserveState: false
     });
 }
+
+
+const onDragStart = (event) => {
+    event.dataTransfer.setData('task', JSON.stringify(props.task));
+    dispatchEventStart()
+};
+
+const onDragEnd = () => {
+    // Dispatch ein globales Event zum Beenden
+    dispatchEventEnd()
+};
 
 const filteredUsers = computed(() => {
     return props.task.users.filter(user => user.id !== usePage().props.user.id);

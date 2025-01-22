@@ -1,6 +1,6 @@
 @layer components {
     .checklist-card {
-        @apply w-72 min-w-72 rounded-lg relative;
+        @apply w-72 min-w-72 rounded-lg;
 
         .checklist-card-header {
             @apply  px-4 py-2 bg-artwork-buttons-create flex items-center justify-between text-white truncate rounded-t-lg;

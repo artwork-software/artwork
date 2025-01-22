@@ -93,8 +93,6 @@ const onDrop = (event) =>  {
         return;
     }
 
-    console.debug(event.dataTransfer.getData('application/json'));
-
     ItemDragElement.value = JSON.parse(event.dataTransfer.getData('application/json'));
     showAssignedItemToEventModal.value = true;
 

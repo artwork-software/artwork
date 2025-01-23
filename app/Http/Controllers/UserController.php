@@ -750,6 +750,11 @@ class UserController extends Controller
         $user->update($request->only('bulk_sort_id'));
     }
 
+    public function updateDailyView(User $user, Request $request): void
+    {
+        $user->update($request->only('daily_view'));
+    }
+
     /**
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface

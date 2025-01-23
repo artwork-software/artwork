@@ -1,10 +1,9 @@
 <template>
-    <div
-        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
-        class="rounded-lg group event-item relative"
-        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '']">
+    <div :style="{ minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
+        class="rounded-lg group/singleEvent event-item relative overflow-y-scroll"
+        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '', isHeightFull ? 'h-full' : '']">
         <div v-if="zoom_factor > 0.4 && multiEdit"
-             class="absolute w-full h-full z-10 rounded-lg group-hover:block flex justify-center align-middle items-center"
+             class="absolute w-full h-full z-10 rounded-lg group-hover/singleEvent:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
             <div class="flex justify-center items-center h-full gap-2">
                 <div class="relative flex items-start">
@@ -25,35 +24,35 @@
                 </div>
             </div>
         </div>
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between" >
             <div class="px-1 py-1">
                 <div
                     :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
                     :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']"
                     class="flex justify-between flex-wrap">
-                    <div class="truncate max-w-40">
+                    <div class="truncate max-w-fit">
                         <a v-if="event.projectName && event.projectId" type="button"
-                           :style="{ width: width - (36 * zoom_factor) + 'px'}" :href="getEditHref(event.projectId)"
-                           class="text-ellipsis items-center w-full xsDark">
+                           :href="getEditHref(event.projectId)"
+                           class="text-ellipsis items-center w-full">
                             {{ event.projectName }}
                         </a>
                     </div>
                     <div v-if="usePage().props.user.calendar_settings.project_artists"
                          class="flex items-center w-full">
-                        <div v-if="event.projectArtists" :style="{ width: width - (64 * zoom_factor) + 'px'}"
+                        <div v-if="event.projectArtists"
                              class=" truncate">
                             {{ event.projectArtists }}
                         </div>
                     </div>
                     <div v-if="usePage().props.user.calendar_settings.event_name"
                          class="flex items-center w-full">
-                        <div v-if="event.eventName" :style="{ width: width - (64 * zoom_factor) + 'px'}"
+                        <div v-if="event.eventName"
                              class=" truncate">
                             {{ event.eventName }}
                         </div>
                     </div>
                     <div>
-                        <div :style="{ width: width - (55 * zoom_factor) + 'px'}" class=" truncate">
+                        <div  class=" truncate">
                             {{ event.eventTypeName }}
                         </div>
                     </div>
@@ -195,8 +194,8 @@
                     </div>
                 </div>
             </div>
-            <div class="relative invisible group-hover:visible">
-                <BaseMenu menuWidth="w-fit" :dots-color="$page.props.user.calendar_settings.high_contrast ? 'text-white' : ''">
+            <div class="relative invisible group-hover/singleEvent:visible">
+                <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.user.calendar_settings.high_contrast ? 'text-white' : ''">
                     <MenuItem v-slot="{ active }">
                         <div @click="$emit('editEvent', event)"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
@@ -426,6 +425,11 @@ const props = defineProps({
         type: [Number, String],
         required: false,
         default: null
+    },
+    isHeightFull: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 });
 

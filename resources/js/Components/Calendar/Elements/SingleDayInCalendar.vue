@@ -1,6 +1,6 @@
 <template>
-    <div :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays'" class="bg-userBg text-calendarText text-right">
-        <div :style="textStyle" class="mt-3 mr-2">
+    <div :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="[isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays', hour ? '!bg-gray-200' : '']" class=" text-calendarText text-right">
+        <div :style="textStyle" class="mt-3 mr-2" v-if="day">
             <div>
                 {{ zoom_factor >= 0.8 ? day.day_string : '' }}
             </div>
@@ -8,7 +8,7 @@
                 {{ zoom_factor >= 0.8 ? day.full_day_display : day.short_day }}
             </div>
             <div v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</div>
-            <HolidayToolTip v-if="day.holidays.length > 0" class="mt-2">
+            <HolidayToolTip v-if="day?.holidays?.length > 0" class="mt-2">
                 <div class="space-y-1 divide-dashed divide-gray-500 divide-y">
                     <div v-for="holiday in day.holidays" class="pt-1">
                         <div :style="{ color: holiday.color}">
@@ -24,7 +24,11 @@
                 </div>
             </HolidayToolTip>
         </div>
-
+        <div :style="textStyle" class="mt-3 mr-2" v-else>
+            <div class="xsDark">
+                {{ hour }}
+            </div>
+        </div>
     </div>
 </template>
 
@@ -37,12 +41,18 @@ import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 const props = defineProps({
     day: {
         type: Object,
-        required: true
+        required: false,
+        default: null
     },
     isFullscreen: {
         type: Boolean,
         required: false,
         default: false
+    },
+    hour: {
+        type: String,
+        required: false,
+        default: null
     }
 })
 
@@ -56,6 +66,8 @@ const textStyle = computed(() => {
         lineHeight,
     };
 })
+
+
 
 </script>
 

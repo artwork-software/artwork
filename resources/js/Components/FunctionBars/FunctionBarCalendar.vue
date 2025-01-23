@@ -59,15 +59,31 @@
                         :class="[isCalendarUsingProjectTimePeriod ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                     <span class="sr-only">Use project time period toggle</span>
                     <span :class="[isCalendarUsingProjectTimePeriod ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                        <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                        <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                             <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
                         </span>
-                        <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                        <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                             <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
                         </span>
                     </span>
                 </Switch>
+
+                <Switch @click="changeDailyViewMode()" v-model="dailyViewMode"
+                        :class="[dailyViewMode ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                    <span class="sr-only">Use setting</span>
+                    <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconCalendarWeek" :tooltip-text="$t('Daily view')" stroke="1.5"/>
+                                </span>
+                                <span :class="[dailyViewMode ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconCalendarMonth" :tooltip-text="$t('Daily view')" stroke="1.5"/>
+                                </span>
+                            </span>
+                </Switch>
             </div>
+
+
+
             <div class="flex items-center gap-x-2">
                 <div class="flex items-center">
                     <div class="flex items-center gap-x-2">
@@ -78,10 +94,10 @@
                                 :class="[atAGlance ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                             <span class="sr-only">Use setting</span>
                             <span :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                     <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconList" :tooltip-text="$t('At a glance')" stroke="1.5"/>
                                 </span>
-                                <span :class="[atAGlance ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                <span :class="[atAGlance ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                     <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconList" :tooltip-text="$t('At a glance')" stroke="1.5"/>
                                 </span>
                             </span>
@@ -99,6 +115,9 @@
                         @click="incrementZoomFactor"
                         v-if="!atAGlance"
                     />
+                    <p class="xsDark">
+                        {{ zoom_factor * 100 }}%
+                    </p>
 
                     <ToolTipComponent
                         direction="bottom"
@@ -466,6 +485,8 @@ const props = defineProps({
     }
 })
 
+const dailyViewMode = ref(usePage().props.user.daily_view ?? false);
+
 const isCalendarUsingProjectTimePeriod = computed(() => {
     return usePage().props.user.calendar_settings.use_project_time_period;
 });
@@ -485,6 +506,16 @@ const closeCalendarAboSettingModal = (bool) => {
     if(bool){
         showCalendarAboInfoModal.value = true;
     }
+}
+
+const changeDailyViewMode = () => {
+    dailyViewMode.value = !dailyViewMode.value;
+    router.patch(route('user.update.daily_view', usePage().props.user.id), {
+        daily_view: dailyViewMode.value
+    }, {
+        preserveScroll: true,
+        preserveState: false
+    })
 }
 
 const UpdateMultiEditEmits = (value) => {

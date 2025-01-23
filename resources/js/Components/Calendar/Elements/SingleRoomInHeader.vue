@@ -1,5 +1,5 @@
 <template>
-    <Link :style="textStyle" class="flex font-semibold xsDark items-center px-8 mt-1.5" :href="route('rooms.show', { room: room.id })">
+    <Link :style="textStyle" class="flex font-semibold  items-center px-8" :class="isLight ? 'text-white' : 'xsDark'" :href="route('rooms.show', { room: room.id })">
         {{ room.name }}
     </Link>
 </template>
@@ -15,6 +15,11 @@ const props = defineProps({
     room: {
         type: Object,
         required: true
+    },
+    isLight: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 

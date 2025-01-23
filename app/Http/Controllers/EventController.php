@@ -517,7 +517,7 @@ class EventController extends Controller
             return $this->redirector->back();
         }
 
-        broadcast(new EventCreated($firstEvent, $firstEvent->room_id));
+        broadcast(new EventCreated($firstEvent->load(['event_type']), $firstEvent->room_id));
 
         return new CalendarEventResource($firstEvent);
     }
@@ -2482,13 +2482,14 @@ class EventController extends Controller
                 $event->setAttribute('end_time', $date . ' ' . $endTime);
             }
             $event->save();
+            broadcast(new EventCreated($event, $event->room_id));
         }
 
 
-        return new JsonResponse([
+        /*return new JsonResponse([
             'desiredRoomIds' => array_values(array_unique($desiredRoomIds)),
             'desiredDays' => array_values(array_unique($desiredDaysOfEvents))
-        ]);
+        ]);*/
     }
 
     //@todo: fix phpcs error - refactor function because complexity is rising
@@ -2713,7 +2714,7 @@ class EventController extends Controller
         );
 
         $freshEvent = $event->fresh();
-        broadcast(new EventCreated($event->load('project'), $event->room_id));
+        broadcast(new EventCreated($event->load(['project', 'event_type']), $event->room_id));
 
         return Redirect::back();
     }

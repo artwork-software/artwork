@@ -456,13 +456,22 @@ class Event extends Model
         return Carbon::parse($this->start_time)->format('H');
     }
 
-    public function getEventLengthInHoursAttribute(): int
+    public function getEventLengthInHoursAttribute(): float
     {
+        $start = Carbon::parse($this->start_time);
+        $end = Carbon::parse($this->end_time);
 
-        return Carbon::parse($this->start_time)->isSameDay(Carbon::parse($this->end_time)) ?
-            Carbon::parse($this->end_time)->diffInHours(Carbon::parse($this->start_time)) :
-            Carbon::parse($this->start_time)->endOfDay()->diffInHours(Carbon::parse($this->start_time));
+        if ($start->isSameDay($end)) {
+            // Differenz in Stunden und Minuten berechnen
+            $diffInMinutes = $end->diffInMinutes($start);
+            return round($diffInMinutes / 60, 2); // In Stunden umrechnen
+        } else {
+            // Wenn nicht am selben Tag: Bis zum Tagesende des Starttags berechnen
+            $diffInMinutes = $start->endOfDay()->diffInMinutes($start);
+            return round($diffInMinutes / 60, 2); // In Stunden umrechnen
+        }
     }
+
 
     public function getHoursToNextDayAttribute(): int
     {

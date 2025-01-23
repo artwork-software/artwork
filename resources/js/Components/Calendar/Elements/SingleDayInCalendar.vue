@@ -8,7 +8,7 @@
                 {{ zoom_factor >= 0.8 ? day.full_day_display : day.short_day }}
             </div>
             <div v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</div>
-            <HolidayToolTip v-if="day.holidays.length > 0" class="mt-2">
+            <HolidayToolTip v-if="day?.holidays?.length > 0" class="mt-2">
                 <div class="space-y-1 divide-dashed divide-gray-500 divide-y">
                     <div v-for="holiday in day.holidays" class="pt-1">
                         <div :style="{ color: holiday.color}">

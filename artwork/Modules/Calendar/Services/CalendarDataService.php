@@ -80,11 +80,7 @@ readonly class CalendarDataService
                         'subdivisions' => $holiday->subdivisions->pluck('name'), // Subdivision-Namen sammeln
                     ];
                 }),
-                'hours_of_day' => $user->getAttribute('daily_view')
-                    ? collect(range(0, 23))->map(function ($hour) {
-                        return Carbon::createFromTime($hour)->format('H:i');
-                    })->toArray()
-                    : [],
+                //'hours_of_day' => $user->getAttribute('daily_view') ? range(0, 23) : [
             ];
         }
 

@@ -115,6 +115,9 @@
                         @click="incrementZoomFactor"
                         v-if="!atAGlance"
                     />
+                    <p class="xsDark">
+                        {{ zoom_factor * 100 }}%
+                    </p>
 
                     <ToolTipComponent
                         direction="bottom"

@@ -206,10 +206,10 @@
                     </div>
                 </transition>
                 <!-- user window end -->
-                <div class="xsDark" v-if="loadedProjectInformation['ShiftTab'].events_with_relevant.length === 0">
+                <div class="xsDark" v-if="newEventWithRelevant.length === 0">
                     {{ $t('So far, there are no shift-relevant events for this project.') }}
                 </div>
-                <SingleRelevantEvent v-for="event in loadedProjectInformation['ShiftTab'].events_with_relevant"
+                <SingleRelevantEvent v-for="event in newEventWithRelevant"
                                      :crafts="loadedProjectInformation['ShiftTab'].crafts"
                                      :currentUserCrafts="loadedProjectInformation['ShiftTab'].current_user_crafts"
                                      :event="event"
@@ -222,10 +222,15 @@
             </div>
         </div>
     </div>
+
+    <pre>
+        {{ headerObject.project.id }}
+    </pre>
+
     <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
 <script>
-import {defineComponent, nextTick} from 'vue'
+import {defineComponent, nextTick, ref} from 'vue'
 import {Menu, MenuButton, MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel} from '@headlessui/vue'
 import {DuplicateIcon, PencilAltIcon} from "@heroicons/vue/outline";
 import {DotsVerticalIcon, TrashIcon, XIcon} from "@heroicons/vue/solid";
@@ -244,6 +249,8 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
+import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
+import {useShiftRelevantEventListener} from "@/Composeables/Listener/useShiftRelevantEventListener.js";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
 export default defineComponent({
@@ -291,6 +298,7 @@ export default defineComponent({
             closedCrafts: [],
             userSearch: '',
             relevantEventId: null,
+            newEventWithRelevant: ref(this.loadedProjectInformation['ShiftTab'].events_with_relevant)
         }
     },
     watch: {
@@ -454,8 +462,10 @@ export default defineComponent({
         });
     },
     mounted() {
-        this.makeContainerDraggable();
+        const shiftRelevantEventListener = useShiftRelevantEventListener(this.newEventWithRelevant, this.headerObject.project.id);
+        shiftRelevantEventListener.init();
 
+        this.makeContainerDraggable();
         setTimeout(() => {
             if (this.$page.props.urlParameters.scrollToEvent) {
                 const scrollToEvent = () => {

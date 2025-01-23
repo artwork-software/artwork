@@ -21,6 +21,7 @@ use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Events\RemoveEvent;
+use Artwork\Modules\Event\Events\ShiftRelevantEventCreated;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
@@ -1455,6 +1456,12 @@ readonly class EventService
             $createdEvent->update([
                 'event_status_id' => $event['status']['id']
             ]);
+        }
+
+        // Event Ids
+        $shiftRelevantEventTypeIds = $project->shiftRelevantEventTypes->pluck('id');
+        if($shiftRelevantEventTypeIds->contains($event['type']['id'])) {
+            broadcast(new ShiftRelevantEventCreated($createdEvent, $project->id));
         }
 
         return $createdEvent;

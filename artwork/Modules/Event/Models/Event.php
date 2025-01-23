@@ -124,7 +124,11 @@ class Event extends Model
         'event_date_without_time',
         'formatted_dates',
         'dates_for_series_event',
-        'times_without_dates'
+        'times_without_dates',
+        'start_hour',
+        'event_length_in_hours',
+        'hours_to_next_day',
+        'minutes_form_start_hour_to_start',
     ];
 
     public static function boot(): void
@@ -445,5 +449,37 @@ class Event extends Model
             ->whereRaw('`projects`.`id` = `events`.`project_id`')
             ->orderBy($columnToOrderBy, $direction)
             ->take(1);
+    }
+
+    public function getStartHourAttribute(): string
+    {
+        return Carbon::parse($this->start_time)->format('H');
+    }
+
+    public function getEventLengthInHoursAttribute(): float
+    {
+        $start = Carbon::parse($this->start_time);
+        $end = Carbon::parse($this->end_time);
+
+        if ($start->isSameDay($end)) {
+            // Differenz in Stunden und Minuten berechnen
+            $diffInMinutes = $end->diffInMinutes($start);
+            return round($diffInMinutes / 60, 2); // In Stunden umrechnen
+        } else {
+            // Wenn nicht am selben Tag: Bis zum Tagesende des Starttags berechnen
+            $diffInMinutes = $start->endOfDay()->diffInMinutes($start);
+            return round($diffInMinutes / 60, 2); // In Stunden umrechnen
+        }
+    }
+
+
+    public function getHoursToNextDayAttribute(): int
+    {
+        return Carbon::parse($this->end_time)->diffInHours(Carbon::parse($this->start_time)->endOfDay());
+    }
+
+    public function getMinutesFormStartHourToStartAttribute(): int
+    {
+        return Carbon::parse($this->start_time)->diffInMinutes(Carbon::parse($this->start_time)->startOfHour());
     }
 }

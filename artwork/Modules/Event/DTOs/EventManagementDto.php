@@ -12,7 +12,7 @@ class EventManagementDto extends BaseDto
 {
     public ?array $eventTypes = null;
 
-    public ?SupportCollection $calendar = null;
+    public ?array $calendar = null;
 
     public ?array $days = null;
     public ?array $months = null;
@@ -82,7 +82,7 @@ class EventManagementDto extends BaseDto
         return $this;
     }
 
-    public function setCalendar(?SupportCollection $calendar): self
+    public function setCalendar(?array $calendar): self
     {
         $this->calendar = $calendar;
 
@@ -216,7 +216,7 @@ class EventManagementDto extends BaseDto
         return $this->eventTypes;
     }
 
-    public function getCalendar(): ?SupportCollection
+    public function getCalendar(): ?array
     {
         return $this->calendar;
     }

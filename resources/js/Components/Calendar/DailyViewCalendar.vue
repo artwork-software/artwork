@@ -187,9 +187,9 @@ const getEventStyle = (event, day, hour, zoom_factor) => {
 
     let height = '';
     let marginTop = '0px';
-
+    let opacity = 1;
     if (event.allDay) {
-        height = ((115 * zoom_factor) * 2) + 3 + 'px';
+        height = (24 * (zoom_factor * 115)) + 25 + 'px';
     } else if (isStartDay) {
         const startHour = parseInt(event.start_hour.split(':')[0], 10);
         const startMinute = parseInt(event.start_hour.split(':')[1], 10) || 0;
@@ -202,6 +202,7 @@ const getEventStyle = (event, day, hour, zoom_factor) => {
         const minusHeight = event.days_of_event.length > 1 ? event.minutes_form_start_hour_to_start * (zoom_factor * 1.91) - 10 : 0;
         height = ((totalHours * (zoom_factor * 115)) - minusHeight) + 'px';
         marginTop = event.minutes_form_start_hour_to_start * (zoom_factor * 1.91) + 'px';
+
     } else if (isMiddleDay) {
         height = (24 * (zoom_factor * 115)) + 25 + 'px';
     } else if (isEndDay) {
@@ -223,7 +224,7 @@ const getEventStyle = (event, day, hour, zoom_factor) => {
     } else {
         height = event.event_length_in_hours * (zoom_factor * 115) + 'px';
     }
-    const opacity = event.days_of_event.length > 1 ? 0.6 : 1;
+    opacity = event.days_of_event.length > 1 ? 0.6 : 1;
 
     return {
         height,

@@ -45,6 +45,7 @@ use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
@@ -823,6 +824,7 @@ readonly class EventService
                     'formatted_dates' => $event->formatted_dates,
                     'timesWithoutDates' => $event->timesWithoutDates,
                     'is_series' => $event->is_series,
+                    'series' => $this->aggregateSeriesEvents($event),
                     'start_hour' => $event->getAttribute('start_hour') . ':00',
                     'event_length_in_hours' => $event->getAttribute('event_length_in_hours'),
                     'hours_to_next_day' => $event->getAttribute('hours_to_next_day'),
@@ -838,6 +840,18 @@ readonly class EventService
                 ];
             });
         });
+    }
+
+    private function aggregateSeriesEvents($event): array
+    {
+        if (!($series = $event->getAttribute('series')) instanceof SeriesEvents) {
+            return [];
+        }
+
+        return [
+            'id' => $series->getAttribute('id'),
+            'end_date' => $series->getAttribute('end_date')->format('Y-m-d'),
+        ];
     }
 
     public function mapRoomsToContent(Collection $rooms, $startDate, $endDate, bool $withShifts = true): array

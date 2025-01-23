@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Project\Events\NewCommentInProject;
 use Artwork\Modules\Project\Http\Requests\StoreCommentRequest;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Services\CommentService;
@@ -31,7 +32,7 @@ class CommentController extends Controller
         return inertia('Comments/Create');
     }
 
-    public function store(StoreCommentRequest $request, ChangeService $changeService): JsonResponse|RedirectResponse
+    public function store(StoreCommentRequest $request, ChangeService $changeService): void
     {
         $project = $this->projectService->findById($request->input('project_id'));
 
@@ -46,17 +47,12 @@ class CommentController extends Controller
             $comment = $this->commentService->create(
                 text: $request->text,
                 user: $user,
+                changeService: $changeService,
                 project: $project,
-                tabId: $request->tab_id,
-                changeService: $changeService
+                tabId: $request->tab_id
             );
+            broadcast(new NewCommentInProject($comment, $project->id));
         }
-
-        if (!$comment) {
-            return response()->json(['error' => 'Not authorized to create comments in this project.'], 403);
-        }
-
-        return Redirect::back();
     }
 
     public function update(Request $request, Comment $comment): RedirectResponse
@@ -66,9 +62,9 @@ class CommentController extends Controller
         return Redirect::back();
     }
 
-    public function destroy(Comment $comment): RedirectResponse
+    public function destroy(Comment $comment): void
     {
         $this->commentService->forceDelete($comment);
-        return Redirect::back();
+        //return Redirect::back();
     }
 }

@@ -92,7 +92,10 @@ use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Artwork\Modules\Project\Services\ProjectStateService;
+use Artwork\Modules\ProjectManagementBuilder\Models\ProjectManagementBuilder;
+use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
+use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -171,6 +174,7 @@ class ProjectController extends Controller
         private readonly UserService $userService,
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly TimelineService $timelineService,
+        private readonly ProjectManagementBuilderService $projectManagementBuilderService,
     ) {
     }
 
@@ -200,32 +204,236 @@ class ProjectController extends Controller
             ->getFromUser($this->userService->getAuthUser())
             ->getAttribute('settings');
 
-        return inertia('Projects/ProjectManagement', [
-            'projects' => $this->projectService->paginateProjects(
-                $saveFilterAndSort,
-                $request->string('query'),
-                $request->integer('entitiesPerPage', 10),
-                $saveFilterAndSort ?
-                    $request->enum('sort', ProjectSortEnum::class) :
-                    (
-                    $userProjectManagementSetting['sort_by'] ?
-                        ProjectSortEnum::from($userProjectManagementSetting['sort_by']) :
-                        null
-                    ),
-                $saveFilterAndSort ?
-                    $request->collect('project_state_ids')->map(fn(string $id) => (int)$id) :
-                    Collection::make($userProjectManagementSetting['project_state_ids']),
-                $saveFilterAndSort ? $request
-                    ->collect('project_filters')
-                    ->mapWithKeys(
-                        function (string $filter, string $key): array {
-                            return [
-                                $key => (bool)$filter,
-                            ];
-                        }
-                    ) :
-                    Collection::make($userProjectManagementSetting['project_filters'])
+        $projects = $this->projectService->paginateProjects(
+            $saveFilterAndSort,
+            $request->string('query'),
+            $request->integer('entitiesPerPage', 10),
+            $saveFilterAndSort ?
+                $request->enum('sort', ProjectSortEnum::class) :
+                (
+                $userProjectManagementSetting['sort_by'] ?
+                    ProjectSortEnum::from($userProjectManagementSetting['sort_by']) :
+                    null
+                ),
+            $saveFilterAndSort ?
+                $request->collect('project_state_ids')->map(fn(string $id) => (int)$id) :
+                Collection::make($userProjectManagementSetting['project_state_ids']),
+            $saveFilterAndSort ? $request
+                ->collect('project_filters')
+                ->map(fn(string $filter) => (bool)$filter) :
+                Collection::make($userProjectManagementSetting['project_filters'])
+        );
+
+        $components = $this->projectManagementBuilderService->getProjectManagementBuilder(['component']);
+        $pinnedProjects = $this->projectService->pinnedProjects($this->authManager->id());
+
+        $pinnedProjectsComponents = $pinnedProjects->map(function ($project) use ($components) {
+            /** @var Project $project */
+            $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
+            $projectData->id = $project->id;
+            $projectData->firstTabId = $this->projectTabService->getFirstProjectTabId();
+            $projectData->project_managers = $project->managerUsers;
+            $projectData->write_auth = $project->writeUsers;
+            $projectData->delete_permission_users = $project->delete_permission_users;
+
+            foreach ($components as $component) {
+                /** @var Component $componentFullData */
+                $componentFullData = Component::find($component->component_id);
+
+                switch ($component->type) {
+                    case ProjectTabComponentEnum::PROJECT_TITLE->value:
+                        $projectData->title = $project->name;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_STATUS->value:
+                        $projectData->state = ProjectState::find($project->state);
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_GROUP->value:
+                        $projectData->group = $project->groups;
+                        $projectData->is_group = $project->is_group;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_TEAM->value:
+                        $projectData->team = $project->users;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_ATTRIBUTES->value:
+                        $categories = $project->categories;
+                        $genres = $project->genres;
+                        $sectors = $project->sectors;
+                        $projectData->attributes = [
+                            'Categories' => $categories,
+                            'Genres' => $genres,
+                            'Sectors' => $sectors
+                        ];
+                        break;
+                    case ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING->value:
+                        $projectData->shift_relevant_event_types = $project->shiftRelevantEventTypes;
+                        break;
+                    case ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value:
+                        $projectData->shift_contact = $project->shift_contact;
+                        break;
+                    case ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION->value:
+                        $projectData->shift_description = $project->shift_description;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_BUDGET_DEADLINE->value:
+                        $projectData->budget_deadline = $project->budget_deadline ?
+                            Carbon::parse($project->budget_deadline)->translatedFormat('D, d F Y') : null;
+                        break;
+                    case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
+                        $projectData->collecting_society = $project->collectingSociety;
+                        $projectData->cost_center = $project->costCenter;
+                        $projectData->own_copyright = $project->own_copyright;
+                        $projectData->cost_center_description = $project->cost_center_description;
+                        break;
+                }
+
+                if ($componentFullData) {
+                    if (!$componentFullData?->special) {
+                        $projectData->{$component->type}[$componentFullData->id] =
+                            $componentFullData->projectValue()
+                                ->where('project_id', $project->id)
+                                ->first();
+                    }
+                }
+            }
+
+            return $projectData;
+        });
+
+        $projectComponents = $projects->map(function ($project) use ($components) {
+            /** @var Project $project */
+            $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
+            $projectData->id = $project->id;
+            $projectData->firstTabId = $this->projectTabService->getFirstProjectTabId();
+            $projectData->project_managers = $project->managerUsers;
+            $projectData->write_auth = $project->writeUsers;
+            $projectData->delete_permission_users = $project->delete_permission_users;
+
+            foreach ($components as $component) {
+                /** @var Component $componentFullData */
+                $componentFullData = Component::find($component->component_id);
+
+                switch ($component->type) {
+                    case ProjectTabComponentEnum::PROJECT_TITLE->value:
+                        $projectData->title = $project->name;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_STATUS->value:
+                        $projectData->state = ProjectState::find($project->state);
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_GROUP->value:
+                        $projectData->group = $project->groups;
+                        $projectData->is_group = $project->is_group;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_TEAM->value:
+                        $projectData->team = $project->users;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_ATTRIBUTES->value:
+                        $categories = $project->categories;
+                        $genres = $project->genres;
+                        $sectors = $project->sectors;
+                        $projectData->attributes = [
+                            'Categories' => $categories,
+                            'Genres' => $genres,
+                            'Sectors' => $sectors
+                        ];
+                        break;
+                    case ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING->value:
+                        $projectData->shift_relevant_event_types = $project->shiftRelevantEventTypes;
+                        break;
+                    case ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value:
+                        $projectData->shift_contact = $project->shift_contact;
+                        break;
+                    case ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION->value:
+                        $projectData->shift_description = $project->shift_description;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_BUDGET_DEADLINE->value:
+                        $projectData->budget_deadline = $project->budget_deadline ?
+                            Carbon::parse($project->budget_deadline)->translatedFormat('D, d F Y') : null;
+                        break;
+                    case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
+                        $projectData->collecting_society = $project->collectingSociety;
+                        $projectData->cost_center = $project->costCenter;
+                        $projectData->own_copyright = $project->own_copyright;
+                        $projectData->cost_center_description = $project->cost_center_description;
+                        break;
+                }
+
+                if ($componentFullData) {
+                    if (!$componentFullData?->special) {
+                        $projectData->{$component->type}[$componentFullData->id] =
+                            $componentFullData->projectValue()
+                                ->where('project_id', $project->id)
+                                ->first();
+                    }
+                }
+            }
+
+            return $projectData;
+        });
+
+
+        //dd($projectComponents);
+
+        return inertia('Projects/NewProjectManagement', [
+            'projects' => $projects, // enthält paginierte und sortierte Projekte
+            'projectComponents' => $projectComponents, // angereicherte Daten pro Projekt
+            'components' => $components,
+            'pinnedProjects' => $pinnedProjectsComponents,
+            'pinnedProjectsAll' => $pinnedProjects,
+            'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
+            'states' => $this->projectStateService->getAll(),
+            'projectGroups' => $this->projectService->getProjectGroups(),
+            'categories' => $this->categoryService->getAll(),
+            'genres' => $this->genreService->getAll(),
+            'sectors' => $this->sectorService->getAll(),
+            'createSettings' => app(ProjectCreateSettings::class),
+            'myLastProject' => $this->projectService->getMyLastProject($this->authManager->id()),
+            'eventTypes' => $this->eventTypeService->getAll(),
+            'rooms' => $this->roomService->getAllWithoutTrashed(),
+            'projectSortEnumNames' => array_map(
+                function (ProjectSortEnum $enum): string {
+                    return $enum->name;
+                },
+                ProjectSortEnum::cases()
             ),
+            'userProjectManagementSetting' => $userProjectManagementSetting,
+            'eventStatuses' => EventStatus::orderBy('order')->get(),
+        ]);
+        /*$saveFilterAndSort = $request->boolean('saveFilterAndSort');
+        $userProjectManagementSetting = $this->userProjectManagementSettingService
+            ->getFromUser($this->userService->getAuthUser())
+            ->getAttribute('settings');
+
+        $projects = $this->projectService->paginateProjects(
+            $saveFilterAndSort,
+            $request->string('query'),
+            $request->integer('entitiesPerPage', 10),
+            $saveFilterAndSort ?
+                $request->enum('sort', ProjectSortEnum::class) :
+                (
+                $userProjectManagementSetting['sort_by'] ?
+                    ProjectSortEnum::from($userProjectManagementSetting['sort_by']) :
+                    null
+                ),
+            $saveFilterAndSort ?
+                $request->collect('project_state_ids')->map(fn(string $id) => (int)$id) :
+                Collection::make($userProjectManagementSetting['project_state_ids']),
+            $saveFilterAndSort ? $request
+                ->collect('project_filters')
+                ->mapWithKeys(
+                    function (string $filter, string $key): array {
+                        return [
+                            $key => (bool)$filter,
+                        ];
+                    }
+                ) :
+                Collection::make($userProjectManagementSetting['project_filters'])
+        );
+
+        $components = $this->projectManagementBuilderService->getProjectManagementBuilder();
+
+        return inertia('Projects/NewProjectManagement', [
+
+            'components' => $this->projectManagementBuilderService->getProjectManagementBuilder(),
+            'projects' => $projects
             'pinnedProjects' => $this->projectService->pinnedProjects($this->authManager->id()),
             'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
             'states' => $this->projectStateService->getAll(),
@@ -247,7 +455,7 @@ class ProjectController extends Controller
                 ->getFromUser($this->userService->getAuthUser())
                 ->getAttribute('settings'),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
-        ]);
+        ]); */
     }
 
     public function updateSettings(
@@ -1920,7 +2128,7 @@ class ProjectController extends Controller
         ProjectCreateSettings $projectCreateSettings
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
-        $headerObject->project = (object) $project->getAttributes();
+        $headerObject->project = $project;
         $headerObject->project->cost_center = $project->costCenter; // needed for the ProjectShowHeaderComponent
         $loadedProjectInformation = [];
 
@@ -1949,10 +2157,16 @@ class ProjectController extends Controller
                     break;
                 case ProjectTabComponentEnum::COMMENT_TAB->value:
                     $headerObject->project->comments = $project->comments()
-                        ->whereIn('tab_id', $componentInTab->scope)->with('user')->get();
+                        ->whereIn('tab_id', $componentInTab->scope)
+                        ->with('user')
+                        ->orderBy('created_at', 'DESC')
+                        ->get();
                     break;
                 case ProjectTabComponentEnum::COMMENT_ALL_TAB->value:
-                    $headerObject->project->comments_all = $project->comments()->with('user')->get();
+                    $headerObject->project->comments_all = $project->comments()
+                        ->with('user')
+                        ->orderBy('created_at', 'DESC')
+                        ->get();
                     break;
                 case ProjectTabComponentEnum::PROJECT_DOCUMENTS->value:
                     $headerObject->project->project_files_tab = $project->project_files()
@@ -2444,10 +2658,16 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($projectId);
     }
 
-    public function deleteProjectFromGroup(Request $request): void
+    public function deleteProjectFromGroup(Project $project, Project $projectGroup): void
     {
-        $group = Project::find($request->groupId);
-        $group->projectsOfGroup()->detach($request->projectIdToDelete);
+        //dd($project, $projectGroup);
+        $project->projectsOfGroup()->detach($projectGroup->id);
+    }
+
+    public function addProjectsToGroup(Request $request, Project $projectGroup): void
+    {
+        $projectIdsToAdd = $request->collect('projectIdsToAdd')->pluck('id');
+        $projectGroup->projectsOfGroup()->sync($projectIdsToAdd);
     }
 
     private function checkProjectGenreChanges($projectId, $oldGenres, $newGenres): void

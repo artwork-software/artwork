@@ -34,7 +34,7 @@
                     <div class="truncate max-w-40">
                         <a v-if="event.projectName && event.projectId" type="button"
                            :style="{ width: width - (36 * zoom_factor) + 'px'}" :href="getEditHref(event.projectId)"
-                           class="text-ellipsis items-center w-full">
+                           class="text-ellipsis items-center w-full xsDark">
                             {{ event.projectName }}
                         </a>
                     </div>

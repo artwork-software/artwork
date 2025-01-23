@@ -1,6 +1,6 @@
 <template>
     <div class="bg-white">
-        <div class="w-full top-0 left-4 py-4 z-40 -mx-10 -my-4" :class="project ? '' : 'fixed ml-10'">
+        <div class="w-full z-[100]" :class="project ? '-mt-10 -ml-6' : 'sticky -ml-2 -mt-1'">
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :rooms="rooms"
@@ -10,7 +10,7 @@
                 @wants-to-add-new-event="openEditEventModal"
                 @update-multi-edit="changeMultiEdit"/>
         </div>
-        <div class="flex pt-10 relative events-at-a-glance-container">
+        <div class="flex relative events-at-a-glance-container" :class="project ? '-ml-6' : '-ml-1 -mt-6'">
             <template v-if="eventsAtAGlanceRef">
                 <div v-for="room in computedRooms">
                     <div :class="isSearchingForProject ? '' : 'sticky' + (isCalendarViewRoute ? ' top-[4.5rem] mt-7' : '')"

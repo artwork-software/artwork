@@ -1,0 +1,8 @@
+<?php
+
+namespace {{namespace}};
+
+readonly class {{class}}
+{
+    // Add repository logic here
+}

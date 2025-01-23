@@ -737,7 +737,7 @@ import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventCompon
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import DeleteCalendarMultiEditEntities from "@/Pages/Shifts/Components/DeleteCalendarMultiEditEntities.vue";
 import DeleteCalendarRoomShiftEntriesModal from "@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue";
-import { useShiftCalendarListener } from "@/Composeables/useShiftCalendarListener.js";
+import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
 export default {

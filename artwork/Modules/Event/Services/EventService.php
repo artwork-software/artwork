@@ -1317,11 +1317,19 @@ readonly class EventService
         $originalRoomId = $event->getOriginal('room_id');
 
         $event = $this->eventRepository->save($event);
+
         if ($originalStartTime && $originalEndTime) {
-            broadcast(new EventUpdated($originalRoomId, $originalStartTime, $originalEndTime))->toOthers();
+            broadcast(
+                new EventUpdated(
+                    $event->getAttribute('room_id') ?? $originalRoomId,
+                    $originalStartTime,
+                    $originalEndTime
+                )
+            )->toOthers();
         }
+
         broadcast(new EventUpdated(
-            $event->room_id,
+            $event->getAttribute('room_id') ?? $originalRoomId,
             $event->start_time,
             $event->is_series ?
                 $event->series->end_date :

@@ -73,20 +73,20 @@
         </SwitchGroup>
     </div>
     <div v-if="userType === 'user'" class="mb-2">
-        <div class="headline6Light">
+        <div class="headline6Light mb-3">
             {{ $t('Shift planner for')}}
         </div>
-        <hr class="mb-2">
-        <div class="flex flex-row">
-            <TagComponent v-if="this.user.accessibleCrafts?.length > 0"
-                          v-for="craft in this.user.accessibleCrafts"
-                          :tag="craft"
-                          :key="craft.id"
-                          :displayed-text="craft.name"
-                          hide-x="true"/>
-            <span v-else class="text-xs text-gray-500">
-                {{ $t('Not assigned as shift planner.') }}
-            </span>
+        <div class="inline-flex gap-2">
+            <div v-for="(craft, index) in user.accessibleCrafts" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                <div class="flex items-center">
+                    <div>
+                        <div class="block size-8  rounded-full object-cover border-2" :style="{backgroundColor: backgroundColorWithOpacityOld(craft.color, 75), borderColor: craft.color}" />
+                    </div>
+                    <div class="mx-2">
+                        <p class="xsDark group-hover:text-gray-900">{{ craft.name}}</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div v-if="this.craftSettingsForm.canBeAssignedToShifts" class="mb-2">
@@ -97,30 +97,25 @@
         <label for="selectedCraftToAdd" class="text-sm subpixel-antialiased text-secondary">
             {{  $t('Assign new crafts') }}
         </label>
-        <div class="w-full mb-2 flex items-center">
-            <Listbox as="div" id="selectedCraftToAdd" class="w-2/3 relative" v-model="this.selectedCraftToAssign">
-                <ListboxButton class="menu-button">
+        <div class="flex items-center">
+            <Listbox as="div" id="selectedCraftToAdd" class="relative" v-model="this.selectedCraftToAssign">
+                <ListboxButton class="menu-button w-96">
                     <div v-if="this.selectedCraftToAssign" class="flex-grow text-left">
-                        {{
-                            this.user.assignableCrafts.find(
-                                assignableCraft => assignableCraft.id === this.selectedCraftToAssign
-                            )?.name
-                        }}
+                        {{ this.user.assignableCrafts.find(assignableCraft => assignableCraft.id === this.selectedCraftToAssign)?.name }}
                     </div>
                     <div v-else class="flex-grow xsLight text-left subpixel-antialiased">
                         {{  $t('Select craft') }}
                     </div>
                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                 </ListboxButton>
-                <ListboxOptions class="bg-artwork-navigation-background w-full max-h-32 overflow-y-auto text-sm absolute">
-                    <ListboxOption v-if="this.user.assignableCrafts.length === 0" :key="0" :value="null"
-                                   class="hover:bg-artwork-buttons-create text-secondary cursor-pointer p-2 flex justify-between ">
+                <ListboxOptions class="bg-artwork-navigation-background w-full max-h-32 min-h-16 overflow-y-auto text-sm absolute rounded-lg">
+                    <ListboxOption v-if="this.user.assignableCrafts.length === 0" :key="0" :value="null" class="hover:bg-artwork-buttons-create text-secondary cursor-pointer p-2 flex justify-between ">
                         <div class="h-5 text-gray-300">
                             {{ $t('There are no other crafts that can be assigned.') }}
                         </div>
                     </ListboxOption>
                     <ListboxOption v-else v-for="assignableCraft in this.user.assignableCrafts"
-                                   class="hover:bg-artwork-buttons-create text-secondary cursor-pointer p-2 flex justify-between "
+                                   class="hover:bg-artwork-buttons-create text-white cursor-pointer p-2 flex justify-between "
                                    :key="assignableCraft.id"
                                    :value="assignableCraft.id"
                                    v-slot="{ active, selected }">
@@ -138,8 +133,22 @@
                 class="ml-4"
                 />
         </div>
-        <div class="w-2/3 flex flex-row flex-wrap">
-            <TagComponent v-for="craft in user.assignedCrafts" :tag="craft" :key="craft.id" :displayed-text="craft.name" :method="removeCraft" :property="craft.id"/>
+        <div class="inline-flex gap-2 mt-4">
+            <div v-for="(craft, index) in user.assignedCrafts" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                <div class="flex items-center">
+                    <div>
+                        <div class="block size-8  rounded-full object-cover border-2" :style="{backgroundColor: backgroundColorWithOpacityOld(craft.color, 75), borderColor: craft.color}" />
+                    </div>
+                    <div class="mx-2">
+                        <p class="xsDark group-hover:text-gray-900">{{ craft.name}}</p>
+                    </div>
+                    <div class="flex items-center">
+                        <button type="button" @click="removeCraft(craft.id)">
+                            <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -151,15 +160,17 @@ import {router, useForm} from "@inertiajs/vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import {CheckIcon} from "@heroicons/vue/solid";
-import {ChevronDownIcon} from "@heroicons/vue/outline";
+import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
 import {nextTick, reactive} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import Button from "@/Jetstream/Button.vue";
 
 export default {
     components: {
+        Button, XIcon,
         TextInputComponent,
         TextareaComponent,
         AddButtonSmall,
@@ -373,6 +384,10 @@ export default {
                     }
                 );
             }
+        },
+        backgroundColorWithOpacityOld(color, percent = 15) {
+            if (!color) return `rgba(255, 255, 255, ${percent / 100})`;
+            return `rgba(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, ${percent / 100})`;
         }
     }
 }

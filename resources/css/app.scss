@@ -20,7 +20,7 @@
 @layer base {
     body {
         scrollbar-width: thin; /* Für Firefox */
-        scrollbar-color: #A7A6B170 transparent; /* Für Firefox */
+        scrollbar-color: rgba(210, 210, 213, 0.44) transparent; /* Für Firefox */
     }
 
     [x-cloak] {
@@ -28,7 +28,7 @@
     }
 
     ::-webkit-scrollbar {
-        width: 16px;
+        width: 9px;
     }
 
     ::-webkit-scrollbar-track {
@@ -37,7 +37,7 @@
     }
 
     ::-webkit-scrollbar-thumb {
-        background-color: #A7A6B170;
+        background-color: rgba(210, 210, 213, 0.44);
         border-radius: 16px;
         border: 4px solid transparent;
         background-clip: content-box;

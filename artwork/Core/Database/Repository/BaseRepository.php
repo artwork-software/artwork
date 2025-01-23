@@ -68,12 +68,12 @@ abstract class BaseRepository
         return $model;
     }
 
-    public function delete(Model|Pivot|CanSubstituteBaseModel $model): bool
+    public function delete(Model|Pivot|CanSubstituteBaseModel|DatabaseNotification $model): bool
     {
         return $model->delete();
     }
 
-    public function forceDelete(Model|Pivot|CanSubstituteBaseModel $model): bool
+    public function forceDelete(Model|Pivot|CanSubstituteBaseModel|DatabaseNotification $model): bool
     {
         return $model->forceDelete();
     }

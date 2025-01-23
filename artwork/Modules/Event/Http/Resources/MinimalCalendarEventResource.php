@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Http\Resources;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\SubEvent\Http\Resources\SubEventResource;
 use Artwork\Modules\User\Models\User;
@@ -39,7 +40,6 @@ class MinimalCalendarEventResource extends JsonResource
         $eventType = $this->getAttribute('event_type');
         $eventName = $this->getAttribute('eventName');
         $startTime = $this->getAttribute('start_time');
-
         return [
             'id' => $this->getAttribute('id'),
             'description' => $this->getAttribute('description'),
@@ -58,6 +58,7 @@ class MinimalCalendarEventResource extends JsonResource
             'end' => $this->getAttribute('end_time')->utc()->toIso8601String(),
             'allDay' => $this->getAttribute('allDay'),
             'is_series' => $this->getAttribute('is_series'),
+            'series' => $this->aggregateSeriesEvents(),
             'option_string' => $this->getAttribute('option_string'),
             'occupancy_option' => $this->getAttribute('occupancy_option'),
             'alwaysEventName' => $eventName,
@@ -149,5 +150,20 @@ class MinimalCalendarEventResource extends JsonResource
                 $managerUsers
             ) :
             [];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function aggregateSeriesEvents(): array
+    {
+        if (!($series = $this->getAttribute('series')) instanceof SeriesEvents) {
+            return [];
+        }
+
+        return [
+            'id' => $series->getAttribute('id'),
+            'end_date' => $series->getAttribute('end_date')->format('Y-m-d'),
+        ];
     }
 }

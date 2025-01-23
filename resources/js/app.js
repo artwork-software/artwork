@@ -2,7 +2,7 @@ import './bootstrap';
 import '../css/app.scss';
 import '../css/global.css';
 
-import {createApp, h} from 'vue';
+import {createApp, h, reactive, provide} from 'vue';
 import {createInertiaApp} from '@inertiajs/vue3';
 import VueTailwindDatepicker from 'vue-tailwind-datepicker';
 import VueMathjax from 'vue-mathjax-next';
@@ -31,13 +31,23 @@ const messages = {
     de: de
 };
 
-const i18n = VueI18n.createI18n({
-    legacy: false,
-    locale: document.documentElement.lang,
-    fallbackLocale: 'en',
-    messages,
-});
+// Globaler Zustand für Dragging
 
+
+
+
+const i18n = VueI18n.createI18n({
+    legacy: false, // Verwende die Composition API
+    locale: document.documentElement.lang || 'de', // Standard-Sprache
+    fallbackLocale: 'en', // Fallback-Sprache
+    messages,
+    missingWarn: false, // Deaktiviert Warnungen für fehlende Schlüssel
+    fallbackWarn: false, // Deaktiviert Warnungen für Fallback-Schlüssel
+    missing: (locale, key) => {
+        // Gibt den Schlüssel zurück, wenn keine Übersetzung gefunden wurde
+        return key;
+    },
+});
 const pages = import.meta.glob('./Pages/**/*.vue');
 
 createInertiaApp({
@@ -51,14 +61,12 @@ createInertiaApp({
         const app = createApp({ render: () => h(inertiaApp, props) })
             .use(plugin)
             .mixin({ methods: { route }});
-
         app.config.globalProperties.$svgColors = svgColors;
         app.use(VueTailwindDatepicker);
         app.use(VueMathjax);
         app.use(i18n);
         app.use(Icons);
         app.mount(el);
-
         app.config.globalProperties.$updateLocale = function (newLocale) {
             this.$i18n.locale = newLocale;
             document.documentElement.lang = newLocale;

@@ -196,17 +196,19 @@
                                 <div class="font-semibold text-sm pb-2">{{ $t('Project management')}}</div>
                                 <UserSearch @user-selected="addUserToProject" only-manager />
 
-                                <div v-if="assignedUsers.length > 0">
-                                    <div v-for="(user, index) in assignedUsers">
-                                        <div class="flex items-center justify-between mt-3 group">
-                                            <div class="flex items-center gap-x-2">
-                                                <img :src="user.profile_photo_url" alt="" class="h-8 w-8 object-cover rounded-full">
-                                                <div class="text-sm xsLight">
-                                                    {{ user.name}}
-                                                </div>
+                                <div v-if="assignedUsers?.length > 0" class="flex items-center gap-4 mt-3">
+                                    <div v-for="(user, index) in assignedUsers" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">
+                                        <div class="flex items-center">
+                                            <div>
+                                                <img class="inline-block size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
                                             </div>
-                                            <div class="hidden group-hover:block">
-                                                <IconCircleX class="h-6 w-6 text-gray-600 hover:text-red-600 cursor-pointer transition-all duration-150 ease-in-out" @click="removeUserFromProject(index)"/>
+                                            <div class="mx-2">
+                                                <p class="xsDark group-hover:text-gray-900">{{ user.name}}</p>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <button type="button" @click="removeUserFromProject(index)">
+                                                    <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -245,13 +247,13 @@
                                     </div>
                                 </div>
                             </div>
+
                             <div v-if="createSettings.budget_deadline" class="px-6 py-2">
                                 <DateInputComponent
                                     id="budgetDeadline"
                                     v-model="createProjectForm.budget_deadline"
                                     :label="$t('Budget deadline')" />
                             </div>
-
                         </div>
                         <div class="w-full flex items-center justify-end gap-x-4 pb-6 px-6">
                             <BaseButton
@@ -417,21 +419,25 @@
                             <div class="relative w-full">
                                 <ProjectSearch :noProjectGroups="createProjectGroup" @project-selected="addProjectToProjectGroup" v-model="projectGroupQuery" />
                             </div>
-                            <div v-if="projectGroupProjects.length > 0" class="mt-2 mb-4 flex items-center">
-                                <span v-for="(projectGroupProject, index) in projectGroupProjects"
-                                      class="flex rounded-full items-center font-bold text-primary">
-                                    <span
-                                        class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                        {{ projectGroupProject.name }}
-                                        <button type="button"
-                                                @click="this.deleteProjectFromProjectGroup(index)">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-                                </span>
+                            <div v-if="projectGroupProjects.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-3">
+                                <div v-for="(groupProject, index) in projectGroupProjects" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                                    <div class="flex items-center">
+                                        <div>
+                                            <img class="inline-block size-9 rounded-full object-cover" :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject?.key_visual_path : '/storage/logo/artwork_logo_small.svg'" alt="" />
+                                        </div>
+                                        <div class="mx-2">
+                                            <p class="xsDark group-hover:text-gray-900">{{ groupProject.name}}</p>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <button type="button" @click="deleteProjectFromProjectGroup(index)">
+                                                <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="w-full flex items-center justify-end gap-x-4 pb-6 px-6">
+                        <div class="w-full flex items-center justify-end gap-x-4 pb-6">
                             <BaseButton
                                 v-if="!project"
                                 @click="addProject(true)"
@@ -450,6 +456,8 @@
                                 <IconCirclePlus class="w-5 h-5" />
                             </BaseButton>
                         </div>
+
+
                     </div>
                 </div>
             </div>
@@ -570,7 +578,7 @@ export default {
             projectGroupSearchResults: [],
             projectGroupQuery: '',
             selectedState: this.project ? this.project?.state?.id : null,
-            assignedUsers: this.project ? this.project?.manager_users : [],
+            assignedUsers: this.project ? this.project.manager_users ? this.project.manager_users : [] : [],
             keyVisualForm: useForm({
                 keyVisual: null,
             }),
@@ -595,7 +603,8 @@ export default {
     },
     methods: {
         addUserToProject(user) {
-            if (!this.assignedUsers.includes(user)) {
+            // check if user is already in the list
+            if (!this.assignedUsers.find(assignedUser => assignedUser.id === user.id)) {
                 this.assignedUsers.push(user);
             }
         },
@@ -623,7 +632,7 @@ export default {
                 this.createProjectForm.projects.push(projectToAdd.id);
             });
 
-            this.createProjectForm.assignedUsers = this.assignedUsers.map(user => user.id);
+            this.createProjectForm.assignedUsers = this.assignedUsers?.map(user => user.id);
             this.createProjectForm.state = this.selectedState;
 
             if ( this.createProjectGroup ){

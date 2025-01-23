@@ -1,0 +1,102 @@
+<template>
+    <BaseModal @closed="$emit('close')">
+        <div>
+            <ModalHeader
+                :title="$t('Add projects to group')"
+                :description="$t('Select a project to add to this group.')"
+                />
+        </div>
+
+        <div>
+
+            <div>
+                <ProjectSearch no-project-groups @project-selected="addProjectToGroup" />
+            </div>
+
+            <div class="my-5 flex items-center flex-wrap gap-3">
+                <div v-for="(groupProject, index) in projectGroupForm.projectIdsToAdd" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                    <div class="flex items-center">
+                        <div>
+                            <img class="inline-block size-9 rounded-full object-cover" :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject?.key_visual_path : '/storage/logo/artwork_logo_small.svg'" alt="" />
+                        </div>
+                        <div class="mx-2">
+                            <p class="xsDark group-hover:text-gray-900">{{ groupProject.name}}</p>
+                        </div>
+                        <div class="flex items-center">
+                            <button type="button" @click="deleteGroupFormListByIndex(index)">
+                                <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <AlertComponent type="error" :text="$t('Please note: If you remove and save a project here, the project will be removed from the group')" />
+            </div>
+
+            <div class="flex items-center justify-center">
+                <FormButton :text="$t('Add projects to group')" @click="addProjectsToGroup" />
+            </div>
+        </div>
+    </BaseModal>
+</template>
+
+<script setup>
+
+import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import {ref} from "vue";
+import {useForm} from "@inertiajs/vue3";
+import {XIcon} from "@heroicons/vue/outline";
+import Button from "@/Jetstream/Button.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+
+const props = defineProps({
+    project: {
+        type: Object,
+        required: true,
+    },
+    projectsInGroup: {
+        type: Object,
+        required: true,
+    }
+})
+
+
+const emits = defineEmits([
+    'close',
+]);
+
+const projectGroupForm = useForm({
+    projectIdsToAdd: props.projectsInGroup ? props.projectsInGroup : [],
+});
+
+const addProjectToGroup = (projectToAdd) => {
+    // Prüfen, ob ein Projekt mit derselben ID bereits in der Liste ist
+    if (projectGroupForm.projectIdsToAdd.some(project => project.id === projectToAdd.id)) {
+        return;
+    }
+
+    projectGroupForm.projectIdsToAdd.push(projectToAdd);
+}
+
+const deleteGroupFormListByIndex = (index) => {
+    projectGroupForm.projectIdsToAdd.splice(index, 1);
+}
+
+const addProjectsToGroup = () => {
+    projectGroupForm.post(route('project-group.add-projects', {projectGroup: props.project.id}), {
+        preserveScroll: true,
+        onSuccess: () => {
+            emits('close');
+        }
+    });
+}
+</script>
+
+<style scoped>
+
+</style>

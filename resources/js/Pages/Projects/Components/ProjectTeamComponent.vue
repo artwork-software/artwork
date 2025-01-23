@@ -37,7 +37,7 @@
                 {{ $t('Project team') }}
             </span>
             <div class="flex w-full">
-                <div class="flex" v-if="this.project.departments.length > 0">
+                <div class="flex" v-if="this.project.departments?.length > 0">
                     <div class="flex mt-2 -mr-3" v-for="department in this.project.departments">
                         <TeamIconCollection :data-tooltip-target="department.name"
                                             :iconName="department.svg_name"
@@ -53,8 +53,8 @@
         </div>
         <!-- Modal -->
         <ProjectEditTeamModal :show="this.showTeamModal"
-                              :assigned-users="this.project.usersArray"
-                              :assigned-departments="this.project.departments"
+                              :assigned-users="this.project?.usersArray ? this.project.usersArray : []"
+                              :assigned-departments="this.project.departments ? this.project.departments : []"
                               :project-id="this.project.id"
                               :userIsProjectManager="this.userIsProjectManager"
                               @closed="this.showTeamModal = false"

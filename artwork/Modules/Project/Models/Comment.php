@@ -10,6 +10,7 @@ use Artwork\Modules\User\Models\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
@@ -43,9 +44,10 @@ class Comment extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime: d. M Y H:i:s',
+        'created_at' => 'datetime: d. M Y H:i',
         'updated_at' => 'datetime',
     ];
+
 
     //@todo: fix phpcs error - refactor function name to projectFile
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps

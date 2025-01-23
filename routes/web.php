@@ -50,6 +50,7 @@ use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\ProjectManagementBuilderController;
 use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\ProjectTabController;
@@ -311,7 +312,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.update_description');
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
-    Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
 
     Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])
         ->name('projects.update_team');
@@ -355,6 +356,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/checklists/{checklist}/edit', [ChecklistController::class, 'edit']);
     Route::patch('/checklists/{checklist}', [ChecklistController::class, 'update'])->name('checklists.update');
     Route::delete('/checklists/{checklist}', [ChecklistController::class, 'destroy'])->name('checklist.destroy');
+
+    // route change.task.checklist
+    Route::patch('/checklists/{checklist}/change/task/{task}', [TaskController::class, 'changeTaskChecklist'])
+        ->name('checklists.change.task');
 
 
     //checklist.done.all.tasks
@@ -838,7 +843,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('delete.timeline.row');
         Route::delete('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'destroy'])
             ->name('project.sum.money.source.destroy');
-        Route::delete('/group', [ProjectController::class, 'deleteProjectFromGroup'])->name('projects.group.delete');
+        Route::delete('/group/{project}/{projectGroup}', [ProjectController::class, 'deleteProjectFromGroup'])
+            ->name('projects.group.delete');
+        Route::post('/group/{projectGroup}/add/projects', [ProjectController::class, 'addProjectsToGroup'])
+            ->name('project-group.add-projects');
         Route::delete('/{project}/delete/keyVisual', [ProjectController::class, 'deleteKeyVisual'])
             ->name('project.delete.keyVisual');
         Route::delete('/removeFromShift/{usersPivotId}/type/{userType}', [ShiftController::class, 'removeFromShift'])
@@ -1815,6 +1823,24 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/calendar-xlsx/{cacheToken}',
             [EventListOrCalendarExportController::class, 'downloadCalendarXlsx']
         )->name('export.download-calendar-xlsx');
+    });
+
+
+    Route::group(['prefix' => 'project-management-builder'], function (): void {
+        Route::get('/', [ProjectManagementBuilderController::class, 'index'])
+            ->name('project-management-builder.index');
+
+        // patch: project-management-builder.update.order
+        Route::patch('/update/order', [ProjectManagementBuilderController::class, 'updateOrder'])
+            ->name('project-management-builder.update.order');
+
+        // post project-management-builder.store
+        Route::post('/store/{component}', [ProjectManagementBuilderController::class, 'store'])
+            ->name('project-management-builder.store');
+
+        // delete project-management-builder.destroy
+        Route::delete('/destroy/{component}', [ProjectManagementBuilderController::class, 'destroy'])
+            ->name('project-management-builder.destroy');
     });
 });
 

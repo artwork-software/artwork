@@ -1301,7 +1301,26 @@ readonly class EventService
             ->setDateValue($dateValue)
             ->setCalendarType($calendarType)
             ->setSelectedDate($selectedDate)
-            ->setEventsWithoutRoom([])
+            ->setEventsWithoutRoom( CalendarEventResource::collection(
+                $this->getEventsWithoutRoom(
+                    $project,
+                    [
+                        'room',
+                        'creator',
+                        'project',
+                        'project.managerUsers',
+                        'project.state',
+                        'shifts',
+                        'shifts.craft',
+                        'shifts.users',
+                        'shifts.freelancer',
+                        'shifts.serviceProvider',
+                        'shifts.shiftsQualifications',
+                        'subEvents.event',
+                        'subEvents.event.room',
+                    ]
+                )
+            )->resolve())
             ->setRooms(
                 $roomService->getFilteredRooms(
                     $startDate,

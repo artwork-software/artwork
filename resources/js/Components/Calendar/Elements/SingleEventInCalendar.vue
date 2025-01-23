@@ -3,7 +3,7 @@
         class="rounded-lg group/singleEvent event-item relative overflow-y-scroll"
         :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '', isHeightFull ? 'h-full' : '']">
         <div v-if="zoom_factor > 0.4 && multiEdit"
-             class="absolute w-full h-full z-10 rounded-lg group-hover:block flex justify-center align-middle items-center"
+             class="absolute w-full h-full z-10 rounded-lg group-hover/singleEvent:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
             <div class="flex justify-center items-center h-full gap-2">
                 <div class="relative flex items-start">

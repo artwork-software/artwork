@@ -61,6 +61,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventProperty\Services\EventPropertyService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
@@ -2125,7 +2126,8 @@ class ProjectController extends Controller
         EventTypeService $eventTypeService,
         AreaService $areaService,
         EventService $eventService,
-        ProjectCreateSettings $projectCreateSettings
+        ProjectCreateSettings $projectCreateSettings,
+        EventPropertyService $eventPropertyService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -2252,6 +2254,7 @@ class ProjectController extends Controller
                                 $areaService,
                                 $projectService,
                                 $projectCreateSettings,
+                                $eventPropertyService,
                                 $project
                             );
 

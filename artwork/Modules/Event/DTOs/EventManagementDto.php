@@ -15,6 +15,7 @@ class EventManagementDto extends BaseDto
     public ?SupportCollection $calendar = null;
 
     public ?array $days = null;
+
     public ?array $months = null;
 
     public ?array $dateValue = null;
@@ -28,8 +29,8 @@ class EventManagementDto extends BaseDto
     public ?array $eventsAtAGlance = null;
 
     public ?Collection $rooms = null;
-    public ?Collection $eventStatuses = null;
 
+    public ?Collection $eventStatuses = null;
 
     public ?CalendarEventDto $events = null;
 
@@ -50,6 +51,8 @@ class EventManagementDto extends BaseDto
     public ?bool $show_artists;
 
     public ?string $projectNameUsedForProjectTimePeriod = null;
+
+    public ?SupportCollection $eventProperties = null;
 
     public function getEventStatuses(): ?Collection
     {
@@ -208,6 +211,13 @@ class EventManagementDto extends BaseDto
         return $this;
     }
 
+    public function setEventProperties(?SupportCollection $eventProperties): self
+    {
+        $this->eventProperties = $eventProperties;
+
+        return $this;
+    }
+
     /**
      * @return array<string, mixed>|null
      */
@@ -324,6 +334,11 @@ class EventManagementDto extends BaseDto
         return $this->show_artists;
     }
 
+    public function getEventProperties(): ?SupportCollection
+    {
+        return $this->eventProperties;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -350,7 +365,8 @@ class EventManagementDto extends BaseDto
             'areas' => $this->getAreas(),
             'projectNameUsedForProjectTimePeriod' => $this->getProjectNameUsedForProjectTimePeriod(),
             'eventStatuses' => $this->getEventStatuses(),
-            'show_artists' => $this->getShowArtists()
+            'show_artists' => $this->getShowArtists(),
+            'event_properties' => $this->getEventProperties()
         ];
     }
 }

@@ -351,7 +351,7 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref} from "vue";
+import {computed, inject, onMounted, ref} from "vue";
 import {Link, usePage} from "@inertiajs/vue3";
 import {IconCirclePlus, IconEdit, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
@@ -365,11 +365,10 @@ import EventNoteComponent from "@/Layouts/Components/EventNoteComponent.vue";
 const {t} = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
-const deleteComponentVisible = ref(false);
-const deleteTitle = ref('');
-const deleteDescription = ref('');
-const deleteType = ref('');
 
+const event_properties = inject('event_properties');
+//@todo implement and then remove
+console.debug('single event in calendar', event_properties);
 
 const emits = defineEmits([
     'editEvent',

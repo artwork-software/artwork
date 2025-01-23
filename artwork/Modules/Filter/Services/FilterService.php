@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Filter\Services;
 
 use Artwork\Modules\Area\Repositories\AreaRepository;
+use Artwork\Modules\EventProperty\Repositories\EventPropertyRepository;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Repositories\FilterRepository;
 use Artwork\Modules\Room\Models\Room;
@@ -15,14 +16,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class FilterService
 {
-    public const LOUD = 'LOUD';
-
-    public const NOT_LOUD = 'NOT_LOUD';
-
-    public const WITH_AUDIENCE = 'WITH_AUDIENCE';
-
-    public const WITHOUT_AUDIENCE = 'WITHOUT_AUDIENCE';
-
     public function __construct(
         private readonly FilterRepository $filterRepository,
         private readonly RoomRepository $roomRepository,
@@ -30,6 +23,7 @@ class FilterService
         private readonly EventTypeService $eventTypeService,
         private readonly AreaRepository $areaRepository,
         private readonly RoomCategoryRepository $categoryRepository,
+        private readonly EventPropertyRepository $eventPropertyRepository,
     ) {
     }
 
@@ -51,12 +45,7 @@ class FilterService
             'roomCategories' => $this->map($this->categoryRepository->getAll()),
             'roomAttributes' => $this->map($this->roomAttributeRepository->getAll()),
             'eventTypes' => $this->map($this->eventTypeService->getAll()),
-            'eventAttributes' => [
-                self::LOUD => 'loud',
-                self::NOT_LOUD => 'not loud',
-                self::WITH_AUDIENCE => 'With audience',
-                self::WITHOUT_AUDIENCE => 'without audience',
-            ],
+            'eventProperties' => $this->map($this->eventPropertyRepository->getAll()),
             'areas' => $this->map($this->areaRepository->getAll()),
             'rooms' => $this->roomRepository
                 ->allWithoutTrashed()

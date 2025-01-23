@@ -28,6 +28,7 @@ use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventProperty\Services\EventPropertyService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -159,7 +160,8 @@ class EventController extends Controller
         EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
-        ProjectCreateSettings $projectCreateSettings
+        ProjectCreateSettings $projectCreateSettings,
+        EventPropertyService $eventPropertyService,
     ): Response {
         return Inertia::render(
             'Events/EventManagement',
@@ -184,6 +186,7 @@ class EventController extends Controller
                     $areaService,
                     $projectService,
                     $projectCreateSettings,
+                    $eventPropertyService
                 )
         );
     }

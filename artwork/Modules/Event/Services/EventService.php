@@ -27,6 +27,8 @@ use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventProperty\Models\EventProperty;
+use Artwork\Modules\EventProperty\Services\EventPropertyService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
@@ -1117,6 +1119,7 @@ readonly class EventService
         AreaService $areaService,
         ProjectService $projectService,
         ProjectCreateSettings $projectCreateSettings,
+        EventPropertyService $eventPropertyService,
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
@@ -1211,7 +1214,16 @@ readonly class EventService
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
             )
-            ->setShowArtists($projectCreateSettings->show_artists);
+            ->setShowArtists($projectCreateSettings->show_artists)
+            ->setEventProperties($eventPropertyService->getAll()->map(
+                function (EventProperty $eventProperty) {
+                    return [
+                        'id' => $eventProperty->getAttribute('id'),
+                        'name' => $eventProperty->getAttribute('name'),
+                        'icon' => $eventProperty->getAttribute('icon')
+                    ];
+                }
+            ));
 
 
         if ($useProjectTimePeriod) {

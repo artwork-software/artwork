@@ -306,28 +306,29 @@ class EventRepository extends BaseRepository
                     $query->whereIn('event_type_id', $eventTypes);
                 }
             )
-            //handle event attributes
-            ->when(
-                count(($eventAttributes = $filter['eventAttributes'])) > 0,
-                function (Builder $query) use ($eventAttributes): void {
-                    foreach ($eventAttributes as $eventAttribute) {
-                        $query->when(
-                            $eventAttribute === FilterService::LOUD ||
-                            $eventAttribute === FilterService::NOT_LOUD,
-                            function (Builder $query) use ($eventAttribute): void {
-                                $query->where('is_loud', ($eventAttribute === FilterService::LOUD));
-                            }
-                        );
-                        $query->when(
-                            $eventAttribute === FilterService::WITH_AUDIENCE ||
-                            $eventAttribute === FilterService::WITHOUT_AUDIENCE,
-                            function (Builder $query) use ($eventAttribute): void {
-                                $query->where('audience', ($eventAttribute === FilterService::WITH_AUDIENCE));
-                            }
-                        );
-                    }
-                }
-            )->orderBy('start_time');
+            //handle event attributes ->  @todo jgl: handle new event properties
+////            ->when(
+////                count(($eventAttributes = $filter['eventAttributes'])) > 0,
+////                function (Builder $query) use ($eventAttributes): void {
+////                    foreach ($eventAttributes as $eventAttribute) {
+////                        $query->when(
+////                            $eventAttribute === FilterService::LOUD ||
+////                            $eventAttribute === FilterService::NOT_LOUD,
+////                            function (Builder $query) use ($eventAttribute): void {
+////                                $query->where('is_loud', ($eventAttribute === FilterService::LOUD));
+////                            }
+////                        );
+////                        $query->when(
+////                            $eventAttribute === FilterService::WITH_AUDIENCE ||
+////                            $eventAttribute === FilterService::WITHOUT_AUDIENCE,
+////                            function (Builder $query) use ($eventAttribute): void {
+////                                $query->where('audience', ($eventAttribute === FilterService::WITH_AUDIENCE));
+////                            }
+////                        );
+////                    }
+////                }
+//            )
+            ->orderBy('start_time');
 
         return $query->get();
     }

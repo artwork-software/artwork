@@ -574,6 +574,7 @@
                         <MenuItems class="absolute overflow-y-auto h-24 w-[88%] origin-top-left divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
                                 <div class="flex w-full mb-4">
+                                    <!-- @todo jgl: implement eventProperties -->
                                     <input v-model="audience"
                                            :disabled="!canEdit"
                                            type="checkbox"

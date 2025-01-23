@@ -48,6 +48,7 @@ use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftFilter;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -64,6 +65,8 @@ use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourService;
+use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -633,10 +636,10 @@ readonly class EventService
         [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($user);
 
         $periodArray = $this->generatePeriodArray($startDate, $endDate, $user);
+        $userFilter = $user->shift_calendar_filter;
+        $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate);
 
-        $rooms = $this->fetchFilteredRooms($userService, $startDate, $endDate);
-
-        $this->filterRoomsEventsAndShifts($rooms, $userService, $startDate, $endDate);
+        $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate);
 
         $mappedRooms = $this->mapRoomsToContent($rooms, $startDate, $endDate);
 
@@ -725,10 +728,9 @@ readonly class EventService
         })->toArray();
     }
 
-    public function fetchFilteredRooms(UserService $userService, $startDate, $endDate)
+    public function fetchFilteredRooms(UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate)
     {
-        $userCalendarFilter = $userService->getAuthUser()->shift_calendar_filter;
-
+        $userCalendarFilter = $filter;
         return Room::with([
             'events.shifts',
             'events.shifts.craft',
@@ -747,9 +749,9 @@ readonly class EventService
             )->orderBy('order')->get();
     }
 
-    public function filterRoomsEventsAndShifts($rooms, UserService $userService, $startDate, $endDate): void
+    public function filterRoomsEventsAndShifts($rooms, UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate): void
     {
-        $rooms->each(function ($room) use ($userService, $startDate, $endDate): void {
+        $rooms->each(function ($room) use ($filter, $startDate, $endDate): void {
             // Filtere die Schichten
             $room->shifts = $room->shifts->filter(function ($shift) use ($startDate, $endDate) {
                 /** @var Shift $shift */
@@ -757,9 +759,9 @@ readonly class EventService
             });
 
             // Filtere die Events nach der Logik von startAndEndTimeOverlap
-            $room->events = $room->events->filter(function ($event) use ($userService, $startDate, $endDate) {
+            $room->events = $room->events->filter(function ($event) use ($filter, $startDate, $endDate) {
                 /** @var Event $event */
-                $eventTypeFilter = $userService->getAuthUser()->shift_calendar_filter->event_types ?? [];
+                $eventTypeFilter = $filter->event_types ?? [];
 
                 return (
                     (
@@ -1249,10 +1251,10 @@ readonly class EventService
                 ];
             }
         }
+        $userFilter = $user->calendar_filter;
+        $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate);
 
-        $rooms = $this->fetchFilteredRooms($userService, $startDate, $endDate);
-
-        $this->filterRoomsEventsAndShifts($rooms, $userService, $startDate, $endDate);
+        $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate);
         $mappedRooms = $this->mapRoomsToContentForCalendar($rooms, $startDate, $endDate);
 
 

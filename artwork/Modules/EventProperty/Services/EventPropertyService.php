@@ -27,6 +27,17 @@ class EventPropertyService
     /**
      * @throws Throwable
      */
+    public function findOrFailById(int $id): EventProperty|null
+    {
+        /** @var EventProperty $eventProperty */
+        $eventProperty = $this->eventPropertyRepository->findOrFail($id);
+
+        return $eventProperty;
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function create(array $attributes): EventProperty
     {
         /** @var EventProperty $eventProperty */

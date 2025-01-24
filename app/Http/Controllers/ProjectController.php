@@ -2243,6 +2243,7 @@ class ProjectController extends Controller
                                 $areaService,
                                 $projectService,
                                 $projectCreateSettings,
+                                $eventPropertyService,
                                 $project
                             ) :
                             $eventService->createEventManagementDto(
@@ -2333,6 +2334,7 @@ class ProjectController extends Controller
         $headerObject->project->project_managers = $project->managerUsers;
         $headerObject->eventStatuses = app(EventSettings::class)
             ->enable_status ? EventStatus::orderBy('order')->get() : [];
+        $headerObject->event_properties = $eventPropertyService->getAll();
 
         return inertia('Projects/Tab/TabContent', [
             'currentTab' => $projectTab,

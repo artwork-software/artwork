@@ -631,8 +631,6 @@
         @single="singleSaveEvent"
     />
 </template>
-
-
 <script>
 import IconLib from "@/Mixins/IconLib.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";

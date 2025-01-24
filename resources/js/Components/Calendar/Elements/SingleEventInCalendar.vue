@@ -366,8 +366,6 @@ const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 
 const event_properties = inject('event_properties');
-//@todo implement event property icon solution and then remove
-console.debug('single event in calendar', event_properties);
 
 const emits = defineEmits([
     'editEvent',

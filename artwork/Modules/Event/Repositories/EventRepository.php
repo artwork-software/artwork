@@ -8,7 +8,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Filter\Services\FilterService;
+use Artwork\Modules\EventProperty\Models\EventProperty;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -331,5 +331,12 @@ class EventRepository extends BaseRepository
             ->orderBy('start_time');
 
         return $query->get();
+    }
+
+    public function attachEventProperty(Event $event, EventProperty $eventProperty): Event
+    {
+        $event->eventProperties()->attach($eventProperty->getAttribute('id'));
+
+        return $event;
     }
 }

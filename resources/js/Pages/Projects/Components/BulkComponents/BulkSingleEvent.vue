@@ -285,6 +285,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import {computed, onMounted, ref} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
+import {inject} from "vue";
 
 const props = defineProps({
     event: {
@@ -329,6 +330,7 @@ const props = defineProps({
 const showMenu = ref(false);
 const dayString = ref(null);
 const openNoteModal = ref(false);
+const event_properties = inject('event_properties');
 
 const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent']);
 const openEventComponent = (eventId) => {

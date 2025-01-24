@@ -82,7 +82,7 @@ readonly class EventService
     private ?Collection $cachedData;
     public function __construct(
         private EventRepository $eventRepository,
-        private readonly WorkingHourService $workingHourService,
+        private WorkingHourService $workingHourService,
         private ShiftTimePresetService $shiftTimePresetService,
         private CollectionService $collectionService,
     ) {
@@ -1061,6 +1061,7 @@ readonly class EventService
         AreaService $areaService,
         ProjectService $projectService,
         ProjectCreateSettings $projectCreateSettings,
+        EventPropertyService $eventPropertyService,
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
@@ -1186,7 +1187,8 @@ readonly class EventService
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
             )
-            ->setShowArtists($projectCreateSettings->show_artists);
+            ->setShowArtists($projectCreateSettings->show_artists)
+            ->setEventProperties($eventPropertyService->getAll());
 
         if ($useProjectTimePeriod) {
             $eventManagementDto->setProjectNameUsedForProjectTimePeriod($project->getAttribute('name'));
@@ -1677,5 +1679,10 @@ readonly class EventService
         $this->eventRepository->update($event, $attributes);
 
         return $event;
+    }
+
+    public function attachEventProperty(Event $event, EventProperty $eventProperty): Event
+    {
+        return $this->eventRepository->attachEventProperty($event, $eventProperty);
     }
 }

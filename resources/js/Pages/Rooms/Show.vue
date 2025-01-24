@@ -461,7 +461,7 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
-
+import {provide} from "vue";
 
 export default {
     mixins: [Permissions, IconLib],
@@ -492,7 +492,8 @@ export default {
         'user_filters',
         'first_project_tab_id',
         'first_project_calendar_tab_id',
-        'eventStatuses'
+        'eventStatuses',
+        'event_properties'
     ],
     components: {
         DateInputComponent,
@@ -564,6 +565,9 @@ export default {
         roomDeleteDescriptionText() {
             return this.$t('Are you sure you want to put the room {0} in the trash?', [this.roomToSoftDelete.name]);
         },
+    },
+    created() {
+        provide('event_properties', this.event_properties);
     },
     mounted() {
         setTimeout(() => {

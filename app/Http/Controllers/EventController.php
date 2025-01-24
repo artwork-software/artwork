@@ -975,6 +975,10 @@ class EventController extends Controller
         Event $event,
         ProjectController $projectController
     ): CalendarEventResource|RedirectResponse {
+
+        //dd($request->all());
+
+
         $this->authorize('update', $event);
         if (!$request->noNotifications) {
             $projectManagers = [];

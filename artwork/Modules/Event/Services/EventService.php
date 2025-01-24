@@ -83,6 +83,7 @@ readonly class EventService
         private readonly WorkingHourService $workingHourService,
         private ShiftTimePresetService $shiftTimePresetService,
         private CollectionService $collectionService,
+        private EventCollectionService $eventCollectionService,
     ) {
         $this->cachedData = null;
     }
@@ -666,6 +667,11 @@ readonly class EventService
     public function generatePeriodArray($startDate, $endDate, User $user, bool $extraRow = true): array
     {
         $periodArray = [];
+
+        if (!$startDate || !$endDate) {
+            return $periodArray;
+        }
+
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
 
         foreach ($calendarPeriod as $period) {
@@ -753,34 +759,28 @@ readonly class EventService
     public function filterRoomsEventsAndShifts($rooms, UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate): void
     {
         $rooms->each(function ($room) use ($filter, $startDate, $endDate): void {
-            // Filtere die Schichten
             $room->shifts = $room->shifts->filter(function ($shift) use ($startDate, $endDate) {
                 /** @var Shift $shift */
                 return ($shift->start_date <= $endDate && $shift->end_date >= $startDate);
             });
 
-            // Filtere die Events nach der Logik von startAndEndTimeOverlap
             $room->events = $room->events->filter(function ($event) use ($filter, $startDate, $endDate) {
                 /** @var Event $event */
                 $eventTypeFilter = $filter->event_types ?? [];
 
                 return (
                     (
-                        // Events, die innerhalb des gegebenen Zeitraums starten und enden
                         ($event->start_time >= $startDate && $event->start_time <= $endDate &&
                             $event->end_time >= $startDate && $event->end_time <= $endDate)
                         ||
-                        // Events, die vor dem gegebenen Startdatum beginnen und nach dem gegebenen Enddatum enden
                         ($event->start_time < $startDate && $event->end_time > $endDate)
                         ||
-                        // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
                         (
                             $event->start_time < $startDate &&
                             $event->end_time >= $startDate &&
                             $event->end_time <= $endDate
                         )
                         ||
-                        // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden
                         (
                             $event->start_time >= $startDate &&
                             $event->start_time <= $endDate &&
@@ -788,13 +788,12 @@ readonly class EventService
                         )
                     )
                     &&
-                    // Filtere die Events nach den gewünschten Event-Typen
                     (empty($eventTypeFilter) || in_array($event->event_type_id, $eventTypeFilter))
                 );
             })->map(function ($event) {
                 $startTime = Carbon::parse($event->start_time);
-                $eventType = $event->event_type; // Angenommen, die Beziehung ist geladen
-                $creator = $event->creator; // Angenommen, die Beziehung ist geladen
+                $eventType = $event->event_type;
+                $creator = $event->creator;
                 return [
                     'id' => $event->id,
                     'start' => $startTime,
@@ -888,19 +887,16 @@ readonly class EventService
         return $rooms->map(function ($room) use ($startDate, $endDate) {
             $content = $this->initializeContentArray($startDate, $endDate);
 
-            // Gruppieren der Shift-Daten, um innere Iterationen zu reduzieren
             $shiftDays = $room->shifts->flatMap(function ($shift) {
                 return collect($shift->getAttribute('days_of_shift'))->mapWithKeys(fn($date) => [$date => $shift]);
             });
 
-            // Hinzufügen der Shift-Daten zu den Content-Tagen
             foreach ($shiftDays as $shiftDate => $shift) {
                 if (isset($content[$shiftDate])) {
                     $content[$shiftDate]['shifts'][] = $shift;
                 }
             }
 
-            /// Gruppieren der Event-Daten
             $eventDays = $room->events->flatMap(function ($event) {
                 return collect($event['days_of_event'])->map(function ($date) use ($event) {
                     return [
@@ -910,13 +906,11 @@ readonly class EventService
                 });
             });
 
-// Hinzufügen der Event-Daten zu den Content-Tagen
             foreach ($eventDays as $eventDay) {
                 $eventDate = $eventDay['date'];
                 $event = $eventDay['event'];
 
                 if (isset($content[$eventDate])) {
-                    // Sicherstellen, dass 'events' ein Array ist und neue Events anhängen
                     $content[$eventDate]['events'][] = $event;
                 }
             }
@@ -932,6 +926,11 @@ readonly class EventService
     public function initializeContentArray($startDate, $endDate): array
     {
         $content = [];
+
+        if (!$startDate || !$endDate) {
+            return $content;
+        }
+
         $period = CarbonPeriod::create($startDate, '1 day', $endDate);
 
         foreach ($period as $date) {
@@ -1227,7 +1226,7 @@ readonly class EventService
                         $firstEventInProject->getAttribute('start_time')->startOfDay() :
                         null,
                     $firstEventInProject && (
-                        $latestEndingEventInProject = $projectService->getLatestEndingEventInProject($project)
+                    $latestEndingEventInProject = $projectService->getLatestEndingEventInProject($project)
                     ) ? $latestEndingEventInProject->getAttribute('end_time')->endOfDay() :
                         null,
                 ];
@@ -1237,13 +1236,21 @@ readonly class EventService
                         $firstEventInProject->getAttribute('start_time')->startOfDay() :
                         $today->startOfDay(),
                     $firstEventInProject && (
-                        $latestEndingEventInProject = $projectService->getLatestEndingEventInProject($project)
+                    $latestEndingEventInProject = $projectService->getLatestEndingEventInProject($project)
                     ) ?
                         $latestEndingEventInProject->getAttribute('end_time')->endOfDay() :
                         $today->endOfDay(),
                 ];
             }
+
+            // Zusätzliche Überprüfung, ob $startDate und $endDate leer sind
+            /*if ($useProjectTimePeriod && (!$startDate || !$endDate)) {
+                $startDate = $today->startOfDay();
+                $endDate = $today->endOfDay();
+            }*/
         }
+
+        //dd($startDate, $endDate);
 
         $periodArray = $this->generatePeriodArray(
             $startDate,
@@ -1252,7 +1259,11 @@ readonly class EventService
             false
         );
 
-        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+        if (!$startDate && !$endDate) {
+            $calendarPeriod = [];
+        } else {
+            $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+        }
 
         $months = [];
         foreach ($calendarPeriod as $period) {
@@ -1271,40 +1282,21 @@ readonly class EventService
         $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate);
         $mappedRooms = $this->mapRoomsToContentForCalendar($rooms, $startDate, $endDate);
 
-
-        //dd($mappedRooms);
-
-        $showCalendar = [
-            'roomsWithEvents' => SupportCollection::make(),
-            'days' => [],
-            'dateValue' => [],
-            'calendarType' => 'individual',
-            'selectedDate' => '',
-            'eventsWithoutRoom' => [],
-            'months' => [],
-            'filterOptions' => $filterService->getCalendarFilterDefinitions(),
-            'personalFilters' => $filterService->getPersonalFilter(),
-            'user_filters' => $userService->getAuthUser()->calendar_filter,
-        ];
-
         if ($useProjectTimePeriod && !$startDate && !$endDate) {
-            $showCalendar = [
-                'roomsWithEvents' => SupportCollection::make(),
-                'days' => [],
-                'dateValue' => [],
-                'calendarType' => 'individual',
-                'selectedDate' => '',
-                'eventsWithoutRoom' => [],
-                'months' => [],
-                'filterOptions' => $filterService->getCalendarFilterDefinitions(),
-                'personalFilters' => $filterService->getPersonalFilter(),
-                'user_filters' => $userService->getAuthUser()->calendar_filter,
-            ];
+            $startDate = $today->startOfDay();
+            $endDate = $today->endOfDay();
         }
 
-        $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
-        $calendarType = $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ? 'daily' : 'individual';
-        $selectedDate = $startDate->format('Y-m-d') === $endDate->format('Y-m-d') ?
+        $dateValue = [
+            $startDate ? $startDate->format('Y-m-d') : null,
+            $endDate ? $endDate->format('Y-m-d') : null
+        ];
+
+        $calendarType = ($startDate && $endDate && $startDate->format('d.m.Y') === $endDate->format('d.m.Y')) ?
+            'daily' :
+            'individual';
+
+        $selectedDate = ($startDate && $endDate && $startDate->format('Y-m-d') === $endDate->format('Y-m-d')) ?
             $startDate->format('Y-m-d') :
             null;
 
@@ -1318,7 +1310,7 @@ readonly class EventService
             ->setCalendarType($calendarType)
             ->setSelectedDate($selectedDate)
             ->setEventsWithoutRoom( CalendarEventResource::collection(
-                $this->getEventsWithoutRoom(
+                $this->eventCollectionService->getEventsWithoutRoom(
                     $project,
                     [
                         'room',

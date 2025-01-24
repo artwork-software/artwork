@@ -20,14 +20,14 @@ class DefaultEventPropertiesSeeder extends Seeder
         $this->eventPropertyService->create(
             [
                 'name' => 'Publikum',
-                'icon' => 'users-group'
+                'icon' => 'IconUsersGroup'
             ]
         );
 
         $this->eventPropertyService->create(
             [
                 'name' => 'Laut',
-                'icon' => 'speakerphone'
+                'icon' => 'IconSpeakerphone'
             ]
         );
     }

@@ -36,12 +36,16 @@ class EventCreated implements ShouldBroadcastNow
         return new PrivateChannel('event.room.' . $this->roomId);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
         $event = $this->event;
         $eventType = $event->event_type;
         $creator = $event->creator;
         $startTime = Carbon::parse($event->start_time);
+
         return [
             'event' => [
                 'id' => $event->id,
@@ -60,6 +64,7 @@ class EventCreated implements ShouldBroadcastNow
                 'eventTypeName' => $eventType?->name,
                 'eventTypeAbbreviation' => $eventType?->abbreviation,
                 'eventTypeColor' => $eventType?->hex_code,
+                'eventProperties' => $event->getAttribute('eventProperties'),
                 'created_at' => $event->created_at?->format('d.m.Y, H:i'),
                 'occupancy_option' => $event->occupancy_option,
                 'allDay' => $event->allDay,

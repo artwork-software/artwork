@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('event_event_properties', function (Blueprint $table) {
+        Schema::create('event_event_property', function (Blueprint $table) {
             $table->id();
             $table->foreignId('event_id')->constrained('events')->cascadeOnDelete();
             $table->foreignId('event_property_id')->constrained('event_properties')->cascadeOnDelete();
@@ -17,6 +17,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('event_event_properties');
+        Schema::dropIfExists('event_event_property');
     }
 };

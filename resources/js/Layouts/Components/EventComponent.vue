@@ -572,27 +572,15 @@
                         leave-from-class="transform scale-100 opacity-100"
                         leave-to-class="transform scale-95 opacity-0">
                         <MenuItems class="absolute overflow-y-auto h-24 w-[88%] origin-top-left divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                            <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
-                                <div class="flex w-full mb-4">
-                                    <!-- @todo jgl: implement eventProperties -->
-                                    <input v-model="audience"
+                            <div class="w-full rounded-2xl bg-primary border-none mt-2 flex flex-col gap-y-1">
+                                <div v-for="eventProperty in this.event_properties" class="flex flex-row gap-x-1 w-full items-center">
+                                    <input v-model="eventProperty.checked"
                                            :disabled="!canEdit"
                                            type="checkbox"
                                            class="checkBoxOnDark"/>
-                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
-                                         alt="audienceIcon"/>
-
-                                    <div :class="[audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
-                                        {{ $t('With audience') }}
-                                    </div>
-                                </div>
-                                <div class="flex w-full mb-2">
-                                    <input v-model="isLoud"
-                                           :disabled="!canEdit"
-                                           type="checkbox"
-                                           class="checkBoxOnDark"/>
-                                    <div :class="[isLoud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">
-                                        {{ $t('It gets loud') }}
+                                    <component :is="eventProperty.icon" class="w-5 h-5 text-white" stroke-width="2"/>
+                                    <div :class="[eventProperty.checked ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
+                                        {{ eventProperty.name }}
                                     </div>
                                 </div>
                             </div>
@@ -601,16 +589,13 @@
                 </Menu>
                 <!--    Properties    -->
                 <div class="flex py-2">
-                    <div v-if="audience">
-                        <TagComponent icon="audience" :displayed-text="$t('With audience')"
-                                      hideX="true" property="" />
-                    </div>
-                    <div v-if="isLoud">
-                        <TagComponent :displayed-text="$t('It gets loud')" hideX="true" property="" />
-                    </div>
+                    <TagComponent v-for="eventProperty in this.event?.eventProperties"
+                                  :icon="eventProperty.icon.replace('Icon', '')"
+                                  :displayed-text="eventProperty.name"
+                                  hideX="true"
+                                  property=""/>
                 </div>
             </div>
-
             <div v-if="canEdit">
                 <div class="flex justify-center w-full py-4"
                      v-if="(isAdmin || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.user.id))">
@@ -686,6 +671,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import {inject} from "vue";
 
 const {getDaysOfEvent} = useEvent();
 
@@ -763,8 +749,6 @@ export default {
             oldStartTime: null,
             oldEndDate: null,
             oldEndTime: null,
-            isLoud: false,
-            audience: false,
             showSeriesEdit: false,
             allSeriesEvents: false,
             frequencies: [
@@ -826,7 +810,8 @@ export default {
                 roomId: null
             }),
             helpTextLengthRoom: '',
-            initialRoomId: null
+            initialRoomId: null,
+            event_properties: inject('event_properties')
         }
     },
     props: [
@@ -931,8 +916,6 @@ export default {
             this.oldStartTime = this.startTime;
             this.oldEndDate = this.endDate;
             this.oldEndTime = this.endTime;
-            this.isLoud = this.event.isLoud;
-            this.audience = this.event.audience;
             this.title = this.event.title;
             this.eventName = this.event.eventName;
             this.selectedEventStatus = this.eventStatuses.find(status => status.id === this.event.eventStatusId);
@@ -964,6 +947,12 @@ export default {
             this.initialRoomId = this.selectedRoom?.id;
 
             this.description = this.event.description;
+
+            this.event_properties.forEach((event_property) => {
+                event_property.checked = this.event.eventProperties.some(
+                    (event_event_properties) => event_event_properties.id === event_property.id
+                );
+            });
 
             this.checkCollisions();
         },
@@ -1288,8 +1277,6 @@ export default {
                 end: this.formatDate(this.endDate, this.endTime),
                 roomId: this.selectedRoom?.id,
                 description: this.description,
-                audience: this.audience ? this.audience : false,
-                isLoud: this.isLoud ? this.isLoud : false,
                 isOption: this.isOption,
                 eventNameMandatory: this.selectedEventType?.individual_name,
                 projectId: this.showProjectInfo ? this.selectedProject?.id : null,
@@ -1309,6 +1296,9 @@ export default {
                 allDay: this.allDayEvent,
                 usedInBulkComponent: this.usedInBulkComponent,
                 showProjectPeriodInCalendar: this.calendarProjectPeriod,
+                event_properties: this.event_properties
+                    .filter((eventProperty) => eventProperty.checked)
+                    .map((eventProperty) => eventProperty.id)
             };
         },
     },

@@ -28,6 +28,7 @@ use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventProperty\Models\EventProperty;
 use Artwork\Modules\EventProperty\Services\EventPropertyService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
@@ -411,6 +412,7 @@ class EventController extends Controller
     ): CalendarEventResource | RedirectResponse {
         $this->authorize('create', Event::class);
         $firstEvent = Event::create($request->data());
+        $firstEvent->eventProperties()->sync($request->get('event_properties'));
         $this->adjoiningRoomsCheck($request, $firstEvent);
         if ($request->get('projectName')) {
             $this->associateProject(
@@ -1240,10 +1242,12 @@ class EventController extends Controller
         $oldEventType = $event->event_type_id;
         $oldEventStartDate = $event->start_time;
         $oldEventEndDate = $event->end_time;
-        $oldIsLoud = $event->is_loud;
-        $oldAudience = $event->audience;
+        $oldEventPropertyIds = $event->getAttribute('eventProperties')->map(
+            fn (EventProperty $eventProperty) => $eventProperty->getAttribute('id')
+        )->all();
 
         $event->fill($request->data());
+        $event->eventProperties()->sync(($newEventPropertyIds = $request->get('event_properties', [])));
 
         $this->eventService->save($event);
 
@@ -1272,8 +1276,6 @@ class EventController extends Controller
         $newEventType = $event->event_type_id;
         $newEventStartDate = $event->start_time;
         $newEventEndDate = $event->end_time;
-        $newIsLoud = $event->is_loud;
-        $newAudience = $event->audience;
 
         $this->checkShortDescriptionChanges($event->id, $oldEventDescription, $newEventDescription);
         $this->checkRoomChanges($event->id, $oldEventRoom, $newEventRoom);
@@ -1281,7 +1283,7 @@ class EventController extends Controller
         $this->checkEventNameChanges($event->id, $oldEventName, $newEventName);
         $this->checkEventTypeChanges($event->id, $oldEventType, $newEventType);
         $this->checkDateChanges($event->id, $oldEventStartDate, $newEventStartDate, $oldEventEndDate, $newEventEndDate);
-        $this->checkEventOptionChanges($event->id, $oldIsLoud, $newIsLoud, $oldAudience, $newAudience);
+        $this->checkEventPropertyChanges($event->id, $oldEventPropertyIds, $newEventPropertyIds);
 
         $this->createEventScheduleNotification($event);
 
@@ -2274,9 +2276,15 @@ class EventController extends Controller
         }
     }
 
-    private function checkEventOptionChanges(int $eventId, $isLoudOld, $isLoudNew, $audienceOld, $audienceNew): void
-    {
-        if ($isLoudOld !== $isLoudNew || $audienceOld !== $audienceNew) {
+    private function checkEventPropertyChanges(
+        int $eventId,
+        array $oldEventPropertyIds,
+        array $newEventPropertyIds
+    ): void {
+        if (
+            array_diff($oldEventPropertyIds, $newEventPropertyIds) ||
+            array_diff($newEventPropertyIds, $oldEventPropertyIds)
+        ) {
             $this->changeService->saveFromBuilder(
                 $this->changeService
                     ->createBuilder()

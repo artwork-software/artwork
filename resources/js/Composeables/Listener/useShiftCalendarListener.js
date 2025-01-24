@@ -104,7 +104,8 @@ export function useShiftCalendarListener(newShiftPlanData) {
                     profile_photo_url: eventData.created_by?.profile_photo_url,
                     first_name: eventData.created_by?.first_name,
                     last_name: eventData.created_by?.last_name,
-                }
+                },
+                eventProperties: eventData.eventProperties,
             };
 
             if (eventIndex === -1) {

@@ -761,6 +761,8 @@ readonly class EventService
                 return ($shift->start_date <= $endDate && $shift->end_date >= $startDate);
             });
 
+            //@todo: code duplication
+            //@todo: use model scope "startAndEndTimeOverlap" as its an event builder when used on relation
             // Filtere die Events nach der Logik von startAndEndTimeOverlap
             $room->events = $room->events->filter(function ($event) use ($filter, $startDate, $endDate) {
                 /** @var Event $event */
@@ -790,13 +792,13 @@ readonly class EventService
                         )
                     )
                     &&
-                    // Filtere die Events nach den gewünschten Event-Typen
                     (empty($eventTypeFilter) || in_array($event->event_type_id, $eventTypeFilter))
                 );
             })->map(function ($event) {
                 $startTime = Carbon::parse($event->start_time);
-                $eventType = $event->event_type; // Angenommen, die Beziehung ist geladen
-                $creator = $event->creator; // Angenommen, die Beziehung ist geladen
+                $eventType = $event->event_type;
+                $creator = $event->creator;
+
                 return [
                     'id' => $event->id,
                     'start' => $startTime,
@@ -814,6 +816,7 @@ readonly class EventService
                     'eventTypeName' => $eventType?->name,
                     'eventTypeAbbreviation' => $eventType?->abbreviation,
                     'eventTypeColor' => $eventType?->hex_code,
+                    'eventProperties' => $event->getAttribute('eventProperties'),
                     'created_at' => $event->created_at?->format('d.m.Y, H:i'),
                     'occupancy_option' => $event->occupancy_option,
                     'allDay' => $event->allDay,

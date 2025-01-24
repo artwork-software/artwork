@@ -153,6 +153,32 @@
                             </div>
                         </div>
                     </a>
+
+                    <!--<BaseMenu has-no-offset menu-width="w-full hidden">
+                        <div class="flex items-center">
+                            <div>
+                                <BaseMenuItem title="Your account" icon="IconUser" as-link :link="route('user.edit.info', {user: this.$page.props.user.id})" />
+                                <BaseMenuItem title="Log out" icon="IconLogout" @click="logout" />
+                            </div>
+                            <div class="w-96 text-white py-4">
+                                <div class="flex items-center justify-center mb-3">
+                                    <div>
+                                        {{ formattedTime }}
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-center">
+                                    <div v-if="!trackingIsRunning">
+                                        <component is="IconPlayerPlayFilled" class="size-8" @click="startTracking" />
+                                    </div>
+                                    <div v-else class="flex items-center justify-center gap-x-4">
+                                        <component is="IconPlayerPauseFilled" class="size-8" @click="breakTracking" />
+                                        <component is="IconPlayerStopFilled" class="size-8" @click="stopTracking" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </BaseMenu>-->
+
                     <Menu as="div" class="flex flex-col items-center">
                         <MenuButton @mouseover="!fullSidenav ? hoverUserMenu = true : null"
                                     @mouseleave="hoverUserMenu = false" ref="menuButton" @click="setHeightOfMenuItems" class="text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs hover:bg-artwork-navigation-color/10">
@@ -186,6 +212,7 @@
                                     </MenuItem>
                                 </div>
                             </MenuItems>
+
                         </transition>
                     </Menu>
                 </div>
@@ -244,6 +271,8 @@ import NumberComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateComponent from "@/Components/Inputs/DateInputComponent.vue";
 import Linkifyit from 'linkify-it';
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
@@ -265,6 +294,8 @@ const managementRoutes = [
 export default {
     mixins: [Permissions, IconLib],
     components: {
+        BaseMenuItem,
+        BaseMenu,
         DateComponent,
         TextareaComponent,
         NumberComponent,
@@ -421,8 +452,33 @@ export default {
         hideToolTipForItem(item) {
             item.showToolTipForItem = false;
         },
+        startTracking() {
+            if (this.timer) return; // Verhindert mehrfaches Starten
+
+            this.trackingIsRunning = true;
+            this.timer = setInterval(() => {
+                this.timeInSeconds++;
+            }, 1000);
+        },
+        breakTracking() {
+            this.trackingIsRunning = false;
+            clearInterval(this.timer);
+            this.timer = null;
+        },
+        stopTracking() {
+            this.trackingIsRunning = false;
+            clearInterval(this.timer);
+            this.timer = null;
+            this.timeInSeconds = 0; // Timer zurücksetzen
+        },
     },
     computed: {
+        formattedTime() {
+            const hours = String(Math.floor(this.timeInSeconds / 3600)).padStart(2, '0');
+            const minutes = String(Math.floor((this.timeInSeconds % 3600) / 60)).padStart(2, '0');
+            const seconds = String(this.timeInSeconds % 60).padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        },
         managementNavigation() {
             //default budget route is general
             let desiredBudgetRoute = route('budget-settings.general');
@@ -533,6 +589,9 @@ export default {
     },
   data() {
         return {
+            trackingIsRunning: false,
+            timer: null,
+            timeInSeconds: 0,
             showSystemSettings: false,
             showUserMenu: false,
             pushNotifications: [],
@@ -626,6 +685,10 @@ export default {
             hoverTrashMenu: false,
             hoverNotificationsMenu: false,
         }
+    },
+    beforeDestroy() {
+        // Timer aufräumen, falls die Komponente zerstört wird
+        if (this.timer) clearInterval(this.timer);
     },
     setup() {
         const sidebarOpen = ref(false)

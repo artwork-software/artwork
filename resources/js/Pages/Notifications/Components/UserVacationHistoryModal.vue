@@ -17,8 +17,8 @@
                                     <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                         {{ historyItem.created_at }}:
                                     </span>
-                                <NewUserToolTip :height="7" :width="7" v-if="historyItem.changes[0].changed_by"
-                                                :user="historyItem.changes[0].changed_by" :id="index"/>
+                                <<NewUserToolTip :height="7" :width="7" v-if="historyItem.change_by"
+                                                :user="historyItem.change_by" :id="index"/>
                                 <div v-else class="xsLight ml-3">
                                     {{ $t('deleted User')}}
                                 </div>

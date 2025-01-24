@@ -4,7 +4,7 @@ import JetInputError from "@/Jetstream/InputError.vue";
 import Button from "@/Jetstream/Button.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import {IconDownload, IconEdit, IconX} from "@tabler/icons-vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import {ref} from "vue";
 
 const props = defineProps({
@@ -60,7 +60,7 @@ const downloadKeyVisual = () => {
     link.click();
 }
 const deleteKeyVisual = () => {
-    this.$inertia.delete(route('project.delete.keyVisual', props.project.id))
+    router.delete(route('project.delete.keyVisual', props.project.id))
 }
 </script>
 

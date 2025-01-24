@@ -243,6 +243,7 @@ class ProjectController extends Controller
                 switch ($component->type) {
                     case ProjectTabComponentEnum::PROJECT_TITLE->value:
                         $projectData->title = $project->name;
+                        $projectData->key_visual_path = $project->key_visual_path;
                         break;
                     case ProjectTabComponentEnum::PROJECT_STATUS->value:
                         $projectData->state = ProjectState::find($project->state);
@@ -314,6 +315,7 @@ class ProjectController extends Controller
                 switch ($component->type) {
                     case ProjectTabComponentEnum::PROJECT_TITLE->value:
                         $projectData->title = $project->name;
+                        $projectData->key_visual_path = $project->key_visual_path;
                         break;
                     case ProjectTabComponentEnum::PROJECT_STATUS->value:
                         $projectData->state = ProjectState::find($project->state);
@@ -3465,11 +3467,11 @@ class ProjectController extends Controller
 
             $img = Image::make($file);
 
-            if ($img->width() < 1080) {
+            /*if ($img->width() < 1080) {
                 throw ValidationException::withMessages([
                     'keyVisual' => __('notification.project.key_visual.width')
                 ]);
-            }
+            }*/
 
             Storage::delete('keyVisual/' . $project->key_visual_path);
 

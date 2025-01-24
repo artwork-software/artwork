@@ -329,6 +329,7 @@ class EventController extends Controller
                 foreach ($historyComplete as $history) {
                     $historyObjects[] = [
                         'changes' => json_decode($history->changes),
+                        'change_by' => $history->changer,
                         'created_at' => $history->created_at->diffInHours() < 24
                             ? $history->created_at->diffForHumans()
                             : $history->created_at->format('d.m.Y, H:i'),
@@ -342,6 +343,7 @@ class EventController extends Controller
                 foreach ($historyComplete as $history) {
                     $historyObjects[] = [
                         'changes' => json_decode($history->changes),
+                        'change_by' => $history->changer,
                         'created_at' => $history->created_at->diffInHours() < 24
                             ? $history->created_at->diffForHumans()
                             : $history->created_at->format('d.m.Y, H:i'),

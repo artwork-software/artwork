@@ -44,5 +44,10 @@ class UpdateArtwork extends Command
         $this->info('Artwork Add New Components Command has been called');
         $this->info('----------------------------------------------------------');
         $this->info('Artwork Update Command has finished');
+
+        $this->info('Artwork add default event properties');
+        $this->call('db:seed', ['--class' => 'DefaultEventPropertiesSeeder']);
+        $this->info('----------------------------------------------------------');
+        $this->info('Artwork Update Command has finished');
     }
 }

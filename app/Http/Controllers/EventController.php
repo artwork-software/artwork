@@ -176,7 +176,8 @@ class EventController extends Controller
                     $eventTypeService,
                     $areaService,
                     $projectService,
-                    $projectCreateSettings
+                    $projectCreateSettings,
+                    $eventPropertyService,
                 ) :
                 $eventService->createEventManagementDto(
                     $roomService,

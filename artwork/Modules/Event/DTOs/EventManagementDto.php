@@ -366,7 +366,6 @@ class EventManagementDto extends BaseDto
             'projectNameUsedForProjectTimePeriod' => $this->getProjectNameUsedForProjectTimePeriod(),
             'eventStatuses' => $this->getEventStatuses(),
             'show_artists' => $this->getShowArtists(),
-            //@todo: maybe remove
             'event_properties' => $this->getEventProperties()
         ];
     }

@@ -17,18 +17,22 @@ class DefaultEventPropertiesSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->eventPropertyService->create(
-            [
-                'name' => 'Publikum',
-                'icon' => 'IconUsersGroup'
-            ]
-        );
+        if ($this->eventPropertyService->find(1) === null) {
+            $this->eventPropertyService->create(
+                [
+                    'name' => 'Publikum',
+                    'icon' => 'IconUsersGroup'
+                ]
+            );
+        }
 
-        $this->eventPropertyService->create(
-            [
-                'name' => 'Laut',
-                'icon' => 'IconSpeakerphone'
-            ]
-        );
+        if ($this->eventPropertyService->find(2) === null) {
+            $this->eventPropertyService->create(
+                [
+                    'name' => 'Laut',
+                    'icon' => 'IconSpeakerphone'
+                ]
+            );
+        }
     }
 }

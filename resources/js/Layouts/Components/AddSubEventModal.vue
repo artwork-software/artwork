@@ -87,23 +87,15 @@
                         <MenuItems
                             class="absolute overflow-y-auto h-24 w-full rounded-lg origin-top-left divide-y divide-gray-200 bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
-                                <div class="flex w-full mb-4">
-                                    <input v-model="subEvent.audience"
-                                           type="checkbox"
-                                           class="checkBoxOnDark"/>
-                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
-                                         alt="audienceIcon"/>
-
-                                    <div :class="[subEvent.audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
-                                        {{ $t('With audience') }}
-                                    </div>
-                                </div>
-                                <div class="flex w-full mb-2">
-                                    <input v-model="subEvent.is_loud"
-                                           type="checkbox"
-                                           class="checkBoxOnDark"/>
-                                    <div :class="[subEvent.is_loud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">
-                                        {{ $t('It gets loud') }}
+                                <div class="w-full rounded-2xl bg-primary border-none mt-2 flex flex-col gap-y-1">
+                                    <div v-for="eventProperty in this.event_properties" class="flex flex-row gap-x-1 w-full items-center">
+                                        <input v-model="eventProperty.checked"
+                                               type="checkbox"
+                                               class="checkBoxOnDark"/>
+                                        <component :is="eventProperty.icon" class="w-5 h-5 text-white" stroke-width="2"/>
+                                        <div :class="[eventProperty.checked ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
+                                            {{ eventProperty.name }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -251,6 +243,7 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import {inject} from "vue";
 
 const {getDaysOfEvent, formatEventDateByDayJs} = useEvent();
 export default {
@@ -293,8 +286,6 @@ export default {
                 selectedEventType: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType : this.eventTypes[1],
                 start_time: this.subEventToEdit?.start ? this.subEventToEdit?.start : dayjs(this.event.start).format('YYYY-MM-DD HH:mm'),
                 end_time: this.subEventToEdit?.end ? this.subEventToEdit?.end : dayjs(this.event.end).format('YYYY-MM-DD HH:mm'),
-                is_loud: this.subEventToEdit?.is_loud ? this.subEventToEdit?.is_loud : false,
-                audience: this.subEventToEdit?.audience ? this.subEventToEdit?.audience : false,
                 description: this.subEventToEdit?.description ? this.subEventToEdit?.description : '',
                 user_id: this.$page.props.user.id,
                 event_type_id: this.subEventToEdit?.eventTypeId ? this.subEventToEdit?.eventTypeId : '',
@@ -312,6 +303,7 @@ export default {
             endDate: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('YYYY-MM-DD') : dayjs(this.event.end).format('YYYY-MM-DD'),
             show: true,
             submit: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType.individual_name ? this.subEventToEdit?.title?.length > 0 : true : true,
+            event_properties: inject('event_properties')
         }
     },
     props: ['event', 'eventTypes', 'subEventToEdit'],
@@ -393,8 +385,6 @@ export default {
                 selectedEventType: this.subEvent.selectedEventType,
                 start_time: this.subEvent.start_time,
                 end_time: this.subEvent.end_time,
-                is_loud: this.subEvent.is_loud,
-                audience: this.subEvent.audience,
                 description:  this.subEvent.description,
                 user_id: this.subEvent.user_id,
                 event_type_id: this.subEvent.event_type_id,

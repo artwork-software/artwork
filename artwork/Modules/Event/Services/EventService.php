@@ -760,7 +760,6 @@ readonly class EventService
                 /** @var Shift $shift */
                 return ($shift->start_date <= $endDate && $shift->end_date >= $startDate);
             });
-
             //@todo: code duplication
             //@todo: use model scope "startAndEndTimeOverlap" as its an event builder when used on relation
             // Filtere die Events nach der Logik von startAndEndTimeOverlap
@@ -794,56 +793,75 @@ readonly class EventService
                     &&
                     (empty($eventTypeFilter) || in_array($event->event_type_id, $eventTypeFilter))
                 );
-            })->map(function ($event) {
-                $startTime = Carbon::parse($event->start_time);
-                $eventType = $event->event_type;
-                $creator = $event->creator;
-
-                return [
-                    'id' => $event->id,
-                    'start' => $startTime,
-                    'startTime' => Carbon::parse($event->start_time, 'Europe/Berlin')->format('Y-m-d H:i:s'),
-                    'end' => Carbon::parse($event->end_time, 'Europe/Berlin')->format('Y-m-d H:i:s'),
-                    'eventName' => $event->eventName,
-                    'description' => $event->description,
-                    'audience' => $event->audience,
-                    'isLoud' => $event->is_loud,
-                    'projectId' => $event->project_id,
-                    'projectName' => $event->project?->name,
-                    'eventTypeId' => $event->event_type_id,
-                    'eventStatusId' => $event->event_status_id,
-                    'eventStatusColor' => $event->eventStatus?->color,
-                    'eventTypeName' => $eventType?->name,
-                    'eventTypeAbbreviation' => $eventType?->abbreviation,
-                    'eventTypeColor' => $eventType?->hex_code,
-                    'eventProperties' => $event->getAttribute('eventProperties'),
-                    'created_at' => $event->created_at?->format('d.m.Y, H:i'),
-                    'occupancy_option' => $event->occupancy_option,
-                    'allDay' => $event->allDay,
-                    'eventTypeColorBackground' => $eventType->getAttribute('hex_code') . '33',
-                    'event_type_color' => $eventType->getAttribute('hex_code'),
-                    'shifts' => MinimalShiftPlanShiftResource::collection($event->shifts)->resolve(),
-                    'days_of_event' => $event->days_of_event,
-                    'days_of_shifts' => $event->getDaysOfShifts($event->shifts),
-                    'option_string' => $event->option_string,
-                    'formatted_dates' => $event->formatted_dates,
-                    'timesWithoutDates' => $event->timesWithoutDates,
-                    'is_series' => $event->is_series,
-                    'series' => $this->aggregateSeriesEvents($event),
-                    'start_hour' => $event->getAttribute('start_hour') . ':00',
-                    'event_length_in_hours' => $event->getAttribute('event_length_in_hours'),
-                    'hours_to_next_day' => $event->getAttribute('hours_to_next_day'),
-                    'minutes_form_start_hour_to_start' => $event->getAttribute('minutes_form_start_hour_to_start'),
-                    'roomId' => $event->getAttribute('room_id'),
-                    'roomName' => $event->getAttribute('room')?->getAttribute('name'),
-                    'created_by' => [
-                        'id' => $creator->getAttribute('id'),
-                        'profile_photo_url' => $creator->getAttribute('profile_photo_url'),
-                        'first_name' => $creator->getAttribute('first_name'),
-                        'last_name' => $creator->getAttribute('last_name')
-                    ],
-                ];
             });
+
+            $filterEventPropertyIds = $filter->getAttribute('event_properties') ?? [];
+
+            $room->events = $room->events
+                ->when(count($filterEventPropertyIds) > 0)
+                ->filter(
+                    function (Event $event) use ($filterEventPropertyIds) {
+                        foreach ($event->getAttribute('eventProperties') as $eventProperty) {
+                            if (in_array($eventProperty->id, $filterEventPropertyIds)) {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    }
+                );
+
+            $room->events = $room->events
+                ->map(function ($event) {
+                    $startTime = Carbon::parse($event->start_time);
+                    $eventType = $event->event_type;
+                    $creator = $event->creator;
+
+                    return [
+                        'id' => $event->id,
+                        'start' => $startTime,
+                        'startTime' => Carbon::parse($event->start_time, 'Europe/Berlin')->format('Y-m-d H:i:s'),
+                        'end' => Carbon::parse($event->end_time, 'Europe/Berlin')->format('Y-m-d H:i:s'),
+                        'eventName' => $event->eventName,
+                        'description' => $event->description,
+                        'audience' => $event->audience,
+                        'isLoud' => $event->is_loud,
+                        'projectId' => $event->project_id,
+                        'projectName' => $event->project?->name,
+                        'eventTypeId' => $event->event_type_id,
+                        'eventStatusId' => $event->event_status_id,
+                        'eventStatusColor' => $event->eventStatus?->color,
+                        'eventTypeName' => $eventType?->name,
+                        'eventTypeAbbreviation' => $eventType?->abbreviation,
+                        'eventTypeColor' => $eventType?->hex_code,
+                        'eventProperties' => $event->getAttribute('eventProperties'),
+                        'created_at' => $event->created_at?->format('d.m.Y, H:i'),
+                        'occupancy_option' => $event->occupancy_option,
+                        'allDay' => $event->allDay,
+                        'eventTypeColorBackground' => $eventType->getAttribute('hex_code') . '33',
+                        'event_type_color' => $eventType->getAttribute('hex_code'),
+                        'shifts' => MinimalShiftPlanShiftResource::collection($event->shifts)->resolve(),
+                        'days_of_event' => $event->days_of_event,
+                        'days_of_shifts' => $event->getDaysOfShifts($event->shifts),
+                        'option_string' => $event->option_string,
+                        'formatted_dates' => $event->formatted_dates,
+                        'timesWithoutDates' => $event->timesWithoutDates,
+                        'is_series' => $event->is_series,
+                        'series' => $this->aggregateSeriesEvents($event),
+                        'start_hour' => $event->getAttribute('start_hour') . ':00',
+                        'event_length_in_hours' => $event->getAttribute('event_length_in_hours'),
+                        'hours_to_next_day' => $event->getAttribute('hours_to_next_day'),
+                        'minutes_form_start_hour_to_start' => $event->getAttribute('minutes_form_start_hour_to_start'),
+                        'roomId' => $event->getAttribute('room_id'),
+                        'roomName' => $event->getAttribute('room')?->getAttribute('name'),
+                        'created_by' => [
+                            'id' => $creator->getAttribute('id'),
+                            'profile_photo_url' => $creator->getAttribute('profile_photo_url'),
+                            'first_name' => $creator->getAttribute('first_name'),
+                            'last_name' => $creator->getAttribute('last_name')
+                        ],
+                    ];
+                });
         });
     }
 

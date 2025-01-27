@@ -92,6 +92,7 @@ use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
+use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
@@ -614,6 +615,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             //event_status.delete
             Route::delete('/{eventStatus}', [EventStatusController::class, 'destroy'])
                 ->name('event_status.delete');
+        });
+
+        Route::group(['prefix' => 'event_properties'], function (): void {
+            Route::get('/', [EventPropertyController::class, 'index'])
+                ->name('event_settings.event_properties.index');
+            Route::post('/', [EventPropertyController::class, 'store'])
+                ->name('event_settings.event_properties.store');
+            Route::patch('/{eventProperty}', [EventPropertyController::class, 'update'])
+                ->name('event_settings.event_properties.update');
+            Route::delete('/{eventProperty}', [EventPropertyController::class, 'destroy'])
+                ->name('event_settings.event_properties.delete');
         });
     });
 
@@ -1845,10 +1857,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // delete project-management-builder.destroy
         Route::delete('/destroy/{component}', [ProjectManagementBuilderController::class, 'destroy'])
             ->name('project-management-builder.destroy');
-    });
-
-    Route::group(['prefix' => 'event-property'], function (): void {
-
     });
 });
 

@@ -753,26 +753,13 @@ name: "SingleEventInEventsWithoutRoom",
                 preserveState: true,
                 onSuccess: () => {
                     router.reload({
-                        only: ['eventsWithoutRoom']
+                        only: ['eventsWithoutRoom', 'calendar']
                     })
                 },
                 onError: (error) => {
                     event.error = error.response;
                 }
             })
-
-
-            /*axios.put('/events/' + event?.id, this.eventData(event))
-                .then(() => {
-                    this.requestReload(
-                        this.event.roomId,
-                        getDaysOfEvent(
-                            formatEventDateByDayJs(event.start),
-                            formatEventDateByDayJs(event.end)
-                        )
-                    )
-                })
-                .catch(error => event.error = error.response.data.errors);*/
         },
         openDeleteEventModal() {
             this.deleteComponentVisible = true;

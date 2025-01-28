@@ -977,10 +977,6 @@ class EventController extends Controller
         Event $event,
         ProjectController $projectController
     ): void {
-
-        //dd($request->all());
-
-
         $this->authorize('update', $event);
         if (!$request->noNotifications) {
             $projectManagers = [];
@@ -1667,7 +1663,7 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function declineEvent(Request $request, Event $event): bool
+    public function declineEvent(Request $request, Event $event): void
     {
         $this->authorize('update', $event);
 
@@ -1922,7 +1918,7 @@ class EventController extends Controller
         $this->notificationService->setNotificationTo($event->creator);
         $this->notificationService->createNotification();
 
-        return true;
+        //broadcast(new EventCreated($event, $event->room_id));
     }
 
     public function getCollisionCount(Request $request): int

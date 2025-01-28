@@ -976,7 +976,7 @@ class EventController extends Controller
         EventUpdateRequest $request,
         Event $event,
         ProjectController $projectController
-    ): CalendarEventResource|RedirectResponse {
+    ): void {
 
         //dd($request->all());
 
@@ -1362,11 +1362,13 @@ class EventController extends Controller
             $this->craftInventoryItemEventService->updateEventTimeInInventory($isInInventoryEvent, $event);
         }
 
+        broadcast(new EventCreated($event, $event->room_id));
+
         //redirect is required for bulk component event component
-        if ($request->boolean('usedInBulkComponent')) {
+        /*if ($request->boolean('usedInBulkComponent')) {
             return $this->redirector->back();
-        }
-        return new CalendarEventResource($event);
+        }*/
+        //return new CalendarEventResource($event);
     }
 
     private function createEventScheduleNotification(Event $event): void
@@ -1983,7 +1985,7 @@ class EventController extends Controller
         SubEventService $subEventService,
         NotificationService $notificationService,
         ProjectTabService $projectTabService
-    ): bool|null {
+    ): void {
         $this->authorize('delete', $event);
 
         $this->eventService->delete(
@@ -2005,7 +2007,7 @@ class EventController extends Controller
             $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
         }
 
-        return true;
+        //return true;
     }
 
     public function destroyWithoutReturn(

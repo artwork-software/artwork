@@ -2486,7 +2486,7 @@ class EventController extends Controller
                 $event->setAttribute('end_time', $date . ' ' . $endTime);
             }
             $event->save();
-            broadcast(new EventCreated($event, $event->room_id));
+            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
         }
 
 

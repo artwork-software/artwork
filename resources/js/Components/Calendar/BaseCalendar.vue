@@ -28,7 +28,7 @@
             </div>
         </div>
 
-        <div v-if="checkIfAnyRoomHasAnEventOrShift && !usePage().props.user.calendar_settings.use_project_time_period">
+        <div>
             <div v-if="!usePage().props.user.daily_view">
                 <div class="-mx-5 mt-4">
                     <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">

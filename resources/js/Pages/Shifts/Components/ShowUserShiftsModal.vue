@@ -296,6 +296,53 @@ export default defineComponent({
         closeConfirmDeleteModal() {
             this.showConfirmDeleteModal = false;
         },
+        sendIndividualTimes() {
+            router.post(route('add.update.individualTimesAndShiftPlanComment'), {
+                modelId: this.user.element.id,
+                modelType: this.user.type,
+                individualTimes: this.user.individual_times,
+                shift_comment: this.shiftPlanComment,
+            }, {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    this.sendCheckVacation();
+                },
+                onError: () => {
+                    return false;
+                }
+            });
+            return false;
+        },
+        sendCheckVacation() {
+            if (this.user.type === 0) {
+                router.patch(route('user.check.vacation', {user: this.user.element.id}), {
+                    checked: this.checked,
+                    day: this.day.full_day,
+                    vacationTypeBeforeUpdate: this.vacationTypeBeforeUpdate,
+                }, {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        this.closeModal(true);
+                    }
+                })
+            } else if (this.user.type === 1) {
+                router.patch(route('service_provider.check.vacation', {service_provider: this.user.element.id}), {
+                    checked: this.checked,
+                    day: this.day.full_day,
+                    vacationTypeBeforeUpdate: this.vacationTypeBeforeUpdate,
+                }, {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        this.closeModal(true);
+                    }
+                })
+            } else {
+                this.closeModal(false);
+            }
+        },
         checkVacation() {
             let callback = (afterRequest) => {
                 this.closeModal(true);
@@ -312,43 +359,8 @@ export default defineComponent({
                 }
             }
 
-            router.post(route('add.update.individualTimesAndShiftPlanComment'), {
-                modelId: this.user.element.id,
-                modelType: this.user.type,
-                individualTimes: this.user.individual_times,
-                shift_comment: this.shiftPlanComment,
-            }, {
-                preserveScroll: true,
-                preserveState: true,
-            });
+            this.sendIndividualTimes();
 
-            if (this.user.type === 0) {
-                router.patch(route('user.check.vacation', {user: this.user.element.id}), {
-                    checked: this.checked,
-                    day: this.day.full_day,
-                    vacationTypeBeforeUpdate: this.vacationTypeBeforeUpdate,
-                }, {
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => {
-                        callback(true);
-                    }
-                })
-            } else if (this.user.type === 1) {
-                router.patch(route('service_provider.check.vacation', {service_provider: this.user.element.id}), {
-                    checked: this.checked,
-                    day: this.day.full_day,
-                    vacationTypeBeforeUpdate: this.vacationTypeBeforeUpdate,
-                }, {
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => {
-                        callback(true);
-                    }
-                })
-            } else {
-                callback(false);
-            }
         }
     }
 })

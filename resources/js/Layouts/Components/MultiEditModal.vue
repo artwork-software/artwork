@@ -225,6 +225,8 @@ export default {
             let desiredRoomIds = null,
                 desiredDays;
 
+
+
             axios.patch(
                 route('multi-edit.save'),
                 {

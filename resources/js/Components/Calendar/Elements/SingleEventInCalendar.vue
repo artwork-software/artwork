@@ -24,35 +24,42 @@
                 </div>
             </div>
         </div>
-        <div class="flex items-center justify-between" >
+        <div class="flex items-center justify-between">
             <div class="px-1 py-1">
-                <div
-                    :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
-                    :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']"
-                    class="flex justify-between flex-wrap">
-                    <div class="truncate max-w-fit">
-                        <a v-if="event.projectName && event.projectId" type="button"
-                           :href="getEditHref(event.projectId)"
-                           class="text-ellipsis items-center w-full">
-                            {{ event.projectName }}
-                        </a>
+                <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
+                    :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']" class="">
+                    <div class="flex items-center gap-x-1">
+                        <div v-if="event.projectStatusId">
+                            <div class="text-center rounded-full border group size-4 cursor-pointer" :style="{backgroundColor: event.projectStatusBackgroundColor, borderColor: event.projectStatusBorderColor}">
+                                <div class="absolute hidden group-hover:block top-5">
+                                    <div class="bg-artwork-navigation-background text-white text-xs rounded-full px-3 py-0.5">
+                                        {{ event.projectStatusName}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <a v-if="event.projectName && event.projectId" :href="getEditHref(event.projectId)" class="flex items-center">
+                                <span class="truncate !w-28 inline-block">{{ event.projectName }}</span>
+                            </a>
+                        </div>
                     </div>
                     <div v-if="usePage().props.user.calendar_settings.project_artists"
-                         class="flex items-center w-full">
+                         class="flex items-center w-36">
                         <div v-if="event.projectArtists"
                              class=" truncate">
                             {{ event.projectArtists }}
                         </div>
                     </div>
                     <div v-if="usePage().props.user.calendar_settings.event_name"
-                         class="flex items-center w-full">
+                         class="flex items-center w-36">
                         <div v-if="event.eventName"
-                             class=" truncate">
+                             class="truncate">
                             {{ event.eventName }}
                         </div>
                     </div>
-                    <div>
-                        <div  class=" truncate">
+                    <div class="w-36">
+                        <div class=" truncate">
                             {{ event.eventTypeName }}
                         </div>
                     </div>

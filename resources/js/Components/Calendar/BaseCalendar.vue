@@ -15,20 +15,20 @@
         </div>
 
 
-        <div :class="computedFilteredEvents.length > 0 ? 'mt-20' : ''">
-            <div v-if="computedFilteredEvents.length > 0" class="flex justify-center">
+        <div :class="eventsWithoutRoom.length > 0 ? 'mt-20' : ''">
+            <div v-if="eventsWithoutRoom.length > 0" class="flex justify-center">
                 <div class="flex errorText items-center cursor-pointer my-2" @click="showEventsWithoutRoomComponent = true">
                     <IconAlertTriangle class="h-6 mr-2"/>
                     {{
                         computedFilteredEvents.length === 1 ?
-                            $t('{0} Event without room!', [computedFilteredEvents.length]) :
-                            $t('{0} Events without room!', [computedFilteredEvents.length])
+                            $t('{0} Event without room!', [eventsWithoutRoom.length]) :
+                            $t('{0} Events without room!', [eventsWithoutRoom.length])
                     }}
                 </div>
             </div>
         </div>
 
-        <div v-if="checkIfAnyRoomHasAnEventOrShift && !usePage().props.user.calendar_settings.use_project_time_period">
+        <div>
             <div v-if="!usePage().props.user.daily_view">
                 <div class="-mx-5 mt-4">
                     <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
@@ -210,7 +210,7 @@
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :eventsWithoutRoom="computedFilteredEvents"
+        :eventsWithoutRoom="eventsWithoutRoom"
         :isAdmin="hasAdminRole()"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
     />

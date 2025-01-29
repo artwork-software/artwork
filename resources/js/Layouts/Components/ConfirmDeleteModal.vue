@@ -26,6 +26,7 @@
         <div v-if="is_budget && !isSeriesDelete" class="flex justify-between mt-5 pl-4 items-center pr-4">
             <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal(false)">{{ $t('Continue without saving') }}</p>
             <FormButton
+                type="button"
                 @click="deleteElement(true)"
                 :text="buttonText" />
 

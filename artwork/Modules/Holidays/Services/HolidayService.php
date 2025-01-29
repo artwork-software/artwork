@@ -73,7 +73,8 @@ class HolidayService
     public function getHolidaysFormAPI(
         \Illuminate\Support\Collection $selectedSubdivisions,
         bool $publicHolidays,
-        bool $schoolHolidays
+        bool $schoolHolidays,
+        string $languageCode = 'DE'
     ): array {
         $responses = [];
         foreach ($selectedSubdivisions as $subdivision) {

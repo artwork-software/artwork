@@ -41,7 +41,7 @@
                                                 'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
                                                 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
                                             ]">
-                                    {{ $t('Delete Entries') }}
+                                    {{ $t('Delete') }}
                                 </button>
                             </div>
                         </div>
@@ -1018,6 +1018,7 @@ export default {
                 this.showAddShiftModal = true;
             } else {
                 this.openCellMultiEditCalendarDelete = false;
+                this.multiEditCalendarDays = [];
             }
         },
         openEditShiftModal(shift) {
@@ -1035,6 +1036,7 @@ export default {
             this.showAddShiftModal = false;
             this.roomForShiftAdd = null;
             this.dayForShiftAdd = null;
+            this.multiEditCalendarDays = [];
         },
         checkIfRoomAndDayIsInMultiEditCalendar(day, roomId){
             return this.multiEditCalendarDays.some((dayAndRoom) => dayAndRoom.day === day && dayAndRoom.roomId === roomId)
@@ -1054,24 +1056,24 @@ export default {
         },
         setupInertiaNavigationGuard() {
             this.originalVisit = router.visit;
+            window.onbeforeunload = (event) => {
+                if (this.multiEditMode && this.userForMultiEdit && !this.preventNextNavigation) {
+                    event.preventDefault();
+                    event.returnValue = this.$t('Would you like to save the changes before you leave the page?');
+                }
+            };
+
             router.visit = async (url, options = {}) => {
                 if (this.multiEditMode && this.userForMultiEdit && !this.preventNextNavigation) {
-                    const confirmation = confirm(this.$t('Would you like to save the changes before you leave the page?'));
+                    this.preventNextNavigation = true;
 
-                    if (confirmation) {
-                        this.preventNextNavigation = true;
-
-                        try {
-                            await this.initializeMultiEditSave();
-
-                            if (!this.waitForModalClose) {
-                                this.originalVisit.call(router, url, options);
-                            }
-                        } finally {
-                            this.preventNextNavigation = false;
+                    try {
+                        //await this.initializeMultiEditSave();
+                        if (!this.waitForModalClose) {
+                            this.originalVisit.call(router, url, options);
                         }
-                    } else {
-                        this.originalVisit.call(router, url, options);
+                    } finally {
+                        this.preventNextNavigation = false;
                     }
                 } else if (!this.waitForModalClose) {
                     this.originalVisit.call(router, url, options);

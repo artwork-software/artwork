@@ -185,6 +185,7 @@
 
                     </div>
                 </div>
+
                 <BasePaginator
                     :entities="projects"
                     property-name="projects"
@@ -372,13 +373,13 @@ const projectHistoryToDisplay = ref([]);
 
 // Project management settings
 const userProjectManagementSetting = props.userProjectManagementSetting; // Assuming it's passed or available in the context
-const showOnlyMyProjects = ref(userProjectManagementSetting?.project_filters.showOnlyMyProjects);
-const showProjectGroups = ref(userProjectManagementSetting?.project_filters.showProjectGroups);
-const showProjects = ref(userProjectManagementSetting?.project_filters.showProjects);
-const showExpiredProjects = ref(userProjectManagementSetting?.project_filters.showExpiredProjects);
-const showFutureProjects = ref(userProjectManagementSetting?.project_filters.showFutureProjects);
-const showProjectsWithoutEvents = ref(userProjectManagementSetting?.project_filters.showProjectsWithoutEvents);
-const sortBy = ref(userProjectManagementSetting?.sort_by === null ? undefined : userProjectManagementSetting?.sort_by);
+const showOnlyMyProjects = ref(props.userProjectManagementSetting?.project_filters.showOnlyMyProjects);
+const showProjectGroups = ref(props.userProjectManagementSetting?.project_filters.showProjectGroups);
+const showProjects = ref(props.userProjectManagementSetting?.project_filters.showProjects);
+const showExpiredProjects = ref(props.userProjectManagementSetting?.project_filters.showExpiredProjects);
+const showFutureProjects = ref(props.userProjectManagementSetting?.project_filters.showFutureProjects ?? false);
+const showProjectsWithoutEvents = ref(props.userProjectManagementSetting?.project_filters.showProjectsWithoutEvents);
+const sortBy = ref(props.userProjectManagementSetting?.sort_by === null ? undefined : props.userProjectManagementSetting?.sort_by);
 
 const showProjectStateFilter = ref(true);
 const editingProject = ref(false);
@@ -475,35 +476,33 @@ const openExportModal = () => {
 };
 
 const applyFiltersAndSort = (resetPage = true) => {
-    router.get(route().current(), {
-        page: resetPage ? 1 : page.value,
-        entitiesPerPage: perPage.value,
-        query: route().params.query,
+    router.post(route('projects.filter'), {
         project_state_ids: props.states.filter((state) => state.clicked).map((state) => state.id),
         project_filters: {
-            showOnlyMyProjects: getTruthyOrUndefined(true),
-            showProjectGroups: getTruthyOrUndefined(true),
-            showProjects: getTruthyOrUndefined(true),
-            showExpiredProjects: getTruthyOrUndefined(true),
-            showFutureProjects: getTruthyOrUndefined(true),
-            showProjectsWithoutEvents: getTruthyOrUndefined(true),
+            showOnlyMyProjects: getTruthyOrUndefined(showOnlyMyProjects.value),
+            showProjectGroups: getTruthyOrUndefined(showProjectGroups.value),
+            showProjects: getTruthyOrUndefined(showProjects.value),
+            showExpiredProjects: getTruthyOrUndefined(showExpiredProjects.value),
+            showFutureProjects: getTruthyOrUndefined(showFutureProjects.value),
+            showProjectsWithoutEvents: getTruthyOrUndefined(showProjectsWithoutEvents.value),
         },
         sort: sortBy.value,
-        saveFilterAndSort: 1,
     }, {
-        preserveState: false
+        preserveState: false,
+        onSuccess: () => {
+            reloadProjects(resetPage);
+        },
     });
 };
 
 const resetFilter = () => {
-    router.get(route().current(), {
+    router.post(route('projects.filter'), {
         page: 1,
         entitiesPerPage: perPage.value,
         query: route().params.query,
         project_states: undefined,
         project_filters: undefined,
         sort: sortBy.value,
-        saveFilterAndSort: 1,
     });
 };
 
@@ -525,13 +524,13 @@ const changeEntitiesPerPage = (entitiesPerPage) => {
 
 const getTruthyOrUndefined = (value) => (value ? 1 : undefined);
 
-const reloadProjects = () => {
+const reloadProjects = (resetPage = true) => {
     router.reload({
         only: ['projects', 'pinnedProjects', 'projectComponents', 'components', 'pinnedProjectsAll'],
         data: {
-            query: project_search.value,
-            page: 1,
+            page: resetPage ? 1 : page.value,
             entitiesPerPage: perPage.value,
+            query: route().params.query,
         },
     });
 };

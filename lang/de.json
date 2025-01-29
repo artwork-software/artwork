@@ -2297,5 +2297,7 @@
     "Are you sure you want to delete the selected component from the project?": "Möchtest du die ausgewählte Komponente wirklich aus dem Projekt löschen?",
     "Set up the project overview for your artwork. To do this, drag and drop the components from the lower area into the project overview. You can also adjust the order of the components using drag & drop.": "Richte die Projektübersicht für dein Artwork ein. Ziehe dazu die Komponenten aus dem unteren Bereich in die Projektübersicht. Du kannst die Reihenfolge der Komponenten auch per Drag & Drop anpassen.",
     "Drop here": "Hier ablegen",
-    "Add the task here": "Aufgabe hier hinzufügen"
+    "Add the task here": "Aufgabe hier hinzufügen",
+    "Deselect all": "Alle abwählen",
+    "Select all": "Alle auswählen"
 }

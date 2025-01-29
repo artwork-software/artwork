@@ -40,6 +40,7 @@ use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Models\PresetShiftShiftsQualifications;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -191,11 +192,14 @@ readonly class EventService
         $subEventService->deleteSubEvents($event->subEvents);
 
         broadcast(new OccupancyUpdated())->toOthers();
-
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
+        if ($event->room_id){
+            broadcast(new RemoveEvent($event, $event->room_id));
+        }
+
         $this->eventRepository->delete($event);
-        broadcast(new RemoveEvent($event, $event->room_id));
+
     }
 
     public function deleteAll(
@@ -557,6 +561,7 @@ readonly class EventService
                 $totalBreakMinutes += $shift['break_minutes'];
             }
 
+
             if ($earliestStart !== null && $latestEnd !== null) {
                 $plannedWorkingHours = max(
                     ($earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes) / 60,
@@ -794,6 +799,13 @@ readonly class EventService
                 $startTime = Carbon::parse($event->start_time);
                 $eventType = $event->event_type;
                 $creator = $event->creator;
+                /** @var Project $project */
+                $project = $event->project ?: null;
+                $projectState = null;
+                if($project?->state){
+                    /** @var ProjectState $projectState */
+                    $projectState = ProjectState::find($project->state);
+                }
                 return [
                     'id' => $event->id,
                     'start' => $startTime,
@@ -808,6 +820,10 @@ readonly class EventService
                     'eventTypeId' => $event->event_type_id,
                     'eventStatusId' => $event->event_status_id,
                     'eventStatusColor' => $event->eventStatus?->color,
+                    'projectStatusId' => $projectState?->id,
+                    'projectStatusBackgroundColor' => $projectState?->color . '33',
+                    'projectStatusBorderColor' => $projectState?->color,
+                    'projectStatusName' => $projectState?->name,
                     'eventTypeName' => $eventType?->name,
                     'eventTypeAbbreviation' => $eventType?->abbreviation,
                     'eventTypeColor' => $eventType?->hex_code,

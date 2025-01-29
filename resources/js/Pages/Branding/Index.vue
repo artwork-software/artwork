@@ -21,7 +21,7 @@
                     @click="selectNewBigLogo"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedBigLogo($event)">
-                    <img v-show="bigLogoPreview" :src="bigLogoPreview" alt="Logo" class="rounded-md h-40 w-40">
+                    <img v-show="bigLogoPreview" :src="bigLogoPreview" alt="Logo" class="rounded-md h-auto w-auto">
                     <input type="file" class="hidden"
                            ref="bigLogo"
                            @change="updateBigLogoPreview">
@@ -52,14 +52,14 @@
                     @click="selectNewSmallLogo"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedSmallLogo($event)">
-                    <img v-show="smallLogoPreview" :src="smallLogoPreview" alt="Logo" class="rounded-md h-40 w-40">
+                    <img v-show="smallLogoPreview" :src="smallLogoPreview" alt="Logo" class="rounded-md h-auto w-auto object-cover">
                     <input type="file" class="hidden" ref="smallLogo" @change="updateSmallLogoPreview">
                     <div class="xsLight flex my-auto h-40 items-center"
                          v-if="$page.props.small_logo === null && smallLogoPreview === null">
                         {{ $t('Drag your small artwork logo here') }}
                     </div>
                     <div class="cursor-pointer" v-else-if="!smallLogoPreview">
-                        <img :src="$page.props.small_logo" alt="Logo" class="rounded-md h-40 w-40">
+                        <img :src="$page.props.small_logo" alt="Logo" class="rounded-md h-auto w-auto object-cover">
                     </div>
                 </div>
 
@@ -79,7 +79,7 @@
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
-                    class="flex col-span-2 w-full justify-center border-2 bg-stone-50 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                    class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
                     @click="selectNewBanner"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedBanner($event)">
@@ -96,14 +96,14 @@
                             />
                         </div>
                         <div class="cursor-pointer" v-else>
-                            <img :src="$page.props.banner" :alt="$t('Current banner')" class="rounded-md h-40 w-40">
+                            <img :src="$page.props.banner" :alt="$t('Current banner')" class="rounded-md h-auto w-auto object-cover">
                         </div>
                     </div>
                     <div class="cursor-pointer">
                         <img v-show="bannerPreview"
                              :src="bannerPreview"
                              :alt="$t('Current banner')"
-                             class="rounded-md h-40 w-40"
+                             class="rounded-md h-auto w-auto object-cover"
                         >
                         <input type="file" class="hidden"
                                ref="banner"

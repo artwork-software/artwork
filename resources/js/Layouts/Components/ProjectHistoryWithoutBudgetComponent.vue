@@ -8,8 +8,7 @@
                     {{ $t('Here you can see what was changed by whom and when.')}}
                 </div>
 
-
-                <div class="flex w-full flex-wrap mt-4 max-h-96">
+                <div class="flex w-full flex-wrap mt-4 max-h-96 overflow-x-scroll">
                     <div v-for="(historyItem,index) in project_history">
                         <div class="flex w-full my-1" v-if="historyItem?.changes !== null && historyItem.changes[0]?.type === 'public_changes'">
                             <div class="flex w-full ">
@@ -18,7 +17,7 @@
                                     </span>
                                 <NewUserToolTip :height="7"
                                                 :width="7"
-                                                :user="historyItem.changes[0].changed_by"
+                                                :user="historyItem.change_by"
                                                 :id="index"/>
                                 <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
                                     {{

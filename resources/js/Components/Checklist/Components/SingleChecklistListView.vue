@@ -262,7 +262,7 @@ const orderTasksByDeadline = computed(() => {
 const checkIfUserIsInTaskIfInOwnTaskManagement = (task) => {
     // if isInOwnTaskManagement is true, check if the current user ist in the task
     if (props.isInOwnTaskManagement && !props.checklist.private) {
-        return task.users.map(user => user.id).includes(usePage().props.user.id);
+        return task?.users.map(user => user.id)?.includes(usePage().props.user.id);
     } else {
         return true;
     }

@@ -1,16 +1,16 @@
 <template>
-    <div class="flex items-center justify-between mb-2 relative">
-        <div class="w-96 flex items-center gap-x-5 justify-between cursor-pointer relative">
-            <div class="flex items-center gap-x-1 headline3" @click="changeChecklistStatus(checklist)">
-                <span v-if="checklist?.private">
-                    <IconLock stroke-width="1.5" class="h-6 w-6 text-primary" />
-                </span>
-                {{ checklist?.name }}
+    <div class="bg-white px-5 py-7 rounded-lg border-l-8 " :class="$page.props.user.opened_checklists.includes(checklist?.id) ? 'border-artwork-buttons-create' : 'border-gray-400'">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-x-3 cursor-pointer" @click="changeChecklistStatus(checklist)">
+                <div class="font-bold">
+                    {{ checklist?.name }}
+                </div>
                 <div>
-                    <IconChevronDown class="h-6 w-6 text-primary" :class="$page.props.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
+                    <component is="IconChevronDown" class="h-6 w-6" :class="$page.props.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
                 </div>
             </div>
-            <BaseMenu v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id))) || isInOwnTaskManagement" no-relative>
+
+            <BaseMenu has-no-offset v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id))) || isInOwnTaskManagement" >
                 <MenuItem as="div" v-slot="{ active }" v-if="!checklist.private">
                     <a @click="openEditChecklistTeamsModal = true"
                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
@@ -40,7 +40,7 @@
                     </a>
                 </MenuItem>
                 <MenuItem as="div"
-                    v-slot="{ active }">
+                          v-slot="{ active }">
                     <a @click="createTemplateFromChecklist "
                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
                         <IconFilePlus stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
@@ -64,40 +64,23 @@
                 </MenuItem>
             </BaseMenu>
         </div>
-
-        <div class="flex items-center gap-x-1 text-xs" v-if="checklist?.tasks.length > 0">
-            <div v-for="task in checklist.tasks" class="w-2.5 h-2.5 flex flex-col justify-center overflow-hidden  text-xs text-white text-center whitespace-nowrap transition duration-500" v-show="!checkIfAllTasksAreDone" :class="task.done ? 'bg-teal-500' : 'bg-gray-500'" role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
-            <div class="ms-1" v-if="checkIfAllTasksAreDone">
-                <span class="flex-shrink-0 ms-auto size-4 flex justify-center items-center rounded-full bg-teal-500 text-white">
-                  <svg class="flex-shrink-0 size-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </span>
+        <div class="my-4 border-b border-dashed pb-3" v-if="$page.props.user.opened_checklists.includes(checklist?.id)">
+            <div class="text-xs" v-if="checklist.hasProject">
+                <div class="flex gap-x-1">
+                    {{ $t('Project') }}:
+                    <Link v-if="checklist?.project?.id" :href="route('projects.tab', {project: checklist?.project?.id, projectTab: checklist?.project?.checklist_tab_id ?? 1})" class="text-artwork-buttons-create underline flex items-center gap-x-0.5">
+                        {{ checklist?.project?.name }}
+                        <IconChevronRight class="h-4 w-4 text-primary" />
+                        {{ checklist.name }}
+                    </Link>
+                </div>
+                <div v-if="checklist?.project?.firstEventInProject && checklist?.project?.lastEventInProject">
+                    {{ checklist?.project?.firstEventInProject?.start_time }} -
+                    {{ checklist?.project?.lastEventInProject?.end_time }}
+                </div>
             </div>
-            <div v-else class="ml-1">
-                {{ countDoneTasks }} / {{ checklist.tasks.length }}
-            </div>
-        </div>
-    </div>
-
-    <div v-if="$page.props.user.opened_checklists.includes(checklist?.id)">
-        <div class="mb-2 text-xs" v-if="checklist.hasProject">
-           <div class=" flex gap-x-1">
-               {{ $t('Project') }}:
-               <Link v-if="checklist?.project?.id" :href="route('projects.tab', {project: checklist?.project?.id, projectTab: checklist?.project?.checklist_tab_id ?? 1})" class="text-artwork-buttons-create underline flex items-center gap-x-0.5">
-                   {{ checklist?.project?.name }}
-                   <IconChevronRight class="h-4 w-4 text-primary" />
-                   {{ checklist.name }}
-               </Link>
-           </div>
-            <div v-if="checklist?.project?.firstEventInProject && checklist?.project?.lastEventInProject">
-                {{ checklist?.project?.firstEventInProject?.start_time }} -
-                {{ checklist?.project?.lastEventInProject?.end_time }}
-            </div>
-        </div>
-        <div class="border-l-4 border-l-artwork-buttons-create border rounded-lg shadow-md">
-            <draggable :disabled="!canEditComponent" ghost-class="opacity-50" key="draggableKey" item-key="draggableID" :list="orderTasksByDeadline" @start="dragging = true" @end="dragging = false" @change="updateTaskOrder(checklist.tasks)" class="divide-y-2 divide-dashed text-sm">
-                <template #item="{element}" :key="element.id">
+            <div class="divide-y divide-dashed">
+                <div v-for="element in orderTasksByDeadline" :key="element.id">
                     <SingleTaskInListView
                         :can-edit-component="canEditComponent"
                         :project-manager-ids="projectManagerIds"
@@ -108,15 +91,19 @@
                         :tab_id="tab_id"
                         :checklist="checklist"
                         :is-in-own-task-management="isInOwnTaskManagement"
+                        v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
+
                     />
-                </template>
-            </draggable>
-            <div class="px-5 py-2.5 cursor-pointer flex items-center text-center justify-center" @click="openAddTaskModal = true" :class="checklist.tasks.length > 0 ? ' border-t-2 border-dashed' : ''">
-                <AlertComponent :text="$t('Click here to create a task')" type="info" />
+                </div>
             </div>
         </div>
-    </div>
 
+        <div class="px-5 py-2.5 cursor-pointer flex items-center text-center justify-center gap-x-4 h-8" @click="openAddTaskModal = true">
+            <AlertComponent :text="$t('Click here to create a task')" type="info" />
+            <DropTaskInListView :checklist-id="checklist.id" />
+        </div>
+
+    </div>
     <AddEditChecklistModal
         :checklist_templates="checklist_templates"
         :project="project ?? checklist?.project"
@@ -175,6 +162,8 @@ import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import AddEditTaskModal from "@/Components/Checklist/Modals/AddEditTaskModal.vue";
 import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserModal.vue";
 import { usePermission } from "@/Composeables/Permission.js";
+import DropTaskInKanbanView from "@/Components/Checklist/Components/DropTaskInKanbanView.vue";
+import DropTaskInListView from "@/Components/Checklist/Components/DropTaskInListView.vue";
 const {can} = usePermission(usePage().props)
 const props = defineProps({
     checklist: {
@@ -231,6 +220,7 @@ const checkIfAllTasksChecked = computed(() => {
     return tasks.every(task => task.done === true);
 });
 
+
 const templateForm = useForm({
     checklist_id: props.checklist?.id,
 });
@@ -272,7 +262,7 @@ const orderTasksByDeadline = computed(() => {
 const checkIfUserIsInTaskIfInOwnTaskManagement = (task) => {
     // if isInOwnTaskManagement is true, check if the current user ist in the task
     if (props.isInOwnTaskManagement && !props.checklist.private) {
-        return task.users.map(user => user.id).includes(usePage().props.user.id);
+        return task?.users.map(user => user.id)?.includes(usePage().props.user.id);
     } else {
         return true;
     }

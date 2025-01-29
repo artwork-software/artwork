@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
+    <BaseModal @closed="closeModal" v-if="true">
             <div class="mx-4">
                 <div>
                     <h1 class="my-1 flex">
@@ -24,32 +24,44 @@
                     </div>
                     <!-- Calculate Tab -->
                     <div v-if="isCalculateTab">
+                        <ConfirmDeleteModal
+                            v-if="showConfirmCalculationModal"
+                            :title="$t('Save calculation')"
+                            :description="$t('Would you like to save your calculation? The previous figure in the budget table will be overwritten with the new figure irrevocably.')"
+                            :button="$t('Save')"
+                            :is_budget="true"
+                            @closed="closeConfirmCalculationModal"
+                            @delete="saveAllCalculations"
+                        />
                         <div v-if="this.cell.calculations?.length > 0"
                              v-for="(calculation,index) in this.cell.calculations">
                             <div @mouseover="!cell.column.is_locked ? calculationHovered = calculation.id : null"
                                  @mouseout="calculationHovered = null">
                                 <div class="h-1.5 my-2 bg-silverGray"/>
-                                <div class="flex space-x-4 mb-3">
-                                    <div class="w-1/2">
-                                        <input type="text"
+                                <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
+                                    <div class="col-span-1">
+                                        <TextInputComponent type="text"
                                                v-model="calculation.name"
-                                               :placeholder="$t('Name')"
+                                               :label="$t('Name')" id="name"
                                                :disabled="cell.column.is_locked"
-                                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                        />
                                     </div>
-                                    <div class="w-1/2">
-                                        <input type="number" @focusout="this.refreshSumKey++"
+                                    <div class="col-span-1">
+                                        <NumberInputComponent
                                                v-model="calculation.value"
                                                :disabled="cell.column.is_locked"
-                                               :placeholder="$t('Value')"
-                                               class="h-12 sDark text-right inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                               :label="$t('Value')" :max="300000000"
+                                               id="value"/>
                                     </div>
                                 </div>
-                                <textarea :placeholder="$t('Comment')"
-                                          v-model="calculation.description"
-                                          :disabled="cell.column.is_locked"
-                                          rows="4"
-                                          class="inputMain resize-none xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                <div class="col-span-full pt-4">
+                                    <TextareaComponent :label="$t('Comment')"
+                                                       v-model="calculation.description"
+                                                       :disabled="cell.column.is_locked"
+                                                       rows="4"
+                                                       id="description"
+                                    />
+                                </div>
                             </div>
                             <!-- add new Buttons with hover effect -->
                             <div class="grid grid-cols-2 group h-2">
@@ -111,7 +123,7 @@
                                 SUM
                             </div>
                             <div class="mr-2 sDark">
-                                {{ this.calculationSum }}
+                                {{ this.sumCalculated }}
                             </div>
                         </div>
                         <div class="flex justify-center mt-6">
@@ -269,16 +281,9 @@
                     </div>
                 </div>
             </div>
+
     </BaseModal>
-    <ConfirmDeleteModal
-        v-if="showConfirmCalculationModal"
-        :title="$t('Save calculation')"
-        :description="$t('Would you like to save your calculation? The previous figure in the budget table will be overwritten with the new figure irrevocably.')"
-        :button="$t('Save')"
-        :is_budget="true"
-        @closed="closeConfirmCalculationModal()"
-        @delete="saveAllCalculations()"
-    />
+
 </template>
 
 <script>
@@ -294,7 +299,7 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/outline';
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
@@ -303,11 +308,18 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import {nextTick} from "vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default {
     name: 'CellDetailComponent',
     mixins: [Permissions, IconLib],
     components: {
+        TextareaComponent,
+        NumberInputComponent,
+        TextInputComponent,
         BaseModal,
         FormButton,
         ConfirmDeleteModal,
@@ -355,7 +367,6 @@ export default {
             isExcludeTab: false,
             isLinkTab: this.openTab === 'moneySource',
             hoveredBorder: false,
-            refreshSumKey: 0,
             isExcluded: this.cell.commented,
             cellComment: null,
             commentHovered: null,
@@ -366,7 +377,8 @@ export default {
             }),
             moneySource_query: '',
             moneySource_search_results: [],
-            showConfirmCalculationModal: false
+            showConfirmCalculationModal: false,
+            saveCalculationAfterConfirm: false
         }
     },
     props: [
@@ -378,6 +390,7 @@ export default {
     emits: ['closed'],
     mounted() {
         if (this.cell.calculations.length === 0) {
+            console.log('mounted')
             this.$inertia.post(
                 route('project.budget.cell-calculation.add', this.cell.id),
                 {},
@@ -420,24 +433,14 @@ export default {
                 ]
             }
         },
-        calculationValues() {
-            let calculations = this.cell.calculations;
-            let values = []
-            calculations?.forEach((calculation) => {
-                values.push(calculation.value);
-            })
-            return values;
-        },
-        calculationSum() {
-            this.refreshSumKey++;
+        sumCalculated() {
             let sum = 0;
-            this.calculationValues?.forEach((value) => {
-                if (!isNaN(value) && value !== '') {
-                    sum += parseInt(value);
-                }
-            })
+            this.cell.calculations.forEach((calculation) => {
+                sum += parseInt(calculation.value);
+            });
+
             return sum;
-        },
+        }
     },
     methods: {
         formatDate(date) {
@@ -508,42 +511,47 @@ export default {
                         calculations: this.cell.calculations,
                     },
                     {
+                        preserveScroll: true,
                         preserveState: true,
-                        preserveScroll: true
+                        onSuccess: () => {
+                            this.$inertia.post(route('project.budget.cell-calculation.add', cellId), {
+                                position: position
+                            }, {
+                                preserveScroll: true,
+                                preserveState: true,
+                            })
+                        }
                     }
                 );
             }
-            this.$inertia.post(route('project.budget.cell-calculation.add', cellId), {
-                position: position
-            }, {
-                preserveScroll: true
-            })
+
         },
         saveCalculation() {
-            let canClosed = false;
-            this.cell.calculations.forEach((calculation) => {
-                if (!canClosed) {
-                    if (Number(calculation.value) !== 0) {
-                        this.showConfirmCalculationModal = true;
-                        canClosed = true;
-                    }
-                }
-            })
-            if (!canClosed) {
-                this.saveAllCalculations()
+            const cellValue = Number(this.cell.value ?? this.cell.sage_value ?? this.cell.current_value);
+            if (cellValue === 0) {
+                this.saveAllCalculations();
+            } else {
+                this.showConfirmCalculationModal = true;
             }
         },
         saveAllCalculations() {
-            this.$inertia.patch(
+            router.patch(
                 route('project.budget.cell-calculation.update'),
                 {
                     calculations: this.cell.calculations,
                 },
                 {
-                    preserveState: true, preserveScroll: true
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        router.reload({
+                            only: ['selectedCell']
+                        })
+                        this.closeConfirmCalculationModal();
+                        this.saveCalculationAfterConfirm = false;
+                        this.closeModal(true);
+                    }
                 }
             );
-            this.closeModal(true);
         },
         deleteCommentFromCell(comment) {
             this.$inertia.delete(
@@ -554,12 +562,28 @@ export default {
             );
         },
         deleteCalculationFromCell(calculation) {
-            this.$inertia.delete(
-                route('project.budget.cell.calculation.delete', {cellCalculation: calculation.id}),
-                {
-                    preserveScroll: true
-                }
-            );
+            if (this.cell.calculations?.length > 0) {
+                this.$inertia.patch(
+                    route('project.budget.cell-calculation.update'),
+                    {
+                        calculations: this.cell.calculations,
+                    },
+                    {
+                        preserveScroll: true,
+                        preserveState: true,
+                        onSuccess: () => {
+                            this.$inertia.delete(
+                                route('project.budget.cell.calculation.delete', {cellCalculation: calculation.id}),
+                                {
+                                    preserveScroll: true,
+                                    preserveState: true,
+                                }
+                            );
+                        }
+                    }
+                );
+            }
+
         },
         addCommentToCell() {
             if (!this.commentForm.description) {

@@ -56,6 +56,7 @@ class NotificationController extends Controller
                 foreach ($historyComplete as $history) {
                     $historyObjects[] = [
                         'changes' => json_decode($history->changes),
+                        'change_by' => $history->changer,
                         'created_at' => $history->created_at->diffInHours() < 24
                             ? $history->created_at->diffForHumans()
                             : $history->created_at->format('d.m.Y, H:i'),
@@ -69,6 +70,7 @@ class NotificationController extends Controller
                 foreach ($historyComplete as $history) {
                     $historyObjects[] = [
                         'changes' => json_decode($history->changes),
+                        'change_by' => $history->changer,
                         'created_at' => $history->created_at->diffInHours() < 24
                             ? $history->created_at->diffForHumans()
                             : $history->created_at->format('d.m.Y, H:i'),
@@ -84,6 +86,7 @@ class NotificationController extends Controller
                     foreach ($historyComplete as $history) {
                         $historyObjects[] = [
                             'changes' => json_decode($history->changes),
+                            'change_by' => $history->changer,
                             'created_at' => $history->created_at->diffInHours() < 24
                                 ? $history->created_at->diffForHumans()
                                 : $history->created_at->format('d.m.Y, H:i'),
@@ -158,18 +161,27 @@ class NotificationController extends Controller
     ): void {
         /** @var DatabaseNotification $wantedNotification */
         $wantedNotification = $databaseNotificationService->find($request->string('notificationId'));
+
+        if (
+            !is_null($wantedNotification) &&
+            $wantedNotification->getAttribute('data')['buttons'] > 0
+        ) {
+            return;
+        }
+
         $wantedNotification->setAttribute('read_at', $carbonService->getNow());
         $wantedNotification->save();
     }
 
     public function setOnReadAll(Request $request): void
     {
-        // get user
         $user = User::find(Auth::id());
-        // get all notifications within ids in $request->notificationId
         $notifications = $user->notifications()->whereIn('id', $request->notificationIds)->get();
-        // set all notifications to read
         foreach ($notifications as $notification) {
+            if (count($notification->data['buttons']) > 0) {
+                continue;
+            }
+
             $notification->read_at = now();
             $notification->save();
         }

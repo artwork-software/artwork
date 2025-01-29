@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Contract\Http\Resources;
 
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Http\Resources\CommentResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Task\Models\Task;
@@ -11,25 +12,18 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ContractResource extends JsonResource
 {
+
     /**
-     * @return User[]
+     * @return \Illuminate\Support\Collection
      */
-    public function getAccessibleUsers(): array
+    public function getAccessibleUsers(): \Illuminate\Support\Collection
     {
-        $usersWithAccess = $this->accessingUsers->all();
+        $usersWithAccess = collect($this->accessingUsers->all());
         $project = Project::where('id', $this->project_id)->with(['users'])->first();
+
         foreach ($project->users as $user) {
-            if ($user->pivot->is_manager) {
-                // check if user->id is already in $usersWithAccess
-                $userExists = false;
-                foreach ($usersWithAccess as $userWithAccess) {
-                    if ($userWithAccess->id === $user->id) {
-                        $userExists = true;
-                    }
-                }
-                if (!$userExists) {
-                    array_push($usersWithAccess, $user);
-                }
+            if ($user->pivot->is_manager && !$usersWithAccess->contains('id', $user->id)) {
+                $usersWithAccess->push($user);
             }
         }
 
@@ -58,7 +52,23 @@ class ContractResource extends JsonResource
             'currency' => $this->currency,
             'is_freed' => $this->is_freed,
             'description' => $this->description,
-            'accessibleUsers' => UserIndexResource::collection($this->getAccessibleUsers())->resolve(),
+            'accessibleUsers' => $this->getAccessibleUsers()->map(fn ($user) => [
+                'resource' => class_basename($user),
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'profile_photo_url' => $user->profile_photo_url,
+                'email' => $user->email,
+                'departments' => $user->departments,
+                'position' => $user->position,
+                'business' => $user->business,
+                'phone_number' => $user->phone_number,
+                'project_management' => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
+                'display_name' => $user->getDisplayNameAttribute(),
+                'type' => $user->getTypeAttribute(),
+                'assigned_craft_ids' => $user->getAssignedCraftIdsAttribute(),
+            ]),
+            //'accessibleUsers' => UserIndexResource::collection($this->getAccessibleUsers())->resolve(),
             'tasks' => Task::where('contract_id', $this->id)->get(),
             'comments' => CommentResource::collection($this->comments)->resolve()
         ];

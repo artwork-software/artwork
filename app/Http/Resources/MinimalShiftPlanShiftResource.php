@@ -61,7 +61,11 @@ class MinimalShiftPlanShiftResource extends JsonResource
                         "value" => $shiftsQualifications->getAttribute('value'),
                     ];
                 }
-            )
+            ),
+            'worker_count' => $this->getAttribute('users')->count() +
+                $this->getAttribute('freelancer')->count() +
+                $this->getAttribute('serviceProvider')->count(),
+            'max_worker_count' => $this->getAttribute('shiftsQualifications')->sum('value')
         ];
     }
 }

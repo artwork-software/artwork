@@ -8,6 +8,7 @@ use Artwork\Core\Console\Commands\DeleteOldNotificationsCommand;
 use Artwork\Core\Console\Commands\ImportHolidaysCommand;
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
 use Artwork\Core\Console\Commands\NotifyCraftIfShiftDeadlineReached;
+use Artwork\Core\Console\Commands\RemoveDatabaseNotificationsCommand;
 use Artwork\Core\Console\Commands\RemoveExpiredInvitationsCommand;
 use Artwork\Core\Console\Commands\RemoveTemporaryRoomsCommand;
 use Artwork\Core\Console\Commands\SendDeadlineNotificationsCommand;
@@ -52,6 +53,9 @@ class Kernel extends ConsoleKernel
             ->dailyAt('01:00')
             ->runInBackground();
         $schedule->command(RemoveExpiredInvitationsCommand::class)->dailyAt('01:00')->runInBackground();
+        $schedule->command(RemoveDatabaseNotificationsCommand::class)
+            ->dailyAt('01:00')
+            ->runInBackground();
 
         $sageApiSettings = $this->sageApiSettingsService->getFirst();
         if (!is_null($sageApiSettings) && $sageApiSettings->enabled) {

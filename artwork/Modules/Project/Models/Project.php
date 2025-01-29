@@ -34,6 +34,7 @@ use Laravel\Scout\Searchable;
 /**
  * @property int $id
  * @property string $name
+ * @property string $own_copyright
  * @property string $artists
  * @property string $description
  * @property string $shift_description
@@ -64,6 +65,11 @@ use Laravel\Scout\Searchable;
  * @property Collection<Genre> $genres
  * @property Collection<Room> $rooms
  * @property CostCenter $costCenter
+ * @property CollectingSociety $collectingSociety
+ * @property Collection<Project> $groups
+ * @property Collection<Project> $projectsOfGroup
+ * @property Collection<Comment> $comments
+ * @property Collection<ArtistResidency> $artistResidencies
  */
 class Project extends Model
 {
@@ -96,6 +102,7 @@ class Project extends Model
         'pinned_by_users' => 'array',
         'live_music' => 'boolean',
         'own_copyright' => 'boolean',
+        'is_group' => 'boolean'
     ];
 
     protected $with = [

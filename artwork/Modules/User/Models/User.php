@@ -211,7 +211,8 @@ class User extends Model implements
         'is_developer',
         'show_qualifications',
         'email_private',
-        'phone_private'
+        'phone_private',
+        'daily_view'
     ];
 
     protected $casts = [
@@ -238,7 +239,8 @@ class User extends Model implements
         'is_developer' => 'boolean',
         'show_qualifications' => 'array',
         'email_private' => 'boolean',
-        'phone_private' => 'boolean'
+        'phone_private' => 'boolean',
+        'daily_view' => 'boolean'
     ];
 
     protected $hidden = [

@@ -1,59 +1,63 @@
 <template>
-    <div>
+    <div class="my-4">
 
-        <div class="flex w-full items-center my-4">
-            <h3 class="sDark">{{ $t('Documents') }}</h3>
-        </div>
-        <div class="mb-3">
-            <MultiAlertComponent :errors="documentForm.errors" v-show="Object.keys(documentForm.errors).length > 0" :error-count="Object.keys(documentForm.errors).length" />
-        </div>
-        <div
-            v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.user.id))">
-            <input
-                @change="uploadChosenDocuments"
-                class="hidden"
-                ref="project_files"
-                id="file"
-                type="file"
-                multiple
-            />
-            <div @click="selectNewFiles" @dragover.prevent
-                 @drop.stop.prevent="uploadDraggedDocuments($event)"
-                 class="mb-4 w-full flex justify-center items-center border-artwork-buttons-create rounded-lg border-dotted border-2 h-40 bg-colorOfAction p-2 cursor-pointer">
-                <p class="text-artwork-buttons-create font-bold text-center"
-                   v-html="$t('Drag document here to upload or click in the field')">
-                </p>
+        <TinyPageHeadline
+            :title="$t('Documents')"
+            :description="$t('Here you can upload and download documents for the project.')"
+        />
+
+        <div>
+            <div class="mb-3">
+                <MultiAlertComponent :errors="documentForm.errors" v-show="Object.keys(documentForm.errors).length > 0" :error-count="Object.keys(documentForm.errors).length" />
             </div>
-            <jet-input-error :message="uploadDocumentFeedback"/>
-        </div>
-        <div class="mb-3">
-            <div class="space-y-1">
-                <div v-for="project_file in project.project_files_tab"
-                     class="cursor-pointer group flex items-center">
-                    <div :data-tooltip-target="project_file.name" class="flex truncate">
-                        <IconFileText class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
-                        <p @click="downloadFile(project_file)" class="ml-2 truncate">
-                            {{ project_file.name }}</p>
 
-                        <IconCircleX
-                            v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id))"
-                            @click="openConfirmDeleteModal(project_file)"
-                            class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
-                            aria-hidden="true"/>
-                    </div>
-                    <div :id="project_file.name" role="tooltip"
-                         class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                        <div class="flex flex-wrap">
-                            {{ $t('To download the file, click on the file name') }}
+            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.user.id))">
+                <div
+                    @click="selectNewFiles"
+                    @dragover.prevent
+                    @drop.stop.prevent="uploadDraggedDocuments($event)"
+                    class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <component is="IconFileUpload" class="mx-auto size-12 text-gray-400" />
+                    <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t('Drag document here to upload or click in the field') }}</span>
+                </div>
+                <input
+                    @change="uploadChosenDocuments"
+                    class="hidden"
+                    ref="project_files"
+                    id="file"
+                    type="file"
+                    multiple
+                />
+                <jet-input-error :message="uploadDocumentFeedback"/>
+            </div>
+
+
+            <div class="my-4">
+                <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200" v-if="documents.length > 0">
+                    <li class="flex items-center justify-between py-4 pl-4 pr-5 text-sm/6 group" v-for="project_file in documents">
+                        <div class="flex w-0 flex-1 items-center">
+                            <component is="IconFileText" class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
+                            <div class="ml-4 flex min-w-0 flex-1 gap-2">
+                                <span class="truncate font-medium">{{ project_file.name }}</span>
+                                <span class="shrink-0 text-gray-400">{{ project_file.file_size }}</span>
+                            </div>
                         </div>
-                        <div class="tooltip-arrow" data-popper-arrow></div>
-                    </div>
+                        <div class="ml-4 shrink-0 flex items-center gap-x-4">
+                            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id))"
+                                 @click="openConfirmDeleteModal(project_file)"
+                                 class="invisible group-hover:visible font-medium text-gray-900 hover:text-artwork-messages-error cursor-pointer">
+                                {{ $t('Löschen') }}
+                            </div>
+                            <div @click="downloadFile(project_file)" class="font-medium text-gray-900 hover:text-artwork-buttons-hover cursor-pointer">{{ $t('Download') }}</div>
+                        </div>
+                    </li>
+                </ul>
+                <div v-if="documents.length === 0" class="xsDark">
+                    {{ $t('No files available') }}
                 </div>
             </div>
-            <div v-if="project?.project_files_all?.length === 0" class="xsDark">
-                {{ $t('No files available') }}
-            </div>
         </div>
+
         <ConfirmDeleteModal :title="$t('Delete file')"
                             :description="$t('Are you sure you want to delete the selected file from the project?')"
                             @closed="closeConfirmDeleteModal"
@@ -72,6 +76,8 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {useForm} from "@inertiajs/vue3";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
+import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
+import {useProjectDocumentListener} from "@/Composeables/Listener/useProjectDocumentListener.js";
 
 export default defineComponent({
     mixins: [
@@ -79,6 +85,7 @@ export default defineComponent({
         IconLib
     ],
     components: {
+        TinyPageHeadline,
         MultiAlertComponent,
         VisualFeedback,
         ConfirmDeleteModal,
@@ -99,7 +106,11 @@ export default defineComponent({
                 tabId: this.tab_id ? this.tab_id : null
             }),
             deletingFile: false,
+            documents: this.project?.project_files_tab ?? []
         };
+    },
+    mounted() {
+        useProjectDocumentListener(this.documents, this.project.id).init();
     },
     methods: {
         uploadChosenDocuments(event) {
@@ -111,7 +122,7 @@ export default defineComponent({
         uploadDocumentToProject(file) {
             this.documentForm.file = file
 
-            this.documentForm.post(`/projects/${this.project.id}/files`, {
+            this.documentForm.post(route('project_files.store', {project: this.project.id}), {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {

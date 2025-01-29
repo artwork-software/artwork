@@ -1,6 +1,6 @@
 <template>
     <div class="checklist-listview-container ">
-        <div v-for="checklist in checklists" >
+        <div v-for="checklist in checklists" :key="checklist.id">
             <SingleChecklistListView
                 :checklist="checklist"
                 :can-edit-component="canEditComponent"

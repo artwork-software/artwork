@@ -7,7 +7,7 @@
                 :show="showCopyrightModal"
                 @close-modal="closeCopyrightModal"
                 :project="project"
-                :collecting-societies="loadedProjectInformation['BudgetInformation'].collecting_societies"
+                :collecting-societies="loadedProjectInformation['BudgetInformation']?.collecting_societies ?? project.collecting_societies"
             />
         </div>
         <div class="text-secondary text-md">{{$t('Copyright')}}: {{ project.own_copyright ? $t('Yes') : $t('No') }}</div>
@@ -28,7 +28,7 @@
             <ProjectFileUploadModal :show="showFileUploadModal"
                                     :close-modal="closeFileUploadModal"
                                     :project-id="project.id"
-                                    :budget-access="loadedProjectInformation['BudgetInformation'].access_budget"/>
+                                    :budget-access="loadedProjectInformation['BudgetInformation']?.access_budget ?? project.access_budget"/>
         </div>
         <div v-if="showProjectFiles">
             <div v-if="loadedProjectInformation['BudgetInformation'].project_files.length > 0">
@@ -72,10 +72,10 @@
                 <ContractUploadModal
                     :show="showContractUploadModal"
                     :project-id="project.id"
-                    :budget-access="this.loadedProjectInformation['BudgetInformation'].access_budget"
-                    :contract-types="this.loadedProjectInformation['BudgetInformation'].contract_types"
-                    :company-types="this.loadedProjectInformation['BudgetInformation'].company_types"
-                    :currencies="this.loadedProjectInformation['BudgetInformation'].currencies"
+                    :budget-access="this.loadedProjectInformation['BudgetInformation']?.access_budget ?? project.access_budget"
+                    :contract-types="this.loadedProjectInformation['BudgetInformation']?.contract_types ?? project.contract_types"
+                    :company-types="this.loadedProjectInformation['BudgetInformation']?.company_types ?? project.company_types"
+                    :currencies="this.loadedProjectInformation['BudgetInformation']?.currencies ?? project.currencies"
                     @close-modal="closeContractUploadModal"/>
             </div>
             <div v-if="showContracts">
@@ -94,9 +94,9 @@
                                                :show="showContractEditModal === contract?.id"
                                                :close-modal="closeContractEditModal"
                                                :contract="contract"
-                                               :currencies="this.loadedProjectInformation['BudgetInformation'].currencies"
-                                               :company-types="this.loadedProjectInformation['BudgetInformation'].company_types"
-                                               :contract-types="this.loadedProjectInformation['BudgetInformation'].contract_types"/>
+                                               :contract-types="this.loadedProjectInformation['BudgetInformation']?.contract_types ?? project.contract_types"
+                                               :company-types="this.loadedProjectInformation['BudgetInformation']?.company_types ?? project.company_types"
+                                               :currencies="this.loadedProjectInformation['BudgetInformation']?.currencies ?? project.currencies"/>
                             <IconCircleX class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openContractDeleteModal(contract)"/>
                         </div>
                     </div>

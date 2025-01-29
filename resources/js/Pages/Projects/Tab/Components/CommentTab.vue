@@ -26,30 +26,39 @@
             </div>
 
             <div>
-                <div v-if="sortedComments?.length > 0" class="my-6" v-for="comment in sortedComments"
-                     @mouseover="commentHovered = comment.id"
-                     @mouseout="commentHovered = null">
-                    <div class="flex justify-between">
-                        <div class="flex items-center">
-                            <UserPopoverTooltip :user="comment.user" height="7" width="7" :id="comment.id"/>
-                            <div class="ml-2 text-secondary"
-                                 :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
-                                {{ comment.created_at }}
+
+                <!-- new comment layout -->
+
+                <div v-if="newCommentList?.length > 0" class="my-6" v-for="comment in newCommentList">
+                    <div class="group flex items-center justify-between">
+                        <div class="">
+                            <div class="flex items-center gap-x-2">
+                                <UserPopoverTooltip :user="comment.user" height="9" width="9" :id="comment.id"/>
+                                <div class="xsDark">
+                                    <div class="xxsLight">
+                                        {{ comment.created_at }}
+                                    </div>
+                                    <div>
+                                        {{ comment.user.full_name }} {{ $t('wrote') }}:
+                                    </div>
+                                </div>
                             </div>
+                            <p class="mt-2 mr-14 subpixel-antialiased xsDark font-semibold" v-html="comment.text"></p>
                         </div>
-                        <button v-show="this.canEditComponent && (commentHovered === comment.id && ($role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.user.id))" type="button"
-                                @click="deleteCommentFromProject(comment)">
-                            <span class="sr-only">{{ $t('Remove comment from project') }}</span>
-                            <IconCircleXFilled class="ml-2 h-7 w-7 hover:text-error"/>
-                        </button>
+                        <div class="invisible group-hover:visible">
+                            <button v-if="$role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.user.id" type="button"
+                                    @click="deleteCommentFromProject(comment)">
+                                <span class="sr-only">{{ $t('Remove comment from project') }}</span>
+                                <IconCircleXFilled class="ml-2 h-7 w-7 hover:text-error"/>
+                            </button>
+                        </div>
                     </div>
-                    <p class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold" v-html="comment.text">
-                    </p>
                 </div>
                 <div v-else class="xsDark mt-6">
                     {{ $t('No comments yet') }}
                 </div>
             </div>
+
         </div>
     </div>
 </template>
@@ -65,9 +74,13 @@ import {useForm} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import Button from "@/Jetstream/Button.vue";
+import {useCommentListener} from "@/Composeables/Listener/useCommentListener.js";
+import {ref} from "vue";
 
 export default {
     components: {
+        Button,
         TextareaComponent,
         UserPopoverTooltip,
         CheckIcon,
@@ -83,6 +96,10 @@ export default {
         'tab_id',
         'canEditComponent'
     ],
+    mounted() {
+        const useCommentListener1 = useCommentListener(this.newCommentList, this.project.id);
+        useCommentListener1.init();
+    },
     computed:{
         sortedComments: function () {
             let commentCopy = this.project.comments.slice();
@@ -113,6 +130,7 @@ export default {
                 tab_id: this.tab_id ? this.tab_id : null,
             }),
             commentHovered: null,
+            newCommentList: ref(this.project.comments)
         }
     },
     methods: {

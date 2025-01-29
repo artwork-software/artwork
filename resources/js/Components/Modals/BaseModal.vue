@@ -33,7 +33,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div>
+                            <div class="pt-5">
                                 <slot/>
                             </div>
                         </DialogPanel>

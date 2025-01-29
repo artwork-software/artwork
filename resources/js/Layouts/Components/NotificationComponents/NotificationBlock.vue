@@ -56,13 +56,13 @@
                 />
             </div>
         </div>
-        <div class="">
-            <img @click="setReadAt" v-show="notification.hovered"
-                 v-if="!isArchive"
-                 src="/Svgs/IconSvgs/icon_archive_white.svg"
-                 class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-artwork-buttons-create rounded-full"
-                 aria-hidden="true" alt=""/>
-        </div>
+        <img @click="setReadAt"
+             v-show="notification.hovered"
+             v-if="!isArchive && notification.data.buttons.length === 0"
+             src="/Svgs/IconSvgs/icon_archive_white.svg"
+             class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-artwork-buttons-create rounded-full"
+             aria-hidden="true"
+             alt=""/>
     </div>
     <ProjectHistoryWithoutBudgetComponent
         v-if="showProjectHistory"
@@ -346,7 +346,7 @@ export default {
             }
         },
         checkNotificationKey(key){
-            return key !== null || key !== '' || key.length > 0;
+            return key !== null && key.length > 0;
         },
         openProjectBudget(projectId) {
             if (this.first_project_budget_tab_id) {

@@ -31,6 +31,12 @@ export default {
                     current: route().current('component.index'),
                     show: true
                 },
+                {
+                    name: this.$t('Project overview builder'),
+                    href: route('project-management-builder.index'),
+                    current: route().current('project-management-builder.index'),
+                    show: true
+                },
             ]
         },
     },

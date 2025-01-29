@@ -238,8 +238,11 @@ export default  {
             this.deleteComponentVisible = true;
         },
         setAllOnRead() {
-            // filter all notifications that icon is not blue
-            const notifications = this.notifications.filter(notification => notification.data.icon !== 'blue');
+            // filter all notifications that icon is not blue and don't have buttons
+            const notifications = this.notifications.filter(
+                notification => notification.data.icon !== 'blue' &&
+                    notification.data.buttons.length === 0
+            );
 
             // get all notification ids and push it in set on read all form
             notifications.forEach(notification => {

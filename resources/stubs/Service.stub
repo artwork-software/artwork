@@ -1,0 +1,15 @@
+<?php
+
+namespace {{namespace}};
+
+use {{repositoryNamespace}};
+
+readonly class {{class}}
+{
+
+    public function __construct(private {{repository}} ${{repositoryVariable}})
+    {
+    }
+
+    // Add service logic here
+}

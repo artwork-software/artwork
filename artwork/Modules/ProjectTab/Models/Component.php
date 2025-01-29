@@ -2,24 +2,43 @@
 
 namespace Artwork\Modules\ProjectTab\Models;
 
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
+ * Component Model
+ *
+ * Represents a component in the project tab module.
+ *
+ * @property int $id
  * @property string $name
+ * @property string $type
+ * @property array $data
+ * @property bool $special
+ * @property bool $sidebar_enabled
  * @property string $permission_type
- * @property Collection<User> $users
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ *
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\User\Models\User[] $users
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Department\Models\Department[] $departments
+ * @property-read \Artwork\Modules\ProjectTab\Models\ProjectComponentValue $projectValue
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\ProjectTab\Models\SidebarTabComponent[] $sidebarTabComponent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\ProjectTab\Models\ComponentInTab[] $tabComponent
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder|Component notSpecial()
+ * @method static \Illuminate\Database\Eloquent\Builder|Component isSpecial()
  */
 class Component extends Model
 {
     use HasFactory;
+
 
     protected $fillable = [
         'name',
@@ -30,32 +49,54 @@ class Component extends Model
         'permission_type'
     ];
 
+
     protected $casts = [
         'data' => 'array',
         'special' => 'boolean',
         'sidebar_enabled' => 'boolean'
     ];
 
+
     protected $with = [
         'users',
         'departments'
     ];
 
+    /**
+     * Get the project value associated with the component.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
     public function projectValue(): HasOne
     {
         return $this->hasOne(ProjectComponentValue::class, 'component_id', 'id');
     }
 
+    /**
+     * Get the sidebar tab components associated with the component.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function sidebarTabComponent(): HasMany
     {
         return $this->hasMany(SidebarTabComponent::class, 'component_id', 'id');
     }
 
+    /**
+     * Get the tab components associated with the component.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function tabComponent(): HasMany
     {
         return $this->hasMany(ComponentInTab::class, 'component_id', 'id');
     }
 
+    /**
+     * The users that belong to the component.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
@@ -64,6 +105,11 @@ class Component extends Model
             ->withTimestamps();
     }
 
+    /**
+     * The departments that belong to the component.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class)
@@ -73,12 +119,24 @@ class Component extends Model
             ->with(['users']);
     }
 
-    public function scopeNotSpecial($query): Builder
+    /**
+     * Scope a query to only include non-special components.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeNotSpecial(\Illuminate\Database\Eloquent\Builder $query): Builder
     {
         return $query->where('special', false);
     }
 
-    public function scopeIsSpecial($query): Builder
+    /**
+     * Scope a query to only include special components.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeIsSpecial(\Illuminate\Database\Eloquent\Builder $query): Builder
     {
         return $query->where('special', true);
     }

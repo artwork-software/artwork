@@ -158,7 +158,12 @@
                             <div v-for="(group, groupName) in this.computedGroupedPermissions"
                                  v-show="group.shown"
                             >
-                                <h3 class="headline6Light mb-2 mt-6">{{ groupName }}</h3>
+                                <div class="flex items-center justify-between">
+                                    <h3 class="headline6Light mb-2 mt-3">{{ groupName }}</h3>
+                                    <div class="text-xs underline text-artwork-buttons-create cursor-pointer" @click="checkOrUncheckAllPermissionsOfGroup(group)">
+                                        {{ group.permissions.some(permission => permission.checked) ? $t('Deselect all') : $t('Select all') }}
+                                    </div>
+                                </div>
                                 <div class="relative w-full flex items-center mb-2" v-for="(permission, index) in group.permissions" :key=index>
                                     <div class="relative flex w-full">
                                         <div class="flex h-6 items-center">
@@ -324,6 +329,21 @@ export default {
         });
     },
     methods: {
+        checkOrUncheckAllPermissionsOfGroup(group) {
+            // check if some permissions are already selected in the group and if so deselect them
+            if (group.permissions.some(permission => this.form.permissions.includes(permission.name))) {
+                group.permissions.forEach(permission => {
+                    this.form.permissions = this.form.permissions.filter(permissionName => permissionName !== permission.name);
+                    permission.checked = false;
+                });
+            } else {
+                // select all permissions
+                group.permissions.forEach(permission => {
+                    this.form.permissions.push(permission.name);
+                    permission.checked = true;
+                });
+            }
+        },
         closeUserModal(bool){
             this.uncheckRolesAndPermissions();
             this.addingUser = false;

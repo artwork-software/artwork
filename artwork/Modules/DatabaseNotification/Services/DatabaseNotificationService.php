@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\DatabaseNotification\Services;
 
+use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\DatabaseNotification\Repositories\DatabaseNotificationRepository;
 use Illuminate\Notifications\DatabaseNotification;
 use Throwable;
@@ -9,8 +10,10 @@ use Throwable;
 class DatabaseNotificationService
 {
     public function __construct(
-        private readonly DatabaseNotificationRepository $databaseNotificationRepository
-    ) {
+        private readonly DatabaseNotificationRepository $databaseNotificationRepository,
+        private readonly CarbonService $carbonService
+    )
+    {
     }
 
     public function find(string $id): ?DatabaseNotification
@@ -42,5 +45,16 @@ class DatabaseNotificationService
     public function deleteByKey(string $notificationKey): bool
     {
         return $this->databaseNotificationRepository->deleteByKey($notificationKey);
+    }
+
+    public function removeNotificationsOlderThanSevenDays(): void
+    {
+        foreach (
+            $this->databaseNotificationRepository->findOlderThan(
+                $this->carbonService->getNow()->subDays(7)
+            ) as $notification
+        ) {
+            $this->databaseNotificationRepository->forceDelete($notification);
+        }
     }
 }

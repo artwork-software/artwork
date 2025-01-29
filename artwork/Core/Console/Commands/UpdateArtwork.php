@@ -8,7 +8,6 @@ use Illuminate\Console\Command;
 
 class UpdateArtwork extends Command
 {
-
     public function __construct(
         private readonly ProjectManagementBuilderService $projectManagementBuilderService
     ) {

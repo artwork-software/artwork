@@ -14,7 +14,8 @@
                         {{ $t('All day') }}
                     </div>
                     <div v-else-if="event.days_of_event.length === 1">
-                        {{ event.timesWithoutDates.start }} - {{ event.timesWithoutDates.end }}
+                        <span v-if="event?.timesWithoutDates">{{ event?.timesWithoutDates?.start }} - {{ event?.timesWithoutDates?.end }}</span>
+                        <span v-else>{{ event?.times_without_dates?.start }} - {{ event?.times_without_dates.end }}</span>
                     </div>
                     <div v-else>
                         {{ event.formatted_dates.start }} - {{ event.formatted_dates.end }}

@@ -287,6 +287,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    Route::post('/projects/appleFilter', [ProjectController::class, 'saveProjectManagementFilter'])
+        ->name('projects.filter');
     Route::get(
         '/projects/export/budget/{startBudgetDeadline}/{endBudgetDeadline}',
         [ProjectController::class, 'projectsBudgetByBudgetDeadlineExport']
@@ -733,6 +735,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::patch('/user/{user}/update/bulk/sort_id', [UserController::class, 'updateBulkSortId'])
         ->name('user.update_bulk_sort_id');
+
+    // user.update.daily_view
+    Route::patch('/user/{user}/update/daily_view', [UserController::class, 'updateDailyView'])
+        ->name('user.update.daily_view');
+
     Route::resource(
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class

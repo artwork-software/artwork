@@ -644,7 +644,11 @@ export default defineComponent({
                                 preserveState: true,
                                 onSuccess: () => {
                                     this.shiftForm.reset();
+                                    router.reload({
+                                        only: ['loadedProjectInformation']
+                                    })
                                     this.closeModal(true);
+
                                 },
                                 onError: (error) => {
                                     console.log(error);
@@ -662,6 +666,9 @@ export default defineComponent({
                                 preserveState: true,
                                 onSuccess: () => {
                                     this.shiftForm.reset();
+                                    router.reload({
+                                        only: ['loadedProjectInformation']
+                                    })
                                     this.closeModal(true);
                                 },
                                 onError: (error) => {

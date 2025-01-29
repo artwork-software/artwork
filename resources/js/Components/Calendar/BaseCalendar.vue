@@ -14,65 +14,105 @@
             />
         </div>
 
-        <div :class="computedFilteredEvents.length > 0 ? 'mt-20' : ''">
-            <div v-if="computedFilteredEvents.length > 0" class="flex justify-center">
+
+        <div :class="eventsWithoutRoom.length > 0 ? 'mt-20' : ''">
+            <div v-if="eventsWithoutRoom.length > 0" class="flex justify-center">
                 <div class="flex errorText items-center cursor-pointer my-2" @click="showEventsWithoutRoomComponent = true">
                     <IconAlertTriangle class="h-6 mr-2"/>
                     {{
                         computedFilteredEvents.length === 1 ?
-                            $t('{0} Event without room!', [computedFilteredEvents.length]) :
-                            $t('{0} Events without room!', [computedFilteredEvents.length])
+                            $t('{0} Event without room!', [eventsWithoutRoom.length]) :
+                            $t('{0} Events without room!', [eventsWithoutRoom.length])
                     }}
                 </div>
             </div>
         </div>
-        <div v-if="!dateValue[0] && !dateValue[1]" class="mt-24 ml-4 text-error text-sm">
-            {{ $t('The selected project has no dates') }}
-        </div>
 
-        <div v-else class="-mx-5 mt-4">
-            <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
-                <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
-                <div class="w-fit events-by-days-container" :class="[!project ? 'pt-8' : '', isFullscreen ? 'mt-4': '', computedFilteredEvents.length > 0 ? '-mt-7' : 'mt-4' ]" ref="calendarToCalculate">
-                    <div v-for="day in days"
-                         :key="day.full_day"
-                         :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
-                         class="flex gap-0.5 day-container"
-                         :class="day.is_weekend ? 'bg-userBg/70' : ''"
-                         :data-day="day.full_day"
-                         :data-day-to-jump="day.without_format">
-                        <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day"/>
-                        <div v-for="room in computedCalendarData.value"
-                             :key="room.id"
-                             class="relative">
-                            <div v-if="room[day.full_day].events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
-                                <component is="IconChevronDown" @click="scrollToNextEventInDay(day.without_format, room[day.full_day].events.length)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
-                            </div>
-                            <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
-                                 :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
-                                 class="group/container border-t-2 border-gray-400 border-dashed" :id="'scroll_container-' + day.without_format">
-                                <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="(event, index) in room[day.full_day].events">
-                                    <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.without_format">
-                                        <AsyncSingleEventInCalendar
-                                            :event="event"
-                                            :multi-edit="multiEdit"
-                                            :font-size="textStyle.fontSize"
-                                            :line-height="textStyle.lineHeight"
-                                            :rooms="rooms"
-                                            :has-admin-role="hasAdminRole()"
-                                            :width="zoom_factor * 196"
-                                            :first_project_tab_id="first_project_tab_id"
-                                            :firstProjectShiftTabId="firstProjectShiftTabId"
-                                            @edit-event="showEditEventModel"
-                                            @edit-sub-event="openAddSubEventModal"
-                                            @open-add-sub-event-modal="openAddSubEventModal"
-                                            @open-confirm-modal="openDeleteEventModal"
-                                            @show-decline-event-modal="openDeclineEventModal"
-                                            @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                                        />
+        <div>
+            <div v-if="!usePage().props.user.daily_view">
+                <div class="-mx-5 mt-4">
+                    <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
+                        <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
+                        <div class="w-fit events-by-days-container" :class="[!project ? 'pt-8' : '', isFullscreen ? 'mt-4': '', computedFilteredEvents.length > 0 ? '-mt-7' : 'mt-4' ]" ref="calendarToCalculate">
+                            <div v-for="day in days"
+                                 :key="day.full_day"
+                                 :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                                 class="flex gap-0.5 day-container"
+                                 :class="day.is_weekend ? 'bg-userBg/70' : ''"
+                                 :data-day="day.full_day"
+                                 :data-day-to-jump="day.without_format">
+                                <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day" v-if="!day.is_extra_row"/>
+                                <div v-for="room in newCalendarData"
+                                     :key="room.id"
+                                     class="relative"
+                                     v-if="!day.is_extra_row">
+                                    <div v-if="room.content[day.full_day]?.events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
+                                        <component is="IconChevronDown" @click="scrollToNextEventInDay(day.without_format, room.content[day.full_day].events.length)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
+                                    </div>
+                                    <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                                         :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
+                                         class="group/container border-t-2 border-gray-400 border-dashed" :id="'scroll_container-' + day.without_format">
+                                        <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="(event, index) in room.content[day.full_day].events">
+                                            <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.without_format">
+                                                <AsyncSingleEventInCalendar
+                                                    :event="event"
+                                                    :multi-edit="multiEdit"
+                                                    :font-size="textStyle.fontSize"
+                                                    :line-height="textStyle.lineHeight"
+                                                    :rooms="rooms"
+                                                    :has-admin-role="hasAdminRole()"
+                                                    :width="zoom_factor * 196"
+                                                    :first_project_tab_id="first_project_tab_id"
+                                                    :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                    @edit-event="showEditEventModel"
+                                                    @edit-sub-event="openAddSubEventModal"
+                                                    @open-add-sub-event-modal="openAddSubEventModal"
+                                                    @open-confirm-modal="openDeleteEventModal"
+                                                    @show-decline-event-modal="openDeclineEventModal"
+                                                    @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-else>
+                <DailyViewCalendar
+                    :multi-edit="multiEdit"
+                    :rooms="rooms"
+                    :days="days"
+                    :calendarData="newCalendarData"
+                    :project="project"
+                    :eventStatuses="eventStatuses"
+                    :eventTypes="eventTypes"
+                    :eventsWithoutRoom="computedFilteredEvents"
+                    :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                    :firstProjectShiftTabId="firstProjectShiftTabId"
+                    :first-project-tab-id="first_project_tab_id"
+                    @edit-event="showEditEventModel"
+                    @edit-sub-event="openAddSubEventModal"
+                    @open-add-sub-event-modal="openAddSubEventModal"
+                    @open-confirm-modal="openDeleteEventModal"
+                    @show-decline-event-modal="openDeclineEventModal"
+                    @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                />
+            </div>
+        </div>
+        <div v-if="!checkIfAnyRoomHasAnEventOrShift && usePage().props.user.calendar_settings.use_project_time_period">
+            <div class="mt-24 ml-4">
+                <div class="border-l-4 border-red-400 bg-red-50 p-4 w-fit">
+                    <div class="flex">
+                        <div class="shrink-0">
+                            <component is="IconExclamationCircle" class="h-5 w-5 text-red-400" stroke-width="2" aria-hidden="true" />
+                        </div>
+                        <div class="ml-1">
+                            <p class="text-sm text-red-700 font-bold">
+                                {{ $t('The selected project has no dates') }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -138,7 +178,6 @@
         v-if="showDeclineEventModal"
         :request-to-decline="declineEvent"
         :event-types="eventTypes"
-        @declined="eventDeclined"
         @closed="showDeclineEventModal = false"/>
 
     <MultiEditModal v-if="showMultiEditModal"
@@ -171,17 +210,10 @@
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :eventsWithoutRoom="computedFilteredEvents"
+        :eventsWithoutRoom="eventsWithoutRoom"
         :isAdmin="hasAdminRole()"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
-        @desires-reload="handleReload"/>
-
-    <div v-if="showReceivesNewDataOverlay"
-         class="bg-opacity-50 bg-black text-white w-full h-full absolute inset-0 z-50 justify-center text-center">
-        <div class="flex flex-col w-full h-full justify-center">
-            {{ $t('Your view is being processed, please wait a moment.') }}
-        </div>
-    </div>
+    />
 
 </template>
 
@@ -202,9 +234,12 @@ import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
-import {useEvent} from "@/Composeables/Event.js";
 import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionObserver.js";
 import MultiDuplicateModal from "@/Layouts/Components/MultiDuplicateModal.vue";
+import DailyViewCalendar from "@/Components/Calendar/DailyViewCalendar.vue";
+import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
+import {computeComponentStructure} from "vuedraggable/src/core/renderHelper.js";
+import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 
 const filterOptions = inject('filterOptions');
 const personalFilters = inject('personalFilters');
@@ -247,46 +282,36 @@ const props = defineProps({
             required: false,
             default: null
         }
-    }),
-    $t = useTranslation(),
-    {getDaysOfEvent, formatEventDateByDayJs, useCalendarReload} = useEvent(),
-    {
-        showReceivesNewDataOverlay,
-        hasReceivedNewCalendarData,
-        hasReceivedNewEventsWithoutRoomData,
-        receivedRoomData,
-        receivedEventsWithoutRoom,
-        handleReload
-    } = useCalendarReload(props.project ? props.project.id : 0),
-    {
-        composedCurrentDaysInViewRef,
-        composedStartDaysAndEventsIntersectionObserving
-    } = useDaysAndEventsIntersectionObserver(),
-    {hasAdminRole} = usePermission(usePage().props),
-    AsyncFunctionBarCalendar = defineAsyncComponent(
+    })
+const $t = useTranslation()
+const { composedCurrentDaysInViewRef, composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
+const {hasAdminRole} = usePermission(usePage().props)
+
+const AsyncFunctionBarCalendar = defineAsyncComponent(
         {
             loader: () => import('@/Components/FunctionBars/FunctionBarCalendar.vue')
         }
-    ),
-    AsyncCalendarHeader = defineAsyncComponent(
+    )
+
+const AsyncCalendarHeader = defineAsyncComponent(
         {
             loader: () => import('@/Components/Calendar/Elements/CalendarHeader.vue')
         }
-    ),
-    AsyncSingleEventInCalendar = defineAsyncComponent(
+    )
+const AsyncSingleEventInCalendar = defineAsyncComponent(
         {
             loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue')
         }
-    ),
-    textStyle = computed(() => {
+    )
+const textStyle = computed(() => {
         const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
         const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
         return {
             fontSize,
             lineHeight,
         };
-    }),
-    scrollToNextEventInDay = (day, length) => {
+    })
+const scrollToNextEventInDay = (day, length) => {
         let eventScroll = document.getElementById('event_scroll-' + (length - 1) + '-day-' + day);
         if (eventScroll) {
             eventScroll.scrollIntoView({
@@ -296,34 +321,8 @@ const props = defineProps({
             });
         }
 
-    },
-    computedCalendarData = computed(() => {
-        if (!hasReceivedNewCalendarData.value) {
-            return calendarDataRef;
-        }
-
-        for (const [day, rooms] of Object.entries(receivedRoomData.value)) {
-            for (const [roomId, events] of Object.entries(rooms)) {
-                calendarDataRef.value.forEach(
-                    (roomWithEvents) => {
-                        if (roomWithEvents[day]?.roomId === Number(roomId)) {
-                            roomWithEvents[day].events = JSON.parse(JSON.stringify(events));
-                        }
-                    }
-                );
-            }
-        }
-
-        hasReceivedNewCalendarData.value = false;
-        receivedRoomData.value = [];
-
-        if (showReceivesNewDataOverlay.value) {
-            showReceivesNewDataOverlay.value = false;
-        }
-
-        return calendarDataRef;
-    }),
-    computedFilteredEvents = computed(() => {
+    }
+const computedFilteredEvents = computed(() => {
         let getComputedEventsWithoutRoom = () => {
             return eventsWithoutRoomRef.value.filter((event) => {
                 let createdBy = event.created_by;
@@ -344,135 +343,118 @@ const props = defineProps({
             });
         }
 
-        if (!hasReceivedNewEventsWithoutRoomData.value) {
-            return getComputedEventsWithoutRoom();
-        }
-
-        eventsWithoutRoomRef.value = receivedEventsWithoutRoom.value;
-
-        receivedEventsWithoutRoom.value = [];
-        hasReceivedNewEventsWithoutRoomData.value = false;
-
         return getComputedEventsWithoutRoom();
-    }),
-    computedCheckedEventsForMultiEditCount = computed(() => {
+    })
+const computedCheckedEventsForMultiEditCount = computed(() => {
         return editEvents.value.length;
-    }),
-    calendarDataRef = ref(JSON.parse(JSON.stringify(props.calendarData))),
-    eventsWithoutRoomRef = ref(JSON.parse(JSON.stringify(props.eventsWithoutRoom ?? []))),
-    first_project_calendar_tab_id = inject('first_project_calendar_tab_id'),
-    first_project_tab_id = inject('first_project_tab_id'),
-    eventTypes = inject('eventTypes'),
-    multiEdit = ref(false),
-    isFullscreen = ref(false),
-    zoom_factor = ref(usePage().props.user.zoom_factor ?? 1),
-    showMultiEditModal = ref(false),
-    editEvents = ref([]),
-    editEventsRoomIds = ref([]),
-    editEventsRoomsDesiredDays = ref([]),
-    openDeleteSelectedEventsModal = ref(false),
-    showEventsWithoutRoomComponent = ref(false),
-    showAddSubEventModal = ref(false),
-    showDeclineEventModal = ref(false),
-    showEventComponent = ref(false),
-    deleteComponentVisible = ref(false),
-    deleteTitle = ref(''),
-    deleteDescription = ref(''),
-    deleteType = ref(''),
-    eventToEdit = ref(null),
-    subEventToEdit = ref(null),
-    declineEvent = ref(null),
-    eventToDelete = ref(null),
-    wantedRoom = ref(null),
-    roomCollisions = ref([]),
-    showMultiDuplicateModal = ref(false),
-    checkIfScrolledToCalendarRef = ref('!-ml-3'),
-    handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
-        if (considerOnMultiEdit) {
-            editEvents.value.push(eventId);
+    })
+const calendarDataRef = ref(JSON.parse(JSON.stringify(props.calendarData)))
+const eventsWithoutRoomRef = ref(JSON.parse(JSON.stringify(props.eventsWithoutRoom ?? [])))
+const first_project_calendar_tab_id = inject('first_project_calendar_tab_id')
+const first_project_tab_id = inject('first_project_tab_id')
+const eventTypes = inject('eventTypes')
+const multiEdit = ref(false)
+const isFullscreen = ref(false)
+const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1)
+const showMultiEditModal = ref(false)
+const editEvents = ref([])
+const editEventsRoomIds = ref([])
+const editEventsRoomsDesiredDays = ref([])
+const openDeleteSelectedEventsModal = ref(false)
+const showEventsWithoutRoomComponent = ref(false)
+const showAddSubEventModal = ref(false)
+const showDeclineEventModal = ref(false)
+const showEventComponent = ref(false)
+const deleteComponentVisible = ref(false)
+const deleteTitle = ref('')
+const deleteDescription = ref('')
+const deleteType = ref('')
+const eventToEdit = ref(null)
+const subEventToEdit = ref(null)
+const declineEvent = ref(null)
+const eventToDelete = ref(null)
+const wantedRoom = ref(null)
+const roomCollisions = ref([])
+const showMultiDuplicateModal = ref(false)
+const checkIfScrolledToCalendarRef = ref('!-ml-3')
+const newCalendarData = ref(props.calendarData);
+const handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId) => {
+    if (considerOnMultiEdit) {
+        editEvents.value.push(eventId);
 
-            for (const [day, rooms] of Object.entries(calendarDataRef.value)) {
-                for (const [roomId, events] of Object.entries(rooms)) {
-                    events.events.forEach((event) => {
-                        if (eventId === event.id) {
-                            event.considerOnMultiEdit = true;
-                        }
-                    });
-                }
-            }
-
-            editEventsRoomIds.value.push(eventRoomId);
-            editEventsRoomsDesiredDays.value = getDaysOfEvent(
-                formatEventDateByDayJs(eventStart),
-                formatEventDateByDayJs(eventEnd)
-            ).concat(editEventsRoomsDesiredDays.value);
-
-            return;
-        }
-
-        for (const [day, rooms] of Object.entries(calendarDataRef.value)) {
-            for (const [roomId, events] of Object.entries(rooms)) {
-                events.events.forEach((event) => {
-                    if (eventId === event.id) {
-                        event.considerOnMultiEdit = false;
+        newCalendarData.value.forEach(room => {
+            Object.entries(room.content).forEach(([date, { events }]) => {
+                events.forEach(event => {
+                    if (event.id === eventId) {
+                        event.considerOnMultiEdit = true;
                     }
                 });
-            }
-        }
+            });
+        });
 
-        editEvents.value = editEvents.value.filter((editEventId) => editEventId !== eventId);
-        editEventsRoomIds.value = editEventsRoomIds.value.filter((editEventRoomId) => editEventRoomId !== eventRoomId);
-        editEventsRoomsDesiredDays.value = editEventsRoomsDesiredDays.value.filter(
-            (editEventDesiredDay) => {
-                return getDaysOfEvent(
-                    formatEventDateByDayJs(eventStart),
-                    formatEventDateByDayJs(eventEnd)
-                ).includes(editEventDesiredDay);
-            }
-        );
-    },
-    resetMultiEdit = () => {
-        editEvents.value = [];
-        editEventsRoomIds.value = [];
-        editEventsRoomsDesiredDays.value = [];
-        toggleMultiEdit(false);
-    },
-    toggleMultiEdit = (value) => {
-        multiEdit.value = value;
+        return;
+    }
 
-        if (!value) {
-            calendarDataRef.value.forEach(
-                (calendarData) => {
-                    Object.values(calendarData)
-                        .forEach(
-                            (roomEvents) => {
-                                roomEvents.events.forEach((roomEvent) => roomEvent.considerOnMultiEdit = false);
-                            }
-                        );
+    newCalendarData.value.forEach(room => {
+        Object.entries(room.content).forEach(([date, { events }]) => {
+            events.forEach(event => {
+                if (event.id === eventId) {
+                    event.considerOnMultiEdit = false;
                 }
-            );
-        }
-    },
-    cancelMultiEditDuplicateSelection = () => {
-        editEvents.value = [];
-        editEventsRoomIds.value = [];
-        editEventsRoomsDesiredDays.value = [];
-        calendarDataRef.value.forEach(
-            (calendarData) => {
-                Object.values(calendarData)
-                    .forEach(
-                        (roomEvents) => {
-                            roomEvents.events.forEach((roomEvent) => roomEvent.considerOnMultiEdit = false);
-                        }
-                    );
-            }
-        )
-    },
-    openDeclineEventModal = (event) => {
+            });
+        });
+    });
+
+    editEvents.value = editEvents.value.filter(editEventId => editEventId !== eventId);
+    editEventsRoomIds.value = editEventsRoomIds.value.filter(editEventRoomId => editEventRoomId !== eventRoomId);
+};
+const resetMultiEdit = () => {
+    editEvents.value = [];
+    editEventsRoomIds.value = [];
+    editEventsRoomsDesiredDays.value = [];
+    toggleMultiEdit(false);
+};
+
+const checkIfAnyRoomHasAnEventOrShift = computed(() => {
+    // Prüfen, ob irgendein Raum ein Event oder eine Schicht im aktuellen Kalender hat
+    return newCalendarData.value.some(room => {
+        return room.content && Object.entries(room.content).some(([date, { events }]) => {
+            return events && events.length > 0;
+        });
+    });
+});
+
+const toggleMultiEdit = (value) => {
+    multiEdit.value = value;
+
+    if (!value) {
+        newCalendarData.value.forEach(room => {
+            Object.entries(room.content).forEach(([date, { events }]) => {
+                events.forEach(event => {
+                    event.considerOnMultiEdit = false;
+                });
+            });
+        });
+    }
+};
+const cancelMultiEditDuplicateSelection = () => {
+    editEvents.value = [];
+    editEventsRoomIds.value = [];
+    editEventsRoomsDesiredDays.value = [];
+
+    newCalendarData.value.forEach(room => {
+        Object.entries(room.content).forEach(([date, { events }]) => {
+            events.forEach(event => {
+                event.considerOnMultiEdit = false;
+            });
+        });
+    });
+};
+const openDeclineEventModal = (event) => {
         declineEvent.value = event;
         showDeclineEventModal.value = true;
-    },
-    openDeleteEventModal = (event, type) => {
+    }
+const openDeleteEventModal = (event, type) => {
         if (type === 'main') {
             deleteType.value = type;
             deleteTitle.value = $t('Delete event?');
@@ -484,8 +466,8 @@ const props = defineProps({
         }
         eventToDelete.value = event;
         deleteComponentVisible.value = true;
-    },
-    openAddSubEventModal = (desiredEvent, mode, mainEvent) => {
+    }
+const openAddSubEventModal = (desiredEvent, mode, mainEvent) => {
         if (mode === 'create') {
             //only set eventToEdit as base for new sub event
             eventToEdit.value = desiredEvent;
@@ -496,24 +478,20 @@ const props = defineProps({
         }
 
         showAddSubEventModal.value = true;
-    },
-    closeAddSubEventModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
+    }
+const closeAddSubEventModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
         if (closedOnPurpose) {
-            handleReload(
-                desiredRoomIds,
-                desiredDays
-            );
         }
 
         showAddSubEventModal.value = false;
         eventToEdit.value = null;
         subEventToEdit.value = null;
-    },
-    showEditEventModel = (event) => {
+    }
+const showEditEventModel = (event) => {
         eventToEdit.value = event;
         showEventComponent.value = true;
-    },
-    openFullscreen = () => {
+    }
+const openFullscreen = () => {
         let elem = document.getElementById('myCalendar');
 
         if (elem.requestFullscreen) {
@@ -525,28 +503,20 @@ const props = defineProps({
         }
 
         isFullscreen.value = true;
-    },
-    closeMultiEditModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
+    }
+const closeMultiEditModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
         showMultiEditModal.value = false;
         if (closedOnPurpose) {
-            if (desiredRoomIds && desiredDays) {
-                handleReload(desiredRoomIds, desiredDays);
-            }
-
             resetMultiEdit();
         }
-    },
-    closeMultiDuplicateModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
+    }
+const closeMultiDuplicateModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
         showMultiDuplicateModal.value = false;
         if (closedOnPurpose) {
-            if (desiredRoomIds && desiredDays) {
-                handleReload(desiredRoomIds, desiredDays);
-            }
-
             resetMultiEdit();
         }
-    },
-    eventComponentClosed = (closedOnPurpose, desiredRoomIdsToReload, desiredDaysToReload, oldDaysToReload) => {
+    }
+const eventComponentClosed = (closedOnPurpose) => {
         if (closedOnPurpose) {
             let calendar_settings = usePage().props.user.calendar_settings;
 
@@ -564,60 +534,28 @@ const props = defineProps({
                     }
                 );
                 return;
-            } else {
-                handleReload(
-                    desiredRoomIdsToReload,
-                    desiredDaysToReload
-                );
-                handleReload(
-                    desiredRoomIdsToReload,
-                    oldDaysToReload
-                );
             }
         }
 
         showEventComponent.value = false;
-    },
-    eventDeclined = (desiredRoomIdToReload, startDate, endDate) => {
-        handleReload(
-            [
-                desiredRoomIdToReload
-            ],
-            getDaysOfEvent(
-                formatEventDateByDayJs(startDate),
-                formatEventDateByDayJs(endDate)
-            ),
-            true
-        );
-    },
-    deleteEvent = () => {
-        const onSuccess = () => {
-            handleReload(
-                [
-                    eventToDelete.value.roomId
-                ],
-                getDaysOfEvent(
-                    formatEventDateByDayJs(eventToDelete.value.start),
-                    formatEventDateByDayJs(eventToDelete.value.end)
-                )
-            );
-        }
+    }
+const deleteEvent = () => {
         if (deleteType.value === 'main') {
-            axios.delete(route('events.delete', eventToDelete.value)).finally(() => onSuccess());
+            axios.delete(route('events.delete', eventToDelete.value));
         }
         if (deleteType.value === 'sub') {
-            axios.delete(route('subEvent.delete', eventToDelete.value)).finally(() => onSuccess());
+            axios.delete(route('subEvent.delete', eventToDelete.value));
         }
         deleteComponentVisible.value = false;
-    },
-    closeDeleteSelectedEventsModal = (closedOnPurpose) => {
+    }
+const closeDeleteSelectedEventsModal = (closedOnPurpose) => {
         openDeleteSelectedEventsModal.value = false;
 
         if (closedOnPurpose) {
             resetMultiEdit();
         }
-    },
-    deleteSelectedEvents = () => {
+    }
+const deleteSelectedEvents = () => {
         axios.post(
             route('multi-edit.delete'),
             {
@@ -625,10 +563,6 @@ const props = defineProps({
             }
         ).finally(
             () => {
-                handleReload(
-                    Array.from(new Set(editEventsRoomIds.value)),
-                    Array.from(new Set(editEventsRoomsDesiredDays.value))
-                );
 
                 openDeleteSelectedEventsModal.value = false;
                 resetMultiEdit();
@@ -801,26 +735,6 @@ onMounted(() => {
             checkIfScrolledToCalendarRef.value = '';
         }
     });
-
-  Echo.private('events')
-      .listen('.event.updated', (data) => {
-        handleReload(
-            data.roomId,
-            getDaysOfEvent(
-                data.dateData.start,
-                data.dateData.end
-            )
-        );
-      })
-      .listen('.event.deleted', (data) => {
-        handleReload(
-            data.roomId,
-            getDaysOfEvent(
-                data.dateData.start,
-                data.dateData.end
-            )
-        );
-      })
 });
 
 
@@ -834,6 +748,11 @@ const jumpToDayOfMonth = (day) => {
         });
     }
 }
+
+onMounted(() => {
+    const ShiftCalendarListener = useShiftCalendarListener(newCalendarData.value);
+    ShiftCalendarListener.init();
+})
 
 </script>
 

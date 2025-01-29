@@ -82,19 +82,21 @@
                     {{ checklist?.project?.lastEventInProject?.end_time }}
                 </div>
             </div>
-            <SingleTaskInKanbanView
-                v-for="element in orderTasksByDeadline"
-                :can-edit-component="canEditComponent"
-                :project-manager-ids="projectManagerIds"
-                :project-can-write-ids="projectCanWriteIds"
-                :is-admin="isAdmin"
-                :task="element"
-                :project="project"
-                :tab_id="tab_id"
-                :checklist="checklist"
-                :is-in-own-task-management="isInOwnTaskManagement"
-                v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
-            />
+            <div v-for="element in orderTasksByDeadline">
+                <SingleTaskInKanbanView
+                    :can-edit-component="canEditComponent"
+                    :project-manager-ids="projectManagerIds"
+                    :project-can-write-ids="projectCanWriteIds"
+                    :is-admin="isAdmin"
+                    :task="element"
+                    :project="project"
+                    :tab_id="tab_id"
+                    :checklist="checklist"
+                    :is-in-own-task-management="isInOwnTaskManagement"
+                    v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
+                />
+            </div>
+
             <!--<draggable :disabled="!canEditComponent" ghost-class="opacity-50" key="draggableKey" item-key="draggableID" :list="orderTasksByDeadline" @change="updateTaskOrder(checklist.tasks)" class="text-sm">
                 <template #item="{element}" :key="element.id">
                     <div>
@@ -245,7 +247,7 @@ const templateForm = useForm({
 const checkIfUserIsInTaskIfInOwnTaskManagement = (task) => {
     // if isInOwnTaskManagement is true, check if the current user ist in the task
     if (props.isInOwnTaskManagement && !props.checklist.private) {
-        return task.users.map(user => user.id).includes(usePage().props.user.id);
+        return task?.users.map(user => user.id).includes(usePage().props.user.id);
     } else {
         return true;
     }

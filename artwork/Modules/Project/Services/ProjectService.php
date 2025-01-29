@@ -40,7 +40,7 @@ class ProjectService
         private readonly EventService $eventService,
         private readonly UserService $userService,
         private readonly CarbonService $carbonService,
-        private readonly UserProjectManagementSettingService $userFilterAndSortSettingService
+
     ) {
     }
 
@@ -227,7 +227,6 @@ class ProjectService
     }
 
     public function paginateProjects(
-        bool $saveFilterAndSort,
         string $search = '',
         int $perPage = 10,
         ?ProjectSortEnum $sortEnum = null,
@@ -241,18 +240,6 @@ class ProjectService
             //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
             $projectFilters->filter(fn($filter, $enabled) => $enabled)->keys()
         );
-
-        if ($saveFilterAndSort) {
-            $this->userFilterAndSortSettingService->updateOrCreateIfNecessary(
-                $this->userService->getAuthUser(),
-                [
-                    'sort_by' => $sortEnum?->name,
-                    'project_state_ids' => $projectStateIds->toArray(),
-                    'project_filters' => $projectFilters->toArray()
-                ]
-            );
-        }
-
         return $projectQuery->paginate($perPage);
     }
 

@@ -263,6 +263,7 @@ class ProjectController extends Controller
                     case ProjectTabComponentEnum::PROJECT_TITLE->value:
                         $projectData->title = $project->name;
                         $projectData->key_visual_path = $project->key_visual_path;
+                        $projectData->is_group = $project->is_group;
                         break;
                     case ProjectTabComponentEnum::PROJECT_STATUS->value:
                         $projectData->state = ProjectState::find($project->state);
@@ -335,6 +336,7 @@ class ProjectController extends Controller
                     case ProjectTabComponentEnum::PROJECT_TITLE->value:
                         $projectData->title = $project->name;
                         $projectData->key_visual_path = $project->key_visual_path;
+                        $projectData->is_group = $project->is_group;
                         break;
                     case ProjectTabComponentEnum::PROJECT_STATUS->value:
                         $projectData->state = ProjectState::find($project->state);

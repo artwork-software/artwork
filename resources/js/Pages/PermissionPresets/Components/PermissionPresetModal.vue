@@ -40,7 +40,12 @@
                     </div>
                 </div>
                 <div v-for="(permissions, group) in available_permissions">
-                    <h3 class="headline6Light mb-2 mt-3">{{ group }}</h3>
+                    <div class="flex items-center justify-between">
+                        <h3 class="headline6Light mb-2 mt-3">{{ group }}</h3>
+                        <div class="text-xs underline text-artwork-buttons-create cursor-pointer" @click="checkOrUncheckAllPermissions(permissions)">
+                            {{ permissions.some(permission => this.permissionPresetForm.permissions.includes(permission.id)) ? $t('Deselect all') : $t('Select all') }}
+                        </div>
+                    </div>
                     <div class="w-full flex items-center"
                          v-for="(permission) in permissions" :key=permission.id>
                         <div class="w-full flex justify-between items-center my-1">
@@ -49,7 +54,7 @@
                                        :value="permission.id"
                                        v-model="this.permissionPresetForm.permissions"
                                        type="checkbox"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                       class="input-checklist"/>
 
                                 <p :class="[this.permissionPresetForm.permissions.includes(permission.id) ? 'xsDark' : 'xsLight']"
                                    class="ml-4 my-auto text-sm">{{ $t(permission.translation_key) }}</p>
@@ -105,6 +110,16 @@ export default defineComponent({
         }
     },
     methods: {
+        checkOrUncheckAllPermissions(permissions) {
+            // check if some permissions are already selected
+            if (permissions.some(permission => this.permissionPresetForm.permissions.includes(permission.id))) {
+                // deselect all permissions
+                this.permissionPresetForm.permissions = this.permissionPresetForm.permissions.filter(permission => !permissions.map(permission => permission.id).includes(permission));
+            } else {
+                // select all permissions
+                this.permissionPresetForm.permissions = this.permissionPresetForm.permissions.concat(permissions.map(permission => permission.id));
+            }
+        },
         save() {
             switch (this.mode) {
                 case 'create':

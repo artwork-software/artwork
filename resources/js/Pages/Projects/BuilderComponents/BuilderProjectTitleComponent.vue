@@ -1,7 +1,7 @@
 <template>
     <div class="flex font-black font-lexend text-primary tracking-wide text-sm items-center">
         <span v-if="project?.is_group">
-            <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
+            <img src="/Svgs/IconSvgs/icon_group_black.svg" class="size-5 mr-2" aria-hidden="true"/>
         </span>
         <span v-if="project?.key_visual_path !== null">
             <img :src="'/storage/keyVisual/' + project?.key_visual_path"

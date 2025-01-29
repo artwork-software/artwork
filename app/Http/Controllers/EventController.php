@@ -2325,7 +2325,7 @@ class EventController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
-    public function updateMultiEdit(Request $request): JsonResponse
+    public function updateMultiEdit(Request $request): void
     {
         $desiredRoomIds = [];
         $desiredDaysOfEvents = [];
@@ -2498,11 +2498,10 @@ class EventController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
-    public function updateMultiDuplicate(Request $request): JsonResponse
+    public function updateMultiDuplicate(Request $request): void
     {
         $desiredRoomIds = [];
         $desiredDaysOfEvents = [];
-
         $eventIds = $request->collect('events');
         $duplicatedEvents = [];
 
@@ -2533,7 +2532,7 @@ class EventController extends Controller
                 $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
             }
 
-            if ($request->integer('newRoomId') !== null) {
+            if ($request->get('newRoomId') !== null) {
                 $event->setAttribute('room_id', $request->integer('newRoomId'));
                 $desiredRoomIds[] = $event->getAttribute('room_id');
             }
@@ -2680,13 +2679,10 @@ class EventController extends Controller
                 $event->setAttribute('start_time', $date . ' ' . $startTime);
                 $event->setAttribute('end_time', $date . ' ' . $endTime);
             }
+            //dd($event);
             $event->save();
+            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
         }
-
-        return new JsonResponse([
-            'desiredRoomIds' => array_values(array_unique($desiredRoomIds)),
-            'desiredDays' => array_values(array_unique($desiredDaysOfEvents))
-        ]);
     }
 
 

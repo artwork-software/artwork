@@ -41,7 +41,7 @@
                                                 'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
                                                 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
                                             ]">
-                                    {{ $t('Delete Entries') }}
+                                    {{ $t('Delete') }}
                                 </button>
                             </div>
                         </div>
@@ -1018,6 +1018,7 @@ export default {
                 this.showAddShiftModal = true;
             } else {
                 this.openCellMultiEditCalendarDelete = false;
+                this.multiEditCalendarDays = [];
             }
         },
         openEditShiftModal(shift) {
@@ -1035,6 +1036,7 @@ export default {
             this.showAddShiftModal = false;
             this.roomForShiftAdd = null;
             this.dayForShiftAdd = null;
+            this.multiEditCalendarDays = [];
         },
         checkIfRoomAndDayIsInMultiEditCalendar(day, roomId){
             return this.multiEditCalendarDays.some((dayAndRoom) => dayAndRoom.day === day && dayAndRoom.roomId === roomId)

@@ -561,6 +561,7 @@ readonly class EventService
                 $totalBreakMinutes += $shift['break_minutes'];
             }
 
+
             if ($earliestStart !== null && $latestEnd !== null) {
                 $plannedWorkingHours = max(
                     ($earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes) / 60,

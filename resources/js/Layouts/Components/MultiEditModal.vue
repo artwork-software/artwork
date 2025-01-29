@@ -147,7 +147,7 @@ import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -220,34 +220,21 @@ export default {
         saveMultiEdit() {
             this.editEvents.type = this.selectedTimeType.id;
             this.editEvents.calculationType = this.selectedCalculationType.id;
-            this.editEvents.newRoomId = this.selectedRoom?.id;
+            this.editEvents.newRoomId = this.selectedRoom?.id ?? null;
 
-            let desiredRoomIds = null,
-                desiredDays;
-
-
-
-            axios.patch(
-                route('multi-edit.save'),
-                {
-                    events: this.editEvents.events,
-                    newRoomId: this.editEvents.newRoomId,
-                    calculationType: this.editEvents.calculationType,
-                    value: this.editEvents.value,
-                    type: this.editEvents.type,
-                    date: this.editEvents.date
+            router.patch(route('multi-edit.save'), {
+                events: this.editEvents.events,
+                newRoomId: this.editEvents.newRoomId,
+                calculationType: this.editEvents.calculationType,
+                value: this.editEvents.value,
+                type: this.editEvents.type,
+                date: this.editEvents.date
+            }, {
+                preserveScroll: true,
+                onFinish: () => {
+                    this.closeModal(true);
                 }
-            ).then((response) => {
-                desiredRoomIds = response.data.desiredRoomIds;
-                desiredDays = response.data.desiredDays;
-            }).finally(() => {
-                this.editEvents.newRoomId = null;
-                this.editEvents.calculationType = null;
-                this.editEvents.value = 0;
-                this.editEvents.type = null;
-                this.editEvents.date = null;
-                this.closeModal(true, desiredRoomIds, desiredDays);
-            });
+            })
         }
     },
 }

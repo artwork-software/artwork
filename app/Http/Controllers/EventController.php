@@ -2344,7 +2344,7 @@ class EventController extends Controller
                 $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
             }
 
-            if ($request->integer('newRoomId') !== null) {
+            if ($request->get('newRoomId') !== null) {
                 $event->setAttribute('room_id', $request->integer('newRoomId'));
                 $desiredRoomIds[] = $event->getAttribute('room_id');
             }

@@ -73,7 +73,9 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection as SupportCollection;
+use Inertia\Inertia;
 use Throwable;
 
 readonly class EventService
@@ -473,42 +475,39 @@ readonly class EventService
     ): array {
         $totalPlannedWorkingHours = 0;
         $eventsWithPlannedWorkingHours = [];
+        $shiftsWithoutEvent = [];
 
-        /** @var Event $event */
-        foreach (
-            $this->eventRepository->getEventsWhereUserHasShiftsInPeriod(
-                $userId,
-                CarbonPeriod::create($startDate, $endDate)
-            ) as $event
-        ) {
+        /**
+         * Berechnet die geplanten Arbeitsstunden für eine Menge an Schichten
+         */
+        $calculatePlannedWorkingHours = function ($shifts): float {
             $earliestStart = null;
             $latestEnd = null;
-            $plannedWorkingHours = 0;
             $totalBreakMinutes = 0;
 
-            /** @var Shift $shift */
-            foreach ($event['shifts'] as $shift) {
+            foreach ($shifts as $shift) {
                 $start = Carbon::parse($shift['start']);
                 $end = Carbon::parse($shift['end']);
 
-                $earliestStart = ($earliestStart === null || $start->lt($earliestStart)) ?
-                    $start :
-                    $earliestStart;
-
-                $latestEnd = ($latestEnd === null || $end->gt($latestEnd)) ?
-                    $end :
-                    $latestEnd;
+                $earliestStart = ($earliestStart === null || $start->lt($earliestStart)) ? $start : $earliestStart;
+                $latestEnd = ($latestEnd === null || $end->gt($latestEnd)) ? $end : $latestEnd;
 
                 $totalBreakMinutes += $shift['break_minutes'];
             }
 
-            if ($earliestStart !== null && $latestEnd !== null) {
-                $plannedWorkingHours = max(
-                    ($earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes) / 60,
-                    0
-                );
-            }
+            return ($earliestStart !== null && $latestEnd !== null)
+                ? max(($earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes) / 60, 0)
+                : 0;
+        };
 
+        // Events mit Schichten abrufen
+        $events = $this->eventRepository->getEventsWhereUserHasShiftsInPeriod(
+            $userId,
+            CarbonPeriod::create($startDate, $endDate)
+        );
+
+        foreach ($events as $event) {
+            $plannedWorkingHours = $calculatePlannedWorkingHours($event['shifts']);
             $totalPlannedWorkingHours += $plannedWorkingHours;
 
             $eventsWithPlannedWorkingHours[] = [
@@ -517,8 +516,40 @@ readonly class EventService
             ];
         }
 
+        // Schichten ohne Event abrufen
+        $shifts = Shift::query()
+            ->with(['room', 'users', 'users.dayServices', 'freelancer', 'serviceProvider', 'shiftsQualifications'])
+            ->whereHas('users', function (Builder $builder) use ($userId): void {
+                $builder->where('user_id', $userId);
+            })
+            ->whereBetween('start_date', CarbonPeriod::create($startDate, $endDate))
+            ->whereBetween('end_date', CarbonPeriod::create($startDate, $endDate))
+            ->orderBy('start_date')
+            ->orderBy('end_date')
+            ->get();
+
+        // Schichten ohne Event verarbeiten
+        foreach ($shifts as $shift) {
+            if (!$shift->event_id) { // Falls keine Event-Zuordnung vorhanden ist
+                $plannedWorkingHours = $calculatePlannedWorkingHours([$shift]);
+                $totalPlannedWorkingHours += $plannedWorkingHours;
+
+                $shiftsWithoutEvent[] = [
+                    $shift,
+                    'plannedWorkingHours' => $plannedWorkingHours,
+                ];
+            }
+        }
+
+
+        Inertia::share([
+            'shiftsWithoutEvent' => $shiftsWithoutEvent,
+            'totalPlannedWorkingHours' => $totalPlannedWorkingHours,
+        ]);
+
         return [
             $eventsWithPlannedWorkingHours,
+            $shiftsWithoutEvent,
             $totalPlannedWorkingHours,
         ];
     }

@@ -170,6 +170,7 @@ class UserService
 
         [
             $eventsWithTotalPlannedWorkingHours,
+            $shiftsWithoutEvent,
             $totalPlannedWorkingHours
         ] = $eventService->getDaysWithEventsWhereUserHasShiftsWithTotalPlannedWorkingHours(
             $user->id,

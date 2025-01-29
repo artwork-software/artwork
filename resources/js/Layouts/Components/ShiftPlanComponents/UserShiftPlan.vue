@@ -13,7 +13,7 @@
             <div class="w-full grid grid-cols-7 gap-x-2">
                 <template v-for="day in wholeWeekDatePeriod">
                     <span v-if="day.is_monday" class="sDark text-md col-span-7">KW {{ day.week_number }}</span>
-                    <div :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', 'min-h-48 mb-2 flex flex-col gap-y-2 rounded-lg']">
+                    <div :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', 'min-h-48 flex flex-col gap-y-2 rounded-lg']" class="px-3 py-3">
                         <div :class="[!day.inRequestedTimeSpan ? 'opacity-30' : '','calendarRoomHeader']">
                             {{ day.day_string }} {{ day.full_day }}
                             <span class="text-shiftText subpixel-antialiased">
@@ -33,7 +33,7 @@
 <!--                                {{ $t('not available') }}-->
 <!--                            </div>-->
 <!--                        </div>-->
-                        <div :class="[!day.inRequestedTimeSpan ? 'opacity-30' : '', 'flex flex-col gap-y-2']">
+                        <div :class="[!day.inRequestedTimeSpan ? 'opacity-30' : '', 'flex flex-col']">
                             <template v-for="event in this.getEventsWhereHasShiftsOnDay(day.full_day)">
                                 <template v-for="shift in event.shifts">
                                     <SingleUserEventShift :type="type"
@@ -48,13 +48,29 @@
                                     <DayServiceComponent :day-service="dayService"/>
                                 </template>
                             </template>
+
                         </div>
+
+                        <template v-for="shiftAll in $page.props.shiftsWithoutEvent">
+                            <template v-for="shift in shiftAll">
+                                <div>
+
+                                </div>
+                                <pre v-if="shift.days_of_shift?.includes(day.full_day)">
+                                    {{ shift }}
+                                </pre>
+                            </template>
+                        </template>
                     </div>
                 </template>
             </div>
         </div>
     </div>
 
+
+    <pre>
+        {{ $page.props }}
+    </pre>
 </template>
 
 <script>

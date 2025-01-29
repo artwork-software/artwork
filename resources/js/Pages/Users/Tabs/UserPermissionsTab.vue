@@ -118,10 +118,6 @@
                 </div>
             </div>
     </BaseModal>
-
-    <pre>
-        {{ this.userForm }}
-    </pre>
 </template>
 
 <script>

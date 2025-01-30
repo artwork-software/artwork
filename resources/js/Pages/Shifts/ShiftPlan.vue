@@ -597,7 +597,7 @@
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <span v-if="user.type === 0">
-                                                    {{ user?.weeklyWorkingHours[day.week_number].difference }}
+                                                    {{ user?.weeklyWorkingHours[day.week_number]?.difference }}
                                                 </span>
                                             </div>
                                             <div

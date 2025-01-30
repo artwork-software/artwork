@@ -1630,10 +1630,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'settings'], function (): void {
             Route::get('/index', [InventorySettingsController::class, 'index'])
                 ->name('inventory-management.settings');
-
-            // inventory.columns.reorder
-            Route::post('/columns/reorder', [InventorySettingsController::class, 'reorderColumns'])
-                ->name('inventory-management.settings.columns.reorder');
         });
 
         Route::group(['prefix' => 'inventory'], function (): void {
@@ -1662,6 +1658,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                     '/{craftsInventoryColumn}',
                     [CraftsInventoryColumnController::class, 'forceDelete']
                 )->name('inventory-management.inventory.column.delete');
+            });
+            Route::group(['prefix' => 'columns'], function (): void {
+                Route::patch(
+                    '/reorder',
+                    [CraftsInventoryColumnController::class, 'reorderColumns']
+                )->name('inventory-management.inventory.columns.reorder');
             });
             Route::group(['prefix' => 'category'], function (): void {
                 Route::post(

@@ -12,6 +12,7 @@ use Artwork\Modules\InventoryManagement\Http\Requests\Column\UpdateCraftsInvento
 use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Translation\Translator;
 use Psr\Log\LoggerInterface;
@@ -178,5 +179,11 @@ class CraftsInventoryColumnController extends Controller
         }
 
         return $this->redirector->back();
+    }
+
+    public function reorderColumns(Request $request): void
+    {
+        $request->validate(['columns.*' => 'integer|exists:crafts_inventory_columns,id']);
+        $this->craftsInventoryColumnService->reorderColumns($request->collect('columns'));
     }
 }

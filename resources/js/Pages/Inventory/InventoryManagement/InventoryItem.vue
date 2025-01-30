@@ -5,7 +5,7 @@
             <InventoryCell :cell="cell" @is-editing-cell-value="handleCellIsEditing"/>
         </template>
         <td class="relative">
-            <div class="absolute right-0 group-hover:visible invisible top-2" v-if="can('can manage inventory stock') || hasAdminRole()">
+            <div class="absolute right-14 group-hover:visible invisible top-2" v-if="can('can manage inventory stock') || hasAdminRole()">
                 <BaseMenu has-no-offset>
                     <MenuItem v-slot="{ active }" as="div">
                         <a @click="showItemDeleteConfirmModal()"
@@ -31,10 +31,10 @@
 <script setup>
 import InventoryCell from "@/Pages/Inventory/InventoryManagement/InventoryItemCell.vue";
 import {computed, ref} from "vue";
-import {IconDotsVertical, IconTrash, IconTrashXFilled} from "@tabler/icons-vue";
+import {IconTrash} from "@tabler/icons-vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {MenuItem} from "@headlessui/vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import {usePage} from "@inertiajs/vue3";

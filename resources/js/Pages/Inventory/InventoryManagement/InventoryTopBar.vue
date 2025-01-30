@@ -4,7 +4,7 @@
             <div class="inventory-top-bar-filter-container">
                 <div class="reset-filter-container">
                     <span>{{ $t('Filter') }}</span>
-                    <span class="reset-btn" @click="updatesCraftFilters()">
+                    <span class="reset-btn" @click="updatesCraftFilters(undefined)">
                         {{ $t('Reset') }}
                     </span>
                 </div>

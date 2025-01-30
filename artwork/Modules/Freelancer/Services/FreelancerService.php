@@ -140,10 +140,7 @@ readonly class FreelancerService
         $startOfWeek = $startDate->copy()->startOfWeek();
         $endOfWeek = $endDate->copy()->endOfWeek();
 
-        [
-            $eventsWithTotalPlannedWorkingHours,
-            $totalPlannedWorkingHours
-        ] = $eventService->getDaysWithEventsWhereFreelancerHasShiftsWithTotalPlannedWorkingHours(
+        $daysWithData = $eventService->getDaysWithEventsWhereFreelancerHasShiftsWithTotalPlannedWorkingHours(
             $freelancer->id,
             $startOfWeek,
             $endOfWeek
@@ -197,13 +194,14 @@ readonly class FreelancerService
                                     'month_number' => $date->month,
                                     'is_monday' => $date->isMonday(),
                                     'is_weekend' => $date->isWeekend(),
+                                    'day_without_format' => $date->format('Y-m-d'),
                                 ];
                             }
                         )
                 )
             )
-            ->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
-            ->setTotalPlannedWorkingHours((float) $totalPlannedWorkingHours)
+            //->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
+            //->setTotalPlannedWorkingHours((float) $totalPlannedWorkingHours)
             ->setRooms($roomService->getAllWithoutTrashed())
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
             ->setProjects($projectService->getAll())

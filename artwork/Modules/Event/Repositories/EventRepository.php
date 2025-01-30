@@ -66,8 +66,8 @@ class EventRepository extends BaseRepository
                     $builder->where('user_id', $userId);
                 }
             )
-            ->whereBetween('start_time', $carbonPeriod)
-            ->whereBetween('end_time', $carbonPeriod)
+            ->whereBetween('start_time', [$carbonPeriod->start, $carbonPeriod->end])
+            ->whereBetween('end_time', [$carbonPeriod->start, $carbonPeriod->end])
             ->orderBy('start_time')
             ->orderBy('end_time')
             ->get();

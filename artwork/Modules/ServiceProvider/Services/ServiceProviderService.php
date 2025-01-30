@@ -108,13 +108,10 @@ readonly class ServiceProviderService
         $startOfWeek = $startDate->copy()->startOfWeek();
         $endOfWeek = $endDate->copy()->endOfWeek();
 
-        [
-            $eventsWithTotalPlannedWorkingHours,
-            $totalPlannedWorkingHours
-        ] = $eventService->getDaysWithEventsWhereServiceProviderHasShiftsWithTotalPlannedWorkingHours(
+        $daysWithData = $eventService->getDaysWithEventsWhereServiceProviderHasShiftsWithTotalPlannedWorkingHours(
             $serviceProvider->id,
-            $startDate,
-            $endDate
+            $startOfWeek,
+            $endOfWeek
         );
 
         return ShowDto::newInstance()
@@ -137,13 +134,14 @@ readonly class ServiceProviderService
                                     'month_number' => $date->month,
                                     'is_monday' => $date->isMonday(),
                                     'is_weekend' => $date->isWeekend(),
+                                    'day_without_format' => $date->format('Y-m-d'),
                                 ];
                             }
                         )
                 )
             )
-            ->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
-            ->setTotalPlannedWorkingHours((float) $totalPlannedWorkingHours)
+            //->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
+            //->setTotalPlannedWorkingHours((float) $totalPlannedWorkingHours)
             ->setRooms($roomService->getAllWithoutTrashed())
             ->setEventTypes($eventTypeService->getAll())
             ->setProjects($projectService->getAll())

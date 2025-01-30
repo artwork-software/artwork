@@ -13,6 +13,7 @@ export default defineConfig({
         strictPort: true,
         // Defines the origin of the generated asset URLs during development,
         // this will also be used for the public/hot file (Vite devserver URL)
+        cors: true,
         origin: origin,
         watch: {
             //still knows about the changes in storage dir but is not watch reloading because of them

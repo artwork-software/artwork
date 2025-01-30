@@ -41,22 +41,28 @@
             </div>
         </div>
         <div>
-            <div v-if="showUserPermissions" class="flex flex-col w-full ">
+            <div v-if="showUserPermissions" class="flex flex-col w-full mt-5 ">
                 <div class="w-full mb-3"
                      v-for="(group, groupName) in this.computedGroupedPermissions"
                      v-show="group.shown"
                 >
-                    <div
-                        class="uppercase my-3 text-xs columnSubName flex items-center cursor-pointer"
-                        @click="group.show = typeof group.show === 'undefined' ? false : !group.show">
-                        {{ $t(groupName) }}
-                        <div class="flex items-center ml-2">
-                            <SvgCollection svg-name="arrowUp"
-                                           v-if="typeof group.show === 'undefined' ? true : group.show"
-                            />
-                            <SvgCollection svg-name="arrowDown"
-                                           v-else
-                            />
+                    <div class="flex items-center justify-between select-none mb-2 mt-3">
+                        <div class="flex items-center gap-x-2 xxsLight !font-bold uppercase" @click="group.show = typeof group.show === 'undefined' ? false : !group.show">
+                            {{ $t(groupName) }}
+                            <div class="flex items-center ml-2">
+                                <SvgCollection svg-name="arrowUp"
+                                               v-if="typeof group.show === 'undefined' ? true : group.show"
+                                />
+                                <SvgCollection svg-name="arrowDown"
+                                               v-else
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs underline text-artwork-buttons-create cursor-pointer" @click="checkOrUncheckAllPermissionsOfGroup(group)">
+                                {{ group.permissions.some(permission => this.userForm.permissions.includes(permission.name)) ? $t('Deselect all') : $t('Select all') }}
+                            </div>
                         </div>
                     </div>
                     <div v-if="typeof group.show === 'undefined' || group.show"
@@ -202,6 +208,19 @@ export default {
         }
     },
     methods: {
+        checkOrUncheckAllPermissionsOfGroup(group) {
+            if (group.permissions.some(permission => this.userForm.permissions.includes(permission.name))) {
+                // Entferne alle Berechtigungen der Gruppe
+                this.userForm.permissions = this.userForm.permissions.filter(permission =>
+                    !group.permissions.some(p => p.name === permission)
+                );
+            } else {
+                // Füge alle Berechtigungen der Gruppe hinzu
+                this.userForm.permissions = [...new Set([...this.userForm.permissions, ...group.permissions.map(p => p.name)])];
+            }
+
+            this.editUser();
+        },
         editUser() {
             this.userForm.patch(
                 route('user.update.permissions-and-roles', {user: this.user_to_edit.id}),

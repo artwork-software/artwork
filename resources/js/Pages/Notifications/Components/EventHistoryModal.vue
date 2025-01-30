@@ -19,7 +19,7 @@
                                     </span>
                                 <NewUserToolTip :height="7"
                                                 :width="7"
-                                                :user="historyItem.changes[0].changed_by"
+                                                :user="historyItem.change_by"
                                                 :id="index"/>
                                 <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
                                     {{

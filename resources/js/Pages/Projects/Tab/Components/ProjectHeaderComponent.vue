@@ -163,9 +163,10 @@ export default {
                         <span v-if="project?.key_visual_path !== null">
                             <img :src="'/storage/keyVisual/' + project?.key_visual_path"
                                  :alt="$t('Current key visual')"
-                                 class="mx-auto w-8 h-8 rounded-full object-cover mr-2">
+                                 class="mx-auto size-10 rounded-full object-cover mr-2 hover:size-24 duration-300 ease-in-out">
                         </span>
                         {{ project?.name }}
+
                         <span v-if="projectState" class="rounded-full items-center font-medium px-3 py-1 text-sm ml-2 mb-1 inline-flex border" :style="{backgroundColor: backgroundColorWithOpacity(projectState.color), color: TextColorWithDarken(projectState.color), borderColor: TextColorWithDarken(projectState.color)}">
                             {{ projectState.name }}
                         </span>

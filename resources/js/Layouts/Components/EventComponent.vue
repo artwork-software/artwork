@@ -961,7 +961,7 @@ export default {
             }
 
             this.initialRoomId = this.selectedRoom?.id;
-
+            this.selectedRoom = this.rooms.find(room => room.id === this.event.roomId);
             this.description = this.event.description;
 
             this.checkCollisions();

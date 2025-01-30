@@ -221,4 +221,10 @@ class TaskController extends Controller
 
         return Redirect::back();
     }
+
+    public function changeTaskChecklist(Checklist $checklist, Task $task) {
+        $task->update([
+            'checklist_id' => $checklist->id
+        ]);
+    }
 }

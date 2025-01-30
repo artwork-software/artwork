@@ -287,6 +287,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    Route::post('/projects/appleFilter', [ProjectController::class, 'saveProjectManagementFilter'])
+        ->name('projects.filter');
     Route::get(
         '/projects/export/budget/{startBudgetDeadline}/{endBudgetDeadline}',
         [ProjectController::class, 'projectsBudgetByBudgetDeadlineExport']
@@ -356,6 +358,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/checklists/{checklist}/edit', [ChecklistController::class, 'edit']);
     Route::patch('/checklists/{checklist}', [ChecklistController::class, 'update'])->name('checklists.update');
     Route::delete('/checklists/{checklist}', [ChecklistController::class, 'destroy'])->name('checklist.destroy');
+
+    // route change.task.checklist
+    Route::patch('/checklists/{checklist}/change/task/{task}', [TaskController::class, 'changeTaskChecklist'])
+        ->name('checklists.change.task');
 
 
     //checklist.done.all.tasks
@@ -729,6 +735,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::patch('/user/{user}/update/bulk/sort_id', [UserController::class, 'updateBulkSortId'])
         ->name('user.update_bulk_sort_id');
+
+    // user.update.daily_view
+    Route::patch('/user/{user}/update/daily_view', [UserController::class, 'updateDailyView'])
+        ->name('user.update.daily_view');
+
     Route::resource(
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class

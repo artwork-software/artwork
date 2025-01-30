@@ -17,8 +17,8 @@
 
     <ConfirmDeleteModal
         v-if="showDeleteConfirmationModal"
-        :title="'Delete ' + element.name"
-        :description="'Are you sure you want to delete ' + element.name + '? This action cannot be undone.'"
+        :title="$t('Delete {0}', [$t(element.name)])"
+        :description="$t('Are you sure you want to delete the selected component from the project?')"
         @delete="removeComponentFormGrid"
         />
 </template>

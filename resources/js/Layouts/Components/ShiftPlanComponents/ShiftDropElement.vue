@@ -4,7 +4,7 @@
              class="flex items-center xsLight text-shiftText subpixel-antialiased"
              @dragover="onDragOver"
              @drop="onDrop"
-            @click="handleClickEvent"
+             @click="handleClickEvent"
         >
             <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
                 <input v-model="userForMultiEdit.shift_ids"
@@ -212,6 +212,10 @@ export default defineComponent({
     },
     methods: {
         handleClickEvent(){
+            if(this.multiEditMode){
+                return;
+            }
+
             if ( this.$can('can plan shifts') || this.hasAdminRole() ){
                 this.$emit('clickOnEdit', this.shift)
             }

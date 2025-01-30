@@ -82,22 +82,42 @@
                     {{ checklist?.project?.lastEventInProject?.end_time }}
                 </div>
             </div>
-            <draggable :disabled="!canEditComponent" ghost-class="opacity-50" key="draggableKey" item-key="draggableID" :list="orderTasksByDeadline" @start="dragging=true" @end="dragging=false" @change="updateTaskOrder(checklist.tasks)" class="text-sm">
+            <div v-for="element in orderTasksByDeadline">
+                <SingleTaskInKanbanView
+                    :can-edit-component="canEditComponent"
+                    :project-manager-ids="projectManagerIds"
+                    :project-can-write-ids="projectCanWriteIds"
+                    :is-admin="isAdmin"
+                    :task="element"
+                    :project="project"
+                    :tab_id="tab_id"
+                    :checklist="checklist"
+                    :is-in-own-task-management="isInOwnTaskManagement"
+                    v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
+                />
+            </div>
+
+            <!--<draggable :disabled="!canEditComponent" ghost-class="opacity-50" key="draggableKey" item-key="draggableID" :list="orderTasksByDeadline" @change="updateTaskOrder(checklist.tasks)" class="text-sm">
                 <template #item="{element}" :key="element.id">
-                    <SingleTaskInKanbanView
-                        :can-edit-component="canEditComponent"
-                        :project-manager-ids="projectManagerIds"
-                        :project-can-write-ids="projectCanWriteIds"
-                        :is-admin="isAdmin"
-                        :task="element"
-                        :project="project"
-                        :tab_id="tab_id"
-                        :checklist="checklist"
-                        :is-in-own-task-management="isInOwnTaskManagement"
-                        v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
-                    />
+                    <div>
+                        <SingleTaskInKanbanView
+                            :can-edit-component="canEditComponent"
+                            :project-manager-ids="projectManagerIds"
+                            :project-can-write-ids="projectCanWriteIds"
+                            :is-admin="isAdmin"
+                            :task="element"
+                            :project="project"
+                            :tab_id="tab_id"
+                            :checklist="checklist"
+                            :is-in-own-task-management="isInOwnTaskManagement"
+                            v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
+                        />
+
+                    </div>
                 </template>
-            </draggable>
+            </draggable>-->
+
+            <DropTaskInKanbanView :checklist-id="checklist.id"/>
             <div v-if="canEditComponent"   class="checklist-body-add-task" @click="openAddTaskModal = true">
                 <AlertComponent :text="$t('Click here to create a task')" type="plus" show-icon icon-size="h-4 w-4" />
             </div>
@@ -161,7 +181,9 @@ import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserModal.vue";
 
+
 import { usePermission } from "@/Composeables/Permission.js";
+import DropTaskInKanbanView from "@/Components/Checklist/Components/DropTaskInKanbanView.vue";
 const {can} = usePermission(usePage().props)
 const props = defineProps({
     checklist: {
@@ -222,11 +244,10 @@ const templateForm = useForm({
     checklist_id: props.checklist.id,
 });
 
-
 const checkIfUserIsInTaskIfInOwnTaskManagement = (task) => {
     // if isInOwnTaskManagement is true, check if the current user ist in the task
     if (props.isInOwnTaskManagement && !props.checklist.private) {
-        return task.users.map(user => user.id).includes(usePage().props.user.id);
+        return task?.users.map(user => user.id).includes(usePage().props.user.id);
     } else {
         return true;
     }

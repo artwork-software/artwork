@@ -2,6 +2,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems,Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
 } from '@headlessui/vue'
 import IconLib from "@/Mixins/IconLib.vue";
+import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
 export default {
     name: "DropDown",
     mixins: [IconLib],
@@ -32,22 +33,34 @@ export default {
     },
     data() {
         return {
-            checkedData: {
-                selected: this.data.project_value ? this.data.project_value.data.selected : this.data.data.selected
-            }
+            projectData: this.data,
+            selected: this.data.project_value ? this.data.project_value.data.selected : this.data.data.selected
+        }
+    },
+    mounted() {
+        useProjectDataListener(this.projectData, this.projectId).init();
+    },
+    watch: {
+        // if the data changes, update the text
+        projectData: {
+            handler: function (newVal, oldVal) {
+                this.selected = newVal.project_value ? newVal.project_value.data.selected : newVal.data.selected
+            },
+            deep: true
         }
     },
     methods: {
         updateTextData(value) {
-            this.checkedData.selected = value
             this.$inertia.patch(route('project.tab.component.update', {project: this.projectId, component: this.data.id}), {
-                data: this.checkedData,
+                data: {
+                    selected: value
+                },
             }, {
                 preserveScroll: true,
-                preserveState: false
+                preserveState: true
             }, {
                 preserveScroll: true,
-                preserveState: false
+                preserveState: true
             })
         }
     }
@@ -55,13 +68,13 @@ export default {
 </script>
 
 <template>
-    <Listbox as="div" class="w-96" v-model="checkedData.selected" :disabled="!this.canEditComponent">
+    <Listbox as="div" class="w-96" v-model="selected" :disabled="!this.canEditComponent">
         <ListboxLabel class="block text-sm font-medium leading-6"  :class="inSidebar ? 'text-white' : 'text-gray-900'">
             {{ data.data.label }}
         </ListboxLabel>
         <div class="relative mt-2">
             <ListboxButton class="menu-button" :class="inSidebar ? 'bg-primary text-white border  border-gray-300' : ''">
-                <div class="block truncate">{{ checkedData.selected }}</div>
+                <div class="block truncate">{{ selected }}</div>
                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                     <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </span>

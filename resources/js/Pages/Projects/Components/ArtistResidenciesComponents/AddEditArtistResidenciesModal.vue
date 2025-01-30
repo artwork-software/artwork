@@ -267,6 +267,16 @@ const props = defineProps({
     }
 })
 
+const formatDate = (date) => {
+    if(date) {
+        let utcDate = new Date(date)
+        let localDate = new Date(utcDate.getTime() - utcDate.getTimezoneOffset() * 60000);
+        return localDate ? localDate.toISOString().split('T')[0] : null;
+    }else {
+        return ''
+    }
+}
+
 const emit = defineEmits(['close'])
 const selectedServiceProvider = ref(usePage().props.serviceProviders.find(serviceProvider => serviceProvider.id === props.artist_residency?.service_provider_id) || usePage().props.serviceProviders[0])
 const selectedRoomType = ref(props.artist_residency?.type_of_room || usePage().props.roomTypes[0])
@@ -279,9 +289,9 @@ const artistResidency = useForm({
     position: props.artist_residency ? props.artist_residency.position : '',
     service_provider_id: null,
     project_id: props.project.id,
-    arrival_date: props.artist_residency ? props.artist_residency.arrival_date : '',
+    arrival_date: props.artist_residency ? formatDate(props.artist_residency.arrival_date) : '',
     arrival_time: props.artist_residency ? props.artist_residency.arrival_time : '',
-    departure_date: props.artist_residency ? props.artist_residency.departure_date : '',
+    departure_date: props.artist_residency ? formatDate(props.artist_residency.departure_date) : '',
     departure_time: props.artist_residency ? props.artist_residency.departure_time : '',
     type_of_room: null,
     cost_per_night: props.artist_residency ? props.artist_residency.cost_per_night : 0.00,
@@ -314,6 +324,16 @@ const calculateTotalDailyAllowance = computed(() => {
     return (Math.floor(artistResidency.daily_allowance) * (calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance)))
 })
 
+
+
+const formattedDepartureDate = computed(() => {
+    let utcDate = new Date(artistResidency.departure_date)
+    let localDate = null;
+    if(artistResidency.departure_date){
+        localDate = new Date(utcDate.getTime() - utcDate.getTimezoneOffset() * 60000);
+    }
+    return localDate ? localDate.toISOString().split('T')[0] : null;
+})
 
 const createOrUpdateArtistResidency = () => {
 

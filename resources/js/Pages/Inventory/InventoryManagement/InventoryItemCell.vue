@@ -1,6 +1,5 @@
 <template>
     <td :class="getCellCls()" class="relative">
-
         <span v-if="hasCellValue()" :class="getCellValueCls()" @click="toggleCellEdit()">
             <template v-if="isTextColumn() || isSelectColumn() || isNumberColumn()">
                 <span v-if="isTextColumn()" :title="cell.cell_value">
@@ -96,7 +95,9 @@
                        @focusout="applyCellValueChange()"/>
             </div>
             <div v-else-if="isSelectColumn()" :class="getInputCls()">
-                <select ref="cellValueInputRef" class="select-input" v-model="cellValue" @focusout="applyCellValueChange()">
+                <select ref="cellValueInputRef"
+                        class="select-input"
+                        v-model="cellValue" @focusout="applyCellValueChange()">
                     <option v-for="(option) in cell.column.type_options">
                         {{ option }}
                     </option>
@@ -146,7 +147,9 @@ const emits = defineEmits(['isEditingCellValue']),
 
         return [
             getBackgroundCls(),
-            'max-w-40 h-10 px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap ' + addedClasses
+            'max-w-40 h-10 px-3 border subpixel-antialiased relative text-xs ' +
+                'overflow-ellipsis overflow-hidden whitespace-nowrap ' +
+                addedClasses
         ].join(' ');
     },
     getBackgroundCls = () => {
@@ -174,7 +177,6 @@ const emits = defineEmits(['isEditingCellValue']),
         return props.cell.cell_value.length > 0;
     },
     getCellValueCls = () => {
-
         return isDateColumn() || isCheckboxColumn() ? 'text-center block cursor-text' : 'cursor-text';
     },
     isTextColumn = () => {
@@ -199,8 +201,7 @@ const emits = defineEmits(['isEditingCellValue']),
         return props.cell.column.type === 99;
     },
     toggleCellEdit = () => {
-
-        if(!can('can manage inventory stock') || !hasAdminRole()){
+        if (!can('can manage inventory stock') || !hasAdminRole()) {
             return;
         }
 

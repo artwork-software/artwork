@@ -16,14 +16,19 @@
             </div>
         </div>
     </div>
-
-
+    <error-component v-if="showInsufficientPermissionsErrorComponent"
+                     :confirm="$t('OK')"
+                     :titel="$t('No permissions')"
+                     :description="$t('Contact your administrator so that you can plan the inventory.')"
+                     @closed="showInsufficientPermissionsErrorComponent = false;"
+    />
 </template>
 
 <script setup>
 import {usePermission} from "@/Composeables/Permission.js";
 import {usePage} from "@inertiajs/vue3";
-import {computed, onMounted} from "vue";
+import {computed, onMounted, ref} from "vue";
+import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props);
 
 const props = defineProps({
@@ -47,15 +52,17 @@ const props = defineProps({
     }
 })
 
-
+const showInsufficientPermissionsErrorComponent = ref(false);
 const onDragStart = (event) => {
-    if(
+    if (
         !can('can plan inventory') ||
         !hasAdminRole() ||
         !props.inventory_planer_ids.includes(usePage().props.user.id)
     ) {
+        showInsufficientPermissionsErrorComponent.value = true;
         return;
     }
+
     const transferItem = {
         id: props.item.id,
         name: props.item.name,

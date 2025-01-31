@@ -140,8 +140,9 @@ readonly class FreelancerService
         $startOfWeek = $startDate->copy()->startOfWeek();
         $endOfWeek = $endDate->copy()->endOfWeek();
 
-        $daysWithData = $eventService->getDaysWithEventsWhereFreelancerHasShiftsWithTotalPlannedWorkingHours(
+        $daysWithData = $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
             $freelancer->id,
+            'freelancer',
             $startOfWeek,
             $endOfWeek
         );

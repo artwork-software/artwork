@@ -554,7 +554,7 @@
                     </div>
                 </div>
                 <!-- Attribute Menu -->
-                <Menu as="div" class="inline-block text-left w-full" v-if="canEdit">
+                <Menu as="div" class="inline-block text-left w-full" v-if="canEdit && event_properties?.length > 0">
                     <div>
                         <MenuButton class="menu-button">
                             <span class="flex items-center gap-x-2">
@@ -571,13 +571,13 @@
                         leave-active-class="transition duration-75 ease-in"
                         leave-from-class="transform scale-100 opacity-100"
                         leave-to-class="transform scale-95 opacity-0">
-                        <MenuItems class="absolute overflow-y-auto h-24 w-[88%] origin-top-left divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                            <div class="w-full rounded-2xl bg-primary border-none mt-2 flex flex-col gap-y-1">
-                                <div v-for="eventProperty in this.event_properties" class="flex flex-row gap-x-1 w-full items-center">
+                        <MenuItems class="absolute overflow-y-auto h-44 w-[88%] origin-top-left divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            <div class="w-full rounded-2xl bg-primary border-none mt-2 flex flex-col gap-y-2">
+                                <div v-for="eventProperty in event_properties" class="flex flex-row gap-x-1 w-full items-center">
                                     <input v-model="eventProperty.checked"
                                            :disabled="!canEdit"
                                            type="checkbox"
-                                           class="checkBoxOnDark"/>
+                                           class="input-checklist-dark"/>
                                     <component :is="eventProperty.icon" class="w-5 h-5 text-white" stroke-width="2"/>
                                     <div :class="[eventProperty.checked ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
                                         {{ eventProperty.name }}
@@ -588,14 +588,20 @@
                     </transition>
                 </Menu>
                 <!--    Properties    -->
-                <div class="flex py-2">
-                    <TagComponent v-for="eventProperty in this.event?.eventProperties"
-                                  :icon="eventProperty.icon.replace('Icon', '')"
-                                  :displayed-text="eventProperty.name"
-                                  hideX="true"
-                                  property=""/>
+                <div v-if="event?.eventProperties.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-2">
+                    <div v-for="(eventProperty, index) in event?.eventProperties" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                        <div class="flex items-center">
+                            <div class="rounded-full p-1 size-8 flex items-center justify-center">
+                                <component :is="eventProperty.icon" class="inline-block size-4"  />
+                            </div>
+                            <div class="mx-1">
+                                <p class="xxsDark group-hover:text-gray-900">{{ eventProperty.name}}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
             <div v-if="canEdit">
                 <div class="flex justify-center w-full py-4"
                      v-if="(isAdmin || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.user.id))">
@@ -670,6 +676,7 @@ import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {inject} from "vue";
+import Button from "@/Jetstream/Button.vue";
 
 const {getDaysOfEvent} = useEvent();
 
@@ -688,12 +695,14 @@ const options = [
     },
 ];
 
+
 export default {
     name: 'EventComponent',
     mixins: [
         Permissions, IconLib
     ],
     components: {
+        Button,
         TextareaComponent,
         TimeInputComponent,
         DateInputComponent,
@@ -732,8 +741,11 @@ export default {
         InputComponent,
     },
     setup() {
+        const event_properties = inject('event_properties');
+
         return {
             options,
+            event_properties
         }
     },
     data() {
@@ -809,7 +821,7 @@ export default {
             }),
             helpTextLengthRoom: '',
             initialRoomId: null,
-            event_properties: inject('event_properties')
+            //event_properties: event_properties
         }
     },
     props: [
@@ -946,8 +958,8 @@ export default {
             this.selectedRoom = this.rooms.find(room => room.id === this.event.roomId);
             this.description = this.event.description;
 
-            this.event_properties.forEach((event_property) => {
-                event_property.checked = this.event.eventProperties.some(
+            this.event_properties?.forEach((event_property) => {
+                event_property.checked = this.event?.eventProperties.some(
                     (event_event_properties) => event_event_properties.id === event_property.id
                 );
             });

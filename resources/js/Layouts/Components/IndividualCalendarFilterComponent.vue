@@ -237,8 +237,13 @@
                                        class="input-checklist-dark"/>
                                 <label :for="'event-property-' + eventProperty.id"
                                        :class="[eventProperty.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                       class="cursor-pointer ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                    {{ eventProperty.name }}
+                                       class="cursor-pointer ml-1.5 text-xs subpixel-antialiased align-text-middle flex items-center gap-x-1">
+                                    <span>
+                                        <component :is="eventProperty.icon" class="size-5" />
+                                    </span>
+                                    <span>
+                                        {{ eventProperty.name }}
+                                    </span>
                                 </label>
                             </div>
                         </DisclosurePanel>

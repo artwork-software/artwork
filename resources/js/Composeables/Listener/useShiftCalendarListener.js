@@ -100,6 +100,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
                 roomName: eventData.roomName,
                 eventStatusId: eventData.eventStatusId,
                 eventStatusColor: eventData.eventStatusColor,
+                subEvents: eventData.subEvents,
                 created_by: {
                     id: eventData.created_by?.id,
                     profile_photo_url: eventData.created_by?.profile_photo_url,

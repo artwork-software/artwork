@@ -9,12 +9,12 @@
                         <AddButtonSmall @click="showEventPropertyModal = true;" text="Event Eigenschaft hinzufügen"/>
                     </div>
                 </div>
-                <ul role="list" class="flex flex-col gap-y-1 max-w-3xl">
+                <ul role="list" class="flex flex-col gap-y-3 max-w-3xl">
                     <li v-for="(eventProperty) in event_properties"
                         :key="eventProperty.id"
                         class="flex flex-row justify-between">
-                        <div class="flex flex-row items-center gap-2">
-                            <component as="div" class="h-12 w-12 rounded rounded-full border border-gray-300 p-2"
+                        <div class="flex flex-row items-center gap-4">
+                            <component as="div" class="h-12 w-12 rounded-full border border-gray-300 p-2"
                                        width="16" height="16"
                                        :is="eventProperty.icon"
                                        stroke-width="2"/>
@@ -75,6 +75,7 @@ import EventPropertyModal from "@/Pages/Settings/EventProperties/EventPropertyMo
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import {provide} from "vue";
+import IconSelector from "@/Components/Icon/IconSelector.vue";
 
 const props = defineProps({
         event_properties: {

@@ -237,7 +237,8 @@ import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 const filterOptions = inject('filterOptions');
 const personalFilters = inject('personalFilters');
 const user_filters = inject('user_filters');
-provide('event_properties', inject('event_properties'));
+const event_properties = inject('event_properties');
+//provide('event_properties', inject('event_properties'));
 
 const props = defineProps({
         rooms: {

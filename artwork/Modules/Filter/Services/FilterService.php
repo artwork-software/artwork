@@ -45,7 +45,7 @@ class FilterService
             'roomCategories' => $this->map($this->categoryRepository->getAll()),
             'roomAttributes' => $this->map($this->roomAttributeRepository->getAll()),
             'eventTypes' => $this->map($this->eventTypeService->getAll()),
-            'eventProperties' => $this->map($this->eventPropertyRepository->getAll()),
+            'eventProperties' => $this->eventPropertyRepository->getAll(),
             'areas' => $this->map($this->areaRepository->getAll()),
             'rooms' => $this->roomRepository
                 ->allWithoutTrashed()

@@ -2302,5 +2302,7 @@
     "Drop here": "Drop here",
     "Add the task here": "Add the task here",
     "Deselect all": "Deselect all",
-    "Select all": "Select all"
+    "Select all": "Select all",
+    "Select an icon from {0} different icons.": "Select an icon from {0} different icons.",
+    "Universal Shift": "Universal Shift"
 }

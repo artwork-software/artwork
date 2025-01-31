@@ -4,7 +4,8 @@
         <form @submit.prevent="addOrUpdateEventProperty" class="mt-5">
             <div class="flex items-center gap-x-4">
                 <div class="col-span-1">
-                    <Menu as="div" class="relative col-span-1">
+                    <IconSelector @update:modelValue="addIconToForm" :current-icon="eventPropertyToEdit ? eventPropertyToEdit.icon : null" />
+                    <!--<Menu as="div" class="relative col-span-1">
                         <div>
                             <MenuButton :class="[eventPropertyForm.icon === '' ? 'border border-gray-400' : '']" class="menu-button">
                                 <label v-if="eventPropertyForm.icon === null" class="cursor-pointer text-gray-400 text-xs">
@@ -39,7 +40,7 @@
                                 </MenuItem>
                             </MenuItems>
                         </transition>
-                    </Menu>
+                    </Menu>-->
                 </div>
                 <div class="w-full">
                     <TextInputComponent
@@ -55,6 +56,7 @@
             <div class="flex items-center justify-center mt-5">
                 <FormButton type="submit" :text="eventPropertyToEdit ? $t('Save') : $t('Create')" />
             </div>
+
         </form>
     </BaseModal>
 </template>
@@ -70,6 +72,7 @@ import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualific
 import Label from "@/Jetstream/Label.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {inject} from "vue";
+import IconSelector from "@/Components/Icon/IconSelector.vue";
 const props = defineProps({
         eventPropertyToEdit: {
             type: Object,
@@ -125,4 +128,8 @@ const props = defineProps({
 
         emits.call(this, 'closeModal');
     };
+
+const addIconToForm = (icon) => {
+    eventPropertyForm.icon = icon;
+}
 </script>

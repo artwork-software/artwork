@@ -97,6 +97,7 @@ class EventCreated implements ShouldBroadcastNow
                 'minutes_form_start_hour_to_start' => $event->getAttribute('minutes_form_start_hour_to_start'),
                 'roomId' => $event->getAttribute('room_id'),
                 'roomName' => $event->getAttribute('room')?->getAttribute('name'),
+                'subEvents' => $event->getAttribute('subEvents'),
                 'created_by' => [
                     'id' => $creator->getAttribute('id'),
                     'profile_photo_url' => $creator->getAttribute('profile_photo_url'),

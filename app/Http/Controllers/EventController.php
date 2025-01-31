@@ -1364,7 +1364,7 @@ class EventController extends Controller
             $this->craftInventoryItemEventService->updateEventTimeInInventory($isInInventoryEvent, $event);
         }
 
-        broadcast(new EventCreated($event, $event->room_id));
+        broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
 
         //redirect is required for bulk component event component
         /*if ($request->boolean('usedInBulkComponent')) {

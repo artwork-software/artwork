@@ -17,7 +17,7 @@
                             <component as="div" class="h-12 w-12 rounded-full border border-gray-300 p-2"
                                        width="16" height="16"
                                        :is="eventProperty.icon"
-                                       stroke-width="2"/>
+                                       stroke-width="1.5"/>
                             <p class="mDark">{{ eventProperty.name }}</p>
                         </div>
                         <div class="flex items-center" v-if="eventProperty.id > 2">

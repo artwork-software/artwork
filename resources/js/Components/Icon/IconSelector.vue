@@ -1,10 +1,12 @@
 <template>
-    <Popover v-slot="{ open }" class="relative">
-        <PopoverButton id="iconSelectorButton" :class="open ? 'text-white' : 'text-white/90'"
-                       class="size-10 flex items-center justify-center border border-gray-300 rounded-full">
-            <span>
-                <component :is="selectedIconComponent" class="size-7 text-black"/>
-            </span>
+    <Popover class="relative">
+        <PopoverButton id="iconSelectorButton" class="size-10 flex items-center justify-center border border-gray-300 rounded-full">
+            <ToolTipComponent
+                :icon="selectedIcon"
+                icon-size="size-7"
+                :tooltip-text="$t('Select an icon')"
+                direction="bottom"
+            />
         </PopoverButton>
 
         <transition enter-active-class="transition duration-200 ease-out"
@@ -24,9 +26,9 @@
                     <div>
                         <div class="grid grid-cols-1 relative">
                             <input v-model="searchInput" type="text" class="col-start-1 row-start-1 block w-full rounded-md bg-white py-1.5 pl-10 pr-3 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:pl-9 sm:text-sm/6" :placeholder="$t('Search')" />
-                            <component is="IconSearch" class="pointer-events-none col-start-1 row-start-1 ml-3 size-5 self-center text-gray-400 sm:size-4" aria-hidden="true" />
+                            <component :is="TablerIcons.IconSearch" class="pointer-events-none col-start-1 row-start-1 ml-3 size-5 self-center text-gray-400 sm:size-4" aria-hidden="true" />
                             <div class="absolute right-2 flex items-center h-full" @click="searchInput = ''" v-if="searchInput.length > 0">
-                                <component is="IconX" class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                                <component :is="TablerIcons.IconX" class="h-5 w-5 text-gray-400" aria-hidden="true" />
                             </div>
                         </div>
                     </div>
@@ -43,11 +45,13 @@
                     <div v-else class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div v-for="icon in computedIcons" :key="icon.name">
                             <div @click="selectIcon(icon)" :class="selectedIcon === icon.name ? 'bg-green-300/20' : ''" class="flex flex-col items-center p-3 gap-y-3 hover:bg-gray-50 rounded-lg cursor-pointer">
-                                <component :is="icon.icon" class="h-8 w-8 text-black"/>
+                                <component v-if="icon.icon" :is="icon.icon" class="h-8 w-8 text-black" stroke-width="1.5"/>
                                 <p class="text-center headline4 !text-xs">{{ icon.display_name }}</p>
                             </div>
                         </div>
                     </div>
+
+
                 </div>
             </PopoverPanel>
         </transition>
@@ -55,9 +59,10 @@
 </template>
 
 <script setup>
-import { markRaw, ref, computed, onMounted } from "vue";
+import {ref, computed, onMounted} from "vue";
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/vue";
 import * as TablerIcons from "@tabler/icons-vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const icons = ref([]);
 const searchInput = ref('');
@@ -66,12 +71,11 @@ const loading = ref(true);
 const props = defineProps({
     currentIcon: {
         type: String,
-        default: 'IconPhotoCircle'
+        required: false,
     }
 });
 
-const selectedIcon = ref(props.currentIcon ?? 'IconPhotoCircle');
-const selectedIconComponent = ref(props.currentIcon ?? 'IconPhotoCircle'); // Markiere als nicht-reaktiv
+const selectedIcon = ref(TablerIcons[props.currentIcon] ?? TablerIcons["IconPhotoCircle"]);
 
 const emit = defineEmits(['update:modelValue']);
 
@@ -88,36 +92,50 @@ const convertToDisplayName = (iconName) => {
 }
 
 const loadIconsBatchwise = () => {
-    const iconEntries = Object.entries(TablerIcons);
+    const iconEntries = Object.entries(TablerIcons)
+        .filter(([key, value]) =>
+            typeof value === 'function' || // Falls das Icon als Funktion exportiert wird
+            (typeof value === 'object' && (value?.render || value?.setup)) // Falls es eine Vue 3-Komponente ist
+        );
+
     let index = 0;
-    const batchSize = 10;
+    const batchSize = 50;
 
     function loadBatch() {
         if (index < iconEntries.length) {
             icons.value.push(
                 ...iconEntries.slice(index, index + batchSize).map(([key, value]) => ({
                     name: key,
-                    icon: markRaw(value),
-                    display_name: convertToDisplayName(key)
+                    icon: value, // Speichert die echte Komponente
+                    display_name: convertToDisplayName(key),
                 }))
             );
             index += batchSize;
-            requestAnimationFrame(loadBatch);
+
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(loadBatch);
+            } else {
+                requestAnimationFrame(loadBatch);
+            }
         } else {
             loading.value = false;
         }
     }
 
     loadBatch();
-}
+};
+
+
 
 onMounted(() => {
+    loading.value = true; // Setze loading aktiv
     loadIconsBatchwise();
 });
 
+
 const selectIcon = (icon) => {
     selectedIcon.value = icon.name;
-    selectedIconComponent.value = markRaw(icon.icon); // Markiere als nicht-reaktiv
+    //selectedIconComponent.value = markRaw(icon.icon); // Markiere als nicht-reaktiv
 
     // Emitte das ausgewählte Icon
     emit('update:modelValue', icon.name);

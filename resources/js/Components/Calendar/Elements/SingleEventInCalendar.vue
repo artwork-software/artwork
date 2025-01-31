@@ -204,7 +204,7 @@
             <div class="flex items-center gap-1 my-2">
                 <div class="grid gird-cols-1 md:grid-cols-2 gap-2">
                     <div v-for="property in event.eventProperties">
-                        <component :is="property.icon" class="size-4" />
+                        <component :is="property.icon" class="size-4" stroke-width="1.5" />
                     </div>
                 </div>
                 <div class="relative invisible group-hover/singleEvent:visible">
@@ -297,7 +297,7 @@
                         </div>
                         <div class="flex items-center -space-x-1">
                             <div v-for="property in subEvent.event_properties" class="bg-gray-100 rounded-full border-2 border-white p-0.5" >
-                                <component :is="property.icon" class="size-3" />
+                                <component :is="property.icon" class="size-3" stroke-width="1.5" />
                             </div>
                         </div>
                     </div>

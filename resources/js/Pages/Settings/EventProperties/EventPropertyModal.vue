@@ -5,42 +5,6 @@
             <div class="flex items-center gap-x-4">
                 <div class="col-span-1">
                     <IconSelector @update:modelValue="addIconToForm" :current-icon="eventPropertyToEdit ? eventPropertyToEdit.icon : null" />
-                    <!--<Menu as="div" class="relative col-span-1">
-                        <div>
-                            <MenuButton :class="[eventPropertyForm.icon === '' ? 'border border-gray-400' : '']" class="menu-button">
-                                <label v-if="eventPropertyForm.icon === null" class="cursor-pointer text-gray-400 text-xs">
-                                    {{$t('Icon')}}*
-                                </label>
-                                <component v-if="eventPropertyForm.icon"
-                                           as="div"
-                                           class="h-6 w-6 "
-                                           width="16" height="16"
-                                           :is="eventPropertyForm.icon"
-                                           stroke-width="2"/>
-                                <ChevronDownIcon class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"/>
-                            </MenuButton>
-                        </div>
-                        <transition enter-active-class="transition-enter-active" enter-from-class="transition-enter-from" enter-to-class="transition-enter-to" leave-active-class="transition-leave-active" leave-from-class="transition-leave-from" leave-to-class="transition-leave-to">
-                            <MenuItems class="z-40 origin-top-right absolute h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                <MenuItem v-for="icon in icons"
-                                          v-slot="{ active }">
-
-                                    <div @click="eventPropertyForm.icon = icon;"
-                                         :class="[
-                                             active ?
-                                             'bg-primaryHover text-secondaryHover' :
-                                             'text-secondary',
-                                             'cursor-pointer group px-3 py-2 text-sm subpixel-antialiased flex items-center justify-center'
-                                         ]">
-                                        <component as="div" class="h-12 w-12 rounded rounded-full border border-gray-300 p-2"
-                                                   width="16" height="16"
-                                                   :is="icon"
-                                                   stroke-width="2"/>
-                                    </div>
-                                </MenuItem>
-                            </MenuItems>
-                        </transition>
-                    </Menu>-->
                 </div>
                 <div class="w-full">
                     <TextInputComponent

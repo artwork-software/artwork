@@ -49,5 +49,9 @@ class UpdateArtwork extends Command
         $this->call('db:seed', ['--class' => 'DefaultEventPropertiesSeeder']);
         $this->info('----------------------------------------------------------');
         $this->info('Artwork Update Command has finished');
+
+        $this->info('Update Shift-Qualification-Icons');
+        $this->call('db:seed', ['--class' => 'ShiftQualificationIconsSeeder']);
+        $this->info('----------------------------------------------------------');
     }
 }

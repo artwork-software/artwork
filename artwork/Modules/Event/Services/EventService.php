@@ -466,161 +466,6 @@ readonly class EventService
     }
 
     /**
-     * @return array<int, mixed>
-     */
-    public function getDaysWithEventsWhereUserHasShiftsWithTotalPlannedWorkingHours(
-        int $userId,
-        Carbon $startDate,
-        Carbon $endDate,
-    ): array {
-        $daysWithData = [];
-
-        /**
-         * Berechnet die geplanten Arbeitsstunden für eine Menge an Schichten
-         */
-        $calculatePlannedWorkingHours = function ($shifts): array {
-            $earliestStart = null;
-            $latestEnd = null;
-            $totalBreakMinutes = 0;
-
-            foreach ($shifts as $shift) {
-                $start = Carbon::parse($shift['start']);
-                $end = Carbon::parse($shift['end']);
-
-                $earliestStart = ($earliestStart === null || $start->lt($earliestStart)) ? $start : $earliestStart;
-                $latestEnd = ($latestEnd === null || $end->gt($latestEnd)) ? $end : $latestEnd;
-
-                $totalBreakMinutes += $shift['break_minutes'];
-            }
-
-            $totalWorkMinutes = ($earliestStart !== null && $latestEnd !== null)
-                ? max(($earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes), 0)
-                : 0;
-
-            return [
-                'totalWorkTime' => $this->formatTime($totalWorkMinutes),
-                'totalBreakTime' => $this->formatTime($totalBreakMinutes),
-            ];
-        };
-
-        // Erstelle alle Tage als leere Einträge
-        $period = CarbonPeriod::create($startDate, $endDate);
-        foreach ($period as $date) {
-            $formattedDate = $date->format('Y-m-d');
-            $daysWithData[$formattedDate] = [
-                'date' => $formattedDate,
-                'shifts' => [],
-                'totalWorkTime' => '00:00',
-                'totalBreakTime' => '00:00',
-            ];
-        }
-
-
-        // Events mit Schichten abrufen
-        $events = $this->eventRepository->getEventsWhereUserHasShiftsInPeriod(
-            $userId,
-            $period
-        );
-
-
-        foreach ($events as $event) {
-            /** @var Shift $shift */
-            foreach ($event['shifts'] as $shift) {
-                $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d'); // Jetzt nach Schichtdatum!
-
-                $plannedData = $calculatePlannedWorkingHours([$shift]);
-
-                $daysWithData[$shiftDate]['shifts'][] = [
-                    'room' => $shift->room,
-                    'project' => $event->project,
-                    'event' => $event,
-                    'id' => $shift->id,
-                    'name' => $shift->name ?? '',
-                    'start' => $shift->start,
-                    'end' => $shift->end,
-                    'break_minutes' => $shift->break_minutes,
-                    'description' => $shift->description,
-                    'is_committed' => (bool) $shift->is_committed,
-                    'craft' => $shift->craft ?? [],
-                    'users' => $shift->users ?? [],
-                    'freelancer' => $shift->freelancer ?? [],
-                    'serviceProvider' => $shift->serviceProvider ?? [],
-                    'shiftQualifications' => $shift->shiftsQualifications ?? [],
-                    'plannedWorkingHours' => $plannedData['totalWorkTime'],
-                ];
-
-                // Arbeitszeiten nach Schichtzeit summieren
-                $daysWithData[$shiftDate]['totalWorkTime'] = $this->sumTimes(
-                    $daysWithData[$shiftDate]['totalWorkTime'],
-                    $plannedData['totalWorkTime']
-                );
-                $daysWithData[$shiftDate]['totalBreakTime'] = $this->sumTimes(
-                    $daysWithData[$shiftDate]['totalBreakTime'],
-                    $plannedData['totalBreakTime']
-                );
-            }
-        }
-
-        // Schichten ohne Event abrufen
-        $shifts = Shift::query()
-            ->with(['room', 'users', 'users.dayServices', 'freelancer', 'serviceProvider', 'shiftsQualifications'])
-            ->whereHas('users', function (Builder $builder) use ($userId): void {
-                $builder->where('user_id', $userId);
-            })
-            ->whereBetween('start_date', [$startDate, $endDate])
-            ->whereBetween('end_date', [$startDate, $endDate])
-            ->orderBy('start')
-            ->get();
-        /** @var Shift $shift */
-        foreach ($shifts as $shift) {
-            if (!$shift->event_id) { // Falls keine Event-Zuordnung vorhanden ist
-                $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d');
-                $plannedData = $calculatePlannedWorkingHours([$shift]);
-
-                $daysWithData[$shiftDate]['shifts'][] = [
-                    'room' => $shift->room,
-                    'project' => null,
-                    'event' => null,
-                    'id' => $shift->id,
-                    'name' => $shift->name ?? '',
-                    'start' => $shift->start,
-                    'end' => $shift->end,
-                    'break_minutes' => $shift->break_minutes,
-                    'description' => $shift->description,
-                    'is_committed' => (bool) $shift->is_committed,
-                    'craft' => $shift->craft ?? [],
-                    'users' => $shift->users ?? [],
-                    'freelancer' => $shift->freelancer ?? [],
-                    'serviceProvider' => $shift->serviceProvider ?? [],
-                    'shiftQualifications' => $shift->shiftsQualifications ?? [],
-                    'plannedWorkingHours' => $plannedData['totalWorkTime'],
-                ];
-
-                $daysWithData[$shiftDate]['totalWorkTime'] = $this->sumTimes(
-                    $daysWithData[$shiftDate]['totalWorkTime'],
-                    $plannedData['totalWorkTime']
-                );
-                $daysWithData[$shiftDate]['totalBreakTime'] = $this->sumTimes(
-                    $daysWithData[$shiftDate]['totalBreakTime'],
-                    $plannedData['totalBreakTime']
-                );
-            }
-        }
-
-        // Sortiere Schichten pro Tag nach Startzeit
-        foreach ($daysWithData as &$day) {
-            usort($day['shifts'], fn($a, $b) => strtotime($a['start']) - strtotime($b['start']));
-        }
-
-        // Daten an Inertia weitergeben
-        Inertia::share([
-            'daysWithData' => $daysWithData,
-        ]);
-
-        return $daysWithData;
-    }
-
-    /**
      * Formatiert Minuten in HH:MM Format.
      */
     private function formatTime(int $minutes): string {
@@ -640,19 +485,13 @@ readonly class EventService
         return $this->formatTime($totalMinutes);
     }
 
-    /**
-     * @return array<int, mixed>
-     */
-    public function getDaysWithEventsWhereFreelancerHasShiftsWithTotalPlannedWorkingHours(
-        int $freelancerId,
+    public function getDaysWithEventsAndTotalPlannedWorkingHours(
+        int $modelId,
+        string $modelType,
         Carbon $startDate,
         Carbon $endDate,
     ): array {
         $daysWithData = [];
-
-        /**
-         * Berechnet die geplanten Arbeitsstunden für eine Menge an Schichten
-         */
         $calculatePlannedWorkingHours = function ($shifts): array {
             $earliestStart = null;
             $latestEnd = null;
@@ -678,7 +517,6 @@ readonly class EventService
             ];
         };
 
-        // Erstelle alle Tage als leere Einträge
         $period = CarbonPeriod::create($startDate, $endDate);
         foreach ($period as $date) {
             $formattedDate = $date->format('Y-m-d');
@@ -690,18 +528,49 @@ readonly class EventService
             ];
         }
 
+        $mapping = [
+            'freelancer' => ['id' => 'freelancer_id', 'relation' => 'freelancer'],
+            'service_provider' => ['id' => 'service_provider_id', 'relation' => 'serviceProvider'],
+        ];
 
-        // Events mit Schichten abrufen
-        $events = $this->eventRepository->getEventsWhereFreelancerHasShiftsInPeriod(
-            $freelancerId,
-            CarbonPeriod::create($startDate, $endDate)
-        );
+        $modelToFind = $mapping[$modelType]['id'] ?? 'user_id';
+        $relationToFind = $mapping[$modelType]['relation'] ?? 'users';
+
+        $events = Event::query()
+            ->with(
+                [
+                    'room',
+                    'shifts' => function (HasMany $query) use ($relationToFind, $modelToFind, $modelId): void {
+                        $query->whereRelation($relationToFind, $modelToFind, $modelId);
+                        $query->orderBy('start_date');
+                        $query->orderBy('start');
+                        $query->orderBy('end_date');
+                        $query->orderBy('end');
+                    },
+                    'shifts.users',
+                    'shifts.users.dayServices',
+                    'shifts.freelancer',
+                    'shifts.serviceProvider',
+                    'shifts.shiftsQualifications',
+                ]
+            )
+            ->whereHas(
+                'shifts.' . $relationToFind,
+                function (Builder $builder) use ($modelToFind, $modelId): void {
+                    $builder->where($modelToFind, $modelId);
+                }
+            )
+            ->whereBetween('start_time', $period)
+            ->whereBetween('end_time', $period)
+            ->orderBy('start_time')
+            ->orderBy('end_time')
+            ->get();
 
 
         foreach ($events as $event) {
             /** @var Shift $shift */
             foreach ($event['shifts'] as $shift) {
-                $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d'); // Jetzt nach Schichtdatum!
+                $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d');
 
                 $plannedData = $calculatePlannedWorkingHours([$shift]);
 
@@ -724,7 +593,6 @@ readonly class EventService
                     'plannedWorkingHours' => $plannedData['totalWorkTime'],
                 ];
 
-                // Arbeitszeiten nach Schichtzeit summieren
                 $daysWithData[$shiftDate]['totalWorkTime'] = $this->sumTimes(
                     $daysWithData[$shiftDate]['totalWorkTime'],
                     $plannedData['totalWorkTime']
@@ -736,11 +604,10 @@ readonly class EventService
             }
         }
 
-        // Schichten ohne Event abrufen
         $shifts = Shift::query()
             ->with(['room', 'users', 'users.dayServices', 'freelancer', 'serviceProvider', 'shiftsQualifications'])
-            ->whereHas('freelancer', function (Builder $builder) use ($freelancerId): void {
-                $builder->where('freelancer_id', $freelancerId);
+            ->whereHas($relationToFind, function (Builder $builder) use ($modelToFind, $modelId): void {
+                $builder->where($modelToFind, $modelId);
             })
             ->whereBetween('start_date', [$startDate, $endDate])
             ->whereBetween('end_date', [$startDate, $endDate])
@@ -749,7 +616,7 @@ readonly class EventService
 
         /** @var Shift $shift */
         foreach ($shifts as $shift) {
-            if (!$shift->event_id) { // Falls keine Event-Zuordnung vorhanden ist
+            if (!$shift->event_id) {
                 $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d');
                 $plannedData = $calculatePlannedWorkingHours([$shift]);
 
@@ -783,209 +650,16 @@ readonly class EventService
             }
         }
 
-        // Sortiere Schichten pro Tag nach Startzeit
         foreach ($daysWithData as &$day) {
             usort($day['shifts'], fn($a, $b) => strtotime($a['start']) - strtotime($b['start']));
         }
 
-        // Daten an Inertia weitergeben
         Inertia::share([
             'daysWithData' => $daysWithData,
         ]);
 
         return $daysWithData;
     }
-
-    /**
-     * @return array<int, mixed>
-     */
-    public function getDaysWithEventsWhereServiceProviderHasShiftsWithTotalPlannedWorkingHours(
-        int $serviceProviderId,
-        Carbon $startDate,
-        Carbon $endDate,
-    ): array {
-        /*$totalPlannedWorkingHours = 0;
-        $eventsWithPlannedWorkingHours = [];
-
-        foreach (
-            $this->eventRepository->getEventsWhereServiceProviderHasShiftsInPeriod(
-                $serviceProviderId,
-                CarbonPeriod::create($startDate, $endDate)
-            ) as $event
-        ) {
-            $plannedWorkingHours = 0;
-
-            foreach ($event['shifts'] as $shift) {
-                $start = Carbon::parse($shift['start']);
-                $end = Carbon::parse($shift['end']);
-
-                $totalWorkingMinutes = 0;
-                $totalWorkingMinutes += $start->diffInMinutes($end);
-                $plannedWorkingHours += max($totalWorkingMinutes / 60, 0);
-            }
-
-            $totalPlannedWorkingHours += $plannedWorkingHours;
-
-            $eventsWithPlannedWorkingHours[] = [
-                'event' => $event->setAttribute('daysOfShifts', $event->getDaysOfShifts()),
-                'plannedWorkingHours' => $plannedWorkingHours,
-            ];
-        }
-
-        return [
-            $eventsWithPlannedWorkingHours,
-            $totalPlannedWorkingHours,
-        ];*/
-
-
-        $daysWithData = [];
-
-        /**
-         * Berechnet die geplanten Arbeitsstunden für eine Menge an Schichten
-         */
-        $calculatePlannedWorkingHours = function ($shifts): array {
-            $earliestStart = null;
-            $latestEnd = null;
-            $totalBreakMinutes = 0;
-
-            foreach ($shifts as $shift) {
-                $start = Carbon::parse($shift['start']);
-                $end = Carbon::parse($shift['end']);
-
-                $earliestStart = ($earliestStart === null || $start->lt($earliestStart)) ? $start : $earliestStart;
-                $latestEnd = ($latestEnd === null || $end->gt($latestEnd)) ? $end : $latestEnd;
-
-                $totalBreakMinutes += $shift['break_minutes'];
-            }
-
-            $totalWorkMinutes = ($earliestStart !== null && $latestEnd !== null)
-                ? max(($earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes), 0)
-                : 0;
-
-            return [
-                'totalWorkTime' => $this->formatTime($totalWorkMinutes),
-                'totalBreakTime' => $this->formatTime($totalBreakMinutes),
-            ];
-        };
-
-        // Erstelle alle Tage als leere Einträge
-        $period = CarbonPeriod::create($startDate, $endDate);
-        foreach ($period as $date) {
-            $formattedDate = $date->format('Y-m-d');
-            $daysWithData[$formattedDate] = [
-                'date' => $formattedDate,
-                'shifts' => [],
-                'totalWorkTime' => '00:00',
-                'totalBreakTime' => '00:00',
-            ];
-        }
-
-
-        // Events mit Schichten abrufen
-        $events = $this->eventRepository->getEventsWhereServiceProviderHasShiftsInPeriod(
-            $serviceProviderId,
-            CarbonPeriod::create($startDate, $endDate)
-        );
-
-
-        foreach ($events as $event) {
-            /** @var Shift $shift */
-            foreach ($event['shifts'] as $shift) {
-                $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d'); // Jetzt nach Schichtdatum!
-
-                $plannedData = $calculatePlannedWorkingHours([$shift]);
-
-                $daysWithData[$shiftDate]['shifts'][] = [
-                    'room' => $shift->room,
-                    'project' => $event->project,
-                    'event' => $event,
-                    'id' => $shift->id,
-                    'name' => $shift->name ?? '',
-                    'start' => $shift->start,
-                    'end' => $shift->end,
-                    'break_minutes' => $shift->break_minutes,
-                    'description' => $shift->description,
-                    'is_committed' => (bool) $shift->is_committed,
-                    'craft' => $shift->craft ?? [],
-                    'users' => $shift->users ?? [],
-                    'freelancer' => $shift->freelancer ?? [],
-                    'serviceProvider' => $shift->serviceProvider ?? [],
-                    'shiftQualifications' => $shift->shiftsQualifications ?? [],
-                    'plannedWorkingHours' => $plannedData['totalWorkTime'],
-                ];
-
-                // Arbeitszeiten nach Schichtzeit summieren
-                $daysWithData[$shiftDate]['totalWorkTime'] = $this->sumTimes(
-                    $daysWithData[$shiftDate]['totalWorkTime'],
-                    $plannedData['totalWorkTime']
-                );
-                $daysWithData[$shiftDate]['totalBreakTime'] = $this->sumTimes(
-                    $daysWithData[$shiftDate]['totalBreakTime'],
-                    $plannedData['totalBreakTime']
-                );
-            }
-        }
-
-        // Schichten ohne Event abrufen
-        $shifts = Shift::query()
-            ->with(['room', 'users', 'users.dayServices', 'freelancer', 'serviceProvider', 'shiftsQualifications'])
-            ->whereHas('serviceProvider', function (Builder $builder) use ($serviceProviderId): void {
-                $builder->where('service_provider_id', $serviceProviderId);
-            })
-            ->whereBetween('start_date', [$startDate, $endDate])
-            ->whereBetween('end_date', [$startDate, $endDate])
-            ->orderBy('start')
-            ->get();
-
-        /** @var Shift $shift */
-        foreach ($shifts as $shift) {
-            if (!$shift->event_id) { // Falls keine Event-Zuordnung vorhanden ist
-                $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d');
-                $plannedData = $calculatePlannedWorkingHours([$shift]);
-
-                $daysWithData[$shiftDate]['shifts'][] = [
-                    'room' => $shift->room,
-                    'project' => null,
-                    'event' => null,
-                    'id' => $shift->id,
-                    'name' => $shift->name ?? '',
-                    'start' => $shift->start,
-                    'end' => $shift->end,
-                    'break_minutes' => $shift->break_minutes,
-                    'description' => $shift->description,
-                    'is_committed' => (bool) $shift->is_committed,
-                    'craft' => $shift->craft ?? [],
-                    'users' => $shift->users ?? [],
-                    'freelancer' => $shift->freelancer ?? [],
-                    'serviceProvider' => $shift->serviceProvider ?? [],
-                    'shiftQualifications' => $shift->shiftsQualifications ?? [],
-                    'plannedWorkingHours' => $plannedData['totalWorkTime'],
-                ];
-
-                $daysWithData[$shiftDate]['totalWorkTime'] = $this->sumTimes(
-                    $daysWithData[$shiftDate]['totalWorkTime'],
-                    $plannedData['totalWorkTime']
-                );
-                $daysWithData[$shiftDate]['totalBreakTime'] = $this->sumTimes(
-                    $daysWithData[$shiftDate]['totalBreakTime'],
-                    $plannedData['totalBreakTime']
-                );
-            }
-        }
-
-        // Sortiere Schichten pro Tag nach Startzeit
-        foreach ($daysWithData as &$day) {
-            usort($day['shifts'], fn($a, $b) => strtotime($a['start']) - strtotime($b['start']));
-        }
-
-        // Daten an Inertia weitergeben
-        Inertia::share([
-            'daysWithData' => $daysWithData,
-        ]);
-
-        return $daysWithData;
-    }
-
 
     public function getShiftPlanDto(
         UserService $userService,

@@ -4,6 +4,8 @@ namespace Artwork\Modules\Event\Events;
 
 use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectState;
 use Carbon\Carbon;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -46,6 +48,14 @@ class EventCreated implements ShouldBroadcastNow
         $creator = $event->creator;
         $startTime = Carbon::parse($event->start_time);
 
+        /** @var Project $project */
+        $project = $event->project ?: null;
+        $projectState = null;
+        if($project?->state){
+            /** @var ProjectState $projectState */
+            $projectState = ProjectState::find($project->state);
+        }
+
         return [
             'event' => [
                 'id' => $event->id,
@@ -61,6 +71,10 @@ class EventCreated implements ShouldBroadcastNow
                 'eventTypeId' => $event->event_type_id,
                 'eventStatusId' => $event->event_status_id,
                 'eventStatusColor' => $event->eventStatus?->color,
+                'projectStatusId' => $projectState?->id,
+                'projectStatusBackgroundColor' => $projectState?->color . '33',
+                'projectStatusBorderColor' => $projectState?->color,
+                'projectStatusName' => $projectState?->name,
                 'eventTypeName' => $eventType?->name,
                 'eventTypeAbbreviation' => $eventType?->abbreviation,
                 'eventTypeColor' => $eventType?->hex_code,

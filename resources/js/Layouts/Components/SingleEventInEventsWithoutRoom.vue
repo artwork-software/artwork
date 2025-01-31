@@ -466,6 +466,7 @@ import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {inject} from "vue";
+import {router, useForm} from "@inertiajs/vue3";
 
 const {getDaysOfEvent, formatEventDateByDayJs} = useEvent();
 
@@ -745,17 +746,20 @@ name: "SingleEventInEventsWithoutRoom",
                 this.isOption = true;
             }
 
-            axios.put('/events/' + event?.id, this.eventData(event))
-                .then(() => {
-                    this.requestReload(
-                        this.event.roomId,
-                        getDaysOfEvent(
-                            formatEventDateByDayJs(event.start),
-                            formatEventDateByDayJs(event.end)
-                        )
-                    )
-                })
-                .catch(error => event.error = error.response.data.errors);
+            const updateEventForm = useForm(this.eventData(event))
+
+            updateEventForm.put(route('events.update', {event: event.id}), {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    router.reload({
+                        only: ['eventsWithoutRoom', 'calendar']
+                    })
+                },
+                onError: (error) => {
+                    event.error = error.response;
+                }
+            })
         },
         openDeleteEventModal() {
             this.deleteComponentVisible = true;
@@ -765,7 +769,20 @@ name: "SingleEventInEventsWithoutRoom",
                 return this.deleteComponentVisible = false;
             }
 
-            axios.delete(route('events.delete', {event: this.event.id}))
+            router.delete(route('events.delete', {event: this.event.id}), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    router.reload({
+                        only: ['eventsWithoutRoom']
+                    })
+                },
+                onError: (error) => {
+                    this.event.error = error.response.data.errors;
+                }
+            })
+
+
+            /*axios.delete(route('events.delete', {event: this.event.id}))
                 .then(() => {
                     this.requestReload(
                         null,
@@ -776,7 +793,7 @@ name: "SingleEventInEventsWithoutRoom",
                     );
                     this.deleteComponentVisible = false;
                 })
-                .catch(error => this.event.error = error.response.data.errors);
+                .catch(error => this.event.error = error.response.data.errors);*/
         },
         eventData(event) {
             return {

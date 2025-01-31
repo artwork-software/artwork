@@ -40,7 +40,6 @@
                                 <div class="column-name" @click="toggleColumnEdit(column)">
                                     {{ column.name }}
                                 </div>
-
                                 <div :class="[column.clicked ? '' : '!hidden', ' column-input-container']">
                                     <input
                                         type="text"
@@ -96,8 +95,15 @@
                                                 {{ $t('Edit') }}
                                             </a>
                                         </MenuItem>
+                                        <MenuItem v-slot="{ active }"
+                                                  as="div">
+                                            <a @click="openEditColumnOrderModal()"
+                                               :class="[active ? 'active' : 'not-active', 'default group cursor-pointer text-white flex items-center px-4 py-2 subpixel-antialiased text-sm']">
+                                                <IconEdit class="mr-3 h-5 w-5 group-hover:text-white"/>
+                                                {{ $t('Column Order') }}
+                                            </a>
+                                        </MenuItem>
                                     </BaseMenu>
-
                                 </div>
                                 <Listbox v-if="column.showColorMenu === true"
                                          as="div"
@@ -148,6 +154,10 @@
                                   :show="showEditColumnSelectOptionsModal"
                                   :column="selectOptionsColumnToEdit"
                                   @closed="closeEditColumnSelectOptionsModal()"/>
+    <EditColumnOrderModal v-if="showEditColumnOrderModal"
+                          :show="showEditColumnOrderModal"
+                          :columns="JSON.parse(JSON.stringify(columns))"
+                          @closed="closeEditColumnOrderModal"/>
     <ErrorComponent v-if="hasFlashError()"
                     :titel="$t('Unfortunately an error has occurred')"
                     :description="getFlashError()"
@@ -160,8 +170,8 @@
 
 <script setup>
 import InventoryHeader from "@/Pages/Inventory/InventoryHeader.vue";
-import {IconCopy, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
-import {Listbox, ListboxOption, ListboxOptions, Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {IconCopy, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
+import {Listbox, ListboxOption, ListboxOptions, MenuItem} from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {onMounted, onUpdated, ref} from "vue";
@@ -174,6 +184,7 @@ import InventoryTopBar from "@/Pages/Inventory/InventoryManagement/InventoryTopB
 import useCraftFilterAndSearch from "@/Pages/Inventory/Composeables/useCraftFilterAndSearch.js";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {usePermission} from "@/Composeables/Permission.js";
+import EditColumnOrderModal from "@/Pages/Inventory/InventoryManagement/EditColumnOrderModal.vue";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props);
 
 const props = defineProps({
@@ -199,6 +210,7 @@ const props = defineProps({
     selectOptionsColumnToEdit = ref(null),
     showConfirmDeleteColumnModal = ref(false),
     columnIdToDelete = ref(null),
+    showEditColumnOrderModal = ref(false),
     { searchValue, craftFilters, crafts, filteredCrafts } = useCraftFilterAndSearch(),
     getPageProps = () => usePage().props,
     hasFlashError = () => getPageProps().flash.error?.length > 0,
@@ -241,7 +253,7 @@ const props = defineProps({
         return getColumnWidthCls(index, column);
     },
     getColumnWidthCls = (index, column) => {
-        return isLastEditColumn(column) ? '!w-auto min-w-72' :
+        return isLastEditColumn(column) ? 'w-80' :
             isTextColumn(column) ? 'w-[10%] min-w-[10%]' :
             isNumberColumn(column) ? 'w-[8%] min-w-[8%]' :
             isTextColumn(column) ? 'w-[10%] min-w-[10%]' :
@@ -257,6 +269,26 @@ const props = defineProps({
     closeEditColumnSelectOptionsModal = () => {
         selectOptionsColumnToEdit.value = null;
         showEditColumnSelectOptionsModal.value = false;
+    },
+    openEditColumnOrderModal = () => {
+        showEditColumnOrderModal.value = true;
+    },
+    closeEditColumnOrderModal = (closedOnPurpose, columns) => {
+        if (closedOnPurpose) {
+            router.patch(
+                route('inventory-management.inventory.columns.reorder'),
+                {
+                    columns: columns.map((column) => column.id)
+                },
+                {
+                    preserveScroll: true,
+                    onFinish: showEditColumnOrderModal.value = false
+                }
+            );
+
+            return;
+        }
+        showEditColumnOrderModal.value = false;
     },
     createDynamicColumnNameInputRef = (element, columnId) => {
         dynamicColumnNameInputRefs[columnId] = ref(element);
@@ -371,6 +403,39 @@ const props = defineProps({
     setFilterAndSearchData = () => {
         crafts.value = props.crafts;
         craftFilters.value = props.craftFilters;
+    },
+    updateSort = (column) => {
+        // If the column is already sorted by this column, reverse the sort direction
+        if (usePage().props.user.inventory_sort_direction === 'asc' && usePage().props.user.inventory_sort_column_id === column.id) {
+            usePage().props.user.inventory_sort_direction = 'desc';
+        } else {
+            usePage().props.user.inventory_sort_direction = 'asc';
+        }
+
+        usePage().props.user.inventory_sort_column_id = column.id;
+
+        if(column.id === null) {
+            usePage().props.user.inventory_sort_column_id = null;
+            usePage().props.user.inventory_sort_direction = null;
+        }
+
+        // update user data
+        router.patch(
+            route('user.update.inventory.sort', usePage().props.user.id),
+            {
+                inventory_sort_column_id: column.id,
+                inventory_sort_direction: usePage().props.user.inventory_sort_direction
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    setTimeout(() => {
+                        router.reload()
+                    }, 5000);
+                }
+            }
+        );
     };
 
 onMounted(() => {
@@ -380,38 +445,4 @@ onMounted(() => {
 onUpdated(() => {
     setFilterAndSearchData();
 });
-
-const updateSort = (column) => {
-    // If the column is already sorted by this column, reverse the sort direction
-    if (usePage().props.user.inventory_sort_direction === 'asc' && usePage().props.user.inventory_sort_column_id === column.id) {
-        usePage().props.user.inventory_sort_direction = 'desc';
-    } else {
-        usePage().props.user.inventory_sort_direction = 'asc';
-    }
-
-    usePage().props.user.inventory_sort_column_id = column.id;
-
-    if(column.id === null) {
-        usePage().props.user.inventory_sort_column_id = null;
-        usePage().props.user.inventory_sort_direction = null;
-    }
-
-    // update user data
-    router.patch(
-        route('user.update.inventory.sort', usePage().props.user.id),
-        {
-            inventory_sort_column_id: column.id,
-            inventory_sort_direction: usePage().props.user.inventory_sort_direction
-        },
-        {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                setTimeout(() => {
-                    router.reload()
-                }, 5000);
-            }
-        }
-    );
-};
 </script>

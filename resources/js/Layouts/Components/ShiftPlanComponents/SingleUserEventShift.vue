@@ -1,18 +1,20 @@
 <template>
     <div>
-        <div ref="sidebarTagComponent"
-             class="text-secondaryHover xsWhiteBold p-1 flex justify-between items-center rounded-t-lg"
-             :style="{ backgroundColor: backgroundColorWithOpacity(eventType?.hex_code, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType?.hex_code, percentage)) }">
-            <a :href="project?.id ? route('projects.tab', {project: project.id, projectTab: firstProjectShiftTabId}) : '#'" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
-                {{ eventType?.abbreviation }}: {{ event.projectName ?? project?.name }}
+        <div ref="sidebarTagComponent" class="text-secondaryHover xsWhiteBold p-1 flex justify-between items-center rounded-t-lg h-[28px]"
+             :style="{ backgroundColor: eventType ? backgroundColorWithOpacity(eventType?.hex_code, percentage) : '#e8e8e8', color: eventType ? getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType?.hex_code, percentage)) : '#000000' }">
+            <a v-if="project && eventType" :href="project?.id ? route('projects.tab', {project: project.id, projectTab: firstProjectShiftTabId}) : '#'" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
+                {{ eventType?.abbreviation }}: {{ project?.name }}
             </a>
+            <div v-else>
+                <span class="w-40 truncate">Schicht ohne Projekt oder Event</span>
+            </div>
             <div v-if="shift.is_committed">
                 <IconLock stroke-width="1.5" class="h-5 w-5 text-white"/>
             </div>
         </div>
         <div class="flex flex-col bg-backgroundGray rounded-b-lg px-1 pt-1">
             <div class="flex flex-row justify-between border-b-2 border-dashed border-gray-400 pb-1">
-                <span class="text-sm font-bold">{{ shift.start }} - {{ shift.end }}, {{ event.room?.name }}</span>
+                <span class="text-sm font-bold">{{ shift.start }} - {{ shift.end }}, {{ shift.room?.name }}</span>
                 <IconCalendarMonth v-if="project" class="w-5 h-5 cursor-pointer" @click="toggleProjectTimePeriodAndRedirect"/>
             </div>
             <div class="border-b-2 border-dashed border-gray-400 pb-1 pt-0.5">
@@ -84,23 +86,27 @@ const {
 const props = defineProps({
     type: {
         type: String,
-        required: true
+        required: true,
+        default: null
     },
     event: {
-        type: Object,
-        required: true
+        type: [Object, null],
+        required: true,
+        default: []
     },
     shift: {
         type: Object,
         required: true
     },
     project: {
-        type: Object,
-        required: false
+        type: [Object, null],
+        required: false,
+        default: []
     },
     eventType: {
-        type: Object,
-        required: true
+        type: [Object, null],
+        required: true,
+        default: []
     },
     firstProjectShiftTabId: {
         type: Number,
@@ -126,7 +132,7 @@ const toggleProjectTimePeriodAndRedirect = () => {
 
 const hasColleaguesOnShift = (shift) => {
     // The user where the shift is to be displayed is always automatically in the users array, which is why users is always greater than 0
-    return shift.users.length > 1 || shift.freelancer.length > 0 || shift.service_provider.length > 0;
+    return shift.users.length > 1 || shift.freelancer.length > 0 || shift.serviceProvider.length > 0;
 };
 
 </script>

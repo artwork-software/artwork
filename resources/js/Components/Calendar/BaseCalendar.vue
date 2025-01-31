@@ -14,64 +14,64 @@
             />
         </div>
 
-        <div :class="computedFilteredEvents.length > 0 ? 'mt-20' : ''">
-            <div v-if="computedFilteredEvents.length > 0" class="flex justify-center">
+
+        <div :class="eventsWithoutRoom.length > 0 ? 'mt-20' : ''">
+            <div v-if="eventsWithoutRoom.length > 0" class="flex justify-center">
                 <div class="flex errorText items-center cursor-pointer my-2" @click="showEventsWithoutRoomComponent = true">
                     <IconAlertTriangle class="h-6 mr-2"/>
                     {{
                         computedFilteredEvents.length === 1 ?
-                            $t('{0} Event without room!', [computedFilteredEvents.length]) :
-                            $t('{0} Events without room!', [computedFilteredEvents.length])
+                            $t('{0} Event without room!', [eventsWithoutRoom.length]) :
+                            $t('{0} Events without room!', [eventsWithoutRoom.length])
                     }}
                 </div>
             </div>
         </div>
-        <div v-if="!usePage().props.user.daily_view">
-            <div v-if="!dateValue[0] && !dateValue[1]" class="mt-24 ml-4 text-error text-sm">
-                {{ $t('The selected project has no dates') }}
-            </div>
 
-            <div v-else class="-mx-5 mt-4">
-                <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
-                    <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
-                    <div class="w-fit events-by-days-container" :class="[!project ? 'pt-8' : '', isFullscreen ? 'mt-4': '', computedFilteredEvents.length > 0 ? '-mt-7' : 'mt-4' ]" ref="calendarToCalculate">
-                        <div v-for="day in days"
-                             :key="day.full_day"
-                             :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
-                             class="flex gap-0.5 day-container"
-                             :class="day.is_weekend ? 'bg-userBg/70' : ''"
-                             :data-day="day.full_day"
-                             :data-day-to-jump="day.without_format">
-                            <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day" v-if="!day.is_extra_row"/>
-                            <div v-for="room in newCalendarData"
-                                 :key="room.id"
-                                 class="relative"
-                                 v-if="!day.is_extra_row">
-                                <div v-if="room.content[day.full_day]?.events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
-                                    <component is="IconChevronDown" @click="scrollToNextEventInDay(day.without_format, room.content[day.full_day].events.length)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
-                                </div>
-                                <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
-                                     :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
-                                     class="group/container border-t-2 border-gray-400 border-dashed" :id="'scroll_container-' + day.without_format">
-                                    <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="(event, index) in room.content[day.full_day].events">
-                                        <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.without_format">
-                                            <AsyncSingleEventInCalendar
-                                                :event="event"
-                                                :multi-edit="multiEdit"
-                                                :font-size="textStyle.fontSize"
-                                                :line-height="textStyle.lineHeight"
-                                                :rooms="rooms"
-                                                :has-admin-role="hasAdminRole()"
-                                                :width="zoom_factor * 196"
-                                                :first_project_tab_id="first_project_tab_id"
-                                                :firstProjectShiftTabId="firstProjectShiftTabId"
-                                                @edit-event="showEditEventModel"
-                                                @edit-sub-event="openAddSubEventModal"
-                                                @open-add-sub-event-modal="openAddSubEventModal"
-                                                @open-confirm-modal="openDeleteEventModal"
-                                                @show-decline-event-modal="openDeclineEventModal"
-                                                @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                                            />
+        <div>
+            <div v-if="!usePage().props.user.daily_view">
+                <div class="-mx-5 mt-4">
+                    <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
+                        <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
+                        <div class="w-fit events-by-days-container" :class="[!project ? 'pt-8' : '', isFullscreen ? 'mt-4': '', computedFilteredEvents.length > 0 ? '-mt-7' : 'mt-4' ]" ref="calendarToCalculate">
+                            <div v-for="day in days"
+                                 :key="day.full_day"
+                                 :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                                 class="flex gap-0.5 day-container"
+                                 :class="day.is_weekend ? 'bg-userBg/70' : ''"
+                                 :data-day="day.full_day"
+                                 :data-day-to-jump="day.without_format">
+                                <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day" v-if="!day.is_extra_row"/>
+                                <div v-for="room in newCalendarData"
+                                     :key="room.id"
+                                     class="relative"
+                                     v-if="!day.is_extra_row">
+                                    <div v-if="room.content[day.full_day]?.events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
+                                        <component is="IconChevronDown" @click="scrollToNextEventInDay(day.without_format, room.content[day.full_day].events.length)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
+                                    </div>
+                                    <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                                         :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
+                                         class="group/container border-t-2 border-gray-400 border-dashed" :id="'scroll_container-' + day.without_format">
+                                        <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="(event, index) in room.content[day.full_day].events">
+                                            <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.without_format">
+                                                <AsyncSingleEventInCalendar
+                                                    :event="event"
+                                                    :multi-edit="multiEdit"
+                                                    :font-size="textStyle.fontSize"
+                                                    :line-height="textStyle.lineHeight"
+                                                    :rooms="rooms"
+                                                    :has-admin-role="hasAdminRole()"
+                                                    :width="zoom_factor * 196"
+                                                    :first_project_tab_id="first_project_tab_id"
+                                                    :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                    @edit-event="showEditEventModel"
+                                                    @edit-sub-event="openAddSubEventModal"
+                                                    @open-add-sub-event-modal="openAddSubEventModal"
+                                                    @open-confirm-modal="openDeleteEventModal"
+                                                    @show-decline-event-modal="openDeclineEventModal"
+                                                    @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -80,27 +80,43 @@
                     </div>
                 </div>
             </div>
+            <div v-else>
+                <DailyViewCalendar
+                    :multi-edit="multiEdit"
+                    :rooms="rooms"
+                    :days="days"
+                    :calendarData="newCalendarData"
+                    :project="project"
+                    :eventStatuses="eventStatuses"
+                    :eventTypes="eventTypes"
+                    :eventsWithoutRoom="computedFilteredEvents"
+                    :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                    :firstProjectShiftTabId="firstProjectShiftTabId"
+                    :first-project-tab-id="first_project_tab_id"
+                    @edit-event="showEditEventModel"
+                    @edit-sub-event="openAddSubEventModal"
+                    @open-add-sub-event-modal="openAddSubEventModal"
+                    @open-confirm-modal="openDeleteEventModal"
+                    @show-decline-event-modal="openDeclineEventModal"
+                    @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                />
+            </div>
         </div>
-        <div v-else>
-            <DailyViewCalendar
-                :multi-edit="multiEdit"
-                :rooms="rooms"
-                :days="days"
-                :calendarData="newCalendarData"
-                :project="project"
-                :eventStatuses="eventStatuses"
-                :eventTypes="eventTypes"
-                :eventsWithoutRoom="computedFilteredEvents"
-                :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                :firstProjectShiftTabId="firstProjectShiftTabId"
-                :first-project-tab-id="first_project_tab_id"
-                @edit-event="showEditEventModel"
-                @edit-sub-event="openAddSubEventModal"
-                @open-add-sub-event-modal="openAddSubEventModal"
-                @open-confirm-modal="openDeleteEventModal"
-                @show-decline-event-modal="openDeclineEventModal"
-                @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-            />
+        <div v-if="!checkIfAnyRoomHasAnEventOrShift && usePage().props.user.calendar_settings.use_project_time_period">
+            <div class="mt-24 ml-4">
+                <div class="border-l-4 border-red-400 bg-red-50 p-4 w-fit">
+                    <div class="flex">
+                        <div class="shrink-0">
+                            <component is="IconExclamationCircle" class="h-5 w-5 text-red-400" stroke-width="2" aria-hidden="true" />
+                        </div>
+                        <div class="ml-1">
+                            <p class="text-sm text-red-700 font-bold">
+                                {{ $t('The selected project has no dates') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div class="fixed bottom-0 w-full h-32 bg-artwork-navigation-background/30 z-40 pointer-events-none" v-if="multiEdit">
@@ -187,7 +203,7 @@
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :eventsWithoutRoom="computedFilteredEvents"
+        :eventsWithoutRoom="eventsWithoutRoom"
         :isAdmin="hasAdminRole()"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
     />
@@ -215,6 +231,8 @@ import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionO
 import MultiDuplicateModal from "@/Layouts/Components/MultiDuplicateModal.vue";
 import DailyViewCalendar from "@/Components/Calendar/DailyViewCalendar.vue";
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
+import {computeComponentStructure} from "vuedraggable/src/core/renderHelper.js";
+import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 
 const filterOptions = inject('filterOptions');
 const personalFilters = inject('personalFilters');
@@ -388,6 +406,15 @@ const resetMultiEdit = () => {
     editEventsRoomsDesiredDays.value = [];
     toggleMultiEdit(false);
 };
+
+const checkIfAnyRoomHasAnEventOrShift = computed(() => {
+    // Prüfen, ob irgendein Raum ein Event oder eine Schicht im aktuellen Kalender hat
+    return newCalendarData.value.some(room => {
+        return room.content && Object.entries(room.content).some(([date, { events }]) => {
+            return events && events.length > 0;
+        });
+    });
+});
 
 const toggleMultiEdit = (value) => {
     multiEdit.value = value;

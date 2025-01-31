@@ -13,16 +13,16 @@
             <div class="w-full grid grid-cols-7 gap-x-2">
                 <template v-for="day in wholeWeekDatePeriod">
                     <span v-if="day.is_monday" class="sDark text-md col-span-7">KW {{ day.week_number }}</span>
-                    <div :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', 'min-h-48 mb-2 flex flex-col gap-y-2 rounded-lg']">
+                    <div :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', 'min-h-48 flex flex-col gap-y-2 rounded-lg']" class="px-3 py-3">
                         <div :class="[!day.inRequestedTimeSpan ? 'opacity-30' : '','calendarRoomHeader']">
                             {{ day.day_string }} {{ day.full_day }}
                             <span class="text-shiftText subpixel-antialiased">
                                 <span>(</span>
-                                <span :class="showShiftDurationWarningForDay(day.full_day)? 'text-error': ''">
-                                    {{ calculateShiftDurationForDay(day.full_day) }}
+                                <span >
+                                    {{ $page.props.daysWithData[day.day_without_format]?.totalWorkTime }}
                                 </span>
-                                <span :class="showBreakWarningForDay(day.full_day)">
-                                    | {{ calculateTotalBreakDuration(this.getEventsWhereHasShiftsOnDay(day.full_day)) }}
+                                <span>
+                                    | {{ $page.props.daysWithData[day.day_without_format]?.totalBreakTime }}
                                 </span>
                                 <span>)</span>
                             </span>
@@ -34,19 +34,20 @@
 <!--                            </div>-->
 <!--                        </div>-->
                         <div :class="[!day.inRequestedTimeSpan ? 'opacity-30' : '', 'flex flex-col gap-y-2']">
-                            <template v-for="event in this.getEventsWhereHasShiftsOnDay(day.full_day)">
-                                <template v-for="shift in event.shifts">
-                                    <SingleUserEventShift :type="type"
-                                                          :event="event"
-                                                          :shift="shift"
-                                                          :project="this.findProjectById(event.project_id)"
-                                                          :event-type="this.findEventTypeById(event.event_type_id)"
-                                                          :user-to-edit-id="this.userToEditId"
-                                                          :first-project-shift-tab-id="this.firstProjectShiftTabId"/>
-                                </template>
-                                <template v-for="dayService in getUserToEditDayServicesOfShift(event.shifts)">
-                                    <DayServiceComponent :day-service="dayService"/>
-                                </template>
+                            <template v-for="shift in $page.props.daysWithData[day.day_without_format]?.shifts">
+                                <SingleUserEventShift
+                                    :user-to-edit-id="userToEditId"
+                                    :first-project-shift-tab-id="firstProjectShiftTabId"
+                                    :event-type="shift?.event?.event_type ?? null"
+                                    :shift="shift"
+                                    :event="shift?.event ?? null"
+                                    :type="type"
+                                    :project="shift?.project ?? null"
+                                />
+
+                            </template>
+                            <template v-for="dayService in getUserToEditDayServicesOfShift($page.props.daysWithData[day.day_without_format]?.shifts)">
+                                <DayServiceComponent :day-service="dayService"/>
                             </template>
                         </div>
                     </div>
@@ -54,6 +55,7 @@
             </div>
         </div>
     </div>
+
 </template>
 
 <script>
@@ -65,11 +67,15 @@ import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/Singl
 import SingleUserEventShift from "@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue";
 import DayServiceComponent from "@/Layouts/Components/DayService/DayServiceComponent.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import {IconCalendarMonth, IconLock} from "@tabler/icons-vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
 
 export default {
     name: "UserShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        IconLock, ShiftNoteComponent, UserPopoverTooltip, IconCalendarMonth,
         DayServiceComponent,
         SingleUserEventShift,
         SingleShiftPlanEvent,

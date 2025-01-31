@@ -144,10 +144,15 @@
 
                             class="cursor-pointer py-4 pr-4 flex justify-between items-center border-b-2"
                         >
-                            <span class="sDark cursor-pointer">
+
+                            <span class="sDark cursor-pointer flex justify-center">
+                                <ShiftQualificationIconCollection
+                                    class="text-black mx-1" :classes="['h-5', 'w-5', 'text-black', 'mx-0.5']"
+                                    :icon-name="shiftQualification.icon"
+                                />
                                 {{ shiftQualification.name }}
                                 <span v-if="shiftQualification.available"
-                                      class="xxsLight">
+                                      class="xxsLight ml-1 mt-1">
                                     {{$t('(Considered for new shifts)')}}
                                 </span>
                             </span>
@@ -282,11 +287,13 @@ import AddEditShiftTimePreset from "@/Pages/Settings/Components/AddEditShiftTime
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import draggable from "vuedraggable";
 import {router} from "@inertiajs/vue3";
+import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
+        ShiftQualificationIconCollection,
         SwitchLabel,
         Switch,
         SwitchGroup,

@@ -1,9 +1,10 @@
 <template>
     <div class="w-full group/shift bg-backgroundGray hover:bg-gray-50 duration-300 ease-in-out cursor-pointer">
-        <div :class="[!highlightMode || !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30 px-1' : 'bg-pink-500 !text-white px-1', multiEditMode ?'text-[10px]' : '']"
-             class="flex items-center xsLight text-shiftText subpixel-antialiased"
-             @dragover="onDragOver"
-             @drop="onDrop"
+        <div
+            :class="[!highlightMode || !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30 px-1' : 'bg-pink-500 !text-white px-1', multiEditMode ?'text-[10px]' : '']"
+            class="flex items-center xsLight text-shiftText subpixel-antialiased"
+            @dragover="onDragOver"
+            @drop="onDrop"
             @click="handleClickEvent"
         >
             <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
@@ -14,27 +15,31 @@
                        class="input-checklist mr-1"/>
             </div>
             <div class="flex items-center justify-between w-full">
-                <div class="flex items-center"> <!--@click="this.showQualificationRowExpander = !this.showQualificationRowExpander"-->
+                <div class="flex items-center">
+                    <!--@click="this.showQualificationRowExpander = !this.showQualificationRowExpander"-->
                     <div>
                         {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
                     </div>
                     <div v-if="!showRoom" class="ml-0.5 " :class="multiEditMode ? 'text-[10px]' : 'text-xs'">
-                        ({{ this.computedUsedWorkerCount }}/{{ this.computedMaxWorkerCount}})
+                        ({{ this.computedUsedWorkerCount }}/{{ this.computedMaxWorkerCount }})
+                        <span class="inline-block w-2.5 h-2.5 rounded-full ml-1"
+                              :class="{'bg-red-500': computedUsedWorkerCount === 0 && computedMaxWorkerCount !== 0,
+                              'bg-yellow-500': computedUsedWorkerCount !== 0 && computedUsedWorkerCount < computedMaxWorkerCount,
+                              'bg-green-500': computedUsedWorkerCount === computedMaxWorkerCount}">
+                        </span>
                     </div>
                     <div v-else-if="room" class="truncate">
-                        , {{room?.name}}
-                    </div>
-                    <div v-if="computedUsedWorkerCount >= computedMaxWorkerCount">
-                        <IconCheck stroke-width="1.5" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                        , {{ room?.name }}
                     </div>
                 </div>
             </div>
         </div>
         <div class="w-full px-1" v-if="usePage().props.user.calendar_settings.show_qualifications">
             <div class="w-full flex flex-row flex-wrap">
-                <div v-for="(computedShiftsQualificationWithWorkerCount) in this.computedShiftsQualificationsWithWorkerCount"
-                     class="flex xsLight items-center">
-                    {{computedShiftsQualificationWithWorkerCount.workerCount}}/{{computedShiftsQualificationWithWorkerCount.maxWorkerCount}}
+                <div
+                    v-for="(computedShiftsQualificationWithWorkerCount) in this.computedShiftsQualificationsWithWorkerCount"
+                    class="flex xsLight items-center">
+                    {{ computedShiftsQualificationWithWorkerCount.workerCount }}/{{ computedShiftsQualificationWithWorkerCount.maxWorkerCount }}
                     <ShiftQualificationIconCollection
                         class="text-black mx-1" :classes="['h-4', 'w-4', 'text-black', 'mx-0.5']"
                         :icon-name="this.getShiftQualificationById(computedShiftsQualificationWithWorkerCount.shift_qualification_id).icon"
@@ -211,8 +216,12 @@ export default defineComponent({
         },
     },
     methods: {
-        handleClickEvent(){
-            if ( this.$can('can plan shifts') || this.hasAdminRole() ){
+        handleClickEvent() {
+            if (this.multiEditMode) {
+                return;
+            }
+
+            if (this.$can('can plan shifts') || this.hasAdminRole()) {
                 this.$emit('clickOnEdit', this.shift)
             }
         },
@@ -250,7 +259,7 @@ export default defineComponent({
             return highlightedId ? this.shiftUserIds[typeMap[highlightedType]].includes(highlightedId) : false;
         },
         saveUser() {
-            if(!this.droppedUser.craft_universally_applicable) {
+            if (!this.droppedUser.craft_universally_applicable) {
                 if (this.droppedUserCannotBeAssignedToCraft(this.droppedUser)) {
                     this.dropFeedbackUserCannotBeAssignedToCraft(this.droppedUser.type);
                     return;

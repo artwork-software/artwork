@@ -98,7 +98,7 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Button from "@/Jetstream/Button.vue";
 import {AdjustmentsIcon} from "@heroicons/vue/outline";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import dayjs from "dayjs";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -142,7 +142,20 @@ export default {
             this.$emit('closed', bool)
         },
         declineRequest() {
-            axios.put(
+            router.put(route('events.decline', this.requestToDecline.id), {
+                comment: this.declineEvent.comment
+            }, {
+                preserveScroll: true,
+                onFinish: () => {
+                    router.reload({
+                        only: ['calendar', 'eventsWithoutRoom']
+                    })
+                    this.closeDeclineRequestModal();
+                }
+            });
+
+
+            /*axios.put(
                 route('events.decline', this.requestToDecline.id),
                 {
                     comment: this.declineEvent.comment
@@ -156,7 +169,7 @@ export default {
                         this.requestToDecline.end
                     );
                 }
-            );
+            );*/
         }
     }
 }

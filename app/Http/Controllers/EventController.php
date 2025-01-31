@@ -334,6 +334,7 @@ class EventController extends Controller
                 foreach ($historyComplete as $history) {
                     $historyObjects[] = [
                         'changes' => json_decode($history->changes),
+                        'change_by' => $history->changer,
                         'created_at' => $history->created_at->diffInHours() < 24
                             ? $history->created_at->diffForHumans()
                             : $history->created_at->format('d.m.Y, H:i'),
@@ -347,6 +348,7 @@ class EventController extends Controller
                 foreach ($historyComplete as $history) {
                     $historyObjects[] = [
                         'changes' => json_decode($history->changes),
+                        'change_by' => $history->changer,
                         'created_at' => $history->created_at->diffInHours() < 24
                             ? $history->created_at->diffForHumans()
                             : $history->created_at->format('d.m.Y, H:i'),
@@ -980,7 +982,7 @@ class EventController extends Controller
         EventUpdateRequest $request,
         Event $event,
         ProjectController $projectController
-    ): CalendarEventResource|RedirectResponse {
+    ): void {
         $this->authorize('update', $event);
         if (!$request->noNotifications) {
             $projectManagers = [];
@@ -1362,11 +1364,13 @@ class EventController extends Controller
             $this->craftInventoryItemEventService->updateEventTimeInInventory($isInInventoryEvent, $event);
         }
 
+        broadcast(new EventCreated($event, $event->room_id));
+
         //redirect is required for bulk component event component
-        if ($request->boolean('usedInBulkComponent')) {
+        /*if ($request->boolean('usedInBulkComponent')) {
             return $this->redirector->back();
-        }
-        return new CalendarEventResource($event);
+        }*/
+        //return new CalendarEventResource($event);
     }
 
     private function createEventScheduleNotification(Event $event): void
@@ -1665,7 +1669,7 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function declineEvent(Request $request, Event $event): bool
+    public function declineEvent(Request $request, Event $event): void
     {
         $this->authorize('update', $event);
 
@@ -1920,7 +1924,7 @@ class EventController extends Controller
         $this->notificationService->setNotificationTo($event->creator);
         $this->notificationService->createNotification();
 
-        return true;
+        //broadcast(new EventCreated($event, $event->room_id));
     }
 
     public function getCollisionCount(Request $request): int
@@ -1983,7 +1987,7 @@ class EventController extends Controller
         SubEventService $subEventService,
         NotificationService $notificationService,
         ProjectTabService $projectTabService
-    ): bool|null {
+    ): void {
         $this->authorize('delete', $event);
 
         $this->eventService->delete(
@@ -2005,7 +2009,7 @@ class EventController extends Controller
             $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
         }
 
-        return true;
+        //return true;
     }
 
     public function destroyWithoutReturn(
@@ -2333,7 +2337,7 @@ class EventController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
-    public function updateMultiEdit(Request $request): JsonResponse
+    public function updateMultiEdit(Request $request): void
     {
         $desiredRoomIds = [];
         $desiredDaysOfEvents = [];
@@ -2352,7 +2356,7 @@ class EventController extends Controller
                 $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
             }
 
-            if ($request->integer('newRoomId') !== null) {
+            if ($request->get('newRoomId') !== null) {
                 $event->setAttribute('room_id', $request->integer('newRoomId'));
                 $desiredRoomIds[] = $event->getAttribute('room_id');
             }
@@ -2494,7 +2498,7 @@ class EventController extends Controller
                 $event->setAttribute('end_time', $date . ' ' . $endTime);
             }
             $event->save();
-            broadcast(new EventCreated($event, $event->room_id));
+            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
         }
 
 
@@ -2506,11 +2510,10 @@ class EventController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
-    public function updateMultiDuplicate(Request $request): JsonResponse
+    public function updateMultiDuplicate(Request $request): void
     {
         $desiredRoomIds = [];
         $desiredDaysOfEvents = [];
-
         $eventIds = $request->collect('events');
         $duplicatedEvents = [];
 
@@ -2541,7 +2544,7 @@ class EventController extends Controller
                 $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
             }
 
-            if ($request->integer('newRoomId') !== null) {
+            if ($request->get('newRoomId') !== null) {
                 $event->setAttribute('room_id', $request->integer('newRoomId'));
                 $desiredRoomIds[] = $event->getAttribute('room_id');
             }
@@ -2688,13 +2691,10 @@ class EventController extends Controller
                 $event->setAttribute('start_time', $date . ' ' . $startTime);
                 $event->setAttribute('end_time', $date . ' ' . $endTime);
             }
+            //dd($event);
             $event->save();
+            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
         }
-
-        return new JsonResponse([
-            'desiredRoomIds' => array_values(array_unique($desiredRoomIds)),
-            'desiredDays' => array_values(array_unique($desiredDaysOfEvents))
-        ]);
     }
 
 

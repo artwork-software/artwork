@@ -180,10 +180,9 @@ export default {
             //is deleted and the page reloads
             if (this.removeNotificationOnAction) {
                 this.closeModal(true);
-                return;
             }
 
-            this.$emit('desiresReload', desiredRoomIds, desiredDays, reloadEventsWithoutRoom);
+            //this.$emit('desiresReload', desiredRoomIds, desiredDays, reloadEventsWithoutRoom);
         },
         getTimeOfDate(date) {
             //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object

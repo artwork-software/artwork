@@ -58,7 +58,6 @@ export function useShiftCalendarListener(newShiftPlanData) {
 
         const room = findRoomById(eventData.roomId);
         if (!room) return;
-
         eventData.days_of_event.forEach((day) => {
             if (!room.content[day]) return;
 
@@ -74,7 +73,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
                 audience: eventData.audience,
                 isLoud: eventData.is_loud,
                 projectId: eventData.projectId,
-                projectName: eventData?.project?.name,
+                projectName: eventData?.projectName,
                 eventTypeId: eventData.event_type_id,
                 eventTypeName: eventData.eventTypeName,
                 eventTypeAbbreviation: eventData.eventTypeAbbreviation,
@@ -97,8 +96,10 @@ export function useShiftCalendarListener(newShiftPlanData) {
                 event_length_in_hours: eventData.event_length_in_hours,
                 hours_to_next_day: eventData.hours_to_next_day,
                 minutes_form_start_hour_to_start: eventData.minutes_form_start_hour_to_start,
-                roomId: eventData.room_id,
-                roomName: eventData.room?.name,
+                roomId: eventData.roomId,
+                roomName: eventData.roomName,
+                eventStatusId: eventData.eventStatusId,
+                eventStatusColor: eventData.eventStatusColor,
                 created_by: {
                     id: eventData.created_by?.id,
                     profile_photo_url: eventData.created_by?.profile_photo_url,

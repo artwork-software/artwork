@@ -176,6 +176,7 @@ class ProjectController extends Controller
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly TimelineService $timelineService,
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
+        private readonly UserProjectManagementSettingService $userFilterAndSortSettingService
     ) {
     }
 
@@ -197,32 +198,50 @@ class ProjectController extends Controller
         return $returnUser;
     }
 
+    public function saveProjectManagementFilter(ProjectIndexPaginateRequest $request): void
+    {
+        $sortEnum = $request->enum('sort', ProjectSortEnum::class);
+        $projectStateIds = $request->collect('project_state_ids')->map(fn(string $id) => (int)$id);
+        $projectFilters = $request
+            ->collect('project_filters')
+            ->mapWithKeys(
+                function (string $filter, string $key): array {
+                    return [
+                        $key => (bool)$filter,
+                    ];
+                }
+            );
+
+        $this->userFilterAndSortSettingService->updateOrCreateIfNecessary(
+            $this->userService->getAuthUser(),
+            [
+                'sort_by' => $sortEnum?->name,
+                'project_state_ids' => $projectStateIds->toArray(),
+                'project_filters' => $projectFilters->toArray()
+            ]
+        );
+
+        //dd($request->all());
+    }
+
 
     public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
     {
-        $saveFilterAndSort = $request->boolean('saveFilterAndSort');
+        //$saveFilterAndSort = $request->boolean('saveFilterAndSort');
+
+
         $userProjectManagementSetting = $this->userProjectManagementSettingService
             ->getFromUser($this->userService->getAuthUser())
             ->getAttribute('settings');
 
+        //dd($userProjectManagementSetting);
+
         $projects = $this->projectService->paginateProjects(
-            $saveFilterAndSort,
             $request->string('query'),
             $request->integer('entitiesPerPage', 10),
-            $saveFilterAndSort ?
-                $request->enum('sort', ProjectSortEnum::class) :
-                (
-                $userProjectManagementSetting['sort_by'] ?
-                    ProjectSortEnum::from($userProjectManagementSetting['sort_by']) :
-                    null
-                ),
-            $saveFilterAndSort ?
-                $request->collect('project_state_ids')->map(fn(string $id) => (int)$id) :
-                Collection::make($userProjectManagementSetting['project_state_ids']),
-            $saveFilterAndSort ? $request
-                ->collect('project_filters')
-                ->map(fn(string $filter) => (bool)$filter) :
-                Collection::make($userProjectManagementSetting['project_filters'])
+            $userProjectManagementSetting['sort_by'] ? ProjectSortEnum::from($userProjectManagementSetting['sort_by']) : null,
+            Collection::make($userProjectManagementSetting['project_state_ids']),
+            Collection::make($userProjectManagementSetting['project_filters'])
         );
 
         $components = $this->projectManagementBuilderService->getProjectManagementBuilder(['component']);
@@ -244,6 +263,8 @@ class ProjectController extends Controller
                 switch ($component->type) {
                     case ProjectTabComponentEnum::PROJECT_TITLE->value:
                         $projectData->title = $project->name;
+                        $projectData->key_visual_path = $project->key_visual_path;
+                        $projectData->is_group = $project->is_group;
                         break;
                     case ProjectTabComponentEnum::PROJECT_STATUS->value:
                         $projectData->state = ProjectState::find($project->state);
@@ -315,6 +336,8 @@ class ProjectController extends Controller
                 switch ($component->type) {
                     case ProjectTabComponentEnum::PROJECT_TITLE->value:
                         $projectData->title = $project->name;
+                        $projectData->key_visual_path = $project->key_visual_path;
+                        $projectData->is_group = $project->is_group;
                         break;
                     case ProjectTabComponentEnum::PROJECT_STATUS->value:
                         $projectData->state = ProjectState::find($project->state);
@@ -1752,6 +1775,7 @@ class ProjectController extends Controller
                 'type' => 'sum',
                 'linked_first_column' => $request->first_column_id,
                 'linked_second_column' => $request->second_column_id,
+                'position' => $table->columns()->max('position') + 1
             ]);
             $this->setColumnSubName($request->table_id);
             foreach ($firstColumns as $firstColumn) {
@@ -1777,7 +1801,8 @@ class ProjectController extends Controller
                 'subName' => '-',
                 'type' => 'difference',
                 'linked_first_column' => $request->first_column_id,
-                'linked_second_column' => $request->second_column_id
+                'linked_second_column' => $request->second_column_id,
+                'position' => $table->columns()->max('position') + 1
             ]);
             $this->setColumnSubName($request->table_id);
             foreach ($firstColumns as $firstColumn) {
@@ -3470,11 +3495,11 @@ class ProjectController extends Controller
 
             $img = Image::make($file);
 
-            if ($img->width() < 1080) {
+            /*if ($img->width() < 1080) {
                 throw ValidationException::withMessages([
                     'keyVisual' => __('notification.project.key_visual.width')
                 ]);
-            }
+            }*/
 
             Storage::delete('keyVisual/' . $project->key_visual_path);
 

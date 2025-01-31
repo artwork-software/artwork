@@ -1186,6 +1186,8 @@ class ShiftController extends Controller
                 $roomShift->serviceProvider()->detach();
                 $roomShift->shiftsQualifications()->delete();
 
+                broadcast(new DestroyShift($roomShift, $roomShift->room_id));
+
                 $roomShift->delete();
             });
         }

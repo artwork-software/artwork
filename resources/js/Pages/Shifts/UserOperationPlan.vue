@@ -23,7 +23,10 @@ export default {
         'createShowDate',
         'showVacationsAndAvailabilitiesDate',
         'availabilities',
-        'shiftQualifications'
+        'shiftQualifications',
+        'eventsWithTotalPlannedWorkingHours',
+        'wholeWeekDatePeriod',
+        'firstProjectShiftTabId'
     ]
 }
 </script>
@@ -41,6 +44,10 @@ export default {
                            :rooms="this.rooms"
                            :vacations="this.vacations"
                            :shift-qualifications="this.shiftQualifications"
+                           :events-with-total-planned-working-hours="eventsWithTotalPlannedWorkingHours"
+                           :whole-week-date-period="wholeWeekDatePeriod"
+                           :first-project-shift-tab-id="firstProjectShiftTabId"
+                           :user-to-edit-id="user_to_edit.id"
             />
             <Availability :availabilities="availabilities"
                           :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate"

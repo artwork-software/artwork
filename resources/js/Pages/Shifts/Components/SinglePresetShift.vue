@@ -51,9 +51,10 @@
                         <div class="h-4 w-4 rounded-full block bg-gray-500"></div>
                         <div class="text-xs">{{ $t('Unoccupied')}}</div>
                     </div>
-                    <ShiftQualificationIconCollection
+                    <component
                         :classes="'w-4 h-4'"
-                        :icon-name="this.getShiftQualificationById(shiftsQualification.shift_qualification_id).icon"/>
+                        stroke-width="1.5"
+                        :is="this.getShiftQualificationById(shiftsQualification.shift_qualification_id).icon"/>
                 </div>
             </div>
         </div>

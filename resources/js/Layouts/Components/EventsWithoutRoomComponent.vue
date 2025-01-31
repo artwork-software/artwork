@@ -50,7 +50,8 @@ import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import SingleEventInEventsWithoutRoom from "@/Layouts/Components/SingleEventInEventsWithoutRoom.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-
+import {provide, inject} from "vue";
+provide('event_properties', inject('event_properties'));
 export default {
     name: 'EventsWithoutRoomComponent',
     mixins: [Permissions, IconLib],

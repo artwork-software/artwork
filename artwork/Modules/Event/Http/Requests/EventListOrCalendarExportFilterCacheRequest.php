@@ -32,15 +32,16 @@ class EventListOrCalendarExportFilterCacheRequest extends FormRequest
             'filter.roomAttributes' => 'array',
             'filter.eventTypes' => 'array',
             'filter.eventTypes.*' => 'exists:event_types,id',
-            'filter.eventAttributes' => 'array',
-            'filter.eventAttributes.*' => Rule::in(
-                [
-                    FilterService::LOUD,
-                    FilterService::NOT_LOUD,
-                    FilterService::WITH_AUDIENCE,
-                    FilterService::WITHOUT_AUDIENCE
-                ]
-            ),
+            //@todo:jgl eventProperties
+//            'filter.eventAttributes' => 'array',
+//            'filter.eventAttributes.*' => Rule::in(
+//                [
+//                    FilterService::LOUD,
+//                    FilterService::NOT_LOUD,
+//                    FilterService::WITH_AUDIENCE,
+//                    FilterService::WITHOUT_AUDIENCE
+//                ]
+//            ),
             'filter.areas' => 'array',
             'filter.areas.*' => 'exists:areas,id',
             'filter.rooms' => 'array',

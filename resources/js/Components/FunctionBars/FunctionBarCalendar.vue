@@ -386,7 +386,6 @@ const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const dateValueCopy = ref(dateValue ?? []);
 const showExportModal = ref(false);
-const wantedRoom = ref(null);
 const roomCollisions = ref([]);
 const externUpdate = ref(false);
 const showCalendarAboInfoModal = ref(false);

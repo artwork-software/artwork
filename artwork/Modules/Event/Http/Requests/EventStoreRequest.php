@@ -30,6 +30,7 @@ class EventStoreRequest extends EventStoreOrUpdateRequest
             'frequency' => $this->get('seriesFrequency'),
             'seriesEnd' => $this->get('seriesEndDate'),
             'allDay' => $this->get('allDay'),
+            'event_properties' => $this->get('event_properties'),
         ];
     }
 }

@@ -1,12 +1,14 @@
 <template>
     <div>
-        <div ref="sidebarTagComponent" class="text-secondaryHover xsWhiteBold p-1 flex justify-between items-center rounded-t-lg h-[28px]"
+        <div ref="sidebarTagComponent" class="text-secondaryHover xsWhiteBold p-1 flex flex-wrap justify-between items-center rounded-t-lg w-full truncate h-[28px]"
              :style="{ backgroundColor: eventType ? backgroundColorWithOpacity(eventType?.hex_code, percentage) : '#e8e8e8', color: eventType ? getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType?.hex_code, percentage)) : '#000000' }">
             <a v-if="project && eventType" :href="project?.id ? route('projects.tab', {project: project.id, projectTab: firstProjectShiftTabId}) : '#'" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
                 {{ eventType?.abbreviation }}: {{ project?.name }}
             </a>
             <div v-else>
-                <span class="w-40 truncate">Schicht ohne Projekt oder Event</span>
+                <span class="w-40 truncate">
+                    {{ $t('Universal Shift')}}
+                </span>
             </div>
             <div v-if="shift.is_committed">
                 <IconLock stroke-width="1.5" class="h-5 w-5 text-white"/>

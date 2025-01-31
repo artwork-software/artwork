@@ -6,7 +6,7 @@
                     <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
                     <span class="text-xs">{{ $t('Unoccupied') }}</span>
                 </div>
-                <ShiftQualificationIconCollection :classes="'w-4 h-4'" class="w-5 h-5" :icon-name="this.shiftQualification.icon"/>
+                <component stroke-width="1.5" class="size-4" :is="this.shiftQualification.icon"/>
             </div>
         </SelectUserForShiftMenu>
     </div>

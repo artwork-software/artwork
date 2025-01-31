@@ -131,6 +131,7 @@ import {usePermission} from "@/Composeables/Permission.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
+import {provide, inject} from "vue";
 
 const exportTabEnums = useExportTabEnums();
 const {hasAdminRole} = usePermission(usePage().props),
@@ -169,6 +170,10 @@ const {hasAdminRole} = usePermission(usePage().props),
         eventStatuses: {
             type: Object,
             required: false
+        },
+        event_properties: {
+            type: Array,
+            required: true
         }
     }),
     roomCollisions = ref([]),
@@ -456,6 +461,8 @@ onMounted(() => {
     if (props.isInModal) {
         addEmptyEvent();
     }
+
+    provide('event_properties', props.event_properties);
 });
 
 watch(events, (newEvents) => {

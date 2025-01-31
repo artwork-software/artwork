@@ -4,11 +4,14 @@ namespace Artwork\Modules\SubEvent\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\EventProperty\Models\EventProperty;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -53,7 +56,9 @@ class SubEvent extends Model
         'allDay' => 'boolean'
     ];
 
-    protected $with = ['type', 'creator'];
+    protected $with = ['type', 'creator', 'eventProperties'];
+
+    protected $appends = ['formattedDates'];
 
     public function type(): BelongsTo
     {
@@ -83,5 +88,22 @@ class SubEvent extends Model
             'id',
             'users'
         );
+    }
+
+    public function eventProperties(): BelongsToMany
+    {
+        return $this->belongsToMany(EventProperty::class);
+    }
+
+    public function getFormattedDatesAttribute(){
+        return [
+            'start_time' => Carbon::parse($this->start_time)->format('H:i'),
+            'end_time' => Carbon::parse($this->end_time)->format('H:i'),
+            'start_date' => Carbon::parse($this->start_time)->format('d.m.Y'),
+            'end_date' => Carbon::parse($this->end_time)->format('d.m.Y'),
+            'start_date_time' => Carbon::parse($this->start_time)->format('d.m.Y H:i'),
+            'end_date_time' => Carbon::parse($this->end_time)->format('d.m.Y H:i'),
+            'is_same_day' => Carbon::parse($this->start_time)->isSameDay(Carbon::parse($this->end_time)),
+        ];
     }
 }

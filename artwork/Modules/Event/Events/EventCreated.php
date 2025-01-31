@@ -38,12 +38,16 @@ class EventCreated implements ShouldBroadcastNow
         return new PrivateChannel('event.room.' . $this->roomId);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
         $event = $this->event;
         $eventType = $event->event_type;
         $creator = $event->creator;
         $startTime = Carbon::parse($event->start_time);
+
         /** @var Project $project */
         $project = $event->project ?: null;
         $projectState = null;
@@ -51,6 +55,7 @@ class EventCreated implements ShouldBroadcastNow
             /** @var ProjectState $projectState */
             $projectState = ProjectState::find($project->state);
         }
+
         return [
             'event' => [
                 'id' => $event->id,
@@ -73,6 +78,7 @@ class EventCreated implements ShouldBroadcastNow
                 'eventTypeName' => $eventType?->name,
                 'eventTypeAbbreviation' => $eventType?->abbreviation,
                 'eventTypeColor' => $eventType?->hex_code,
+                'eventProperties' => $event->getAttribute('eventProperties'),
                 'created_at' => $event->created_at?->format('d.m.Y, H:i'),
                 'occupancy_option' => $event->occupancy_option,
                 'allDay' => $event->allDay,
@@ -91,6 +97,7 @@ class EventCreated implements ShouldBroadcastNow
                 'minutes_form_start_hour_to_start' => $event->getAttribute('minutes_form_start_hour_to_start'),
                 'roomId' => $event->getAttribute('room_id'),
                 'roomName' => $event->getAttribute('room')?->getAttribute('name'),
+                'subEvents' => $event->getAttribute('subEvents'),
                 'created_by' => [
                     'id' => $creator->getAttribute('id'),
                     'profile_photo_url' => $creator->getAttribute('profile_photo_url'),

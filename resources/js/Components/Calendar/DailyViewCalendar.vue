@@ -77,10 +77,8 @@
 </template>
 
 <script setup>
-
-import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
-import {defineAsyncComponent, ref} from "vue";
-import {Link, usePage} from "@inertiajs/vue3";
+import {ref} from "vue";
+import {usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import SingleEventInCalendar from "@/Components/Calendar/Elements/SingleEventInCalendar.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
@@ -132,7 +130,7 @@ const props = defineProps({
         required: false,
         default: null
     },
-})
+});
 
 const emits = defineEmits([
     'editEvent',
@@ -146,14 +144,12 @@ const emits = defineEmits([
 const hasOverlappingEvents = (events, day, hour) => {
     if (!events || events.length < 2) return false;
 
-    // Filtere Events, die in der aktuellen Stunde stattfinden
     const overlappingEvents = events.filter(event =>
         shouldRenderEvent(event, day, hour)
     );
 
-    // Prüfen, ob mindestens 2 Events überlappen
     return overlappingEvents.length > 1;
-}
+};
 
 const shouldRenderEvent = (event, day, hour) => {
     const isStartDay = day.full_day === event.days_of_event[0];
@@ -234,37 +230,23 @@ const getEventStyle = (event, day, hour, zoom_factor) => {
     };
 };
 
-
-
-
-
 const showEditEventModel = (event) => {
     emits('editEvent', event)
-}
+};
 
 const openAddSubEventModal = (desiredEvent, mode, mainEvent) => {
     emits('openAddSubEventModal', desiredEvent, mode, mainEvent)
-}
+};
 
 const openDeleteEventModal = (event, type) => {
     emits('openConfirmModal', event, type)
-}
+};
 
 const openDeclineEventModal = (event) => {
     emits('showDeclineEventModal', event)
-}
+};
 
 const handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
     emits('changedMultiEditCheckbox', eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd)
-}
-
-const AsyncSingleEventInCalendar = defineAsyncComponent(
-    {
-        loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue')
-    }
-);
+};
 </script>
-
-<style scoped>
-
-</style>

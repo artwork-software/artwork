@@ -85,31 +85,36 @@
                         leave-to-class="transform scale-95 opacity-0"
                     >
                         <MenuItems
-                            class="absolute overflow-y-auto h-24 w-full rounded-lg origin-top-left divide-y divide-gray-200 bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            class="absolute overflow-y-auto h-44 w-full rounded-lg origin-top-left divide-y divide-gray-200 bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
-                                <div class="flex w-full mb-4">
-                                    <input v-model="subEvent.audience"
-                                           type="checkbox"
-                                           class="checkBoxOnDark"/>
-                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
-                                         alt="audienceIcon"/>
-
-                                    <div :class="[subEvent.audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
-                                        {{ $t('With audience') }}
-                                    </div>
-                                </div>
-                                <div class="flex w-full mb-2">
-                                    <input v-model="subEvent.is_loud"
-                                           type="checkbox"
-                                           class="checkBoxOnDark"/>
-                                    <div :class="[subEvent.is_loud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">
-                                        {{ $t('It gets loud') }}
+                                <div class="w-full rounded-2xl bg-primary border-none mt-2 flex flex-col gap-y-2">
+                                    <div v-for="eventProperty in this.event_properties" class="flex flex-row gap-x-1 w-full items-center">
+                                        <input v-model="eventProperty.checked"
+                                               type="checkbox"
+                                               class="input-checklist-dark"/>
+                                        <component :is="eventProperty.icon" class="w-5 h-5 text-white" stroke-width="2"/>
+                                        <div :class="[eventProperty.checked ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
+                                            {{ eventProperty.name }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </MenuItems>
                     </transition>
                 </Menu>
+
+                <div v-if="subEvent?.eventProperties.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-2">
+                    <div v-for="(eventProperty, index) in subEvent?.eventProperties" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                        <div class="flex items-center">
+                            <div class="rounded-full p-1 size-8 flex items-center justify-center">
+                                <component :is="eventProperty.icon" class="inline-block size-4"  />
+                            </div>
+                            <div class="mx-1">
+                                <p class="xxsDark group-hover:text-gray-900">{{ eventProperty.name}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!--    Properties    -->
                 <div class="flex py-2">
@@ -156,7 +161,6 @@
                                 required
                             />
                         </div>
-                        <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
                     </div>
                     <div>
                         <div class="w-full flex">
@@ -178,7 +182,6 @@
                                 required
                             />
                         </div>
-                        <p class="text-xs text-red-800">{{ error?.end?.join('. ') }}</p>
                     </div>
 
                 </div>
@@ -251,6 +254,7 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import {inject, nextTick} from "vue";
 
 const {getDaysOfEvent, formatEventDateByDayJs} = useEvent();
 export default {
@@ -266,6 +270,10 @@ export default {
             return this.eventTypes.filter(eventType => eventType.id !== 1)
         },
 
+    },
+    setup() {
+        const event_properties = inject('event_properties');
+        return {event_properties}
     },
     components: {
         TextareaComponent,
@@ -289,16 +297,15 @@ export default {
         return {
             subEvent: useForm({
                 event_id: this.event.id,
-                eventName: this.subEventToEdit?.title ? this.subEventToEdit?.title : '',
-                selectedEventType: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType : this.eventTypes[1],
+                eventName: this.subEventToEdit?.eventName ? this.subEventToEdit?.eventName : '',
+                selectedEventType: this.subEventToEdit?.type ? this.subEventToEdit?.type : this.eventTypes[1],
                 start_time: this.subEventToEdit?.start ? this.subEventToEdit?.start : dayjs(this.event.start).format('YYYY-MM-DD HH:mm'),
                 end_time: this.subEventToEdit?.end ? this.subEventToEdit?.end : dayjs(this.event.end).format('YYYY-MM-DD HH:mm'),
-                is_loud: this.subEventToEdit?.is_loud ? this.subEventToEdit?.is_loud : false,
-                audience: this.subEventToEdit?.audience ? this.subEventToEdit?.audience : false,
                 description: this.subEventToEdit?.description ? this.subEventToEdit?.description : '',
                 user_id: this.$page.props.user.id,
                 event_type_id: this.subEventToEdit?.eventTypeId ? this.subEventToEdit?.eventTypeId : '',
                 allDay: this.subEventToEdit?.allDay ? this.subEventToEdit?.allDay : false,
+                eventProperties: this.subEventToEdit?.event_properties ? this.subEventToEdit?.event_properties : [],
             }),
             edit: !!this.subEventToEdit?.id,
             helpText: '',
@@ -312,10 +319,16 @@ export default {
             endDate: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('YYYY-MM-DD') : dayjs(this.event.end).format('YYYY-MM-DD'),
             show: true,
             submit: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType.individual_name ? this.subEventToEdit?.title?.length > 0 : true : true,
+            //event_properties: event_properties
         }
     },
     props: ['event', 'eventTypes', 'subEventToEdit'],
     emits: ['close'],
+    mounted() {
+       nextTick(() => {
+
+       })
+    },
     methods: {
         closeModal(bool, desiredRoomIds, desiredDays) {
             this.$emit('close', bool, desiredRoomIds, desiredDays);
@@ -393,12 +406,13 @@ export default {
                 selectedEventType: this.subEvent.selectedEventType,
                 start_time: this.subEvent.start_time,
                 end_time: this.subEvent.end_time,
-                is_loud: this.subEvent.is_loud,
-                audience: this.subEvent.audience,
                 description:  this.subEvent.description,
                 user_id: this.subEvent.user_id,
                 event_type_id: this.subEvent.event_type_id,
-                allDay: this.subEvent.allDay
+                allDay: this.subEvent.allDay,
+                eventProperties: this.event_properties
+                    .filter((eventProperty) => eventProperty.checked)
+                    .map((eventProperty) => eventProperty.id),
             };
 
             if (this.edit) {
@@ -419,6 +433,17 @@ export default {
         allDayEvent: {
             handler() {
                 this.checkTimes()
+            }
+        },
+        subEvent: {
+            immediate: true,
+            deep: true,
+            handler(){
+                this.event_properties?.forEach((event_property) => {
+                    event_property.checked = this.subEventToEdit?.event_properties.some(
+                        (event_event_properties) => event_event_properties.id === event_property.id
+                    );
+                });
             }
         }
     },

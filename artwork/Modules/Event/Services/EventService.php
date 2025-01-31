@@ -28,6 +28,8 @@ use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventProperty\Models\EventProperty;
+use Artwork\Modules\EventProperty\Services\EventPropertyService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
@@ -83,7 +85,7 @@ readonly class EventService
     private ?Collection $cachedData;
     public function __construct(
         private EventRepository $eventRepository,
-        private readonly WorkingHourService $workingHourService,
+        private WorkingHourService $workingHourService,
         private ShiftTimePresetService $shiftTimePresetService,
         private CollectionService $collectionService,
         private EventCollectionService $eventCollectionService,
@@ -802,6 +804,9 @@ readonly class EventService
                 /** @var Shift $shift */
                 return ($shift->start_date <= $endDate && $shift->end_date >= $startDate);
             });
+            //@todo: code duplication
+            //@todo: use model scope "startAndEndTimeOverlap" as its an event builder when used on relation
+            // Filtere die Events nach der Logik von startAndEndTimeOverlap
 
             $room->events = $room->events->filter(function ($event) use ($filter, $startDate, $endDate) {
                 /** @var Event $event */
@@ -864,6 +869,7 @@ readonly class EventService
                     'created_at' => $event->created_at?->format('d.m.Y, H:i'),
                     'occupancy_option' => $event->occupancy_option,
                     'allDay' => $event->allDay,
+                    'eventProperties' => $event->getAttribute('eventProperties'),
                     'eventTypeColorBackground' => $eventType->getAttribute('hex_code') . '33',
                     'event_type_color' => $eventType->getAttribute('hex_code'),
                     'shifts' => MinimalShiftPlanShiftResource::collection($event->shifts)->resolve(),
@@ -880,6 +886,7 @@ readonly class EventService
                     'minutes_form_start_hour_to_start' => $event->getAttribute('minutes_form_start_hour_to_start'),
                     'roomId' => $event->getAttribute('room_id'),
                     'roomName' => $event->getAttribute('room')?->getAttribute('name'),
+                    'subEvents' => $event->getAttribute('subEvents'),
                     'created_by' => [
                         'id' => $creator->getAttribute('id'),
                         'profile_photo_url' => $creator->getAttribute('profile_photo_url'),
@@ -888,6 +895,22 @@ readonly class EventService
                     ],
                 ];
             });
+
+            $filterEventPropertyIds = $filter->getAttribute('event_properties') ?? [];
+
+            $room->events = $room->events
+                ->when(count($filterEventPropertyIds) > 0)
+                ->filter(function ($event) use ($filterEventPropertyIds) {
+                    // Stelle sicher, dass eventProperties als Array vorhanden ist
+                    $eventProperties = $event['eventProperties'] ?? [];
+
+                    foreach ($eventProperties as $eventProperty) {
+                        if (in_array($eventProperty['id'], $filterEventPropertyIds)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
         });
     }
 
@@ -1105,6 +1128,7 @@ readonly class EventService
         AreaService $areaService,
         ProjectService $projectService,
         ProjectCreateSettings $projectCreateSettings,
+        EventPropertyService $eventPropertyService,
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
@@ -1230,7 +1254,8 @@ readonly class EventService
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
             )
-            ->setShowArtists($projectCreateSettings->show_artists);
+            ->setShowArtists($projectCreateSettings->show_artists)
+            ->setEventProperties($eventPropertyService->getAll());
 
         if ($useProjectTimePeriod) {
             $eventManagementDto->setProjectNameUsedForProjectTimePeriod($project->getAttribute('name'));
@@ -1252,6 +1277,7 @@ readonly class EventService
         AreaService $areaService,
         ProjectService $projectService,
         ProjectCreateSettings $projectCreateSettings,
+        EventPropertyService $eventPropertyService,
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
@@ -1399,7 +1425,16 @@ readonly class EventService
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
             )
-            ->setShowArtists($projectCreateSettings->show_artists);
+            ->setShowArtists($projectCreateSettings->show_artists)
+            ->setEventProperties($eventPropertyService->getAll()->map(
+                function (EventProperty $eventProperty) {
+                    return [
+                        'id' => $eventProperty->getAttribute('id'),
+                        'name' => $eventProperty->getAttribute('name'),
+                        'icon' => $eventProperty->getAttribute('icon')
+                    ];
+                }
+            ));
 
 
         if ($useProjectTimePeriod) {
@@ -1704,5 +1739,10 @@ readonly class EventService
         $this->eventRepository->update($event, $attributes);
 
         return $event;
+    }
+
+    public function attachEventProperty(Event $event, EventProperty $eventProperty): Event
+    {
+        return $this->eventRepository->attachEventProperty($event, $eventProperty);
     }
 }

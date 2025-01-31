@@ -33,6 +33,7 @@
                     :rooms="headerObject.rooms"
                     :eventsInProject="headerObject.project.events"
                     :eventStatuses="headerObject.eventStatuses"
+                    :event_properties="headerObject.event_properties"
                 />
             </div>
         </div>
@@ -76,6 +77,7 @@
                             :eventTypes="headerObject.eventTypes"
                             :rooms="headerObject.rooms"
                             :eventStatuses="headerObject.eventStatuses"
+                            :event_properties="headerObject.event_properties"
                         />
                     </div>
                 </div>

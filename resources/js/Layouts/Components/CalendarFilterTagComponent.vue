@@ -48,35 +48,13 @@
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
-        <span v-if="calendarFilters.hasAudience"
+        <span v-if="eventProperties.some((eventProperty) => eventProperty.checked)"
+              v-for="eventProperty in eventProperties"
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-            {{ $t('with audience')}}
-            <button @click="calendarFilters.hasAudience = !calendarFilters.hasAudience; eventAttributes.hasAudience.checked = false; this.updateDisplayedEvents()" type="button">
-                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
-            </button>
-        </span>
-        <span v-if="calendarFilters.hasNoAudience"
-              class="flex rounded-full items-center font-medium text-tagText
-              border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-            {{ $t('without audience')}}
-            <button @click="calendarFilters.hasNoAudience = !calendarFilters.hasNoAudience; eventAttributes.hasNoAudience.checked = false; this.updateDisplayedEvents()" type="button">
-                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-            </button>
-        </span>
-        <span v-if="calendarFilters.isLoud"
-              class="flex rounded-full items-center font-medium text-tagText
-              border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-            {{  $t('loud') }}
-            <button @click="calendarFilters.isLoud = !calendarFilters.isLoud; eventAttributes.isLoud.checked = false; this.updateDisplayedEvents()" type="button">
-                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
-            </button>
-        </span>
-        <span v-if="calendarFilters.isNotLoud"
-              class="flex rounded-full items-center font-medium text-tagText
-              border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-            {{  $t('not loud') }}
-            <button @click="calendarFilters.isNotLoud = !calendarFilters.isNotLoud; eventAttributes.isNotLoud.checked = false; this.updateDisplayedEvents()" type="button">
+            {{ eventProperty.name }}
+            <button @click="eventProperty.checked = !eventProperty.checked; this.updateDisplayedEvents()"
+                    type="button">
                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -131,7 +109,7 @@ export default {
     },
     props: {
         calendarFilters: Object,
-        eventAttributes: Object,
+        eventProperties: Array,
         roomFilters: Object,
         eventsSince: Date,
         eventsUntil: Date
@@ -143,7 +121,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

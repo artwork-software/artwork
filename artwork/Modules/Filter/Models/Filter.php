@@ -34,15 +34,12 @@ class Filter extends Model
 
     protected $fillable = [
         'name',
-        'isLoud',
-        'isNotLoud',
-        'hasAudience',
-        'hasNoAudience',
+        'user_id',
         'adjoiningNoAudience',
         'adjoiningNotLoud',
         'allDayFree',
         'showAdjoiningRooms',
-        'user_id'
+        'eventProperties'
     ];
 
     protected $casts = [

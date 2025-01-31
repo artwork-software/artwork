@@ -7,11 +7,6 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     *
-     * @return void
-     */
     public function run(): void
     {
         $this->call([
@@ -22,6 +17,7 @@ class DatabaseSeeder extends Seeder
             ServiceProviderSeeder::class,
             SettingsSeeder::class,
             DefaultComponentSeeder::class,
+            DefaultEventPropertiesSeeder::class,
             ContentSeeder::class,
             CraftSeeder::class,
             WalidRaadSeeder::class,

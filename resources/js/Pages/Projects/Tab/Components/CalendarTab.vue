@@ -86,4 +86,5 @@ provide('user_filters', props.user_filters ?? props.loadedProjectInformation['Ca
 provide('personalFilters', props.personalFilters ?? props.loadedProjectInformation['CalendarTab'].personalFilters);
 provide('filterOptions', props.filterOptions ?? props.loadedProjectInformation['CalendarTab'].filterOptions);
 provide('eventStatuses', props.eventStatuses ?? props.loadedProjectInformation['CalendarTab'].eventStatuses);
+provide('event_properties', props.loadedProjectInformation['CalendarTab'].event_properties);
 </script>

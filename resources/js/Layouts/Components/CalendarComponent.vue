@@ -1,228 +1,219 @@
 <template>
     <div class=" items-center relative bg-secondaryHover" id="myCalendar">
         <div class="flex justify-center" :class="filteredEvents?.length ? 'mt-10' : ''">
-            <div class="ml-5 flex errorText items-center cursor-pointer mb-5 "
-                 @click="openEventsWithoutRoomComponent()"
-                 v-if="filteredEvents?.length > 0">
-                <IconAlertTriangle class="h-6  mr-2"/>{{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
+            <div v-if="filteredEvents?.length > 0"
+                 class="ml-5 flex errorText items-center cursor-pointer mb-5 "
+                 @click="openEventsWithoutRoomComponent()">
+                <IconAlertTriangle class="h-6  mr-2"/>
+                {{
+                    filteredEvents?.length === 1 ?
+                        $t('{0} Event without room!', [filteredEvents?.length]) :
+                        $t('{0} Events without room!', [filteredEvents?.length])
+                }}
             </div>
         </div>
-              <FunctionBarCalendar
-                  :multi-edit="false"
-                  :project="project"
-                  :rooms="rooms"
-                  :isFullscreen="isFullscreen"
-                  :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                  @open-fullscreen-mode="openFullscreen"
-                  @wants-to-add-new-event="openEventComponent"
-                  @update-multi-edit="toggleMultiEdit"
-                  @nextDay="nextDay"
-                  @previousDay="previousDay"
-                  :daily-view="true"
-                  />
-
-            <!--  Calendar  -->
-            <div class="pl-14 overflow-x-scroll">
-                <vue-cal
-                    ref="vuecal"
-                    id="vuecal"
-                    style="height: 70rem; max-height: calc(100vh - 280px); min-width: 100%; width: fit-content;"
-                    today-button
-                    :time-cell-height=120
-                    events-on-month-view="short"
-                    locale="de"
-                    hide-view-selector
-                    show-week-numbers
-                    :hideTitleBar="currentView !== 'year'"
-                    sticky-split-labels
-                    :disable-views="['years']"
-                    :events="displayedEvents"
-                    :split-days="displayedRooms"
-                    :editable-events="{ title: false, drag: true, resize: false, delete: true, create: true }"
-                    :snap-to-time="15"
-                    :selected-date="selectedDate"
-                    :drag-to-create-threshold="15"
-                    events-count-on-year-view
-                    v-model:active-view="currentView"
-                    @event-drag-create="openEventComponent($event)"
-                    @event-focus="openEventComponent($event)"
-                    @ready="initializeCalendar"
-                    @view-change="initializeCalendar($event)">
-                    <template #title="{ title, view }" class="group">
-                        <div :class="currentView === 'year' ? 'ml-24' : ''" class="mb-6">
-                            {{ title }}
-                        </div>
-                    </template>
-                    <template #today-button>
-                        <div class="flex w-24 xsDark text-artwork-buttons-create" v-if="currentView === 'year'">
-                            {{ $t('Current year')}}
-                        </div>
-                    </template>
-                    <template #weekday-heading="{ heading, view }">
-                        <div v-if="currentView === 'week'">
-                            {{ heading.label }}, {{ heading.date.format("DD.MM.YYYY") }}
-                        </div>
-                    </template>
-                    <template #week-number-cell=" weekNumber, view">
-                        <div>
-                            KW {{ weekNumber.week }}
-                        </div>
-                    </template>
-                    <template #split-label="{ split, view }">
-                        <Link class="text-base font-bold" :href="route('rooms.show',{room: split.id})">
-                            {{ split.name }}
-                        </Link>
-                    </template>
-                    <template #event="{ event, view}">
-                        <div class="text-left centered mt-3 cursor-pointer" :style="{backgroundColor: backgroundColorWithOpacity(event.event_type_color), color: TextColorWithDarken(event.event_type_color)}">
-                            <div class="flex w-full justify-between items-center">
-                                <div v-if="!project" class="flex eventHeader truncate mx-1">
-                                    <div v-if="event.eventTypeAbbreviation" class="mr-1">
-                                        {{ event.eventTypeAbbreviation }}:
-                                    </div>
-                                    {{ event.eventName }}
+        <FunctionBarCalendar :multi-edit="false"
+                             :project="project"
+                             :rooms="rooms"
+                             :isFullscreen="isFullscreen"
+                             :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                             :daily-view="true"
+                             @open-fullscreen-mode="openFullscreen"
+                             @wants-to-add-new-event="openEventComponent"
+                             @update-multi-edit="toggleMultiEdit"
+                             @nextDay="nextDay"
+                             @previousDay="previousDay"/>
+        <div class="pl-14 overflow-x-scroll">
+            <vue-cal
+                ref="vuecal"
+                id="vuecal"
+                style="height: 70rem; max-height: calc(100vh - 280px); min-width: 100%; width: fit-content;"
+                today-button
+                :time-cell-height=120
+                events-on-month-view="short"
+                locale="de"
+                hide-view-selector
+                show-week-numbers
+                :hideTitleBar="currentView !== 'year'"
+                sticky-split-labels
+                :disable-views="['years']"
+                :events="displayedEvents"
+                :split-days="displayedRooms"
+                :editable-events="{ title: false, drag: true, resize: false, delete: true, create: true }"
+                :snap-to-time="15"
+                :selected-date="selectedDate"
+                :drag-to-create-threshold="15"
+                events-count-on-year-view
+                v-model:active-view="currentView"
+                @event-drag-create="openEventComponent($event)"
+                @event-focus="openEventComponent($event)"
+                @ready="initializeCalendar"
+                @view-change="initializeCalendar($event)">
+                <template #title="{ title, view }" class="group">
+                    <div :class="currentView === 'year' ? 'ml-24' : ''" class="mb-6">
+                        {{ title }}
+                    </div>
+                </template>
+                <template #today-button>
+                    <div class="flex w-24 xsDark text-artwork-buttons-create" v-if="currentView === 'year'">
+                        {{ $t('Current year') }}
+                    </div>
+                </template>
+                <template #weekday-heading="{ heading, view }">
+                    <div v-if="currentView === 'week'">
+                        {{ heading.label }}, {{ heading.date.format("DD.MM.YYYY") }}
+                    </div>
+                </template>
+                <template #week-number-cell=" weekNumber, view">
+                    <div>
+                        KW {{ weekNumber.week }}
+                    </div>
+                </template>
+                <template #split-label="{ split, view }">
+                    <Link class="text-base font-bold" :href="route('rooms.show',{room: split.id})">
+                        {{ split.name }}
+                    </Link>
+                </template>
+                <template #event="{ event, view}">
+                    <div class="text-left centered mt-3 cursor-pointer"
+                         :style="{backgroundColor: backgroundColorWithOpacity(event.event_type_color), color: TextColorWithDarken(event.event_type_color)}">
+                        <div class="flex w-full justify-between items-center">
+                            <div v-if="!project" class="flex eventHeader truncate mx-1">
+                                <div v-if="event.eventTypeAbbreviation" class="mr-1">
+                                    {{ event.eventTypeAbbreviation }}:
                                 </div>
-                                <div v-else class="truncate mx-1">
-                                    {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
-                                </div>
-                                <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
+                                {{ event.eventName }}
+                            </div>
+                            <div v-else class="truncate mx-1">
+                                {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
+                            </div>
+                            <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
+                                 class="flex">
+                                <div v-if="event.audience"
                                      class="flex">
-                                    <div v-if="event.audience"
-                                         class="flex">
-                                        <IconUsersGroup class="w-4 h-4" />
-                                    </div>
+                                    <IconUsersGroup class="w-4 h-4"/>
                                 </div>
                             </div>
-                            <div class="eventTime mx-1" v-if="event.subEvents?.length > 0">
-                                <div>
-                                    {{$t('Sub-events')}}:
-                                </div>
-                                <div v-for="subEvent in event.subEvents">
-                                    {{ subEvent.eventTypeAbbreviation }}:
-                                    {{ subEvent.name }}
-                                </div>
-
+                        </div>
+                        <div class="eventTime mx-1" v-if="event.subEvents?.length > 0">
+                            <div>
+                                {{ $t('Sub-events') }}:
                             </div>
-
-
-                            <div v-if="currentView !== 'month'" class="mx-1">
-                                <div v-if="!project">
-                        <span class="truncate"
-                              v-if="event.eventName && event.eventName !== event.name"> {{ event.eventName }}</span>
-                                </div>
-                                <div v-else class="truncate">
+                            <div v-for="subEvent in event.subEvents">
+                                {{ subEvent.eventTypeAbbreviation }}:
+                                {{ subEvent.name }}
+                            </div>
+                        </div>
+                        <div v-if="currentView !== 'month'" class="mx-1">
+                            <div v-if="!project">
+                                <span v-if="event.eventName && event.eventName !== event.name"
+                                      class="truncate">
                                     {{ event.eventName }}
-                                </div>
-                                <span class="flex w-full eventTime">
-                        <span v-if="event.start.getDay() === event.end.getDay()"
-                              class="items-center eventTime">
-                            <span v-if="event.allDay" class="lowercase">
-                            {{ $t('Full day') }}
+                                </span>
+                            </div>
+                            <div v-else class="truncate">
+                                {{ event.eventName }}
+                            </div>
+                            <span class="flex w-full eventTime">
+                            <span v-if="event.start.getDay() === event.end.getDay()"
+                                  class="items-center eventTime">
+                                <span v-if="event.allDay"
+                                      class="lowercase">
+                                    {{ $t('Full day') }}
+                                </span>
+                                <span v-else>
+                                    {{ event.start.formatTime("HH:mm") }} - {{ event.end.formatTime("HH:mm") }}
+                                </span>
                             </span>
-                            <span v-else>
-                                {{ event.start.formatTime("HH:mm") }} - {{
-                                    event.end.formatTime("HH:mm")
-                                }}
+                            <span class="flex w-full eventTime" v-else>
+                                <span class="text-error mx-1">!</span>
+                                <span v-if="event.allDay">
+                                    {{ event.start.format("DD.MM.") }} - {{ event.end.format("DD.MM.") }}
+                                    <span class="lowercase">
+                                        {{ $t('Full day') }}
+                                    </span>
+                                </span>
+                                <span v-else class="items-center eventTime">
+                                    {{ event.start.format("DD.MM. HH:mm") }} - {{ event.end.format("DD.MM. HH:mm") }}
+                                </span>
                             </span>
-
-                        </span>
-                        <span class="flex w-full eventTime" v-else>
-                            <span class="text-error mx-1">
-                        !
-                        </span>
-                            <span v-if="event.allDay">
-                             {{event.start.format("DD.MM.")}} - {{ event.end.format("DD.MM.")}} <span class="lowercase">{{ $t('Full day') }}</span>
+                            <br/>
                             </span>
-                            <span v-else class="items-center eventTime">
-                                {{ event.start.format("DD.MM. HH:mm") }} - {{
-                                    event.end.format("DD.MM. HH:mm")
-                                }}
-                            </span>
-
-                        </span><br/>
-                    </span>
-                                <div class="flex">
-                                    <div class="flex -ml-3">
-                                        <div v-if="event.projectLeaders && !project"
-                                             class="ml-2.5 flex flex-wrap ">
-                                            <div class="-mr-3 flex flex-wrap flex-row"
-                                                 v-for="user in event.projectLeaders?.slice(0,3)">
-                                                <img :src="user.profile_photo_url" alt=""
-                                                     class="mx-auto shrink-0 flex object-cover rounded-full"
-                                                     :class="['h-' + 6, 'w-' + 6]">
-                                            </div>
-                                            <div v-if="event.projectLeaders.length >= 4" class="my-auto">
-                                                <Menu as="div" class="relative">
-                                                    <div>
-                                                        <MenuButton class="flex rounded-full focus:outline-none">
-                                                            <div
-                                                                :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                                                class="ml-2 flex-shrink-0 flex my-auto ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
-                                                                <p class="">
-                                                                    +{{ event.projectLeaders.length - 3 }}
-                                                                </p>
-                                                            </div>
-                                                        </MenuButton>
-                                                    </div>
-                                                    <transition enter-active-class="transition-enter-active"
-                                                                enter-from-class="transition-enter-from"
-                                                                enter-to-class="transition-enter-to"
-                                                                leave-active-class="transition-leave-active"
-                                                                leave-from-class="transition-leave-from"
-                                                                leave-to-class="transition-leave-to">
-                                                        <MenuItems
-                                                            class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                            <MenuItem v-for="user in event.projectLeaders"
-                                                                      v-slot="{ active }">
-                                                                <Link href="#"
-                                                                      :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                    <img
-                                                                        :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                                                        class="rounded-full"
-                                                                        :src="user.profile_photo_url"
-                                                                        alt=""/>
-                                                                    <span class="ml-4">
-                                                                {{ user.first_name }} {{ user.last_name }}
-                                                            </span>
-                                                                </Link>
-                                                            </MenuItem>
-                                                        </MenuItems>
-                                                    </transition>
-                                                </Menu>
-                                            </div>
+                            <div class="flex">
+                                <div class="flex -ml-3">
+                                    <div v-if="event.projectLeaders && !project"
+                                         class="ml-2.5 flex flex-wrap ">
+                                        <div class="-mr-3 flex flex-wrap flex-row"
+                                             v-for="user in event.projectLeaders?.slice(0,3)">
+                                            <img :src="user.profile_photo_url" alt=""
+                                                 class="mx-auto shrink-0 flex object-cover rounded-full"
+                                                 :class="['h-' + 6, 'w-' + 6]">
                                         </div>
-                                        <div v-else-if="event.created_by"
-                                             class="mt-1 ml-3 flex flex-wrap w-full">
-                                            <div class="-mr-3 flex flex-wrap flex-row">
-                                                <img :src="event.created_by.profile_photo_url" alt=""
-                                                     class="mx-auto shrink-0 flex object-cover rounded-full"
-                                                     :class="['h-' + 6, 'w-' + 6]">
-                                            </div>
+                                        <div v-if="event.projectLeaders.length >= 4" class="my-auto">
+                                            <Menu as="div" class="relative">
+                                                <div>
+                                                    <MenuButton class="flex rounded-full focus:outline-none">
+                                                        <div
+                                                            :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                                            class="ml-2 flex-shrink-0 flex my-auto ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                                            <p class="">
+                                                                +{{ event.projectLeaders.length - 3 }}
+                                                            </p>
+                                                        </div>
+                                                    </MenuButton>
+                                                </div>
+                                                <transition enter-active-class="transition-enter-active"
+                                                            enter-from-class="transition-enter-from"
+                                                            enter-to-class="transition-enter-to"
+                                                            leave-active-class="transition-leave-active"
+                                                            leave-from-class="transition-leave-from"
+                                                            leave-to-class="transition-leave-to">
+                                                    <MenuItems
+                                                        class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                        <MenuItem v-for="user in event.projectLeaders"
+                                                                  v-slot="{ active }">
+                                                            <Link href="#"
+                                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                                                     class="rounded-full"
+                                                                     :src="user.profile_photo_url"
+                                                                     alt=""/>
+                                                                <span class="ml-4">
+                                                                    {{ user.first_name }} {{ user.last_name }}
+                                                                </span>
+                                                            </Link>
+                                                        </MenuItem>
+                                                    </MenuItems>
+                                                </transition>
+                                            </Menu>
                                         </div>
-
+                                    </div>
+                                    <div v-else-if="event.created_by"
+                                         class="mt-1 ml-3 flex flex-wrap w-full">
+                                        <div class="-mr-3 flex flex-wrap flex-row">
+                                            <img :src="event.created_by.profile_photo_url" alt=""
+                                                 class="mx-auto shrink-0 flex object-cover rounded-full"
+                                                 :class="['h-' + 6, 'w-' + 6]">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </template>
-                </vue-cal>
-
-            </div>
-
+                    </div>
+                </template>
+            </vue-cal>
+        </div>
     </div>
-
     <div class="ml-12">
         <CalendarFilterTagComponent
             class="flex"
             :calendar-filters="calendarFilters"
-            :event-attributes="eventAttributes"
+            :event-properties="filterOptions.eventProperties"
             :room-filters="roomFilters"
             :events-since="eventsSince"
             :events-until="eventsUntil"
         />
     </div>
-
-    <!-- Termin erstellen Modal-->
     <event-component
         v-if="createEventComponentIsVisible"
         @closed="onEventComponentClose"
@@ -237,7 +228,6 @@
         :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
         :event-statuses="eventStatuses"
     />
-    <!-- Termine ohne Raum Modal -->
     <events-without-room-component
         v-if="showEventsWithoutRoomComponent"
         @closed="onEventsWithoutRoomComponentClose()"
@@ -300,6 +290,7 @@ import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
+import {provide} from "vue";
 
 export default {
     name: 'CalendarComponent',
@@ -458,6 +449,9 @@ export default {
         }
     },
     created() {
+        provide('filterOptions', this.filterOptions);
+        provide('user_filters', this.user_filters);
+        provide('personalFilters', this.personalFilters);
         Echo.private('events')
             .listen('OccupancyUpdated', () => {
                 this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
@@ -513,7 +507,7 @@ export default {
             if (!this.events) {
                 return;
             }
-            
+
             let events = Object.values(this.events)[0].events;
 
             events.map(
@@ -671,14 +665,13 @@ export default {
             }
         },
         nextDay() {
-
             this.$refs.vuecal.next();
             this.dateValueArray[0] = this.addOneDay(this.dateValueArray[0]);
             this.dateValueArray[1] = this.addOneDay(this.dateValueArray[1]);
             router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
-                start_date:  this.dateValueArray[0],
+                start_date: this.dateValueArray[0],
                 end_date: this.dateValueArray[1],
-            },{
+            }, {
                 preserveScroll: true,
                 preserveState: false
             })
@@ -688,12 +681,12 @@ export default {
             this.dateValueArray[0] = this.subtractOneDay(this.dateValueArray[0]);
             this.dateValueArray[1] = this.subtractOneDay(this.dateValueArray[1]);
             router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
-                start_date:  this.dateValueArray[0],
+                start_date: this.dateValueArray[0],
                 end_date: this.dateValueArray[1],
-            },{
+            }, {
                 preserveScroll: true,
                 preserveState: false
-            })
+            });
         },
         formatDate(date) {
             return new Date((new Date(date)).getTime() - ((new Date(date)).getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
@@ -722,7 +715,7 @@ export default {
                 this.zoomFactor = 1;
             }
         },
-        toggleMultiEdit(value){
+        toggleMultiEdit(value) {
             this.multiEdit.value = value;
         },
     }

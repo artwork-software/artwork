@@ -6,8 +6,9 @@
                     :description="descriptionText"
 
                     />
-                <div class="grid gird-cols-1 md:grid-cols-5 gap-4">
-                    <Menu as="div" class="relative col-span-1">
+                <div class="flex items-center gap-4">
+                    <IconSelector @update:modelValue="addIconToForm" :current-icon="shiftQualificationForm ? shiftQualificationForm.icon : null" />
+                    <!--<Menu as="div" class="relative col-span-1">
                         <div>
                             <MenuButton :class="[this.shiftQualificationForm.icon === '' ? 'border border-gray-400' : '']" class="menu-button mt-5">
                                 <label v-if="this.shiftQualificationForm.icon === null" class="cursor-pointer text-gray-400 text-xs">
@@ -38,9 +39,10 @@
                                 </MenuItem>
                             </MenuItems>
                         </transition>
-                    </Menu>
-                    <div class="col-span-4">
+                    </Menu>-->
+                    <div class="w-full">
                         <TextInputComponent
+                            no-margin-top
                             id="name"
                             v-model="this.shiftQualificationForm.name"
                             :label="$t('Name of the qualification')"
@@ -83,6 +85,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import IconSelector from "@/Components/Icon/IconSelector.vue";
 const shiftQualificationIcons = [
     {iconName: 'user-icon'},
     {iconName: 'academic-cap-icon'},
@@ -99,6 +102,7 @@ const shiftQualificationIcons = [
 export default defineComponent({
     name: 'ShiftQualificationModal',
     components: {
+        IconSelector,
         ModalHeader,
         TextInputComponent,
         BaseModal,
@@ -132,6 +136,9 @@ export default defineComponent({
         }
     },
     methods: {
+        addIconToForm(icon) {
+            this.shiftQualificationForm.icon = icon;
+        },
         save() {
             const onSuccessCallback = () => this.close();
 

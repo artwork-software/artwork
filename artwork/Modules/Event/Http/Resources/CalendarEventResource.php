@@ -2,12 +2,14 @@
 
 namespace Artwork\Modules\Event\Http\Resources;
 
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Http\Resources\ProjectInCalendarResource;
 use Artwork\Modules\SubEvent\Http\Resources\SubEventResource;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
+/** @mixin Event */
 class CalendarEventResource extends JsonResource
 {
     public static $wrap = null;
@@ -70,6 +72,7 @@ class CalendarEventResource extends JsonResource
             'comments' => $this->comments,
             'shifts' => $this->shifts,
             'eventTypeColorBackground' => $this->event_type->hex_code . '33',
+            'eventProperties' => $this->getAttribute('eventProperties'),
         ];
 
         return $this->handleNoUserCalendarWorkShifts($output);

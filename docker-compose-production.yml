@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: ./dockerfiles/release.Dockerfile
-    pull_policy: always
     ports:
       - '${APP_PORT:-80}:80'
       - '${PUSHER_PORT:-6001}:6001'
@@ -14,12 +13,28 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - "artwork-files:/var/www/html/storage"
-      - 'artwork-db:/var/lib/mysql'
-      - 'artwork-redis:/data'
-      - 'artwork-meilisearch:/meili_data_v2'
-      - './:/var/www/html/:cached'
+      #- './:/var/www/html/:cached'
+  db:
+    image: 'mariadb'
+    ports:
+      - '${FORWARD_DB_PORT:-3306}:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    volumes:
+      - 'artwork-db-maria:/var/lib/mysql'
+  meili:
+    image: 'getmeili/meilisearch:latest'
+    ports:
+      - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
+    volumes:
+      - 'artwork-meilisearch:/data'
 volumes:
-  artwork-db:
+  artwork-db-maria:
     driver: local
   artwork-meilisearch:
     driver: local

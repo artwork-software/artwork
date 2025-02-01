@@ -13,7 +13,6 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - "artwork-files:/var/www/html/storage"
-      #- './:/var/www/html/:cached'
   db:
     image: 'mariadb'
     ports:
@@ -33,6 +32,10 @@ services:
       - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
     volumes:
       - 'artwork-meilisearch:/data'
+  redis:
+    image: 'redis:alpine'
+    volumes:
+      - 'artwork-redis:/data'
 volumes:
   artwork-db-maria:
     driver: local

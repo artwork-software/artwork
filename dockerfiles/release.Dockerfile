@@ -71,6 +71,8 @@ RUN cp -rf .install/artwork.vhost.conf /etc/nginx/sites-available/default && \
 RUN wget -O composer.phar https://getcomposer.org/download/2.6.5/composer.phar && \
     php composer.phar --no-interaction install
 
+RUN php artisan key:generate
+
 RUN npm install && npm run build
 
 RUN chown -R www-data:www-data /var/www/html && \

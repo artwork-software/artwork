@@ -571,7 +571,7 @@
                         leave-active-class="transition duration-75 ease-in"
                         leave-from-class="transform scale-100 opacity-100"
                         leave-to-class="transform scale-95 opacity-0">
-                        <MenuItems class="absolute overflow-y-auto h-44 w-[88%] origin-top-left divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                        <MenuItems class="absolute overflow-y-auto max-h-44 w-[88%] origin-top-left divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="w-full rounded-2xl bg-primary border-none mt-2 flex flex-col gap-y-2">
                                 <div v-for="eventProperty in event_properties" class="flex flex-row gap-x-1 w-full items-center">
                                     <input v-model="eventProperty.checked"
@@ -588,7 +588,7 @@
                     </transition>
                 </Menu>
                 <!--    Properties    -->
-                <div v-if="event?.eventProperties.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-2">
+                <div v-if="event?.eventProperties?.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-2">
                     <div v-for="(eventProperty, index) in event?.eventProperties" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
                         <div class="flex items-center">
                             <div class="rounded-full p-1 size-8 flex items-center justify-center">

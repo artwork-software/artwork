@@ -2303,5 +2303,8 @@
     "Drop here": "Hier ablegen",
     "Add the task here": "Aufgabe hier hinzufügen",
     "Deselect all": "Alle abwählen",
-    "Select all": "Alle auswählen"
+    "Select all": "Alle auswählen",
+    "Select an icon from {0} different icons.": "Wähle ein Icon aus {0} verschiedenen Icons aus.",
+    "Universal Shift": "Universelle Schicht",
+    "Select an icon": "Icon auswählen"
 }

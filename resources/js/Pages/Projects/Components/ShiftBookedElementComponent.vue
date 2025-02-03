@@ -20,10 +20,9 @@
                     </span>
                     </div>
                 </div>
-                <ShiftQualificationIconCollection
-                    :classes="'w-4 h-4'"
-                    class=" block group-hover:hidden"
-                    :icon-name="getShiftQualificationById(user.pivot.shift_qualification_id).icon"/>
+                <component stroke-width="1.5"
+                    class=" block group-hover:hidden size-4"
+                    :is="getShiftQualificationById(user.pivot.shift_qualification_id).icon"/>
             </div>
         </div>
         <template #xButton>

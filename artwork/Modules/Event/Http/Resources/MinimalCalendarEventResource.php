@@ -82,6 +82,7 @@ class MinimalCalendarEventResource extends JsonResource
             'event_length_in_hours' => $this->getAttribute('event_length_in_hours'),
             'hours_to_next_day' => $this->getAttribute('hours_to_next_day'),
             'minutes_form_start_hour_to_start' => $this->getAttribute('minutes_form_start_hour_to_start'),
+            'eventProperties' => $this->getAttribute('eventProperties'),
         ];
     }
 

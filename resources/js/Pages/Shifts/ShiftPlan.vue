@@ -1846,6 +1846,9 @@ export default {
         applyUserOverviewHeight() {
             router.patch(route('user.update.userOverviewHeight', {user: usePage().props.user.id}), {
                 drawer_height: this.userOverviewHeight
+            }, {
+                preserveScroll: true,
+                preserveState: true
             });
         },
         applySort(shiftPlanWorkerSortEnumName) {

@@ -33,16 +33,17 @@ class FilterController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function store(Request $request): RedirectResponse
     {
+        $request->validate(['calendarFilters.eventPropertyIds.*' => 'exists:event_properties,id']);
+
         $filter = Filter::create([
             'name' => $request->name,
-            'isLoud' => $request->input('calendarFilters.isLoud'),
-            'isNotLoud' => $request->input('calendarFilters.isNotLoud'),
-            'hasAudience' => $request->input('calendarFilters.hasAudience'),
-            'hasNoAudience' => $request->input('calendarFilters.hasNoAudience'),
             'adjoiningNoAudience' => $request->input('calendarFilters.adjoiningNoAudience'),
             'adjoiningNotLoud' => $request->input('calendarFilters.adjoiningNotLoud'),
             'allDayFree' => $request->input('calendarFilters.allDayFree'),
             'showAdjoiningRooms' => $request->input('calendarFilters.showAdjoiningRooms'),
+            'eventProperties' => count(
+                ($eventPropertyIds = $request->collect('calendarFilters.eventPropertyIds'))
+            ) > 0 ? $eventPropertyIds : null,
             'user_id' => Auth::id()
         ]);
 

@@ -15,7 +15,6 @@
                     {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }}
                 </div>
                 <div class="flex justify-end">
-
                     <div v-if="event?.canDelete"
                          class="flex  justify-end">
                         <div class="flex mt-1 mr-2 cursor-pointer" @click="openDeleteEventModal(event)">
@@ -23,6 +22,7 @@
                         </div>
                     </div>
                     <div v-else>
+                        <!-- //@todo: jgl -->
                         <div v-if="event.audience || event.isLoud"
                              class="flex justify-end mt-6">
                             <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg"
@@ -107,13 +107,11 @@
             </div>
             <!--    Properties    -->
             <div class="flex">
-                <div v-if="event.audience">
-                    <TagComponent icon="audience" :displayed-text="$t('With audience')"
-                                  hideX="true" property=""></TagComponent>
-                </div>
-                <div v-if="event.isLoud">
-                    <TagComponent :displayed-text="$t('It gets loud')" hideX="true" property=""></TagComponent>
-                </div>
+                <TagComponent v-for="eventProperty in this.event?.eventProperties"
+                              :icon="eventProperty.icon.replace('Icon', '')"
+                              :displayed-text="eventProperty.name"
+                              hideX="true"
+                              property=""/>
             </div>
             <!--    Time    -->
             <div class="col-span-full">
@@ -338,18 +336,14 @@
                         >
                             <MenuItems
                                 class="absolute overflow-y-auto h-24 mt-2 w-full origin-top-left divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                <div class="mx-auto w-full bg-primary border-none mt-2">
-                                    <div class="flex w-full mb-4">
-                                        <input v-model="event.audience" :disabled="!event.canEdit" type="checkbox" class="input-checklist-dark"/>
-                                        <IconUsersGroup stroke-width="1.5" class="h-6 w-6 mx-2" alt="audienceIcon"/>
-                                        <div :class="[event.audience ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">
-                                            {{$t('With audience')}}
-                                        </div>
-                                    </div>
-                                    <div class="flex w-full mb-2">
-                                        <input v-model="event.isLoud" :disabled="!event.canEdit" type="checkbox" class="input-checklist-dark"/>
-                                        <div :class="[event.isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased mx-2']">
-                                            {{$t('It gets loud')}}
+                                <div class="w-full rounded-2xl bg-primary border-none mt-2 flex flex-col gap-y-1">
+                                    <div v-for="eventProperty in this.event_properties" class="flex flex-row gap-x-1 w-full items-center">
+                                        <input v-model="eventProperty.checked"
+                                               type="checkbox"
+                                               class="checkBoxOnDark"/>
+                                        <component :is="eventProperty.icon" class="w-5 h-5 text-white" stroke-width="2"/>
+                                        <div :class="[eventProperty.checked ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
+                                            {{ eventProperty.name }}
                                         </div>
                                     </div>
                                 </div>
@@ -434,7 +428,6 @@
             </div>
         </div>
     </div>
-
     <confirmation-component
         v-if="deleteComponentVisible"
         :confirm="$t('Delete')"
@@ -472,6 +465,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import {inject} from "vue";
 import {router, useForm} from "@inertiajs/vue3";
 
 const {getDaysOfEvent, formatEventDateByDayJs} = useEvent();
@@ -526,8 +520,6 @@ name: "SingleEventInEventsWithoutRoom",
             startTime: null,
             endDate: null,
             endTime: null,
-            isLoud: false,
-            audience: false,
             projectName: null,
             title: null,
             eventName: null,
@@ -563,7 +555,8 @@ name: "SingleEventInEventsWithoutRoom",
                     id: 4,
                     name: this.$t('Monthly')
                 }
-            ]
+            ],
+            event_properties: inject('event_properties')
         }
     },
     emits: ['desiresReload'],
@@ -579,6 +572,13 @@ name: "SingleEventInEventsWithoutRoom",
                     .then(response => this.projectSearchResults = response.data)
             },
         }
+    },
+    created() {
+        this.event_properties.forEach((event_property) => {
+            event_property.checked = this.event.eventProperties.some(
+                (event_event_properties) => event_event_properties.id === event_property.id
+            );
+        });
     },
     methods: {
         getTimeOfDate(date) {
@@ -803,8 +803,6 @@ name: "SingleEventInEventsWithoutRoom",
                 end: this.formatDate(event.endDate, event.endTime),
                 roomId: event.roomId,
                 description: event.description,
-                audience: event.audience,
-                isLoud: event.isLoud,
                 eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
                 projectId: this.showProjectInfo ? event.projectId : null,
                 projectName: event.creatingProject ? event.projectName : '',
@@ -813,7 +811,10 @@ name: "SingleEventInEventsWithoutRoom",
                 creatingProject: event.creatingProject,
                 isOption: this.isOption,
                 allDay: event.allDay,
-                is_series: event.series ? event.series : false
+                is_series: event.series ? event.series : false,
+                event_properties: this.event_properties
+                    .filter((eventProperty) => eventProperty.checked)
+                    .map((eventProperty) => eventProperty.id)
             };
         },
     },

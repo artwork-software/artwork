@@ -146,9 +146,10 @@
                         >
 
                             <span class="sDark cursor-pointer flex justify-center">
-                                <ShiftQualificationIconCollection
-                                    class="text-black mx-1" :classes="['h-5', 'w-5', 'text-black', 'mx-0.5']"
-                                    :icon-name="shiftQualification.icon"
+                                <component
+                                    stroke-width="1.5"
+                                    class="text-black mx-1 size-5"
+                                    :is="shiftQualification.icon"
                                 />
                                 {{ shiftQualification.name }}
                                 <span v-if="shiftQualification.available"
@@ -471,22 +472,6 @@ export default defineComponent({
             this.shiftTimePresetToDelete = null;
         },
         submitDelete(){
-            this.$inertia.delete(route('craft.delete', this.craftToDelete.id), {
-                preserveScroll: true,
-                preserveState: true,
-                onFinish: () => {
-                    this.closedDeleteCraftModal();
-                }
-            })
-        },
-        reorderCrafts(crafts) {
-            crafts.map((craft, index) => {
-                craft.position = index + 1
-            })
-
-            router.post(route('craft.reorder'), {
-                crafts: crafts
-            });
             if (this.deleteType === 'craft') {
                 this.$inertia.delete(route('craft.delete', this.craftToDelete.id), {
                     preserveScroll: true,
@@ -514,6 +499,15 @@ export default defineComponent({
                 this.deleteShiftTimePreset(this.shiftTimePresetToDelete);
                 this.closeDeleteShiftTimePresetModal();
             }
+        },
+        reorderCrafts(crafts) {
+            crafts.map((craft, index) => {
+                craft.position = index + 1
+            })
+
+            router.post(route('craft.reorder'), {
+                crafts: crafts
+            });
         },
         updateShiftSettingUseFirstNameSort(useFirstNameForSort) {
             router.patch(

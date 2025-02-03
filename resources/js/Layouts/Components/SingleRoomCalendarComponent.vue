@@ -37,7 +37,6 @@
             </table>
         </div>
     </div>
-
     <event-component
         v-if="createEventComponentIsVisible"
         @closed="onEventComponentClose"
@@ -74,7 +73,7 @@ import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-
+import {inject, provide} from "vue";
 
 export default {
     name: "IndividualCalendarComponent",
@@ -95,7 +94,8 @@ export default {
             wantedRoom: null,
             roomCollisions: [],
             isFullscreen: false,
-            zoomFactor: 1
+            zoomFactor: 1,
+            event_properties: inject('event_properties')
         }
     },
     props: [
@@ -115,6 +115,9 @@ export default {
         'eventStatuses'
     ],
     emits: ['changeAtAGlance'],
+    created() {
+        provide('event_properties', this.event_properties);
+    },
     mounted(){
         window.addEventListener('resize', this.listenToFullscreen);
     },

@@ -21,7 +21,7 @@
     }
 
     .input {
-        @apply rounded-lg px-2.5 w-full text-sm border-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent focus:border-primary focus:ring-0;
+        @apply rounded-lg px-2.5 w-full text-sm border-2 border-gray-300 focus:ring-0 text-primary placeholder-gray-500 placeholder-transparent ring-artwork-buttons-create/20 focus:border-artwork-buttons-create transition-all duration-150 ease-in-out;
 
         &:disabled {
             @apply bg-gray-100 text-gray-600;
@@ -71,11 +71,11 @@
         }
 
         .model-title {
-            @apply font-black font-lexend text-primary text-3xl my-2;
+            @apply font-black font-lexend text-primary headline1 mb-2;
         }
 
         .modal-description {
-            @apply xsLight subpixel-antialiased;
+            @apply text-gray-400 font-lexend font-light;
         }
     }
 

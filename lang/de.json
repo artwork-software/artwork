@@ -2306,5 +2306,6 @@
     "Select all": "Alle auswählen",
     "Select an icon from {0} different icons.": "Wähle ein Icon aus {0} verschiedenen Icons aus.",
     "Universal Shift": "Universelle Schicht",
-    "Select an icon": "Icon auswählen"
+    "Select an icon": "Icon auswählen",
+    "Delete all shifts for the selected rooms and days? Only universal shifts are deleted.": "Alle Schichten für die ausgewählten Räume und Tage löschen? Nur universelle Schichten werden gelöscht."
 }

@@ -2307,5 +2307,17 @@
     "Select an icon from {0} different icons.": "Wähle ein Icon aus {0} verschiedenen Icons aus.",
     "Universal Shift": "Universelle Schicht",
     "Select an icon": "Icon auswählen",
-    "Delete all shifts for the selected rooms and days? Only universal shifts are deleted.": "Alle Schichten für die ausgewählten Räume und Tage löschen? Nur universelle Schichten werden gelöscht."
+    "Delete all shifts for the selected rooms and days? Only universal shifts are deleted.": "Alle Schichten für die ausgewählten Räume und Tage löschen? Nur universelle Schichten werden gelöscht.",
+    "Print Layout Settings": "Drucklayout-Einstellungen",
+    "Here you can manage the print layouts for your projects. You can add, edit and delete print layouts. You can also set the default print layout for your projects.": "Hier kannst du die Drucklayouts für deine Projekte verwalten. Du kannst Drucklayouts hinzufügen, bearbeiten und löschen. Du kannst auch das Standard-Drucklayout für deine Projekte festlegen.",
+    "Edit Print Layout": "Drucklayout bearbeiten",
+    "Create Print Layout": "Drucklayout erstellen",
+    "Header columns": "Spalten der Kopfzeile",
+    "Footer columns": "Spalten der Fußzeile",
+    "Body columns": "Spalten des Hauptteils",
+    "Should this print layout be available?": "Soll dieses Drucklayout verfügbar sein?",
+    "The columns of the main part are set to more than 1, which makes the print layout less legible and it is no longer possible to add the components marked as “special components”.": "Die Spalten des Hauptteils sind auf mehr als 1 gesetzt, was das Drucklayout weniger lesbar macht und es nicht mehr möglich ist, die als „Spezialkomponenten“ markierten Komponenten hinzuzufügen.",
+    "Header": "Kopfzeile",
+    "Body": "Hauptteil",
+    "Footer": "Fußzeile"
 }

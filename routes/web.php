@@ -51,6 +51,7 @@ use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectManagementBuilderController;
+use App\Http\Controllers\ProjectPrintLayoutController;
 use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\ProjectTabController;
@@ -1861,6 +1862,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // delete project-management-builder.destroy
         Route::delete('/destroy/{component}', [ProjectManagementBuilderController::class, 'destroy'])
             ->name('project-management-builder.destroy');
+    });
+
+    Route::group(['prefix' => 'project-print-layout'], function(): void {
+        Route::get('/', [ProjectPrintLayoutController::class, 'index'])
+            ->name('project-print-layout.index');
+
+        Route::post('/store', [ProjectPrintLayoutController::class, 'store'])
+            ->name('project-print-layout.store');
     });
 });
 

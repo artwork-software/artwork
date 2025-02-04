@@ -165,13 +165,12 @@ class UserService
             )
         );
 
+        //dd($requestedPeriod);
+
         $startOfWeek = $requestedStartDate->copy()->startOfWeek();
         $endOfWeek = $requestedEndDate->copy()->endOfWeek();
 
-        [
-            $eventsWithTotalPlannedWorkingHours,
-            $totalPlannedWorkingHours
-        ] = $eventService->getDaysWithEventsWhereUserHasShiftsWithTotalPlannedWorkingHours(
+        $daysWithData = $eventService->getDaysWithEventsWhereUserHasShiftsWithTotalPlannedWorkingHours(
             $user->id,
             $startOfWeek,
             $endOfWeek
@@ -227,13 +226,14 @@ class UserService
                                     'month_number' => $date->month,
                                     'is_monday' => $date->isMonday(),
                                     'is_weekend' => $date->isWeekend(),
+                                    'day_without_format' => $date->format('Y-m-d'),
                                 ];
                             }
                         )
                 )
             )
-            ->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
-            ->setTotalPlannedWorkingHours((float)$totalPlannedWorkingHours)
+            //->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
+            //->setTotalPlannedWorkingHours((float)$totalPlannedWorkingHours)
             ->setVacationSelectCalendar($calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth))
             ->setRooms($roomService->getAllWithoutTrashed())
             ->setProjects($projectService->getAll())

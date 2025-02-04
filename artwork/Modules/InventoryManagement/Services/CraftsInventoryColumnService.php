@@ -9,6 +9,7 @@ use Artwork\Modules\InventoryManagement\Repositories\CraftsInventoryColumnReposi
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Throwable;
+use Illuminate\Support\Collection as SupportCollection;
 
 class CraftsInventoryColumnService
 {
@@ -150,11 +151,11 @@ class CraftsInventoryColumnService
         return $this->craftsInventoryColumnRepository->forceDelete($craftsInventoryColumn);
     }
 
-    public function reorder(\Illuminate\Support\Collection $columns): void
+    public function reorderColumns(SupportCollection $columns): void
     {
-        foreach ($columns as $column) {
-            $columnFound = $this->craftsInventoryColumnRepository->find($column['id']);
-            $this->craftsInventoryColumnRepository->update($columnFound, ['order' => $column['order']]);
+        foreach ($columns as $index => $columnId) {
+            $column = $this->craftsInventoryColumnRepository->find($columnId);
+            $this->craftsInventoryColumnRepository->update($column, ['order' => ($index + 1)]);
         }
     }
 }

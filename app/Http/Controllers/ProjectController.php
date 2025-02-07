@@ -251,7 +251,7 @@ class ProjectController extends Controller
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
-            $projectData->firstTabId = $this->projectTabService->getFirstProjectTabId();
+            $projectData->firstTabId = $this->projectTabService->getDefaultOrFirstProjectTabId();
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
@@ -324,7 +324,7 @@ class ProjectController extends Controller
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
-            $projectData->firstTabId = $this->projectTabService->getFirstProjectTabId();
+            $projectData->firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
@@ -402,7 +402,7 @@ class ProjectController extends Controller
             'components' => $components,
             'pinnedProjects' => $pinnedProjectsComponents,
             'pinnedProjectsAll' => $pinnedProjects,
-            'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
+            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTab(),
             'states' => $this->projectStateService->getAll(),
             'projectGroups' => $this->projectService->getProjectGroups(),
             'categories' => $this->categoryService->getAll(),

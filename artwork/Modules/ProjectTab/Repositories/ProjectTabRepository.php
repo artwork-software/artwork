@@ -37,4 +37,11 @@ class ProjectTabRepository extends BaseRepository
     {
         return ProjectTab::find($id);
     }
+
+    public function getDefaultOrFirstProjectTab(): ?ProjectTab
+    {
+        return ProjectTab::query()
+            ->where('default', true)
+            ->first() ?? $this->findFirstProjectTab();
+    }
 }

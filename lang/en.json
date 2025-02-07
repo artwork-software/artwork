@@ -2305,5 +2305,6 @@
     "Select all": "Select all",
     "Select an icon from {0} different icons.": "Select an icon from {0} different icons.",
     "Universal Shift": "Universal Shift",
-    "Select an icon": "Select an icon"
+    "Select an icon": "Select an icon",
+    "Should this tab be set as the default tab?": "Should this tab be set as the default tab?"
 }

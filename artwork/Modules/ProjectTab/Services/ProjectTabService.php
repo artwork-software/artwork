@@ -43,6 +43,16 @@ class ProjectTabService implements ServiceWithArrayCache
         return $this->projectTabRepository->findFirstProjectTab();
     }
 
+    public function getDefaultOrFirstProjectTab(): ProjectTab
+    {
+        return $this->projectTabRepository->getDefaultOrFirstProjectTab();
+    }
+
+    public function getDefaultOrFirstProjectTabId(): int
+    {
+        return $this->getDefaultOrFirstProjectTab()->getAttribute('id');
+    }
+
     public function getFirstProjectTabId(): int
     {
         return $this->findFirstProjectTab()->getAttribute('id');
@@ -70,7 +80,7 @@ class ProjectTabService implements ServiceWithArrayCache
     public function getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum $type): int
     {
         return $this->findFirstProjectTabWithType($type)?->getAttribute('id') ??
-            $this->getFirstProjectTabId();
+            $this->getDefaultOrFirstProjectTabId();
     }
 
     public function getShiftTab(

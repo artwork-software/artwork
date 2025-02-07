@@ -2330,5 +2330,8 @@
     "Are you sure you want to delete the selected print layout?": "Are you sure you want to delete the selected print layout?",
     "No print layouts available": "No print layouts available",
     "Edit the print layout": "Edit the print layout",
-    "Create a new print layout": "Create a new print layout"
+    "Create a new print layout": "Create a new print layout",
+    "Should this tab be set as the default tab?": "Should this tab be set as the default tab?",
+    "Schedule events without request": "Schedule events without request",
+    "A user with this permission can schedule events directly without a request in all rooms": "A user with this permission can schedule events directly without a request in all rooms"
 }

@@ -24,6 +24,11 @@ class ProjectTab extends Model
     protected $fillable = [
         'name',
         'order',
+        'default'
+    ];
+
+    protected $casts = [
+        'default' => 'boolean'
     ];
 
     protected $appends = ['hasSidebarTabs'];

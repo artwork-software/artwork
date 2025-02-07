@@ -2306,6 +2306,7 @@
     "Select an icon from {0} different icons.": "Select an icon from {0} different icons.",
     "Universal Shift": "Universal Shift",
     "Select an icon": "Select an icon",
+    "Should this tab be set as the default tab?": "Should this tab be set as the default tab?",
     "Schedule events without request": "Schedule events without request",
     "A user with this permission can schedule events directly without a request in all rooms": "A user with this permission can schedule events directly without a request in all rooms"
 }

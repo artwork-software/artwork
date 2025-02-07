@@ -1493,6 +1493,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ProjectTabController::class,
                 'addComponentWithScopes'
             ])->name('tab.add.component.with.scopes');
+
+            // patch tab.update.default
+            Route::patch('/{projectTab}/update/default', [ProjectTabController::class, 'updateDefault'])
+                ->name('tab.update.default');
         });
         Route::group(['prefix' => 'component'], function (): void {
             // index

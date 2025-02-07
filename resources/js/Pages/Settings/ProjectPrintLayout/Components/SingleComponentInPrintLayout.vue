@@ -8,6 +8,7 @@
             </div>
         </div>
         <div class="flex flex-col items-center justify-between">
+            <ComponentIcons :type="component.component.type" />
             <div>{{ $t(component.component.name) }}</div>
         </div>
     </div>
@@ -26,6 +27,7 @@
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {ref} from "vue";
 import {router} from "@inertiajs/vue3";
+import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 
 const props = defineProps({
     component: {

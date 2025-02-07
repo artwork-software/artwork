@@ -1,12 +1,12 @@
 <template>
     <div class="border border-gray-300 rounded-lg select-none">
-        <div class="bg-gray-200 p-2 flex items-center justify-between" :class="!layout.closed ? 'rounded-t-lg' : 'rounded-lg'" >
-            <div  @click="layout.closed = !layout.closed" class="cursor-pointer flex items-center justify-between w-fit gap-x-10">
+        <div class="bg-gray-200 p-2 flex items-center justify-between" :class="!layoutClosed ? 'rounded-t-lg' : 'rounded-lg'" >
+            <div  @click="layoutClosed = !layoutClosed" class="cursor-pointer flex items-center justify-between w-fit gap-x-10">
                 <div>
                     <h3 class="headline3">{{ layout.name }}</h3>
                     <p class="xsDark mt-1">{{ layout.description }}</p>
                 </div>
-                <component is="IconChevronDown" :class="layout.closed ? 'rotate-180' : ''" class="transition-all duration-300 ease-in-out h-6 w-6" />
+                <component is="IconChevronDown" :class="layoutClosed ? 'rotate-180' : ''" class="transition-all duration-300 ease-in-out h-6 w-6" />
             </div>
             <div>
                 <BaseMenu has-no-offset>
@@ -15,7 +15,7 @@
                 </BaseMenu>
             </div>
         </div>
-        <div v-if="!layout.closed" class="rounded-b-lg border-gray-100">
+        <div v-if="!layoutClosed" class="rounded-b-lg border-gray-100">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-2">
                     <h4 class="xsDark mb-2">{{ $t('Header') }}</h4>
@@ -164,6 +164,7 @@ const props = defineProps({
 
 const showCreateOrUpdateModal = ref(false);
 const showDeleteModal = ref(false);
+const layoutClosed = ref(false);
 const getComponent = (layout, section, row, col) => {
     return layout[section + '_components'].find(comp => comp.row === row && comp.position === col) || null;
 };

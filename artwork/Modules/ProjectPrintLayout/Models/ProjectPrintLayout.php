@@ -32,6 +32,7 @@ class ProjectPrintLayout extends Model
         'notes' => 'array'
     ];
 
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'users');
@@ -72,4 +73,5 @@ class ProjectPrintLayout extends Model
             'id'
         );
     }
+
 }

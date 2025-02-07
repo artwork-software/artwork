@@ -67,7 +67,7 @@ class ProjectPrintLayoutController extends Controller
     {
         return Inertia::render('Settings/ProjectPrintLayout/Index', [
             'components' => Component::notSpecial()->get()->groupBy('type'),
-            'componentsSpecial' => Component::isSpecial()->get(),
+            'componentsSpecial' => Component::isSpecial()->whereNotIn('id', [6,7,9,13,15,17])->get(),
             'layouts' => $this->projectService->getProjectPrintLayouts(),
             'allComponents' => Component::all(),
         ]);
@@ -114,6 +114,9 @@ class ProjectPrintLayoutController extends Controller
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
+            $projectData->projectGroups = $project->groups;
+            $projectData->groupProjects = Project::where('is_group', 1)->get();
+            $projectData->projectsOfGroup = $project->projectsOfGroup()->get();
             foreach ($projectPrintLayout->components as $component) {
                 /** @var Component $componentFullData */
                 $componentFullData = Component::find($component->component_id);

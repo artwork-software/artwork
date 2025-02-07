@@ -123,6 +123,7 @@ const props = defineProps({
 
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import BuilderSeparatorComponent from "@/Pages/Projects/BuilderComponents/BuilderSeparatorComponent.vue";
+import BuilderProjectGroupComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectGroupComponent.vue";
 
 const headerRef = ref(null);
 const footerRef = ref(null);
@@ -206,6 +207,7 @@ const componentMapping = {
     BuilderCheckbox,
     BuilderDropDown,
     BuilderTitle,
+    BuilderProjectGroupComponent,
     BuilderSeparatorComponent,
     BuilderBulkBody: EventTable,
     BuilderArtistResidenciesComponent: ArtistResidenciesComponent,

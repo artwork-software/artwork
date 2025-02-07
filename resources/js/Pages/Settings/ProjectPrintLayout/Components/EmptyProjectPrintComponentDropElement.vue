@@ -158,6 +158,7 @@ const onDrop = (event) => {
         col: props.col,
         type: props.type,
     }, {
+        preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
             dropOver.value = false;
@@ -188,6 +189,7 @@ const addComponent = (component) => {
         col: props.col,
         type: props.type,
     }, {
+        preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
             dropOver.value = false;

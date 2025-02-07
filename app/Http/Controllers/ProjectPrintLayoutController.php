@@ -66,10 +66,10 @@ class ProjectPrintLayoutController extends Controller
     public function index()
     {
         return Inertia::render('Settings/ProjectPrintLayout/Index', [
-            'components' => Component::notSpecial()->get()->groupBy('type'),
+            'components' => Component::notSpecial()->whereNotIn('id', [6,7,9,13,15,17])->get()->groupBy('type'),
             'componentsSpecial' => Component::isSpecial()->whereNotIn('id', [6,7,9,13,15,17])->get(),
             'layouts' => $this->projectService->getProjectPrintLayouts(),
-            'allComponents' => Component::all(),
+            'allComponents' => Component::whereNotIn('id', [6,7,9,13,15,17])->get(),
         ]);
     }
 

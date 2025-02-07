@@ -2307,5 +2307,7 @@
     "Select an icon from {0} different icons.": "Wähle ein Icon aus {0} verschiedenen Icons aus.",
     "Universal Shift": "Universelle Schicht",
     "Select an icon": "Icon auswählen",
-    "Should this tab be set as the default tab?": "Soll dieser Tab als Standardtab festgelegt werden?"
+    "Should this tab be set as the default tab?": "Soll dieser Tab als Standardtab festgelegt werden?",
+    "Schedule events without request": "Termine ohne Anfrage planen",
+    "A user with this permission can schedule events directly without a request in all rooms": "Ein Nutzer mit dieser Berechtigung kann direkt Termine ohne Anfrage in allen Räumen planen"
 }

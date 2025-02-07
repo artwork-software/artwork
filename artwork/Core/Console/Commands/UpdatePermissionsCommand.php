@@ -81,6 +81,15 @@ class UpdatePermissionsCommand extends Command
                 'tooltipText' => 'Darf private Kontaktdaten von Nutzer*innen einsehen',
                 'tooltipKey' => "Can view private contact details of users",
                 'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value,
+                'name_de' => "Termine fest planen",
+                'translation_key' => "Schedule events without request",
+                'group' => 'Room bookings',
+                'tooltipText' => 'Ein User mit diesem Recht darf Termine ohne Anfrage direkt fest planen in allen Räumen',
+                'tooltipKey' => 'A user with this permission can schedule events directly without a request in all rooms',
+                'checked' => false
             ]
         ];
 

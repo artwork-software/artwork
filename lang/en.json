@@ -2328,5 +2328,7 @@
     "Print": "Print",
     "Delete print layout": "Delete print layout",
     "Are you sure you want to delete the selected print layout?": "Are you sure you want to delete the selected print layout?",
-    "No print layouts available": "No print layouts available"
+    "No print layouts available": "No print layouts available",
+    "Edit the print layout": "Edit the print layout",
+    "Create a new print layout": "Create a new print layout"
 }

@@ -6,7 +6,7 @@
                     <h3 class="headline3">{{ layout.name }}</h3>
                     <p class="xsDark mt-1">{{ layout.description }}</p>
                 </div>
-                <component is="IconChevronDown" :class="layout.closed ? 'rotate-180' : ''" class="transition-all duration-300 ease-in-out" />
+                <component is="IconChevronDown" :class="layout.closed ? 'rotate-180' : ''" class="transition-all duration-300 ease-in-out h-6 w-6" />
             </div>
             <div>
                 <BaseMenu has-no-offset>

@@ -2329,5 +2329,7 @@
     "Print": "Drucken",
     "Delete print layout": "Drucklayout löschen",
     "Are you sure you want to delete the selected print layout?": "Möchtest du das ausgewählte Drucklayout wirklich löschen?",
-    "No print layouts available": "Keine Drucklayouts verfügbar"
+    "No print layouts available": "Keine Drucklayouts verfügbar",
+    "Edit the print layout": "Bearbeite das Drucklayout",
+    "Create a new print layout": "Füge ein neues Drucklayout hinzu"
 }

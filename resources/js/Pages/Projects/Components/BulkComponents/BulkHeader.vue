@@ -1,5 +1,5 @@
 <template>
-    <div class="grid gird-cols-1 md:grid-cols-8 gap-4 mb-3 text-gray-400 text-sm">
+    <div class="grid gird-cols-1 md:grid-cols-8 gap-4 mb-3 text-gray-400 text-sm print:xsDark">
         <div class="font-bold" v-if="usePage().props.event_status_module">
             {{ $t('Event Status') }}
         </div>
@@ -12,7 +12,7 @@
         <div class="font-bold">
             {{ $t('Room') }}
         </div>
-        <div class="font-bold">
+        <div class="font-bold print:col-span-2">
             {{ $t('Day') }}
         </div>
         <div class="font-bold col-span-1">
@@ -31,10 +31,10 @@
             </SwitchGroup>
             <div v-else class="flex items-center gap-x-4">
                 {{ $t('Period') }}
-                <ToolTipDefault :tooltip-text="$t('If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.')" top/>
+                <ToolTipDefault :tooltip-text="$t('If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.')" top class="print:hidden"/>
             </div>
         </div>
-        <div class="font-bold">
+        <div class="font-bold print:hidden">
         </div>
     </div>
 </template>

@@ -32,7 +32,7 @@
                             {{ createOrUpdateForm.columns_header }}
                         </span>
                     </label>
-                    <input id="columns_header" type="range" min="1" max="5" v-model="createOrUpdateForm.columns_header" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 text-artwork-buttons-create">
+                    <input id="columns_header" :disabled="projectPrintLayout" type="range" min="1" max="5" v-model="createOrUpdateForm.columns_header" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 text-artwork-buttons-create">
                 </div>
                 <div>
                     <label for="columns_footer" class="mb-2 text-sm font-medium text-gray-900 dark:text-white flex items-center justify-between">
@@ -43,7 +43,7 @@
                             {{ createOrUpdateForm.columns_footer }}
                         </span>
                     </label>
-                    <input id="columns_footer" type="range" min="1" max="5" v-model="createOrUpdateForm.columns_footer" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                    <input id="columns_footer" :disabled="projectPrintLayout" type="range" min="1" max="5" v-model="createOrUpdateForm.columns_footer" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
                 </div>
                 <div>
                     <label for="columns_body" class="mb-2 text-sm font-medium text-gray-900 dark:text-white flex items-center justify-between">
@@ -54,7 +54,7 @@
                             {{ createOrUpdateForm.columns_body }}
                         </span>
                     </label>
-                    <input id="columns_body" type="range" min="1" max="3" v-model="createOrUpdateForm.columns_body" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                    <input id="columns_body" :disabled="projectPrintLayout" type="range" min="1" max="3" v-model="createOrUpdateForm.columns_body" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
                 </div>
                 <div class="col-span-full my-3">
                     <div v-if="parseInt(createOrUpdateForm.columns_body) > 1" class="mb-2">
@@ -120,6 +120,7 @@ const emits = defineEmits([
  * @type {InertiaForm<{name: (*|string), description: (*|string), columns_header: (number), columns_footer: (number), columns_body: (number), is_active: (boolean)}>}
  */
 const createOrUpdateForm = useForm({
+    id: props.projectPrintLayout ? props.projectPrintLayout.id : null,
     name: props.projectPrintLayout ? props.projectPrintLayout.name : '',
     description: props.projectPrintLayout ? props.projectPrintLayout.description : '',
     columns_header: props.projectPrintLayout ? props.projectPrintLayout.columns_header : 1,
@@ -130,17 +131,17 @@ const createOrUpdateForm = useForm({
 
 const createOrUpdate = () => {
     if (props.projectPrintLayout) {
-        createOrUpdateForm.put(route('project-print-layout.update', props.projectPrintLayout.id), {
+        createOrUpdateForm.patch(route('project-print-layout.update', props.projectPrintLayout.id), {
             preserveScroll: true,
             onSuccess: () => {
-                emits.call('close')
+                emits('close')
             }
         })
     } else {
         createOrUpdateForm.post(route('project-print-layout.store'), {
             preserveScroll: true,
             onSuccess: () => {
-                emits.call('close')
+                emits('close')
             }
         })
     }

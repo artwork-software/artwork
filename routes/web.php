@@ -1870,6 +1870,30 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::post('/store', [ProjectPrintLayoutController::class, 'store'])
             ->name('project-print-layout.store');
+
+        // project.print.layout.add.component
+        Route::post('/{projectPrintLayout}/add/component', [ProjectPrintLayoutController::class, 'addComponent'])
+            ->name('project.print.layout.add.component');
+
+        // project-print-layout.components.destroy
+        Route::delete('/components/{printLayoutComponent}', [ProjectPrintLayoutController::class, 'destroyComponent'])
+            ->name('project-print-layout.components.destroy');
+
+        // project-print-layout.update
+        Route::patch('/{projectPrintLayout}/update', [ProjectPrintLayoutController::class, 'update'])
+            ->name('project-print-layout.update');
+
+        // project-print-layout.update.header.note
+        Route::patch('/{projectPrintLayout}/update/header/note', [ProjectPrintLayoutController::class, 'updateHeaderNote'])
+            ->name('project-print-layout.update.header.note');
+
+        // project.print.layout
+        Route::get('/print/{project}/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'show'])
+            ->name('project-print-layout.show');
+
+        // project-print-layout.destroy
+        Route::delete('/destroy/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'destroy'])
+            ->name('project-print-layout.destroy');
     });
 });
 

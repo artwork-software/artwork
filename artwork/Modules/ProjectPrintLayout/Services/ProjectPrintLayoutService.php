@@ -13,6 +13,10 @@ readonly class ProjectPrintLayoutService
     {
     }
 
+    public function getAll(): Collection
+    {
+        return $this->projectPrintLayoutRepository->getAll();
+    }
 
     public function getProjectPrintLayouts(): Collection
     {

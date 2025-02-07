@@ -1,15 +1,15 @@
 <template>
-    <div class="mt-6 p-5 bg-lightBackgroundGray print:bg-white print:p-0">
+    <div class="mt-6 p-5 bg-lightBackgroundGray">
         <div
-            class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray print:bg-white print:mx-0 print:p-0 print:mt-0">
+            class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
             <div v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id) || isMemberOfADepartment)" class="relative">
-                <TextareaComponent
-                    :label="$t('What should the other project members know about the project?')"
-                    v-model="commentForm.text"
-                    id="text"
-                    :rows="4"
-                    :maxlength="5000"
-                />
+                        <TextareaComponent
+                            :label="$t('What should the other project members know about the project?')"
+                            v-model="commentForm.text"
+                            id="text"
+                            :rows="4"
+                            :maxlength="5000"
+                        />
                 <div class="absolute bottom-6 right-2 flex">
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
                         <span class="hind text-secondary tracking-tight ml-1 my-auto text-xl">{{ $t('Publish information') }}</span>
@@ -25,12 +25,10 @@
                 <div class="text-xs text-end mt-1 text-artwork-buttons-context">{{ commentForm.text?.length ?? 0 }} / 5000</div>
             </div>
 
-            <div class="hidden print:block">
-                <h3 class="headline3 hidden print:block print:mb-2">{{ $t('Comments') }}</h3>
-            </div>
-
             <div>
+
                 <!-- new comment layout -->
+
                 <div v-if="newCommentList?.length > 0" class="my-6" v-for="comment in newCommentList">
                     <div class="group flex items-center justify-between">
                         <div class="">
@@ -47,7 +45,7 @@
                             </div>
                             <p class="mt-2 mr-14 subpixel-antialiased xsDark font-semibold" v-html="comment.text"></p>
                         </div>
-                        <div class="invisible group-hover:visible print:hidden">
+                        <div class="invisible group-hover:visible">
                             <button v-if="$role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.user.id" type="button"
                                     @click="deleteCommentFromProject(comment)">
                                 <span class="sr-only">{{ $t('Remove comment from project') }}</span>
@@ -79,6 +77,7 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import Button from "@/Jetstream/Button.vue";
 import {useCommentListener} from "@/Composeables/Listener/useCommentListener.js";
 import {ref} from "vue";
+
 export default {
     components: {
         Button,
@@ -98,11 +97,12 @@ export default {
         'canEditComponent'
     ],
     mounted() {
-        useCommentListener(this.newCommentList, this.project.id).init();
+        const useCommentListener1 = useCommentListener(this.newCommentList, this.project.id);
+        useCommentListener1.init();
     },
     computed:{
         sortedComments: function () {
-            let commentCopy = this.project.comments_all.slice();
+            let commentCopy = this.project.comments.slice();
 
             function compare(a, b) {
                 if (b.created_at === null) {
@@ -130,7 +130,7 @@ export default {
                 tab_id: this.tab_id ? this.tab_id : null,
             }),
             commentHovered: null,
-            newCommentList: ref(this.project.comments_all)
+            newCommentList: ref(this.project.comments)
         }
     },
     methods: {

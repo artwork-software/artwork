@@ -13,9 +13,8 @@ class PrintLayoutComponents extends Model
 
     protected $fillable = [
         'project_print_layout_id',
+        'component_id',
         'type',
-        'name',
-        'order',
         'position',
         'row',
     ];

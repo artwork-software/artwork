@@ -19,6 +19,11 @@ readonly class ProjectPrintLayoutRepository
         ])->get();
     }
 
+    public function getAll(): Collection
+    {
+        return ProjectPrintLayout::all();
+    }
+
     public function getMaxOrder(): int
     {
         return ProjectPrintLayout::max('order') ?? 0;

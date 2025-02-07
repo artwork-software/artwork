@@ -19,6 +19,10 @@ return new class extends Migration
             $table->integer('columns_header')->default(1);
             $table->integer('columns_footer')->default(1);
             $table->integer('columns_body')->default(1);
+            $table->json('notes')->default(json_encode([
+                'header' => [],
+                'footer' => []
+            ], JSON_THROW_ON_ERROR));
             $table->integer('order');
             $table->boolean('is_active')->default(true);
             $table->foreignId('user_id')->references('id')->on('users');

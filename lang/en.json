@@ -2318,5 +2318,15 @@
     "The columns of the main part are set to more than 1, which makes the print layout less legible and it is no longer possible to add the components marked as “special components”.": "The columns of the main part are set to more than 1, which makes the print layout less legible and it is no longer possible to add the components marked as “special components”.",
     "Header": "Header",
     "Body": "Body",
-    "Footer": "Footer"
+    "Footer": "Footer",
+    "Delete component": "Delete component",
+    "Are you sure you want to delete this component?": "Are you sure you want to delete this component?",
+    "Done at": "Done at",
+    "Deadline": "Deadline",
+    "Select print layout": "Select print layout",
+    "Select a print layout to print the project": "Select a print layout to print the project",
+    "Print": "Print",
+    "Delete print layout": "Delete print layout",
+    "Are you sure you want to delete the selected print layout?": "Are you sure you want to delete the selected print layout?",
+    "No print layouts available": "No print layouts available"
 }

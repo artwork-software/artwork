@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('project_print_layout_id')->references('id')->on('project_print_layouts');
             $table->foreignId('component_id')->references('id')->on('components');
             $table->string('type')->default('body');
-            $table->integer('order');
             $table->integer('position');
             $table->integer('row');
             $table->timestamps();

@@ -23,11 +23,13 @@ class ProjectPrintLayout extends Model
         'is_active',
         'user_id',
         'permission',
+        'notes'
     ];
 
     protected $casts = [
         'is_default' => 'boolean',
         'is_active' => 'boolean',
+        'notes' => 'array'
     ];
 
     public function user(): BelongsTo
@@ -60,5 +62,14 @@ class ProjectPrintLayout extends Model
             'project_print_layout_id',
             'id'
         )->where('type', 'body');
+    }
+
+    public function components(): HasMany
+    {
+        return $this->hasMany(
+            PrintLayoutComponents::class,
+            'project_print_layout_id',
+            'id'
+        );
     }
 }

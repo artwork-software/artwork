@@ -12,6 +12,7 @@ enum PermissionEnum : string
     case PROJECT_BUDGET_VERIFIED_ADD_REMOVE = 'can add and remove verified states';
     case PROJECT_BUDGET_SEE_DOCS_CONTRACTS = 'can see, edit and delete project contracts and docs';
     case EVENT_REQUEST = 'request room occupancy';
+    case CREATE_EVENTS_WITHOUT_REQUEST = 'create events without request';
     case ROOM_UPDATE = 'create, delete and update rooms';
     case CONTRACT_EDIT_UPLOAD = 'view edit upload contracts';
     case MONEY_SOURCE_EDIT_VIEW_ADD = 'view edit add money_sources';

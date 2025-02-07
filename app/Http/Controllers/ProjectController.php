@@ -61,6 +61,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventProperty\Services\EventPropertyService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
@@ -94,6 +95,7 @@ use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Artwork\Modules\Project\Services\ProjectStateService;
 use Artwork\Modules\ProjectManagementBuilder\Models\ProjectManagementBuilder;
 use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
+use Artwork\Modules\ProjectPrintLayout\Services\ProjectPrintLayoutService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
@@ -145,6 +147,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
+use phpDocumentor\Reflection\PseudoTypes\IntegerRange;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -175,7 +178,8 @@ class ProjectController extends Controller
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly TimelineService $timelineService,
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
-        private readonly UserProjectManagementSettingService $userFilterAndSortSettingService
+        private readonly UserProjectManagementSettingService $userFilterAndSortSettingService,
+        private readonly ProjectPrintLayoutService $projectPrintLayoutService,
     ) {
     }
 
@@ -250,7 +254,7 @@ class ProjectController extends Controller
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
-            $projectData->firstTabId = $this->projectTabService->getFirstProjectTabId();
+            $projectData->firstTabId = $this->projectTabService->getDefaultOrFirstProjectTabId();
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
@@ -323,7 +327,7 @@ class ProjectController extends Controller
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
-            $projectData->firstTabId = $this->projectTabService->getFirstProjectTabId();
+            $projectData->firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
@@ -401,7 +405,7 @@ class ProjectController extends Controller
             'components' => $components,
             'pinnedProjects' => $pinnedProjectsComponents,
             'pinnedProjectsAll' => $pinnedProjects,
-            'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
+            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTab(),
             'states' => $this->projectStateService->getAll(),
             'projectGroups' => $this->projectService->getProjectGroups(),
             'categories' => $this->categoryService->getAll(),
@@ -2150,7 +2154,8 @@ class ProjectController extends Controller
         EventTypeService $eventTypeService,
         AreaService $areaService,
         EventService $eventService,
-        ProjectCreateSettings $projectCreateSettings
+        ProjectCreateSettings $projectCreateSettings,
+        EventPropertyService $eventPropertyService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -2266,6 +2271,7 @@ class ProjectController extends Controller
                                 $areaService,
                                 $projectService,
                                 $projectCreateSettings,
+                                $eventPropertyService,
                                 $project
                             ) :
                             $eventService->createEventManagementDto(
@@ -2277,6 +2283,7 @@ class ProjectController extends Controller
                                 $areaService,
                                 $projectService,
                                 $projectCreateSettings,
+                                $eventPropertyService,
                                 $project
                             );
 
@@ -2355,6 +2362,7 @@ class ProjectController extends Controller
         $headerObject->project->project_managers = $project->managerUsers;
         $headerObject->eventStatuses = app(EventSettings::class)
             ->enable_status ? EventStatus::orderBy('order')->get() : [];
+        $headerObject->event_properties = $eventPropertyService->getAll();
 
         return inertia('Projects/Tab/TabContent', [
             'currentTab' => $projectTab,
@@ -2366,6 +2374,7 @@ class ProjectController extends Controller
             'first_project_budget_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
             'createSettings' => app(ProjectCreateSettings::class),
+            'printLayouts' => $this->projectPrintLayoutService->getAll(),
         ]);
     }
 

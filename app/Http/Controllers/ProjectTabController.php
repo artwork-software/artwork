@@ -121,4 +121,10 @@ class ProjectTabController extends Controller
             'scope' => $request->input('scope'),
         ]);
     }
+
+    public function updateDefault(ProjectTab $projectTab): void
+    {
+        ProjectTab::where('default', true)->update(['default' => false]);
+        $projectTab->update(['default' => true]);
+    }
 }

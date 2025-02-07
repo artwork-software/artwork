@@ -108,8 +108,9 @@ readonly class ServiceProviderService
         $startOfWeek = $startDate->copy()->startOfWeek();
         $endOfWeek = $endDate->copy()->endOfWeek();
 
-        $daysWithData = $eventService->getDaysWithEventsWhereServiceProviderHasShiftsWithTotalPlannedWorkingHours(
+        $daysWithData = $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
             $serviceProvider->id,
+            'service_provider',
             $startOfWeek,
             $endOfWeek
         );
@@ -125,7 +126,8 @@ readonly class ServiceProviderService
                                 return [
                                     'inRequestedTimeSpan' => in_array(
                                         $date->format('d.m.Y'),
-                                        $requestedPeriod
+                                        $requestedPeriod,
+                                        true
                                     ),
                                     'full_day' => $date->format('d.m.Y'),
                                     'day' => $date->format('d.m.'),

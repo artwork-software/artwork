@@ -1,5 +1,5 @@
 <template>
-    <Menu as="div" class="inline-block" :class="!noRelative ? 'relative' : ''">
+    <Menu as="div" class="inline-block print:hidden" :class="!noRelative ? 'relative' : ''">
         <Float auto-placement portal :offset="{ mainAxis: hasNoOffset ? 5 : -10, crossAxis: hasNoOffset ? 25 : 75}">
             <div class="font-semibold text-artwork-buttons-context flex items-center justify-center" ref="menuButtonRef">
                 <MenuButton :id="buttonId">

@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-start gap-4 overflow-y-scroll min-h-screen">
+    <div class="flex items-start gap-4 overflow-y-scroll min-h-screen print:min-h-full">
         <div v-for="checklist in checklists">
             <SingleChecklistInKanbanView
                 :checklist="checklist"

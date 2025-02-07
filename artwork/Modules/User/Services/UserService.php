@@ -170,8 +170,9 @@ class UserService
         $startOfWeek = $requestedStartDate->copy()->startOfWeek();
         $endOfWeek = $requestedEndDate->copy()->endOfWeek();
 
-        $daysWithData = $eventService->getDaysWithEventsWhereUserHasShiftsWithTotalPlannedWorkingHours(
+        $daysWithData = $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
             $user->id,
+            'users',
             $startOfWeek,
             $endOfWeek
         );

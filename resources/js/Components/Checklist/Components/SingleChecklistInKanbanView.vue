@@ -6,15 +6,15 @@
                     <IconLock stroke-width="1.5" class="h-6 w-6" />
                 </span>
                 <div class="flex items-center gap-x-4 ">
-                   <div class="truncate w-44">
+                   <div class="truncate w-44 print:headline3">
                        {{ checklist.name }}
                    </div>
-                    <span class="bg-white text-xs px-2 py-0.5 rounded">
+                    <span class="bg-white text-xs px-2 py-0.5 rounded print:border print:bg-gray-200 print:text-gray-500 print:border-gray-200 print:rounded-lg">
                         {{ checklist.tasks.length }}
                     </span>
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-x-3">
+            <div class="flex items-center justify-end gap-x-3 print:hidden">
                 <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-5 w-5 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" @click="openAddTaskModal = true"/>
                 <BaseMenu v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id))) || isInOwnTaskManagement">
                     <MenuItem v-slot="{ active }" v-if="!checklist.private">

@@ -48,6 +48,7 @@ class UserCalendarFilter extends CalendarFilter
         'areas',
         'room_attributes',
         'room_categories',
+        'event_properties'
     ];
 
     protected $casts = [
@@ -65,5 +66,6 @@ class UserCalendarFilter extends CalendarFilter
         'areas' => 'array',
         'room_attributes' => 'array',
         'room_categories' => 'array',
+        'event_properties' => 'array'
     ];
 }

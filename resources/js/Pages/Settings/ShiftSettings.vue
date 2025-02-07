@@ -144,10 +144,16 @@
 
                             class="cursor-pointer py-4 pr-4 flex justify-between items-center border-b-2"
                         >
-                            <span class="sDark cursor-pointer">
+
+                            <span class="sDark cursor-pointer flex justify-center">
+                                <component
+                                    stroke-width="1.5"
+                                    class="text-black mx-1 size-5"
+                                    :is="shiftQualification.icon"
+                                />
                                 {{ shiftQualification.name }}
                                 <span v-if="shiftQualification.available"
-                                      class="xxsLight">
+                                      class="xxsLight ml-1 mt-1">
                                     {{$t('(Considered for new shifts)')}}
                                 </span>
                             </span>
@@ -282,11 +288,13 @@ import AddEditShiftTimePreset from "@/Pages/Settings/Components/AddEditShiftTime
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import draggable from "vuedraggable";
 import {router} from "@inertiajs/vue3";
+import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
+        ShiftQualificationIconCollection,
         SwitchLabel,
         Switch,
         SwitchGroup,
@@ -464,22 +472,6 @@ export default defineComponent({
             this.shiftTimePresetToDelete = null;
         },
         submitDelete(){
-            this.$inertia.delete(route('craft.delete', this.craftToDelete.id), {
-                preserveScroll: true,
-                preserveState: true,
-                onFinish: () => {
-                    this.closedDeleteCraftModal();
-                }
-            })
-        },
-        reorderCrafts(crafts) {
-            crafts.map((craft, index) => {
-                craft.position = index + 1
-            })
-
-            router.post(route('craft.reorder'), {
-                crafts: crafts
-            });
             if (this.deleteType === 'craft') {
                 this.$inertia.delete(route('craft.delete', this.craftToDelete.id), {
                     preserveScroll: true,
@@ -507,6 +499,15 @@ export default defineComponent({
                 this.deleteShiftTimePreset(this.shiftTimePresetToDelete);
                 this.closeDeleteShiftTimePresetModal();
             }
+        },
+        reorderCrafts(crafts) {
+            crafts.map((craft, index) => {
+                craft.position = index + 1
+            })
+
+            router.post(route('craft.reorder'), {
+                crafts: crafts
+            });
         },
         updateShiftSettingUseFirstNameSort(useFirstNameForSort) {
             router.patch(

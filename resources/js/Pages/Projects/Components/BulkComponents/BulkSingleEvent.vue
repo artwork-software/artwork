@@ -1,5 +1,5 @@
 <template>
-   <div>
+   <div class="print:w-full">
        <div class="grid gird-cols-1 md:grid-cols-8 gap-4">
            <div class="" v-if="usePage().props.event_status_module">
                <Listbox v-model="event.status"
@@ -8,17 +8,17 @@
                         as="div"
                         class="relative"
                         :disabled="canEditComponent === false">
-                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
+                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class="print:border-0">
                        <div class="flex items-center gap-x-2">
                            <div>
                                <div class="block w-5 h-5 rounded-full"
                                     :style="{'backgroundColor' : event.status?.color }"/>
                            </div>
-                           <div class="truncate w-16">
+                           <div class="truncate w-16 print:w-full">
                                {{ event.status?.name }}
                            </div>
                        </div>
-                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
                    </ListboxButton>
                    <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
                        <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
@@ -46,17 +46,17 @@
                         as="div"
                         class="relative"
                         :disabled="canEditComponent === false">
-                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
+                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class="print:border-0 ">
                        <div class="flex items-center gap-x-2">
-                           <div>
+                           <div class="">
                                <div class="block w-5 h-5 rounded-full"
                                     :style="{'backgroundColor' : event.type?.hex_code }"/>
                            </div>
-                           <div class="truncate w-16">
+                           <div class="truncate w-16 print:w-full">
                                {{ event.type?.name }}
                            </div>
                        </div>
-                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
                    </ListboxButton>
                    <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
                        <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
@@ -81,7 +81,7 @@
                <input v-model="event.name"
                    type="text"
                    :id="'name-' + index"
-                   class="input h-12"
+                   class="input h-12 print:border-0 print:bg-white"
                    :class="event.type?.individual_name && !event.name ? 'border-red-500' : ''"
                    placeholder="Name"
                    @focusout="updateEventInDatabase"
@@ -95,11 +95,11 @@
                         v-model="event.room"
                         @update:model-value="updateEventInDatabase"
                         :disabled="canEditComponent === false">
-                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
+                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class=" print:border-0">
                        <div class="flex-grow flex text-left xsDark">
                            {{ event.room?.name }}
                        </div>
-                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
                    </ListboxButton>
                    <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
                        <ListboxOption v-for="room in sortedRooms"
@@ -116,7 +116,7 @@
                    </ListboxOptions>
                </Listbox>
            </div>
-           <div class="">
+           <div class="print:col-span-2">
                <div class="relative">
                    <div class="absolute inset-y-0 left-1 text-xs pointer-events-none text-primary flex items-center pl-3 z-40 h-12">
                        {{ dayString }},
@@ -126,7 +126,7 @@
                        type="date"
                        :id="'day-' + index"
                        placeholder="Tag"
-                       class="input h-12 pl-9 text-xs"
+                       class="input h-12 pl-9 text-xs print:border-0 print:pr-5"
                        :disabled="canEditComponent === false"
                        @focusout="updateEventInDatabase"
                        @change="dayString = getDayOfWeek(new Date(event.day)).replace('.', '')"
@@ -140,7 +140,7 @@
                        type="time"
                        :id="'start-time-' + index"
                        placeholder="Tag"
-                       class="input h-12 !rounded-r-none"
+                       class="input h-12 !rounded-r-none print:border-0"
                        :disabled="canEditComponent === false"
                        @focusout="updateEventInDatabase"
                    />
@@ -149,13 +149,13 @@
                        type="time"
                        :id="'end_time-' + index"
                        placeholder="Tag"
-                       class="input h-12 !rounded-l-none border-l-0"
+                       class="input h-12 !rounded-l-none border-l-0 print:border-0"
                        :disabled="canEditComponent === false"
                        @focusout="updateEventInDatabase"
                    />
                </div>
            </div>
-           <div v-if="canEditComponent" class="flex items-center col-span-1">
+           <div v-if="canEditComponent" class="flex items-center col-span-1 print:hidden">
                <div class="flex items-center gap-x-3">
                    <ToolTipComponent icon="IconNote" v-if="!isInModal" :tooltip-text="$t('Edit the description')" stroke="1.5" @click="openNoteModal = true" />
                    <ToolTipDefault :tooltip-text="$t('Set the event to all-day')" left show24-h-icon icon-classes="w-6 h-6" v-if="event.start_time && event.end_time && !event.copy && !isInModal" @click="removeTime"/>
@@ -285,6 +285,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import {computed, onMounted, ref} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
+import {inject} from "vue";
 
 const props = defineProps({
     event: {
@@ -329,6 +330,7 @@ const props = defineProps({
 const showMenu = ref(false);
 const dayString = ref(null);
 const openNoteModal = ref(false);
+const event_properties = inject('event_properties');
 
 const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent']);
 const openEventComponent = (eventId) => {

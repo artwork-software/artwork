@@ -104,6 +104,9 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import {router, usePage} from "@inertiajs/vue3";
+import {inject, provide} from "vue";
+
+provide('event_properties', inject('event_properties'));
 
 const {hasAdminRole} = usePermission(usePage().props),
     props = defineProps([

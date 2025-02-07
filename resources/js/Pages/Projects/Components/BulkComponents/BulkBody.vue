@@ -5,13 +5,13 @@
                 {{ $t('Data is currently loaded. Please wait') }}
             </div>
         </div>
-        <div class="flex items-center justify-end gap-x-2" v-if="!isInModal">
+        <div class="flex items-center justify-end gap-x-2 print:hidden" v-if="!isInModal">
             <ToolTipComponent icon="IconFileExport"
                               icon-size="h-7 w-7"
                               :tooltip-text="$t('Export project list')"
                               direction="bottom"
                               @click="showExportModal = true"/>
-            <IconCalendarMonth class="w-6 h-6 cursor-pointer"
+            <IconCalendarMonth class="w-6 h-6 cursor-pointer text-artwork-buttons-context" stroke-width="1.2"
                                @click="useProjectTimePeriodAndRedirect()"/>
             <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
                 <MenuItem v-slot="{ active }">
@@ -64,13 +64,13 @@
                     :event-statuses="eventStatuses"
                 />
             </div>
-            <div v-else class="flex items-center h-24">
+            <div v-else class="flex items-center h-24 print:hidden">
                 <AlertComponent :text="$t('No events found. Click on the plus (+) icon to create an event')" type="info"
                                 show-icon icon-size="h-5 w-5"
                                 classes="!items-center"/>
             </div>
         </div>
-        <div class="flex items-center justify-between pointer-events-none">
+        <div class="flex items-center justify-between pointer-events-none print:hidden">
             <IconCirclePlus v-if="canEditComponent"
                             @click="addEmptyEvent"
                             class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out pointer-events-auto"
@@ -131,6 +131,7 @@ import {usePermission} from "@/Composeables/Permission.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
+import {provide, inject} from "vue";
 
 const exportTabEnums = useExportTabEnums();
 const {hasAdminRole} = usePermission(usePage().props),
@@ -169,6 +170,10 @@ const {hasAdminRole} = usePermission(usePage().props),
         eventStatuses: {
             type: Object,
             required: false
+        },
+        event_properties: {
+            type: Array,
+            required: true
         }
     }),
     roomCollisions = ref([]),
@@ -456,6 +461,8 @@ onMounted(() => {
     if (props.isInModal) {
         addEmptyEvent();
     }
+
+    provide('event_properties', props.event_properties);
 });
 
 watch(events, (newEvents) => {

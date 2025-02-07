@@ -95,6 +95,7 @@ use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Artwork\Modules\Project\Services\ProjectStateService;
 use Artwork\Modules\ProjectManagementBuilder\Models\ProjectManagementBuilder;
 use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
+use Artwork\Modules\ProjectPrintLayout\Services\ProjectPrintLayoutService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
@@ -146,6 +147,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
+use phpDocumentor\Reflection\PseudoTypes\IntegerRange;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -176,7 +178,8 @@ class ProjectController extends Controller
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly TimelineService $timelineService,
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
-        private readonly UserProjectManagementSettingService $userFilterAndSortSettingService
+        private readonly UserProjectManagementSettingService $userFilterAndSortSettingService,
+        private readonly ProjectPrintLayoutService $projectPrintLayoutService,
     ) {
     }
 
@@ -2371,6 +2374,7 @@ class ProjectController extends Controller
             'first_project_budget_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
             'createSettings' => app(ProjectCreateSettings::class),
+            'printLayouts' => $this->projectPrintLayoutService->getAll(),
         ]);
     }
 

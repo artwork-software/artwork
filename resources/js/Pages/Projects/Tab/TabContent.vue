@@ -1,5 +1,5 @@
 <template>
-    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id">
+    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id" :print-layouts="printLayouts">
         <div class="my-10 w-full">
             <div v-for="component in currentTab.components" :class="removeML(component.component?.type)">
                 <Component
@@ -182,6 +182,10 @@ const props = defineProps({
         required: true
     },
     createSettings: {
+        type: Object,
+        required: true
+    },
+    printLayouts: {
         type: Object,
         required: true
     }

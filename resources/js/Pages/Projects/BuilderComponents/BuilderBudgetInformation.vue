@@ -1,5 +1,6 @@
 <template>
-    <div class="xxsLight">
+    <div class="xxsLight print:xsDark">
+        <h3 class="headline3 hidden print:block print:mb-2">{{ $t('Budget Informations') }}</h3>
         <div class="w-full items-center">
             <div class="">{{ $t('Cost unit:') }} {{ project?.cost_center?.name }}</div>
         </div>

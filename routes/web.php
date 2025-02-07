@@ -51,6 +51,7 @@ use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectManagementBuilderController;
+use App\Http\Controllers\ProjectPrintLayoutController;
 use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\ProjectTabController;
@@ -1865,6 +1866,38 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // delete project-management-builder.destroy
         Route::delete('/destroy/{component}', [ProjectManagementBuilderController::class, 'destroy'])
             ->name('project-management-builder.destroy');
+    });
+
+    Route::group(['prefix' => 'project-print-layout'], function(): void {
+        Route::get('/', [ProjectPrintLayoutController::class, 'index'])
+            ->name('project-print-layout.index');
+
+        Route::post('/store', [ProjectPrintLayoutController::class, 'store'])
+            ->name('project-print-layout.store');
+
+        // project.print.layout.add.component
+        Route::post('/{projectPrintLayout}/add/component', [ProjectPrintLayoutController::class, 'addComponent'])
+            ->name('project.print.layout.add.component');
+
+        // project-print-layout.components.destroy
+        Route::delete('/components/{printLayoutComponent}', [ProjectPrintLayoutController::class, 'destroyComponent'])
+            ->name('project-print-layout.components.destroy');
+
+        // project-print-layout.update
+        Route::patch('/{projectPrintLayout}/update', [ProjectPrintLayoutController::class, 'update'])
+            ->name('project-print-layout.update');
+
+        // project-print-layout.update.header.note
+        Route::patch('/{projectPrintLayout}/update/header/note', [ProjectPrintLayoutController::class, 'updateHeaderNote'])
+            ->name('project-print-layout.update.header.note');
+
+        // project.print.layout
+        Route::get('/print/{project}/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'show'])
+            ->name('project-print-layout.show');
+
+        // project-print-layout.destroy
+        Route::delete('/destroy/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'destroy'])
+            ->name('project-print-layout.destroy');
     });
 });
 

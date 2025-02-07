@@ -603,8 +603,7 @@
             </div>
 
             <div v-if="canEdit">
-                <div class="flex justify-center w-full py-4"
-                     v-if="(isAdmin || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.user.id))">
+                <div class="flex justify-center w-full py-4" v-if="(isAdmin || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.user.id) || $can('create events without request'))">
                     <FormButton
                         :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
                         @click="updateOrCreateEvent()"

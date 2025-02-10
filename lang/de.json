@@ -2334,5 +2334,6 @@
     "Create a new print layout": "Füge ein neues Drucklayout hinzu",
     "Should this tab be set as the default tab?": "Soll dieser Tab als Standardtab festgelegt werden?",
     "Schedule events without request": "Termine ohne Anfrage planen",
-    "A user with this permission can schedule events directly without a request in all rooms": "Ein Nutzer mit dieser Berechtigung kann direkt Termine ohne Anfrage in allen Räumen planen"
+    "A user with this permission can schedule events directly without a request in all rooms": "Ein Nutzer mit dieser Berechtigung kann direkt Termine ohne Anfrage in allen Räumen planen",
+    "Open": "Öffnen"
 }

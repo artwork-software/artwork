@@ -412,7 +412,7 @@
                                         </div>
                                     </div>
                                 </BaseFilter>
-                                <BaseMenu :white-icon="true" show-sort-icon dots-size="h-7 w-7" menu-width="w-fit" right>
+                                <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-fit" right white-icon>
                                     <div class="flex items-center justify-end py-1">
                                     <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="this.resetSort()">
                                         {{ $t('Reset') }}

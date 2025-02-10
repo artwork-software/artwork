@@ -76,6 +76,7 @@ class EventCreated implements ShouldBroadcastNow
                 'projectStatusBorderColor' => $projectState?->color,
                 'projectStatusName' => $projectState?->name,
                 'eventTypeName' => $eventType?->name,
+                'projectArtists' => $project?->artists,
                 'eventTypeAbbreviation' => $eventType?->abbreviation,
                 'eventTypeColor' => $eventType?->hex_code,
                 'eventProperties' => $event->getAttribute('eventProperties'),

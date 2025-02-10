@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "62978fe48c949bf105194201ab8b8b0e",
+    "content-hash": "cb913e590afad9d2692ded3828ba8c82",
     "packages": [
         {
             "name": "antonrom00/laravel-model-changes-history",
@@ -2031,6 +2031,87 @@
                 }
             ],
             "time": "2023-11-03T12:00:00+00:00"
+        },
+        {
+            "name": "fiveam-code/laravel-notion-api",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/5am-code/laravel-notion-api.git",
+                "reference": "9cf529de964c47766c0e125c0d88265d147ee258"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/5am-code/laravel-notion-api/zipball/9cf529de964c47766c0e125c0d88265d147ee258",
+                "reference": "9cf529de964c47766c0e125c0d88265d147ee258",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.0.1",
+                "illuminate/support": "^8.0|^9.0|^10.0|^11.0",
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^6.0|^8.0|^9.0",
+                "pestphp/pest": "^1.22|^2.34",
+                "pestphp/pest-plugin-laravel": "^1.3|^2.3",
+                "phpunit/phpunit": "^9.0|^10.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Notion": "FiveamCode\\LaravelNotionApi\\NotionFacade"
+                    },
+                    "providers": [
+                        "FiveamCode\\LaravelNotionApi\\LaravelNotionApiServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "FiveamCode\\LaravelNotionApi\\": "src",
+                    "FiveamCode\\LaravelNotionApi\\Endpoints\\": "src/Endpoints",
+                    "FiveamCode\\LaravelNotionApi\\Exceptions\\": "src/Exceptions"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Diana Scharf",
+                    "email": "hello@dianaweb.dev",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Johannes Güntner",
+                    "email": "johannes.guentner@it-guentner.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Laravel Wrapper for the Notion API",
+            "homepage": "https://github.com/fiveam-code/laravel-notion-api",
+            "keywords": [
+                "api-wrapper",
+                "fiveam-code",
+                "laravel",
+                "laravel-notion-api",
+                "notion",
+                "notion-api"
+            ],
+            "support": {
+                "issues": "https://github.com/5am-code/laravel-notion-api/issues",
+                "source": "https://github.com/5am-code/laravel-notion-api/tree/v1.2.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.patreon.com/5amcode",
+                    "type": "patreon"
+                }
+            ],
+            "time": "2024-05-05T04:32:14+00:00"
         },
         {
             "name": "fruitcake/php-cors",

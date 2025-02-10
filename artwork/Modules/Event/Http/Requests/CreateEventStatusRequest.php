@@ -24,6 +24,7 @@ class CreateEventStatusRequest extends FormRequest
         return [
             'name' => 'required|string',
             'color' => 'required|string',
+            'default' => 'required|boolean',
         ];
     }
 }

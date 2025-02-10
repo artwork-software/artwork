@@ -25,6 +25,7 @@ class UpdateEventStatusRequest extends FormRequest
             'id' => 'required|exists:event_statuses,id',
             'name' => 'required|string',
             'color' => 'required|string',
+            'default' => 'required|boolean',
         ];
     }
 }

@@ -19,8 +19,13 @@
                     />
                 </div>
             </div>
+            <div v-if="eventPropertyForm.errors">
+                <div class="text-red-500 text-sm mt-2" v-for="error in eventPropertyForm.errors" :key="error">
+                    {{ error }}
+                </div>
+            </div>
             <div class="flex items-center justify-center mt-5">
-                <FormButton type="submit" :text="eventPropertyToEdit ? $t('Save') : $t('Create')" />
+                <FormButton type="submit" :text="eventPropertyToEdit ? $t('Save') : $t('Create')" :disabled="eventPropertyForm.processing" />
             </div>
 
         </form>
@@ -33,12 +38,8 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {useForm} from "@inertiajs/vue3";
-import {ChevronDownIcon} from "@heroicons/vue/outline";
-import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
-import Label from "@/Jetstream/Label.vue";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {inject} from "vue";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
+
 const props = defineProps({
         eventPropertyToEdit: {
             type: Object,
@@ -46,17 +47,15 @@ const props = defineProps({
             default: null
         }
     }),
-    icons = [
-        'IconUsersGroup',
-        'IconSpeakerphone'
-    ],
-    availableEventProperties = inject('event_properties'),
+
     emits = defineEmits(["closeModal"]),
     eventPropertyForm = useForm({
         name: props.eventPropertyToEdit ? props.eventPropertyToEdit.name : '',
         icon: props.eventPropertyToEdit ? props.eventPropertyToEdit.icon : null,
     }),
     addOrUpdateEventProperty = () => {
+
+
         let onFinish = () => {
             emits.call(this, 'closeModal');
 
@@ -69,7 +68,7 @@ const props = defineProps({
                 {
                     preserveScroll: true,
                     preserveState: true,
-                    onFinish: onFinish,
+                    onSuccess: onFinish,
                 }
             );
 
@@ -86,7 +85,7 @@ const props = defineProps({
             {
                 preserveScroll: true,
                 preserveState: true,
-                onFinish: onFinish,
+                onSuccess: onFinish,
             }
         );
 

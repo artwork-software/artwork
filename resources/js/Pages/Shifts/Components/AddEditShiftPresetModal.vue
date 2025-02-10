@@ -140,7 +140,7 @@
             </div>
         </div>
         <div class="flex justify-center">
-            <FormButton :text="$t('Save')" type="submit" />
+            <FormButton :text="$t('Save')" type="submit" :disabled="shiftForm.processing" />
         </div>
     </form>
 

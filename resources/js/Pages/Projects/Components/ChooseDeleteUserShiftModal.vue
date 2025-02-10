@@ -35,7 +35,7 @@
                                     </SwitchLabel>
                                 </SwitchGroup>
                                 <div class="flex items-center justify-center">
-                                    <FormButton :text="$t('Save')" @click="returnBuffer" class="mt-4"/>
+                                    <FormButton :text="$t('Save')" @click="returnBuffer" class="mt-4"  :disabled="removeFromSingleShift.processing"/>
                                 </div>
                             </div>
                         </DialogPanel>

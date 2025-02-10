@@ -327,7 +327,7 @@
 
                 <div class="w-full items-center flex justify-center text-center mt-4">
                     <FormButton
-                        :disabled="newAreaForm.name.length === 0"
+                        :disabled="newAreaForm.processing || newAreaForm.name === ''"
                         :text="$t('Create')"
                         class="mt-8"
                         type="submit"
@@ -354,7 +354,7 @@
 
                 <div class="w-full items-center flex justify-center text-center">
                     <FormButton
-                        :disabled="editAreaForm.name.length === 0"
+                        :disabled="editAreaForm.processing || editAreaForm.name === ''"
                         :text="$t('Save')"
                         type="submit"
                         class="mt-8 inline-flex items-center"
@@ -553,7 +553,7 @@
                 <div class="w-full items-center text-center">
                     <FormButton
                         type="submit"
-                        :disabled="newRoomForm.name.length === 0"
+                        :disabled="newRoomForm.processing || newRoomForm.name === ''"
                         :text="$t('Create')"
                         class="inline-flex items-center mt-4"
                     />
@@ -768,7 +768,7 @@
                 <div class="w-full items-center text-center">
                     <FormButton
                         type="submit"
-                        :disabled="editRoomForm.name.length === 0"
+                        :disabled="editRoomForm.name.length === 0 || editRoomForm.processing"
                         :text="$t('Save')"
                         class="inline-flex items-center mt-8"
                     />

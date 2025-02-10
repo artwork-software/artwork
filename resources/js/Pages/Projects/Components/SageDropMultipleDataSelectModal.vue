@@ -169,7 +169,9 @@ export default {
                             <div class="flex justify-between mt-5 items-center pr-4">
                                 <FormButton
                                     @click="moveRow(true)"
-                                    text="Verschieben" />
+                                    text="Verschieben"
+                                />
+
                                 <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">
                                     {{ $t('No, not really') }}
                                 </p>

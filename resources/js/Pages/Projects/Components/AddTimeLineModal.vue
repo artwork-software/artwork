@@ -96,7 +96,7 @@
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <FormButton :text="$t('Save')" @click="saveTimeLines"/>
+                                <FormButton :text="$t('Save')" @click="saveTimeLines" :disabled="addTimeLineForm.processing"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>

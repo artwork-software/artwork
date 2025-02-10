@@ -245,7 +245,7 @@
                 </div>
             </div>
             <div class="w-full items-center text-center">
-                <FormButton @click="saveNewTeams" :text="$t('Save')"/>
+                <FormButton @click="saveNewTeams" :text="$t('Save')" :disabled="userForm.processing"/>
             </div>
         </div>
     </BaseModal>

@@ -175,7 +175,7 @@
 
                         <div class="flex justify-center pt-8">
                             <FormButton
-                                :disabled="editRoomForm.name.length === 0"
+                                :disabled="editRoomForm.name.length === 0 || editRoomForm.processing"
                                 type="submit"
                                 :text="$t('Save')"
                             />
@@ -272,7 +272,7 @@
                     <div class="flex justify-between mt-6">
                         <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="approveRequest">
+                                @click="approveRequest" :disabled="approveRequestForm.processing">
                             {{$t('Commitments')}}
                         </button>
                         <div class="flex my-auto">
@@ -365,6 +365,7 @@
                             @click="declineRequest"
                             :text="$t('Cancellations')"
                             class="inline-flex items-center"
+                            :disabled="approveRequestForm.processing"
                         />
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"

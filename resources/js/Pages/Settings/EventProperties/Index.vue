@@ -53,8 +53,8 @@
                                 @close-modal="eventPropertyToEdit = null; showEventPropertyModal = false;"/>
             <confirm-delete-modal
                 v-if="showDeleteEventPropertyModal"
-                :title="$t('Event-Eigenschaft löschen')"
-                :description="$t('Sicher, dass du die Event-Eigenschaft {0} löschen möchtest? Das ist nicht umkehrbar.'+eventPropertyToDelete.name, [eventPropertyToDelete.name])"
+                :title="$t('Delete event property')"
+                :description="$t('Are you sure you want to delete the event property {0}? This is not reversible.', [eventPropertyToDelete.name])"
                 @closed="showDeleteEventPropertyModal = false"
                 @delete="deleteEventProperty"/>
             <!-- -->

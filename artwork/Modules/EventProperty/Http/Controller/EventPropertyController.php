@@ -3,6 +3,8 @@
 namespace Artwork\Modules\EventProperty\Http\Controller;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\EventProperty\Http\Requests\CreateEventPropertyRequest;
+use Artwork\Modules\EventProperty\Http\Requests\UpdateEventPropertyRequest;
 use Artwork\Modules\EventProperty\Models\EventProperty;
 use Artwork\Modules\EventProperty\Services\EventPropertyService;
 use Illuminate\Http\RedirectResponse;
@@ -30,20 +32,26 @@ class EventPropertyController extends Controller
         );
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(CreateEventPropertyRequest $request): RedirectResponse
     {
-        $this->eventPropertyService->createFromRequest($request);
+        if($request->validated()){
+            $this->eventPropertyService->createFromRequest($request);
+            return $this->redirector->back();
+        }
 
-        return $this->redirector->back();
+        return $this->redirector->back()->withErrors($request->validated());
     }
 
     public function update(
         EventProperty $eventProperty,
-        Request $request
+        UpdateEventPropertyRequest $request
     ): RedirectResponse {
-        $this->eventPropertyService->updateFromRequest($eventProperty, $request);
+        if($request->validated()){
+            $this->eventPropertyService->updateFromRequest($eventProperty, $request);
+            return $this->redirector->back();
+        }
 
-        return $this->redirector->back();
+        return $this->redirector->back()->withErrors($request->validated());
     }
 
     public function destroy(EventProperty $eventProperty): RedirectResponse

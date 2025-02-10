@@ -187,7 +187,7 @@ export default {
                     <span class="ml-1">{{ $t('Show instructions') }}</span>
                 </div>
             </div>
-            <FormButton @click="create(true)" :text="aboForm.id ? $t('Save') : $t('Subscribe')" />
+            <FormButton @click="create(true)" :text="aboForm.id ? $t('Save') : $t('Subscribe')"  :disabled="aboForm.processing" />
         </div>
 
         <div v-if="aboForm.id" class="mt-2 text-artwork-buttons-create bg-artwork-buttons-create/10 rounded-lg p-3" >

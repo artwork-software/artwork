@@ -61,7 +61,7 @@
         </section>
 
         <div class="flex justify-center mt-5">
-            <FormButton :text="$t('Save')" @click="submitForm" />
+            <FormButton :text="$t('Save')" @click="submitForm" :disabled="multiEditCellForm.processing" />
         </div>
     </BaseModal>
 </template>

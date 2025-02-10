@@ -2334,5 +2334,7 @@
     "Should this tab be set as the default tab?": "Should this tab be set as the default tab?",
     "Schedule events without request": "Schedule events without request",
     "A user with this permission can schedule events directly without a request in all rooms": "A user with this permission can schedule events directly without a request in all rooms",
-    "Open": "Open"
+    "Open": "Open",
+    "Are you sure you want to delete the event property {0}? This is not reversible.": "Are you sure you want to delete the event property {0}? This is not reversible.",
+    "Delete event property": "Delete event property"
 }

@@ -78,6 +78,7 @@
                                 <FormButton
                                     :text="$t('Save')"
                                     @click="saveTimeLines"
+                                    :disabled="addTimeLineForm.processing"
                                     />
                             </div>
                         </DialogPanel>

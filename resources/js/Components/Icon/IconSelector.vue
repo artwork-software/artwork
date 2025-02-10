@@ -70,7 +70,7 @@ const loading = ref(true);
 
 const props = defineProps({
     currentIcon: {
-        type: String,
+        type: [String, Object, Function],
         required: false,
     }
 });

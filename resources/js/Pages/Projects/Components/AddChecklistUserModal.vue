@@ -27,7 +27,8 @@
                 <FormButton
                     @click="submitUsers"
                     :text="$t('Assign')"
-                    class="mt-8" />
+                    class="mt-8"
+                />
                 <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
             </div>
     </BaseModal>

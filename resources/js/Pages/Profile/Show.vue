@@ -116,7 +116,7 @@
 
                         <div class="pt-5">
                             <div class="mt-2 items-center">
-                                <FormButton v-if="!showSuccess" @click="updateProfileInformation()" :text="$t('Save profile changes')" />
+                                <FormButton v-if="!showSuccess" @click="updateProfileInformation()" :text="$t('Save profile changes')" :disabled="userForm.processing" />
                                 <button v-else type="submit"
                                     class="items-center py-1 mt-5 rounded-full px-28 border bg-success"
                                 >
@@ -233,11 +233,15 @@
                         <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
                             <FormButton
                                 :text="$t('Select file')"
-                                @click.prevent="selectNewPhoto"/>
+                                @click.prevent="selectNewPhoto"
+                                :disabled="userForm.processing"
+                            />
                             <FormButton
                                 @click.prevent="deletePhoto"
                                 :text="$t('Delete current profile picture')"
-                                v-if="user.profile_photo_path" />
+                                v-if="user.profile_photo_path"
+                                :disabled="userForm.processing"
+                            />
                         </div>
                     </div>
 
@@ -247,7 +251,9 @@
                     <div class="mt-6">
                         <FormButton
                             :text="$t('Save new profile picture')"
-                            @click="validateTypeAndChange" />
+                            @click="validateTypeAndChange"
+                            :disabled="userForm.processing"
+                        />
                     </div>
                 </div>
         </BaseModal>

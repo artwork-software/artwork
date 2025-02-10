@@ -71,6 +71,7 @@ class RemoveEvent implements ShouldBroadcastNow
                 'projectStatusBorderColor' => $projectState?->color,
                 'projectStatusName' => $projectState?->name,
                 'eventTypeName' => $eventType?->name,
+                'projectArtists' => $project?->artists,
                 'eventTypeAbbreviation' => $eventType?->abbreviation,
                 'eventTypeColor' => $eventType?->hex_code,
                 'created_at' => $event->created_at?->format('d.m.Y, H:i'),

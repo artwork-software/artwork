@@ -2334,5 +2334,10 @@
     "Create a new print layout": "Füge ein neues Drucklayout hinzu",
     "Should this tab be set as the default tab?": "Soll dieser Tab als Standardtab festgelegt werden?",
     "Schedule events without request": "Termine ohne Anfrage planen",
-    "A user with this permission can schedule events directly without a request in all rooms": "Ein Nutzer mit dieser Berechtigung kann direkt Termine ohne Anfrage in allen Räumen planen"
+    "A user with this permission can schedule events directly without a request in all rooms": "Ein Nutzer mit dieser Berechtigung kann direkt Termine ohne Anfrage in allen Räumen planen",
+    "Open": "Öffnen",
+    "Are you sure you want to delete the event property {0}? This is not reversible.": "Möchtest du die Termin-Eigenschaft {0} wirklich löschen? Dies ist nicht rückgängig zu machen.",
+    "Delete event property": "Termin-Eigenschaft löschen",
+    "Hide unoccupied rooms": "Leere Räume ausblenden",
+    "Should this status be set as the default?": "Soll dieser Status als Standard festgelegt werden?"
 }

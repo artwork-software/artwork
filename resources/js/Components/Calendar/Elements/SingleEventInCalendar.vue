@@ -1,6 +1,6 @@
 <template>
     <div :style="{ minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
-        class="rounded-lg group/singleEvent event-item relative overflow-y-scroll"
+        class="rounded-lg group/singleEvent relative overflow-hidden"
         :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '', isHeightFull ? 'h-full' : '']">
         <div v-if="zoom_factor > 0.4 && multiEdit"
              class="absolute w-full h-full z-10 rounded-lg group-hover/singleEvent:block flex justify-center align-middle items-center"
@@ -24,7 +24,8 @@
                 </div>
             </div>
         </div>
-        <div class="flex items-center justify-between">
+
+        <div class="flex items-center justify-between w-full">
             <div class="px-1 py-1">
                 <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
                     :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']" class="">
@@ -45,20 +46,20 @@
                         </div>
                     </div>
                     <div v-if="usePage().props.user.calendar_settings.project_artists"
-                         class="flex items-center w-36">
+                         class="flex items-center w-32">
                         <div v-if="event.projectArtists"
                              class=" truncate">
                             {{ event.projectArtists }}
                         </div>
                     </div>
                     <div v-if="usePage().props.user.calendar_settings.event_name"
-                         class="flex items-center w-36">
+                         class="flex items-center w-32">
                         <div v-if="event.eventName"
                              class="truncate">
                             {{ event.eventName }}
                         </div>
                     </div>
-                    <div class="w-36">
+                    <div class="w-32">
                         <div class=" truncate">
                             {{ event.eventTypeName }}
                         </div>
@@ -75,7 +76,7 @@
                         <IconUsersGroup stroke-width="1.5" :width="12 * zoom_factor" :height="12 * zoom_factor"/>
                     </div>
                 </div>
-                <div class="flex">
+                <div class="flex w-32">
                     <!-- Time -->
                     <div class="flex"
                          :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}"
@@ -201,13 +202,19 @@
                     </div>
                 </div>
             </div>
-            <div class="flex items-center gap-1 my-2">
-                <div class="grid gird-cols-1 md:grid-cols-2 gap-2">
-                    <div v-for="property in event.eventProperties">
-                        <component :is="property.icon" class="size-4" stroke-width="1.5" />
+            <div class="flex items-center">
+                <div class="grid gird-cols-1 md:grid-cols-2 gap-1">
+                    <div v-for="property in event.eventProperties" class="col-span-1">
+                        <ToolTipComponent
+                            :icon="property.icon"
+                            icon-size="size-4"
+                            :tooltip-text="property.name"
+                            classes="text-black"
+                            stroke="1.5"
+                        />
                     </div>
                 </div>
-                <div class="relative invisible group-hover/singleEvent:visible">
+                <div class="invisible group-hover/singleEvent:visible">
                     <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.user.calendar_settings.high_contrast ? 'text-white' : ''">
                         <MenuItem v-slot="{ active }">
                             <div @click="$emit('editEvent', event)"
@@ -366,6 +373,7 @@ import {useI18n} from "vue-i18n";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import EventNoteComponent from "@/Layouts/Components/EventNoteComponent.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const {t} = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);

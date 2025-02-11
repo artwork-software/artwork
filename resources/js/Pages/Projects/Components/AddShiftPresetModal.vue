@@ -57,6 +57,7 @@
                 :text="preset ? $t('Save template') : $t('Create template')"
                 @click="savePreset"
                 class="mt-3"
+                :disabled="presetForm.processing"
             />
         </div>
     </BaseModal>

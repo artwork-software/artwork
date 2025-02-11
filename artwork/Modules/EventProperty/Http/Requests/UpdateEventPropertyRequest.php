@@ -1,10 +1,10 @@
 <?php
 
-namespace Artwork\Modules\Event\Http\Requests;
+namespace Artwork\Modules\EventProperty\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreateEventStatusRequest extends FormRequest
+class UpdateEventPropertyRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,9 @@ class CreateEventStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string',
-            'color' => 'required|string',
-            'default' => 'required|boolean',
+            'id' => 'required|integer|exists:event_properties,id',
+            'icon' => 'required|string',
+            'name' => 'required|string'
         ];
     }
 }

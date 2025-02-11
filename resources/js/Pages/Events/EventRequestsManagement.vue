@@ -275,6 +275,7 @@
                             @click="declineRequest"
                             :text="$t('Cancellations')"
                             class="inline-flex items-center"
+                            :disabled="answerRequestForm.processing"
                             />
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"

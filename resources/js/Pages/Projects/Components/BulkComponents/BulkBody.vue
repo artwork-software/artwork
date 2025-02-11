@@ -240,7 +240,7 @@ const {hasAdminRole} = usePermission(usePage().props),
         if (props.isInModal) {
             events.push({
                 index: events.length + 1,
-                status: props.eventStatuses ? props.eventStatuses[0] : null,
+                status: props.eventStatuses ? props.eventStatuses?.find(status => status.default) : null,
                 type: props.eventTypes ? props.eventTypes[0] : null,
                 name: props.isInModal ? '' : 'Blocker',
                 room: props.rooms ? props.rooms[0] : null,
@@ -283,7 +283,8 @@ const {hasAdminRole} = usePermission(usePage().props),
             } else {
                 router.post(route('event.store.bulk.single', {project: props.project}), {
                     event: {
-                        status: props.eventStatuses ? props.eventStatuses[0] : null,
+                        // status get the default status form the eventStatuses
+                        status: props.eventStatuses ? props.eventStatuses?.find(status => status.default) : null,
                         type: props.eventTypes ? props.eventTypes[0] : null,
                         name: props.isInModal ? '' : 'Blocker',
                         room: props.rooms ? props.rooms[0] : null,

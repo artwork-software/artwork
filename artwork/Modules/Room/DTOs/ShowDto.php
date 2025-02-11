@@ -63,6 +63,8 @@ class ShowDto extends BaseDto
 
     public ?int $firstProjectCalendarTabId = null;
 
+    public ?SupportCollection $eventProperties = null;
+
     public function setRoom(?RoomCalendarResource $room): self
     {
         $this->room = $room;
@@ -238,6 +240,13 @@ class ShowDto extends BaseDto
         return $this;
     }
 
+    public function setEventProperties(?SupportCollection $eventProperties): self
+    {
+        $this->eventProperties = $eventProperties;
+
+        return $this;
+    }
+
     public function getEventStatuses(): ?Collection
     {
         return $this->eventStatuses;
@@ -408,6 +417,11 @@ class ShowDto extends BaseDto
         return $this->firstProjectCalendarTabId;
     }
 
+    public function getEventProperties(): ?SupportCollection
+    {
+        return $this->eventProperties;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -440,6 +454,7 @@ class ShowDto extends BaseDto
             'first_project_tab_id' => $this->getFirstProjectTabId(),
             'first_project_calendar_tab_id' => $this->getFirstProjectCalendarTabId(),
             'eventStatuses' => $this->getEventStatuses(),
+            'event_properties' => $this->getEventProperties()
         ];
     }
 }

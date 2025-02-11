@@ -1,7 +1,7 @@
 <template>
-    <div class="mt-6 p-5 bg-lightBackgroundGray">
+    <div class="mt-6 p-5 bg-lightBackgroundGray print:bg-white print:p-0">
         <div
-            class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
+            class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray print:bg-white print:mx-0 print:p-0 print:mt-0">
             <div v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id) || isMemberOfADepartment)" class="relative">
                 <TextareaComponent
                     :label="$t('What should the other project members know about the project?')"
@@ -25,10 +25,12 @@
                 <div class="text-xs text-end mt-1 text-artwork-buttons-context">{{ commentForm.text?.length ?? 0 }} / 5000</div>
             </div>
 
+            <div class="hidden print:block">
+                <h3 class="headline3 hidden print:block print:mb-2">{{ $t('Comments') }}</h3>
+            </div>
+
             <div>
-
                 <!-- new comment layout -->
-
                 <div v-if="newCommentList?.length > 0" class="my-6" v-for="comment in newCommentList">
                     <div class="group flex items-center justify-between">
                         <div class="">
@@ -45,7 +47,7 @@
                             </div>
                             <p class="mt-2 mr-14 subpixel-antialiased xsDark font-semibold" v-html="comment.text"></p>
                         </div>
-                        <div class="invisible group-hover:visible">
+                        <div class="invisible group-hover:visible print:hidden">
                             <button v-if="$role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.user.id" type="button"
                                     @click="deleteCommentFromProject(comment)">
                                 <span class="sr-only">{{ $t('Remove comment from project') }}</span>

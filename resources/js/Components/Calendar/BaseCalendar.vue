@@ -51,7 +51,7 @@
                                     </div>
                                     <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                          :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
-                                         class="group/container border-t-2 border-gray-400 border-dashed" :id="'scroll_container-' + day.without_format">
+                                         class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.without_format">
                                         <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="(event, index) in room.content[day.full_day].events">
                                             <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.without_format">
                                                 <AsyncSingleEventInCalendar
@@ -166,44 +166,37 @@
         @closed="eventComponentClosed"
         :event-statuses="eventStatuses"
     />
-
     <ConfirmDeleteModal
         v-if="deleteComponentVisible"
         :title="deleteTitle"
         :description="deleteDescription"
         @closed="deleteComponentVisible = false"
         @delete="deleteEvent"/>
-
     <DeclineEventModal
         v-if="showDeclineEventModal"
         :request-to-decline="declineEvent"
         :event-types="eventTypes"
         @closed="showDeclineEventModal = false"/>
-
     <MultiEditModal v-if="showMultiEditModal"
                     :checked-events="editEvents"
                     :rooms="rooms"
                     @closed="closeMultiEditModal"/>
-
     <MultiDuplicateModal v-if="showMultiDuplicateModal"
                     :checked-events="editEvents"
                     :rooms="rooms"
                     @closed="closeMultiDuplicateModal"/>
-
     <ConfirmDeleteModal
         v-if="openDeleteSelectedEventsModal"
         :title="$t('Delete assignments')"
         :description="$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.')"
         @closed="closeDeleteSelectedEventsModal"
         @delete="deleteSelectedEvents"/>
-
     <AddSubEventModal
         v-if="showAddSubEventModal"
         :event="eventToEdit"
         :event-types="eventTypes"
         :sub-event-to-edit="subEventToEdit"
         @close="closeAddSubEventModal"/>
-
     <events-without-room-component
         v-if="showEventsWithoutRoomComponent"
         @closed="showEventsWithoutRoomComponent = false"
@@ -221,7 +214,7 @@
 /* Comment: below very important unused import new Date().format relies on it - do not remove otherwise ui breaks */
 import VueCal from 'vue-cal';
 /* Comment: above very important unused import new Date().format relies on it - do not remove otherwise ui breaks */
-import {computed, defineAsyncComponent, inject, onMounted, ref} from "vue";
+import {computed, defineAsyncComponent, inject, onMounted, provide, ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
@@ -244,6 +237,8 @@ import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 const filterOptions = inject('filterOptions');
 const personalFilters = inject('personalFilters');
 const user_filters = inject('user_filters');
+const event_properties = inject('event_properties');
+//provide('event_properties', inject('event_properties'));
 
 const props = defineProps({
         rooms: {
@@ -320,8 +315,7 @@ const scrollToNextEventInDay = (day, length) => {
                 inline: 'nearest' // Stelle sicher, dass es nicht die ganze Seite beeinflusst
             });
         }
-
-    }
+    };
 const computedFilteredEvents = computed(() => {
         let getComputedEventsWithoutRoom = () => {
             return eventsWithoutRoomRef.value.filter((event) => {
@@ -344,39 +338,38 @@ const computedFilteredEvents = computed(() => {
         }
 
         return getComputedEventsWithoutRoom();
-    })
+    });
 const computedCheckedEventsForMultiEditCount = computed(() => {
         return editEvents.value.length;
-    })
-const calendarDataRef = ref(JSON.parse(JSON.stringify(props.calendarData)))
-const eventsWithoutRoomRef = ref(JSON.parse(JSON.stringify(props.eventsWithoutRoom ?? [])))
-const first_project_calendar_tab_id = inject('first_project_calendar_tab_id')
-const first_project_tab_id = inject('first_project_tab_id')
-const eventTypes = inject('eventTypes')
-const multiEdit = ref(false)
-const isFullscreen = ref(false)
-const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1)
-const showMultiEditModal = ref(false)
-const editEvents = ref([])
-const editEventsRoomIds = ref([])
-const editEventsRoomsDesiredDays = ref([])
-const openDeleteSelectedEventsModal = ref(false)
-const showEventsWithoutRoomComponent = ref(false)
-const showAddSubEventModal = ref(false)
-const showDeclineEventModal = ref(false)
-const showEventComponent = ref(false)
-const deleteComponentVisible = ref(false)
-const deleteTitle = ref('')
-const deleteDescription = ref('')
-const deleteType = ref('')
-const eventToEdit = ref(null)
-const subEventToEdit = ref(null)
-const declineEvent = ref(null)
-const eventToDelete = ref(null)
-const wantedRoom = ref(null)
-const roomCollisions = ref([])
-const showMultiDuplicateModal = ref(false)
-const checkIfScrolledToCalendarRef = ref('!-ml-3')
+    });
+const eventsWithoutRoomRef = ref(JSON.parse(JSON.stringify(props.eventsWithoutRoom ?? [])));
+const first_project_calendar_tab_id = inject('first_project_calendar_tab_id');
+const first_project_tab_id = inject('first_project_tab_id');
+const eventTypes = inject('eventTypes');
+const multiEdit = ref(false);
+const isFullscreen = ref(false);
+const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
+const showMultiEditModal = ref(false);
+const editEvents = ref([]);
+const editEventsRoomIds = ref([]);
+const editEventsRoomsDesiredDays = ref([]);
+const openDeleteSelectedEventsModal = ref(false);
+const showEventsWithoutRoomComponent = ref(false);
+const showAddSubEventModal = ref(false);
+const showDeclineEventModal = ref(false);
+const showEventComponent = ref(false);
+const deleteComponentVisible = ref(false);
+const deleteTitle = ref('');
+const deleteDescription = ref('');
+const deleteType = ref('');
+const eventToEdit = ref(null);
+const subEventToEdit = ref(null);
+const declineEvent = ref(null);
+const eventToDelete = ref(null);
+const wantedRoom = ref(null);
+const roomCollisions = ref([]);
+const showMultiDuplicateModal = ref(false);
+const checkIfScrolledToCalendarRef = ref('!-ml-3');
 const newCalendarData = ref(props.calendarData);
 const handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId) => {
     if (considerOnMultiEdit) {

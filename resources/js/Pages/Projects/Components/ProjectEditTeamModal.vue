@@ -174,7 +174,7 @@
                     </span>
                 </div>
                 <div class="w-full items-center text-center">
-                    <FormButton @click="editProjectTeam"
+                    <FormButton @click="editProjectTeam" :disabled="form.processing"
                                :text="$t('Save')"
                     />
                 </div>

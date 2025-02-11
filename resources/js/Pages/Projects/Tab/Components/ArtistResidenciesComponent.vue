@@ -1,10 +1,10 @@
 <template>
-    <div class="">
-        <div class="sm:flex sm:items-center">
+    <div class="print:break-before-auto">
+        <div class="sm:flex sm:items-center ">
             <div class="sm:flex-auto">
                 <TinyPageHeadline :title="$t('Artist residencies')" :description="$t('Manage the artist residencies for this project.')"/>
             </div>
-            <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex items-center gap-x-4">
+            <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex items-center gap-x-4 print:hidden">
                 <ToolTipComponent
                     icon="IconFileExport"
                     :tooltip-text="$t('Export artist residencies')"

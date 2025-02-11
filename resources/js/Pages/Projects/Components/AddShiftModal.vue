@@ -224,7 +224,7 @@
                 </div>
             </div>
             <div class="flex w-full items-center px-6" :class="!shift?.room_id ? 'justify-center' : 'justify-between'">
-                <FormButton :text="$t('Save')" type="submit"/>
+                <FormButton :text="$t('Save')" type="submit" :disabled="shiftForm.processing"/>
 
                 <div @click="showComfirmDeleteModal = true" class="text-sm underline cursor-pointer hover:text-red-600 ease-in-out duration-300 transition-colors" v-if="shift?.room_id">
                     {{ $t('Delete shift without Event') }}

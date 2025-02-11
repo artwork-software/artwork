@@ -58,6 +58,10 @@ const props = defineProps(
         first_project_shift_tab_id: Number,
         eventStatuses: Object,
         months: Object,
+        event_properties: {
+            type: Array,
+            required: true
+        }
     }),
     atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 
@@ -72,4 +76,5 @@ provide('rooms', props.rooms);
 provide('areas', props.areas);
 provide('eventStatuses', props.eventStatuses);
 provide('months', props.months);
+provide('event_properties', props.event_properties);
 </script>

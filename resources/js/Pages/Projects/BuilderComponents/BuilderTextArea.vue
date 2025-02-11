@@ -1,7 +1,7 @@
 <template>
-    <div class="xxsLight">
-        <p class="line-clamp-3" v-html="project['TextArea'][component.component_id]?.data?.text"></p>
-    </div>
+    <p class="line-clamp-3 print:line-clamp-none">
+        {{ project['TextArea']?.[component.component_id ?? component.id]?.data?.text }}
+    </p>
 
 </template>
 

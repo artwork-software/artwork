@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -16,7 +17,7 @@ class SubEventsController extends Controller
 
     public function store(Request $request): bool
     {
-        SubEvent::create($request->only([
+        $subevent = SubEvent::create($request->only([
             'event_id',
             'eventName',
             'description',
@@ -28,6 +29,10 @@ class SubEventsController extends Controller
             'is_loud',
             'allDay'
         ]));
+
+        // add Properties to SubEvent
+        $subevent->eventProperties()->sync($request->get('eventProperties'));
+
 
         // Send Notification to Room Admins
         $event = Event::find($request->event_id);
@@ -55,6 +60,7 @@ class SubEventsController extends Controller
             $this->notificationService->createNotification();
         }
 
+        broadcast(new EventCreated($event, $event->room_id));
         return true;
     }
 
@@ -72,11 +78,21 @@ class SubEventsController extends Controller
             'allDay'
         ]));
 
+        // add Properties to SubEvent
+        $subEvents->eventProperties()->sync($request->get('eventProperties'));
+
+        $event = $subEvents->event;
+
+        broadcast(new EventCreated($event, $event->room_id));
+
         return true;
     }
 
     public function destroy(SubEvent $subEvents): void
     {
+        $event = $subEvents->event;
+        broadcast(new EventCreated($event, $event->room_id));
+
         $subEvents->forceDelete();
     }
 }

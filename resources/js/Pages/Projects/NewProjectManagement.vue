@@ -19,7 +19,7 @@
                                     </div>
                                     <div v-else class="flex items-center w-60">
                                         <div>
-                                            <input type="text" ref="searchBarInput" :placeholder="$t('Search for projects')" v-model="project_search" class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                            <input type="text" ref="searchBarInput" id="searchBarInput" :placeholder="$t('Search for projects')" v-model="project_search" class="h-10 inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-artwork-buttons-create"/>
                                         </div>
                                         <IconX class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
                                     </div>
@@ -530,7 +530,7 @@ const reloadProjects = (resetPage = true) => {
         data: {
             page: resetPage ? 1 : page.value,
             entitiesPerPage: perPage.value,
-            query: route().params.query,
+            query: project_search.value,
         },
     });
 };

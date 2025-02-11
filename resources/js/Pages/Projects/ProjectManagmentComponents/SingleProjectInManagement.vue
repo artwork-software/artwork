@@ -1,5 +1,7 @@
 <template>
     <div :key="project.id"
+         @mousedown.middle="openProjectInNewTab(project)"
+         @mousedown="openProjectInNewTabWithCmdOrSTRG($event, project)"
         class="grid bg-gray-50/50 px-3 py-3 rounded-lg border border-gray-100 hover:bg-gray-100 duration-300 ease-in-out group/project w-fit relative cursor-pointer"
         :style="`grid-template-columns: ${gridTemplateColumns}`"
         @contextmenu.prevent="openMenu(project.id, $event)">
@@ -14,7 +16,6 @@
             class="px-3 flex items-center"
             :class="component.type === 'ActionsComponent' ? 'flex justify-end' : ''"
             @click="openProject(component, project)"
-            @mousedown.middle="openProjectInNewTab(component, project)"
         >
             <component
                 v-if="checkIfComponentIsVisible(component)"
@@ -207,11 +208,15 @@ const openProject = (component, project) => {
     }
 };
 
-const openProjectInNewTab = (component, project) => {
-    if (component.type !== 'ActionsComponent') {
-        window.open(route('projects.tab', { project: project.id, projectTab: project.firstTabId }), '_blank');
-    }
+const openProjectInNewTab = (project) => {
+    window.open(route('projects.tab', { project: project.id, projectTab: project.firstTabId }), '_blank');
 };
+
+const openProjectInNewTabWithCmdOrSTRG = (event, project) => {
+    if (event.metaKey || event.ctrlKey) {
+        openProjectInNewTab(project);
+    }
+}
 
 const gridTemplateColumns = computed(() =>
     props.components

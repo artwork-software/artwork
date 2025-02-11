@@ -70,6 +70,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -776,10 +777,24 @@ readonly class EventService
         })->toArray();
     }
 
-    public function fetchFilteredRooms(UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate)
+    public function fetchFilteredRooms(UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate, UserCalendarSettings $userCalendarSettings = null)
     {
         $userCalendarFilter = $filter;
+
         return Room::with([
+            'events' => function ($query) use ($startDate, $endDate) {
+                if ($startDate && $endDate) {
+                    $query->where(function ($q) use ($startDate, $endDate) {
+                        $q->whereBetween('start_time', [$startDate, $endDate])
+                            ->orWhereBetween('end_time', [$startDate, $endDate])
+                            ->orWhere(function ($subQuery) use ($startDate, $endDate) {
+                                $subQuery->where('start_time', '<', $startDate)
+                                    ->where('end_time', '>', $endDate);
+                            });
+                    });
+                }
+            }
+        ])->with([
             'events.shifts',
             'events.shifts.craft',
             'events.project',
@@ -794,7 +809,22 @@ readonly class EventService
                 $userCalendarFilter?->adjoining_no_audience,
                 $startDate,
                 $endDate
-            )->orderBy('order')->get();
+            )
+            ->when($userCalendarSettings?->hide_unoccupied_rooms, function ($query) use ($startDate, $endDate) {
+                $query->whereHas('events', function ($eventQuery) use ($startDate, $endDate) {
+                    $eventQuery->where(function ($q) use ($startDate, $endDate) {
+                        $q->whereBetween('start_time', [$startDate, $endDate])
+                            ->orWhereBetween('end_time', [$startDate, $endDate])
+                            ->orWhere(function ($subQuery) use ($startDate, $endDate) {
+                                $subQuery->where('start_time', '<', $startDate)
+                                    ->where('end_time', '>', $endDate);
+                            });
+                    });
+                });
+            })
+            ->orderBy('order')
+            ->get();
+
     }
 
     public function filterRoomsEventsAndShifts($rooms, UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate): void
@@ -1354,7 +1384,9 @@ readonly class EventService
             }
         }
         $userFilter = $user->calendar_filter;
-        $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate);
+        $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings);
+
+        //dd($this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings ));
 
         $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate);
         $mappedRooms = $this->mapRoomsToContentForCalendar($rooms, $startDate, $endDate);
@@ -1407,11 +1439,7 @@ readonly class EventService
                 )
             )->resolve())
             ->setRooms(
-                $roomService->getFilteredRooms(
-                    $startDate,
-                    $endDate,
-                    $userCalendarFilter
-                )
+                $this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings)
             )
             ->setAreas($areaService->getAll())
             ->setFilterOptions($filterService->getCalendarFilterDefinitions())

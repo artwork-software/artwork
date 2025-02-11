@@ -90,6 +90,7 @@ readonly class EventService
         private ShiftTimePresetService $shiftTimePresetService,
         private CollectionService $collectionService,
         private EventCollectionService $eventCollectionService,
+        private EventTypeService $eventTypeService
     ) {
         $this->cachedData = null;
     }
@@ -781,26 +782,7 @@ readonly class EventService
     {
         $userCalendarFilter = $filter;
 
-        return Room::with([
-            'events' => function ($query) use ($startDate, $endDate) {
-                if ($startDate && $endDate) {
-                    $query->where(function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('start_time', [$startDate, $endDate])
-                            ->orWhereBetween('end_time', [$startDate, $endDate])
-                            ->orWhere(function ($subQuery) use ($startDate, $endDate) {
-                                $subQuery->where('start_time', '<', $startDate)
-                                    ->where('end_time', '>', $endDate);
-                            });
-                    });
-                }
-            }
-        ])->with([
-            'events.shifts',
-            'events.shifts.craft',
-            'events.project',
-            'events.event_type',
-            'events.eventStatus'
-        ])->unlessRoomIds($userCalendarFilter?->rooms)
+        return Room::query()->unlessRoomIds($userCalendarFilter?->rooms)
             ->unlessRoomAttributeIds($userCalendarFilter?->room_attributes)
             ->unlessAreaIds($userCalendarFilter?->areas)
             ->unlessRoomCategoryIds($userCalendarFilter?->room_categories)
@@ -829,44 +811,43 @@ readonly class EventService
 
     public function filterRoomsEventsAndShifts($rooms, UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate): void
     {
-        $rooms->each(function ($room) use ($filter, $startDate, $endDate): void {
-            $room->shifts = $room->shifts->filter(function ($shift) use ($startDate, $endDate) {
+        
+        $q = Event::query();
+        $q->where(function(Builder $query) use ($startDate, $endDate) {
+            $query->where(function(Builder $q) use ($startDate, $endDate) {
+                $q->where('start_time', '>=', $startDate)
+                    ->where('start_time', '<=', $endDate);
+            })->orWhere(function(Builder $q)  use ($startDate, $endDate){
+                $q->where('end_time', '>=', $startDate)
+                    ->where('end_time', '<=', $endDate);
+            })->orWhere(function(Builder $q) use ($startDate, $endDate) {
+                $q->where('start_time', '<', $startDate)
+                    ->where('end_time', '>', $endDate);
+            });
+        });
+
+        if (!empty ($filter->event_types)) {
+            $q->where('events.event_type_id', $filter->event_types);
+        }
+        
+        $q->whereIn('room_id', $rooms->pluck('id'));
+        $events = $q->get();
+        
+        foreach ($rooms as $room) {
+            $shifts = $room->shifts->filter(function ($shift) use ($startDate, $endDate) {
                 /** @var Shift $shift */
                 return ($shift->start_date <= $endDate && $shift->end_date >= $startDate);
             });
-            //@todo: code duplication
-            //@todo: use model scope "startAndEndTimeOverlap" as its an event builder when used on relation
-            // Filtere die Events nach der Logik von startAndEndTimeOverlap
+            
+            $room->shifts = $shifts;
+            
+            $roomEvents = $events->filter(function ($event) use ($room) {
+                return $event->room_id === $room->id;
+            });
 
-            $room->events = $room->events->filter(function ($event) use ($filter, $startDate, $endDate) {
-                /** @var Event $event */
-                $eventTypeFilter = $filter->event_types ?? [];
-
-                return (
-                    (
-                        ($event->start_time >= $startDate && $event->start_time <= $endDate &&
-                            $event->end_time >= $startDate && $event->end_time <= $endDate)
-                        ||
-                        ($event->start_time < $startDate && $event->end_time > $endDate)
-                        ||
-                        (
-                            $event->start_time < $startDate &&
-                            $event->end_time >= $startDate &&
-                            $event->end_time <= $endDate
-                        )
-                        ||
-                        (
-                            $event->start_time >= $startDate &&
-                            $event->start_time <= $endDate &&
-                            $event->end_time > $endDate
-                        )
-                    )
-                    &&
-                    (empty($eventTypeFilter) || in_array($event->event_type_id, $eventTypeFilter))
-                );
-            })->map(function ($event) {
+            $roomEvents = $roomEvents->map(function ($event) {
                 $startTime = Carbon::parse($event->start_time);
-                $eventType = $event->event_type;
+                $eventType = $event->event_type;  //$this->eventTypeService->findById($event->event_type_id);
                 $creator = $event->creator;
                 /** @var Project $project */
                 $project = $event->project ?: null;
@@ -926,10 +907,9 @@ readonly class EventService
                     ],
                 ];
             });
-
             $filterEventPropertyIds = $filter->getAttribute('event_properties') ?? [];
 
-            $room->events = $room->events
+            $roomEvents = $roomEvents
                 ->when(count($filterEventPropertyIds) > 0)
                 ->filter(function ($event) use ($filterEventPropertyIds) {
                     // Stelle sicher, dass eventProperties als Array vorhanden ist
@@ -942,7 +922,8 @@ readonly class EventService
                     }
                     return false;
                 });
-        });
+            $room->events = $roomEvents;
+        }
     }
 
     private function aggregateSeriesEvents($event): array
@@ -1389,6 +1370,7 @@ readonly class EventService
         //dd($this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings ));
 
         $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate);
+        
         $mappedRooms = $this->mapRoomsToContentForCalendar($rooms, $startDate, $endDate);
 
         if ($useProjectTimePeriod && !$startDate && !$endDate) {

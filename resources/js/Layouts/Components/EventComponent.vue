@@ -791,7 +791,7 @@ export default {
             eventStatus: null,
             eventTypeName: null,
             selectedEventType: this.eventTypes[0],
-            selectedEventStatus: this.eventStatuses[0],
+            selectedEventStatus: this.eventStatuses?.find(status => status.default),
             showProjectInfo: this.project ? true : this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id ? true :false,
             allDayEvent: false,
             selectedProject: null,

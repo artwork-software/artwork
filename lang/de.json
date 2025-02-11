@@ -2338,5 +2338,6 @@
     "Open": "Öffnen",
     "Are you sure you want to delete the event property {0}? This is not reversible.": "Möchtest du die Termin-Eigenschaft {0} wirklich löschen? Dies ist nicht rückgängig zu machen.",
     "Delete event property": "Termin-Eigenschaft löschen",
-    "Hide unoccupied rooms": "Leere Räume ausblenden"
+    "Hide unoccupied rooms": "Leere Räume ausblenden",
+    "Should this status be set as the default?": "Soll dieser Status als Standard festgelegt werden?"
 }

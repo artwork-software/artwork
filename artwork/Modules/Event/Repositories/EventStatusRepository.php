@@ -30,4 +30,9 @@ class EventStatusRepository extends BaseRepository
 
         return $builder;
     }
+
+    public function removeDefaultStatus(): void
+    {
+        EventStatus::where('default', true)->update(['default' => false]);
+    }
 }

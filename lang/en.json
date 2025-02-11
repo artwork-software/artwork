@@ -2336,5 +2336,6 @@
     "A user with this permission can schedule events directly without a request in all rooms": "A user with this permission can schedule events directly without a request in all rooms",
     "Open": "Open",
     "Are you sure you want to delete the event property {0}? This is not reversible.": "Are you sure you want to delete the event property {0}? This is not reversible.",
-    "Delete event property": "Delete event property"
+    "Delete event property": "Delete event property",
+    "Should this status be set as the default?": "Should this status be set as the default?"
 }

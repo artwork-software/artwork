@@ -42,7 +42,7 @@
                                     <div>
                                         <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventType?.hex_code }"/>
                                     </div>
-                                    <div>
+                                    <div class="truncate w-56">
                                         {{ selectedEventType?.name }}
                                     </div>
                                 </div>

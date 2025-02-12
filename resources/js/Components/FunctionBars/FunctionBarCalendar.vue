@@ -526,7 +526,7 @@ const changeDailyViewMode = () => {
         daily_view: dailyViewMode.value
     }, {
         preserveScroll: true,
-        preserveState: false
+        preserveState: true
     })
 }
 
@@ -621,7 +621,11 @@ const updateTimes = () => {
 
 const saveUserCalendarSettings = () => {
     let preserveState = true;
-    if(usePage().props.user.calendar_settings.hide_unoccupied_rooms !== userCalendarSettings.hide_unoccupied_rooms){
+    if(
+        usePage().props.user.calendar_settings.hide_unoccupied_rooms !== userCalendarSettings.hide_unoccupied_rooms ||
+        usePage().props.user.calendar_settings.work_shifts !== userCalendarSettings.work_shifts ||
+        usePage().props.user.calendar_settings.project_status !== userCalendarSettings.project_status
+    ){
         preserveState = false;
     }
 

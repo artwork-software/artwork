@@ -2338,5 +2338,8 @@
     "Are you sure you want to delete the event property {0}? This is not reversible.": "Are you sure you want to delete the event property {0}? This is not reversible.",
     "Delete event property": "Delete event property",
     "Hide unoccupied rooms": "Hide unoccupied rooms",
-    "Should this status be set as the default?": "Should this status be set as the default?"
+    "Should this status be set as the default?": "Should this status be set as the default?",
+    "Create Event": "Create Event",
+    "Edit Event": "Edit Event",
+    "Load window data": "Load window data"
 }

@@ -150,7 +150,7 @@
             </div>
         </div>
     </div>
-    <EventComponent
+    <!--<EventComponent
         v-if="showEventComponent"
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
@@ -165,7 +165,14 @@
         :requires-axios-requests="true"
         @closed="eventComponentClosed"
         :event-statuses="eventStatuses"
+    />-->
+
+    <CreateOrUpdateEventModal
+        v-if="showEventComponent"
+        :event-to-edit="eventToEdit"
+        @closed="eventComponentClosed"
     />
+
     <ConfirmDeleteModal
         v-if="deleteComponentVisible"
         :title="deleteTitle"
@@ -233,6 +240,7 @@ import DailyViewCalendar from "@/Components/Calendar/DailyViewCalendar.vue";
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
 import {computeComponentStructure} from "vuedraggable/src/core/renderHelper.js";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import CreateOrUpdateEventModal from "@/Pages/Events/Components/CreateOrUpdateEventModal.vue";
 
 const filterOptions = inject('filterOptions');
 const personalFilters = inject('personalFilters');

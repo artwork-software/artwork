@@ -30,7 +30,7 @@
                 <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
                     :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']" class="">
                     <div class="flex items-center gap-x-1">
-                        <div v-if="event.projectStatusId">
+                        <div v-if="event.projectStatusId && usePage().props.user.calendar_settings.project_status">
                             <div class="text-center rounded-full border group size-4 cursor-pointer" :style="{backgroundColor: event.projectStatusBackgroundColor, borderColor: event.projectStatusBorderColor}">
                                 <div class="absolute hidden group-hover:block top-5">
                                     <div class="bg-artwork-navigation-background text-white text-xs rounded-full px-3 py-0.5">

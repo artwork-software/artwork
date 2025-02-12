@@ -254,7 +254,7 @@ class User extends Model implements
         'profile_photo_url',
         'full_name',
         'type',
-        'assigned_craft_ids',
+        //'assigned_craft_ids',
     ];
 
     protected $with = ['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'];

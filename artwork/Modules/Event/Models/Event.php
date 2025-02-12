@@ -245,7 +245,11 @@ class Event extends Model
     {
         return [
             'start' => Carbon::parse($this->start_time)->translatedFormat('d.m.Y H:i'),
-            'end' => Carbon::parse($this->end_time)->translatedFormat('d.m.Y H:i')
+            'end' => Carbon::parse($this->end_time)->translatedFormat('d.m.Y H:i'),
+            'start_without_time' => Carbon::parse($this->start_time)->translatedFormat('Y-m-d'),
+            'start_with_time' => Carbon::parse($this->start_time)->translatedFormat('Y-m-d H:i'),
+            'end_without_time' => Carbon::parse($this->end_time)->translatedFormat('Y-m-d'),
+            'end_with_time' => Carbon::parse($this->end_time)->translatedFormat('Y-m-d H:i')
         ];
     }
 

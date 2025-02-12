@@ -22,15 +22,15 @@ class Benchmark2022ProjectSeeder extends Seeder
             'state' => 4,
         ]);
 
-        Room::factory()->count(25)->create();
+        Room::factory()->count(10)->create();
 
-        $startOfYear = Carbon::today()->year(2022)->startOfYear();
+        $startOfYear = Carbon::today()->year(2025)->startOfYear();
         $endOfYear = clone $startOfYear;
         $endOfYear->endOfYear();
         $dateRange = $startOfYear->range($endOfYear);
         $eventTypes = EventType::all()->pluck('name', 'id');
         //first 5 rooms
-        $roomIds = Room::all()->pluck('id')->shift(20);
+        $roomIds = Room::all()->pluck('id')->shift(5);
         $faker = Factory::create('de_DE');
 
         //generate two events per room per day

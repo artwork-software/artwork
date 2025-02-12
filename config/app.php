@@ -17,6 +17,8 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+
+    'notion_api_token' => env('NOTION_API_TOKEN', ''),
     /*
     |--------------------------------------------------------------------------
     | Application Environment

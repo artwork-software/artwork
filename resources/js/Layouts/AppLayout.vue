@@ -490,7 +490,7 @@ export default {
                         route().current('budget-settings.templates')
                 },
                 {
-                    has_permission: true,
+                    has_permission: usePage().props.isNotionKeySet,
                     name: 'Updates',
                     href: route('notion.index'),
                     isCurrent: route().current('notion.index')

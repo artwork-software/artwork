@@ -77,6 +77,7 @@ class HandleInertiaRequests extends Middleware
                 'calendar_settings' => $calendarSettings,
                 'module_settings' => $this->moduleSettingsService->getModuleSettings(),
                 'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,
+                'isNotionKeySet' => config('app.notion_api_token') !== null && config('app.notion_api_token') !== '',
             ]
         );
     }

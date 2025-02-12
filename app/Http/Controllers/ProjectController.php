@@ -1720,6 +1720,7 @@ class ProjectController extends Controller
                 'type' => 'empty',
                 'linked_first_column' => null,
                 'linked_second_column' => null,
+                'position' => $table->columns()->max('position') + 1
             ]);
             $this->setColumnSubName($request->table_id);
 

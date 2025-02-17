@@ -525,7 +525,7 @@ const changeDailyViewMode = () => {
     router.patch(route('user.update.daily_view', usePage().props.user.id), {
         daily_view: dailyViewMode.value
     }, {
-        preserveScroll: true,
+        preserveScroll: false,
         preserveState: true
     })
 }
@@ -620,18 +620,8 @@ const updateTimes = () => {
 }
 
 const saveUserCalendarSettings = () => {
-    let preserveState = true;
-    if(
-        usePage().props.user.calendar_settings.hide_unoccupied_rooms !== userCalendarSettings.hide_unoccupied_rooms ||
-        usePage().props.user.calendar_settings.work_shifts !== userCalendarSettings.work_shifts ||
-        usePage().props.user.calendar_settings.project_status !== userCalendarSettings.project_status
-    ){
-        preserveState = false;
-    }
-
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}), {
         preserveScroll: true,
-        preserveState: preserveState,
     })
     document.getElementById('displaySettings').click();
 }

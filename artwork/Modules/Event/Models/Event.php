@@ -244,12 +244,18 @@ class Event extends Model
     public function getFormattedDatesAttribute(): array
     {
         return [
-            'start' => Carbon::parse($this->start_time)->translatedFormat('d.m.Y H:i'),
-            'end' => Carbon::parse($this->end_time)->translatedFormat('d.m.Y H:i'),
+            'start' => Carbon::parse($this->start_time)->translatedFormat('d.m.Y'),
+            'end' => Carbon::parse($this->end_time)->translatedFormat('d.m.Y'),
             'start_without_time' => Carbon::parse($this->start_time)->translatedFormat('Y-m-d'),
             'start_with_time' => Carbon::parse($this->start_time)->translatedFormat('Y-m-d H:i'),
             'end_without_time' => Carbon::parse($this->end_time)->translatedFormat('Y-m-d'),
-            'end_with_time' => Carbon::parse($this->end_time)->translatedFormat('Y-m-d H:i')
+            'end_with_time' => Carbon::parse($this->end_time)->translatedFormat('Y-m-d H:i'),
+            'startTime' => Carbon::parse($this->start_time)->translatedFormat('H:i'),
+            'endTime' => Carbon::parse($this->end_time)->translatedFormat('H:i'),
+            'start_without_year' => Carbon::parse($this->start_time)->translatedFormat('d.m'),
+            'end_without_year' => Carbon::parse($this->end_time)->translatedFormat('d.m'),
+            'startDateTime_without_year' => Carbon::parse($this->start_time)->translatedFormat('d.m H:i'),
+            'endDateTime_without_year' => Carbon::parse($this->end_time)->translatedFormat('d.m H:i'),
         ];
     }
 

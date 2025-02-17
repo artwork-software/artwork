@@ -103,7 +103,7 @@ class MinimalCalendarEventResource extends JsonResource
             ];
         }
 
-        if (($projectStateColor = $projectState = $project->getRelation('state'))) {
+        if (($projectStateColor = $projectState = $project->getRelation('status'))) {
             $projectStateColor = $projectState->getAttribute('color');
         }
 

@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property boolean $project_status
+ * @property boolean $project_artists
+ * @property boolean $description
  * @property boolean $options
  * @property boolean $project_management
  * @property boolean $repeating_events

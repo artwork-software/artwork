@@ -65,6 +65,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Scout\Searchable;
+use phpDocumentor\Reflection\Utils;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
@@ -254,10 +255,10 @@ class User extends Model implements
         'profile_photo_url',
         'full_name',
         'type',
-        //'assigned_craft_ids',
+        'assigned_craft_ids',
     ];
 
-    protected $with = ['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'];
+    //protected $with = ['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'];
 
     public function getTypeAttribute(): string
     {
@@ -387,11 +388,6 @@ class User extends Model implements
         return $this->hasManyThrough(Task::class, Checklist::class);
     }
 
-    public function getPermissionAttribute(): \Illuminate\Support\Collection
-    {
-        return $this->getAllPermissions();
-    }
-
     public function globalNotification(): HasOne
     {
         return $this->hasOne(GlobalNotification::class, 'created_by');
@@ -487,13 +483,10 @@ class User extends Model implements
      */
     public function allPermissions(): array
     {
-        $permissions = [];
-        foreach (Permission::all() as $permission) {
-            if (Auth::user()->can($permission->name)) {
-                $permissions[] = $permission->name;
-            }
+        if (!$this->exists){
+            return [];
         }
-        return $permissions;
+        return $this->getAllPermissions()->pluck('name')->toArray();
     }
 
     /**
@@ -501,14 +494,13 @@ class User extends Model implements
      */
     public function allRoles(): array
     {
-        $rolesArray = [];
-        foreach (Role::all() as $roles) {
-            if (Auth::user()->hasRole($roles->name)) {
-                $rolesArray[] = $roles->name;
-            }
+        if (!$this->exists) {
+            return [];
         }
-        return $rolesArray;
+
+        return $this->roles()->pluck('name')->toArray();
     }
+
 
     /**
      * @return array<string, mixed>

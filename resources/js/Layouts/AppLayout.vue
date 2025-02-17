@@ -425,7 +425,7 @@ export default {
 
             return [
                 {
-                    has_permission: this.$can('change tool settings'),
+                    has_permission: this.$can('change tool settings') || this.hasAdminRole(),
                     name: 'Tool Settings',
                     href: route('tool.branding'),
                     isCurrent: route().current('tool.branding') ||
@@ -483,7 +483,7 @@ export default {
                             'view budget templates',
                             'edit budget templates'
                         ]
-                    ),
+                    ) || this.hasAdminRole(),
                     href: desiredBudgetRoute,
                     isCurrent: route().current('budget-settings.general') ||
                         route().current('budget-settings.account-management') ||
@@ -564,7 +564,7 @@ export default {
                     href: route('shifts.plan'),
                     route: ['/shifts/view'],
                     has_permission: this.moduleIsVisible('shift_plan') &&
-                        this.$can('can view shift plan'),
+                        this.$can('can view shift plan')  || this.hasAdminRole(),
                     icon: IconCalendarUser,
                     showToolTipForItem: false
                 },

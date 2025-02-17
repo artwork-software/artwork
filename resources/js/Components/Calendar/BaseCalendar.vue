@@ -13,8 +13,6 @@
                 @jump-to-day-of-month="jumpToDayOfMonth"
             />
         </div>
-
-
         <div :class="eventsWithoutRoom.length > 0 ? 'mt-20' : ''">
             <div v-if="eventsWithoutRoom.length > 0" class="flex justify-center">
                 <div class="flex errorText items-center cursor-pointer my-2" @click="showEventsWithoutRoomComponent = true">
@@ -28,34 +26,33 @@
             </div>
         </div>
 
+
         <div>
-            <div v-if="!usePage().props.user.daily_view">
-                <div class="-mx-5 mt-4">
-                    <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
+            <div v-if="!usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
+                <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? '' : 'mt-[4.5rem]'">
+                    <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white px-5'">
                         <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
-                        <div class="w-fit events-by-days-container" :class="[!project ? 'pt-8' : '', isFullscreen ? 'mt-4': '', computedFilteredEvents.length > 0 ? '-mt-7' : 'mt-4' ]" ref="calendarToCalculate">
+                        <div class="w-fit events-by-days-container" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '', computedFilteredEvents.length > 0 ? '-mt-7' : '' ]" ref="calendarToCalculate">
                             <div v-for="day in days"
-                                 :key="day.full_day"
+                                 :key="day.fullDay"
                                  :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                  class="flex gap-0.5 day-container"
-                                 :class="day.is_weekend ? 'bg-userBg/70' : ''"
-                                 :data-day="day.full_day"
-                                 :data-day-to-jump="day.without_format">
-                                <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day" v-if="!day.is_extra_row"/>
-                                <div v-for="room in newCalendarData"
-                                     :key="room.id"
-                                     class="relative"
-                                     v-if="!day.is_extra_row">
-                                    <div v-if="room.content[day.full_day]?.events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
-                                        <component is="IconChevronDown" @click="scrollToNextEventInDay(day.without_format, room.content[day.full_day].events.length)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
+                                 :class="day.isWeekend ? 'bg-gray-50' : ''"
+                                 :data-day="day.fullDay"
+                                 :data-day-to-jump="day.withoutFormat">
+                                <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day" v-if="!day.isExtraRow"/>
+                                <div v-for="room in newCalendarData" :key="room.id" class="relative" v-if="!day.isExtraRow">
+                                    <div v-if="room.content[day.fullDay]?.events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
+                                        <component is="IconChevronDown" @click="scrollToNextEventInDay(day.withoutFormat, room.content[day.fullDay].events.length)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
                                     </div>
                                     <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                          :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
-                                         class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.without_format">
-                                        <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="(event, index) in room.content[day.full_day].events">
-                                            <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.without_format">
-                                                <AsyncSingleEventInCalendar
+                                         class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.withoutFormat">
+                                        <div  v-for="(event, index) in room.content[day.fullDay].events">
+                                            <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.withoutFormat">
+                                                <SingleEventInCalendar
                                                     :event="event"
+                                                    v-if="event.roomId === room.roomId"
                                                     :multi-edit="multiEdit"
                                                     :font-size="textStyle.fontSize"
                                                     :line-height="textStyle.lineHeight"
@@ -80,7 +77,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else>
+            <div v-else-if="usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
                 <DailyViewCalendar
                     :multi-edit="multiEdit"
                     :rooms="rooms"
@@ -100,6 +97,43 @@
                     @show-decline-event-modal="openDeclineEventModal"
                     @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
                 />
+            </div>
+            <div class="mt-[4.5rem] w-max" v-else>
+                <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
+                    <div v-for="room in newCalendarData" :key="room.roomId">
+                        <div v-if="checkIfRoomHasEvents(room)" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
+                            <SingleRoomInHeader :room="room" is-light   />
+                        </div>
+                    </div>
+
+                </div>
+                <div class="flex gap-0.5">
+                    <div v-for="room in newCalendarData">
+                        <div v-for="events in room.content" :key="events" class="flex flex-col">
+                            <div v-for="(event, index) in events.events" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="mb-0.5" :id="'scroll_container-' + events.date">
+                                <div class="py-0.5" :key="event.id">
+                                    <SingleEventInCalendar
+                                        :event="event"
+                                        :multi-edit="multiEdit"
+                                        :font-size="textStyle.fontSize"
+                                        :line-height="textStyle.lineHeight"
+                                        :rooms="rooms"
+                                        :has-admin-role="hasAdminRole()"
+                                        :width="zoom_factor * 196"
+                                        :first_project_tab_id="first_project_tab_id"
+                                        :firstProjectShiftTabId="firstProjectShiftTabId"
+                                        @edit-event="showEditEventModel"
+                                        @edit-sub-event="openAddSubEventModal"
+                                        @open-add-sub-event-modal="openAddSubEventModal"
+                                        @open-confirm-modal="openDeleteEventModal"
+                                        @show-decline-event-modal="openDeclineEventModal"
+                                        @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div v-if="!checkIfAnyRoomHasAnEventOrShift && usePage().props.user.calendar_settings.use_project_time_period">
@@ -150,7 +184,7 @@
             </div>
         </div>
     </div>
-    <!--<EventComponent
+    <EventComponent
         v-if="showEventComponent"
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
@@ -165,13 +199,15 @@
         :requires-axios-requests="true"
         @closed="eventComponentClosed"
         :event-statuses="eventStatuses"
-    />-->
+    />
 
-    <CreateOrUpdateEventModal
+    <!--<CreateOrUpdateEventModal
         v-if="showEventComponent"
         :event-to-edit="eventToEdit"
+        :rooms="rooms"
+        :room-collisions="roomCollisions"
         @closed="eventComponentClosed"
-    />
+    />-->
 
     <ConfirmDeleteModal
         v-if="deleteComponentVisible"
@@ -218,9 +254,6 @@
 </template>
 
 <script setup>
-/* Comment: below very important unused import new Date().format relies on it - do not remove otherwise ui breaks */
-import VueCal from 'vue-cal';
-/* Comment: above very important unused import new Date().format relies on it - do not remove otherwise ui breaks */
 import {computed, defineAsyncComponent, inject, onMounted, provide, ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
@@ -231,16 +264,16 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {IconAlertTriangle} from "@tabler/icons-vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
-import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionObserver.js";
 import MultiDuplicateModal from "@/Layouts/Components/MultiDuplicateModal.vue";
 import DailyViewCalendar from "@/Components/Calendar/DailyViewCalendar.vue";
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
-import {computeComponentStructure} from "vuedraggable/src/core/renderHelper.js";
-import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import CreateOrUpdateEventModal from "@/Pages/Events/Components/CreateOrUpdateEventModal.vue";
+import EventComponent from "@/Layouts/Components/EventComponent.vue";
+import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
+import SingleEventInCalendar from "@/Components/Calendar/Elements/SingleEventInCalendar.vue";
 
 const filterOptions = inject('filterOptions');
 const personalFilters = inject('personalFilters');
@@ -254,7 +287,7 @@ const props = defineProps({
             required: true,
         },
         days: {
-            type: Array,
+            type: Object,
             required: true,
         },
         calendarData: {
@@ -424,6 +457,12 @@ const checkIfAnyRoomHasAnEventOrShift = computed(() => {
         });
     });
 });
+
+const checkIfRoomHasEvents = (room) => {
+    return room.content && Object.entries(room.content).some(([date, { events }]) => {
+        return events && events.length > 0;
+    });
+};
 
 const toggleMultiEdit = (value) => {
     multiEdit.value = value;
@@ -760,7 +799,27 @@ onMounted(() => {
 <style scoped>
 .cell {
     overflow: overlay;
+
+    /* Standard-Scrollbar für Firefox */
+    scrollbar-color: #d4d4d4 #f3f3f3;
+    scrollbar-width: thin;
 }
+
+/* Webkit (Chrome, Edge, Safari) */
+.cell::-webkit-scrollbar {
+    width: 2px !important; /* Sehr schmal */
+    height: 2px !important; /* Falls horizontal */
+}
+
+.cell::-webkit-scrollbar-thumb {
+    background-color: #d4d4d4;
+    border-radius: 10px;
+}
+
+.cell::-webkit-scrollbar-track {
+    background-color: #f3f3f3;
+}
+
 </style>
 
 

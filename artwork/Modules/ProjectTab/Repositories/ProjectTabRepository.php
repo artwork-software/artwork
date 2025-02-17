@@ -11,7 +11,7 @@ class ProjectTabRepository extends BaseRepository
     public function findFirstProjectTab(): ProjectTab|null
     {
         /** @var ProjectTab $projectTab */
-        $projectTab = ProjectTab::query()->first();
+        $projectTab = ProjectTab::query()->without(['components', 'sidebarTabs'])->first();
 
         return $projectTab;
     }
@@ -41,6 +41,7 @@ class ProjectTabRepository extends BaseRepository
     public function getDefaultOrFirstProjectTab(): ?ProjectTab
     {
         return ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
             ->where('default', true)
             ->first() ?? $this->findFirstProjectTab();
     }

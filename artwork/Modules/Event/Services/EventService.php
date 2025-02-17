@@ -10,6 +10,8 @@ use App\Settings\ShiftSettings;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Services\CollectionService;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
+use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -756,27 +758,26 @@ readonly class EventService
         return $periodArray;
     }
 
-    public function getHolidaysForPeriod($period): array
+
+
+    public function getHolidaysForPeriod($period): SupportCollection
     {
-        return Holiday::where(function ($query) use ($period): void {
-            $query->where(function ($q) use ($period): void {
+        return Holiday::where(function (Builder $query) use ($period): void {
+            $query->where(function (Builder $q) use ($period): void {
                 $q->whereDate('date', '<=', $period->format('Y-m-d'))
                     ->whereDate('end_date', '>=', $period->format('Y-m-d'));
-            })->orWhere(function ($q) use ($period): void {
+            })->orWhere(function (Builder $q) use ($period): void {
                 $q->where('yearly', true)
                     ->whereMonth('date', $period->month)
                     ->whereDay('end_date', $period->day);
             });
-        })->with('subdivisions')->get()->map(function ($holiday) {
-            return [
-                'name' => $holiday->name,
-                'type' => $holiday->type,
-                'start_date' => $holiday->startDate,
-                'end_date' => $holiday->endDate,
-                'color' => $holiday->color,
-                'subdivisions' => $holiday->subdivisions->pluck('name'),
-            ];
-        })->toArray();
+        })->with('subdivisions')->get()->map(fn($holiday) => new CalendarHolidayDTO(
+            name: $holiday->name,
+            date: $holiday->date->format('Y-m-d'),
+            end_date: $holiday->end_date->format('Y-m-d'),
+            color: $holiday->color,
+            subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+        ));
     }
 
     public function fetchFilteredRooms(UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate, UserCalendarSettings $userCalendarSettings = null)
@@ -1379,8 +1380,6 @@ readonly class EventService
         }
         $userFilter = $user->calendar_filter;
         $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings);
-
-        //dd($this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings ));
 
         $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate, $userCalendarSettings);
         

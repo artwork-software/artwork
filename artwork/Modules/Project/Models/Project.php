@@ -107,7 +107,7 @@ class Project extends Model
 
     protected $with = [
         'shiftRelevantEventTypes',
-        'state'
+        'status'
     ];
 
     public static function booting(): void
@@ -264,7 +264,7 @@ class Project extends Model
         return $this->belongsToMany(MoneySource::class, 'money_source_project');
     }
 
-    public function state(): HasOne
+    public function status(): HasOne
     {
         return $this->hasOne(
             ProjectState::class,

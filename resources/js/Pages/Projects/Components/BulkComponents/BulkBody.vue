@@ -196,6 +196,11 @@ const {hasAdminRole} = usePermission(usePage().props),
             id: 3,
             name: 'Monatlich',
             type: 'monthly',
+        },
+        {
+            id: 4,
+            name: 'am gleichen Tag',
+            type: 'same_day',
         }
     ]),
     events = reactive([]),
@@ -333,6 +338,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                 newDate.setDate(newDate.getDate() + 7);
             } else if (event.copyType.type === 'monthly') {
                 newDate.setMonth(newDate.getMonth() + 1);
+            } else if (event.copyType.type === 'same_day') {
+                newDate = new Date(event.day);
             }
 
             events.push({

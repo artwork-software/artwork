@@ -328,6 +328,7 @@ class EventRepository extends BaseRepository
 //                    }
 //                }
 //            )
+                ->where('deleted_at', null)
             ->orderBy('start_time');
 
         return $query->get();

@@ -88,6 +88,7 @@
                     <IconCirclePlus class="w-5 h-5 text-white mr-2"/>
                 </BaseButton>
             </div>
+
         </div>
     </div>
     <event-component
@@ -255,7 +256,7 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copy: false,
                 copyCount: 1,
                 copyType: copyTypes.value[0],
-                description: ''
+                description: '',
             });
             isLoading.value = false;
         } else {
@@ -354,7 +355,7 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copy: false,
                 copyCount: 1,
                 copyType: copyTypes.value[0],
-                description: event.description
+                description: event.description,
             });
 
             createdEvents.push({
@@ -458,7 +459,9 @@ onMounted(() => {
                 copyCount: 1,
                 copyType: copyTypes.value[0],
                 index: events.length + 1,
-                description: event.description
+                description: event.description,
+                // if created_at is not older than 5 minutes, the event is new
+                isNew: new Date(event.created_at) > new Date(new Date().getTime() - 5 * 60000)
             });
         });
         isLoading.value = false;

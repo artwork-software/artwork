@@ -2346,5 +2346,5 @@
     "Weekly View Calendar Settings": "Wochenansicht Kalender-Einstellungen",
     "The end time must be greater than the start time.": "Die Endzeit muss größer als die Startzeit sein.",
     "Hours between {start} - {end} are hidden": "Stunden zwischen {start} - {end} sind ausgeblendet",
-    "You recently visited the following project:": "Du hast kürzlich das folgende Projekt besucht:"
+    "Last visited project": "Zuletzt besuchtes Projekt"
 }

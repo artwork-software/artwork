@@ -139,7 +139,7 @@
                     </div>
                     <div class="mt-4 gap-x-1 flex items-center" v-if="lastProject?.id">
                         <div class="xsDark">
-                            {{ $t('You recently visited the following project:') }}
+                            {{ $t('Last visited project') }}:
                         </div>
                         <a class="text-artwork-buttons-create text-sm underline underline-offset-2 font-bold" :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })">{{ lastProject.name }}</a>
                     </div>

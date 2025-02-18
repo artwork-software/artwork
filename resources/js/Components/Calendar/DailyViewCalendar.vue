@@ -55,7 +55,7 @@
                                     maxWidth: zoom_factor * 212 + 'px',
                                     height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px',
                                     }"
-                                     :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
+                                     :class="[zoom_factor > 0.4 ? 'cell' : '']"
                                      class="group/container"
                                      :id="'scroll_container-' + day.without_format">
 

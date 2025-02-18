@@ -1555,6 +1555,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'reorder'])
                 ->name('sidebar.tab.reorder');
         });
+
+        Route::group(['prefix' => 'calendar'], function () {
+            Route::get('/', [CalendarController::class, 'settingIndex'])->name('calendar.settings');
+
+            // post: calendar-settings.store
+            Route::post('/store', [CalendarController::class, 'storeSettings'])->name('calendar-settings.store');
+        });
     });
 
     Route::group(['prefix' => 'user'], function (): void {
@@ -1907,6 +1914,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/destroy/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'destroy'])
             ->name('project-print-layout.destroy');
     });
+
+
 });
 
 Route::get(

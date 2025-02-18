@@ -1,5 +1,6 @@
 <?php
 
+use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
@@ -13,7 +14,8 @@ return [
     'settings' => [
         GeneralSettings::class,
         ProjectCreateSettings::class,
-        ModuleSettings::class
+        ModuleSettings::class,
+        GeneralCalendarSettings::class
     ],
 
     /*

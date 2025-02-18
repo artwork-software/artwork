@@ -212,7 +212,8 @@ class User extends Model implements
         'show_qualifications',
         'email_private',
         'phone_private',
-        'daily_view'
+        'daily_view',
+        'entities_per_page'
     ];
 
     protected $casts = [

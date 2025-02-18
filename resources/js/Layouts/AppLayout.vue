@@ -457,6 +457,12 @@ export default {
                     isCurrent: route().current('project.settings')
                 },
                 {
+                    name: 'Calendar',
+                    has_permission: this.hasAdminRole(),
+                    href: route('calendar.settings'),
+                    isCurrent: route().current('calendar.settings')
+                },
+                {
                     name: 'Events',
                     has_permission: this.$can('change event settings') || this.hasAdminRole(),
                     href: route('event_types.management'),

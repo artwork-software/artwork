@@ -3,6 +3,7 @@
 namespace Artwork\Core\Http\Middleware;
 
 use App\Settings\EventSettings;
+use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -31,8 +32,25 @@ class HandleInertiaRequests extends Middleware
     {
         /** @var GeneralSettings $generalSettings */
         $generalSettings = app(GeneralSettings::class);
+        $generalCalendarSettings = app(GeneralCalendarSettings::class);
         $eventSettings = app(EventSettings::class);
         $calendarSettings = Auth::user()?->calendar_settings;
+
+        // erstelle mir ein Array aus $generalCalendarSettings (Start und end ) für stunden z.b. Start: 22:00 end: 08:00 array = [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
+        $start = explode(':', $generalCalendarSettings->start);
+        $end = explode(':', $generalCalendarSettings->end);
+
+        $hours = [];
+        $startHour = (int)$start[0];
+        $endHour = (int)$end[0];
+        $currentHour = $startHour;
+        while (true) {
+            $hours[] = str_pad($currentHour, 2, '0', STR_PAD_LEFT) . ':00';
+            if ($currentHour === $endHour) {
+                break;
+            }
+            $currentHour = ($currentHour + 1) % 24;
+        }
 
         return array_merge(
             parent::share($request),
@@ -78,6 +96,7 @@ class HandleInertiaRequests extends Middleware
                 'module_settings' => $this->moduleSettingsService->getModuleSettings(),
                 'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,
                 'isNotionKeySet' => config('app.notion_api_token') !== null && config('app.notion_api_token') !== '',
+                'calendarHours' => $hours
             ]
         );
     }

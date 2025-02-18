@@ -179,7 +179,7 @@
                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                </ListboxButton>
                                <ListboxOptions
-                                   class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
+                                   class="w-44 rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
                                    <ListboxOption v-for="copyType in copyTypes"
                                                   class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
                                                   :key="copyType.name"

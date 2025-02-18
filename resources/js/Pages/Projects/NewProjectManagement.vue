@@ -6,9 +6,9 @@
                     <div class="w-full flex items-center justify-end">
                         <div class="w-full flex items-center">
                             <div class="w-full flex items-center">
-                                <p class="items-center flex mr-2 headline1">
+                                <h1 class="items-center flex mr-2 headline1">
                                     {{ $t('Projects') }}
-                                </p>
+                                </h1>
                             </div>
                             <div class="flex relative items-center gap-x-3.5">
                                 <div class="flex items-center">
@@ -134,6 +134,14 @@
                                             @click="openCreateProjectModal"/>
                             </div>
                         </div>
+
+
+                    </div>
+                    <div class="mt-4 gap-x-1 flex items-center" v-if="lastProject?.id">
+                        <div class="xsDark">
+                            {{ $t('Last visited project') }}:
+                        </div>
+                        <a class="text-artwork-buttons-create text-sm underline underline-offset-2 font-bold" :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })">{{ lastProject.name }}</a>
                     </div>
                 </div>
             </div>
@@ -353,6 +361,10 @@ const props = defineProps({
         required: true,
     },
     pinnedProjectsAll: {
+        type: Object,
+        required: true,
+    },
+    lastProject: {
         type: Object,
         required: true,
     },

@@ -231,8 +231,6 @@ class ProjectController extends Controller
     public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
     {
         //$saveFilterAndSort = $request->boolean('saveFilterAndSort');
-
-
         $userProjectManagementSetting = $this->userProjectManagementSettingService
             ->getFromUser($this->userService->getAuthUser())
             ->getAttribute('settings');
@@ -423,6 +421,7 @@ class ProjectController extends Controller
             ),
             'userProjectManagementSetting' => $userProjectManagementSetting,
             'eventStatuses' => EventStatus::orderBy('order')->get(),
+            'lastProject' => $this->userService->getAuthUser()->lastProject,
         ]);
         /*$saveFilterAndSort = $request->boolean('saveFilterAndSort');
         $userProjectManagementSetting = $this->userProjectManagementSettingService
@@ -2162,6 +2161,13 @@ class ProjectController extends Controller
         $headerObject->project = $project;
         $headerObject->project->cost_center = $project->costCenter; // needed for the ProjectShowHeaderComponent
         $loadedProjectInformation = [];
+
+        $user = $userService->getAuthUser();
+        /** @var User $user */
+        if ($user->last_project_id !== $project->id) {
+            $user->update(['last_project_id' => $project->id]);
+        }
+
 
         $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {
             $query->where('project_id', $project->id);

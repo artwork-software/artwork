@@ -137,6 +137,11 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $checklist_completed_tasks
  * @property boolean $checklist_show_without_tasks
  * @property boolean $is_developer
+ * @property array $show_qualifications
+ * @property boolean $email_private
+ * @property boolean $phone_private
+ * @property boolean $daily_view
+ * @property int $last_project_id
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -213,7 +218,8 @@ class User extends Model implements
         'email_private',
         'phone_private',
         'daily_view',
-        'entities_per_page'
+        'entities_per_page',
+        'last_project_id'
     ];
 
     protected $casts = [
@@ -597,5 +603,10 @@ class User extends Model implements
     public function getManagingCraftIds(): array
     {
         return $this->craftsToManage()->pluck('id')->toArray();
+    }
+
+    public function lastProject(): HasOne
+    {
+        return $this->hasOne(Project::class, 'id', 'last_project_id');
     }
 }

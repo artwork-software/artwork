@@ -46,23 +46,23 @@
 
         <BulkHeader v-model="timeArray" :is-in-modal="isInModal"/>
         <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll' : ''">
-            <div v-if="events.length > 0"
-                 v-for="(event, index) in events"
-                 class="mb-4">
-                <BulkSingleEvent
-                    :can-edit-component="canEditComponent"
-                    :rooms="rooms"
-                    :event_types="eventTypes"
-                    :time-array="timeArray"
-                    :event="event"
-                    :copy-types="copyTypes"
-                    :index="index"
-                    :is-in-modal="isInModal"
-                    @open-event-component="onOpenEventComponent"
-                    @delete-current-event="deleteCurrentEvent"
-                    @create-copy-by-event-with-data="createCopyByEventWithData"
-                    :event-statuses="eventStatuses"
-                />
+            <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
+                <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
+                    <BulkSingleEvent
+                        :can-edit-component="canEditComponent"
+                        :rooms="rooms"
+                        :event_types="eventTypes"
+                        :time-array="timeArray"
+                        :event="event"
+                        :copy-types="copyTypes"
+                        :index="index"
+                        :is-in-modal="isInModal"
+                        @open-event-component="onOpenEventComponent"
+                        @delete-current-event="deleteCurrentEvent"
+                        @create-copy-by-event-with-data="createCopyByEventWithData"
+                        :event-statuses="eventStatuses"
+                    />
+                </div>
             </div>
             <div v-else class="flex items-center h-24 print:hidden">
                 <AlertComponent :text="$t('No events found. Click on the plus (+) icon to create an event')" type="info"
@@ -173,7 +173,7 @@ const {hasAdminRole} = usePermission(usePage().props),
         },
         event_properties: {
             type: Array,
-            required: true
+            required: false
         }
     }),
     roomCollisions = ref([]),

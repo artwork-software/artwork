@@ -149,9 +149,11 @@
                 <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
                      :class="[zoom_factor === 1 ? 'eventText' : '', 'font-semibold']"
                      v-if="usePage().props.user.calendar_settings.repeating_events && event.is_series"
-                     class="uppercase flex items-center">
-                    <IconRepeat class="mx-1 h-3 w-3" stroke-width="1.5"/>
-                    {{ $t('Repeat event') }}
+                     class="uppercase flex items-center w-28">
+                    <IconRepeat class="mx-1 size-3 min-h-3 min-w-3" stroke-width="1.5"/>
+                    <span class="truncate">
+                        {{ $t('Repeat event') }}
+                    </span>
                 </div>
                 <!-- User-Icons -->
                 <div class="-ml-3 mb-0.5 w-full"

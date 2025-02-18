@@ -438,7 +438,7 @@ export default {
             this.filterArray.roomFilters.allDayFree = filter.allDayFree;
             this.filterArray.eventProperties.forEach(
                 (eventProperty) => {
-                    eventProperty.checked = filter.eventProperties.includes(eventProperty.id);
+                    eventProperty.checked = filter.eventProperties?.includes(eventProperty.id);
                 }
             );
             this.reloadChanges();

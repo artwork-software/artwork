@@ -358,7 +358,7 @@ const props = defineProps({
     },
     myLastProject: {
         type: Object,
-        required: true,
+        required: false,
     },
     pinnedProjectsAll: {
         type: Object,
@@ -366,6 +366,10 @@ const props = defineProps({
     },
     lastProject: {
         type: Object,
+        required: true,
+    },
+    entitiesPerPage: {
+        type: Number,
         required: true,
     },
 })
@@ -400,7 +404,7 @@ const createProject = ref(false);
 const showExportModal = ref(false);
 const entitiesPerPage = ref([10, 15, 20, 30, 50, 75, 100]);
 const page = ref(route().params.page ?? 1);
-const perPage = ref(route().params.entitiesPerPage ?? 10);
+const perPage = ref(props.entitiesPerPage ?? 10);
 const showAddBulkEventModal = ref(false);
 const dropFeedbackShown = ref(null);
 

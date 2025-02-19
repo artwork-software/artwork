@@ -1924,7 +1924,7 @@ class EventController extends Controller
         $this->notificationService->setNotificationTo($event->creator);
         $this->notificationService->createNotification();
 
-        //broadcast(new EventCreated($event, $event->room_id));
+        broadcast(new EventCreated($event, $roomId));
     }
 
     public function getCollisionCount(Request $request): int

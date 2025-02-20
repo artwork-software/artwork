@@ -1,5 +1,5 @@
 <template>
-   <div class="print:w-full">
+   <div class="print:w-full" :class="event?.isNew ? 'border-2 rounded-lg border-pink-500 border-dashed py-2 px-1' : ''">
        <div class="grid gird-cols-1 md:grid-cols-8 gap-4">
            <div class="" v-if="usePage().props.event_status_module">
                <Listbox v-model="event.status"
@@ -159,9 +159,48 @@
                <div class="flex items-center gap-x-3">
                    <ToolTipComponent icon="IconNote" v-if="!isInModal" :tooltip-text="$t('Edit the description')" stroke="1.5" @click="openNoteModal = true" />
                    <ToolTipDefault :tooltip-text="$t('Set the event to all-day')" left show24-h-icon icon-classes="w-6 h-6" v-if="event.start_time && event.end_time && !event.copy && !isInModal" @click="removeTime"/>
-                   <IconCopy @click="event.copy = true" v-if="!event.copy"
-                             class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                             stroke-width="2"/>
+                   <BaseMenu show-custom-icon dots-color="!text-artwork-buttons-context" stroke-width="2" icon="IconCopy" translation-key="Copy" menu-width="w-fit" white-menu-background>
+                       <div class="flex items-center gap-x-2 p-3">
+                           <IconPlus class="w-6 h-6 text-artwork-buttons-context" stroke-width="2"/>
+                           <input
+                               type="number"
+                               class="input h-12 w-14"
+                               placeholder="Anzahl"
+                               v-model="event.copyCount"
+                               min="1"
+                               minlength="1"
+                               max="1000"
+                           />
+                           <Listbox as="div" class="relative" v-model="event.copyType" id="room">
+                               <ListboxButton class="menu-button">
+                                   <div class="flex-grow flex text-left xsDark !w-12 truncate">
+                                       {{ event.copyType?.name }}
+                                   </div>
+                                   <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                               </ListboxButton>
+                               <ListboxOptions
+                                   class="w-44 rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
+                                   <ListboxOption v-for="copyType in copyTypes"
+                                                  class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                                  :key="copyType.name"
+                                                  :value="copyType"
+                                                  v-slot="{ active, selected }">
+                                       <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                           {{ copyType.name }}
+                                       </div>
+                                       <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
+                                                  aria-hidden="true"/>
+                                   </ListboxOption>
+                               </ListboxOptions>
+                           </Listbox>
+                           <IconCircleCheckFilled @click="createCopyByEventWithData(event)"
+                                                  class="w-8 h-8 text-artwork-buttons-create cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                                  stroke-width="2"/>
+                           <IconX @click="event.copy = false"
+                                  class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                  stroke-width="2"/>
+                       </div>
+                   </BaseMenu>
                    <Menu v-if="!isInModal"
                          as="div"
                          class="text-sm cursor-pointer flex flex-row items-center bg-transparent">
@@ -199,46 +238,7 @@
                            </transition>
                        </div>
                    </Menu>
-                   <div v-if="event.copy" class="flex items-center gap-x-2">
-                       <IconPlus class="w-6 h-6 text-artwork-buttons-context" stroke-width="2"/>
-                       <input
-                           type="number"
-                           class="input h-12 w-14"
-                           placeholder="Anzahl"
-                           v-model="event.copyCount"
-                           min="1"
-                           minlength="1"
-                           max="1000"
-                       />
-                       <Listbox as="div" class="relative" v-model="event.copyType" id="room">
-                           <ListboxButton class="menu-button">
-                               <div class="flex-grow flex text-left xsDark !w-12 truncate">
-                                   {{ event.copyType?.name }}
-                               </div>
-                               <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                           </ListboxButton>
-                           <ListboxOptions
-                               class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
-                               <ListboxOption v-for="copyType in copyTypes"
-                                              class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
-                                              :key="copyType.name"
-                                              :value="copyType"
-                                              v-slot="{ active, selected }">
-                                   <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                       {{ copyType.name }}
-                                   </div>
-                                   <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
-                                              aria-hidden="true"/>
-                               </ListboxOption>
-                           </ListboxOptions>
-                       </Listbox>
-                       <IconCircleCheckFilled @click="createCopyByEventWithData(event)"
-                                              class="w-8 h-8 text-artwork-buttons-create cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                                              stroke-width="2"/>
-                       <IconX @click="event.copy = false"
-                              class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                              stroke-width="2"/>
-                   </div>
+
                </div>
            </div>
        </div>
@@ -253,6 +253,7 @@
            @closed="onCloseDeleteEventConfirmModal"/>
 
        <AddEditEventNoteModal :event="event" v-if="openNoteModal" @close="openNoteModal = false"/>
+
    </div>
 </template>
 
@@ -286,6 +287,7 @@ import {computed, onMounted, ref} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
 import {inject} from "vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 const props = defineProps({
     event: {

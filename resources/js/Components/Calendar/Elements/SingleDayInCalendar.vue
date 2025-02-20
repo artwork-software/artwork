@@ -25,7 +25,7 @@
             </HolidayToolTip>
         </div>
         <div :style="textStyle" class="mt-3 mr-2" v-else>
-            <div class="xsDark">
+            <div class="" :class="zoom_factor < 0.6 ? 'xxsDark' : 'xsDark'">
                 {{ hour }}
             </div>
         </div>

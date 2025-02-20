@@ -229,18 +229,22 @@ class ProjectController extends Controller
 
     public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
     {
+
         $user = $this->userService->getAuthUser();
         $userProjectManagementSetting = $this->userProjectManagementSettingService
             ->getFromUser($user)
             ->getAttribute('settings');
 
-        // Projekte abrufen
+        if($request->integer('entitiesPerPage') && $user->entities_per_page !== $request->integer('entitiesPerPage')) {
+            $user->update(['entities_per_page' => $request->integer('entitiesPerPage')]);
+        }
+
+        //dd($userProjectManagementSetting);
+
         $projects = $this->projectService->paginateProjects(
             $request->string('query'),
-            $request->integer('entitiesPerPage', 10),
-            !empty($userProjectManagementSetting['sort_by'])
-                ? ProjectSortEnum::from($userProjectManagementSetting['sort_by'])
-                : null,
+            $user->entities_per_page,
+            $userProjectManagementSetting['sort_by'] ? ProjectSortEnum::from($userProjectManagementSetting['sort_by']) : null,
             Collection::make($userProjectManagementSetting['project_state_ids']),
             Collection::make($userProjectManagementSetting['project_filters'])
         );
@@ -261,7 +265,7 @@ class ProjectController extends Controller
             'components' => $components,
             'pinnedProjects' => $pinnedProjectsComponents,
             'pinnedProjectsAll' => $pinnedProjects,
-            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTab(),
+            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTab()->getAttribute('id'),
             'states' => $this->projectStateService->getAll(),
             'projectGroups' => $this->projectService->getProjectGroups(),
             'categories' => $this->categoryService->getAll(),
@@ -274,6 +278,8 @@ class ProjectController extends Controller
             'projectSortEnumNames' => array_column(ProjectSortEnum::cases(), 'name'),
             'userProjectManagementSetting' => $userProjectManagementSetting,
             'eventStatuses' => EventStatus::orderBy('order')->get(),
+            'lastProject' => $this->userService->getAuthUser()->lastProject,
+            'entitiesPerPage' => $user->entities_per_page
         ]);
     }
 
@@ -2030,6 +2036,13 @@ class ProjectController extends Controller
         $headerObject->project->cost_center = $project->costCenter; // needed for the ProjectShowHeaderComponent
         $loadedProjectInformation = [];
 
+        $user = $userService->getAuthUser();
+        /** @var User $user */
+        if ($user->last_project_id !== $project->id) {
+            $user->update(['last_project_id' => $project->id]);
+        }
+
+
         $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {
             $query->where('project_id', $project->id);
         }, 'components' => function ($query): void {
@@ -2974,7 +2987,8 @@ class ProjectController extends Controller
         ColumnService $columnService,
         MainPositionService $mainPositionService,
         BudgetColumnSettingService $columnSettingService,
-        SageApiSettingsService $sageApiSettingsService
+        SageApiSettingsService $sageApiSettingsService,
+        Request $request
     ): JsonResponse|RedirectResponse {
         // authorization
         if ($project->users->isNotEmpty() || !Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
@@ -3023,7 +3037,11 @@ class ProjectController extends Controller
             return Redirect::route('projects.tab', [$newProject->id, $projectTab->id]);
         }
 
-        return Redirect::back();
+        return redirect()->route('projects', [
+            'page' => $request->get('page'),
+            'entitiesPerPage' => $request->get('entitiesPerPage'),
+            'query' => $request->get('query'),
+        ]);
     }
 
     public function destroy(
@@ -3043,7 +3061,8 @@ class ProjectController extends Controller
         SubEventService $subEventService,
         NotificationService $notificationService,
         ProjectTabService $projectTabService,
-        TaskService $taskService
+        TaskService $taskService,
+        Request $request
     ): RedirectResponse {
         foreach ($project->users()->get() as $user) {
             $notificationTitle = __('notification.project.delete', [
@@ -3085,7 +3104,11 @@ class ProjectController extends Controller
             $taskService
         );
 
-        return Redirect::route('projects');
+        return redirect()->route('projects', [
+            'page' => $request->get('page'),
+            'entitiesPerPage' => $request->get('entitiesPerPage'),
+            'query' => $request->get('query'),
+        ]);
     }
 
     public function forceDelete(
@@ -3553,10 +3576,14 @@ class ProjectController extends Controller
         return null;
     }
 
-    public function pin(Project $project): RedirectResponse
+    public function pin(Project $project, Request $request): RedirectResponse
     {
         $this->projectService->pin($project);
-        return Redirect::route('projects');
+        return redirect()->route('projects', [
+            'page' => $request->get('page'),
+            'entitiesPerPage' => $request->get('entitiesPerPage'),
+            'query' => $request->get('query'),
+        ]);
     }
 
     public function updateCopyright(Request $request, Project $project): RedirectResponse

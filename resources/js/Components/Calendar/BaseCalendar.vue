@@ -13,26 +13,39 @@
                 @jump-to-day-of-month="jumpToDayOfMonth"
             />
         </div>
-        <div :class="eventsWithoutRoom.length > 0 ? 'mt-20' : ''">
-            <div v-if="eventsWithoutRoom.length > 0" class="flex justify-center">
-                <div class="flex errorText items-center cursor-pointer my-2" @click="showEventsWithoutRoomComponent = true">
-                    <IconAlertTriangle class="h-6 mr-2"/>
-                    {{
-                        computedFilteredEvents.length === 1 ?
-                            $t('{0} Event without room!', [eventsWithoutRoom.length]) :
-                            $t('{0} Events without room!', [eventsWithoutRoom.length])
-                    }}
-                </div>
+
+        <div aria-live="assertive" class="fixed right-0 top-20 z-100 flex items-end px-4 py-6 sm:items-start sm:p-6">
+            <div class="flex w-full flex-col items-center space-y-4 sm:items-end">
+                <!-- Notification panel, dynamically insert this into the live region when it needs to be displayed -->
+                <transition enter-active-class="transform ease-out duration-300 transition" enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2" enter-to-class="translate-y-0 opacity-100 sm:translate-x-0" leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                    <div v-if="eventsWithoutRoom.length > 0"  @click="showEventsWithoutRoomComponent = true" class="cursor-pointer max-w-md w-full overflow-hidden rounded-lg bg-white shadow-lg border border-red-500 border-dashed ring-1 ring-black/5">
+                        <div class="p-4">
+                            <div class="flex items-center">
+                                <div class="shrink-0">
+                                    <component is="IconAlertTriangle" class="size-6 text-red-500" aria-hidden="true" />
+                                </div>
+                                <div class="ml-3 flex-1 pt-0.5">
+                                    <p class="text-sm font-medium text-gray-900">Achtung Termine ohne Raum</p>
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        {{
+                                            eventsWithoutRoom.length === 1 ?
+                                                $t('{0} Event without room!', [eventsWithoutRoom.length]) :
+                                                $t('{0} Events without room!', [eventsWithoutRoom.length])
+                                        }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </transition>
             </div>
         </div>
-
-
         <div>
             <div v-if="!usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
-                <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? '' : 'mt-[4.5rem]'">
+                <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? '' : ''">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white px-5'">
                         <CalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
-                        <div class="w-fit events-by-days-container" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '', computedFilteredEvents.length > 0 ? '-mt-7' : '' ]" ref="calendarToCalculate">
+                        <div class="w-fit events-by-days-container mt-16" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '',]" ref="calendarToCalculate">
                             <div v-for="day in days"
                                  :key="day.fullDay"
                                  :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
@@ -246,7 +259,7 @@
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :eventsWithoutRoom="eventsWithoutRoom"
+        :eventsWithoutRoom="usePage().props.eventsWithoutRoom"
         :isAdmin="hasAdminRole()"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
     />
@@ -261,7 +274,6 @@ import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {IconAlertTriangle} from "@tabler/icons-vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
@@ -270,19 +282,16 @@ import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionO
 import MultiDuplicateModal from "@/Layouts/Components/MultiDuplicateModal.vue";
 import DailyViewCalendar from "@/Components/Calendar/DailyViewCalendar.vue";
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
-import CreateOrUpdateEventModal from "@/Pages/Events/Components/CreateOrUpdateEventModal.vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
-import SingleEventInCalendar from "@/Components/Calendar/Elements/SingleEventInCalendar.vue";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 
 const filterOptions = inject('filterOptions');
-const personalFilters = inject('personalFilters');
 const user_filters = inject('user_filters');
-const event_properties = inject('event_properties');
-//provide('event_properties', inject('event_properties'));
+
+
 
 const props = defineProps({
         rooms: {
@@ -323,20 +332,9 @@ const props = defineProps({
         }
     })
 const $t = useTranslation()
-const { composedCurrentDaysInViewRef, composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
+const { composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
 const {hasAdminRole} = usePermission(usePage().props)
 
-const AsyncFunctionBarCalendar = defineAsyncComponent(
-        {
-            loader: () => import('@/Components/FunctionBars/FunctionBarCalendar.vue')
-        }
-    )
-
-const AsyncCalendarHeader = defineAsyncComponent(
-        {
-            loader: () => import('@/Components/Calendar/Elements/CalendarHeader.vue')
-        }
-    )
 const AsyncSingleEventInCalendar = defineAsyncComponent(
         {
             loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
@@ -365,7 +363,7 @@ const computedFilteredEvents = computed(() => {
         let getComputedEventsWithoutRoom = () => {
             return eventsWithoutRoomRef.value.filter((event) => {
                 let createdBy = event.created_by;
-                let projectLeaders = event.projectLeaders;
+                let projectLeaders = event.project?.leaders;
 
                 if (projectLeaders && projectLeaders.length > 0) {
                     if (
@@ -387,7 +385,7 @@ const computedFilteredEvents = computed(() => {
 const computedCheckedEventsForMultiEditCount = computed(() => {
         return editEvents.value.length;
     });
-const eventsWithoutRoomRef = ref(JSON.parse(JSON.stringify(props.eventsWithoutRoom ?? [])));
+const eventsWithoutRoomRef = ref(props.eventsWithoutRoom );
 const first_project_calendar_tab_id = inject('first_project_calendar_tab_id');
 const first_project_tab_id = inject('first_project_tab_id');
 const eventTypes = inject('eventTypes');

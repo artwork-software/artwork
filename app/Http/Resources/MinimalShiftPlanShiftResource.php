@@ -24,7 +24,7 @@ class MinimalShiftPlanShiftResource extends JsonResource
             'id' => $this->getAttribute('id'),
             'start' => $this->getAttribute('start'),
             'end' => $this->getAttribute('end'),
-            'craft' => $this->getAttribute('craft')->only(['id', 'name', 'abbreviation']),
+            'craft' => $this->getAttribute('craft')?->only(['id', 'name', 'abbreviation']),
             'users' => $this->getAttribute('users')->map(
                 function (User $user): array {
                     return [

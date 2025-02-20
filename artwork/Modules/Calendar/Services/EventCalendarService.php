@@ -39,20 +39,23 @@ readonly class EventCalendarService
     ): Collection {
         $roomIds = $rooms->pluck('id');
 
+        $eventWith = [
+            'project:id,name,state,artists',
+            'project.status:id,name,color',
+            'project.managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
+            'eventStatus:id,color',
+            'event_type:id,name,abbreviation,hex_code',
+            'room:id,name',
+            'creator:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
+            'shifts'
+        ];
+
+
         $events = Event::select([
             'id', 'start_time', 'end_time', 'eventName', 'description', 'project_id',
             'event_type_id', 'event_status_id', 'allDay', 'room_id', 'user_id', 'occupancy_option', 'declined_room_id'
         ])
-            ->with([
-                'project:id,name,state,artists',
-                'project.status:id,name,color',
-                'project.managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
-                'eventStatus:id,color',
-                'event_type:id,name,abbreviation,hex_code',
-                'room:id,name',
-                'creator:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
-                'shifts' => fn($query) => $query->select(['id', 'start_date', 'end_date', 'event_id'])
-            ])
+            ->with($eventWith)
             ->whereIn('room_id', $roomIds)
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('start_time', [$startDate, $endDate])

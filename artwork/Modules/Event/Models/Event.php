@@ -167,7 +167,7 @@ class Event extends Model
 
     public function shifts(): HasMany
     {
-        return $this->hasMany(Shift::class);
+        return $this->hasMany(Shift::class, 'event_id', 'id');
     }
 
     //@todo: fix phpcs error - refactor function name to eventType

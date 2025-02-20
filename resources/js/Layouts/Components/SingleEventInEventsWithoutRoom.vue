@@ -26,19 +26,19 @@
             <div class="">
                 <div class="h-12 flex w-full truncate p-2" v-if="(event?.user_id === usePage().props.user.id) || !isAdmin">
                     <div>
-                        <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventTypeId)?.hex_code }" />
+                        <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventType.id)?.hex_code }" />
                     </div>
-                    <p class="ml-2 headline2">{{ this.eventTypes.find(type => type.id === event.eventTypeId).name }}</p>
+                    <p class="ml-2 headline2">{{ this.eventTypes.find(type => type.id === event.eventType.id).name }}</p>
                 </div>
                 <Listbox as="div" class="flex h-12 mr-2 relative" v-model="event.eventTypeId" v-else :onchange="checkCollisions()" id="eventType">
                     <ListboxButton class="menu-button mt-5">
                         <div class="flex items-center justify-between w-full">
                             <div class="flex items-center gap-x-2">
                                 <div>
-                                    <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventTypeId)?.hex_code }" />
+                                    <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventType.id)?.hex_code }" />
                                 </div>
                                 <span class="truncate items-center flex">
-                                    <span>{{this.eventTypes.find(type => type.id === event.eventTypeId)?.name }}</span>
+                                    <span>{{this.eventTypes.find(type => type.id === event.eventType.id)?.name }}</span>
                                 </span>
                             </div>
                             <span class="pointer-events-none">
@@ -223,7 +223,7 @@
                     <div class="xsLight flex" v-if="!event.creatingProject">
                         {{$t('Currently assigned to:')}}
                         <a v-if="event.projectId"
-                           :href="route('projects.tab', {project: event.projectId, projectTab: this.first_project_calendar_tab_id})"
+                           :href="route('projects.tab', {project: event.project.id, projectTab: this.first_project_calendar_tab_id})"
                            class="ml-3 flex xsDark">
                             {{ event.project?.name }}
                         </a>
@@ -742,7 +742,7 @@ name: "SingleEventInEventsWithoutRoom",
                 preserveState: true,
                 onSuccess: () => {
                     router.reload({
-                        only: ['eventsWithoutRoom', 'calendar']
+                        only: ['eventsWithoutRoom']
                     })
                 },
                 onError: (error) => {
@@ -792,11 +792,11 @@ name: "SingleEventInEventsWithoutRoom",
                 end: this.formatDate(event.endDate, event.endTime),
                 roomId: event.roomId,
                 description: event.description,
-                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
-                projectId: this.showProjectInfo ? event.projectId : null,
-                projectName: event.creatingProject ? event.projectName : '',
-                eventTypeId: event.eventTypeId,
-                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
+                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventType.id)?.individual_name,
+                projectId: this.showProjectInfo ? event.project.id : null,
+                projectName: event.creatingProject ? event.project.name : '',
+                eventTypeId: event.eventType.id,
+                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventType.id)?.project_mandatory && !this.creatingProject,
                 creatingProject: event.creatingProject,
                 isOption: this.isOption,
                 allDay: event.allDay,

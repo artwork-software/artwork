@@ -902,12 +902,14 @@ export default {
         openModal() {
             this.canEdit = (!this.event?.id) || this.isCreator || this.isRoomAdmin || this.hasAdminRole();
             if (!this.event) {
-                if (this.event?.project) {
-                    this.selectedProject = {id: this.event.project.id, name: this.event.project.name};
-                }else if (this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id){
-                    this.selectedProject = {id: this.$page.props.user.calendar_settings.time_period_project_id, name: this.$page.props.projectNameOfCalendarProject};
-                }
                 return;
+            }
+
+            if (this.event?.project) {
+                console.log(this.event.project);
+                this.selectedProject = {id: this.event.project.id, name: this.event.project.name};
+            } else if (this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id){
+                this.selectedProject = {id: this.$page.props.user.calendar_settings.time_period_project_id, name: this.$page.props.projectNameOfCalendarProject};
             }
 
             const start = dayjs(this.event.start);
@@ -925,10 +927,10 @@ export default {
             this.eventName = this.event.eventName;
             this.selectedEventStatus = this.eventStatuses.find(status => status.id === this.event.eventStatusId);
             this.allDayEvent = this.event.allDay ? this.event.allDay : false;
-            if (!this.event.eventTypeName) {
+            if (!this.event.eventType.id) {
                 this.selectedEventType = this.eventTypes[0];
             } else {
-                this.selectedEventType = this.eventTypes.find(type => type.name === this.event.eventTypeName);
+                this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventType.id);
             }
             this.series = this.event.is_series;
             if (this.series) {

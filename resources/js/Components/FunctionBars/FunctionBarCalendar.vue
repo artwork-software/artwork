@@ -239,7 +239,7 @@
                                             {{ $t('Repeat event') }}
                                         </label>
                                     </div>
-                                    <div class="flex items-center py-1" v-if="canAny(['can manage workers', 'can plan shifts'])">
+                                    <div class="flex items-center py-1" v-if="canAny(['can manage workers', 'can plan shifts']) || hasAdminRole()">
                                         <input id="cb-work-shifts"
                                                v-model="userCalendarSettings.work_shifts"
                                                type="checkbox"

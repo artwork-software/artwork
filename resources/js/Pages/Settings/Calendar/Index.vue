@@ -39,11 +39,6 @@
                             />
                         </div>
                     </div>
-
-
-                    <pre>
-                        {{ usePage().props.calendarHours }}
-                    </pre>
                 </div>
             </div>
         </div>

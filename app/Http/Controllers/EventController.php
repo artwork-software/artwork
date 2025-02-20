@@ -12,6 +12,7 @@ use Artwork\Modules\Budget\Services\MainPositionService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\DTO\EventDTO;
+use Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO;
 use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
@@ -238,29 +239,16 @@ class EventController extends Controller
             $endDate,
         );
 
-        /*dd($this->calendarDataService->createCalendarPeriodDto(
-            $startDate,
-            $endDate,
-            $user,
-        ));*/
 
         $dateValue = [
             $startDate ? $startDate->format('Y-m-d') : null,
             $endDate ? $endDate->format('Y-m-d') : null
         ];
 
-        /*
-         * ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
-            ->setFirstProjectCalendarTabId(
-                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
-            )
-         */
-        //$eventTypeIds = $events->pluck('event_type_id')->unique();
         $eventTypes = EventType::select(['id', 'name', 'abbreviation', 'hex_code'])
             ->get()
             ->keyBy('id');
 
-        //dd($period);
 
         return Inertia::render('Calendar/Index', [
             'period' => $period,
@@ -268,35 +256,9 @@ class EventController extends Controller
             'calendar' => $calendarData->rooms,
             'personalFilters' => $this->filterService->getPersonalFilter(),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
-            'eventsWithoutRoom' => Event::query()->where('room_id', null)->get()->map(fn($event) => new EventDTO(
-                id: $event->id,
-                start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
-                end: Carbon::parse($event->end_time)->format('Y-m-d H:i'),
-                eventName: $event->eventName,
-                description: $event->description,
-                project: null,
-                eventTypeId: $event->event_type_id,
-                eventTypeName: $eventTypes[$event->event_type_id]?->name,
-                eventTypeAbbreviation: $eventTypes[$event->event_type_id]?->abbreviation,
-                eventTypeColor: $eventTypes[$event->event_type_id]?->hex_code,
-                eventStatusId: $event->event_status_id,
-                eventStatusColor: $event->eventStatus?->color,
-                shifts: $userCalendarSettings->work_shifts ?
-                    MinimalShiftPlanShiftResource::collection($event->shifts)->resolve() :
-                    null,
-                allDay: $event->allDay,
-                roomId: $event->room_id,
-                roomName: null,
-                daysOfEvent: $event->getAttribute('days_of_event') ?? [],
-                startHour: $event->getAttribute('start_hour') ?? 0,
-                minutesFormStartHourToStart: $event->getAttribute('minutes_form_start_hour_to_start') ?? 0,
-                eventLengthInHours: $event->getAttribute('event_length_in_hours') ?? 0,
-                created_by: $event?->creator,
-                formattedDates: $event->getAttribute('formatted_dates') ?? [],
-                is_series: $event->is_series,
-                eventProperties: $event->eventProperties,occupancy_option: $event->occupancy_option,
-                declinedRoomId: $event->declined_room_id,
-            )),
+            'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
+                EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)
+            ),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
             'eventTypes' => EventType::all(),
@@ -309,35 +271,6 @@ class EventController extends Controller
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'projectNameUsedForProjectTimePeriod' => $project?->name ?? null,
         ]);
-
-
-        /*return Inertia::render(
-            'Events/EventManagement',
-            $userService->atAGlanceEnabled() ?
-                $eventService->createEventManagementDtoForAtAGlance(
-                    $calendarService,
-                    $roomService,
-                    $userService,
-                    $filterService,
-                    $projectTabService,
-                    $eventTypeService,
-                    $areaService,
-                    $projectService,
-                    $projectCreateSettings,
-                    $eventPropertyService,
-                ) :
-                $eventService->createEventManagementDto(
-                    $roomService,
-                    $userService,
-                    $filterService,
-                    $projectTabService,
-                    $eventTypeService,
-                    $areaService,
-                    $projectService,
-                    $projectCreateSettings,
-                    $eventPropertyService
-                )
-        );*/
     }
 
     public function viewShiftPlan(

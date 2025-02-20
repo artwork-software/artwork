@@ -925,7 +925,7 @@ export default {
             this.oldEndTime = this.endTime;
             this.title = this.event.title;
             this.eventName = this.event.eventName;
-            this.selectedEventStatus = this.eventStatuses.find(status => status.id === this.event.eventStatusId);
+            this.selectedEventStatus = this.eventStatuses.find(status => status.id === this.event.eventStatus.id);
             this.allDayEvent = this.event.allDay ? this.event.allDay : false;
             if (!this.event.eventType.id) {
                 this.selectedEventType = this.eventTypes[0];

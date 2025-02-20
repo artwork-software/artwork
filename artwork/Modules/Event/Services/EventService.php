@@ -76,6 +76,7 @@ use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -92,7 +93,8 @@ readonly class EventService
         private ShiftTimePresetService $shiftTimePresetService,
         private CollectionService $collectionService,
         private EventCollectionService $eventCollectionService,
-        private EventTypeService $eventTypeService
+        private EventTypeService $eventTypeService,
+        private readonly AuthManager $authManager
     ) {
         $this->cachedData = null;
     }
@@ -1580,7 +1582,10 @@ readonly class EventService
             $event->end_time
         ))->toOthers();*/
 
-        broadcast(new EventCreated($event->load(['event_type']), $event->room_id));
+        broadcast(new EventCreated(
+            $event->load(['event_type']),
+            $event->room_id
+        ));
         return $event;
     }
 

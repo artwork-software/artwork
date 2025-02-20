@@ -14,25 +14,28 @@
             />
         </div>
 
-        <div aria-live="assertive" class="fixed right-0 top-20 z-100 flex items-end px-4 py-6 sm:items-start sm:p-6">
+        <div aria-live="assertive" class="fixed max-w-sm w-full right-0 top-20 z-100 flex items-end px-4 py-6 sm:items-start sm:p-6">
             <div class="flex w-full flex-col items-center space-y-4 sm:items-end">
                 <!-- Notification panel, dynamically insert this into the live region when it needs to be displayed -->
                 <transition enter-active-class="transform ease-out duration-300 transition" enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2" enter-to-class="translate-y-0 opacity-100 sm:translate-x-0" leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                    <div v-if="eventsWithoutRoom.length > 0"  @click="showEventsWithoutRoomComponent = true" class="cursor-pointer max-w-md w-full overflow-hidden rounded-lg bg-white shadow-lg border border-red-500 border-dashed ring-1 ring-black/5">
+                    <div v-if="eventsWithoutRoom.length > 0"  class="cursor-pointer max-w-md w-full overflow-hidden rounded-lg bg-white shadow-lg border border-red-500 border-dashed ring-1 ring-black/5">
                         <div class="p-4">
                             <div class="flex items-center">
                                 <div class="shrink-0">
                                     <component is="IconAlertTriangle" class="size-6 text-red-500" aria-hidden="true" />
                                 </div>
-                                <div class="ml-3 flex-1 pt-0.5">
-                                    <p class="text-sm font-medium text-gray-900">Achtung Termine ohne Raum</p>
-                                    <p class="mt-1 text-sm text-gray-500">
+                                <div class="ml-3 flex-1 pt-0.5 group" @click="showEventsWithoutRoomComponent = true">
+                                    <p class="text-sm font-bold text-gray-900">Achtung Termine ohne Raum</p>
+                                    <p class="text-sm font-medium text-gray-500">
                                         {{
                                             eventsWithoutRoom.length === 1 ?
                                                 $t('{0} Event without room!', [eventsWithoutRoom.length]) :
                                                 $t('{0} Events without room!', [eventsWithoutRoom.length])
                                         }}
                                     </p>
+                                    <div  class="text-xs font-medium text-red-500 group-hover:text-red-700">
+                                        {{ $t('Show events') }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -267,7 +270,7 @@
 </template>
 
 <script setup>
-import {computed, defineAsyncComponent, inject, onMounted, provide, ref} from "vue";
+import {computed, defineAsyncComponent, inject, onMounted, provide, reactive, ref, watch} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
@@ -290,7 +293,6 @@ import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.v
 
 const filterOptions = inject('filterOptions');
 const user_filters = inject('user_filters');
-
 
 
 const props = defineProps({
@@ -334,7 +336,6 @@ const props = defineProps({
 const $t = useTranslation()
 const { composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
 const {hasAdminRole} = usePermission(usePage().props)
-
 const AsyncSingleEventInCalendar = defineAsyncComponent(
         {
             loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
@@ -795,6 +796,7 @@ onMounted(() => {
     const ShiftCalendarListener = useShiftCalendarListener(newCalendarData.value);
     ShiftCalendarListener.init();
 })
+
 
 </script>
 

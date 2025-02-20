@@ -22,14 +22,14 @@ class ProjectDTO extends Data
     }
 
 
-    public static function fromModel(Project $project, UserCalendarSettings $userCalendarSettings): self
+    public static function fromModel(Project $project, UserCalendarSettings $userCalendarSettings = null): self
     {
         return new self(
             $project->id,
             $project->name,
-            $userCalendarSettings->project_status ? $project->status : Lazy::inertia(fn() => $project->status),
+            $userCalendarSettings?->project_status ? $project->status : Lazy::inertia(fn() => $project->status),
             $project->artists,
-            $userCalendarSettings->project_management ?
+            $userCalendarSettings?->project_management ?
                 $project->managerUsers :
                 Lazy::inertia(fn() => $project->managerUsers),
         );

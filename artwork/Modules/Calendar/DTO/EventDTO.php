@@ -6,6 +6,7 @@ use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Carbon\Carbon;
@@ -39,6 +40,9 @@ class EventDTO extends Data
         public ?bool $occupancy_option,
         public ?int $declinedRoomId = null,
         public Lazy|EventStatus|null $eventStatus,
+        public Collection $subEvents,
+        public SeriesEvents|null $series,
+        public ?string $option_string,
     ) {
     }
 
@@ -47,7 +51,8 @@ class EventDTO extends Data
         UserCalendarSettings $userCalendarSettings,
         Collection $projects,
         Collection $eventTypes,
-        Collection $users
+        Collection $users,
+        Collection $eventStatuses,
     ): EventDTO {
         return new self(
             id: $event->id,
@@ -73,7 +78,12 @@ class EventDTO extends Data
             eventProperties: $event->eventProperties,
             occupancy_option: $event->occupancy_option,
             declinedRoomId: $event->declined_room_id,
-            eventStatus: null,
+            eventStatus: $userCalendarSettings->use_event_status_color ?
+                $eventStatuses[$event->event_status_id] :
+                Lazy::inertia(fn() => $eventStatuses[$event->event_status_id]),
+            subEvents: $event->subEvents,
+            series: $event->is_series ? $event->series : null,
+            option_string: $event->option_string,
         );
     }
 }

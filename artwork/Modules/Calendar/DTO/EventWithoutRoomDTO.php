@@ -6,6 +6,7 @@ use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Carbon\Carbon;
@@ -38,6 +39,9 @@ class EventWithoutRoomDTO extends Data
         public ?int $declinedRoomId = null,
         public ?EventStatus $eventStatus,
         public Collection $eventProperties,
+        public Collection $subEvents,
+        public ?SeriesEvents $series,
+        public ?string $option_string,
     ) {
     }
 
@@ -69,6 +73,9 @@ class EventWithoutRoomDTO extends Data
             declinedRoomId: $event->declined_room_id,
             eventStatus: $event->eventStatus,
             eventProperties: $event->eventProperties,
+            subEvents: $event->subEvents,
+            series: $event->is_series ? $event->series : null,
+            option_string: $event->option_string,
         );
     }
 }

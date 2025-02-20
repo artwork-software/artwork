@@ -2348,5 +2348,6 @@
     "Weekly View Calendar Settings": "Weekly View Calendar Settings",
     "The end time must be greater than the start time.": "The end time must be greater than the start time.",
     "Hours between {start} - {end} are hidden": "Hours between {start} - {end} are hidden",
-    "Last visited project": "Last visited project"
+    "Last visited project": "Last visited project",
+    "Show events": "Show events"
 }

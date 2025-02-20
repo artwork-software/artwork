@@ -16,6 +16,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $options
  * @property boolean $project_management
  * @property boolean $repeating_events
+ * @property boolean $use_project_time_period
+ * @property int $time_period_project_id
+ * @property boolean $event_name
+ * @property boolean $high_contrast
+ * @property boolean $expand_days
+ * @property boolean $use_event_status_color
  * @property boolean $work_shifts
  * @property string $created_at
  * @property string $updated_at

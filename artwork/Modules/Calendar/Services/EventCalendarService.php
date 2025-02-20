@@ -9,6 +9,7 @@ use Artwork\Modules\Calendar\DTO\EventCalendarDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
@@ -71,6 +72,7 @@ readonly class EventCalendarService
         $eventTypeIds = $events->pluck('event_type_id')->unique();
         $projectIds = $events->pluck('project_id')->unique();
         $userIds = $events->pluck('user_id')->unique();
+        $eventStatusIds = $events->pluck('event_status_id')->unique();
 
         $users = User::whereIn('id', $userIds)
             ->select(['id', 'first_name', 'last_name', 'pronouns', 'position', 'email_private', 'email', 'phone_number', 'phone_private', 'description', 'profile_photo_path'])
@@ -91,12 +93,18 @@ readonly class EventCalendarService
             ->get()
             ->keyBy('id');
 
+        $eventStatues = EventStatus::whereIn('id', $eventStatusIds)
+            ->select(['id', 'color'])
+            ->get()
+            ->keyBy('id');
+
         $eventDTOs = $events->map(fn($event) => EventDTO::fromModel(
             $event,
             $userCalendarSettings,
             $projects,
             $eventTypes,
-            $users
+            $users,
+            $eventStatues
         ))->groupBy('roomId');
 
         foreach ($rooms as $room) {

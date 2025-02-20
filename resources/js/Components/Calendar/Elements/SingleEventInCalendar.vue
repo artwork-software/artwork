@@ -1,7 +1,7 @@
 <template>
     <div :style="{ minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
         class="rounded-lg group/singleEvent"
-        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event?.project?.id ? 'border-[3px] border-dashed border-pink-500' : '', isHeightFull ? 'h-full' : '']">
+        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event?.project?.id ? 'border-[3px] border-dashed border-pink-500' : '', isHeightFull ? 'h-full' : '', usePage().props.user.daily_view ? 'overflow-y-scroll' : '']">
         <div v-if="zoom_factor > 0.4 && multiEdit" @click="clickOnCheckBox"
              class="absolute w-full h-full z-10 rounded-lg group-hover/singleEvent:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
@@ -229,7 +229,7 @@
                                 {{ $t('edit')}}
                             </div>
                         </MenuItem>
-                        <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole) && event.eventTypeId === 1" v-slot="{ active }">
+                        <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" v-slot="{ active }">
                             <div
                                 @click="$emit('openAddSubEventModal', event, 'create', null)"
                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
@@ -468,7 +468,7 @@
                                             {{ $t('edit')}}
                                         </div>
                                     </MenuItem>
-                                    <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole) && event.eventTypeId === 1" v-slot="{ active }">
+                                    <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole) && event.eventType.id === 1" v-slot="{ active }">
                                         <div
                                             @click="$emit('openAddSubEventModal', event, 'create', null)"
                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
@@ -690,6 +690,11 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: false
+    },
+    isInDailyView: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 });
 
@@ -725,7 +730,7 @@ const textColorWithDarken = computed(() => {
 });
 
 const getColorBasedOnUserSettings = computed(() => {
-    return usePage().props.user.calendar_settings.use_event_status_color ? props.event?.status?.color : props.event.eventType.hex_code;
+    return usePage().props.user.calendar_settings.use_event_status_color ? props.event?.eventStatus?.color : props.event.eventType.hex_code;
 });
 
 const totalHeight = computed(() => {

@@ -605,7 +605,10 @@ class EventController extends Controller
             return $this->redirector->back();
         }
 
-        broadcast(new EventCreated($firstEvent->load(['event_type']), $firstEvent->room_id));
+        broadcast(new EventCreated(
+            $firstEvent->load(['event_type']),
+            $firstEvent->room_id
+        ));
 
         return new CalendarEventResource($firstEvent);
     }
@@ -1444,7 +1447,10 @@ class EventController extends Controller
             $this->craftInventoryItemEventService->updateEventTimeInInventory($isInInventoryEvent, $event);
         }
 
-        broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
+        broadcast(new EventCreated(
+            $event->fresh(),
+            $event->fresh()->room_id
+        ));
 
         //redirect is required for bulk component event component
         /*if ($request->boolean('usedInBulkComponent')) {
@@ -2004,7 +2010,10 @@ class EventController extends Controller
         $this->notificationService->setNotificationTo($event->creator);
         $this->notificationService->createNotification();
 
-        broadcast(new EventCreated($event, $roomId));
+        broadcast(new EventCreated(
+            $event,
+            $roomId
+        ));
     }
 
     public function getCollisionCount(Request $request): int
@@ -2578,7 +2587,10 @@ class EventController extends Controller
                 $event->setAttribute('end_time', $date . ' ' . $endTime);
             }
             $event->save();
-            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
+            broadcast(new EventCreated(
+                $event->fresh(),
+                $event->fresh()->room_id
+            ));
         }
 
 
@@ -2773,7 +2785,10 @@ class EventController extends Controller
             }
             //dd($event);
             $event->save();
-            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
+            broadcast(new EventCreated(
+                $event->fresh(),
+                $event->fresh()->room_id
+            ));
         }
     }
 
@@ -2806,7 +2821,10 @@ class EventController extends Controller
         );
 
         $freshEvent = $event->fresh();
-        broadcast(new EventCreated($event->load(['project', 'event_type']), $event->room_id));
+        broadcast(new EventCreated(
+            $event->load(['project', 'event_type']),
+            $event->room_id
+        ));
 
         return Redirect::back();
     }
@@ -2823,7 +2841,10 @@ class EventController extends Controller
         );
 
 
-        broadcast(new EventCreated($event, $event->room_id));
+        broadcast(new EventCreated(
+            $event,
+            $event->room_id
+        ));
 
         return Redirect::back();
     }

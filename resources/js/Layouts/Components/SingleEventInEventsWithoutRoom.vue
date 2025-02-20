@@ -764,6 +764,7 @@ name: "SingleEventInEventsWithoutRoom",
                     router.reload({
                         only: ['eventsWithoutRoom']
                     })
+                    this.deleteComponentVisible = false;
                 },
                 onError: (error) => {
                     this.event.error = error.response.data.errors;
@@ -798,6 +799,8 @@ name: "SingleEventInEventsWithoutRoom",
                 eventTypeId: event.eventType.id,
                 projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventType.id)?.project_mandatory && !this.creatingProject,
                 creatingProject: event.creatingProject,
+                // TODO add event Status to events without room
+                eventStatusId : 1,
                 isOption: this.isOption,
                 allDay: event.allDay,
                 is_series: event.series ? event.series : false,

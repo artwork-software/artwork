@@ -30,11 +30,11 @@
                     <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
                          :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']" >
                         <div class="flex items-center gap-x-1">
-                            <div v-if="usePage().props.user.calendar_settings.project_status && event.project?.statusId">
-                                <div class="text-center rounded-full border group size-4 cursor-pointer" :style="{backgroundColor: event?.project?.backgroundColor, borderColor: event?.project?.borderColor}">
+                            <div v-if="usePage().props.user.calendar_settings.project_status && event.project?.status">
+                                <div class="text-center rounded-full border group size-4 cursor-pointer" :style="{backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color}">
                                     <div class="absolute hidden group-hover:block top-5">
                                         <div class="bg-artwork-navigation-background text-white text-xs rounded-full px-3 py-0.5">
-                                            {{ event?.project?.statusName}}
+                                            {{ event?.project?.status?.name }}
                                         </div>
                                     </div>
                                 </div>
@@ -60,7 +60,7 @@
                         </div>
                         <div class="w-28">
                             <div class=" truncate">
-                                {{ event.eventTypeName }}
+                                {{ event?.eventType?.name }}
                             </div>
                         </div>
                         <div v-if="usePage().props.user.calendar_settings.project_status" class="absolute right-5">
@@ -471,7 +471,8 @@ const textColorWithDarken = computed(() => {
 });
 
 const getColorBasedOnUserSettings = computed(() => {
-    return usePage().props.user.calendar_settings.use_event_status_color ? props.event.eventStatusColor : props.event.eventTypeColor;
+    console.log(props.event)
+    return usePage().props.user.calendar_settings.use_event_status_color ? props.event?.status?.color : props.event.eventType.hex_code;
 });
 
 const totalHeight = computed(() => {

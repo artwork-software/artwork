@@ -73,9 +73,9 @@ class Event extends Model
     use Prunable;
 
     protected $with = [
-        'series',
-        'event_type',
-        'subEvents'
+        //'series',
+        //'event_type',
+        //'subEvents'
     ];
 
     protected $fillable = [

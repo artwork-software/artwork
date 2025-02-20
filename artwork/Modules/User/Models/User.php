@@ -468,7 +468,7 @@ class User extends Model implements
      */
     public function getAssignedCraftIdsAttribute(): array
     {
-        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
+        return $this->assignedCrafts->pluck('crafts.id')->toArray();
     }
 
     public function getShiftIdsBetweenStartDateAndEndDate(

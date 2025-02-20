@@ -1,7 +1,7 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
         <div class=" w-full top-0 left-4 py-4  z-40 -mx-10 -my-4" :class="project ? [checkIfScrolledToCalendarRef] : isFullscreen ? 'fixed' : 'fixed ml-10'">
-            <AsyncFunctionBarCalendar
+            <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
                 :rooms="rooms"
@@ -31,7 +31,7 @@
             <div v-if="!usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
                 <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? '' : 'mt-[4.5rem]'">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white px-5'">
-                        <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
+                        <CalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
                         <div class="w-fit events-by-days-container" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '', computedFilteredEvents.length > 0 ? '-mt-7' : '' ]" ref="calendarToCalculate">
                             <div v-for="day in days"
                                  :key="day.fullDay"
@@ -50,7 +50,7 @@
                                          class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.withoutFormat">
                                         <div  v-for="(event, index) in room.content[day.fullDay].events">
                                             <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.withoutFormat">
-                                                <SingleEventInCalendar
+                                                <AsyncSingleEventInCalendar
                                                     :event="event"
                                                     v-if="event.roomId === room.roomId"
                                                     :multi-edit="multiEdit"
@@ -112,7 +112,7 @@
                         <div v-for="events in room.content" :key="events" class="flex flex-col">
                             <div v-for="(event, index) in events.events" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="mb-0.5" :id="'scroll_container-' + events.date">
                                 <div class="py-0.5" :key="event.id">
-                                    <SingleEventInCalendar
+                                    <AsyncSingleEventInCalendar
                                         :event="event"
                                         :multi-edit="multiEdit"
                                         :font-size="textStyle.fontSize"
@@ -274,6 +274,9 @@ import CreateOrUpdateEventModal from "@/Pages/Events/Components/CreateOrUpdateEv
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import SingleEventInCalendar from "@/Components/Calendar/Elements/SingleEventInCalendar.vue";
+import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
+import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
+import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 
 const filterOptions = inject('filterOptions');
 const personalFilters = inject('personalFilters');
@@ -336,7 +339,8 @@ const AsyncCalendarHeader = defineAsyncComponent(
     )
 const AsyncSingleEventInCalendar = defineAsyncComponent(
         {
-            loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue')
+            loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
+            loadingComponent: CalendarPlaceholder
         }
     )
 const textStyle = computed(() => {

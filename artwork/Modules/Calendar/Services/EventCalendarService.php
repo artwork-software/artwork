@@ -65,62 +65,39 @@ readonly class EventCalendarService
             ->when(!empty($filter->event_types), fn($query) => $query->whereIn('event_type_id', $filter->event_types))
             ->get();
 
-        /** @var UserCalendarSettings $userCalendarSettings */
-        $showProjectStatus = $userCalendarSettings->project_status;
-        $showProjectArtists = $userCalendarSettings->project_artists;
-        $showProjectLeaders = $userCalendarSettings->project_management;
-
         $eventTypeIds = $events->pluck('event_type_id')->unique();
+        $projectIds = $events->pluck('project_id')->unique();
+        $userIds = $events->pluck('user_id')->unique();
+
+        $users = User::whereIn('id', $userIds)
+            ->select(['id', 'first_name', 'last_name', 'pronouns', 'position', 'email_private', 'email', 'phone_number', 'phone_private', 'description', 'profile_photo_path'])
+            ->get()
+            ->keyBy('id');
+
+        $projects = Project::whereIn('id', $projectIds)
+            ->select(['id', 'name', 'state', 'artists'])
+            ->with([
+                'status:id,name,color',
+                'managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
+            ])
+            ->get()
+            ->keyBy('id');
+
         $eventTypes = EventType::whereIn('id', $eventTypeIds)
             ->select(['id', 'name', 'abbreviation', 'hex_code'])
             ->get()
             ->keyBy('id');
 
-        $eventDTOs = $events->map(fn($event) => new EventDTO(
-            id: $event->id,
-            start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
-            end: Carbon::parse($event->end_time)->format('Y-m-d H:i'),
-            eventName: $event->eventName,
-            description: $event->description,
-            project: $event->project ? new ProjectDTO(
-                id: $event->project->id,
-                name: $event->project->name,
-                statusId: $showProjectStatus ? $event->project->state : null,
-                backgroundColor: $showProjectStatus ? $event->project->status?->color . '33' : null,
-                borderColor: $showProjectStatus ? $event->project->status?->color : null,
-                statusName: $showProjectStatus ? $event->project->status?->name : null,
-                artistNames: $showProjectArtists && filled($event->project?->artists)
-                    ? $event->project?->artists
-                    : null,
-                leaders: $showProjectLeaders && filled($event->project?->managerUsers)
-                    ? $event->project?->managerUsers
-                    : null,
-            ) : null,
-            eventTypeId: $event->event_type_id,
-            eventTypeName: $eventTypes[$event->event_type_id]?->name,
-            eventTypeAbbreviation: $eventTypes[$event->event_type_id]?->abbreviation,
-            eventTypeColor: $eventTypes[$event->event_type_id]?->hex_code,
-            eventStatusId: $event->event_status_id,
-            eventStatusColor: $event->eventStatus?->color,
-            shifts: $userCalendarSettings->work_shifts ?
-                MinimalShiftPlanShiftResource::collection($event->shifts)->resolve() :
-                null,
-            allDay: $event->allDay,
-            roomId: $event->room_id,
-            roomName: $event->room->name,
-            daysOfEvent: $event->getAttribute('days_of_event') ?? [],
-            startHour: $event->getAttribute('start_hour') ?? 0,
-            minutesFormStartHourToStart: $event->getAttribute('minutes_form_start_hour_to_start') ?? 0,
-            eventLengthInHours: $event->getAttribute('event_length_in_hours') ?? 0,
-            created_by: $event?->creator,
-            formattedDates: $event->getAttribute('formatted_dates') ?? [],
-            is_series: $event->is_series,
-            eventProperties: $event->eventProperties,
-            occupancy_option: $event->occupancy_option,
-            declinedRoomId: $event->declined_room_id,
+        $eventDTOs = $events->map(fn($event) => EventDTO::fromModel(
+            $event,
+            $userCalendarSettings,
+            $projects,
+            $eventTypes,
+            $users
         ))->groupBy('roomId');
 
         foreach ($rooms as $room) {
+
             $room->events = $eventDTOs[$room->id] ?? collect();
         }
 

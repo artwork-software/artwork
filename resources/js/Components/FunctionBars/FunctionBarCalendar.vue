@@ -620,8 +620,26 @@ const updateTimes = () => {
 }
 
 const saveUserCalendarSettings = () => {
+    let valuesToReload = [];
+
+    if (userCalendarSettings.project_management) {
+        valuesToReload.push('leaders');
+    }
+
+    if (userCalendarSettings.project_status) {
+        valuesToReload.push('status');
+    }
+
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}), {
         preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            if (valuesToReload.length > 0) {
+                router.reload({
+                    only: valuesToReload
+                });
+            }
+        }
     })
     document.getElementById('displaySettings').click();
 }

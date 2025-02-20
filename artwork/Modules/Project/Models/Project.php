@@ -70,6 +70,7 @@ use Laravel\Scout\Searchable;
  * @property Collection<Project> $projectsOfGroup
  * @property Collection<Comment> $comments
  * @property Collection<ArtistResidency> $artistResidencies
+ * @property Collection<ProjectState> $status
  */
 class Project extends Model
 {
@@ -106,8 +107,8 @@ class Project extends Model
     ];
 
     protected $with = [
-        'shiftRelevantEventTypes',
-        'status'
+        //'shiftRelevantEventTypes',
+        //'status'
     ];
 
     public static function booting(): void

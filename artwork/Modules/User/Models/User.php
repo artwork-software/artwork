@@ -218,6 +218,7 @@ class User extends Model implements
         'email_private',
         'phone_private',
         'daily_view',
+        'entities_per_page',
         'last_project_id'
     ];
 

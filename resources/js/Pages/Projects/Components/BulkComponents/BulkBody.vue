@@ -466,6 +466,20 @@ onMounted(() => {
         isLoading.value = false;
     }
 
+    // if usePage().props.user.bulk_sort_id === 3 order events by day and start_time and room.position
+    if (usePage().props.user.bulk_sort_id === 3) {
+        events.sort((a, b) => {
+            if (a.day === b.day) {
+                if (a.start_time === b.start_time) {
+                    return a.room.position - b.room.position;
+                }
+                return a.start_time.localeCompare(b.start_time);
+            }
+            return a.day.localeCompare(b.day);
+        });
+    }
+
+
     if (props.isInModal) {
         addEmptyEvent();
     }

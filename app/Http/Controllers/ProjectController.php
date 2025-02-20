@@ -223,8 +223,6 @@ class ProjectController extends Controller
                 'project_filters' => $projectFilters->toArray()
             ]
         );
-
-        //dd($request->all());
     }
 
     public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
@@ -238,8 +236,6 @@ class ProjectController extends Controller
         if($request->integer('entitiesPerPage') && $user->entities_per_page !== $request->integer('entitiesPerPage')) {
             $user->update(['entities_per_page' => $request->integer('entitiesPerPage')]);
         }
-
-        //dd($userProjectManagementSetting);
 
         $projects = $this->projectService->paginateProjects(
             $request->string('query'),
@@ -2575,7 +2571,6 @@ class ProjectController extends Controller
 
     public function deleteProjectFromGroup(Project $project, Project $projectGroup): void
     {
-        //dd($project, $projectGroup);
         $project->projectsOfGroup()->detach($projectGroup->id);
     }
 

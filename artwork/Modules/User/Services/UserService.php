@@ -167,8 +167,6 @@ class UserService
             )
         );
 
-        //dd($requestedPeriod);
-
         $startOfWeek = $requestedStartDate->copy()->startOfWeek();
         $endOfWeek = $requestedEndDate->copy()->endOfWeek();
 

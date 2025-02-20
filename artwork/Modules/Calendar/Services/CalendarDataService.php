@@ -11,11 +11,13 @@ use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -29,7 +31,7 @@ readonly class CalendarDataService
         private EventCollectionService $eventCollectionService,
         private FilterService $filterService,
         private UserService $userService,
-        private EventService $eventService
+        private ProjectService $projectService,
     ) {
     }
 
@@ -298,5 +300,38 @@ readonly class CalendarDataService
             has_events: $room->events->isNotEmpty(),
             admins: $room->admins->pluck('id')->toArray()
         ));
+    }
+
+    public function getCalendarDateRange(
+        UserCalendarSettings $userCalendarSettings,
+        UserCalendarFilter $userCalendarFilter,
+        ?Project $project = null
+    ): array {
+        $today = Carbon::now();
+        $useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period');
+
+        if (!$useProjectTimePeriod && !$project) {
+            return $this->userService->getUserCalendarFilterDatesOrDefault($userCalendarSettings, $userCalendarFilter);
+        }
+        if (!$project && $useProjectTimePeriod) {
+            $project = $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
+        }
+
+        return $this->getProjectDateRange($project, $today);
+    }
+
+    protected function getProjectDateRange($project, Carbon $today): array
+    {
+        if (!$project) {
+            return [$today->startOfDay(), $today->endOfDay()];
+        }
+
+        $firstEvent = $this->projectService->getFirstEventInProject($project);
+        $latestEvent = $this->projectService->getLatestEndingEventInProject($project);
+
+        return [
+            $firstEvent ? $firstEvent->getAttribute('start_time')->startOfDay() : $today->startOfDay(),
+            $latestEvent ? $latestEvent->getAttribute('end_time')->endOfDay() : $today->endOfDay(),
+        ];
     }
 }

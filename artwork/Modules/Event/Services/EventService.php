@@ -841,8 +841,6 @@ readonly class EventService
         
         $q->whereIn('room_id', $rooms->pluck('id'));
         $events = $q->get();
-
-        //dd($isShiftPlan);
         
         foreach ($rooms as $room) {
             if ($isShiftPlan) {
@@ -1347,14 +1345,8 @@ readonly class EventService
                 ];
             }
 
-            // Zusätzliche Überprüfung, ob $startDate und $endDate leer sind
-            /*if ($useProjectTimePeriod && (!$startDate || !$endDate)) {
-                $startDate = $today->startOfDay();
-                $endDate = $today->endOfDay();
-            }*/
         }
 
-        //dd($startDate, $endDate);
 
         $periodArray = $this->generatePeriodArray(
             $startDate,

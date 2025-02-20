@@ -168,48 +168,8 @@ class EventController extends Controller
         $userCalendarFilter = $user->getAttribute('calendar_filter');
         $userCalendarSettings = $user->getAttribute('calendar_settings');
 
-        //today is used if project calendar is opened and no events are given as project calendar
-        //do not rely on user calendar filter dates
-        $today = Carbon::now();
-        [$startDate, $endDate] = $this->userService->getUserCalendarFilterDatesOrDefault(
-            $userCalendarSettings,
-            $userCalendarFilter
-        );
-
-        if (
-            !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
-            !$project
-        ) {
-            [$startDate, $endDate] = $this->userService->getUserCalendarFilterDatesOrDefault(
-                $userCalendarSettings,
-                $userCalendarFilter
-            );
-        } else {
-            if (!$project && $useProjectTimePeriod) {
-                $project = $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
-
-                [$startDate, $endDate] = [
-                    ($firstEventInProject = $this->projectService->getFirstEventInProject($project)) ?
-                        $firstEventInProject->getAttribute('start_time')->startOfDay() :
-                        null,
-                    $firstEventInProject && (
-                    $latestEndingEventInProject = $this->projectService->getLatestEndingEventInProject($project)
-                    ) ? $latestEndingEventInProject->getAttribute('end_time')->endOfDay() :
-                        null,
-                ];
-            } else {
-                [$startDate, $endDate] = [
-                    ($firstEventInProject = $this->projectService->getFirstEventInProject($project)) ?
-                        $firstEventInProject->getAttribute('start_time')->startOfDay() :
-                        $today->startOfDay(),
-                    $firstEventInProject && (
-                    $latestEndingEventInProject = $this->projectService->getLatestEndingEventInProject($project)
-                    ) ?
-                        $latestEndingEventInProject->getAttribute('end_time')->endOfDay() :
-                        $today->endOfDay(),
-                ];
-            }
-        }
+        [$startDate, $endDate] = $this->calendarDataService
+            ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
 
         $period = $this->calendarDataService->createCalendarPeriodDto(
             $startDate,
@@ -2783,7 +2743,6 @@ class EventController extends Controller
                 $event->setAttribute('start_time', $date . ' ' . $startTime);
                 $event->setAttribute('end_time', $date . ' ' . $endTime);
             }
-            //dd($event);
             $event->save();
             broadcast(new EventCreated(
                 $event->fresh(),

@@ -1225,8 +1225,6 @@ class ShiftController extends Controller
                 $shiftsQualificationsService->createShiftsQualificationForShift($shiftSave->id, $shiftsQualification);
             }
         }
-
-        //dd($createdShifts);
         broadcast(new MultiShiftCreateInShiftPlan($createdShifts));
     }
 }

@@ -1,5 +1,5 @@
 <template>
-   <div class="print:w-full">
+   <div class="print:w-full" :class="event?.isNew ? 'border-2 rounded-lg border-pink-500 border-dashed py-2 px-1' : ''">
        <div class="grid gird-cols-1 md:grid-cols-8 gap-4">
            <div class="" v-if="usePage().props.event_status_module">
                <Listbox v-model="event.status"
@@ -253,6 +253,7 @@
            @closed="onCloseDeleteEventConfirmModal"/>
 
        <AddEditEventNoteModal :event="event" v-if="openNoteModal" @close="openNoteModal = false"/>
+
    </div>
 </template>
 

@@ -263,7 +263,7 @@ class User extends Model implements
         'assigned_craft_ids',
     ];
 
-    //protected $with = ['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'];
+    protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
     public function getTypeAttribute(): string
     {

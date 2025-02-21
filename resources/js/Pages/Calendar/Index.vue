@@ -80,7 +80,11 @@ const props = defineProps({
         type: String,
         required: false,
         default: null
-    }
+    },
+    areas: {
+        type: Object,
+        required: true
+    },
 })
 
 provide('eventTypes', props.eventTypes);
@@ -91,11 +95,10 @@ provide('user_filters', props.user_filters);
 provide('personalFilters', props.personalFilters);
 provide('filterOptions', props.filterOptions);
 provide('rooms', props.rooms);
-provide('areas', props.areas);
 provide('eventStatuses', props.eventStatuses);
 provide('months', props.months);
 provide('event_properties', props.event_properties);
-
+provide('areas', props.areas);
 </script>
 
 <style scoped>

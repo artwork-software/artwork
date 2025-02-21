@@ -107,9 +107,8 @@ class EventController extends Controller
         private readonly EventCollectionService $eventCollectionService,
         private readonly EventCalendarService $eventCalendarService,
         private readonly CalendarDataService $calendarDataService,
-        private readonly UserService $userService,
         private readonly FilterService $filterService,
-        private readonly ProjectService $projectService,
+        private readonly AreaService $areaService
     ) {
     }
 
@@ -162,7 +161,7 @@ class EventController extends Controller
     /**
      * @throws Throwable
      */
-    public function viewEventIndex(?Project $project = null,): Response {
+    public function viewEventIndex(?Project $project = null): Response {
         /** @var User $user */
         $user = $this->authManager->user();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
@@ -184,7 +183,7 @@ class EventController extends Controller
             $endDate,
         );
 
-        $this->eventCalendarService->filterRoomsEventsAndShifts(
+        $this->eventCalendarService->filterRoomsEvents(
             $rooms,
             $userCalendarFilter,
             $startDate,
@@ -219,6 +218,7 @@ class EventController extends Controller
             'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
                 EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)
             ),
+            'areas' => $this->areaService->getAll(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
             'eventTypes' => EventType::all(),
@@ -344,7 +344,7 @@ class EventController extends Controller
                         $query->where('user_id', Auth::id());
                     });
                 }
-            )->with(['project', 'room'])->get();
+            )->with(['project', 'room', 'event_type'])->get();
 
         //get date for humans of today with weekday
         $todayDate = Carbon::now()->locale(

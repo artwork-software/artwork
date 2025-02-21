@@ -2,35 +2,24 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
-use Artwork\Modules\Calendar\DTO\EventCalendarDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
-use Artwork\Modules\Calendar\DTO\ProjectDTO;
+use Artwork\Modules\Calendar\DTO\ShiftDTO;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
-use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
-use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Collection;
-use Psy\Util\Str;
 
-readonly class EventCalendarService
+class ShiftCalendarService
 {
-    public function __construct(
-        // private AuthManager         $auth,
-        //private CalendarDataService $calendarDataService
-    ) {
-    }
-
-    public function filterRoomsEvents(
+    public function filterRoomsEventsAnShifts(
         Collection $rooms,
         UserCalendarFilter $filter,
         $startDate,
@@ -67,6 +56,17 @@ readonly class EventCalendarService
             })
             ->when(!empty($filter->event_types), fn($query) => $query->whereIn('event_type_id', $filter->event_types))
             ->get();
+
+
+        $shifts = Shift::whereNull('event_id')->whereIn('room_id', $roomIds)
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate])
+                    ->orWhere(function ($q) use ($startDate, $endDate) {
+                        $q->where('start_date', '<', $startDate)
+                            ->where('end_date', '>', $endDate);
+                    });
+            })->get();
 
         $eventTypeIds = $events->pluck('event_type_id')->unique();
         $projectIds = $events->pluck('project_id')->unique();
@@ -106,9 +106,18 @@ readonly class EventCalendarService
             $eventStatues
         ))->groupBy('roomId');
 
-        foreach ($rooms as $room) {
+        $shiftDTOs = $shifts->map(fn($shift) => ShiftDTO::fromModel(
+            $shift,
+            $userCalendarSettings,
+            $projects,
+            $eventTypes,
+            $users,
+            $eventStatues
+        ))->groupBy('roomId');
 
+        foreach ($rooms as $room) {
             $room->events = $eventDTOs[$room->id] ?? collect();
+            $room->shifts = $shiftDTOs[$room->id] ?? collect();
         }
 
         return $rooms;
@@ -128,9 +137,19 @@ readonly class EventCalendarService
             collect($eventDTO->daysOfEvent)->map(fn($date) => ['date' => $date, 'event' => $eventDTO])
             )->groupBy('date');
 
+            $groupedShifts = $room->shifts->flatMap(fn($shiftDTO) =>
+            collect($shiftDTO->daysOfShift)->map(fn($date) => ['date' => $date, 'shift' => $shiftDTO])
+            )->groupBy('date');
+
             foreach ($groupedEvents as $date => $eventsOnDate) {
                 if (isset($content[$date])) {
                     $content[$date]['events'] = $eventsOnDate->pluck('event')->all();
+                }
+            }
+
+            foreach ($groupedShifts as $date => $shiftsOnDate) {
+                if (isset($content[$date])) {
+                    $content[$date]['shifts'] = $shiftsOnDate->pluck('shift')->all();
                 }
             }
 

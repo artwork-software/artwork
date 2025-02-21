@@ -127,9 +127,9 @@ export default {
 </script>
 
 <template>
-    <BaseModal v-if="true" @closed="closeModal(true)" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
+    <BaseModal v-if="true" @closed="closeModal(true)">
 
-        <div class="h-[calc(100%-10rem)] overflow-scroll">
+        <div class="h-[calc(100%-10rem)] overflow-scroll mt-5">
             <div class="w-full">
                 <h2 class="headline1 mb-6">
                     {{ $t('Instructions for subscribing to the calendar') }}

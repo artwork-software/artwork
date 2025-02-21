@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-
 # Funktion zum Ausgeben von Nachrichten
 log() {
     echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*"

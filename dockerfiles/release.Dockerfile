@@ -1,6 +1,10 @@
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV    VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+ENV    VITE_PUSHER_HOST="${PUSHER_HOST}"
+ENV    VITE_PUSHER_APP_ID='${PUSHER_APP_ID}'
+ENV    VITE_PUSHER_APP_SECRET='${PUSHER_APP_SECRET}'
 
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
@@ -16,6 +20,7 @@ RUN apt-get update -y && \
       nginx \
       openssl \
       unzip \
+      netcat \
       supervisor \
       libcap2-bin \
       libpng-dev \
@@ -71,7 +76,7 @@ RUN cp -rf .install/artwork.vhost.conf /etc/nginx/sites-available/default && \
 RUN wget -O composer.phar https://getcomposer.org/download/2.6.5/composer.phar && \
     php composer.phar --no-interaction install
 
-RUN php artisan key:generate
+RUN php artisan key:generate && php artisan storage:link
 
 RUN npm install && npm run build
 
@@ -79,4 +84,10 @@ RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 750 /var/www/html && \
     chmod 640 /var/www/html/.env || true
 EXPOSE 80
+
+COPY dockerfiles/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
 CMD ["sh", "-c", "php-fpm8.2 -F & nginx -g 'daemon off;'"]

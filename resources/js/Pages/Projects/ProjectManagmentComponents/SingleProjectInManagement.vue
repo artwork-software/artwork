@@ -1,5 +1,7 @@
 <template>
     <div :key="project.id"
+         @mousedown.middle="openProjectInNewTab(project)"
+         @mousedown="openProjectInNewTabWithCmdOrSTRG($event, project)"
         class="grid bg-gray-50/50 px-3 py-3 rounded-lg border border-gray-100 hover:bg-gray-100 duration-300 ease-in-out group/project w-fit relative cursor-pointer"
         :style="`grid-template-columns: ${gridTemplateColumns}`"
         @contextmenu.prevent="openMenu(project.id, $event)">
@@ -14,7 +16,6 @@
             class="px-3 flex items-center"
             :class="component.type === 'ActionsComponent' ? 'flex justify-end' : ''"
             @click="openProject(component, project)"
-            @mousedown.middle="openProjectInNewTab(component, project)"
         >
             <component
                 v-if="checkIfComponentIsVisible(component)"
@@ -154,7 +155,8 @@ const props = defineProps({
     fullProject: {
         type: Object,
         required: true,
-    }
+    },
+
 });
 
 const menuVisible = ref(false);
@@ -181,7 +183,9 @@ const componentMapping = {
     BuilderDropDown
 };
 
-
+const page = ref(route().params.page ?? 1);
+const perPage = ref(route().params.entitiesPerPage ?? 10);
+const query = ref(route().params.query ?? '');
 const openMenu = (projectId, event) => {
     menuVisible.value = projectId;
     currentProjectId.value = projectId;
@@ -207,11 +211,15 @@ const openProject = (component, project) => {
     }
 };
 
-const openProjectInNewTab = (component, project) => {
-    if (component.type !== 'ActionsComponent') {
-        window.open(route('projects.tab', { project: project.id, projectTab: project.firstTabId }), '_blank');
-    }
+const openProjectInNewTab = (project) => {
+    window.open(route('projects.tab', { project: project.id, projectTab: project.firstTabId }), '_blank');
 };
+
+const openProjectInNewTabWithCmdOrSTRG = (event, project) => {
+    if (event.metaKey || event.ctrlKey) {
+        openProjectInNewTab(project);
+    }
+}
 
 const gridTemplateColumns = computed(() =>
     props.components
@@ -281,14 +289,22 @@ const checkPermission = (project, type) => {
 }
 
 const pinProject = () => {
-    router.post(route('project.pin', {project: props.project.id}), {}, {
+    router.post(route('project.pin', {project: props.project.id}), {
+        page: page.value,
+        entitiesPerPage: perPage.value,
+        query: query.value
+    }, {
         preserveScroll: true,
         preserveState: true,
     });
 }
 
 const duplicateProject = () => {
-    router.post(route('projects.duplicate', {project: props.project.id}), {}, {
+    router.post(route('projects.duplicate', {project: props.project.id}), {
+        page: page.value,
+        entitiesPerPage: perPage.value,
+        query: query.value
+    }, {
         preserveScroll: true,
     });
 }
@@ -298,7 +314,12 @@ const openDeleteProjectModal = () => {
 }
 
 const deleteProject = () => {
-    router.delete(route('projects.destroy', {project: props.project.id}), {}, {
+    router.delete(route('projects.destroy', {project: props.project.id}), {
+        data: {
+            page: page.value,
+            entitiesPerPage: perPage.value,
+            query: query.value
+        },
         preserveScroll: true,
     });
     closeDeleteProjectModal();

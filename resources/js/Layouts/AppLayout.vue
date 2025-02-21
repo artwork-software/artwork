@@ -63,23 +63,7 @@
                                 </div>
                             </Link>
                         </template>
-                        <Menu as="div" class="flex flex-col items-center" v-show="
-                        $canAny([
-                            'usermanagement',
-                            'admin checklistTemplates',
-                            'teammanagement',
-                            'update departments',
-                            'change tool settings',
-                            'change project settings',
-                            'change event settings',
-                            'change system notification',
-                            'create, delete and update rooms',
-                            'can manage global project budgets',
-                            'can manage all project budgets without docs',
-                            'view budget templates',
-                            'edit budget templates',
-                        ])
-                        ">
+                        <Menu as="div" class="flex flex-col items-center">
                             <MenuButton
                                 @mouseover="!fullSidenav ? hoverManagementMenu = true : null"
                                 @mouseleave="hoverManagementMenu = false"
@@ -473,6 +457,12 @@ export default {
                     isCurrent: route().current('project.settings')
                 },
                 {
+                    name: 'Calendar',
+                    has_permission: this.hasAdminRole(),
+                    href: route('calendar.settings'),
+                    isCurrent: route().current('calendar.settings')
+                },
+                {
                     name: 'Events',
                     has_permission: this.$can('change event settings') || this.hasAdminRole(),
                     href: route('event_types.management'),
@@ -504,6 +494,12 @@ export default {
                     isCurrent: route().current('budget-settings.general') ||
                         route().current('budget-settings.account-management') ||
                         route().current('budget-settings.templates')
+                },
+                {
+                    has_permission: usePage().props.isNotionKeySet,
+                    name: 'Updates',
+                    href: route('notion.index'),
+                    isCurrent: route().current('notion.index')
                 },
             ]
         },

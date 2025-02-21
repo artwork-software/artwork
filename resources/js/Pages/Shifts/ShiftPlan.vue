@@ -71,7 +71,6 @@
                 </ShiftPlanFunctionBar>
             </div>
 
-
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -412,7 +411,7 @@
                                         </div>
                                     </div>
                                 </BaseFilter>
-                                <BaseMenu :white-icon="true" show-sort-icon dots-size="h-7 w-7" menu-width="w-fit" right>
+                                <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-fit" right white-icon>
                                     <div class="flex items-center justify-end py-1">
                                     <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="this.resetSort()">
                                         {{ $t('Reset') }}
@@ -1846,6 +1845,9 @@ export default {
         applyUserOverviewHeight() {
             router.patch(route('user.update.userOverviewHeight', {user: usePage().props.user.id}), {
                 drawer_height: this.userOverviewHeight
+            }, {
+                preserveScroll: true,
+                preserveState: true
             });
         },
         applySort(shiftPlanWorkerSortEnumName) {

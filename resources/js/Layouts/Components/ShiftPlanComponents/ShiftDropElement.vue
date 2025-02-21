@@ -40,9 +40,9 @@
                     v-for="(computedShiftsQualificationWithWorkerCount) in this.computedShiftsQualificationsWithWorkerCount"
                     class="flex xsLight items-center">
                     {{ computedShiftsQualificationWithWorkerCount.workerCount }}/{{ computedShiftsQualificationWithWorkerCount.maxWorkerCount }}
-                    <ShiftQualificationIconCollection
+                    <component stroke-width="1.5"
                         class="text-black mx-1" :classes="['h-4', 'w-4', 'text-black', 'mx-0.5']"
-                        :icon-name="this.getShiftQualificationById(computedShiftsQualificationWithWorkerCount.shift_qualification_id).icon"
+                        :is="this.getShiftQualificationById(computedShiftsQualificationWithWorkerCount.shift_qualification_id).icon"
                     />
                 </div>
             </div>

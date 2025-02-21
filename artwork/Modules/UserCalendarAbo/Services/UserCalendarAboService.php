@@ -46,8 +46,8 @@ readonly class UserCalendarAboService
     public function getFilteredEvents($calendarAbo, $events)
     {
         if ($calendarAbo->date_range) {
-            $events = $events->whereBetween('start_date', [$calendarAbo->start_date, $calendarAbo->end_date])
-                ->whereBetween('end_date', [$calendarAbo->start_date, $calendarAbo->end_date]);
+            $events = $events->whereBetween('start_time', [$calendarAbo->start_date, $calendarAbo->end_date])
+                ->whereBetween('end_time', [$calendarAbo->start_date, $calendarAbo->end_date]);
         }
         if ($calendarAbo->specific_event_types) {
             $events = $events->whereIn('event_type_id', $calendarAbo->event_types);
@@ -57,7 +57,7 @@ readonly class UserCalendarAboService
             $events = $events->whereIn('room_id', $calendarAbo->selected_rooms);
         }
 
-        return $events->sortBy('start_date');
+        return $events->sortBy('start_time');
     }
 
     public function addEventToCalendar($calendar, $event): void

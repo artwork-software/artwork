@@ -7,11 +7,11 @@
         />
 
         <div>
-            <div class="mb-3">
+            <div class="mb-3 print:hidden" >
                 <MultiAlertComponent :errors="documentForm.errors" v-show="Object.keys(documentForm.errors).length > 0" :error-count="Object.keys(documentForm.errors).length" />
             </div>
 
-            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.user.id))">
+            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.user.id))" class="print:hidden">
                 <div
                     @click="selectNewFiles"
                     @dragover.prevent
@@ -48,7 +48,7 @@
                                  class="invisible group-hover:visible font-medium text-gray-900 hover:text-artwork-messages-error cursor-pointer">
                                 {{ $t('Löschen') }}
                             </div>
-                            <div @click="downloadFile(project_file)" class="font-medium text-gray-900 hover:text-artwork-buttons-hover cursor-pointer">{{ $t('Download') }}</div>
+                            <div @click="downloadFile(project_file)" class="font-medium text-gray-900 hover:text-artwork-buttons-hover cursor-pointer print:hidden">{{ $t('Download') }}</div>
                         </div>
                     </li>
                 </ul>

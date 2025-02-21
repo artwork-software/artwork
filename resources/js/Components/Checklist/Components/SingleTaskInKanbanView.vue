@@ -1,5 +1,5 @@
 <template>
-    <div class="px-4 py-3 group rounded-lg shadow bg-white my-3"
+    <div class="px-4 py-3 group rounded-lg shadow bg-white my-3 print:border print:border-gray-200 print:rounded-lg print:shadow-none"
          draggable="true"
          @dragstart="onDragStart"
          @dragend="onDragEnd"

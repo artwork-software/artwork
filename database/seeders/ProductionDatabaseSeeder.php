@@ -8,11 +8,6 @@ use Illuminate\Support\Facades\DB;
 
 class ProductionDatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     *
-     * @return void
-     */
     public function run(): void
     {
         $this->call([
@@ -21,6 +16,7 @@ class ProductionDatabaseSeeder extends Seeder
             PermissionPresetSeeder::class,
             ShiftQualificationSeeder::class,
             DefaultComponentSeeder::class,
+            DefaultEventPropertiesSeeder::class,
             InventoryManagementDefaultColumnsSeeder::class,
             SubdivisionSeeder::class,
         ]);

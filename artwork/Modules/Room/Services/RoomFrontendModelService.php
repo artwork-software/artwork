@@ -5,6 +5,7 @@ namespace Artwork\Modules\Room\Services;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
 use Artwork\Modules\Event\Models\EventStatus;
+use Artwork\Modules\EventProperty\Services\EventPropertyService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
@@ -35,7 +36,8 @@ readonly class RoomFrontendModelService
         private EventTypeService $eventTypeService,
         private RoomRepository $roomRepository,
         private UserService $userService,
-        private ProjectService $projectService
+        private ProjectService $projectService,
+        private EventPropertyService $eventPropertyService,
     ) {
     }
     public function createShowDto(
@@ -85,6 +87,7 @@ readonly class RoomFrontendModelService
                 ProjectIndexAdminResource::collection($this->projectService
                     ->getProjectsWithAccessBudgetAndManagerUsers())
                     ->resolve()
-            );
+            )
+            ->setEventProperties($this->eventPropertyService->getAll());
     }
 }

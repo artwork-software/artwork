@@ -47,7 +47,7 @@
                                         <p class="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-x-2">
                                             <span class="h-14 w-14 block rounded-full border" :style="{'backgroundColor' : element.color }"/>
                                             {{ element.name }}
-                                            <span v-if="element.id === 1" class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 ml-10">{{ $t('Default') }}</span>
+                                            <span v-if="element.default" class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 ml-10">{{ $t('Default') }}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -63,7 +63,7 @@
                                                 {{$t('Edit')}}
                                             </a>
                                         </MenuItem>
-                                        <MenuItem v-if="element.id !== 1" @click="openDeleteEventStatusModal(element)"
+                                        <MenuItem v-if="!element.default" @click="openDeleteEventStatusModal(element)"
                                                   v-slot="{ active }">
                                             <a :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                                 <IconTrash stroke-width="1.5"

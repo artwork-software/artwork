@@ -207,7 +207,7 @@ class WorkingHourService
             $differenceInMinutes = $actualShiftTimeInMinutes - $totalPlannedWorkingHoursInMinutes;
 
             // Konvertiere die Minuten in Stunden und Minuten für die Ausgabe
-            $weeklyWorkingHours[$weekStart->format('W')] = [
+            $weeklyWorkingHours[ltrim($weekStart->format('W'), '0')] = [
                 'planned_hours' => $this->convertMinutesInHours($totalPlannedWorkingHoursInMinutes),
                 'actual_hours' => $this->convertMinutesInHours($actualShiftTimeInMinutes),
                 'difference' => $this->convertMinutesInHours($differenceInMinutes)

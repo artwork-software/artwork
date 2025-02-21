@@ -69,7 +69,7 @@
             </div>
         </div>
         <div class="flex justify-center">
-            <FormButton :text="$t('Import template')" @click="importTemplate"/>
+            <FormButton :text="$t('Import template')" @click="importTemplate" :disabled="presetForm.processing"/>
         </div>
     </BaseModal>
 </template>

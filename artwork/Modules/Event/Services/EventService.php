@@ -28,6 +28,8 @@ use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventProperty\Models\EventProperty;
+use Artwork\Modules\EventProperty\Services\EventPropertyService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
@@ -68,6 +70,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -83,10 +86,11 @@ readonly class EventService
     private ?Collection $cachedData;
     public function __construct(
         private EventRepository $eventRepository,
-        private readonly WorkingHourService $workingHourService,
+        private WorkingHourService $workingHourService,
         private ShiftTimePresetService $shiftTimePresetService,
         private CollectionService $collectionService,
         private EventCollectionService $eventCollectionService,
+        private EventTypeService $eventTypeService
     ) {
         $this->cachedData = null;
     }
@@ -774,16 +778,11 @@ readonly class EventService
         })->toArray();
     }
 
-    public function fetchFilteredRooms(UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate)
+    public function fetchFilteredRooms(UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate, UserCalendarSettings $userCalendarSettings = null)
     {
         $userCalendarFilter = $filter;
-        return Room::with([
-            'events.shifts',
-            'events.shifts.craft',
-            'events.project',
-            'events.event_type',
-            'events.eventStatus'
-        ])->unlessRoomIds($userCalendarFilter?->rooms)
+
+        return Room::query()->unlessRoomIds($userCalendarFilter?->rooms)
             ->unlessRoomAttributeIds($userCalendarFilter?->room_attributes)
             ->unlessAreaIds($userCalendarFilter?->areas)
             ->unlessRoomCategoryIds($userCalendarFilter?->room_categories)
@@ -792,46 +791,63 @@ readonly class EventService
                 $userCalendarFilter?->adjoining_no_audience,
                 $startDate,
                 $endDate
-            )->orderBy('order')->get();
+            )
+            ->when($userCalendarSettings?->hide_unoccupied_rooms, function ($query) use ($startDate, $endDate) {
+                $query->whereHas('events', function ($eventQuery) use ($startDate, $endDate) {
+                    $eventQuery->where(function ($q) use ($startDate, $endDate) {
+                        $q->whereBetween('start_time', [$startDate, $endDate])
+                            ->orWhereBetween('end_time', [$startDate, $endDate])
+                            ->orWhere(function ($subQuery) use ($startDate, $endDate) {
+                                $subQuery->where('start_time', '<', $startDate)
+                                    ->where('end_time', '>', $endDate);
+                            });
+                    });
+                });
+            })
+            ->orderBy('order')
+            ->get();
+
     }
 
     public function filterRoomsEventsAndShifts($rooms, UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate): void
     {
-        $rooms->each(function ($room) use ($filter, $startDate, $endDate): void {
-            $room->shifts = $room->shifts->filter(function ($shift) use ($startDate, $endDate) {
+        
+        $q = Event::query();
+        $q->where(function(Builder $query) use ($startDate, $endDate) {
+            $query->where(function(Builder $q) use ($startDate, $endDate) {
+                $q->where('start_time', '>=', $startDate)
+                    ->where('start_time', '<=', $endDate);
+            })->orWhere(function(Builder $q)  use ($startDate, $endDate){
+                $q->where('end_time', '>=', $startDate)
+                    ->where('end_time', '<=', $endDate);
+            })->orWhere(function(Builder $q) use ($startDate, $endDate) {
+                $q->where('start_time', '<', $startDate)
+                    ->where('end_time', '>', $endDate);
+            });
+        });
+
+        if (!empty ($filter->event_types)) {
+            $q->where('events.event_type_id', $filter->event_types);
+        }
+        
+        $q->whereIn('room_id', $rooms->pluck('id'));
+        $events = $q->get();
+        
+        foreach ($rooms as $room) {
+            $shifts = $room->shifts->filter(function ($shift) use ($startDate, $endDate) {
                 /** @var Shift $shift */
                 return ($shift->start_date <= $endDate && $shift->end_date >= $startDate);
             });
+            
+            $room->shifts = $shifts;
+            
+            $roomEvents = $events->filter(function ($event) use ($room) {
+                return $event->room_id === $room->id;
+            });
 
-            $room->events = $room->events->filter(function ($event) use ($filter, $startDate, $endDate) {
-                /** @var Event $event */
-                $eventTypeFilter = $filter->event_types ?? [];
-
-                return (
-                    (
-                        ($event->start_time >= $startDate && $event->start_time <= $endDate &&
-                            $event->end_time >= $startDate && $event->end_time <= $endDate)
-                        ||
-                        ($event->start_time < $startDate && $event->end_time > $endDate)
-                        ||
-                        (
-                            $event->start_time < $startDate &&
-                            $event->end_time >= $startDate &&
-                            $event->end_time <= $endDate
-                        )
-                        ||
-                        (
-                            $event->start_time >= $startDate &&
-                            $event->start_time <= $endDate &&
-                            $event->end_time > $endDate
-                        )
-                    )
-                    &&
-                    (empty($eventTypeFilter) || in_array($event->event_type_id, $eventTypeFilter))
-                );
-            })->map(function ($event) {
+            $roomEvents = $roomEvents->map(function ($event) {
                 $startTime = Carbon::parse($event->start_time);
-                $eventType = $event->event_type;
+                $eventType = $event->event_type;  //$this->eventTypeService->findById($event->event_type_id);
                 $creator = $event->creator;
                 /** @var Project $project */
                 $project = $event->project ?: null;
@@ -859,11 +875,13 @@ readonly class EventService
                     'projectStatusBorderColor' => $projectState?->color,
                     'projectStatusName' => $projectState?->name,
                     'eventTypeName' => $eventType?->name,
+                    'projectArtists' => $project?->artists,
                     'eventTypeAbbreviation' => $eventType?->abbreviation,
                     'eventTypeColor' => $eventType?->hex_code,
                     'created_at' => $event->created_at?->format('d.m.Y, H:i'),
                     'occupancy_option' => $event->occupancy_option,
                     'allDay' => $event->allDay,
+                    'eventProperties' => $event->getAttribute('eventProperties'),
                     'eventTypeColorBackground' => $eventType->getAttribute('hex_code') . '33',
                     'event_type_color' => $eventType->getAttribute('hex_code'),
                     'shifts' => MinimalShiftPlanShiftResource::collection($event->shifts)->resolve(),
@@ -880,6 +898,7 @@ readonly class EventService
                     'minutes_form_start_hour_to_start' => $event->getAttribute('minutes_form_start_hour_to_start'),
                     'roomId' => $event->getAttribute('room_id'),
                     'roomName' => $event->getAttribute('room')?->getAttribute('name'),
+                    'subEvents' => $event->getAttribute('subEvents'),
                     'created_by' => [
                         'id' => $creator->getAttribute('id'),
                         'profile_photo_url' => $creator->getAttribute('profile_photo_url'),
@@ -888,7 +907,23 @@ readonly class EventService
                     ],
                 ];
             });
-        });
+            $filterEventPropertyIds = $filter->getAttribute('event_properties') ?? [];
+
+            $roomEvents = $roomEvents
+                ->when(count($filterEventPropertyIds) > 0)
+                ->filter(function ($event) use ($filterEventPropertyIds) {
+                    // Stelle sicher, dass eventProperties als Array vorhanden ist
+                    $eventProperties = $event['eventProperties'] ?? [];
+
+                    foreach ($eventProperties as $eventProperty) {
+                        if (in_array($eventProperty['id'], $filterEventPropertyIds)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+            $room->events = $roomEvents;
+        }
     }
 
     private function aggregateSeriesEvents($event): array
@@ -1105,6 +1140,7 @@ readonly class EventService
         AreaService $areaService,
         ProjectService $projectService,
         ProjectCreateSettings $projectCreateSettings,
+        EventPropertyService $eventPropertyService,
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
@@ -1230,7 +1266,8 @@ readonly class EventService
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
             )
-            ->setShowArtists($projectCreateSettings->show_artists);
+            ->setShowArtists($projectCreateSettings->show_artists)
+            ->setEventProperties($eventPropertyService->getAll());
 
         if ($useProjectTimePeriod) {
             $eventManagementDto->setProjectNameUsedForProjectTimePeriod($project->getAttribute('name'));
@@ -1252,6 +1289,7 @@ readonly class EventService
         AreaService $areaService,
         ProjectService $projectService,
         ProjectCreateSettings $projectCreateSettings,
+        EventPropertyService $eventPropertyService,
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
@@ -1327,9 +1365,12 @@ readonly class EventService
             }
         }
         $userFilter = $user->calendar_filter;
-        $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate);
+        $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings);
+
+        //dd($this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings ));
 
         $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate);
+        
         $mappedRooms = $this->mapRoomsToContentForCalendar($rooms, $startDate, $endDate);
 
         if ($useProjectTimePeriod && !$startDate && !$endDate) {
@@ -1380,11 +1421,7 @@ readonly class EventService
                 )
             )->resolve())
             ->setRooms(
-                $roomService->getFilteredRooms(
-                    $startDate,
-                    $endDate,
-                    $userCalendarFilter
-                )
+                $this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings)
             )
             ->setAreas($areaService->getAll())
             ->setFilterOptions($filterService->getCalendarFilterDefinitions())
@@ -1399,7 +1436,16 @@ readonly class EventService
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
             )
-            ->setShowArtists($projectCreateSettings->show_artists);
+            ->setShowArtists($projectCreateSettings->show_artists)
+            ->setEventProperties($eventPropertyService->getAll()->map(
+                function (EventProperty $eventProperty) {
+                    return [
+                        'id' => $eventProperty->getAttribute('id'),
+                        'name' => $eventProperty->getAttribute('name'),
+                        'icon' => $eventProperty->getAttribute('icon')
+                    ];
+                }
+            ));
 
 
         if ($useProjectTimePeriod) {
@@ -1704,5 +1750,10 @@ readonly class EventService
         $this->eventRepository->update($event, $attributes);
 
         return $event;
+    }
+
+    public function attachEventProperty(Event $event, EventProperty $eventProperty): Event
+    {
+        return $this->eventRepository->attachEventProperty($event, $eventProperty);
     }
 }

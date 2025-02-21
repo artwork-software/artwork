@@ -51,6 +51,7 @@ use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectManagementBuilderController;
+use App\Http\Controllers\ProjectPrintLayoutController;
 use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\ProjectTabController;
@@ -92,6 +93,7 @@ use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
+use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
@@ -109,6 +111,8 @@ use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
+
+use FiveamCode\LaravelNotionApi\Notion;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -136,6 +140,12 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
+
+    Route::group(['prefix' => 'updates'], function() {
+        Route::get('/', [\App\Http\Controllers\NotionController::class, 'index'])
+            ->name('notion.index');
+    });
+
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
         Route::get('/branding', [ToolSettingsBrandingController::class, 'index'])
@@ -616,6 +626,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             //event_status.delete
             Route::delete('/{eventStatus}', [EventStatusController::class, 'destroy'])
                 ->name('event_status.delete');
+        });
+
+        Route::group(['prefix' => 'event_properties'], function (): void {
+            Route::get('/', [EventPropertyController::class, 'index'])
+                ->name('event_settings.event_properties.index');
+            Route::post('/', [EventPropertyController::class, 'store'])
+                ->name('event_settings.event_properties.store');
+            Route::patch('/{eventProperty}', [EventPropertyController::class, 'update'])
+                ->name('event_settings.event_properties.update');
+            Route::delete('/{eventProperty}', [EventPropertyController::class, 'destroy'])
+                ->name('event_settings.event_properties.delete');
         });
     });
 
@@ -1481,6 +1502,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ProjectTabController::class,
                 'addComponentWithScopes'
             ])->name('tab.add.component.with.scopes');
+
+            // patch tab.update.default
+            Route::patch('/{projectTab}/update/default', [ProjectTabController::class, 'updateDefault'])
+                ->name('tab.update.default');
         });
         Route::group(['prefix' => 'component'], function (): void {
             // index
@@ -1529,6 +1554,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::post('/reorder', [ProjectTabSidebarTabController::class,
                 'reorder'])
                 ->name('sidebar.tab.reorder');
+        });
+
+        Route::group(['prefix' => 'calendar'], function () {
+            Route::get('/', [CalendarController::class, 'settingIndex'])->name('calendar.settings');
+
+            // post: calendar-settings.store
+            Route::post('/store', [CalendarController::class, 'storeSettings'])->name('calendar-settings.store');
         });
     });
 
@@ -1834,7 +1866,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->name('export.download-calendar-xlsx');
     });
 
-
     Route::group(['prefix' => 'project-management-builder'], function (): void {
         Route::get('/', [ProjectManagementBuilderController::class, 'index'])
             ->name('project-management-builder.index');
@@ -1851,6 +1882,40 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/destroy/{component}', [ProjectManagementBuilderController::class, 'destroy'])
             ->name('project-management-builder.destroy');
     });
+
+    Route::group(['prefix' => 'project-print-layout'], function(): void {
+        Route::get('/', [ProjectPrintLayoutController::class, 'index'])
+            ->name('project-print-layout.index');
+
+        Route::post('/store', [ProjectPrintLayoutController::class, 'store'])
+            ->name('project-print-layout.store');
+
+        // project.print.layout.add.component
+        Route::post('/{projectPrintLayout}/add/component', [ProjectPrintLayoutController::class, 'addComponent'])
+            ->name('project.print.layout.add.component');
+
+        // project-print-layout.components.destroy
+        Route::delete('/components/{printLayoutComponent}', [ProjectPrintLayoutController::class, 'destroyComponent'])
+            ->name('project-print-layout.components.destroy');
+
+        // project-print-layout.update
+        Route::patch('/{projectPrintLayout}/update', [ProjectPrintLayoutController::class, 'update'])
+            ->name('project-print-layout.update');
+
+        // project-print-layout.update.header.note
+        Route::patch('/{projectPrintLayout}/update/header/note', [ProjectPrintLayoutController::class, 'updateHeaderNote'])
+            ->name('project-print-layout.update.header.note');
+
+        // project.print.layout
+        Route::get('/print/{project}/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'show'])
+            ->name('project-print-layout.show');
+
+        // project-print-layout.destroy
+        Route::delete('/destroy/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'destroy'])
+            ->name('project-print-layout.destroy');
+    });
+
+
 });
 
 Route::get(

@@ -28,6 +28,8 @@
                                 {{ \Carbon\Carbon::parse($cell['cell_value'])->format('d.m.y') }}
                             @elseif($cell['column']['type'] === \Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum::CHECKBOX->value)
                                 {{ $cell['cell_value'] == 'true' ? 'Ja' : 'Nein' }}
+                            @elseif($cell['column']['type'] === \Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum::LAST_EDIT_AND_EDITOR->value)
+                                {{ json_decode($cell['cell_value'])->date }}, {{ json_decode($cell['cell_value'])->editor->full_name }}
                             @else
                                 {{ $cell['cell_value'] }}
                             @endif

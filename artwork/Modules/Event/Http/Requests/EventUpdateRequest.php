@@ -36,7 +36,8 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
             'option_string' => $this->get('optionString'),
             'accept' => $this->get('accept'),
             'optionAccept' => $this->get('optionAccept'),
-            'allDay' => $this->get('allDay')
+            'allDay' => $this->get('allDay'),
+            'event_properties' => $this->get('event_properties'),
         ];
     }
 }

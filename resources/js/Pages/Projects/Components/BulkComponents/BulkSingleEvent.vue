@@ -1,5 +1,5 @@
 <template>
-   <div>
+   <div class="print:w-full" :class="event?.isNew ? 'border-2 rounded-lg border-pink-500 border-dashed py-2 px-1' : ''">
        <div class="grid gird-cols-1 md:grid-cols-8 gap-4">
            <div class="" v-if="usePage().props.event_status_module">
                <Listbox v-model="event.status"
@@ -8,17 +8,17 @@
                         as="div"
                         class="relative"
                         :disabled="canEditComponent === false">
-                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
+                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class="print:border-0">
                        <div class="flex items-center gap-x-2">
                            <div>
                                <div class="block w-5 h-5 rounded-full"
                                     :style="{'backgroundColor' : event.status?.color }"/>
                            </div>
-                           <div class="truncate w-16">
+                           <div class="truncate w-16 print:w-full">
                                {{ event.status?.name }}
                            </div>
                        </div>
-                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
                    </ListboxButton>
                    <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
                        <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
@@ -46,17 +46,17 @@
                         as="div"
                         class="relative"
                         :disabled="canEditComponent === false">
-                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
+                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class="print:border-0 ">
                        <div class="flex items-center gap-x-2">
-                           <div>
+                           <div class="">
                                <div class="block w-5 h-5 rounded-full"
                                     :style="{'backgroundColor' : event.type?.hex_code }"/>
                            </div>
-                           <div class="truncate w-16">
+                           <div class="truncate w-16 print:w-full">
                                {{ event.type?.name }}
                            </div>
                        </div>
-                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
                    </ListboxButton>
                    <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
                        <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
@@ -81,7 +81,7 @@
                <input v-model="event.name"
                    type="text"
                    :id="'name-' + index"
-                   class="input h-12"
+                   class="input h-12 print:border-0 print:bg-white"
                    :class="event.type?.individual_name && !event.name ? 'border-red-500' : ''"
                    placeholder="Name"
                    @focusout="updateEventInDatabase"
@@ -95,11 +95,11 @@
                         v-model="event.room"
                         @update:model-value="updateEventInDatabase"
                         :disabled="canEditComponent === false">
-                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
+                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class=" print:border-0">
                        <div class="flex-grow flex text-left xsDark">
                            {{ event.room?.name }}
                        </div>
-                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
                    </ListboxButton>
                    <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
                        <ListboxOption v-for="room in sortedRooms"
@@ -116,7 +116,7 @@
                    </ListboxOptions>
                </Listbox>
            </div>
-           <div class="">
+           <div class="print:col-span-2">
                <div class="relative">
                    <div class="absolute inset-y-0 left-1 text-xs pointer-events-none text-primary flex items-center pl-3 z-40 h-12">
                        {{ dayString }},
@@ -126,7 +126,7 @@
                        type="date"
                        :id="'day-' + index"
                        placeholder="Tag"
-                       class="input h-12 pl-9 text-xs"
+                       class="input h-12 pl-9 text-xs print:border-0 print:pr-5"
                        :disabled="canEditComponent === false"
                        @focusout="updateEventInDatabase"
                        @change="dayString = getDayOfWeek(new Date(event.day)).replace('.', '')"
@@ -140,7 +140,7 @@
                        type="time"
                        :id="'start-time-' + index"
                        placeholder="Tag"
-                       class="input h-12 !rounded-r-none"
+                       class="input h-12 !rounded-r-none print:border-0"
                        :disabled="canEditComponent === false"
                        @focusout="updateEventInDatabase"
                    />
@@ -149,19 +149,58 @@
                        type="time"
                        :id="'end_time-' + index"
                        placeholder="Tag"
-                       class="input h-12 !rounded-l-none border-l-0"
+                       class="input h-12 !rounded-l-none border-l-0 print:border-0"
                        :disabled="canEditComponent === false"
                        @focusout="updateEventInDatabase"
                    />
                </div>
            </div>
-           <div v-if="canEditComponent" class="flex items-center col-span-1">
+           <div v-if="canEditComponent" class="flex items-center col-span-1 print:hidden">
                <div class="flex items-center gap-x-3">
                    <ToolTipComponent icon="IconNote" v-if="!isInModal" :tooltip-text="$t('Edit the description')" stroke="1.5" @click="openNoteModal = true" />
                    <ToolTipDefault :tooltip-text="$t('Set the event to all-day')" left show24-h-icon icon-classes="w-6 h-6" v-if="event.start_time && event.end_time && !event.copy && !isInModal" @click="removeTime"/>
-                   <IconCopy @click="event.copy = true" v-if="!event.copy"
-                             class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                             stroke-width="2"/>
+                   <BaseMenu show-custom-icon dots-color="!text-artwork-buttons-context" stroke-width="2" icon="IconCopy" translation-key="Copy" menu-width="w-fit" white-menu-background>
+                       <div class="flex items-center gap-x-2 p-3">
+                           <IconPlus class="w-6 h-6 text-artwork-buttons-context" stroke-width="2"/>
+                           <input
+                               type="number"
+                               class="input h-12 w-14"
+                               placeholder="Anzahl"
+                               v-model="event.copyCount"
+                               min="1"
+                               minlength="1"
+                               max="1000"
+                           />
+                           <Listbox as="div" class="relative" v-model="event.copyType" id="room">
+                               <ListboxButton class="menu-button">
+                                   <div class="flex-grow flex text-left xsDark !w-12 truncate">
+                                       {{ event.copyType?.name }}
+                                   </div>
+                                   <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                               </ListboxButton>
+                               <ListboxOptions
+                                   class="w-44 rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
+                                   <ListboxOption v-for="copyType in copyTypes"
+                                                  class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                                  :key="copyType.name"
+                                                  :value="copyType"
+                                                  v-slot="{ active, selected }">
+                                       <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                           {{ copyType.name }}
+                                       </div>
+                                       <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
+                                                  aria-hidden="true"/>
+                                   </ListboxOption>
+                               </ListboxOptions>
+                           </Listbox>
+                           <IconCircleCheckFilled @click="createCopyByEventWithData(event)"
+                                                  class="w-8 h-8 text-artwork-buttons-create cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                                  stroke-width="2"/>
+                           <IconX @click="event.copy = false"
+                                  class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                  stroke-width="2"/>
+                       </div>
+                   </BaseMenu>
                    <Menu v-if="!isInModal"
                          as="div"
                          class="text-sm cursor-pointer flex flex-row items-center bg-transparent">
@@ -199,46 +238,7 @@
                            </transition>
                        </div>
                    </Menu>
-                   <div v-if="event.copy" class="flex items-center gap-x-2">
-                       <IconPlus class="w-6 h-6 text-artwork-buttons-context" stroke-width="2"/>
-                       <input
-                           type="number"
-                           class="input h-12 w-14"
-                           placeholder="Anzahl"
-                           v-model="event.copyCount"
-                           min="1"
-                           minlength="1"
-                           max="1000"
-                       />
-                       <Listbox as="div" class="relative" v-model="event.copyType" id="room">
-                           <ListboxButton class="menu-button">
-                               <div class="flex-grow flex text-left xsDark !w-12 truncate">
-                                   {{ event.copyType?.name }}
-                               </div>
-                               <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                           </ListboxButton>
-                           <ListboxOptions
-                               class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
-                               <ListboxOption v-for="copyType in copyTypes"
-                                              class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
-                                              :key="copyType.name"
-                                              :value="copyType"
-                                              v-slot="{ active, selected }">
-                                   <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                       {{ copyType.name }}
-                                   </div>
-                                   <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
-                                              aria-hidden="true"/>
-                               </ListboxOption>
-                           </ListboxOptions>
-                       </Listbox>
-                       <IconCircleCheckFilled @click="createCopyByEventWithData(event)"
-                                              class="w-8 h-8 text-artwork-buttons-create cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                                              stroke-width="2"/>
-                       <IconX @click="event.copy = false"
-                              class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                              stroke-width="2"/>
-                   </div>
+
                </div>
            </div>
        </div>
@@ -253,6 +253,7 @@
            @closed="onCloseDeleteEventConfirmModal"/>
 
        <AddEditEventNoteModal :event="event" v-if="openNoteModal" @close="openNoteModal = false"/>
+
    </div>
 </template>
 
@@ -285,6 +286,8 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import {computed, onMounted, ref} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
+import {inject} from "vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 const props = defineProps({
     event: {
@@ -329,6 +332,7 @@ const props = defineProps({
 const showMenu = ref(false);
 const dayString = ref(null);
 const openNoteModal = ref(false);
+const event_properties = inject('event_properties');
 
 const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent']);
 const openEventComponent = (eventId) => {

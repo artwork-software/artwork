@@ -6,6 +6,7 @@ use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Models\EventComment;
+use Artwork\Modules\EventProperty\Models\EventProperty;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -218,6 +220,11 @@ class Event extends Model
     public function subEvents(): HasMany
     {
         return $this->hasMany(SubEvent::class)->orderBy('start_time', 'ASC');
+    }
+
+    public function eventProperties(): BelongsToMany
+    {
+        return $this->belongsToMany(EventProperty::class);
     }
 
     public function getStartTimeWithoutDayAttribute(): string

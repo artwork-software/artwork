@@ -717,7 +717,8 @@ class UserController extends Controller
             'expand_days',
             'use_event_status_color',
             'show_qualifications',
-            'shift_notes'
+            'shift_notes',
+            'hide_unoccupied_rooms'
         ]));
     }
 

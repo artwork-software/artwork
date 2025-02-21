@@ -32,6 +32,12 @@ export default {
                     show: true
                 },
                 {
+                    name: this.$t('Print Layout Settings'),
+                    href: route('project-print-layout.index'),
+                    current: route().current('project-print-layout.index'),
+                    show: true
+                },
+                {
                     name: this.$t('Project overview builder'),
                     href: route('project-management-builder.index'),
                     current: route().current('project-management-builder.index'),

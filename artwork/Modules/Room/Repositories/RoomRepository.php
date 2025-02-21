@@ -65,7 +65,8 @@ class RoomRepository extends BaseRepository
                 $adjoiningNoAudience,
                 $startDate,
                 $endDate
-            )->orderBy('order')
+            )
+            ->orderBy('order')
             ->get();
     }
 

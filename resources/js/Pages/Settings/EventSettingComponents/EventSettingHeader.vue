@@ -56,6 +56,12 @@ const tabs = [
         href: route('event_status.management'),
         current: route().current('event_status.management'),
         show: true
+    },
+    {
+        name: 'Event Eigenschaften',
+        href: route('event_settings.event_properties.index'),
+        current: route().current('event_settings.event_properties.index'),
+        show: true
     }
 ];
 </script>

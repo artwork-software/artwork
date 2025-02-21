@@ -5,13 +5,13 @@
                 {{ $t('Data is currently loaded. Please wait') }}
             </div>
         </div>
-        <div class="flex items-center justify-end gap-x-2" v-if="!isInModal">
+        <div class="flex items-center justify-end gap-x-2 print:hidden" v-if="!isInModal">
             <ToolTipComponent icon="IconFileExport"
                               icon-size="h-7 w-7"
                               :tooltip-text="$t('Export project list')"
                               direction="bottom"
                               @click="showExportModal = true"/>
-            <IconCalendarMonth class="w-6 h-6 cursor-pointer"
+            <IconCalendarMonth class="w-6 h-6 cursor-pointer text-artwork-buttons-context" stroke-width="1.2"
                                @click="useProjectTimePeriodAndRedirect()"/>
             <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
                 <MenuItem v-slot="{ active }">
@@ -46,31 +46,31 @@
 
         <BulkHeader v-model="timeArray" :is-in-modal="isInModal"/>
         <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll' : ''">
-            <div v-if="events.length > 0"
-                 v-for="(event, index) in events"
-                 class="mb-4">
-                <BulkSingleEvent
-                    :can-edit-component="canEditComponent"
-                    :rooms="rooms"
-                    :event_types="eventTypes"
-                    :time-array="timeArray"
-                    :event="event"
-                    :copy-types="copyTypes"
-                    :index="index"
-                    :is-in-modal="isInModal"
-                    @open-event-component="onOpenEventComponent"
-                    @delete-current-event="deleteCurrentEvent"
-                    @create-copy-by-event-with-data="createCopyByEventWithData"
-                    :event-statuses="eventStatuses"
-                />
+            <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
+                <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
+                    <BulkSingleEvent
+                        :can-edit-component="canEditComponent"
+                        :rooms="rooms"
+                        :event_types="eventTypes"
+                        :time-array="timeArray"
+                        :event="event"
+                        :copy-types="copyTypes"
+                        :index="index"
+                        :is-in-modal="isInModal"
+                        @open-event-component="onOpenEventComponent"
+                        @delete-current-event="deleteCurrentEvent"
+                        @create-copy-by-event-with-data="createCopyByEventWithData"
+                        :event-statuses="eventStatuses"
+                    />
+                </div>
             </div>
-            <div v-else class="flex items-center h-24">
+            <div v-else class="flex items-center h-24 print:hidden">
                 <AlertComponent :text="$t('No events found. Click on the plus (+) icon to create an event')" type="info"
                                 show-icon icon-size="h-5 w-5"
                                 classes="!items-center"/>
             </div>
         </div>
-        <div class="flex items-center justify-between pointer-events-none">
+        <div class="flex items-center justify-between pointer-events-none print:hidden">
             <IconCirclePlus v-if="canEditComponent"
                             @click="addEmptyEvent"
                             class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out pointer-events-auto"
@@ -88,6 +88,7 @@
                     <IconCirclePlus class="w-5 h-5 text-white mr-2"/>
                 </BaseButton>
             </div>
+
         </div>
     </div>
     <event-component
@@ -131,6 +132,7 @@ import {usePermission} from "@/Composeables/Permission.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
+import {provide, inject} from "vue";
 
 const exportTabEnums = useExportTabEnums();
 const {hasAdminRole} = usePermission(usePage().props),
@@ -169,6 +171,10 @@ const {hasAdminRole} = usePermission(usePage().props),
         eventStatuses: {
             type: Object,
             required: false
+        },
+        event_properties: {
+            type: Array,
+            required: false
         }
     }),
     roomCollisions = ref([]),
@@ -191,6 +197,11 @@ const {hasAdminRole} = usePermission(usePage().props),
             id: 3,
             name: 'Monatlich',
             type: 'monthly',
+        },
+        {
+            id: 4,
+            name: 'am gleichen Tag',
+            type: 'same_day',
         }
     ]),
     events = reactive([]),
@@ -235,7 +246,7 @@ const {hasAdminRole} = usePermission(usePage().props),
         if (props.isInModal) {
             events.push({
                 index: events.length + 1,
-                status: props.eventStatuses ? props.eventStatuses[0] : null,
+                status: props.eventStatuses ? props.eventStatuses?.find(status => status.default) : null,
                 type: props.eventTypes ? props.eventTypes[0] : null,
                 name: props.isInModal ? '' : 'Blocker',
                 room: props.rooms ? props.rooms[0] : null,
@@ -245,7 +256,7 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copy: false,
                 copyCount: 1,
                 copyType: copyTypes.value[0],
-                description: ''
+                description: '',
             });
             isLoading.value = false;
         } else {
@@ -278,7 +289,8 @@ const {hasAdminRole} = usePermission(usePage().props),
             } else {
                 router.post(route('event.store.bulk.single', {project: props.project}), {
                     event: {
-                        status: props.eventStatuses ? props.eventStatuses[0] : null,
+                        // status get the default status form the eventStatuses
+                        status: props.eventStatuses ? props.eventStatuses?.find(status => status.default) : null,
                         type: props.eventTypes ? props.eventTypes[0] : null,
                         name: props.isInModal ? '' : 'Blocker',
                         room: props.rooms ? props.rooms[0] : null,
@@ -327,6 +339,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                 newDate.setDate(newDate.getDate() + 7);
             } else if (event.copyType.type === 'monthly') {
                 newDate.setMonth(newDate.getMonth() + 1);
+            } else if (event.copyType.type === 'same_day') {
+                newDate = new Date(event.day);
             }
 
             events.push({
@@ -341,7 +355,7 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copy: false,
                 copyCount: 1,
                 copyType: copyTypes.value[0],
-                description: event.description
+                description: event.description,
             });
 
             createdEvents.push({
@@ -445,7 +459,9 @@ onMounted(() => {
                 copyCount: 1,
                 copyType: copyTypes.value[0],
                 index: events.length + 1,
-                description: event.description
+                description: event.description,
+                // if created_at is not older than 5 minutes, the event is new
+                isNew: new Date(event.created_at) > new Date(new Date().getTime() - 5 * 60000)
             });
         });
         isLoading.value = false;
@@ -453,9 +469,25 @@ onMounted(() => {
         isLoading.value = false;
     }
 
+    // if usePage().props.user.bulk_sort_id === 3 order events by day and start_time and room.position
+    if (usePage().props.user.bulk_sort_id === 3) {
+        events.sort((a, b) => {
+            if (a.day === b.day) {
+                if (a.start_time === b.start_time) {
+                    return a.room.position - b.room.position;
+                }
+                return a.start_time.localeCompare(b.start_time);
+            }
+            return a.day.localeCompare(b.day);
+        });
+    }
+
+
     if (props.isInModal) {
         addEmptyEvent();
     }
+
+    provide('event_properties', props.event_properties);
 });
 
 watch(events, (newEvents) => {

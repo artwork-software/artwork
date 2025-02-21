@@ -46,6 +46,7 @@ class UserCalendarFilterController extends Controller
             'areas',
             'room_attributes',
             'room_categories',
+            'event_properties'
         ]));
     }
 
@@ -73,11 +74,7 @@ class UserCalendarFilterController extends Controller
     public function reset(User $user): RedirectResponse
     {
         $user->calendar_filter()->update([
-            'is_loud' => false,
-            'is_not_loud' => false,
             'adjoining_not_loud' => false,
-            'has_audience' => false,
-            'has_no_audience' => false,
             'adjoining_no_audience' => false,
             'show_free_rooms' => false,
             'show_adjoining_rooms' => false,
@@ -87,6 +84,7 @@ class UserCalendarFilterController extends Controller
             'areas' => null,
             'room_attributes' => null,
             'room_categories' => null,
+            'event_properties' => null
         ]);
 
         return redirect()->back();

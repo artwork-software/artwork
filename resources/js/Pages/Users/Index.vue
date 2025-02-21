@@ -12,7 +12,7 @@
                             <div v-else class="flex items-center w-64 mr-2">
                                 <input ref="searchBarInput" id="userSearch" v-model="user_query" type="text" autocomplete="off"
                                        placeholder="Suche nach User*innen"
-                                       class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                       class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>

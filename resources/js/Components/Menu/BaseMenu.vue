@@ -1,7 +1,7 @@
 <template>
-    <Menu as="div" class="inline-block" :class="!noRelative ? 'relative' : ''">
+    <Menu as="div" class="inline-block print:hidden" :class="!noRelative ? 'relative' : ''">
         <Float auto-placement portal :offset="{ mainAxis: hasNoOffset ? 5 : -10, crossAxis: hasNoOffset ? 25 : 75}">
-            <div class="font-semibold text-artwork-buttons-context flex items-center justify-center" ref="menuButtonRef">
+            <div class="font-semibold  flex items-center justify-center" ref="menuButtonRef" :class="whiteIcon ? 'text-white' : 'text-artwork-buttons-context'">
                 <MenuButton :id="buttonId">
                    <div v-if="showIcon">
                        <IconDotsVertical
@@ -17,6 +17,7 @@
                            :tooltip-text="$t('Sorting')"
                            icon="IconSortDescending"
                            icon-size="h-8 w-8"
+                           :white-icon="whiteIcon"
                            :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
                        />
 
@@ -26,6 +27,7 @@
                            :tooltip-text="$t(translationKey)"
                            :icon="icon"
                            :icon-size="dotsSize"
+                           :stroke="strokeWidth"
                            :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
                        />
                    </div>
@@ -38,7 +40,7 @@
                         leave-active-class="transition ease-in duration-75"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
-                <MenuItems class="z-50 rounded-lg bg-artwork-navigation-background shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none" :class="[menuWidth]">
+                <MenuItems class="z-50 rounded-lg  shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none" :class="[menuWidth, whiteMenuBackground ? 'bg-white' : 'bg-artwork-navigation-background']">
                     <div>
                         <slot />
                     </div>
@@ -121,6 +123,16 @@ export default defineComponent({
             type: Boolean,
             required: false,
             default: true,
+        },
+        whiteMenuBackground: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        strokeWidth: {
+            type: [String, Number],
+            required: false,
+            default: 1.5,
         },
     },
 

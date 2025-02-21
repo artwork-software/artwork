@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\MinimalShiftPlanShiftResource;
+use App\Settings\ShiftSettings;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Casts\TimeAgoCast;
 use Artwork\Modules\Area\Services\AreaService;
@@ -17,9 +18,11 @@ use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
+use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
+use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
@@ -40,6 +43,7 @@ use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
+use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
@@ -55,6 +59,7 @@ use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
+use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -63,13 +68,17 @@ use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftWorkerService;
+use Artwork\Modules\ShiftPreset\Services\ShiftPresetService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
 use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Http\Resources\TaskDashboardResource;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Timeline\Services\TimelineService;
+use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -108,7 +117,16 @@ class EventController extends Controller
         private readonly EventCalendarService $eventCalendarService,
         private readonly CalendarDataService $calendarDataService,
         private readonly FilterService $filterService,
-        private readonly AreaService $areaService
+        private readonly AreaService $areaService,
+        private readonly ShiftCalendarService $shiftCalendarService,
+        private readonly CraftService $craftService,
+        private readonly ShiftQualificationService $shiftQualificationService,
+        private readonly DayServicesService $dayServicesService,
+        private readonly FreelancerService $freelancerService,
+        private readonly ServiceProviderService $serviceProviderService,
+        private readonly WorkingHourService $workingHourService,
+        private readonly UserService $userService,
+        private readonly ShiftTimePresetService $shiftTimePresetService,
     ) {
     }
 
@@ -233,20 +251,104 @@ class EventController extends Controller
         ]);
     }
 
-    public function viewShiftPlan(
-        ShiftQualificationService $shiftQualificationService,
-        UserService $userService,
-        FreelancerService $freelancerService,
-        ServiceProviderService $serviceProviderService,
-        RoomService $roomService,
-        FilterService $filterService,
-        ShiftFilterController $shiftFilterController,
-        CraftService $craftService,
-        EventService $eventService,
-        DayServicesService $dayServicesService,
-        ProjectTabService $projectTabService
-    ): Response {
-        return Inertia::render(
+    public function viewShiftPlan(): Response {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $userCalendarFilter = $user->getAttribute('shift_calendar_filter');
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+
+        [$startDate, $endDate] = $this->calendarDataService
+            ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter);
+
+        $period = $this->calendarDataService->createCalendarPeriodDto(
+            $startDate,
+            $endDate,
+            $user,
+        );
+
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+        );
+
+        $this->shiftCalendarService->filterRoomsEventsAnShifts(
+            $rooms,
+            $userCalendarFilter,
+            $startDate,
+            $endDate,
+            $userCalendarSettings
+        );
+
+
+        $calendarData = $this->shiftCalendarService->mapRoomsToContentForCalendar(
+            $rooms,
+            $startDate,
+            $endDate,
+        );
+
+
+        $dateValue = [
+            $startDate ? $startDate->format('Y-m-d') : null,
+            $endDate ? $endDate->format('Y-m-d') : null
+        ];
+
+
+        //dd($calendarData->rooms);
+
+        return Inertia::render('Shifts/ShiftPlan', [
+            'history' => $this->shiftCalendarService->getEventShiftsHistoryChanges(),
+            'crafts' => $this->craftService->getAll([
+                'managingUsers',
+                'managingFreelancers',
+                'managingServiceProviders'
+            ]),
+            'days' => $period,
+            'shiftPlan' => $calendarData->rooms,
+            'personalFilters' => $this->filterService->getPersonalFilter(),
+            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
+            'dateValue' => $dateValue,
+            'user_filters' => $userCalendarFilter,
+            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'dayServices' => $this->dayServicesService->getAll(),
+            'firstProjectShiftTabId' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'shiftPlanWorkerSortEnums' => array_map(
+                static function (ShiftPlanWorkerSortEnum $enum): string {
+                    return $enum->name;
+                },
+                ShiftPlanWorkerSortEnum::cases()
+            ),
+            'useFirstNameForSort' => (new ShiftSettings())->use_first_name_for_sort,
+            'userShiftPlanShiftQualificationFilters' => $user->getAttribute('show_qualifications'),
+            'freelancersForShifts' => $this->freelancerService->getFreelancersWithPlannedWorkingHours(
+                $startDate,
+                $endDate,
+                FreelancerShiftPlanResource::class,
+                true,
+                $user
+            ),
+            'serviceProvidersForShifts' => $this->serviceProviderService->getServiceProvidersWithPlannedWorkingHours(
+                $startDate,
+                $endDate,
+                ServiceProviderShiftPlanResource::class,
+                $user
+            ),
+            'usersForShifts' => $this->workingHourService->getUsersWithPlannedWorkingHours(
+                $startDate,
+                $endDate,
+                UserShiftPlanResource::class,
+                true
+            ),
+            'currentUserCrafts' => $this->userService->getAuthUserCrafts()->merge(
+                $this->craftService->getAssignableByAllCrafts()
+            ),
+            'shiftTimePresets' => $this->shiftTimePresetService->getAll()
+        ]);
+
+
+        /*return Inertia::render(
             'Shifts/ShiftPlan',
             $eventService->getShiftPlanDto(
                 $userService,
@@ -261,7 +363,7 @@ class EventController extends Controller
                 $userService->getAuthUser(),
                 $projectTabService
             )
-        );
+        );*/
     }
 
     /**

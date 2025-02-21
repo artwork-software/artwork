@@ -45,7 +45,6 @@ readonly class RoomFrontendModelService
         User $user
     ): ShowDto {
         [$startDate, $endDate] = $this->userService->getUserCalendarFilterDatesOrDefault(
-            $user->calendar_settings,
             $user->calendar_filter
         );
 

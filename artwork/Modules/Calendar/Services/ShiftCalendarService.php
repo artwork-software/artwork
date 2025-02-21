@@ -2,9 +2,11 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
+use Antonrom\ModelChangesHistory\Models\Change;
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
+use Artwork\Modules\Calendar\DTO\EventShiftPlanDTO;
 use Artwork\Modules\Calendar\DTO\ShiftDTO;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
@@ -14,6 +16,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
+use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
 
@@ -21,7 +24,7 @@ class ShiftCalendarService
 {
     public function filterRoomsEventsAnShifts(
         Collection $rooms,
-        UserCalendarFilter $filter,
+        UserShiftCalendarFilter $filter,
         $startDate,
         $endDate,
         ?UserCalendarSettings $userCalendarSettings = null,
@@ -58,7 +61,7 @@ class ShiftCalendarService
             ->get();
 
 
-        $shifts = Shift::whereNull('event_id')->whereIn('room_id', $roomIds)
+        $shifts = Shift::where('event_id', null)->whereIn('room_id', $roomIds)
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('start_date', [$startDate, $endDate])
                     ->orWhereBetween('end_date', [$startDate, $endDate])
@@ -68,22 +71,12 @@ class ShiftCalendarService
                     });
             })->get();
 
+
         $eventTypeIds = $events->pluck('event_type_id')->unique();
-        $projectIds = $events->pluck('project_id')->unique();
         $userIds = $events->pluck('user_id')->unique();
-        $eventStatusIds = $events->pluck('event_status_id')->unique();
 
         $users = User::whereIn('id', $userIds)
             ->select(['id', 'first_name', 'last_name', 'pronouns', 'position', 'email_private', 'email', 'phone_number', 'phone_private', 'description', 'profile_photo_path'])
-            ->get()
-            ->keyBy('id');
-
-        $projects = Project::whereIn('id', $projectIds)
-            ->select(['id', 'name', 'state', 'artists'])
-            ->with([
-                'status:id,name,color',
-                'managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
-            ])
             ->get()
             ->keyBy('id');
 
@@ -92,27 +85,15 @@ class ShiftCalendarService
             ->get()
             ->keyBy('id');
 
-        $eventStatues = EventStatus::whereIn('id', $eventStatusIds)
-            ->select(['id', 'color'])
-            ->get()
-            ->keyBy('id');
 
-        $eventDTOs = $events->map(fn($event) => EventDTO::fromModel(
+        $eventDTOs = $events->map(fn($event) => EventShiftPlanDTO::fromModel(
             $event,
-            $userCalendarSettings,
-            $projects,
             $eventTypes,
             $users,
-            $eventStatues
         ))->groupBy('roomId');
 
         $shiftDTOs = $shifts->map(fn($shift) => ShiftDTO::fromModel(
-            $shift,
-            $userCalendarSettings,
-            $projects,
-            $eventTypes,
-            $users,
-            $eventStatues
+            $shift
         ))->groupBy('roomId');
 
         foreach ($rooms as $room) {
@@ -127,7 +108,7 @@ class ShiftCalendarService
     public function mapRoomsToContentForCalendar(Collection $rooms, $startDate, $endDate): CalendarFrontendDataDTO
     {
         $period = collect(CarbonPeriod::create($startDate, '1 day', $endDate))
-            ->mapWithKeys(fn($date) => [$date->format('d.m.Y') => ['events' => []]])
+            ->mapWithKeys(fn($date) => [$date->format('d.m.Y') => ['events' => [], 'shifts' => []]])
             ->toArray();
 
         $roomsData = $rooms->map(function ($room) use ($period) {
@@ -161,5 +142,26 @@ class ShiftCalendarService
         })->toArray();
 
         return new CalendarFrontendDataDTO(rooms: $roomsData);
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    public function getEventShiftsHistoryChanges(): array
+    {
+        $q = Change::query();
+        $q->where('model_type', Shift::class);
+        $q->orderBy('created_at', 'desc');
+        $historyArray = [];
+        $q->get()->each(function (Change $history) use (&$historyArray): void {
+            $historyArray[] = [
+                'changes' => json_decode($history->changes),
+                'created_at' => $history->created_at->diffInHours() < 24
+                    ? $history->created_at->diffForHumans()
+                    : $history->created_at->format('d.m.Y, H:i'),
+            ];
+        });
+
+        return $historyArray;
     }
 }

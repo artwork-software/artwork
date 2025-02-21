@@ -62,7 +62,6 @@ class InventoryController extends Controller
 
 
         [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault(
-            $user?->calendar_settings,
             $user?->calendar_filter
         );
 

@@ -7,7 +7,6 @@ use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Services\EventCollectionService;
-use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Project\Models\Project;
@@ -204,7 +203,15 @@ readonly class CalendarDataService
             $weekNumber = $period->weekOfYear;
             $monthNumber = $period->month;
 
-            $holidayForDay = $holidays->where('date', $period->toDateString())->values();
+            $holidayForDay = $holidays->where('date', $period->toDateString())->values() ?? [];
+            if ($extraRow){
+                if ($isMonday) {
+                    $periodArray[] = [
+                        'isExtraRow' => true,
+                        'weekNumber' => $period->weekOfYear,
+                    ];
+                }
+            }
 
             $periodArray[] = new CalendarPeriodDTO(
                 day: $period->format('d.m.'),
@@ -304,14 +311,14 @@ readonly class CalendarDataService
 
     public function getCalendarDateRange(
         UserCalendarSettings $userCalendarSettings,
-        UserCalendarFilter $userCalendarFilter,
+        UserCalendarFilter|UserShiftCalendarFilter $userCalendarFilter,
         ?Project $project = null
     ): array {
         $today = Carbon::now();
         $useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period');
 
         if (!$useProjectTimePeriod && !$project) {
-            return $this->userService->getUserCalendarFilterDatesOrDefault($userCalendarSettings, $userCalendarFilter);
+            return $this->userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         }
         if (!$project && $useProjectTimePeriod) {
             $project = $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));

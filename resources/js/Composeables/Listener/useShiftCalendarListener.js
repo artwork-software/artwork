@@ -25,8 +25,8 @@ export function useShiftCalendarListener(newShiftPlanData) {
             const eventsAtDay = room.content[day].events;
             const shiftsAtDay = room.content[day].shifts;
 
-            if (data.shift.event_id) {
-                const event = eventsAtDay.find((event) => event.id === data.shift.event_id);
+            if (data.shift.eventId) {
+                const event = eventsAtDay.find((event) => event.id === data.shift.eventId);
                 if (event) {
                     const shiftIndex = event.shifts.findIndex((shift) => shift.id === data.shift.id);
                     if (shiftIndex !== -1) {
@@ -76,10 +76,10 @@ export function useShiftCalendarListener(newShiftPlanData) {
 
     function addShiftsToRoomAndDay(shifts) {
         shifts.forEach((shift) => {
-            const room = findRoomById(shift.room_id);
+            const room = findRoomById(shift.roomId);
             if (!room) return;
 
-            shift.days_of_shift.forEach((day) => {
+            shift.daysOfShift.forEach((day) => {
                 if (!room.content[day]) return;
 
                 const shiftsAtDay = room.content[day].shifts;
@@ -121,7 +121,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
         const room = findRoomById(room_id);
         if (!room) return;
 
-        shift.days_of_shift.forEach((day) => {
+        shift.daysOfShift.forEach((day) => {
             if (!room.content[day]) return;
 
             const shiftsAtDay = room.content[day].shifts;
@@ -133,7 +133,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
             }
 
             eventsAtDay.forEach((event) => {
-                if (event.id === shift.event_id) {
+                if (event.id === shift.eventId) {
                     const eventShiftIndex = event.shifts.findIndex((existingShift) => existingShift.id === shift.id);
                     if (eventShiftIndex !== -1) {
                         event.shifts.splice(eventShiftIndex, 1);
@@ -152,19 +152,19 @@ export function useShiftCalendarListener(newShiftPlanData) {
         newShiftPlanData.forEach((room) => {
             Echo.private('shift-plan.room.' + room.roomId)
                 .listen('.shift-created', (data) => {
-                    updateShiftInRoomAndEvents(data.days_of_shift, data, data.room_id);
+                    updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
                 })
                 .listen('.shift-assign-entity', (data) => {
-                    updateShiftInRoomAndEvents(data.days_of_shift, data, data.room_id);
+                    updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
                 })
                 .listen('.shift-remove-entity', (data) => {
                     updateShiftForUserOrEntity(data);
                 })
                 .listen('.shift-updated', (data) => {
-                    updateShiftInRoomAndEvents(data.days_of_shift, data, data.room_id);
+                    updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
                 })
                 .listen('.shift-updated.in.event', (data) => {
-                    updateShiftInRoomAndEvents(data.days_of_shift, data, data.room_id);
+                    updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
                 });
 
 

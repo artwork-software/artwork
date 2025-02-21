@@ -22,6 +22,7 @@ use Artwork\Modules\User\Repositories\UserRepository;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
+use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSettingService;
 use Artwork\Modules\UserWorkerShiftPlanFilter\Models\UserWorkerShiftPlanFilter;
 use Carbon\Carbon;
@@ -270,7 +271,7 @@ class UserService
     /**
      * @return array<int, Carbon>
      */
-    public function getUserCalendarFilterDatesOrDefault(UserCalendarSettings $userCalendarSettings, UserCalendarFilter $userCalendarFilter): array
+    public function getUserCalendarFilterDatesOrDefault(UserCalendarFilter|UserShiftCalendarFilter $userCalendarFilter): array
     {
 
         $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->getAttribute('start_date')) &&

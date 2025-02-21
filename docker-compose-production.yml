@@ -27,7 +27,7 @@ services:
       MYSQL_USER: '${DB_USERNAME}'
       MYSQL_PASSWORD: '${DB_PASSWORD}'
     volumes:
-      - 'artwork-db-maria5:/var/lib/mysql'
+      - 'artwork-db-maria-standalone:/var/lib/mysql'
   meili:
     image: 'getmeili/meilisearch:latest'
     ports:
@@ -39,7 +39,7 @@ services:
     volumes:
       - 'artwork-redis:/data'
 volumes:
-  artwork-db-maria5:
+  artwork-db-maria-standalone:
     driver: local
   artwork-meilisearch:
     driver: local

@@ -70,6 +70,7 @@
                     </template>
                 </ShiftPlanFunctionBar>
             </div>
+
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -79,7 +80,7 @@
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
                                     <th  v-for="day in days" :id="day.isExtraRow ? 'extra_row_' + day.weekNumber : day.fullDay" style="max-width: 204px"
-                                         class="z-20 h-8 py-2 border-r-2 border-secondaryHover truncate">
+                                         class="z-20 h-8 py-2 border-r-2 border-artwork-navigation-background truncate text-white">
                                         <div v-if="day.isExtraRow" style="width:37px">
                                             <span class="text-[9px] font-bold">KW{{day.weekNumber }}</span>
                                         </div>

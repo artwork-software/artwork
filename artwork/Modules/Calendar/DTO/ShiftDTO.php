@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Calendar\DTO;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Support\Collection;
 use Spatie\LaravelData\Data;
@@ -23,9 +24,11 @@ class ShiftDTO extends Data
         public ?Collection $users,
         public ?Collection $freelancer,
         public ?Collection $serviceProviders,
+        public ?Room $room,
         public ?array $daysOfShift,
         public ?int $roomId,
-        public ?array $formatted_dates
+        public ?array $formatted_dates,
+        public ?string $startOfShift,
         //public EventDTO $event
     ){
     }
@@ -47,9 +50,11 @@ class ShiftDTO extends Data
             users: $shift->users,
             freelancer: $shift->freelancer,
             serviceProviders: $shift->serviceProvider,
+            room: $shift->room,
             daysOfShift: $shift->getAttribute('days_of_shift'),
             roomId: $shift?->room_id,
-            formatted_dates: $shift->getAttribute('formatted_dates')
+            formatted_dates: $shift->getAttribute('formatted_dates'),
+            startOfShift: $shift->getAttribute('start_date')->format('d.m.Y')
             //event: EventDTO::fromModel($shift->event)
         );
     }

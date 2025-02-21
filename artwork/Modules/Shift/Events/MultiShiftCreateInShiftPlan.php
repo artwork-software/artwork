@@ -26,7 +26,6 @@ class MultiShiftCreateInShiftPlan implements ShouldBroadcastNow
     public function __construct(Collection $shifts)
     {
         $this->shifts = $shifts;
-        Log::info('MultiShiftCreateInShiftPlan');
     }
 
 
@@ -50,7 +49,7 @@ class MultiShiftCreateInShiftPlan implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'shifts' => $this->shifts->map(fn(Shift $shift) => ShiftDTO::fromModel($shift)),
+            'shifts' => $this->shifts->map(fn(Shift $shift) => ShiftDTO::fromModel($shift->fresh())),
         ];
     }
 }

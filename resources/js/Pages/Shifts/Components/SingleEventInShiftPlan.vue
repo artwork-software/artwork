@@ -4,11 +4,13 @@
             <div class="text-secondaryHover xsWhiteBold px-2 py-1 rounded-lg"
                  :style="{backgroundColor: backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent)),
                  borderColor: event.eventType.hex_code}">
-                <div class="px-1.5 py-1 border-l-4" :style="{borderColor: event.eventType.hex_code}">
-                    <a v-if="event?.project?.id" :href="route('projects.tab', {project: event.project.id, projectTab: firstProjectShiftTabId})" class="w-40 truncate cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
-                        {{ event.eventType.abbreviation }}: {{ event.eventName ?? event.project.name }}
+                <div class="px-1.5 py-1 border-l-4 max-w-40 w-40" :style="{borderColor: event.eventType.hex_code}">
+                    <a v-if="event?.project?.id" :href="route('projects.tab', {project: event.project.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
+                        <div class="w-40 max-w-40 truncate ">
+                            {{ event.eventType.abbreviation }}: {{ event.eventName ?? event.project.name }}
+                        </div>
                     </a>
-                    <div v-else class="w-40 truncate">
+                    <div v-else class="truncate">
                         {{ event.eventType.abbreviation }}: {{ event.eventName ?? event.project.name }}
                     </div>
                     <div class="text-xs">

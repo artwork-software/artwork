@@ -3,7 +3,7 @@
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center rounded-t-lg"
                  :style="{backgroundColor: backgroundColorWithOpacity(event.eventType.hex_code ?? eventType?.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventType.hex_code ?? eventType?.hex_code, usePage().props.high_contrast_percent))}">
-                <a v-if="event.project.id" :href="route('projects.tab', {project: event.project.id, projectTab: firstProjectShiftTabId}) + '?scrollToEvent=' + event.id" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
+                <a v-if="event?.project?.id" :href="route('projects.tab', {project: event.project.id, projectTab: firstProjectShiftTabId}) + '?scrollToEvent=' + event.id" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
                     {{ event.eventType.abbreviation ?? eventType?.abbreviation }}: {{ event.project.name }}
                 </a>
                 <div v-if="areAllShiftsCommitted(event)">
@@ -84,9 +84,9 @@ const areAllShiftsCommitted = (event) => {
 const checkIfShiftInDayString = (shift) => {
     const user = usePage().props.user;
     if (user?.show_crafts?.length === 0 || user?.show_crafts === null) {
-        return shift.formatted_dates.start === props.dayString['full_day'];
+        return shift.formatted_dates.start === props.dayString['fullDay'];
     } else {
-        return shift.formatted_dates.start === props.dayString['full_day'] && user?.show_crafts?.includes(shift.craft.id);
+        return shift.formatted_dates.start === props.dayString['fullDay'] && user?.show_crafts?.includes(shift.craft.id);
     }
 }
 

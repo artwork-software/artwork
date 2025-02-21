@@ -6,6 +6,7 @@ use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
@@ -23,6 +24,7 @@ class EventShiftPlanDTO extends Data
         public string $end,
         public ?string $eventName,
         public ?string $description,
+        public ?ProjectDTO $project,
         public EventType|null $eventType,
         public ?Collection $shifts,
         public bool $allDay,
@@ -50,6 +52,7 @@ class EventShiftPlanDTO extends Data
             end: Carbon::parse($event->end_time)->format('Y-m-d H:i'),
             eventName: $event->eventName,
             description: $event->description,
+            project: ProjectDTO::fromModel($event->project),
             eventType: $eventTypes[$event->event_type_id] ?? null,
             shifts: $event->shifts->map(fn($shift) => ShiftDTO::fromModel($shift)),
             allDay: $event->allDay,

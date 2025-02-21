@@ -192,6 +192,7 @@ class EventController extends Controller
             $startDate,
             $endDate,
             $user,
+            false
         );
 
         $rooms = $this->calendarDataService->getFilteredRooms(

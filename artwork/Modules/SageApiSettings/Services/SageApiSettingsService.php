@@ -2,16 +2,16 @@
 
 namespace Artwork\Modules\SageApiSettings\Services;
 
-use Artwork\Modules\Sage100\Clients\Sage100Client;
+use Artwork\Modules\Sage100\Clients\SageClient;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Repositories\SageApiSettingsRepository;
 use Carbon\Carbon;
 use Throwable;
 
-readonly class SageApiSettingsService
+class SageApiSettingsService
 {
-    public function __construct(private SageApiSettingsRepository $sageApiSettingsRepository)
+    public function __construct(private readonly SageApiSettingsRepository $sageApiSettingsRepository)
     {
     }
 
@@ -42,9 +42,10 @@ readonly class SageApiSettingsService
         return $sageApiSettings;
     }
 
+    /** @todo JR - remove this to different service */
     public function testConnection(): bool
     {
-        return app(Sage100Client::class)->testConnection();
+        return app(SageClient::class)->testConnection();
     }
 
     public function updateBookingDate(Carbon $carbon): void

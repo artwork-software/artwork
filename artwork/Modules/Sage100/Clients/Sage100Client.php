@@ -6,26 +6,14 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class Sage100Client
+class Sage100Client implements SageClient
 {
-    public ?string $domain;
-
-    private ?string $endpoint;
-
-    private ?string $user;
-
-    private ?string $password;
-
     public function __construct(
-        ?string $domain,
-        ?string $endpoint,
-        ?string $user,
-        ?string $password
+        private readonly string $domain,
+        private readonly string $endpoint,
+        private readonly string $user,
+        private readonly string $password
     ) {
-        $this->domain = $domain;
-        $this->endpoint = $endpoint;
-        $this->user = $user;
-        $this->password = $password;
     }
 
     private function client(): PendingRequest|null
@@ -51,8 +39,9 @@ class Sage100Client
         $client = $this->client();
 
         if (!$client instanceof PendingRequest) {
-            Log::info('SageAPI-Client requested without necessary parameters. Return empty results.');
-
+            $msg = 'SageAPI-Client requested without necessary parameters. Return empty results.';
+            Log::info($msg);
+            report(new \Exception($msg));
             return [];
         }
 
@@ -62,7 +51,7 @@ class Sage100Client
                 ->json('$resources');
         } catch (\Throwable $t) {
             Log::error('SageAPI-Call erroneous for reason: ' . $t->getMessage());
-
+            report($t);
             return [];
         }
     }
@@ -79,7 +68,7 @@ class Sage100Client
             )->status() === 200;
         } catch (\Throwable $t) {
             Log::error('SageAPI-Call connection test failed for reason: ' . $t->getMessage());
-
+            report($t);
             return false;
         }
     }

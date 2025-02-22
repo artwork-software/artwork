@@ -33,40 +33,41 @@ class Sage100Service
     public function __construct(
         private readonly Sage100Client $sage100Client,
         private readonly DatabaseService $databaseService,
+        private readonly ColumnService $columnService,
+        private readonly SageAssignedDataCommentService $sageAssignedDataCommentService,
+        private readonly SageAssignedDataService $sageAssignedDataService,
+        private readonly SageNotAssignedDataService $sageNotAssignedDataService,
+        private readonly SageApiSettingsService $sageApiSettingsService,
+        private readonly ProjectService $projectService
     ) {
     }
 
     public function importDataToBudget(
         ?int $count,
         ?string $specificDay,
-        ProjectService $projectService,
-        ColumnService $columnService,
-        SageApiSettingsService $sageApiSettingsService,
-        SageAssignedDataService $sageAssignedDataService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
     ): int {
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
         /** @var array $item */
-        foreach (($data = $this->getData($count, $specificDay, $sageApiSettingsService)) as $item) {
+        foreach (($data = $this->getData($count, $specificDay)) as $item) {
             if (!$item['ID']) {
                 continue;
             }
 
-            if ($this->updateExistingSageAssignedDataIfExists($item, $sageAssignedDataService)) {
+            if ($this->updateExistingSageAssignedDataIfExists($item)) {
                 continue;
             }
-            $sageNotAssignedData = $this->updateExistingSageNotAssignedDataIfExists($item, $sageNotAssignedDataService);
+            $sageNotAssignedData = $this->updateExistingSageNotAssignedDataIfExists($item);
 
             //KstTrager (Kostenstelle) is unique and exists only in one Project, find it
             if (!$item['KstTraeger']) {
                 continue;
             }
-            $project = $projectService->getProjectByCostCenter($item['KstTraeger']);
+            $project = $this->projectService->getProjectByCostCenter($item['KstTraeger']);
 
             if (is_null($project)) {
                 //create project unrelated SageNotAssignedData if no Project is found
-                $this->createSageNotAssignedData($item, $sageNotAssignedDataService);
+                $this->createSageNotAssignedData($item);
 
                 continue;
             }
@@ -80,7 +81,7 @@ class Sage100Service
 
             //create project related SageNotAssignedData if not exactly one SubPositionRow
             if ($subPositionRows->count() !== 1) {
-                $this->createSageNotAssignedData($item, $sageNotAssignedDataService, $project->id);
+                $this->createSageNotAssignedData($item, $project->id);
 
                 continue;
             }
@@ -88,7 +89,7 @@ class Sage100Service
             /** @var Column|null $sageColumn */
             $sageColumn = $project->table->columns->where('type', 'sage')->first();
             if (!$sageColumn instanceof Column) {
-                $sageColumn = $this->createSageColumnForTable($project->table, $columnService);
+                $sageColumn = $this->createSageColumnForTable($project->table);
             }
 
             $subPositionRowsSageColumnCellId = $sageColumn
@@ -98,14 +99,13 @@ class Sage100Service
                 ->id;
 
             if ($sageNotAssignedData instanceof SageNotAssignedData) {
-                $sageAssignedDataService->createFromSageNotAssignedData(
+                $this->sageAssignedDataService->createFromSageNotAssignedData(
                     $subPositionRowsSageColumnCellId,
                     $sageNotAssignedData,
-                    $sageNotAssignedDataService
                 );
             } else {
                 //otherwise create a new SageAssignedData entity
-                $sageAssignedDataService->createFromSageApiData(
+                $this->sageAssignedDataService->createFromSageApiData(
                     $subPositionRowsSageColumnCellId,
                     $item
                 );
@@ -131,7 +131,7 @@ class Sage100Service
                     /** @var Column|null $sageColumn */
                     $sageColumn = $projectGroup->table->columns->where('type', 'sage')->first();
                     if (!$sageColumn instanceof Column) {
-                        $sageColumn = $this->createSageColumnForTable($projectGroup->table, $columnService);
+                        $sageColumn = $this->createSageColumnForTable($projectGroup->table);
                     }
 
                     $subPositionRowsSageColumnCellId = $sageColumn
@@ -140,7 +140,7 @@ class Sage100Service
                         ->first()
                         ->id;
 
-                    $sageAssignedDataService->createFromSageApiData(
+                    $this->sageAssignedDataService->createFromSageApiData(
                         $subPositionRowsSageColumnCellId,
                         $item
                     );
@@ -150,7 +150,7 @@ class Sage100Service
 
         //if data was imported update import date from latest given booking-date (Buchungsdatum)
         if (!empty($data)) {
-            $this->updateSageApiSettingsBookingDateFromData($data, $sageApiSettingsService);
+            $this->updateSageApiSettingsBookingDateFromData($data);
         }
 
         return 0;
@@ -158,9 +158,6 @@ class Sage100Service
 
     public function dropData(
         Request $request,
-        ColumnService $columnService,
-        SageAssignedDataService $sageAssignedDataService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
     ): void {
         /** @var Table $table */
         $table = Table::find($request->table_id);
@@ -175,7 +172,7 @@ class Sage100Service
         /** @var Column|null $sageColumn */
         $sageColumn = $table->columns->where('type', 'sage')->first();
         if (!$sageColumn instanceof Column) {
-            $sageColumn = $this->createSageColumnForTable($project->table, $columnService);
+            $sageColumn = $this->createSageColumnForTable($project->table);
         }
 
         SubPositionRow::query()
@@ -241,10 +238,9 @@ class Sage100Service
             'verified_value' => null,
         ]);
 
-        $sageAssignedDataService->createFromSageNotAssignedData(
+        $this->sageAssignedDataService->createFromSageNotAssignedData(
             $sageColumnCell->id,
             $sageNotAssignedData,
-            $sageNotAssignedDataService
         );
     }
 
@@ -282,7 +278,6 @@ class Sage100Service
         SubPosition $subPosition,
         int $positionBefore,
         ColumnCell $columnCell,
-        ColumnService $columnService,
     ): void {
         if ($request->multiple === false) {
             $project = $table->project;
@@ -291,7 +286,7 @@ class Sage100Service
             /** @var Column|null $sageColumn */
             $sageColumn = $table->columns->where('type', 'sage')->first();
             if (!$sageColumn instanceof Column) {
-                $sageColumn = $this->createSageColumnForTable($project->table, $columnService);
+                $sageColumn = $this->createSageColumnForTable($project->table);
             }
 
             SubPositionRow::query()
@@ -373,7 +368,6 @@ class Sage100Service
         SubPosition $subPosition,
         int $positionBefore,
         ColumnCell $columnCell,
-        ColumnService $columnService,
     ): void {
         $project = $table->project;
         $columns = $table->columns()->whereNot('type', 'sage')->get();
@@ -381,7 +375,7 @@ class Sage100Service
         /** @var Column|null $sageColumn */
         $sageColumn = $table->columns->where('type', 'sage')->first();
         if (!$sageColumn instanceof Column) {
-            $sageColumn = $this->createSageColumnForTable($project->table, $columnService);
+            $sageColumn = $this->createSageColumnForTable($project->table);
         }
 
         SubPositionRow::query()
@@ -493,15 +487,14 @@ class Sage100Service
 
     private function updateExistingSageAssignedDataIfExists(
         array $item,
-        SageAssignedDataService $sageAssignedDataService,
     ): bool {
-        $sageAssignedData = $sageAssignedDataService->findBySageId($item['ID']);
+        $sageAssignedData = $this->sageAssignedDataService->findBySageId($item['ID']);
 
         if (is_null($sageAssignedData)) {
             return false;
         }
 
-        $sageAssignedDataService->update(
+        $this->sageAssignedDataService->update(
             $sageAssignedData,
             [
                 'buchungsdatum' => $item['Buchungsdatum'],
@@ -510,14 +503,14 @@ class Sage100Service
             ]
         );
 
-        $assignedSageDataBySageIdExcluded = $sageAssignedDataService->findAllBySageIdExcluded(
+        $assignedSageDataBySageIdExcluded = $this->sageAssignedDataService->findAllBySageIdExcluded(
             $sageAssignedData->getAttribute('sage_id'),
             [$sageAssignedData->getAttribute('id')]
         );
 
         if ($assignedSageDataBySageIdExcluded->count() > 0) {
             foreach ($assignedSageDataBySageIdExcluded as $assignedSageData) {
-                $sageAssignedDataService->update(
+                $this->sageAssignedDataService->update(
                     $assignedSageData,
                     [
                         'buchungsdatum' => $item['Buchungsdatum'],
@@ -534,12 +527,11 @@ class Sage100Service
 
     private function updateExistingSageNotAssignedDataIfExists(
         array $item,
-        SageNotAssignedDataService $sageNotAssignedDataService,
     ): SageNotAssignedData|null {
-        $sageNotAssignedData = $sageNotAssignedDataService->findBySageId($item['ID']);
+        $sageNotAssignedData = $this->sageNotAssignedDataService->findBySageId($item['ID']);
 
         if ($sageNotAssignedData instanceof SageNotAssignedData) {
-            $sageNotAssignedDataService->update(
+            $this->sageNotAssignedDataService->update(
                 $sageNotAssignedData,
                 [
                     'buchungsdatum' => $item['Buchungsdatum'],
@@ -554,14 +546,13 @@ class Sage100Service
 
     private function createSageNotAssignedData(
         array $item,
-        SageNotAssignedDataService $sageNotAssignedDataService,
         ?int $projectId = null,
     ): void {
         SageNotAssignedData::query()
             ->where('sage_id', $item['ID'])
             ->existsOr(
-                function () use ($sageNotAssignedDataService, $item, $projectId): void {
-                    $sageNotAssignedDataService->createFromSageApiData(
+                function () use ($item, $projectId): void {
+                    $this->sageNotAssignedDataService->createFromSageApiData(
                         $item,
                         $projectId
                     );
@@ -571,11 +562,10 @@ class Sage100Service
 
     private function updateSageApiSettingsBookingDateFromData(
         array $data,
-        SageApiSettingsService $sageApiSettingsService,
     ): void {
         $lastDataset = array_pop($data);
         if (isset($lastDataset['Buchungsdatum'])) {
-            $sageApiSettingsService->updateBookingDate(Carbon::parse($lastDataset['Buchungsdatum']));
+            $this->sageApiSettingsService->updateBookingDate(Carbon::parse($lastDataset['Buchungsdatum']));
         }
     }
 
@@ -583,7 +573,6 @@ class Sage100Service
     private function getData(
         int|null $count,
         string|null $specificDay,
-        SageApiSettingsService $sageApiSettingsService
     ): array {
 //        return json_decode(
 //            file_get_contents(
@@ -597,7 +586,7 @@ class Sage100Service
 //            ),
 //            true
 //        )['$resources'];
-        return $this->sage100Client->getData($this->buildQuery($count, $specificDay, $sageApiSettingsService));
+        return $this->sage100Client->getData($this->buildQuery($count, $specificDay));
     }
 
     /**
@@ -606,7 +595,6 @@ class Sage100Service
     private function buildQuery(
         int|null $count,
         string|null $specificDay,
-        SageApiSettingsService $sageApiSettingsService,
     ): array {
         $query = [];
 
@@ -620,7 +608,7 @@ class Sage100Service
                 self::FILTER_FIELD_BOOKINGDATE,
                 Carbon::parse($specificDay)->format('d.m.Y')
             );
-        } elseif ($desiredBookingDate = $sageApiSettingsService->getFirst()?->bookingDate) {
+        } elseif ($desiredBookingDate = $this->sageApiSettingsService->getFirst()?->bookingDate) {
             $query['where'] = sprintf(
                 '%s eq "%s" or %s gt "%s"',
                 self::FILTER_FIELD_BOOKINGDATE,
@@ -635,9 +623,9 @@ class Sage100Service
         return $query;
     }
 
-    private function createSageColumnForTable(Table $table, ColumnService $columnService): Column
+    private function createSageColumnForTable(Table $table): Column
     {
-        $sageColumn = $columnService->createColumnInTable(
+        $sageColumn = $this->columnService->createColumnInTable(
             $table,
             'Sage Abgleich',
             '-',
@@ -646,7 +634,7 @@ class Sage100Service
             $table->columns()->count()
         );
 
-        $columnService->setColumnSubName($table->id);
+        $this->columnService->setColumnSubName($table->id);
 
         $table->mainPositions->each(function (MainPosition $mainPosition) use ($sageColumn): void {
             $mainPosition->subPositions->each(function (SubPosition $subPosition) use ($sageColumn): void {
@@ -693,18 +681,15 @@ class Sage100Service
      * @throws Throwable
      */
     public function deleteSageData(
-        SageAssignedDataCommentService $sageAssignedDataCommentService,
-        SageAssignedDataService $sageAssignedDataService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
     ): int {
         try {
             if (!$this->databaseService->inTransaction()) {
                 $this->databaseService->beginTransaction();
             }
 
-            $sageAssignedDataCommentService->forceDeleteAll();
-            $sageAssignedDataService->forceDeleteAll();
-            $sageNotAssignedDataService->forceDeleteAll();
+            $this->sageAssignedDataCommentService->forceDeleteAll();
+            $this->sageAssignedDataService->forceDeleteAll();
+            $this->sageNotAssignedDataService->forceDeleteAll();
 
             $this->databaseService->commitTransaction();
 

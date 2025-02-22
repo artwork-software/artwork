@@ -7,9 +7,13 @@ use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Repositories\SageAssignedDataRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class SageAssignedDataService
+class SageAssignedDataService
 {
-    public function __construct(private SageAssignedDataRepository $sageAssignedDataRepository)
+
+    public function __construct(
+        private readonly SageAssignedDataRepository $sageAssignedDataRepository,
+        private readonly SageNotAssignedDataService $sageNotAssignedDataService
+    )
     {
     }
 
@@ -57,7 +61,6 @@ readonly class SageAssignedDataService
     public function createFromSageNotAssignedData(
         int $columnCellId,
         SageNotAssignedData $sageNotAssignedData,
-        SageNotAssignedDataService $sageNotAssignedDataService
     ): SageAssignedData {
         $sageAssignedData = $this->create([
             'column_cell_id' => $columnCellId,
@@ -77,7 +80,7 @@ readonly class SageAssignedDataService
             'buchungsdatum' => $sageNotAssignedData->buchungsdatum
         ]);
 
-        $sageNotAssignedDataService->forceDelete($sageNotAssignedData);
+        $this->sageNotAssignedDataService->forceDelete($sageNotAssignedData);
 
         return $sageAssignedData;
     }

@@ -78,6 +78,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Throwable;
 
@@ -1756,4 +1757,30 @@ readonly class EventService
     {
         return $this->eventRepository->attachEventProperty($event, $eventProperty);
     }
+
+    public function bulkMultiEditEvent(SupportCollection $eventIds, array $data): void
+    {
+        $updates = array_filter([
+            'room_id' => $data['selectedRoom']['id'] ?? null,
+            'event_type_id' => $data['selectedEventType']['id'] ?? null,
+            'event_status_id' => $data['selectedEventStatus']['id'] ?? null,
+            'eventName' => $data['eventName'] ?? null,
+        ]);
+
+        $selectedDay = $data['selectedDay'] ?? null;
+        $selectedStartTime = $data['selectedStartTime'] ?? null;
+        $selectedEndTime = $data['selectedEndTime'] ?? null;
+
+        $this->eventRepository->updateEvents($eventIds, $updates, $selectedDay, $selectedStartTime, $selectedEndTime);
+    }
+
+    public function bulkDeleteEvent(SupportCollection $eventIds): void
+    {
+        if ($eventIds->isEmpty()) {
+            return;
+        }
+
+        $this->eventRepository->deleteEvents($eventIds);
+    }
+
 }

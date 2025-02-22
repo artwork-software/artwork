@@ -2768,75 +2768,23 @@ class EventController extends Controller
 
     public function bulkMultiEditEvent(Request $request): void
     {
-        $eventIds = $request->collect('eventIds');
-        $updates = array_filter([
-            'room_id' => $request->input('selectedRoom.id'),
-            'event_type_id' => $request->input('selectedEventType.id'),
-            'event_status_id' => $request->input('selectedEventStatus.id'),
-            'eventName' => $request->input('eventName'),
-        ]);
-
-        $selectedDay = $request->input('selectedDay');
-        $selectedStartTime = $request->input('selectedStartTime');
-        $selectedEndTime = $request->input('selectedEndTime');
-
-        DB::transaction(function () use ($eventIds, $updates, $selectedDay, $selectedStartTime, $selectedEndTime) {
-            foreach ($eventIds as $eventId) {
-                /** @var Event $event */
-                $event = $this->eventService->findEventById($eventId);
-                $event->update($updates);
-
-                if ($selectedDay || $selectedStartTime || $selectedEndTime) {
-                    $startTime = $event->start_time;
-                    $endTime = $event->end_time;
-                    $allDay = $event->allDay;
-
-                    if ($selectedDay && !$selectedStartTime && !$selectedEndTime) {
-                        $startTime = Carbon::parse($selectedDay)->setTimeFrom($startTime);
-                        $endTime = Carbon::parse($selectedDay)->setTimeFrom($endTime);
-                    } elseif ($selectedStartTime || $selectedEndTime) {
-                        $day = optional($startTime)->toDateString() ?? Carbon::now()->toDateString();
-
-                        if ($selectedStartTime) {
-                            $startTime = Carbon::parse("$day $selectedStartTime");
-                        }
-                        if ($selectedEndTime) {
-                            $endTime = Carbon::parse("$day $selectedEndTime");
-                        }
-                    }
-
-                    if ($selectedDay && $selectedStartTime && $selectedEndTime) {
-                        [$startTime, $endTime, $allDay] = $this->eventService->processEventTimes(
-                            Carbon::parse($selectedDay),
-                            $selectedStartTime,
-                            $selectedEndTime
-                        );
-                    }
-
-                    $event->update([
-                        'start_time' => $startTime,
-                        'end_time' => $endTime,
-                        'allDay' => $allDay,
-                    ]);
-                }
-
-                broadcast(new EventCreated($event->fresh(), $event->room_id));
-            }
-        });
+        $this->eventService->bulkMultiEditEvent(
+            $request->collect('eventIds'),
+            $request->only([
+                'selectedRoom',
+                'selectedEventType',
+                'selectedEventStatus',
+                'eventName',
+                'selectedDay',
+                'selectedStartTime',
+                'selectedEndTime'
+            ])
+        );
     }
 
     public function bulkDeleteEvent(Request $request): void
     {
-        $eventIds = $request->collect('eventIds');
-
-        if ($eventIds->isEmpty()) {
-            return;
-        }
-
-        DB::transaction(function () use ($eventIds) {
-            //$events = Event::whereIn('id', $eventIds)->get();
-            Event::whereIn('id', $eventIds)->delete();
-        });
+        $this->eventService->bulkDeleteEvent($request->collect('eventIds'));
     }
 
 

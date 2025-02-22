@@ -30,14 +30,6 @@ use Symfony\Component\Finder\Finder;
 
 class Kernel extends ConsoleKernel
 {
-    public function __construct(
-        private readonly SageApiSettingsService $sageApiSettingsService,
-        Application $app,
-        Dispatcher $events
-    ) {
-        parent::__construct($app, $events);
-    }
-
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('model:prune')->daily();
@@ -57,11 +49,14 @@ class Kernel extends ConsoleKernel
             ->dailyAt('01:00')
             ->runInBackground();
 
-        $sageApiSettings = $this->sageApiSettingsService->getFirst();
-        if (!is_null($sageApiSettings) && $sageApiSettings->enabled) {
-            $schedule->command(ImportSage100ApiDataCommand::class)
-                ->dailyAt($sageApiSettings->fetchTime ?? '08:00')
-                ->runInBackground();
+        if (env('SAGE_API_ENABLED', false)) {
+            $sageApiSettingsService = app(SageApiSettingsService::class);
+            $sageApiSettings = $sageApiSettingsService->getFirst();
+            if (!is_null($sageApiSettings) && $sageApiSettings->enabled) {
+                $schedule->command(ImportSage100ApiDataCommand::class)
+                    ->dailyAt($sageApiSettings->fetchTime ?? '08:00')
+                    ->runInBackground();
+            }
         }
     }
 

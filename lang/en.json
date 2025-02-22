@@ -2345,5 +2345,12 @@
     "Weekly View Calendar Settings": "Weekly View Calendar Settings",
     "The end time must be greater than the start time.": "The end time must be greater than the start time.",
     "Hours between {start} - {end} are hidden": "Hours between {start} - {end} are hidden",
-    "Last visited project": "Last visited project"
+    "Last visited project": "Last visited project",
+    "Start & End Time": "Start & End Time",
+    "No change": "No change",
+    "Bulk Multi Edit": "Bulk Multi Edit",
+    "Edit multiple events at once": "Edit multiple events at once",
+    "No events selected": "No events selected",
+    "Do you really want to delete the selected events?": "Do you really want to delete the selected events?",
+    "This action cannot be undone.": "This action cannot be undone."
 }

@@ -1,5 +1,16 @@
 <template>
-   <div class="print:w-full" :class="event?.isNew ? 'border-2 rounded-lg border-pink-500 border-dashed py-2 px-1' : ''">
+   <div class="print:w-full flex relative" :class="[event?.isNew ? 'border-2 rounded-lg border-pink-500 border-dashed py-2 px-1' : '']">
+       <div class="flex items-center justify-center pr-2" v-if="multiEdit">
+           <input
+               v-model="event.isSelectedForMultiEdit"
+               aria-describedby="candidates-description"
+               name="candidates" type="checkbox"
+               :id="event.id"
+               class="input-checklist"
+           />
+       </div>
+       <div v-if="event.isSelectedForMultiEdit" class="absolute pointer-events-none top-0 left-0 w-full h-full bg-green-100/20 z-50"/>
+
        <div class="grid gird-cols-1 md:grid-cols-8 gap-4">
            <div class="" v-if="usePage().props.event_status_module">
                <Listbox v-model="event.status"
@@ -326,6 +337,11 @@ const props = defineProps({
     eventStatuses: {
         type: Object,
         required: true
+    },
+    multiEdit: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 });
 

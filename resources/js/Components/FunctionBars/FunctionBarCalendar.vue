@@ -621,6 +621,7 @@ const updateTimes = () => {
 
 const saveUserCalendarSettings = () => {
     let valuesToReload = [];
+    let preserveState = true
 
     if (userCalendarSettings.project_management) {
         valuesToReload.push('leaders');
@@ -630,9 +631,16 @@ const saveUserCalendarSettings = () => {
         valuesToReload.push('status');
     }
 
+    if (userCalendarSettings.hide_unoccupied_rooms || !userCalendarSettings.hide_unoccupied_rooms) {
+        valuesToReload.push('rooms');
+        valuesToReload.push('calendar');
+        valuesToReload.push('calendarData');
+        preserveState = false;
+    }
+
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}), {
         preserveScroll: true,
-        preserveState: true,
+        preserveState: preserveState,
         onSuccess: () => {
             if (valuesToReload.length > 0) {
                 router.reload({

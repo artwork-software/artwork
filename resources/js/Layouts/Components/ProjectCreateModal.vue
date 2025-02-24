@@ -559,7 +559,7 @@ export default {
         return {
             isCreateProjectTab: true,
             isCreateProjectGroupTab: false,
-            addToProjectGroup: false,
+            addToProjectGroup: this.project ? !!this.project?.groups[0] : false,
             createProjectForm: useForm({
                 name: this.project ? this.project.name : '',
                 artists: this.project ? this.project.artists : '',
@@ -568,7 +568,7 @@ export default {
                 assignedGenreIds: this.project ? this.project?.genres?.map(genre => genre.id) : [],
                 isGroup: this.project ? this.project.is_group : false,
                 projects: [],
-                selectedGroup: null,
+                selectedGroup: this.project ? this.project?.groups[0] : null,
                 budget_deadline: this.project ? this.project.budget_deadline : '',
                 state: null,
                 assignedUsers: [],

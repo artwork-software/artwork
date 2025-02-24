@@ -1,6 +1,6 @@
 <template>
 
-    <div class="mt-[4.5rem] w-max">
+    <div class="w-max" :class="[eventsWithoutRoom.length > 0 ? 'mt-[6rem]' : 'mt-[4.2rem]']">
         <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg">
             <div :style="{minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}"></div>
             <div v-for="room in $page.props.rooms" :key="room.id" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">

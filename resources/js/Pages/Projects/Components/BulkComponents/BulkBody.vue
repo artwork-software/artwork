@@ -5,7 +5,7 @@
                 {{ $t('Data is currently loaded. Please wait') }}
             </div>
         </div>
-        <div class="flex items-center justify-end gap-x-2 print:hidden" v-if="!isInModal">
+        <div class="flex items-center justify-end gap-x-4 print:hidden" v-if="!isInModal">
             <MultiEditSwitch :multi-edit="multiEdit"
                              :room-mode="false"
                              @update:multi-edit="UpdateMultiEditEmits"/>
@@ -103,20 +103,22 @@
                 </BaseButton>
             </div>
         </div>
-        <div v-else class="flex items-center justify-between print:hidden">
-            <div>
-                <FormButton
-                    @click="showConfirmDeleteModal = true"
-                    :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0"
-                    class="bg-red-500 hover:bg-red-600 text-white h-12"
-                    :text="$t('Delete')" />
-            </div>
-            <div>
-                <FormButton
-                    @click="openMultiEditModal"
-                    :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0"
-                    class="bg-artwork-buttons-create text-white h-12"
-                    :text="$t('Edit')" />
+        <div v-else class="fixed bottom-0 h-28 w-full bg-gray-900/10 -mx-5 print:hidden">
+            <div class="flex items-center justify-center gap-x-4 w-full h-full">
+                <div>
+                    <FormButton
+                        @click="showConfirmDeleteModal = true"
+                        :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0"
+                        class="bg-red-500 hover:bg-red-600 text-white h-12"
+                        :text="$t('Delete')" />
+                </div>
+                <div>
+                    <FormButton
+                        @click="openMultiEditModal"
+                        :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0"
+                        class="bg-artwork-buttons-create text-white h-12"
+                        :text="$t('Edit')" />
+                </div>
             </div>
         </div>
     </div>
@@ -274,7 +276,10 @@ const {hasAdminRole} = usePermission(usePage().props),
     },
     deleteSelectedEvents = () => {
         isLoading.value = true;
-        router.delete(route('event.bulk.multi-edit.delete', {event: getEventIdsWhereSelectedForMultiEdit()}), {
+        router.delete(route('event.bulk.multi-edit.delete'), {
+            data: {
+                eventIds: getEventIdsWhereSelectedForMultiEdit()
+            },
             preserveScroll: true,
             preserveState: false,
             onSuccess: () => {

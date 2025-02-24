@@ -279,15 +279,12 @@ class ProjectPrintLayoutController extends Controller
                             $componentFullData->projectValue()
                                 ->where('project_id', $project->id)
                                 ->first() ?? $componentFullData->data;
-                        //dd($projectData);
                     }
                 }
             }
 
             return $projectData;
         });
-
-        //dd($loadedProjectInformation);
 
         return Inertia::render('Projects/ProjectPrintLayoutWindow', [
             'project' => $projectComponents[0],
@@ -326,14 +323,12 @@ class ProjectPrintLayoutController extends Controller
     }
 
     public function addComponent(ProjectPrintLayout $projectPrintLayout, Request $request){
-        //dd($projectPrintLayout, $request->all());
         $projectPrintLayout->components()->create([
             'component_id' => $request->get('component_id'),
             'type' => $request->get('type'),
             'position' => $request->get('col'),
             'row' => $request->get('row'),
         ]);
-        //dd($projectPrintLayout, $request);
     }
 
     public function destroyComponent(PrintLayoutComponents $printLayoutComponent){

@@ -25,8 +25,8 @@ export function useShiftCalendarListener(newShiftPlanData) {
             const eventsAtDay = room.content[day].events;
             const shiftsAtDay = room.content[day].shifts;
 
-            if (data.shift.event_id) {
-                const event = eventsAtDay.find((event) => event.id === data.shift.event_id);
+            if (data.shift.eventId) {
+                const event = eventsAtDay.find((event) => event.id === data.shift.eventId);
                 if (event) {
                     const shiftIndex = event.shifts.findIndex((shift) => shift.id === data.shift.id);
                     if (shiftIndex !== -1) {
@@ -58,57 +58,13 @@ export function useShiftCalendarListener(newShiftPlanData) {
 
         const room = findRoomById(eventData.roomId);
         if (!room) return;
-        eventData.days_of_event.forEach((day) => {
+        eventData.daysOfEvent.forEach((day) => {
             if (!room.content[day]) return;
 
             const eventsAtDay = room.content[day].events;
             const eventIndex = eventsAtDay.findIndex((event) => event.id === eventData.id);
 
-            const newEvent = {
-                id: eventData.id,
-                start: eventData.startTime,
-                end: eventData.end,
-                eventName: eventData.eventName,
-                description: eventData.description,
-                audience: eventData.audience,
-                isLoud: eventData.is_loud,
-                projectId: eventData.projectId,
-                projectName: eventData?.projectName,
-                eventTypeId: eventData.event_type_id,
-                eventTypeName: eventData.eventTypeName,
-                eventTypeAbbreviation: eventData.eventTypeAbbreviation,
-                eventTypeColor: eventData.eventTypeColor,
-                created_at: eventData.created_at,
-                allDay: eventData.allDay,
-                shifts: eventData.shifts,
-                days_of_event: eventData.days_of_event,
-                days_of_shifts: eventData.days_of_shifts,
-                option_string: eventData.option_string,
-                formatted_dates: eventData.formatted_dates,
-                timesWithoutDates: eventData.timesWithoutDates,
-                is_series: eventData.is_series,
-                sub_events: eventData.sub_events,
-                timelines: eventData.timelines,
-                occupancy_option: eventData.occupancy_option,
-                eventTypeColorBackground: eventData.event_type_color_background,
-                event_type_color: eventData.event_type_color,
-                start_hour: eventData.start_hour,
-                event_length_in_hours: eventData.event_length_in_hours,
-                hours_to_next_day: eventData.hours_to_next_day,
-                minutes_form_start_hour_to_start: eventData.minutes_form_start_hour_to_start,
-                roomId: eventData.roomId,
-                roomName: eventData.roomName,
-                eventStatusId: eventData.eventStatusId,
-                eventStatusColor: eventData.eventStatusColor,
-                subEvents: eventData.subEvents,
-                created_by: {
-                    id: eventData.created_by?.id,
-                    profile_photo_url: eventData.created_by?.profile_photo_url,
-                    first_name: eventData.created_by?.first_name,
-                    last_name: eventData.created_by?.last_name,
-                },
-                eventProperties: eventData.eventProperties,
-            };
+            const newEvent = eventData;
 
             if (eventIndex === -1) {
                 eventsAtDay.push(newEvent);
@@ -120,10 +76,10 @@ export function useShiftCalendarListener(newShiftPlanData) {
 
     function addShiftsToRoomAndDay(shifts) {
         shifts.forEach((shift) => {
-            const room = findRoomById(shift.room_id);
+            const room = findRoomById(shift.roomId);
             if (!room) return;
 
-            shift.days_of_shift.forEach((day) => {
+            shift.daysOfShift.forEach((day) => {
                 if (!room.content[day]) return;
 
                 const shiftsAtDay = room.content[day].shifts;
@@ -165,7 +121,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
         const room = findRoomById(room_id);
         if (!room) return;
 
-        shift.days_of_shift.forEach((day) => {
+        shift.daysOfShift.forEach((day) => {
             if (!room.content[day]) return;
 
             const shiftsAtDay = room.content[day].shifts;
@@ -177,7 +133,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
             }
 
             eventsAtDay.forEach((event) => {
-                if (event.id === shift.event_id) {
+                if (event.id === shift.eventId) {
                     const eventShiftIndex = event.shifts.findIndex((existingShift) => existingShift.id === shift.id);
                     if (eventShiftIndex !== -1) {
                         event.shifts.splice(eventShiftIndex, 1);
@@ -196,19 +152,19 @@ export function useShiftCalendarListener(newShiftPlanData) {
         newShiftPlanData.forEach((room) => {
             Echo.private('shift-plan.room.' + room.roomId)
                 .listen('.shift-created', (data) => {
-                    updateShiftInRoomAndEvents(data.days_of_shift, data, data.room_id);
+                    updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
                 })
                 .listen('.shift-assign-entity', (data) => {
-                    updateShiftInRoomAndEvents(data.days_of_shift, data, data.room_id);
+                    updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
                 })
                 .listen('.shift-remove-entity', (data) => {
                     updateShiftForUserOrEntity(data);
                 })
                 .listen('.shift-updated', (data) => {
-                    updateShiftInRoomAndEvents(data.days_of_shift, data, data.room_id);
+                    updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
                 })
                 .listen('.shift-updated.in.event', (data) => {
-                    updateShiftInRoomAndEvents(data.days_of_shift, data, data.room_id);
+                    updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
                 });
 
 

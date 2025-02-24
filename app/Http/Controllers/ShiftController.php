@@ -1100,15 +1100,20 @@ class ShiftController extends Controller
     public function deleteMultiEditCell(Request $request): void
     {
         $entities = $request->get('entities');
+        $shifts = collect(); // Verwende eine Collection, um alle Shifts zu sammeln
+
         foreach ($entities as $entity) {
             $modelClass = match ($entity['type']) {
                 1 => Freelancer::class,
                 2 => ServiceProvider::class,
                 default => User::class,
             };
+
             $entityModel = $modelClass::findOrFail($entity['id']);
+
             foreach ($entity['days'] as $day) {
                 $this->individualTimeService->deleteForModel($entityModel, $day);
+
                 $vacations = collect();
                 if (!$entityModel instanceof ServiceProvider) {
                     $vacations = $entityModel->vacations()->where('date', $day)->get();
@@ -1119,11 +1124,19 @@ class ShiftController extends Controller
                 }
 
                 $entityModel->shiftPlanComments()->where('date', $day)->delete();
-                $shifts = $entityModel->shifts()->where('start_date', $day)->get();
-                $this->shiftService->detachFromShifts($shifts, $modelClass, $entityModel);
+
+                $dayShifts = $entityModel->shifts()->where('start_date', $day)->get();
+                $this->shiftService->detachFromShifts($dayShifts, $modelClass, $entityModel);
+
+                $shifts = $shifts->merge($dayShifts); // Merge neue Shifts mit den vorherigen
             }
         }
+
+        if ($shifts->isNotEmpty()) {
+            broadcast(new MultiShiftCreateInShiftPlan($shifts));
+        }
     }
+
 
     public function updateTimeLine(Event $event, Request $request): void
     {
@@ -1225,8 +1238,6 @@ class ShiftController extends Controller
                 $shiftsQualificationsService->createShiftsQualificationForShift($shiftSave->id, $shiftsQualification);
             }
         }
-
-        //dd($createdShifts);
         broadcast(new MultiShiftCreateInShiftPlan($createdShifts));
     }
 }

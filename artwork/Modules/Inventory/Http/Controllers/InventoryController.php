@@ -58,7 +58,12 @@ class InventoryController extends Controller
     public function scheduling(
         UserService $userService,
     ): Response {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userService->getAuthUser());
+        $user = $userService->getAuthUser();
+
+
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault(
+            $user?->calendar_filter
+        );
 
         $showCalendar = $this->calendarDataService->createCalendarData(
             $startDate,

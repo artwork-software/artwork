@@ -239,7 +239,7 @@
                                             {{ $t('Repeat event') }}
                                         </label>
                                     </div>
-                                    <div class="flex items-center py-1" v-if="canAny(['can manage workers', 'can plan shifts'])">
+                                    <div class="flex items-center py-1" v-if="canAny(['can manage workers', 'can plan shifts']) || hasAdminRole()">
                                         <input id="cb-work-shifts"
                                                v-model="userCalendarSettings.work_shifts"
                                                type="checkbox"
@@ -525,8 +525,8 @@ const changeDailyViewMode = () => {
     router.patch(route('user.update.daily_view', usePage().props.user.id), {
         daily_view: dailyViewMode.value
     }, {
-        preserveScroll: true,
-        preserveState: false
+        preserveScroll: false,
+        preserveState: true
     })
 }
 
@@ -620,14 +620,34 @@ const updateTimes = () => {
 }
 
 const saveUserCalendarSettings = () => {
-    let preserveState = true;
-    if(usePage().props.user.calendar_settings.hide_unoccupied_rooms !== userCalendarSettings.hide_unoccupied_rooms){
+    let valuesToReload = [];
+    let preserveState = true
+
+    if (userCalendarSettings.project_management) {
+        valuesToReload.push('leaders');
+    }
+
+    if (userCalendarSettings.project_status) {
+        valuesToReload.push('status');
+    }
+
+    if (userCalendarSettings.hide_unoccupied_rooms || !userCalendarSettings.hide_unoccupied_rooms) {
+        valuesToReload.push('rooms');
+        valuesToReload.push('calendar');
+        valuesToReload.push('calendarData');
         preserveState = false;
     }
 
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}), {
         preserveScroll: true,
         preserveState: preserveState,
+        onSuccess: () => {
+            if (valuesToReload.length > 0) {
+                router.reload({
+                    only: valuesToReload
+                });
+            }
+        }
     })
     document.getElementById('displaySettings').click();
 }

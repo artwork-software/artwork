@@ -70,6 +70,7 @@ use Laravel\Scout\Searchable;
  * @property Collection<Project> $projectsOfGroup
  * @property Collection<Comment> $comments
  * @property Collection<ArtistResidency> $artistResidencies
+ * @property Collection<ProjectState> $status
  */
 class Project extends Model
 {
@@ -106,8 +107,8 @@ class Project extends Model
     ];
 
     protected $with = [
-        'shiftRelevantEventTypes',
-        'state'
+        //'shiftRelevantEventTypes',
+        //'status'
     ];
 
     public static function booting(): void
@@ -264,7 +265,7 @@ class Project extends Model
         return $this->belongsToMany(MoneySource::class, 'money_source_project');
     }
 
-    public function state(): HasOne
+    public function status(): HasOne
     {
         return $this->hasOne(
             ProjectState::class,

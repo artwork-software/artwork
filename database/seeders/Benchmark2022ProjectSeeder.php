@@ -24,7 +24,7 @@ class Benchmark2022ProjectSeeder extends Seeder
 
         Room::factory()->count(25)->create();
 
-        $startOfYear = Carbon::today()->year(2022)->startOfYear();
+        $startOfYear = Carbon::today()->year(2025)->startOfYear();
         $endOfYear = clone $startOfYear;
         $endOfYear->endOfYear();
         $dateRange = $startOfYear->range($endOfYear);

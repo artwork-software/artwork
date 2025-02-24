@@ -175,7 +175,7 @@ class EventCollectionService
                     'creator',
                     'project',
                     'project.managerUsers',
-                    'project.state',
+                    'project.status',
                     'shifts',
                     'shifts.craft',
                     'shifts.users',

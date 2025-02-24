@@ -60,7 +60,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
@@ -266,7 +265,7 @@ class User extends Model implements
         'assigned_craft_ids',
     ];
 
-    protected $with = ['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'];
+    protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
     public function getTypeAttribute(): string
     {
@@ -396,11 +395,6 @@ class User extends Model implements
         return $this->hasManyThrough(Task::class, Checklist::class);
     }
 
-    public function getPermissionAttribute(): \Illuminate\Support\Collection
-    {
-        return $this->getAllPermissions();
-    }
-
     public function globalNotification(): HasOne
     {
         return $this->hasOne(GlobalNotification::class, 'created_by');
@@ -481,8 +475,9 @@ class User extends Model implements
      */
     public function getAssignedCraftIdsAttribute(): array
     {
-        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
+        return $this->assignedCrafts()->pluck('crafts.id')->all();
     }
+
 
     public function getShiftIdsBetweenStartDateAndEndDate(
         Carbon $startDate,
@@ -496,13 +491,10 @@ class User extends Model implements
      */
     public function allPermissions(): array
     {
-        $permissions = [];
-        foreach (Permission::all() as $permission) {
-            if (Auth::user()->can($permission->name)) {
-                $permissions[] = $permission->name;
-            }
+        if (!$this->exists){
+            return [];
         }
-        return $permissions;
+        return $this->getAllPermissions()->pluck('name')->toArray();
     }
 
     /**
@@ -510,14 +502,13 @@ class User extends Model implements
      */
     public function allRoles(): array
     {
-        $rolesArray = [];
-        foreach (Role::all() as $roles) {
-            if (Auth::user()->hasRole($roles->name)) {
-                $rolesArray[] = $roles->name;
-            }
+        if (!$this->exists) {
+            return [];
         }
-        return $rolesArray;
+
+        return $this->roles()->pluck('name')->toArray();
     }
+
 
     /**
      * @return array<string, mixed>

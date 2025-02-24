@@ -23,7 +23,7 @@
 
                        <ToolTipComponent
                            v-if="showCustomIcon"
-                           direction="bottom"
+                           direction="top"
                            :tooltip-text="$t(translationKey)"
                            :icon="icon"
                            :icon-size="dotsSize"

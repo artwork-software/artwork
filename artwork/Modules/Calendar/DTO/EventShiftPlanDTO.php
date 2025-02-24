@@ -52,7 +52,7 @@ class EventShiftPlanDTO extends Data
             end: Carbon::parse($event->end_time)->format('Y-m-d H:i'),
             eventName: $event->eventName,
             description: $event->description,
-            project: ProjectDTO::fromModel($event->project),
+            project: $event->project ? ProjectDTO::fromModel($event->project) : null,
             eventType: $eventTypes[$event->event_type_id] ?? null,
             shifts: $event->shifts->map(fn($shift) => ShiftDTO::fromModel($shift)),
             allDay: $event->allDay,

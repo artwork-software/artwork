@@ -170,7 +170,6 @@ export function useShiftCalendarListener(newShiftPlanData) {
 
             Echo.private('destroy.events.room.' + room.roomId)
                 .listen('.shift-destroyed.in.event', (data) => {
-                    console.log('hier angekommen', data);
                     removeShiftFromRoomAndEvents(data);
                 });
 

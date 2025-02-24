@@ -78,9 +78,9 @@ class EventDTO extends Data
             eventProperties: $event->eventProperties,
             occupancy_option: $event->occupancy_option,
             declinedRoomId: $event->declined_room_id,
-            eventStatus: $userCalendarSettings->use_event_status_color ?
+            eventStatus: $userCalendarSettings->use_event_status_color && $event?->event_type_id !== null ?
                 $eventStatuses[$event->event_status_id] :
-                Lazy::inertia(fn() => $eventStatuses[$event->event_status_id]),
+                Lazy::inertia(fn() => $event?->event_type_id !== null ? $eventStatuses[$event->event_status_id] : []),
             subEvents: $event->subEvents,
             series: $event->is_series ? $event->series : null,
             option_string: $event->option_string,

@@ -15,6 +15,7 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\Events\EventCreated;
+use Artwork\Modules\Event\Events\EventDeleted;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Requests\EventBulkCreateRequest;
@@ -75,6 +76,7 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -2761,6 +2763,28 @@ class EventController extends Controller
         ))->toOthers();
 
         return $this->redirector->back();
+    }
+
+
+    public function bulkMultiEditEvent(Request $request): void
+    {
+        $this->eventService->bulkMultiEditEvent(
+            $request->collect('eventIds'),
+            $request->only([
+                'selectedRoom',
+                'selectedEventType',
+                'selectedEventStatus',
+                'eventName',
+                'selectedDay',
+                'selectedStartTime',
+                'selectedEndTime'
+            ])
+        );
+    }
+
+    public function bulkDeleteEvent(Request $request): void
+    {
+        $this->eventService->bulkDeleteEvent($request->collect('eventIds'));
     }
 
 

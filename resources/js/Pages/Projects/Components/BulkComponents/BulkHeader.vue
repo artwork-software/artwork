@@ -1,5 +1,8 @@
 <template>
     <div class="flex items-center gap-4 mb-3 text-gray-400 text-sm print:xsDark mt-5">
+        <div v-if="multiEdit" class="w-8 h-4 block px-4">
+
+        </div>
         <div class="font-bold" v-if="usePage().props.event_status_module" :style="getColumnSize(1)">
             {{ $t('Event Status') }}
         </div>
@@ -55,6 +58,11 @@ const props = defineProps({
         required: true
     },
     isInModal: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    multiEdit: {
         type: Boolean,
         required: false,
         default: false

@@ -2349,5 +2349,16 @@
     "The end time must be greater than the start time.": "The end time must be greater than the start time.",
     "Hours between {start} - {end} are hidden": "Hours between {start} - {end} are hidden",
     "Last visited project": "Last visited project",
-    "Show events": "Show events"
+    "Show events": "Show events",
+    "Start & End Time": "Start & End Time",
+    "No change": "No change",
+    "Bulk Multi Edit": "Bulk Multi Edit",
+    "Edit multiple events at once": "Edit multiple events at once",
+    "No events selected": "No events selected",
+    "Do you really want to delete the selected events?": "Do you really want to delete the selected events?",
+    "This action cannot be undone.": "This action cannot be undone.",
+    "Customize the column size individually for each column.": "Customize the column size individually for each column.",
+    "Reset to default": "Reset to default",
+    "Configure the width of the columns in the bulk view.": "Configure the width of the columns in the bulk view.",
+    "Configure column width": "Configure column width"
 }

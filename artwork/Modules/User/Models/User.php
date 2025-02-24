@@ -218,7 +218,8 @@ class User extends Model implements
         'phone_private',
         'daily_view',
         'entities_per_page',
-        'last_project_id'
+        'last_project_id',
+        'bulk_column_size'
     ];
 
     protected $casts = [
@@ -246,7 +247,8 @@ class User extends Model implements
         'show_qualifications' => 'array',
         'email_private' => 'boolean',
         'phone_private' => 'boolean',
-        'daily_view' => 'boolean'
+        'daily_view' => 'boolean',
+        'bulk_column_size' => 'array',
     ];
 
     protected $hidden = [

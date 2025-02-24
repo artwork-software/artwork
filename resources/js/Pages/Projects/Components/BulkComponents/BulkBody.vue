@@ -6,6 +6,16 @@
             </div>
         </div>
         <div class="flex items-center justify-end gap-x-2 print:hidden" v-if="!isInModal">
+            <MultiEditSwitch :multi-edit="multiEdit"
+                             :room-mode="false"
+                             @update:multi-edit="UpdateMultiEditEmits"/>
+            <ToolTipComponent
+                icon="IconCircuitCapacitorPolarized"
+                icon-size="h-7 w-7"
+                :tooltip-text="$t('Customize the column size individually for each column.')"
+                direction="bottom"
+                @click="showIndividualColumnSizeConfigModal = true"
+            />
             <ToolTipComponent icon="IconFileExport"
                               icon-size="h-7 w-7"
                               :tooltip-text="$t('Export project list')"
@@ -44,33 +54,37 @@
             </BaseMenu>
         </div>
 
-        <BulkHeader v-model="timeArray" :is-in-modal="isInModal"/>
-        <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll' : ''">
-            <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
-                <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
-                    <BulkSingleEvent
-                        :can-edit-component="canEditComponent"
-                        :rooms="rooms"
-                        :event_types="eventTypes"
-                        :time-array="timeArray"
-                        :event="event"
-                        :copy-types="copyTypes"
-                        :index="index"
-                        :is-in-modal="isInModal"
-                        @open-event-component="onOpenEventComponent"
-                        @delete-current-event="deleteCurrentEvent"
-                        @create-copy-by-event-with-data="createCopyByEventWithData"
-                        :event-statuses="eventStatuses"
-                    />
+
+        <div class="max-w-7xl overflow-x-scroll pb-5">
+            <BulkHeader v-model="timeArray" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
+            <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll' : ''">
+                <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
+                    <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
+                        <BulkSingleEvent
+                            :can-edit-component="canEditComponent"
+                            :rooms="rooms"
+                            :event_types="eventTypes"
+                            :time-array="timeArray"
+                            :event="event"
+                            :copy-types="copyTypes"
+                            :index="index"
+                            :is-in-modal="isInModal"
+                            @open-event-component="onOpenEventComponent"
+                            @delete-current-event="deleteCurrentEvent"
+                            @create-copy-by-event-with-data="createCopyByEventWithData"
+                            :event-statuses="eventStatuses"
+                            :multi-edit="multiEdit"
+                        />
+                    </div>
+                </div>
+                <div v-else class="flex items-center h-24 print:hidden">
+                    <AlertComponent :text="$t('No events found. Click on the plus (+) icon to create an event')" type="info"
+                                    show-icon icon-size="h-5 w-5"
+                                    classes="!items-center"/>
                 </div>
             </div>
-            <div v-else class="flex items-center h-24 print:hidden">
-                <AlertComponent :text="$t('No events found. Click on the plus (+) icon to create an event')" type="info"
-                                show-icon icon-size="h-5 w-5"
-                                classes="!items-center"/>
-            </div>
         </div>
-        <div class="flex items-center justify-between pointer-events-none print:hidden">
+        <div class="flex items-center justify-between pointer-events-none print:hidden" v-if="!multiEdit">
             <IconCirclePlus v-if="canEditComponent"
                             @click="addEmptyEvent"
                             class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out pointer-events-auto"
@@ -88,7 +102,22 @@
                     <IconCirclePlus class="w-5 h-5 text-white mr-2"/>
                 </BaseButton>
             </div>
-
+        </div>
+        <div v-else class="flex items-center justify-between print:hidden">
+            <div>
+                <FormButton
+                    @click="showConfirmDeleteModal = true"
+                    :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0"
+                    class="bg-red-500 hover:bg-red-600 text-white h-12"
+                    :text="$t('Delete')" />
+            </div>
+            <div>
+                <FormButton
+                    @click="openMultiEditModal"
+                    :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0"
+                    class="bg-artwork-buttons-create text-white h-12"
+                    :text="$t('Edit')" />
+            </div>
         </div>
     </div>
     <event-component
@@ -114,6 +143,28 @@
                       exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
                   ]"
                   :configuration="getExportModalConfiguration()"/>
+
+    <BulkMultiEditModal
+        v-if="showMultiEditModal"
+        :event-statuses="eventStatuses"
+        :event-types="eventTypes"
+        :rooms="rooms"
+        :event-ids="eventIdsForMultiEdit"
+        @close="showMultiEditModal = false"
+    />
+
+    <ConfirmDeleteModal
+        v-if="showConfirmDeleteModal"
+        @close="showConfirmDeleteModal = false"
+        @delete="deleteSelectedEvents"
+        :title="$t('Do you really want to delete the selected events?')"
+        :description="$t('This action cannot be undone.')"
+        @closed="showConfirmDeleteModal = false"
+        />
+    <IndividualColumnSizeConfigModal
+        v-if="showIndividualColumnSizeConfigModal"
+        @close="showIndividualColumnSizeConfigModal = false"
+    />
 </template>
 
 <script setup>
@@ -124,7 +175,7 @@ import BulkHeader from "@/Pages/Projects/Components/BulkComponents/BulkHeader.vu
 import {onMounted, reactive, ref, watch} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {MenuItem} from "@headlessui/vue";
+import {MenuItem, Switch} from "@headlessui/vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -133,7 +184,12 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import {provide, inject} from "vue";
-
+import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BulkMultiEditModal from "@/Pages/Projects/Components/BulkComponents/BulkMultiEditModal.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import IndividualColumnSizeConfigModal
+    from "@/Pages/Projects/Components/BulkComponents/IndividualColumnSizeConfigModal.vue";
 const exportTabEnums = useExportTabEnums();
 const {hasAdminRole} = usePermission(usePage().props),
     $t = useTranslation(),
@@ -181,6 +237,10 @@ const {hasAdminRole} = usePermission(usePage().props),
     timeArray = ref(!props.isInModal),
     invalidEvents = ref([]),
     emits = defineEmits(['closed']),
+    multiEdit = ref(false),
+    eventIdsForMultiEdit = ref([]),
+    showMultiEditModal = ref(false),
+    showConfirmDeleteModal = ref(false),
     currentSort = ref(0),
     copyTypes = ref([
         {
@@ -209,6 +269,25 @@ const {hasAdminRole} = usePermission(usePage().props),
     eventComponentIsVisible = ref(false),
     eventToEdit = ref(null),
     showExportModal = ref(false),
+    getEventIdsWhereSelectedForMultiEdit = () => {
+        return events.filter(event => event.isSelectedForMultiEdit).map(event => event.id);
+    },
+    deleteSelectedEvents = () => {
+        isLoading.value = true;
+        router.delete(route('event.bulk.delete', {event: getEventIdsWhereSelectedForMultiEdit()}), {
+            preserveScroll: true,
+            preserveState: false,
+            onSuccess: () => {
+                isLoading.value = false;
+            }
+        });
+        events.filter(event => !event.isSelectedForMultiEdit);
+    },
+    openMultiEditModal = () => {
+        eventIdsForMultiEdit.value = getEventIdsWhereSelectedForMultiEdit();
+        showMultiEditModal.value = true;
+    },
+    showIndividualColumnSizeConfigModal = ref(false),
     getExportModalConfiguration = () => {
         const cfg = {};
 
@@ -222,6 +301,9 @@ const {hasAdminRole} = usePermission(usePage().props),
         };
 
         return cfg;
+    },
+    UpdateMultiEditEmits = (value) => {
+        multiEdit.value = value;
     },
     onOpenEventComponent = (eventId) => {
         eventComponentIsVisible.value = true;

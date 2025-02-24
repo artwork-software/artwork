@@ -51,11 +51,13 @@ class UpdateContainerCommand extends Command
             Artisan::call(sprintf('scout:index %s', $key));
             Artisan::call(sprintf('scout:import %s', str_replace('\\', '\\\\', $model)));
         }
-        $this->line('Building frontend');
-        exec('npm run build');
         if (!Permission::first()) {
             $this->line('Seeding initial data');
             Artisan::call('db:seed:production');
         }
+
+        $this->line('Updating artwork components');
+        Artisan::call('artwork:update');
+        $this->line('Container update finished');
     }
 }

@@ -925,12 +925,16 @@ export default {
             this.oldEndTime = this.endTime;
             this.title = this.event.title;
             this.eventName = this.event.eventName;
-            this.selectedEventStatus = this.eventStatuses.find(status => status.id === this.event.eventStatus.id);
+            this.selectedEventStatus = this.eventStatuses.find(status => status.id === this.event?.eventStatus?.id ?? this.event?.eventStatusId);
             this.allDayEvent = this.event.allDay ? this.event.allDay : false;
-            if (!this.event.eventType.id) {
+            if (!this.event.eventType?.id) {
                 this.selectedEventType = this.eventTypes[0];
             } else {
                 this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventType.id);
+            }
+
+            if (this.event?.eventTypeId) {
+                this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventTypeId);
             }
             this.series = this.event.is_series;
             if (this.series) {

@@ -18,7 +18,7 @@
                             {{ columnSizeForm.bulk_column_size[index] + ' Pixel' }}
                         </span>
                     </label>
-                    <input id="columns_header" type="range" min="100" max="450" v-model="columnSizeForm.bulk_column_size[index]" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 text-artwork-buttons-create">
+                    <input id="columns_header" type="range" :min="columnSizeMinMax[index].min" :max="columnSizeMinMax[index].max" v-model="columnSizeForm.bulk_column_size[index]" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 text-artwork-buttons-create">
                 </div>
             </div>
         </div>
@@ -29,7 +29,7 @@
         <form @submit.prevent="submit">
             <div class="my-4 py-4 overflow-x-scroll">
                 <div class="flex items-center gap-4 mb-3 text-gray-400 text-sm print:xsDark">
-                    <div class="font-bold" v-if="usePage().props.event_status_module" :style="getColumnSize(1)">
+                    <div class="font-bold" :style="getColumnSize(1)">
                         {{ $t('Event Status') }}
                     </div>
                     <div class="font-bold" :style="getColumnSize(2)">
@@ -52,7 +52,7 @@
                 </div>
                 <div class="flex items-center gap-4 mb-3 text-gray-400 text-sm print:xsDark">
                     <div v-for="(columnSize, index) in columnSizeForm.bulk_column_size" class="font-bold border-2 border-dashed rounded-lg cursor-default" :style="getColumnSize(index)">
-                        <div class="px-3 py-1.5 cursor-default">
+                        <div class="px-3 py-1.5 cursor-default"  >
                             {{ columnSize + ' Pixel' }}
                         </div>
                     </div>
@@ -93,6 +93,33 @@ const columnSizeForm = useForm({
     bulk_column_size: usePage().props.user.bulk_column_size
 })
 
+const columnSizeMinMax = {
+    1: {
+        min: 100,
+        max: 450
+    },
+    2: {
+        min: 100,
+        max: 450
+    },
+    3: {
+        min: 100,
+        max: 450
+    },
+    4: {
+        min: 100,
+        max: 450
+    },
+    5: {
+        min: 146,
+        max: 450
+    },
+    6: {
+        min: 195,
+        max: 450
+    }
+}
+
 const getColumnSize = (column) => {
     return {
         minWidth: columnSizeForm.bulk_column_size[column] + 'px',
@@ -100,6 +127,7 @@ const getColumnSize = (column) => {
         maxWidth: columnSizeForm.bulk_column_size[column] + 'px'
     }
 }
+
 
 const setColumnSizeToDefault = () => {
    columnSizeForm.bulk_column_size = {

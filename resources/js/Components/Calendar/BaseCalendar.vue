@@ -1,6 +1,6 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
-        <div class=" w-full top-0 left-4 py-4  z-40 -mx-10 -my-4" :class="project ? [checkIfScrolledToCalendarRef] : isFullscreen ? 'fixed' : 'fixed ml-10'">
+        <div class="w-full top-0 left-4 py-4  z-40 -mx-10 -my-4" :class="project ? [checkIfScrolledToCalendarRef] : isFullscreen ? 'fixed' : 'fixed ml-10'">
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
@@ -12,42 +12,25 @@
                 @update-multi-edit="toggleMultiEdit"
                 @jump-to-day-of-month="jumpToDayOfMonth"
             />
-        </div>
-
-        <div aria-live="assertive" class="fixed max-w-sm w-full right-0 top-20 z-100 flex items-end px-4 py-6 sm:items-start sm:p-6">
-            <div class="flex w-full flex-col items-center space-y-4 sm:items-end">
-                <!-- Notification panel, dynamically insert this into the live region when it needs to be displayed -->
-                <transition enter-active-class="transform ease-out duration-300 transition" enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2" enter-to-class="translate-y-0 opacity-100 sm:translate-x-0" leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                    <div v-if="eventsWithoutRoom.length > 0"  class="cursor-pointer max-w-md w-full overflow-hidden rounded-lg bg-white shadow-lg border border-red-500 border-dashed ring-1 ring-black/5">
-                        <div class="p-4">
-                            <div class="flex items-center">
-                                <div class="shrink-0">
-                                    <component is="IconAlertTriangle" class="size-6 text-red-500" aria-hidden="true" />
-                                </div>
-                                <div class="ml-3 flex-1 pt-0.5 group" @click="showEventsWithoutRoomComponent = true">
-                                    <p class="text-sm font-bold text-gray-900">Achtung Termine ohne Raum</p>
-                                    <p class="text-sm font-medium text-gray-500">
-                                        {{
-                                            eventsWithoutRoom.length === 1 ?
-                                                $t('{0} Event without room!', [eventsWithoutRoom.length]) :
-                                                $t('{0} Events without room!', [eventsWithoutRoom.length])
-                                        }}
-                                    </p>
-                                    <div  class="text-xs font-medium text-red-500 group-hover:text-red-700">
-                                        {{ $t('Show events') }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+            <div class="w-full h-8 px-4 py-2 bg-red-500 cursor-pointer" v-if="eventsWithoutRoom.length > 0" @click="showEventsWithoutRoomComponent = true">
+                <div class="flex items-center justify-center w-full h-full gap-x-1">
+                    <component is="IconAlertTriangle" class="size-4 text-white" aria-hidden="true" />
+                    <div class="text-white text-sm font-bold">
+                        {{
+                            eventsWithoutRoom.length === 1 ?
+                                $t('{0} Event without room!', [eventsWithoutRoom.length]) :
+                                $t('{0} Events without room!', [eventsWithoutRoom.length])
+                        }}
                     </div>
-                </transition>
+                </div>
             </div>
         </div>
+
         <div>
             <div v-if="!usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
-                <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? '' : ''">
+                <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? 'mt-8' : ''">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white px-5'">
-                        <CalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
+                        <CalendarHeader :rooms="rooms" :filtered-events-length="eventsWithoutRoom.length"/>
                         <div class="w-fit events-by-days-container mt-16" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '',]" ref="calendarToCalculate">
                             <div v-for="day in days"
                                  :key="day.fullDay"
@@ -102,7 +85,7 @@
                     :project="project"
                     :eventStatuses="eventStatuses"
                     :eventTypes="eventTypes"
-                    :eventsWithoutRoom="computedFilteredEvents"
+                    :eventsWithoutRoom="eventsWithoutRoom"
                     :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
                     :firstProjectShiftTabId="firstProjectShiftTabId"
                     :first-project-tab-id="first_project_tab_id"

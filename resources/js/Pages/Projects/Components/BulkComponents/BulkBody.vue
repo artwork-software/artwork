@@ -6,6 +6,13 @@
             </div>
         </div>
         <div class="flex items-center justify-end gap-x-2 print:hidden" v-if="!isInModal">
+            <ToolTipComponent
+                icon="IconCircuitCapacitorPolarized"
+                icon-size="h-7 w-7"
+                :tooltip-text="$t('Customize the column size individually for each column.')"
+                direction="bottom"
+                @click="showIndividualColumnSizeConfigModal = true"
+            />
             <ToolTipComponent icon="IconFileExport"
                               icon-size="h-7 w-7"
                               :tooltip-text="$t('Export project list')"
@@ -44,30 +51,32 @@
             </BaseMenu>
         </div>
 
-        <BulkHeader v-model="timeArray" :is-in-modal="isInModal"/>
-        <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll' : ''">
-            <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
-                <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
-                    <BulkSingleEvent
-                        :can-edit-component="canEditComponent"
-                        :rooms="rooms"
-                        :event_types="eventTypes"
-                        :time-array="timeArray"
-                        :event="event"
-                        :copy-types="copyTypes"
-                        :index="index"
-                        :is-in-modal="isInModal"
-                        @open-event-component="onOpenEventComponent"
-                        @delete-current-event="deleteCurrentEvent"
-                        @create-copy-by-event-with-data="createCopyByEventWithData"
-                        :event-statuses="eventStatuses"
-                    />
+        <div class="max-w-7xl overflow-x-scroll pb-5">
+            <BulkHeader v-model="timeArray" :is-in-modal="isInModal"/>
+            <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll' : ''">
+                <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
+                    <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
+                        <BulkSingleEvent
+                            :can-edit-component="canEditComponent"
+                            :rooms="rooms"
+                            :event_types="eventTypes"
+                            :time-array="timeArray"
+                            :event="event"
+                            :copy-types="copyTypes"
+                            :index="index"
+                            :is-in-modal="isInModal"
+                            @open-event-component="onOpenEventComponent"
+                            @delete-current-event="deleteCurrentEvent"
+                            @create-copy-by-event-with-data="createCopyByEventWithData"
+                            :event-statuses="eventStatuses"
+                        />
+                    </div>
                 </div>
-            </div>
-            <div v-else class="flex items-center h-24 print:hidden">
-                <AlertComponent :text="$t('No events found. Click on the plus (+) icon to create an event')" type="info"
-                                show-icon icon-size="h-5 w-5"
-                                classes="!items-center"/>
+                <div v-else class="flex items-center h-24 print:hidden">
+                    <AlertComponent :text="$t('No events found. Click on the plus (+) icon to create an event')" type="info"
+                                    show-icon icon-size="h-5 w-5"
+                                    classes="!items-center"/>
+                </div>
             </div>
         </div>
         <div class="flex items-center justify-between pointer-events-none print:hidden">
@@ -114,6 +123,11 @@
                       exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
                   ]"
                   :configuration="getExportModalConfiguration()"/>
+
+    <IndividualColumnSizeConfigModal
+        v-if="showIndividualColumnSizeConfigModal"
+        @close="showIndividualColumnSizeConfigModal = false"
+    />
 </template>
 
 <script setup>
@@ -133,6 +147,8 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import {provide, inject} from "vue";
+import IndividualColumnSizeConfigModal
+    from "@/Pages/Projects/Components/BulkComponents/IndividualColumnSizeConfigModal.vue";
 
 const exportTabEnums = useExportTabEnums();
 const {hasAdminRole} = usePermission(usePage().props),
@@ -209,6 +225,7 @@ const {hasAdminRole} = usePermission(usePage().props),
     eventComponentIsVisible = ref(false),
     eventToEdit = ref(null),
     showExportModal = ref(false),
+    showIndividualColumnSizeConfigModal = ref(false),
     getExportModalConfiguration = () => {
         const cfg = {};
 

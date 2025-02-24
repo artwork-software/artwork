@@ -70,7 +70,6 @@
                     </template>
                 </ShiftPlanFunctionBar>
             </div>
-
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -1536,11 +1535,11 @@ export default {
                 }
 
             } else if (period === 'week') {
-                periodKey = 'week_number';
+                periodKey = 'weekNumber';
                 periodValue = this.currentDayOnView.weekNumber;
                 scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.isMonday);
             } else if (period === 'month') {
-                periodKey = 'month_number';
+                periodKey = 'monthNumber';
                 periodValue = this.currentDayOnView.monthNumber;
                 scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.isFirstDayOfMonth);
             }

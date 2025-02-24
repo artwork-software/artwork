@@ -117,8 +117,8 @@ export function useShiftCalendarListener(newShiftPlanData) {
     }
 
     function removeShiftFromRoomAndEvents(data) {
-        const { shift, room_id } = data;
-        const room = findRoomById(room_id);
+        const { shift, roomId } = data;
+        const room = findRoomById(roomId);
         if (!room) return;
 
         shift.daysOfShift.forEach((day) => {

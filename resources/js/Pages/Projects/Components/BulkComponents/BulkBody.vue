@@ -274,7 +274,7 @@ const {hasAdminRole} = usePermission(usePage().props),
     },
     deleteSelectedEvents = () => {
         isLoading.value = true;
-        router.delete(route('event.bulk.delete', {event: getEventIdsWhereSelectedForMultiEdit()}), {
+        router.delete(route('event.bulk.multi-edit.delete', {event: getEventIdsWhereSelectedForMultiEdit()}), {
             preserveScroll: true,
             preserveState: false,
             onSuccess: () => {

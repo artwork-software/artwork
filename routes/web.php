@@ -538,7 +538,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // event.bulk.delete
     Route::delete('/events/bulk/delete', [EventController::class, 'bulkDeleteEvent'])
-        ->name('event.bulk.delete');
+        ->name('event.bulk.multi-edit.delete');
 
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
     Route::delete('/events/{event}/bulk', [EventController::class, 'destroyWithoutReturn'])->name('event.bulk.delete');

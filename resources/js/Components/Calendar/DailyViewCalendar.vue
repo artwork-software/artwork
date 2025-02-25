@@ -43,7 +43,7 @@
                 <div v-if="shouldShowHour(hour, calendarData, day)" class="border-b border-dashed">
                     <div class="w-fit events-by-days-container rounded-lg" ref="calendarToCalculate">
                         <div :key="day.fullDay"
-                             :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                             :style="{ height: zoom_factor * 115 + 'px' }"
                              class="flex gap-0.5 day-container"
                              :data-day="day.fullDay"
                              :data-day-to-jump="day.withoutFormat">
@@ -54,7 +54,7 @@
                                 <div :style="{
                                     minWidth: zoom_factor * 212 + 'px',
                                     maxWidth: zoom_factor * 212 + 'px',
-                                    height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px',
+                                    height: zoom_factor * 115 + 'px',
                                     }"
                                      :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                                      class="group/container"

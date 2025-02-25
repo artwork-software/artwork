@@ -25,14 +25,14 @@
             </div>
         </div>
 
-        <div class="flex items-center justify-between w-full px-1" v-if="zoom_factor > 0.6">
-            <div class="py-2 px-1">
+        <div class="grid grid-cols-1 md:grid-cols-3 w-full px-1" v-if="zoom_factor > 0.6">
+            <div class="py-2 px-1 col-span-2">
                 <div class="px-2" :class="usePage().props.user.calendar_settings.high_contrast ? '' : 'border-l-4'" :style="{borderColor: getColorBasedOnUserSettings}">
                     <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
                         :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']" class="">
                         <div class="">
                             <div class="flex items-center gap-x-1">
-                                <div  v-if="usePage().props.user.calendar_settings.project_status && event.project?.status" class="text-center rounded-full border group size-4 cursor-pointer" :style="{backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color}">
+                                <div  v-if="usePage().props.user.calendar_settings.project_status && event.project?.status" class="text-center rounded-full border group min-h-4 min-w-4 size-4 cursor-pointer" :style="{backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color}">
                                     <div class="absolute hidden group-hover:block top-5">
                                         <div class="bg-artwork-navigation-background text-white text-xs rounded-full px-3 py-0.5">
                                             {{ event?.project?.status?.name }}
@@ -41,7 +41,7 @@
                                 </div>
                                 <div class="flex items-center">
                                     <a v-if="event.project?.name && event.project?.id" :href="getEditHref(event.project?.id)" class="flex items-center">
-                                        <span class="truncate !w-28 inline-block">{{ event.project?.name }}</span>
+                                        <span class="truncate !w-20 inline-block">{{ event.project?.name }}</span>
                                     </a>
                                 </div>
                             </div>
@@ -208,7 +208,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex items-center">
+            <div class="flex gap-x-1 mt-5">
                 <div class="grid gird-cols-1 md:grid-cols-2 gap-1">
                     <div v-for="property in event.eventProperties" class="col-span-1">
                         <ToolTipComponent
@@ -217,6 +217,7 @@
                             :tooltip-text="property.name"
                             classes="text-black"
                             stroke="1.5"
+                            direction="left"
                         />
                     </div>
                 </div>

@@ -230,12 +230,14 @@ class EventController extends Controller
             ->keyBy('id');
 
 
+        //dd($this->filterService->getCalendarFilterDefinitions());
+
         return Inertia::render('Calendar/Index', [
             'period' => $period,
             'rooms' => $rooms,
-            'calendar' => $calendarData->rooms,
-            'personalFilters' => $this->filterService->getPersonalFilter(),
-            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
+            'calendar' => Inertia::always(fn() => $calendarData->rooms),
+            'personalFilters' => Inertia::always(fn() => $this->filterService->getPersonalFilter()),
+            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(true),
             'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
                 EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)
             ),

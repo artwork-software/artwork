@@ -271,7 +271,7 @@ readonly class CalendarDataService
 
     public function getFilteredRooms($filter, $userCalendarSettings, $startDate, $endDate) {
         $userCalendarFilter = $filter;
-
+        //dd($filter);
         $rooms = Room::select(['id', 'name'])
             ->unlessRoomIds($userCalendarFilter?->rooms)
             ->unlessRoomAttributeIds($userCalendarFilter?->room_attributes)
@@ -283,18 +283,22 @@ readonly class CalendarDataService
                 $startDate,
                 $endDate
             )
-            ->when($userCalendarSettings?->hide_unoccupied_rooms, function ($query) use ($startDate, $endDate) {
-                $query->whereExists(function ($eventQuery) use ($startDate, $endDate) {
+            ->when($userCalendarSettings?->hide_unoccupied_rooms, function ($query) use ($filter, $startDate, $endDate) {
+                $query->whereExists(function ($eventQuery) use ($filter, $startDate, $endDate) {
                     $eventQuery->selectRaw(1)
                         ->from('events')
                         ->whereColumn('events.room_id', 'rooms.id')
+                        ->unless(empty($filter->event_types), function ($q) use ($filter) {
+                            $q->whereIn('events.event_type_id', $filter->event_types);
+                        })
                         ->where(function ($q) use ($startDate, $endDate) {
-                            $q->whereBetween('start_time', [$startDate, $endDate])
-                                ->orWhereBetween('end_time', [$startDate, $endDate])
-                                ->orWhere(function ($subQuery) use ($startDate, $endDate) {
-                                    $subQuery->where('start_time', '<', $startDate)
-                                        ->where('end_time', '>', $endDate);
-                                });
+                            $q->where(function ($q) use ($startDate, $endDate) {
+                                $q->whereBetween('start_time', [$startDate, $endDate])
+                                    ->orWhereBetween('end_time', [$startDate, $endDate]);
+                            })->orWhere(function ($q) use ($startDate, $endDate) {
+                                $q->where('start_time', '<=', $startDate)
+                                    ->where('end_time', '>=', $endDate);
+                            });
                         });
                 });
             })

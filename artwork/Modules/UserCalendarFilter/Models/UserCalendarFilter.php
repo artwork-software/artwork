@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property array $areas
  * @property array $room_attributes
  * @property array $room_categories
+ * @property array $event_properties
  * @property string $created_at
  * @property string $updated_at
  */

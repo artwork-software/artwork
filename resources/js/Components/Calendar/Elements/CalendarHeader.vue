@@ -1,8 +1,8 @@
 <template>
-    <div class="flex items-center sticky  gap-0.5 h-16 bg-userBg z-30 rounded-t-xl divide-x divide-secondaryHover divide-dashed first-line:divide-none" :class="filteredEventsLength > 0 ? 'top-[72px]' : 'top-[64px]'">
+    <div class="flex items-center sticky  gap-0.5 h-16 bg-artwork-navigation-background z-30 rounded-lg" :class="filteredEventsLength > 0 ? 'top-[95px]' : 'top-[64px]'">
         <div :style="{minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}"></div>
-        <div v-for="room in rooms" :key="room.id" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px' }" class="flex items-center bg-userBg h-full truncate">
-            <AsyncSingleRoomInHeader :room="room" />
+        <div v-for="room in rooms" :key="room.id" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px' }" class="flex items-center text-white h-full truncate mt-1">
+            <AsyncSingleRoomInHeader :room="room" is-light />
         </div>
     </div>
 </template>

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Events;
 
+use Artwork\Modules\Calendar\DTO\ShiftDTO;
 use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -23,7 +24,6 @@ class DestroyShift implements ShouldBroadcastNow
     {
         $this->shift = $shift;
         $this->roomId = $roomId;
-        Log::info('DestroyShift event created', ['shift_id' => $shift->id, 'room_id' => $this->roomId]);
     }
 
     /**
@@ -36,15 +36,14 @@ class DestroyShift implements ShouldBroadcastNow
 
     public function broadcastOn(): PrivateChannel
     {
-        Log::info('Broadcasting on channel', ['room_id' => $this->roomId]);
         return new PrivateChannel('destroy.events.room.' . $this->roomId);
     }
 
     public function broadcastWith(): array
     {
         return [
-            'shift' => $this->shift,
-            'room_id' => $this->roomId,
+            'shift' => ShiftDTO::fromModel($this->shift),
+            'roomId' => $this->roomId,
         ];
     }
 

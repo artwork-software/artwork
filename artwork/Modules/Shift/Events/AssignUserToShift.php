@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Events;
 
+use Artwork\Modules\Calendar\DTO\ShiftDTO;
 use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -42,9 +43,9 @@ class AssignUserToShift implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'shift' => $this->shift,
-            'room_id' => $this->roomId,
-            'days_of_shift' => $this->shift->getAttribute('days_of_shift'), // Tag der Schicht
+            'shift' => ShiftDTO::fromModel($this->shift),
+            'roomId' => $this->roomId,
+            'daysOfShift' => $this->shift->getAttribute('days_of_shift'), // Tag der Schicht
             'entity' => $this->entity,
             'entityType' => $this->entityType,
         ];

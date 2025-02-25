@@ -27,6 +27,6 @@ window.Echo = new Echo({
     key: import.meta.env.VITE_PUSHER_APP_KEY ?? 'app-key',
     cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'eu',
     forceTLS: false,
-    wsHost: import.meta.env.VITE_PUSHER_HOST ?? 'artwork.ddev.site',
+    wsHost: import.meta.env.VITE_PUSHER_HOST ?? 'localhost',
     wssPort: import.meta.env.VITE_PUSHER_PORT ?? 6001,
 });

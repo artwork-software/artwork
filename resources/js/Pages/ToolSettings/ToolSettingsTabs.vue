@@ -28,31 +28,31 @@ export default defineComponent({
                     name: this.$t('Branding'),
                     href: route('tool.branding'),
                     current: route().current('tool.branding'),
-                    hasPermission: this.$can('change tool settings')
+                    hasPermission: this.$can('change tool settings') || this.hasAdminRole()
                 },
                 {
                     name: this.$t('Communication & Legal'),
                     href: route('tool.communication-and-legal'),
                     current: route().current('tool.communication-and-legal'),
-                    hasPermission: this.$can('change tool settings')
+                    hasPermission: this.$can('change tool settings') || this.hasAdminRole()
                 },
                 {
                     name: this.$t('Interfaces'),
                     href: route('tool.interfaces'),
                     current: route().current('tool.interfaces'),
-                    hasPermission: this.$can('change tool settings')
+                    hasPermission: this.$can('change tool settings') || this.hasAdminRole()
                 },
                 {
                     name: this.$t('Module visibility'),
                     href: route('tool.module-settings.index'),
                     current: route().current('tool.module-settings.index'),
-                    hasPermission: this.$can('change tool settings')
+                    hasPermission: this.$can('change tool settings') || this.hasAdminRole()
                 },
                 {
                     name: this.$t('File settings'),
                     href: route('tool.file-settings.index'),
                     current: route().current('tool.file-settings.index'),
-                    hasPermission: this.$can('change tool settings')
+                    hasPermission: this.$can('change tool settings') || this.hasAdminRole()
                 },
             ]
         }

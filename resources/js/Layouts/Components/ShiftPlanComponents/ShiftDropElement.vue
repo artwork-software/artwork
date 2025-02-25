@@ -127,19 +127,19 @@ export default defineComponent({
         computedMaxWorkerCount() {
             let maxWorkerCount = 0;
 
-            this.shift.shifts_qualifications.forEach(
+            this.shift?.shifts_qualifications?.forEach(
                 (shiftsQualification) => maxWorkerCount += shiftsQualification.value
             );
 
             return maxWorkerCount;
         },
         computedUsedWorkerCount() {
-            return this.shift.users.length + this.shift.freelancer.length + this.shift.service_provider.length;
+            return this.shift.users.length + this.shift.freelancer?.length + this.shift.serviceProviders?.length;
         },
         computedShiftsQualificationsWithWorkerCount() {
             let shiftsQualificationsWithWorkerCount = [];
 
-            this.shift.shifts_qualifications.forEach((shiftsQualification) => {
+            this.shift?.shifts_qualifications?.forEach((shiftsQualification) => {
                 if (shiftsQualification.value === null || shiftsQualification.value === 0) {
                     return;
                 }
@@ -158,7 +158,7 @@ export default defineComponent({
                     }
                 });
 
-                this.shift.service_provider.forEach((serviceProvider) => {
+                this.shift.serviceProviders.forEach((serviceProvider) => {
                     if (serviceProvider.pivot.shift_qualification_id === shiftsQualification.shift_qualification_id) {
                         assignedUserCount++;
                     }
@@ -187,7 +187,7 @@ export default defineComponent({
                 ids.freelancerIds.push(freelancer.id)
             })
 
-            this.shift.service_provider.forEach((provider) => {
+            this.shift.serviceProviders.forEach((provider) => {
                 ids.providerIds.push(provider.id)
             })
 

@@ -7,12 +7,15 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\SubEvent\Models\SubEvent;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
 
 class SubEventsController extends Controller
 {
-    public function __construct(private readonly NotificationService $notificationService)
-    {
+    public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly AuthManager $auth
+    ) {
     }
 
     public function store(Request $request): bool
@@ -60,7 +63,10 @@ class SubEventsController extends Controller
             $this->notificationService->createNotification();
         }
 
-        broadcast(new EventCreated($event, $event->room_id));
+        broadcast(new EventCreated(
+            $event,
+            $event->room_id
+        ));
         return true;
     }
 

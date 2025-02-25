@@ -175,7 +175,7 @@ class EventCollectionService
                     'creator',
                     'project',
                     'project.managerUsers',
-                    'project.state',
+                    'project.status',
                     'shifts',
                     'shifts.craft',
                     'shifts.users',
@@ -268,6 +268,8 @@ class EventCollectionService
         if (!$isLoud && $isNotLoud) {
             $roomEventsQuery->where('is_loud', false);
         }
+
+        $roomEventsQuery->where('deleted_at', null);
 
         // order $roomEventsQuery by start_time
         $roomEventsQuery->orderBy('start_time');

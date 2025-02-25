@@ -183,15 +183,12 @@ class Shift extends Model
         if (!$this->start_date || !$this->end_date) {
             return [];
         }
-        $days_period = CarbonPeriod::create($this->start_date, $this->end_date);
-        $days = [];
 
-        foreach ($days_period as $day) {
-            $days[] = $day->format('d.m.Y');
-        }
-
-        return $days;
+        return collect(CarbonPeriod::create($this->start_date, $this->end_date))
+            ->map(fn($day) => $day->format('d.m.Y'))
+            ->all();
     }
+
 
     public function shiftsQualifications(): HasMany
     {

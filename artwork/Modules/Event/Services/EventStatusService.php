@@ -60,8 +60,10 @@ readonly class EventStatusService
         } else {
             // setze den Status in den Calendar Settings der user auf false bei use_event_status_color
             $users = User::all();
+
             $users->each(function ($user): void {
-                $user->calendar_settings->update(['use_event_status_color' => false]);
+                /** @var User $user */
+                $user->calendar_settings()->update(['use_event_status_color' => false]);
             });
         }
     }

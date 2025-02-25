@@ -146,11 +146,13 @@ export default {
                 comment: this.declineEvent.comment
             }, {
                 preserveScroll: true,
-                onFinish: () => {
+                onSuccess: () => {
                     router.reload({
-                        only: ['calendar', 'eventsWithoutRoom']
+                        only: ['eventsWithoutRoom']
                     })
-                    this.closeDeclineRequestModal();
+                },
+                onFinish: () => {
+                    this.closeDeclineRequestModal()
                 }
             });
 

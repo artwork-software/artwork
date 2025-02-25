@@ -19,7 +19,10 @@ use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
+use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
+use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSettingService;
 use Artwork\Modules\UserWorkerShiftPlanFilter\Models\UserWorkerShiftPlanFilter;
 use Carbon\Carbon;
@@ -165,8 +168,6 @@ class UserService
             )
         );
 
-        //dd($requestedPeriod);
-
         $startOfWeek = $requestedStartDate->copy()->startOfWeek();
         $endOfWeek = $requestedEndDate->copy()->endOfWeek();
 
@@ -270,13 +271,9 @@ class UserService
     /**
      * @return array<int, Carbon>
      */
-    public function getUserCalendarFilterDatesOrDefault(?User $user = null): array
+    public function getUserCalendarFilterDatesOrDefault(UserCalendarFilter|UserShiftCalendarFilter $userCalendarFilter): array
     {
-        if (!$user instanceof User) {
-            $user = $this->getAuthUser();
-        }
 
-        $userCalendarFilter = $user->getAttribute('calendar_filter');
         $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->getAttribute('start_date')) &&
             !is_null($userCalendarFilter?->getAttribute('end_date'));
 

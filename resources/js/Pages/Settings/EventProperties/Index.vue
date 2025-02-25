@@ -20,7 +20,7 @@
                                        stroke-width="1.5"/>
                             <p class="mDark">{{ eventProperty.name }}</p>
                         </div>
-                        <div class="flex items-center" v-if="eventProperty.id > 2">
+                        <div class="flex items-center">
                             <BaseMenu>
                                 <MenuItem v-slot="{ active }">
                                     <a href="#"

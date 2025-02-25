@@ -50,6 +50,7 @@ const props = defineProps({
 
     emits = defineEmits(["closeModal"]),
     eventPropertyForm = useForm({
+        id: props.eventPropertyToEdit ? props.eventPropertyToEdit.id : null,
         name: props.eventPropertyToEdit ? props.eventPropertyToEdit.name : '',
         icon: props.eventPropertyToEdit ? props.eventPropertyToEdit.icon : null,
     }),

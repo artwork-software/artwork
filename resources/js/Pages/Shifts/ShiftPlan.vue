@@ -70,8 +70,6 @@
                     </template>
                 </ShiftPlanFunctionBar>
             </div>
-
-
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -80,14 +78,14 @@
                             <div class="stickyHeader sticky top-0 z-30">
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
-                                    <th  v-for="day in days" :id="day.is_extra_row ? 'extra_row_' + day.week_number : day.full_day" style="max-width: 204px"
-                                         class="z-20 h-8 py-2 border-r-2 border-secondaryHover truncate">
-                                        <div v-if="day.is_extra_row" style="width:37px">
-                                            <span class="text-[9px] font-bold">KW{{day.week_number }}</span>
+                                    <th  v-for="day in days" :id="day.isExtraRow ? 'extra_row_' + day.weekNumber : day.fullDay" style="max-width: 204px"
+                                         class="z-20 h-8 py-2 border-r-2 border-artwork-navigation-background truncate text-white">
+                                        <div v-if="day.isExtraRow" style="width:37px">
+                                            <span class="text-[9px] font-bold">KW{{day.weekNumber }}</span>
                                         </div>
                                         <div v-else :style="{width:  '200px'}" class="flex items-center h-full justify-between calendarRoomHeaderBold ml-2">
                                             <div>
-                                                {{ day.day_string }} {{ day.full_day }}
+                                                {{ day.dayString }} {{ day.fullDay }}
                                             </div>
                                             <div class="mr-5" v-if="day.holidays.length > 0">
                                                 <HolidayToolTip>
@@ -121,22 +119,22 @@
                                             {{ room.roomName }}
                                         </div>
                                     </th>
-                                    <td :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', day.is_sunday ? '' : 'border-dashed', multiEditModeCalendar ? '' : 'border-r-2 ', $page.props.user.calendar_settings.expand_days ? '' : 'h-28']"
+                                    <td :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : 'border-dashed', multiEditModeCalendar ? '' : 'border-r-2 ', $page.props.user.calendar_settings.expand_days ? '' : 'h-28']"
                                         class="border-gray-400 day-container relative table-cell align-top"
-                                        v-for="day in days" :data-day="day.full_day">
+                                        v-for="day in days" :data-day="day.fullDay">
                                         <div
-                                            v-if="!day.is_extra_row && multiEditModeCalendar"
-                                            :class="[multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.full_day, room.roomId) ?
+                                            v-if="!day.isExtraRow && multiEditModeCalendar"
+                                            :class="[multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ?
                                             'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create' : '',
-                                            checkIfRoomAndDayIsInMultiEditCalendar(day.full_day, room.roomId) ? 'border' : '']"
+                                            checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '']"
                                             class="absolute w-full h-full"
-                                            @click="addDayAndRoomToMultiEditCalendar(day.full_day, room.roomId)">
+                                            @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)">
                                         </div>
-                                        <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.is_extra_row">
+                                        <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.isExtraRow">
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-else style="width: 200px" class="cell group " :class="$page.props.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
-                                            <div v-for="event in room.content[day.full_day].events" class="mb-1">
+                                            <div v-for="event in room.content[day.fullDay].events" class="mb-1">
                                                 <SingleShiftPlanEvent
                                                     v-if="checkIfEventHasShiftsToDisplay(event)"
                                                     :multiEditMode="multiEditMode"
@@ -159,9 +157,9 @@
                                                                         :firstProjectShiftTabId="firstProjectShiftTabId"/>
                                             </div>
                                             <div class="space-y-0.5">
-                                                <div v-for="shift in room.content[day.full_day].shifts">
+                                                <div v-for="shift in room.content[day.fullDay].shifts">
                                                     <div class="bg-gray-50 rounded-lg border border-gray-100 py-0.5"
-                                                         v-if="shift.days_of_shift.includes(day.full_day)">
+                                                         v-if="shift.daysOfShift.includes(day.fullDay)">
                                                         <SingleShiftInRoom
                                                             :multiEditMode="multiEditMode"
                                                             :user-for-multi-edit="userForMultiEdit"
@@ -183,7 +181,7 @@
                                             </div>
                                             <div v-if="!multiEditModeCalendar"
                                                  class="invisible group-hover:visible absolute top-2 right-2 cursor-pointer rounded-full p-0.5 bg-white shadow-md border-2 border-dashed border-artwork-buttons-create"
-                                                 @click="openAddShiftForRoomAndDay(day.without_format, room.roomId)">
+                                                 @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)">
                                                 <ToolTipComponent
                                                     :tooltip-text="$t('Add shift')"
                                                     direction="bottom"
@@ -503,16 +501,16 @@
                                             />
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
-                                            <div v-if="!day.is_extra_row" :class="[
+                                            <div v-if="!day.isExtraRow" :class="[
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     $page.props.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
-                                                    multiEditMode && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : ''
+                                                    multiEditMode && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-100 !overflow-hidden' : ''
                                                 ]"
                                                  class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-y-scroll hover:opacity-100"
                                                  :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
                                                  @click="handleCellClick(user, day)">
-                                                <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-20' : '']"/>
+                                                <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
                                                  class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
@@ -520,14 +518,14 @@
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <span v-if="user.type === 0">
-                                                    {{ user?.weeklyWorkingHours[day.week_number]?.difference }}
+                                                    {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
                                                 </span>
                                             </div>
                                             <div
                                                 v-if="user.dayServices"
                                                 v-for="(userDayServices, index) in user.dayServices"
                                                 class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
-                                                <div v-if="index === day.without_format"
+                                                <div v-if="index === day.withoutFormat"
                                                      v-for="(userDayService, position) in userDayServices"
                                                      class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center"
                                                      :class="position > 0 ? '-ml-3' : ''">
@@ -583,28 +581,28 @@
                                                                :color="null"/>
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
-                                            <div v-if="!day.is_extra_row"
+                                            <div v-if="!day.isExtraRow"
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '',
-                                                    multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : '',
+                                                    multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-100 !overflow-hidden' : '',
                                                     multiEditMode ? '!overflow-hidden' : '']"
                                                  class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll hover:opacity-100"
                                                  @click="handleCellClick(user, day)"
                                                  :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
-                                                <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-20' : '']"/>
+                                                <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 39px"
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <span v-if="user.type === 0">
-                                                    {{ user?.weeklyWorkingHours[day.week_number]?.difference }}
+                                                    {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
                                                 </span>
                                             </div>
                                             <div
                                                 v-if="user.dayServices"
                                                 v-for="(userDayServices, index) in user.dayServices"
                                                 class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
-                                                <div v-if="index === day.without_format"
+                                                <div v-if="index === day.withoutFormat"
                                                      v-for="(userDayService, position) in userDayServices"
                                                      class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center"
                                                      :class="position > 0 ? '-ml-3' : ''">
@@ -673,7 +671,7 @@
 
     <AddShiftModal
         v-if="showAddShiftModal"
-        :crafts="$page.props.crafts"
+        :crafts="this.crafts"
         :event="null"
         :shift="shiftToEdit"
         :currentUserCrafts="$page.props.currentUserCrafts"
@@ -793,7 +791,6 @@ export default {
     props: [
         'events',
         'projects',
-        'rooms',
         'shiftPlan',
         'days',
         'filterOptions',
@@ -812,7 +809,6 @@ export default {
         'shiftPlanWorkerSortEnums',
         'useFirstNameForSort',
         'userShiftPlanShiftQualificationFilters',
-        'mappedRooms'
     ],
     data() {
         return {
@@ -843,8 +839,8 @@ export default {
             },
             showShiftsQualificationsAssignmentModal: false,
             showShiftsQualificationsAssignmentModalShifts: [],
-            firstDayPosition: this.days ? this.days[this.days.findIndex((day) => !day.is_extra_row)] : null,
-            currentDayOnView:  this.days ? this.days[this.days.findIndex((day) => !day.is_extra_row)] : null,
+            firstDayPosition: this.days ? this.days[this.days.findIndex((day) => !day.isExtraRow)] : null,
+            currentDayOnView:  this.days ? this.days[this.days.findIndex((day) => !day.isExtraRow)] : null,
             currentDaysInView: new Set(),
             shiftPlanRef: ref(JSON.parse(JSON.stringify(this.shiftPlan))),
             screenHeight: screen.height,
@@ -864,7 +860,7 @@ export default {
             roomForShiftAdd: null,
             showAddShiftModal: false,
             shiftToEdit: null,
-            newShiftPlanData: ref(this.mappedRooms),
+            newShiftPlanData: ref(this.shiftPlan),
             openCellMultiEditCalendarDelete: false
         }
     },
@@ -1320,9 +1316,9 @@ export default {
             const userData = this.multiEditCellByDayAndUser[userKey];
 
             // Prüfen, ob der Tag bereits für diesen Benutzer vorhanden ist
-            if (userData.days.includes(day.without_format)) {
+            if (userData.days.includes(day.withoutFormat)) {
                 // Entferne den Tag (deselect)
-                userData.days = userData.days.filter((d) => d !== day.without_format);
+                userData.days = userData.days.filter((d) => d !== day.withoutFormat);
 
                 // Wenn keine Tage mehr vorhanden sind, lösche das Benutzerobjekt
                 if (userData.days.length === 0) {
@@ -1330,7 +1326,7 @@ export default {
                 }
             } else {
                 // Wenn der Tag nicht vorhanden ist, füge ihn hinzu (select)
-                userData.days.push(day.without_format);
+                userData.days.push(day.withoutFormat);
             }
         },
         handleCellClick(user, day) {
@@ -1356,7 +1352,7 @@ export default {
                         type = 'service_provider';
                         break;
                 }
-                const hasDayService = user.dayServices?.[day.without_format]?.some(dayService => dayService.id === this.selectedDayService.id)
+                const hasDayService = user.dayServices?.[day.withoutFormat]?.some(dayService => dayService.id === this.selectedDayService.id)
                 // check if user has allready the selected day service, if yes remove it. the dayServices in User are group by day
 
                 let setWorkerDayServicesCallback = (response) => {
@@ -1392,7 +1388,7 @@ export default {
                         ),
                         {
                             dayService: this.selectedDayService.id,
-                            date: day.without_format,
+                            date: day.withoutFormat,
                             modelType: type
                         }
                     ).then(setWorkerDayServicesCallback);
@@ -1406,7 +1402,7 @@ export default {
                             }
                         ),
                         {
-                            date: day.without_format,
+                            date: day.withoutFormat,
                             modelType: type
                         }
                     ).then(setWorkerDayServicesCallback);
@@ -1492,7 +1488,7 @@ export default {
 
                 for (let i = 0; i < this.days.length; i++) {
                     const day = this.days[i];
-                    const dayElement = document.getElementById(day.full_day || `extra_row_${day.week_number}`);
+                    const dayElement = document.getElementById(day.fullDay || `extra_row_${day.weekNumber}`);
                     if (!dayElement) continue;
                     const elementLeft = dayElement.getBoundingClientRect().left;
                     const elementCenter = elementLeft + (dayElement.offsetWidth / 2);
@@ -1505,9 +1501,9 @@ export default {
 
                 if (closestDayIndex !== null) {
                     const selectedDay = this.days[closestDayIndex];
-                    if (selectedDay.is_extra_row) {
+                    if (selectedDay.isExtraRow) {
                         for (let j = closestDayIndex + 1; j < this.days.length; j++) {
-                            if (this.days[j].is_monday) {
+                            if (this.days[j].isMonday) {
                                 this.currentDayOnView = this.days[j];
                                 return;
                             }
@@ -1531,7 +1527,7 @@ export default {
                 let targetIndex = currentIndex + indexModifier;
                 while (targetIndex >= 0 && targetIndex < this.days.length) {
                     const targetDay = this.days[targetIndex];
-                    if (!targetDay.is_extra_row) {
+                    if (!targetDay.isExtraRow) {
                         scrollOffset = targetIndex;
                         break;
                     }
@@ -1539,18 +1535,18 @@ export default {
                 }
 
             } else if (period === 'week') {
-                periodKey = 'week_number';
-                periodValue = this.currentDayOnView.week_number;
-                scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.is_monday);
+                periodKey = 'weekNumber';
+                periodValue = this.currentDayOnView.weekNumber;
+                scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.isMonday);
             } else if (period === 'month') {
-                periodKey = 'month_number';
-                periodValue = this.currentDayOnView.month_number;
-                scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.is_first_day_of_month);
+                periodKey = 'monthNumber';
+                periodValue = this.currentDayOnView.monthNumber;
+                scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.isFirstDayOfMonth);
             }
             if (scrollOffset !== undefined && scrollOffset !== null) {
                 const targetDay = this.days[scrollOffset];
                 this.currentDayOnView = targetDay;
-                const targetElement = document.getElementById(targetDay.full_day);
+                const targetElement = document.getElementById(targetDay.fullDay);
                 if (targetElement) {
                     const roomNameElement = document.getElementById('roomNameContainer_0');
                     const scrollableContainer = this.$refs.shiftPlan;
@@ -1571,7 +1567,7 @@ export default {
                     return null;
                 }
                 const day = this.days[targetIndex];
-                if (!day.is_extra_row && conditionCallback(day)) {
+                if (!day.isExtraRow && conditionCallback(day)) {
                     return targetIndex;
                 }
             }

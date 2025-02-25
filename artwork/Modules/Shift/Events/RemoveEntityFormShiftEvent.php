@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Events;
 
+use Artwork\Modules\Calendar\DTO\ShiftDTO;
 use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -42,7 +43,7 @@ class RemoveEntityFormShiftEvent implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'shift' => $this->shift,
+            'shift' => ShiftDTO::fromModel($this->shift),
             'entity' => $this->entity,
             'entityType' => $this->entityType,
         ];

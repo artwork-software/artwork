@@ -92,7 +92,7 @@ class ProjectService
                 'writeUsers' => function ($query): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
                 },
-                'state',
+                'status',
                 'delete_permission_users' => function ($query): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
                 }

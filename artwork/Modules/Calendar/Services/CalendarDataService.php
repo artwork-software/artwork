@@ -2,18 +2,26 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
+use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
+use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
+use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection as SupportCollection;
 
 readonly class CalendarDataService
 {
@@ -21,7 +29,8 @@ readonly class CalendarDataService
         private RoomRepository $roomRepository,
         private EventCollectionService $eventCollectionService,
         private FilterService $filterService,
-        private UserService $userService
+        private UserService $userService,
+        private ProjectService $projectService,
     ) {
     }
 
@@ -160,6 +169,180 @@ readonly class CalendarDataService
             'filterOptions' => $filterOptions,
             'personalFilters' => $personalFilters,
             'user_filters' => $calendarFilter,
+        ];
+    }
+
+
+    /**
+     * @description Create calendar period DTO
+     * @param $startDate
+     * @param $endDate
+     * @param User $user
+     * @param bool $extraRow
+     * @return array
+     */
+    public function createCalendarPeriodDto($startDate, $endDate, User $user, bool $extraRow = true): array
+    {
+        if (!$startDate || !$endDate) {
+            return [];
+        }
+
+        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+        $holidays = collect($this->getHolidaysForPeriod($startDate, $endDate)); // Optimierung: Alle Feiertage einmal abrufen
+
+        $hoursOfDay = $user->getAttribute('daily_view')
+            ? array_map(fn($hour) => sprintf('%02d:00', $hour), range(0, 23))
+            : [];
+
+        $periodArray = [];
+
+        foreach ($calendarPeriod as $period) {
+            $isMonday = $period->isMonday();
+            $isSunday = $period->isSunday();
+            $isFirstDayOfMonth = $period->isSameDay($period->copy()->firstOfMonth());
+            $weekNumber = $period->weekOfYear;
+            $monthNumber = $period->month;
+
+            $holidayForDay = $holidays->where('date', $period->toDateString())->values() ?? [];
+            if ($extraRow){
+                if ($isMonday) {
+                    $periodArray[] = [
+                        'isExtraRow' => true,
+                        'weekNumber' => $period->weekOfYear,
+                    ];
+                }
+            }
+
+            $periodArray[] = new CalendarPeriodDTO(
+                day: $period->format('d.m.'),
+                dayString: $period->shortDayName,
+                isWeekend: $period->isWeekend(),
+                fullDay: $period->format('d.m.Y'),
+                shortDay: $period->format('d.m'),
+                withoutFormat: $period->toDateString(),
+                fullDayDisplay: $period->format('d.m.y'),
+                weekNumber: $weekNumber,
+                isMonday: $isMonday,
+                monthNumber: $monthNumber,
+                isSunday: $isSunday,
+                isFirstDayOfMonth: $isFirstDayOfMonth,
+                addWeekSeparator: $isSunday,
+                holidays: $holidayForDay,
+                hoursOfDay: $hoursOfDay,
+                isExtraRow: false,
+            );
+        }
+
+        return $periodArray;
+    }
+
+
+
+    /**
+     * @description Get holidays for period
+     * @param $period
+     * @return SupportCollection
+     */
+    public function getHolidaysForPeriod($period): SupportCollection
+    {
+        return Holiday::select(['id', 'name', 'date', 'end_date', 'color', 'yearly'])
+            ->where(function (Builder $query) use ($period): void {
+                $query->where(function (Builder $q) use ($period): void {
+                    $q->whereDate('date', '<=', $period->toDateString())
+                        ->whereDate('end_date', '>=', $period->toDateString());
+                })->orWhere(function (Builder $q) use ($period): void {
+                    $q->where('yearly', true)
+                        ->whereMonth('date', $period->month)
+                        ->whereDay('end_date', $period->day);
+                });
+            })
+            ->with(['subdivisions' => function ($query) {
+                $query->select('name');
+            }])
+            ->get()
+            ->transform(fn($holiday) => new CalendarHolidayDTO(
+                name: $holiday->name,
+                date: $holiday->date->toDateString(),
+                end_date: $holiday->end_date->toDateString(),
+                color: $holiday->color,
+                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+            ));
+    }
+
+    public function getFilteredRooms($filter, $userCalendarSettings, $startDate, $endDate) {
+        $userCalendarFilter = $filter;
+        //dd($filter);
+        $rooms = Room::select(['id', 'name'])
+            ->unlessRoomIds($userCalendarFilter?->rooms)
+            ->unlessRoomAttributeIds($userCalendarFilter?->room_attributes)
+            ->unlessAreaIds($userCalendarFilter?->areas)
+            ->unlessRoomCategoryIds($userCalendarFilter?->room_categories)
+            ->whenFilterAdjoiningWithStartAndEndDate(
+                $userCalendarFilter?->adjoining_not_loud,
+                $userCalendarFilter?->adjoining_no_audience,
+                $startDate,
+                $endDate
+            )
+            ->when($userCalendarSettings?->hide_unoccupied_rooms, function ($query) use ($filter, $startDate, $endDate) {
+                $query->whereExists(function ($eventQuery) use ($filter, $startDate, $endDate) {
+                    $eventQuery->selectRaw(1)
+                        ->from('events')
+                        ->whereColumn('events.room_id', 'rooms.id')
+                        ->unless(empty($filter->event_types), function ($q) use ($filter) {
+                            $q->whereIn('events.event_type_id', $filter->event_types);
+                        })
+                        ->where(function ($q) use ($startDate, $endDate) {
+                            $q->where(function ($q) use ($startDate, $endDate) {
+                                $q->whereBetween('start_time', [$startDate, $endDate])
+                                    ->orWhereBetween('end_time', [$startDate, $endDate]);
+                            })->orWhere(function ($q) use ($startDate, $endDate) {
+                                $q->where('start_time', '<=', $startDate)
+                                    ->where('end_time', '>=', $endDate);
+                            });
+                        });
+                });
+            })
+            ->orderBy('order')
+            ->get();
+
+        return $rooms->map(fn($room) => new RoomDTO(
+            id: $room->id,
+            name: $room->name,
+            has_events: $room->events->isNotEmpty(),
+            admins: $room->admins->pluck('id')->toArray()
+        ));
+    }
+
+    public function getCalendarDateRange(
+        UserCalendarSettings $userCalendarSettings,
+        UserCalendarFilter|UserShiftCalendarFilter $userCalendarFilter,
+        ?Project $project = null
+    ): array {
+        $today = Carbon::now();
+        $useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period');
+
+        if (!$useProjectTimePeriod && !$project) {
+            return $this->userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
+        }
+        if (!$project && $useProjectTimePeriod) {
+            $project = $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
+        }
+
+        return $this->getProjectDateRange($project, $today);
+    }
+
+    protected function getProjectDateRange($project, Carbon $today): array
+    {
+        if (!$project) {
+            return [$today->startOfDay(), $today->endOfDay()];
+        }
+
+        $firstEvent = $this->projectService->getFirstEventInProject($project);
+        $latestEvent = $this->projectService->getLatestEndingEventInProject($project);
+
+        return [
+            $firstEvent ? $firstEvent->getAttribute('start_time')->startOfDay() : $today->startOfDay(),
+            $latestEvent ? $latestEvent->getAttribute('end_time')->endOfDay() : $today->endOfDay(),
         ];
     }
 }

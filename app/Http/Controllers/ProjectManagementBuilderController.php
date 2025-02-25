@@ -37,7 +37,6 @@ class ProjectManagementBuilderController extends Controller
      */
     public function store(Request $request, Component $component): void
     {
-        //dd($component);
         ProjectManagementBuilder::create([
             'name' => $component->name,
             'order' => $request->integer('order'),

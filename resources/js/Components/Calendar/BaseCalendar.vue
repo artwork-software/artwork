@@ -26,6 +26,7 @@
             </div>
         </div>
 
+
         <div>
             <div v-if="!usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
                 <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? 'mt-8' : ''">
@@ -274,8 +275,6 @@ import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlacehol
 import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 
-const filterOptions = inject('filterOptions');
-const user_filters = inject('user_filters');
 
 
 const props = defineProps({
@@ -598,135 +597,6 @@ const deleteSelectedEvents = () => {
 
 const dateValue = inject('dateValue');
 
-const activeFilters = computed(() => {
-    let activeFiltersArray = []
-    filterOptions.rooms.forEach((room) => {
-        if (user_filters.rooms?.includes(room.id)) {
-            activeFiltersArray.push(room)
-        }
-    })
-
-    filterOptions.areas.forEach((area) => {
-        if (user_filters.areas?.includes(area.id)) {
-            activeFiltersArray.push(area)
-        }
-    })
-
-    filterOptions.eventTypes.forEach((eventType) => {
-        if (user_filters.event_types?.includes(eventType.id)) {
-            activeFiltersArray.push(eventType)
-        }
-    })
-
-    filterOptions.roomCategories.forEach((category) => {
-        if (user_filters.room_categories?.includes(category.id)) {
-            activeFiltersArray.push(category)
-        }
-    })
-
-    filterOptions.roomAttributes.forEach((attribute) => {
-        if (user_filters.room_attributes?.includes(attribute.id)) {
-            activeFiltersArray.push(attribute)
-        }
-    })
-
-    if (user_filters.is_loud) {
-        activeFiltersArray.push({name: "Laute Termine", value: 'isLoud', user_filter_key: 'is_loud'})
-    }
-
-    if (user_filters.is_not_loud) {
-        activeFiltersArray.push({name: "Ohne laute Termine", value: 'isNotLoud', user_filter_key: 'is_not_loud'})
-    }
-
-    if (user_filters.adjoining_no_audience) {
-        activeFiltersArray.push({
-            name: "Ohne Nebenveranstaltung mit Publikum",
-            value: 'adjoiningNoAudience',
-            user_filter_key: 'adjoining_no_audience'
-        })
-    }
-
-    if (user_filters.adjoining_not_loud) {
-        activeFiltersArray.push({
-            name: "Ohne laute Nebenveranstaltung",
-            value: 'adjoiningNotLoud',
-            user_filter_key: 'adjoining_not_loud'
-        })
-    }
-
-    if (user_filters.has_audience) {
-        activeFiltersArray.push({name: "Mit Publikum", value: 'hasAudience', user_filter_key: 'has_audience'})
-    }
-
-    if (user_filters.has_no_audience) {
-        activeFiltersArray.push({name: "Ohne Publikum", value: 'hasNoAudience', user_filter_key: 'has_no_audience'})
-    }
-
-    if (user_filters.show_adjoining_rooms) {
-        activeFiltersArray.push({
-            name: "Nebenräume anzeigen",
-            value: 'showAdjoiningRooms',
-            user_filter_key: 'show_adjoining_rooms'
-        })
-    }
-
-    return activeFiltersArray
-})
-
-const removeFilter = (filter) => {
-    if (filter.value === 'isLoud') {
-        updateFilterValue('is_loud', false);
-    }
-
-    if (filter.value === 'isNotLoud') {
-        updateFilterValue('is_not_loud', false)
-    }
-
-    if (filter.value === 'adjoiningNoAudience') {
-        updateFilterValue('adjoining_no_audience', false)
-    }
-
-    if (filter.value === 'adjoiningNotLoud') {
-        updateFilterValue('adjoining_not_loud', false)
-    }
-
-    if (filter.value === 'hasAudience') {
-        updateFilterValue('has_audience', false)
-    }
-
-    if (filter.value === 'hasNoAudience') {
-        updateFilterValue('has_no_audience', false)
-    }
-
-    if (filter.value === 'showAdjoiningRooms') {
-        updateFilterValue('show_adjoining_rooms', false)
-    }
-
-    if (filter.value === 'rooms') {
-        user_filters.rooms.splice(user_filters.rooms.indexOf(filter.id), 1);
-        updateFilterValue('rooms', user_filters.rooms.length > 0 ? user_filters.rooms : null)
-    }
-
-    if (filter.value === 'room_categories') {
-        user_filters.room_categories.splice(user_filters.room_categories.indexOf(filter.id), 1);
-        updateFilterValue('room_categories', user_filters.room_categories.length > 0 ? user_filters.room_categories : null)
-    }
-
-    if (filter.value === 'areas') {
-        user_filters.areas.splice(user_filters.areas.indexOf(filter.id), 1);
-        updateFilterValue('areas', user_filters.areas.length > 0 ? user_filters.areas : null)
-    }
-
-    if (filter.value === 'event_types') {
-        user_filters.event_types.splice(user_filters.event_types.indexOf(filter.id), 1);
-        updateFilterValue('event_types', user_filters.event_types.length > 0 ? user_filters.event_types : null)
-    }
-
-    if (filter.value === 'room_attributes') {
-        user_filters.room_attributes.splice(user_filters.room_attributes.indexOf(filter.id), 1);
-        updateFilterValue('room_attributes', user_filters.room_attributes.length > 0 ? user_filters.room_attributes : null)
-    }
-}
 
 const updateFilterValue = (key, value) => {
     router.patch(route('user.calendar.filter.single.value.update', {user: usePage().props.user.id}), {

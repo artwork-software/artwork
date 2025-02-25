@@ -507,8 +507,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Filters
     Route::get('/filters', [FilterController::class, 'index']);
-    Route::post('/filters', [FilterController::class, 'store']);
+    Route::post('/filters', [FilterController::class, 'store'])->name('filter.store');
     Route::delete('/filters/{filter}', [FilterController::class, 'destroy'])->name('filter.destroy');
+    Route::post('/filters/{filter}/{user}', [FilterController::class, 'activate'])->name('filter.activate');
 
     //Shift Filters
     Route::get('/shifts/filters', [ShiftFilterController::class, 'index']);

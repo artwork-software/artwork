@@ -39,6 +39,8 @@ readonly class EventCalendarService
     ): Collection {
         $roomIds = $rooms->pluck('id');
 
+        //dd($roomIds);
+
         $eventWith = [
             'project:id,name,state,artists',
             'project.status:id,name,color',
@@ -57,15 +59,23 @@ readonly class EventCalendarService
         ])
             ->with($eventWith)
             ->whereIn('room_id', $roomIds)
-            ->where(function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('start_time', [$startDate, $endDate])
-                    ->orWhereBetween('end_time', [$startDate, $endDate])
-                    ->orWhere(function ($q) use ($startDate, $endDate) {
-                        $q->where('start_time', '<', $startDate)
-                            ->where('end_time', '>', $endDate);
-                    });
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->where(function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('start_time', [$startDate, $endDate])
+                        ->orWhereBetween('end_time', [$startDate, $endDate]);
+                })->orWhere(function ($q) use ($startDate, $endDate) {
+                    $q->where('start_time', '<=', $startDate)
+                        ->where('end_time', '>=', $endDate);
+                });
             })
-            ->when(!empty($filter->event_types), fn($query) => $query->whereIn('event_type_id', $filter->event_types))
+            ->unless(empty($filter->event_types), function ($q) use ($filter) {
+                $q->whereIn('event_type_id', $filter->event_types);
+            })
+            ->unless(empty($filter->event_properties), function ($q) use ($filter) {
+                $q->whereHas('eventProperties', function ($q) use ($filter) {
+                    $q->whereIn('event_property_id', $filter->event_properties);
+                });
+            })
             ->get();
 
         $eventTypeIds = $events->pluck('event_type_id')->unique();

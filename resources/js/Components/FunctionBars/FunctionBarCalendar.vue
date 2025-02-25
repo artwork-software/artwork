@@ -138,14 +138,23 @@
                         v-if="!atAGlance && !isFullscreen"
                     />
 
-                    <IndividualCalendarFilterComponent
+                    <!--<IndividualCalendarFilterComponent
                         class=""
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
                         :at-a-glance="atAGlance"
                         :type="project ? 'project' : 'individual'"
                         :user_filters="user_filters"
-                        :extern-updated="externUpdate"/>
+                        :extern-updated="externUpdate"/>-->
+
+                    <ToolTipComponent
+                        icon="IconFilter"
+                        icon-size="h-7 w-7"
+                        direction="bottom"
+                        :tooltip-text="$t('Filter')"
+                        @click="showCalendarFilterModal = true"
+                    />
+
                     <Menu as="div" class="relative inline-block items-center text-left">
                         <div class="flex items-center">
                             <MenuButton id="displaySettings">
@@ -352,6 +361,14 @@
         v-if="showCalendarAboSettingModal"
         @close="closeCalendarAboSettingModal"/>
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" />
+
+    <CalendarFilterModal
+        v-if="showCalendarFilterModal"
+        @close="showCalendarFilterModal = false"
+        :filter-options="filterOptions"
+        :personal-filters="personalFilters"
+        :user_filters="user_filters"
+    />
 </template>
 
 <script setup>
@@ -374,6 +391,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
+import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');
@@ -400,6 +418,7 @@ const showExportModal = ref(false);
 const roomCollisions = ref([]);
 const externUpdate = ref(false);
 const showCalendarAboInfoModal = ref(false);
+const showCalendarFilterModal = ref(false);
 const projectSearchInput = ref(null);
 const userCalendarSettings = useForm({
     project_status: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_status : false,

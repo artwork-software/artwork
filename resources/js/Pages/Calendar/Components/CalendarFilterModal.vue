@@ -149,7 +149,6 @@
                 </div>
             </div>
         </div>
-
     </BaseModal>
 </template>
 
@@ -272,10 +271,10 @@ const applyFilter = () => {
     router.patch(route('update.user.calendar.filter', usePage().props.user.id), {
         rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
         areas: arrayToIds(filteredOptionsByCategories.value.roomFilters.areas),
-        event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.eventTypes),
-        room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.roomAttributes),
-        room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.roomCategories),
-        event_properties: arrayToIds(filteredOptionsByCategories.value.eventFilters.eventProperties),
+        event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
+        room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_attributes),
+        room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_categories),
+        event_properties: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_properties),
     }, {
         preserveScroll: true,
         preserveState: false,
@@ -288,10 +287,10 @@ const saveFilter = () => {
         name: saveFilterForm.name,
         rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
         areas: arrayToIds(filteredOptionsByCategories.value.roomFilters.areas),
-        event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.eventTypes),
-        room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.roomAttributes),
-        room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.roomCategories),
-        event_properties: arrayToIds(filteredOptionsByCategories.value.eventFilters.eventProperties),
+        event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
+        room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_attributes),
+        room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_categories),
+        event_properties: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_properties),
     }, {
         preserveScroll: true,
         onSuccess: () => {

@@ -149,11 +149,6 @@
                 </div>
             </div>
         </div>
-
-        <pre>
-           {{filteredOptionsByCategories}}
-        </pre>
-
     </BaseModal>
 </template>
 

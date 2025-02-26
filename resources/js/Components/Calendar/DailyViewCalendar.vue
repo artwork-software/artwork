@@ -37,7 +37,15 @@
                         </div>
                     </HolidayToolTip>
                 </div>
-                <div></div>
+                <div class="ml-10 flex items-center h-full truncate">
+                    <div class="flex items-center h-full gap-x-2" v-if="usePage().props.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInAllRoomsAndEventsByDay(day)" :key="group.id">
+                        <div class=" text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1 border" :style="{ backgroundColor: group.color + '22', color: group.color, borderColor: group.color }">
+                            <component :is="group.icon" class="size-4" aria-hidden="true"/>
+                            <span>{{ group.name }}</span>
+                        </div>
+
+                    </div>
+                </div>
             </div>
             <div v-for="hour in day.hoursOfDay">
                 <div v-if="shouldShowHour(hour, calendarData, day)" class="border-b border-dashed">
@@ -192,6 +200,19 @@ const shouldShowHour = (hour, calendarData, day) => {
     return true;
 };
 
+const getAllProjectGroupsInAllRoomsAndEventsByDay = (day) => {
+    let projectGroups = [];
+
+    for (const room of props.calendarData) {
+        for (const event of room.content[day.fullDay]?.events || []) {
+            if (event?.project?.isGroup) {
+                projectGroups.push(event.project);
+            }
+        }
+    }
+
+    return projectGroups;
+};
 
 const hasOverlappingEvents = (events, day, hour) => {
     if (!events || events.length < 2) return false;

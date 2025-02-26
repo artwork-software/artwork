@@ -718,7 +718,8 @@ class UserController extends Controller
             'use_event_status_color',
             'show_qualifications',
             'shift_notes',
-            'hide_unoccupied_rooms'
+            'hide_unoccupied_rooms',
+            'display_project_groups',
         ]));
     }
 

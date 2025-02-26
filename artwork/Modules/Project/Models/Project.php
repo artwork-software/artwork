@@ -96,7 +96,9 @@ class Project extends Model
         'law_size',
         'cost_center_description',
         'is_group',
-        'user_id'
+        'user_id',
+        'color',
+        'icon',
     ];
 
     protected $casts = [

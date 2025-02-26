@@ -301,6 +301,8 @@ class ProjectController extends Controller
                         $projectData->title = $project->name;
                         $projectData->key_visual_path = $project->key_visual_path;
                         $projectData->is_group = $project->is_group;
+                        $projectData->color = $project->color;
+                        $projectData->icon = $project->icon;
                         break;
                     case ProjectTabComponentEnum::PROJECT_STATUS->value:
                         $projectData->state = ProjectState::find($project->state);
@@ -436,6 +438,8 @@ class ProjectController extends Controller
             'name' => $request->name,
             'user_id' => $this->authManager->id(),
             'number_of_participants' => $request->number_of_participants,
+            'color' => $request->get('color'),
+            'icon' => $request->get('icon'),
         ]);
 
         $is_manager = in_array(Auth::id(), $request->get('assignedUsers'), true);
@@ -2422,7 +2426,9 @@ class ProjectController extends Controller
             'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
             'cost_center_id' => $request->string('cost_center') !== null ?
-                $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null
+                $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null,
+            'icon' => $request->get('icon'),
+            'color' => $request->get('color'),
         ]);
 
         $this->projectService->detachManagementUsers($project, true);

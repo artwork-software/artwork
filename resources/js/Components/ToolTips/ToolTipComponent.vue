@@ -3,7 +3,9 @@
         <button class="focus:outline-none" :class="classes" :disabled="disabled">
             <component :is="icon" class=" cursor-pointer" :class="[iconSize, classes, whiteIcon ? 'text-white' : grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context']" :stroke-width="stroke"/>
         </button>
+
         <div class="hidden group-hover/tooltip:block">
+
             <div v-if="direction === 'top'" class="absolute z-50 -top-3 text-center w-fit text-nowrap p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-x-1/2 -translate-y-full left-1/2">
                 {{ tooltipText }}
                 <div class="absolute bg-black h-3 w-3 transform rounded-sm rotate-45 left-1/2 -translate-x-1/2 -bottom-1.5"></div>
@@ -22,6 +24,7 @@
                 <div class="absolute bg-black h-3 w-3 transform rounded-sm rotate-45 right-full translate-x-1/2 top-1/2 -mt-1.5"></div>
             </div>
         </div>
+
     </div>
 </template>
 

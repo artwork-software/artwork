@@ -1554,33 +1554,41 @@ class ProjectController extends Controller
     private function setColumnSubName(int $table_id): void
     {
         $table = Table::find($table_id);
-        $columns = $table->columns()->get();
 
+        // Spalten abrufen und nach Position sortieren
+        $columns = $table->columns()->orderBy('position')->get();
+
+        // Nur Spalten, die einen subName bekommen sollen (nach den ersten 3)
+        $filteredColumns = $columns->skip(3)->values();
+
+        $totalColumns = $filteredColumns->count(); // Anzahl der betroffenen Spalten
         $count = 1;
 
-        foreach ($columns as $column) {
-            // Skip columns without subname
-            if ($column->subName === null || empty($column->subName)) {
-                continue;
-            }
-            $column->update([
-                'subName' => $this->getNameFromNumber($count)
-            ]);
+        foreach ($filteredColumns as $column) {
+            // Wenn es die Spalte mit Position 100 ist, bekommt sie den letzten Buchstaben
+            $subName = ($column->position == 100) ? $this->getNameFromNumber($totalColumns) : $this->getNameFromNumber($count);
+
+            $column->update(['subName' => $subName]);
+
             $count++;
         }
     }
 
     public function getNameFromNumber(int $num): string
     {
-        $numeric = ($num - 1) % 26;
-        $letter = chr(65 + $numeric);
-        $num2 = intval(($num - 1) / 26);
-        if ($num2 > 0) {
-            return $this->getNameFromNumber($num2) . $letter;
-        } else {
-            return $letter;
+        $num--; // Da A = 0 ist
+        $letters = '';
+
+        while ($num >= 0) {
+            $letters = chr(65 + ($num % 26)) . $letters;
+            $num = intdiv($num, 26) - 1;
         }
+
+        return $letters;
     }
+
+
+
 
     public function addColumn(Request $request): void
     {
@@ -1593,7 +1601,7 @@ class ProjectController extends Controller
                 'type' => 'empty',
                 'linked_first_column' => null,
                 'linked_second_column' => null,
-                'position' => $table->columns()->max('position') + 1
+                'position' => $table->columns()->whereNot('position', 100)->max('position') + 1
             ]);
             $this->setColumnSubName($request->table_id);
 
@@ -1652,7 +1660,7 @@ class ProjectController extends Controller
                 'type' => 'sum',
                 'linked_first_column' => $request->first_column_id,
                 'linked_second_column' => $request->second_column_id,
-                'position' => $table->columns()->max('position') + 1
+                'position' => $table->columns()->whereNot('position', 100)->max('position') + 1
             ]);
             $this->setColumnSubName($request->table_id);
             foreach ($firstColumns as $firstColumn) {
@@ -1679,7 +1687,7 @@ class ProjectController extends Controller
                 'type' => 'difference',
                 'linked_first_column' => $request->first_column_id,
                 'linked_second_column' => $request->second_column_id,
-                'position' => $table->columns()->max('position') + 1
+                'position' => $table->columns()->whereNot('position', 100)->max('position') + 1
             ]);
             $this->setColumnSubName($request->table_id);
             foreach ($firstColumns as $firstColumn) {
@@ -1938,11 +1946,11 @@ class ProjectController extends Controller
             $firstRowValue = ColumnCell::where('column_id', $column->linked_first_column)
                 ->where('sub_position_row_id', $subPositionRowId)
                 ->first()
-                ->value;
+                ?->value;
             $secondRowValue = ColumnCell::where('column_id', $column->linked_second_column)
                 ->where('sub_position_row_id', $subPositionRowId)
                 ->first()
-                ->value;
+                ?->value;
             $updateColumn = ColumnCell::where('sub_position_row_id', $subPositionRowId)
                 ->where('column_id', $column->id)
                 ->first();

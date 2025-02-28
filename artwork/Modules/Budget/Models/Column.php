@@ -46,10 +46,12 @@ class Column extends Model
         'is_locked',
         'locked_by',
         'commented',
+        'relevant_for_project_groups'
     ];
 
     protected $casts = [
         'is_locked' => 'boolean',
+        'relevant_for_project_groups' => 'boolean',
     ];
 
     protected $with = [

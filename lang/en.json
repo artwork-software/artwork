@@ -2379,5 +2379,8 @@
     "Active filters": "Active filters",
     "Your active filters. Click on a filter to remove it.": "Your active filters. Click on a filter to remove it.",
     "General Filters": "General Filters",
-    "Show project group": "Show project group"
+    "Show project group": "Show project group",
+    "Relevant for project-group": "Relevant for project-group",
+    "Not Relevant for project-group": "Not Relevant for project-group",
+    "This Column is relevant for project groups": "This Column is relevant for project groups"
 }

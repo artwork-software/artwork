@@ -6,7 +6,7 @@
              class="absolute w-full h-full z-10 rounded-lg group-hover/singleEvent:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
             <div class="flex justify-center items-center h-full gap-2">
-                <div class="relative flex items-start">
+                <div class="relative flex items-start z-40">
                     <div class="flex h-6 items-center">
                         <input v-model="event.considerOnMultiEdit"
                                aria-describedby="candidates-description"

@@ -76,7 +76,15 @@
                                                                     width="5"/>
                                             </div>
                                         </div>
-                                        <div class="text-xs text-white text-right">
+                                        <div class="text-xs text-white text-right flex items-center gap-x-1">
+                                            <ToolTipComponent
+                                                icon="IconFlagUp"
+                                                :tooltip-text="$t('This Column is relevant for project groups')"
+                                                icon-size="size-4"
+                                                white-icon
+                                                stroke="2"
+                                                v-if="column.relevant_for_project_groups"
+                                            />
                                             {{ column.subName }}
                                         </div>
 
@@ -128,7 +136,7 @@
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
                             </div>
-                            <BaseMenu dots-color="text-white" has-no-offset class="invisible group-hover:visible" v-if="this.hasBudgetAccess() || this.$can('edit budget templates')">
+                            <BaseMenu dots-color="text-white" has-no-offset menu-width="w-fit" class="invisible group-hover:visible" v-if="this.hasBudgetAccess() || this.$can('edit budget templates')">
                                 <MenuItem v-slot="{ active }">
                                     <a @click="column.showColorMenu = true"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -154,18 +162,32 @@
                                         {{ $t('Unlock') }}
                                     </a>
                                 </MenuItem>
-                                <MenuItem v-slot="{ active }">
+                                <MenuItem v-slot="{ active }" v-if="column.type !== 'project_relevant_column'">
                                     <a v-show="index > 2" @click="deleteColumn(column.id)"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                         {{ $t('Delete') }}
                                     </a>
                                 </MenuItem>
-                                <MenuItem v-slot="{ active }">
+                                <MenuItem v-slot="{ active }" v-if="column.type !== 'project_relevant_column'">
                                     <a v-show="index > 2" @click="duplicateColumn(column.id)"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconCopy class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                         {{ $t('Duplicate') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }" v-if="!column.relevant_for_project_groups && column.type !== 'project_relevant_column' && !project.is_group">
+                                    <a v-show="index > 2" @click="setRelevantForProjectGroup(column.id)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconFlagUp class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                        {{ $t('Relevant for project-group') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }" v-if="column.relevant_for_project_groups && column.type !== 'project_relevant_column' && !project.is_group">
+                                    <a v-show="index > 2" @click="setRelevantForProjectGroup(column.id)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconFlagUp class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                        {{ $t('Not Relevant for project-group') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-show="index > 2" v-slot="{ active }" v-if="column.commented === 1">
@@ -289,8 +311,11 @@
                                         <img @click="openBudgetSumDetailModal('COST', column, 'moneySource')" v-else-if="table.costSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(this.getSumOfTable(0, column.id)) }}</span>
-                                        <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0)) }}</span>
+                                        <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">{{ this.toCurrencyString(this.getSumOfTable(0, column.id)) }}</span>
+                                        <span v-if="column.type === 'sage'">{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0)) }}</span>
+                                        <span v-if="column.type === 'project_relevant_column'">
+                                            {{ this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST')) }}
+                                        </span>
                                         <div v-if="this.hasBudgetAccess()"
                                              class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('COST', column)">
@@ -307,11 +332,14 @@
                                     v-for="column in table.columns.slice(3)"
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
-                                        <span v-if="column.type !== 'sage'">
+                                        <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
                                             {{ this.toCurrencyString(table.commentedCostSums[column.id]) }}
                                         </span>
-                                        <span v-else>
+                                        <span v-if="column.type === 'sage'">
                                                 {{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(0)) }}
+                                        </span>
+                                        <span v-if="column.type === 'project_relevant_column'">
+                                            {{ this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_COST')) }}
                                         </span>
                                     </div>
                                 </td>
@@ -376,8 +404,11 @@
                                         <img @click="openBudgetSumDetailModal('EARNING', column, 'moneySource')" v-else-if="table.earningSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(this.getSumOfTable(1, column.id)) }}</span>
-                                        <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1)) }}</span>
+                                        <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">{{ this.toCurrencyString(this.getSumOfTable(1, column.id)) }}</span>
+                                        <span v-if="column.type === 'sage'">{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1)) }}</span>
+                                        <span v-if="column.type === 'project_relevant_column'">
+                                            {{ this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING')) }}
+                                        </span>
                                         <div v-if="this.hasBudgetAccess()"
                                              class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('EARNING', column)">
@@ -395,11 +426,14 @@
                                     v-for="column in table.columns.slice(3)"
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
-                                         <span v-if="column.type !== 'sage'">
+                                         <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
                                             {{ this.toCurrencyString(table.commentedEarningSums[column.id]) }}
-                                         </span>
-                                        <span v-else>
-                                            {{ this.toCurrencyString(calculateSageColumnWithCellSageDataCommented(1)) }}
+                                        </span>
+                                        <span v-if="column.type === 'sage'">
+                                                {{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(1)) }}
+                                        </span>
+                                        <span v-if="column.type === 'project_relevant_column'">
+                                            {{ this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_EARNING')) }}
                                         </span>
                                     </div>
                                 </td>
@@ -432,12 +466,19 @@
                     <td class="flex items-center w-48"
                         v-for="column in table.columns.slice(3)"
                         v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
-                        <div class="w-48 my-2 p-1" :class="[this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : '', this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0) < 0 ? 'text-red-500' : '']">
-                            <span v-if="column.type !== 'sage'">
+                        <div class="w-48 my-2 p-1" :class="[
+                            this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : '',
+                             this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0) < 0 ? 'text-red-500' : '',
+                            calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST') < 0 ? 'text-red-500' : ''
+                         ]">
+                            <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
                                 {{ this.toCurrencyString((this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id))) }}
                             </span>
-                            <span v-else>
+                            <span v-if="column.type === 'sage'">
                                 {{ this.toCurrencyString((this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0))) }}
+                            </span>
+                            <span v-if="column.type === 'project_relevant_column'">
+                                {{ this.toCurrencyString((calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST'))) }}
                             </span>
                         </div>
                     </td>
@@ -664,11 +705,14 @@ import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue"
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconFlagUp} from "@tabler/icons-vue";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+        ToolTipComponent,
       UserPopoverTooltip,
         UserSearch,
         ModalHeader,
@@ -710,6 +754,7 @@ export default {
         RenameTableComponent,
         ErrorComponent,
         DocumentReportIcon,
+        IconFlagUp
     },
     data() {
         return {
@@ -886,6 +931,32 @@ export default {
         },
     },
     methods: {
+        calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented(type){
+            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
+            //console.log(data);
+            const relevantData = data[type].filter((item) => type === item.type && item.commented);
+            console.log('relevantData calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented:', relevantData);
+
+            const sum = relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value.replace(',', '.'));
+                return acc + value;
+            }, 0);
+
+            return sum;
+        },
+        calculateRelevantBudgetDataSumFormProjectsInGroupNormal(type){
+            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
+            console.log('data', data);
+            const relevantData = data[type].filter((item) => type === item.type && !item.commented);
+
+            console.log('relevantData: calculateRelevantBudgetDataSumFormProjectsInGroupNormal', relevantData);
+            const sum = relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value.replace(',', '.'));
+                return acc + value;
+            }, 0);
+
+            return sum;
+        },
         hasBudgetAccess() {
             return this.hasAdminRole() ||
                 this.budgetAccess?.filter(
@@ -897,6 +968,21 @@ export default {
                         'can manage all project budgets without docs'
                     ]
                 );
+        },
+        setRelevantForProjectGroup(columnId){
+            router.patch(
+                route(
+                    'project.budget.column.update.relevant',
+                    {
+                        column: columnId
+                    }
+                ),
+                {},
+                {
+                    preserveScroll: true,
+                    preserveState: true
+                }
+            );
         },
         updateColumnCommented(columnId, bool) {
             router.patch(

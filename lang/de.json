@@ -2380,5 +2380,8 @@
     "Active filters": "Aktive Filter",
     "Your active filters. Click on a filter to remove it.": "Deine aktiven Filter. Klicke auf einen Filter, um ihn zu entfernen.",
     "General Filters": "Allgemeine Filter",
-    "Show project group": "Projektgruppe anzeigen"
+    "Show project group": "Projektgruppe anzeigen",
+    "Relevant for project-group": "Relevant für Projektgruppe",
+    "Not Relevant for project-group": "Nicht relevant für Projektgruppe",
+    "This Column is relevant for project groups": "Diese Spalte ist relevant für Projektgruppen"
 }

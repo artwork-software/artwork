@@ -12,10 +12,6 @@
             />
         </div>
 
-        <pre>
-            {{ calendar}}
-        </pre>
-
     </AppLayout>
 </template>
 

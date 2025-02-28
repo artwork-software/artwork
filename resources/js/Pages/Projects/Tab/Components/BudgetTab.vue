@@ -27,6 +27,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
 import ProjectBudgetDeadlineComponent from "@/Pages/Projects/Components/ProjectBudgetDeadlineComponent.vue";
+import {usePage} from "@inertiajs/vue3";
 
 export default{
     components: {
@@ -56,6 +57,7 @@ export default{
         }
     },
     methods: {
+        usePage,
         changeProjectHeaderVisualisation(boolean) {
             this.hideProjectHeader = boolean;
         },

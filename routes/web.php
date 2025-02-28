@@ -901,6 +901,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::get('/cell/comments', [CellCommentsController::class, 'get'])
                 ->name('project.budget.cell.comment.get');
 
+            // patch project.budget.column.update.relevant
+            Route::patch('/column/{column}/update/relevant', [BudgetGeneralController::class, 'updateColumnRelevant'])
+                ->name('project.budget.column.update.relevant');
+
             // POST
             Route::post('/column/add', [ProjectController::class, 'addColumn'])->name('project.budget.column.add');
             Route::post('/cell-calculation/{cell}/add', [ProjectController::class, 'addCalculation'])

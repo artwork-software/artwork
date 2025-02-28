@@ -1,6 +1,15 @@
-import { router } from '@inertiajs/vue3';
+import {router} from '@inertiajs/vue3';
 
 export function useShiftCalendarListener(newShiftPlanData) {
+
+    function sortArrayByStartDateTimes(array) {
+        return array.sort((a, b) => {
+            const aStart = new Date(a.start.replace(" ", "T"));
+            const bStart = new Date(b.start.replace(" ", "T"));
+
+            return aStart - bStart;
+        });
+    }
 
     function findRoomById(roomId) {
         return newShiftPlanData.find((shiftPlanObject) => shiftPlanObject.roomId === roomId);
@@ -12,6 +21,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
             shiftsAtDay[shiftIndex] = data.shift;
         } else {
             shiftsAtDay.push(data.shift);
+            sortArrayByStartDateTimes(shiftsAtDay);
         }
     }
 
@@ -33,6 +43,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
                         event.shifts[shiftIndex] = data.shift;
                     } else {
                         event.shifts.push(data.shift);
+                        sortArrayByStartDateTimes(event.shifts);
                     }
                 }
             } else {
@@ -68,6 +79,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
 
             if (eventIndex === -1) {
                 eventsAtDay.push(newEvent);
+                sortArrayByStartDateTimes(eventsAtDay);
             } else {
                 eventsAtDay[eventIndex] = newEvent;
             }
@@ -83,14 +95,14 @@ export function useShiftCalendarListener(newShiftPlanData) {
                 if (!room.content[day]) return;
 
                 const shiftsAtDay = room.content[day].shifts;
-                updateOrAddShift(shiftsAtDay, { shift });
+                updateOrAddShift(shiftsAtDay, {shift});
             });
         });
     }
 
 
     function updateShiftForUserOrEntity(data) {
-        const { shift } = data;
+        const {shift} = data;
 
         newShiftPlanData.forEach((room) => {
             Object.keys(room.content).forEach((day) => {
@@ -117,7 +129,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
     }
 
     function removeShiftFromRoomAndEvents(data) {
-        const { shift, roomId } = data;
+        const {shift, roomId} = data;
         const room = findRoomById(roomId);
         if (!room) return;
 
@@ -197,5 +209,5 @@ export function useShiftCalendarListener(newShiftPlanData) {
             });
     }
 
-    return { init };
+    return {init};
 }

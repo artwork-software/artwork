@@ -197,6 +197,20 @@ class EventController extends Controller
             false
         );
 
+        $months = [];
+        foreach ($period as $periodObject) {
+            $date = Carbon::parse($periodObject->withoutFormat);
+            $month = $date->format('m.Y');
+            if (!array_key_exists($month, $months)) {
+                $months[$month] = [
+                    'first_day_in_period' => $date->format('Y-m-d'),
+                    'month' => $date->monthName,
+                    'year' => $date->format('y'),
+                ];
+            }
+        }
+
+
         $rooms = $this->calendarDataService->getFilteredRooms(
             $userCalendarFilter,
             $userCalendarSettings,
@@ -253,6 +267,7 @@ class EventController extends Controller
             'first_project_shift_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'projectNameUsedForProjectTimePeriod' => $project?->name ?? null,
+            'months' => $months,
         ]);
     }
 

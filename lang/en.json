@@ -2378,5 +2378,9 @@
     "areas": "Areas",
     "Active filters": "Active filters",
     "Your active filters. Click on a filter to remove it.": "Your active filters. Click on a filter to remove it.",
-    "General Filters": "General Filters"
+    "General Filters": "General Filters",
+    "Room requests answered": "Room requests answered",
+    "Find out if your room requests has been answered.": "Find out if your room requests has been answered.",
+    "Room request reminder": "Room request reminder",
+    "Find out if there are any room requests that need to be confirmed or declined.": "Find out if there are any room requests that need to be confirmed or declined."
 }

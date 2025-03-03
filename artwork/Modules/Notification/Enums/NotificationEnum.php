@@ -146,7 +146,7 @@ enum NotificationEnum: string
     public function title(): string
     {
         return match ($this) {
-            self::NOTIFICATION_ROOM_ANSWER,
+            self::NOTIFICATION_ROOM_ANSWER => "Room requests answered",
             self::NOTIFICATION_ROOM_REQUEST => "Room requests confirmed or declined",
             self::NOTIFICATION_CONFLICT => "Event conflicts",
             self::NOTIFICATION_EVENT_CHANGED => "Event changes",
@@ -185,7 +185,7 @@ enum NotificationEnum: string
     public function description(): string
     {
         return match ($this) {
-            self::NOTIFICATION_ROOM_ANSWER,
+            self::NOTIFICATION_ROOM_ANSWER => "Find out if your room requests has been answered.",
             self::NOTIFICATION_ROOM_REQUEST => "Find out if your room requests have been confirmed or declined.",
             self::NOTIFICATION_CONFLICT => "Be notified as soon as someone schedules an appointment that conflicts with one of your appointments.",
             self::NOTIFICATION_EVENT_CHANGED => "Find out if there have been any changes to your appointments or if an appointment has been cancelled.",

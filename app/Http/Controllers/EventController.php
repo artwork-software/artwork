@@ -190,6 +190,13 @@ class EventController extends Controller
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
 
+        $dailyViewInfo = '';
+
+        if($user->daily_view && $startDate->diffInDays($endDate) > 7) {
+            $endDate = $startDate->copy()->addDays(7);
+            $dailyViewInfo = __('calendar.daily_view_info');
+        }
+
         $period = $this->calendarDataService->createCalendarPeriodDto(
             $startDate,
             $endDate,
@@ -267,6 +274,7 @@ class EventController extends Controller
             'first_project_shift_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'projectNameUsedForProjectTimePeriod' => $project?->name ?? null,
+            'infoForDailyView' => $dailyViewInfo,
             'months' => $months,
         ]);
     }

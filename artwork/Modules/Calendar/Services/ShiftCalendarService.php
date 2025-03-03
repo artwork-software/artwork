@@ -32,7 +32,7 @@ class ShiftCalendarService
         $roomIds = $rooms->pluck('id');
 
         $eventWith = [
-            'project:id,name,state,artists',
+            'project:id,name,state,artists,is_group,icon,color',
             'project.status:id,name,color',
             'project.managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
             'eventStatus:id,color',

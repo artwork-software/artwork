@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $fallback_type
  * @property string $abbreviation
  * @property bool $relevant_for_shift
+ * @property bool $relevant_for_inventory
+ * @property bool $relevant_for_project_period
  * @property string $created_at
  * @property string $updated_at
  */
@@ -29,7 +31,8 @@ class EventType extends Model
         'individual_name',
         'abbreviation',
         'relevant_for_shift',
-        'relevant_for_inventory'
+        'relevant_for_inventory',
+        'relevant_for_project_period'
     ];
 
     protected $casts = [
@@ -37,7 +40,8 @@ class EventType extends Model
         'individual_name' => 'boolean',
         'relevant_for_shift' => 'boolean',
         'fallback_type' => 'boolean',
-        'relevant_for_inventory' => 'boolean'
+        'relevant_for_inventory' => 'boolean',
+        'relevant_for_project_period' => 'boolean'
     ];
 
     public function events(): HasMany

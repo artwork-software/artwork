@@ -2046,8 +2046,8 @@ class ProjectController extends Controller
 
         $user = $userService->getAuthUser();
         /** @var User $user */
-        if ($user->last_project_id !== $project->id) {
-            $user->update(['last_project_id' => $project->id]);
+        if ($user?->last_project_id !== $project->id) {
+            $user?->update(['last_project_id' => $project->id]);
         }
 
 

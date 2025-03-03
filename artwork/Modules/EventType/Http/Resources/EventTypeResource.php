@@ -22,6 +22,7 @@ class EventTypeResource extends JsonResource
             'project_mandatory' => $this->project_mandatory,
             'individual_name' => $this->individual_name,
             'abbreviation' => $this->abbreviation,
+            'relevant_for_project_period' => $this->relevant_for_project_period
         ];
     }
 }

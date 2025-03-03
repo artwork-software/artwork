@@ -120,6 +120,8 @@ import BudgetInformations from "@/Pages/Projects/Tab/Components/BudgetInformatio
 import {usePermission} from "@/Composeables/Permission.js";
 import BulkBody from "@/Pages/Projects/Components/BulkComponents/BulkBody.vue";
 import ArtistResidenciesComponent from "@/Pages/Projects/Tab/Components/ArtistResidenciesComponent.vue";
+import GroupProjectDisplayComponent from "@/Pages/Projects/Components/GroupProjectDisplayComponent.vue";
+import ProjectGroupDisplayComponent from "@/Pages/Projects/Components/ProjectGroupDisplayComponent.vue";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
@@ -153,7 +155,9 @@ const componentMapping = {
     CommentAllTab,
     BudgetInformations,
     BulkBody,
-    ArtistResidenciesComponent
+    ArtistResidenciesComponent,
+    GroupProjectDisplayComponent,
+    ProjectGroupDisplayComponent
 };
 
 const props = defineProps({

@@ -2383,5 +2383,10 @@
     "Show project group": "Projektgruppe anzeigen",
     "Relevant for project-group": "Relevant für Projektgruppe",
     "Not Relevant for project-group": "Nicht relevant für Projektgruppe",
-    "This Column is relevant for project groups": "Diese Spalte ist relevant für Projektgruppen"
+    "This Column is relevant for project groups": "Diese Spalte ist relevant für Projektgruppen",
+    "Component Subprojects": "Unterprojekte-Anzeigekomponente",
+    "Project group display component": "Projektgruppen-Anzeigekomponente",
+    "GroupProjectDisplayComponent": "Projektgruppen-Anzeigekomponente",
+    "ProjectGroupDisplayComponent": "Unterprojekte-Anzeigekomponente",
+    "Relevant for project period": "Relevant für Projektzeitraum"
 }

@@ -20,7 +20,7 @@ class ProjectDTO extends Data
         public Lazy|Collection $leaders,
         public ?string $color = null,
         public ?string $icon = null,
-        public ?bool $isGroup = null,
+        public ?bool $isGroup = false,
     ) {
     }
 

@@ -134,6 +134,12 @@
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-else style="width: 200px" class="cell group " :class="$page.props.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
+                                            <div v-if="usePage().props.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
+                                                <div class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
+                                                    <component :is="group.icon" class="size-4" aria-hidden="true"/>
+                                                    <span>{{ group.name }}</span>
+                                                </div>
+                                            </div>
                                             <div v-for="event in room.content[day.fullDay].events" class="mb-1">
                                                 <SingleShiftPlanEvent
                                                     v-if="checkIfEventHasShiftsToDisplay(event)"
@@ -1005,6 +1011,21 @@ export default {
         },
     },
     methods: {
+        usePage,
+       getAllProjectGroupsInEventsByDay(events){
+            let projectGroups = [];
+            events.forEach(event => {
+                if (event?.project?.isGroup) {
+                    let projectGroup = projectGroups.find(group => group.id === event.project.id);
+
+                    if (!projectGroup) {
+                        projectGroups.push(event.project);
+                    }
+                }
+            });
+
+            return projectGroups;
+        },
         initializeCalendarMultiEditSave() {
             this.showAddShiftModal = true
         },

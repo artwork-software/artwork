@@ -85,6 +85,11 @@ const props = defineProps({
         type: Object,
         required: true
     },
+    infoForDailyView: {
+        type: String,
+        required: false,
+        default: ''
+    }
 })
 
 provide('eventTypes', props.eventTypes);
@@ -99,6 +104,7 @@ provide('eventStatuses', props.eventStatuses);
 provide('months', props.months);
 provide('event_properties', props.event_properties);
 provide('areas', props.areas);
+provide('infoForDailyView', props.infoForDailyView);
 </script>
 
 <style scoped>

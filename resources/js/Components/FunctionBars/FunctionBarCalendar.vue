@@ -19,7 +19,7 @@
                         </button>
 
                     </div>
-                    <BaseMenu show-custom-icon icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
+                    <BaseMenu tooltip-direction="bottom" show-custom-icon icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
                         <BaseMenuItem icon="IconCalendarRepeat" without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>
@@ -160,7 +160,7 @@
                             <MenuButton id="displaySettings">
                             <span class="items-center flex">
                                 <button type="button"
-                                        class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
+                                        class="text-sm flex items-center my-auto text-primary focus:outline-none transition">
                                     <ToolTipComponent
                                         direction="bottom"
                                         :tooltip-text="$t('Display Settings')"

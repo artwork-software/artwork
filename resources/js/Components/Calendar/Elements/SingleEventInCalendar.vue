@@ -1,7 +1,7 @@
 <template>
     <div :style="{ minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
-        class="rounded-lg group/singleEvent relative"
-        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event?.project?.id ? 'border-[3px] border-dashed border-pink-500' : '', isHeightFull ? 'h-full' : '', usePage().props.user.daily_view ? 'overflow-y-scroll' : '']">
+        class="rounded-lg group/singleEvent"
+        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event?.project?.id ? 'border-[3px] border-dashed border-pink-500' : '', isHeightFull ? 'h-full' : '', usePage().props.user.daily_view ? 'overflow-y-scroll' : '', multiEdit ? 'relative' : '']">
         <div v-if="zoom_factor > 0.4 && multiEdit" @click="clickOnCheckBox"
              class="absolute w-full h-full z-10 rounded-lg group-hover/singleEvent:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
@@ -218,6 +218,7 @@
                             classes="text-black"
                             stroke="1.5"
                             direction="left"
+                            no-relative
                         />
                     </div>
                 </div>

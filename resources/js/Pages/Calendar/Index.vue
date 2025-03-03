@@ -31,6 +31,10 @@ const props = defineProps({
         type: Object,
         required: true
     },
+    months: {
+        type: Object,
+        required: true
+    },
     calendar: {
         type: Object,
         required: true

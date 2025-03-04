@@ -23,9 +23,6 @@ class UpdateOrCreateProjectRelevantColumn extends Seeder
     public function run(): void
     {
         $projects = Project::all();
-
-
-
         foreach ($projects as $project) {
             if ($project->is_group) {
                 $table = $project->table;
@@ -68,9 +65,6 @@ class UpdateOrCreateProjectRelevantColumn extends Seeder
 
                     $this->command->info('Project Group ' . $project->name . ' has been updated');
                 }
-
-
-
             } else {
                 // set last column to relevant_for_project_groups if no column is relevant_for_project_groups
                 $table = $project->table;

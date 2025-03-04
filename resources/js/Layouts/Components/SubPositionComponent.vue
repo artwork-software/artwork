@@ -454,6 +454,34 @@ export default {
         localStorage.removeItem('closedSubPositions')
     },
     methods: {
+<<<<<<< Updated upstream
+=======
+        usePage,
+        calculateRelevantBudgetDataSumFormProjectsInGroup(cell){
+            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
+
+            if (data.length === 0) return 0;
+
+            const relevantData = data[this.mainPosition.type]?.filter((item) => cell.sub_position_row_id === item.groupRowId);
+            const sum = relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value.replace(',', '.'));
+                return acc + value;
+            }, 0);
+            return this.toCurrencyString(sum);
+        },
+        calculateRelevantBudgetDataSumFormProjectsInGroupSubPosition(){
+            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
+            if (data.length === 0) return 0;
+
+            const relevantData = data[this.mainPosition.type]?.filter((item) => item.subPositionId === this.subPosition.id && this.mainPosition.type === item.type);
+            const sum = relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value.replace(',', '.'));
+                return acc + value;
+            }, 0);
+
+            return this.toCurrencyString(sum);
+        },
+>>>>>>> Stashed changes
         updateRowCommented(rowId, bool) {
             this.$inertia.patch(
                 route(

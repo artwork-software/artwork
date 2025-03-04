@@ -268,6 +268,23 @@ export default {
 
     },
     methods: {
+<<<<<<< Updated upstream
+=======
+        main() {
+            return main
+        },
+        calculateRelevantBudgetDataSumFormProjectsInGroupMainPosition(){
+            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
+            if (data.length === 0) return 0;
+            const relevantData = data[this.mainPosition.type]?.filter((item) => item.mainPositionId === this.mainPosition.id && this.mainPosition.type === item.type);
+            const sum = relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value.replace(',', '.'));
+                return acc + value;
+            }, 0);
+
+            return this.toCurrencyString(sum);
+        },
+>>>>>>> Stashed changes
         checkIfMainPositionClosed(){
             if(localStorage.getItem('closedMainPositions') !== null){
                 let closedMainPositions = JSON.parse(localStorage.getItem('closedMainPositions'))

@@ -886,6 +886,28 @@ export default {
         },
     },
     methods: {
+<<<<<<< Updated upstream
+=======
+        calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented(type){
+            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
+            if (data.length === 0) return 0;
+            const relevantData = data[type]?.filter((item) => type === item.type && item.commented);
+            return relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value.replace(',', '.'));
+                return acc + value;
+            }, 0);
+        },
+        calculateRelevantBudgetDataSumFormProjectsInGroupNormal(type){
+            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
+            if (data.length === 0) return 0;
+            const relevantData = data[type]?.filter((item) => type === item.type && !item.commented);
+
+            return relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value.replace(',', '.'));
+                return acc + value;
+            }, 0);
+        },
+>>>>>>> Stashed changes
         hasBudgetAccess() {
             return this.hasAdminRole() ||
                 this.budgetAccess?.filter(

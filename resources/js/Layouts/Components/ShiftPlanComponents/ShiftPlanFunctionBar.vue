@@ -20,7 +20,7 @@
                                 leave-active-class="transition-leave-active"
                                 leave-from-class="transition-leave-from"
                                 leave-to-class="transition-leave-to">
-                        <MenuItems class="absolute right-0 z-10 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <MenuItems class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                             <div class="py-1">
                                 <MenuItem v-slot="{ active }">
                                     <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">

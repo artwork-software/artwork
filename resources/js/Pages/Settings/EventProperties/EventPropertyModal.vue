@@ -1,7 +1,7 @@
 <template>
     <BaseModal @closed="emits.call(this, 'closeModal')">
         <div class="-mt-8">
-            <ModalHeader :title="eventPropertyToEdit ? $t('Event-Eigenschaft bearbeiten') : $t('Event-Eigenschaft erstellen')" description="sdggsjdgoföasjdg"/>
+            <ModalHeader :title="eventPropertyToEdit ? $t('Event-Eigenschaft bearbeiten') : $t('Event-Eigenschaft erstellen')"/>
         </div>
         <form @submit.prevent="addOrUpdateEventProperty" class="mt-5">
             <div class="flex items-center gap-x-4">
@@ -50,6 +50,7 @@ const props = defineProps({
 
     emits = defineEmits(["closeModal"]),
     eventPropertyForm = useForm({
+        id: props.eventPropertyToEdit ? props.eventPropertyToEdit.id : null,
         name: props.eventPropertyToEdit ? props.eventPropertyToEdit.name : '',
         icon: props.eventPropertyToEdit ? props.eventPropertyToEdit.icon : null,
     }),

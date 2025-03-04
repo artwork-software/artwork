@@ -1,5 +1,5 @@
 <template>
-    <div class="modal-header">
+    <div class="modal-header" :class="classes">
         <div :class="fullModal ? 'full-modal' : 'not-full-modal'">
             <div class="model-title">
                 {{ title }}
@@ -34,6 +34,10 @@ const props = defineProps({
     fullModal: {
         type: Boolean,
         default: false
+    },
+    classes: {
+        type: String,
+        default: ''
     }
 })
 

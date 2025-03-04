@@ -31,23 +31,33 @@ class UserCalendarFilterController extends Controller
 
     public function update(Request $request, User $user): void
     {
-        $user->calendar_filter()->update($request->only([
-            'is_loud',
-            'is_not_loud',
-            'adjoining_not_loud',
-            'has_audience',
-            'has_no_audience',
-            'adjoining_no_audience',
-            'show_free_rooms',
-            'show_adjoining_rooms',
-            'all_day_free',
-            'event_types',
-            'rooms',
-            'areas',
-            'room_attributes',
-            'room_categories',
-            'event_properties'
-        ]));
+        /**
+         * rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
+         * areas: arrayToIds(filteredOptionsByCategories.value.roomFilters.areas),
+         * event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.eventTypes),
+         * room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.roomAttributes),
+         * room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.roomCategories),
+         * event_properties: arrayToIds(filteredOptionsByCategories.value.eventFilters.eventProperties),
+         * adjoiningNoAudience: returnNullIfFalse(generalFilters.value.adjoiningNoAudience.checked),
+         * adjoiningNotLoud: returnNullIfFalse(generalFilters.value.adjoiningNotLoud.checked),
+         */
+
+        $roomIds = $request->collect('rooms')->isNotEmpty() ? $request->collect('rooms') : null;
+        $areaIds = $request->collect('areas')->isNotEmpty() ? $request->collect('areas') : null;
+        $eventTypes = $request->collect('event_types')->isNotEmpty() ? $request->collect('event_types') : null;
+        $roomAttributes = $request->collect('room_attributes')->isNotEmpty() ? $request->collect('room_attributes') : null;
+        $roomCategories = $request->collect('room_categories')->isNotEmpty() ? $request->collect('room_categories') : null;
+        $eventProperties = $request->collect('event_properties')->isNotEmpty() ? $request->collect('event_properties') : null;
+
+
+        $user->calendar_filter()->update([
+            'event_types' => $eventTypes,
+            'rooms' => $roomIds,
+            'areas' => $areaIds,
+            'room_attributes' => $roomAttributes,
+            'room_categories' => $roomCategories,
+            'event_properties' => $eventProperties
+        ]);
     }
 
     public function updateDates(Request $request, User $user): void

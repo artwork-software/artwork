@@ -1,7 +1,7 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
-        <div class=" w-full top-0 left-4 py-4  z-40 -mx-10 -my-4" :class="project ? [checkIfScrolledToCalendarRef] : isFullscreen ? 'fixed' : 'fixed ml-10'">
-            <AsyncFunctionBarCalendar
+        <div class="w-full top-0 left-4 py-4  z-40 -mx-10 -my-4" :class="project ? [checkIfScrolledToCalendarRef] : isFullscreen ? 'fixed' : 'fixed ml-10'">
+            <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
                 :rooms="rooms"
@@ -12,50 +12,47 @@
                 @update-multi-edit="toggleMultiEdit"
                 @jump-to-day-of-month="jumpToDayOfMonth"
             />
-        </div>
-
-
-        <div :class="eventsWithoutRoom.length > 0 ? 'mt-20' : ''">
-            <div v-if="eventsWithoutRoom.length > 0" class="flex justify-center">
-                <div class="flex errorText items-center cursor-pointer my-2" @click="showEventsWithoutRoomComponent = true">
-                    <IconAlertTriangle class="h-6 mr-2"/>
-                    {{
-                        computedFilteredEvents.length === 1 ?
-                            $t('{0} Event without room!', [eventsWithoutRoom.length]) :
-                            $t('{0} Events without room!', [eventsWithoutRoom.length])
-                    }}
+            <div class="w-full h-8 px-4 py-2 bg-red-500 cursor-pointer" v-if="eventsWithoutRoom.length > 0" @click="showEventsWithoutRoomComponent = true">
+                <div class="flex items-center justify-center w-full h-full gap-x-1">
+                    <component is="IconAlertTriangle" class="size-4 text-white" aria-hidden="true" />
+                    <div class="text-white text-sm font-bold">
+                        {{
+                            eventsWithoutRoom.length === 1 ?
+                                $t('{0} Event without room!', [eventsWithoutRoom.length]) :
+                                $t('{0} Events without room!', [eventsWithoutRoom.length])
+                        }}
+                    </div>
                 </div>
             </div>
         </div>
 
+
         <div>
-            <div v-if="!usePage().props.user.daily_view">
-                <div class="-mx-5 mt-4">
-                    <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
-                        <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
-                        <div class="w-fit events-by-days-container" :class="[!project ? 'pt-8' : '', isFullscreen ? 'mt-4': '', computedFilteredEvents.length > 0 ? '-mt-7' : 'mt-4' ]" ref="calendarToCalculate">
+            <div v-if="!usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
+                <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? 'mt-8' : ''">
+                    <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white px-5'">
+                        <CalendarHeader :rooms="rooms" :filtered-events-length="eventsWithoutRoom.length"/>
+                        <div class="w-fit events-by-days-container mt-16" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '',]" ref="calendarToCalculate">
                             <div v-for="day in days"
-                                 :key="day.full_day"
+                                 :key="day.fullDay"
                                  :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                  class="flex gap-0.5 day-container"
-                                 :class="day.is_weekend ? 'bg-userBg/70' : ''"
-                                 :data-day="day.full_day"
-                                 :data-day-to-jump="day.without_format">
-                                <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day" v-if="!day.is_extra_row"/>
-                                <div v-for="room in newCalendarData"
-                                     :key="room.id"
-                                     class="relative"
-                                     v-if="!day.is_extra_row">
-                                    <div v-if="room.content[day.full_day]?.events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
-                                        <component is="IconChevronDown" @click="scrollToNextEventInDay(day.without_format, room.content[day.full_day].events.length)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
+                                 :class="day.isWeekend ? 'bg-gray-50' : ''"
+                                 :data-day="day.fullDay"
+                                 :data-day-to-jump="day.withoutFormat">
+                                <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day" v-if="!day.isExtraRow"/>
+                                <div v-for="room in newCalendarData" :key="room.id" class="relative" v-if="!day.isExtraRow">
+                                    <div v-if="room.content[day.fullDay]?.events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
+                                        <component is="IconChevronDown" @click="scrollToNextEventInDay(day.withoutFormat, room.content[day.fullDay].events.length,room.roomId)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
                                     </div>
                                     <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                          :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
-                                         class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.without_format">
-                                        <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="(event, index) in room.content[day.full_day].events">
-                                            <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.without_format">
+                                         class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.withoutFormat">
+                                        <div  v-for="(event, index) in room.content[day.fullDay].events">
+                                            <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.withoutFormat + '-room-' + room.roomId">
                                                 <AsyncSingleEventInCalendar
                                                     :event="event"
+                                                    v-if="event.roomId === room.roomId"
                                                     :multi-edit="multiEdit"
                                                     :font-size="textStyle.fontSize"
                                                     :line-height="textStyle.lineHeight"
@@ -80,7 +77,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else>
+            <div v-else-if="usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
                 <DailyViewCalendar
                     :multi-edit="multiEdit"
                     :rooms="rooms"
@@ -89,7 +86,7 @@
                     :project="project"
                     :eventStatuses="eventStatuses"
                     :eventTypes="eventTypes"
-                    :eventsWithoutRoom="computedFilteredEvents"
+                    :eventsWithoutRoom="eventsWithoutRoom"
                     :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
                     :firstProjectShiftTabId="firstProjectShiftTabId"
                     :first-project-tab-id="first_project_tab_id"
@@ -100,6 +97,43 @@
                     @show-decline-event-modal="openDeclineEventModal"
                     @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
                 />
+            </div>
+            <div class="mt-[4.5rem] w-max" v-else>
+                <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
+                    <div v-for="room in newCalendarData" :key="room.roomId">
+                        <div v-if="checkIfRoomHasEvents(room)" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
+                            <SingleRoomInHeader :room="room" is-light   />
+                        </div>
+                    </div>
+
+                </div>
+                <div class="flex gap-0.5">
+                    <div v-for="room in newCalendarData">
+                        <div v-for="events in room.content" :key="events" class="flex flex-col">
+                            <div v-for="(event, index) in events.events" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="mb-0.5" :id="'scroll_container-' + events.date">
+                                <div class="py-0.5" :key="event.id">
+                                    <AsyncSingleEventInCalendar
+                                        :event="event"
+                                        :multi-edit="multiEdit"
+                                        :font-size="textStyle.fontSize"
+                                        :line-height="textStyle.lineHeight"
+                                        :rooms="rooms"
+                                        :has-admin-role="hasAdminRole()"
+                                        :width="zoom_factor * 196"
+                                        :first_project_tab_id="first_project_tab_id"
+                                        :firstProjectShiftTabId="firstProjectShiftTabId"
+                                        @edit-event="showEditEventModel"
+                                        @edit-sub-event="openAddSubEventModal"
+                                        @open-add-sub-event-modal="openAddSubEventModal"
+                                        @open-confirm-modal="openDeleteEventModal"
+                                        @show-decline-event-modal="openDeclineEventModal"
+                                        @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div v-if="!checkIfAnyRoomHasAnEventOrShift && usePage().props.user.calendar_settings.use_project_time_period">
@@ -166,6 +200,15 @@
         @closed="eventComponentClosed"
         :event-statuses="eventStatuses"
     />
+
+    <!--<CreateOrUpdateEventModal
+        v-if="showEventComponent"
+        :event-to-edit="eventToEdit"
+        :rooms="rooms"
+        :room-collisions="roomCollisions"
+        @closed="eventComponentClosed"
+    />-->
+
     <ConfirmDeleteModal
         v-if="deleteComponentVisible"
         :title="deleteTitle"
@@ -203,7 +246,7 @@
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :eventsWithoutRoom="eventsWithoutRoom"
+        :eventsWithoutRoom="usePage().props.eventsWithoutRoom"
         :isAdmin="hasAdminRole()"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
     />
@@ -211,34 +254,28 @@
 </template>
 
 <script setup>
-/* Comment: below very important unused import new Date().format relies on it - do not remove otherwise ui breaks */
-import VueCal from 'vue-cal';
-/* Comment: above very important unused import new Date().format relies on it - do not remove otherwise ui breaks */
-import {computed, defineAsyncComponent, inject, onMounted, provide, ref} from "vue";
+import {computed, defineAsyncComponent, inject, onMounted, provide, reactive, ref, watch} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {IconAlertTriangle} from "@tabler/icons-vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
-import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionObserver.js";
 import MultiDuplicateModal from "@/Layouts/Components/MultiDuplicateModal.vue";
 import DailyViewCalendar from "@/Components/Calendar/DailyViewCalendar.vue";
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
-import {computeComponentStructure} from "vuedraggable/src/core/renderHelper.js";
-import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import EventComponent from "@/Layouts/Components/EventComponent.vue";
+import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
+import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
+import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
+import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 
-const filterOptions = inject('filterOptions');
-const personalFilters = inject('personalFilters');
-const user_filters = inject('user_filters');
-const event_properties = inject('event_properties');
-//provide('event_properties', inject('event_properties'));
+
 
 const props = defineProps({
         rooms: {
@@ -246,7 +283,7 @@ const props = defineProps({
             required: true,
         },
         days: {
-            type: Array,
+            type: Object,
             required: true,
         },
         calendarData: {
@@ -279,23 +316,12 @@ const props = defineProps({
         }
     })
 const $t = useTranslation()
-const { composedCurrentDaysInViewRef, composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
+const { composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
 const {hasAdminRole} = usePermission(usePage().props)
-
-const AsyncFunctionBarCalendar = defineAsyncComponent(
-        {
-            loader: () => import('@/Components/FunctionBars/FunctionBarCalendar.vue')
-        }
-    )
-
-const AsyncCalendarHeader = defineAsyncComponent(
-        {
-            loader: () => import('@/Components/Calendar/Elements/CalendarHeader.vue')
-        }
-    )
 const AsyncSingleEventInCalendar = defineAsyncComponent(
         {
-            loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue')
+            loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
+            loadingComponent: CalendarPlaceholder
         }
     )
 const textStyle = computed(() => {
@@ -306,8 +332,8 @@ const textStyle = computed(() => {
             lineHeight,
         };
     })
-const scrollToNextEventInDay = (day, length) => {
-        let eventScroll = document.getElementById('event_scroll-' + (length - 1) + '-day-' + day);
+const scrollToNextEventInDay = (day, length,room) => {
+        let eventScroll = document.getElementById('event_scroll-' + (length - 1) + '-day-' + day + '-room-' + room);
         if (eventScroll) {
             eventScroll.scrollIntoView({
                 behavior: 'smooth', // Optionale Animation für weiches Scrollen
@@ -320,7 +346,7 @@ const computedFilteredEvents = computed(() => {
         let getComputedEventsWithoutRoom = () => {
             return eventsWithoutRoomRef.value.filter((event) => {
                 let createdBy = event.created_by;
-                let projectLeaders = event.projectLeaders;
+                let projectLeaders = event.project?.leaders;
 
                 if (projectLeaders && projectLeaders.length > 0) {
                     if (
@@ -342,7 +368,7 @@ const computedFilteredEvents = computed(() => {
 const computedCheckedEventsForMultiEditCount = computed(() => {
         return editEvents.value.length;
     });
-const eventsWithoutRoomRef = ref(JSON.parse(JSON.stringify(props.eventsWithoutRoom ?? [])));
+const eventsWithoutRoomRef = ref(props.eventsWithoutRoom );
 const first_project_calendar_tab_id = inject('first_project_calendar_tab_id');
 const first_project_tab_id = inject('first_project_tab_id');
 const eventTypes = inject('eventTypes');
@@ -416,6 +442,12 @@ const checkIfAnyRoomHasAnEventOrShift = computed(() => {
         });
     });
 });
+
+const checkIfRoomHasEvents = (room) => {
+    return room.content && Object.entries(room.content).some(([date, { events }]) => {
+        return events && events.length > 0;
+    });
+};
 
 const toggleMultiEdit = (value) => {
     multiEdit.value = value;
@@ -565,135 +597,6 @@ const deleteSelectedEvents = () => {
 
 const dateValue = inject('dateValue');
 
-const activeFilters = computed(() => {
-    let activeFiltersArray = []
-    filterOptions.rooms.forEach((room) => {
-        if (user_filters.rooms?.includes(room.id)) {
-            activeFiltersArray.push(room)
-        }
-    })
-
-    filterOptions.areas.forEach((area) => {
-        if (user_filters.areas?.includes(area.id)) {
-            activeFiltersArray.push(area)
-        }
-    })
-
-    filterOptions.eventTypes.forEach((eventType) => {
-        if (user_filters.event_types?.includes(eventType.id)) {
-            activeFiltersArray.push(eventType)
-        }
-    })
-
-    filterOptions.roomCategories.forEach((category) => {
-        if (user_filters.room_categories?.includes(category.id)) {
-            activeFiltersArray.push(category)
-        }
-    })
-
-    filterOptions.roomAttributes.forEach((attribute) => {
-        if (user_filters.room_attributes?.includes(attribute.id)) {
-            activeFiltersArray.push(attribute)
-        }
-    })
-
-    if (user_filters.is_loud) {
-        activeFiltersArray.push({name: "Laute Termine", value: 'isLoud', user_filter_key: 'is_loud'})
-    }
-
-    if (user_filters.is_not_loud) {
-        activeFiltersArray.push({name: "Ohne laute Termine", value: 'isNotLoud', user_filter_key: 'is_not_loud'})
-    }
-
-    if (user_filters.adjoining_no_audience) {
-        activeFiltersArray.push({
-            name: "Ohne Nebenveranstaltung mit Publikum",
-            value: 'adjoiningNoAudience',
-            user_filter_key: 'adjoining_no_audience'
-        })
-    }
-
-    if (user_filters.adjoining_not_loud) {
-        activeFiltersArray.push({
-            name: "Ohne laute Nebenveranstaltung",
-            value: 'adjoiningNotLoud',
-            user_filter_key: 'adjoining_not_loud'
-        })
-    }
-
-    if (user_filters.has_audience) {
-        activeFiltersArray.push({name: "Mit Publikum", value: 'hasAudience', user_filter_key: 'has_audience'})
-    }
-
-    if (user_filters.has_no_audience) {
-        activeFiltersArray.push({name: "Ohne Publikum", value: 'hasNoAudience', user_filter_key: 'has_no_audience'})
-    }
-
-    if (user_filters.show_adjoining_rooms) {
-        activeFiltersArray.push({
-            name: "Nebenräume anzeigen",
-            value: 'showAdjoiningRooms',
-            user_filter_key: 'show_adjoining_rooms'
-        })
-    }
-
-    return activeFiltersArray
-})
-
-const removeFilter = (filter) => {
-    if (filter.value === 'isLoud') {
-        updateFilterValue('is_loud', false);
-    }
-
-    if (filter.value === 'isNotLoud') {
-        updateFilterValue('is_not_loud', false)
-    }
-
-    if (filter.value === 'adjoiningNoAudience') {
-        updateFilterValue('adjoining_no_audience', false)
-    }
-
-    if (filter.value === 'adjoiningNotLoud') {
-        updateFilterValue('adjoining_not_loud', false)
-    }
-
-    if (filter.value === 'hasAudience') {
-        updateFilterValue('has_audience', false)
-    }
-
-    if (filter.value === 'hasNoAudience') {
-        updateFilterValue('has_no_audience', false)
-    }
-
-    if (filter.value === 'showAdjoiningRooms') {
-        updateFilterValue('show_adjoining_rooms', false)
-    }
-
-    if (filter.value === 'rooms') {
-        user_filters.rooms.splice(user_filters.rooms.indexOf(filter.id), 1);
-        updateFilterValue('rooms', user_filters.rooms.length > 0 ? user_filters.rooms : null)
-    }
-
-    if (filter.value === 'room_categories') {
-        user_filters.room_categories.splice(user_filters.room_categories.indexOf(filter.id), 1);
-        updateFilterValue('room_categories', user_filters.room_categories.length > 0 ? user_filters.room_categories : null)
-    }
-
-    if (filter.value === 'areas') {
-        user_filters.areas.splice(user_filters.areas.indexOf(filter.id), 1);
-        updateFilterValue('areas', user_filters.areas.length > 0 ? user_filters.areas : null)
-    }
-
-    if (filter.value === 'event_types') {
-        user_filters.event_types.splice(user_filters.event_types.indexOf(filter.id), 1);
-        updateFilterValue('event_types', user_filters.event_types.length > 0 ? user_filters.event_types : null)
-    }
-
-    if (filter.value === 'room_attributes') {
-        user_filters.room_attributes.splice(user_filters.room_attributes.indexOf(filter.id), 1);
-        updateFilterValue('room_attributes', user_filters.room_attributes.length > 0 ? user_filters.room_attributes : null)
-    }
-}
 
 const updateFilterValue = (key, value) => {
     router.patch(route('user.calendar.filter.single.value.update', {user: usePage().props.user.id}), {
@@ -747,12 +650,33 @@ onMounted(() => {
     ShiftCalendarListener.init();
 })
 
+
 </script>
 
 <style scoped>
 .cell {
     overflow: overlay;
+
+    /* Standard-Scrollbar für Firefox */
+    scrollbar-color: #d4d4d4 #f3f3f3;
+    scrollbar-width: thin;
 }
+
+/* Webkit (Chrome, Edge, Safari) */
+.cell::-webkit-scrollbar {
+    width: 2px !important; /* Sehr schmal */
+    height: 2px !important; /* Falls horizontal */
+}
+
+.cell::-webkit-scrollbar-thumb {
+    background-color: #d4d4d4;
+    border-radius: 10px;
+}
+
+.cell::-webkit-scrollbar-track {
+    background-color: #f3f3f3;
+}
+
 </style>
 
 

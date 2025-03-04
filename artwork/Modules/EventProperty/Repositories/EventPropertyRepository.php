@@ -31,6 +31,6 @@ class EventPropertyRepository extends BaseRepository
 
     public function getAll(): Collection
     {
-        return $this->getNewModelQuery()->get();
+        return EventProperty::all();
     }
 }

@@ -79,7 +79,7 @@ export default {
 
 <template>
     <BaseModal v-if="true" @closed="closeModal(false)" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
-        <div class="max-h-[calc(100%-10rem)]">
+        <div class="max-h-[calc(100%-10rem)] mt-5">
             <div class="mb-5">
                 <h2 class="headline1 mb-6">{{ $t('Calendar subscription settings') }}</h2>
                 <p class="text-secondary subpixel-antialiased text-sm">

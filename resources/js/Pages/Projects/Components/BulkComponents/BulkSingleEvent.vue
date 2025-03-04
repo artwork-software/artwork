@@ -1,7 +1,17 @@
 <template>
-   <div class="print:w-full">
-       <div class="grid gird-cols-1 md:grid-cols-8 gap-4">
-           <div class="" v-if="usePage().props.event_status_module">
+   <div class="print:w-full flex relative" :class="[event?.isNew ? 'border-2 rounded-lg border-pink-500 border-dashed py-2 px-1' : '']">
+       <div class="flex items-center gap-4 relative">
+           <div class="flex items-center justify-center pr-2" v-if="multiEdit">
+               <input
+                   v-model="event.isSelectedForMultiEdit"
+                   aria-describedby="candidates-description"
+                   name="candidates" type="checkbox"
+                   :id="event.id"
+                   class="input-checklist"
+               />
+           </div>
+           <div v-if="event.isSelectedForMultiEdit && multiEdit" class="absolute pointer-events-none top-0 left-0 w-full h-full bg-green-100/20 z-50"/>
+           <div class="" :style="getColumnSize(1)"  v-if="usePage().props.event_status_module">
                <Listbox v-model="event.status"
                         @update:model-value="updateEventInDatabase"
                         id="type"
@@ -14,7 +24,7 @@
                                <div class="block w-5 h-5 rounded-full"
                                     :style="{'backgroundColor' : event.status?.color }"/>
                            </div>
-                           <div class="truncate w-16 print:w-full">
+                           <div class="truncate print:w-full" :style="getColumnTextSize(1)">
                                {{ event.status?.name }}
                            </div>
                        </div>
@@ -39,7 +49,7 @@
                    </ListboxOptions>
                </Listbox>
            </div>
-           <div class="">
+           <div class="" :style="getColumnSize(2)">
                <Listbox v-model="event.type"
                         @update:model-value="updateEventInDatabase"
                         id="type"
@@ -52,7 +62,7 @@
                                <div class="block w-5 h-5 rounded-full"
                                     :style="{'backgroundColor' : event.type?.hex_code }"/>
                            </div>
-                           <div class="truncate w-16 print:w-full">
+                           <div class="truncate print:w-full" :style="getColumnTextSize(2)">
                                {{ event.type?.name }}
                            </div>
                        </div>
@@ -77,7 +87,7 @@
                    </ListboxOptions>
                </Listbox>
            </div>
-           <div>
+           <div :style="getColumnSize(3)">
                <input v-model="event.name"
                    type="text"
                    :id="'name-' + index"
@@ -88,7 +98,7 @@
                    :disabled="canEditComponent === false"
                />
            </div>
-           <div>
+           <div :style="getColumnSize(4)">
                <Listbox id="room"
                         as="div"
                         class="relative"
@@ -96,7 +106,7 @@
                         @update:model-value="updateEventInDatabase"
                         :disabled="canEditComponent === false">
                    <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class=" print:border-0">
-                       <div class="flex-grow flex text-left xsDark">
+                       <div class="truncate xsDark"  :style="getColumnTextSize(4)">
                            {{ event.room?.name }}
                        </div>
                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
@@ -116,7 +126,7 @@
                    </ListboxOptions>
                </Listbox>
            </div>
-           <div class="print:col-span-2">
+           <div class="print:col-span-2" :style="getColumnSize(5)">
                <div class="relative">
                    <div class="absolute inset-y-0 left-1 text-xs pointer-events-none text-primary flex items-center pl-3 z-40 h-12">
                        {{ dayString }},
@@ -133,7 +143,7 @@
                    />
                </div>
            </div>
-           <div class="col-span-2">
+           <div class="col-span-2" :style="getColumnSize(6)">
                <div class="flex items-center" v-if="timeArray">
                    <input
                        v-model="event.start_time"
@@ -159,86 +169,52 @@
                <div class="flex items-center gap-x-3">
                    <ToolTipComponent icon="IconNote" v-if="!isInModal" :tooltip-text="$t('Edit the description')" stroke="1.5" @click="openNoteModal = true" />
                    <ToolTipDefault :tooltip-text="$t('Set the event to all-day')" left show24-h-icon icon-classes="w-6 h-6" v-if="event.start_time && event.end_time && !event.copy && !isInModal" @click="removeTime"/>
-                   <IconCopy @click="event.copy = true" v-if="!event.copy"
-                             class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                             stroke-width="2"/>
-                   <Menu v-if="!isInModal"
-                         as="div"
-                         class="text-sm cursor-pointer flex flex-row items-center bg-transparent">
-                       <MenuButton as="div" class="bg-transparent">
-                           <IconDotsVertical class="w-5 h-5 flex-shrink-0 z-50"
-                                             stroke-width="1.5"
-                                             aria-hidden="true"/>
-                       </MenuButton>
-                       <div class="w-full h-full relative">
-                           <transition enter-active-class="transition-enter-active"
-                                       enter-from-class="transition-enter-from"
-                                       enter-to-class="transition-enter-to"
-                                       leave-active-class="transition-leave-active"
-                                       leave-from-class="transition-leave-from"
-                                       leave-to-class="transition-leave-to">
-                               <MenuItems class="w-56 absolute top-2 shadow-lg rounded-xl bg-artwork-navigation-background focus:outline-none">
-                                   <MenuItem v-slot="{ active }"
-                                             as="div">
-                                       <a @click="openEventComponent(event.id)"
-                                          :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer flex items-center px-4 py-2 subpixel-antialiased group']">
-                                           <IconEdit class="mr-3 h-5 w-5 group-hover:text-white"/>
-                                           {{ $t('Edit') }}
-                                       </a>
-                                   </MenuItem>
-                                   <MenuItem v-if="index > 0 && !event.copy || !isInModal"
-                                             v-slot="{ active }"
-                                             as="div"
-                                             @click="openDeleteEventConfirmModal()">
-                                       <a :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer flex items-center px-4 py-2 subpixel-antialiased group']">
-                                           <IconTrash class="mr-3 h-5 w-5 group-hover:text-white"/>
-                                           {{ $t('Put in the trash') }}
-                                       </a>
-                                   </MenuItem>
-                               </MenuItems>
-                           </transition>
-                       </div>
-                   </Menu>
-                   <div v-if="event.copy" class="flex items-center gap-x-2">
-                       <IconPlus class="w-6 h-6 text-artwork-buttons-context" stroke-width="2"/>
-                       <input
-                           type="number"
-                           class="input h-12 w-14"
-                           placeholder="Anzahl"
-                           v-model="event.copyCount"
-                           min="1"
-                           minlength="1"
-                           max="1000"
-                       />
-                       <Listbox as="div" class="relative" v-model="event.copyType" id="room">
-                           <ListboxButton class="menu-button">
-                               <div class="flex-grow flex text-left xsDark !w-12 truncate">
-                                   {{ event.copyType?.name }}
-                               </div>
-                               <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                           </ListboxButton>
-                           <ListboxOptions
-                               class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
-                               <ListboxOption v-for="copyType in copyTypes"
-                                              class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
-                                              :key="copyType.name"
-                                              :value="copyType"
-                                              v-slot="{ active, selected }">
-                                   <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                       {{ copyType.name }}
+                   <BaseMenu show-custom-icon dots-color="!text-artwork-buttons-context" stroke-width="2" icon="IconCopy" translation-key="Copy" menu-width="w-fit" white-menu-background>
+                       <div class="flex items-center gap-x-2 p-3">
+                           <IconPlus class="w-6 h-6 text-artwork-buttons-context" stroke-width="2"/>
+                           <input
+                               type="number"
+                               class="input h-12 w-14"
+                               placeholder="Anzahl"
+                               v-model="event.copyCount"
+                               min="1"
+                               minlength="1"
+                               max="1000"
+                           />
+                           <Listbox as="div" class="relative" v-model="event.copyType" id="room">
+                               <ListboxButton class="menu-button">
+                                   <div class="flex-grow flex text-left xsDark !w-12 truncate">
+                                       {{ event.copyType?.name }}
                                    </div>
-                                   <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
-                                              aria-hidden="true"/>
-                               </ListboxOption>
-                           </ListboxOptions>
-                       </Listbox>
-                       <IconCircleCheckFilled @click="createCopyByEventWithData(event)"
-                                              class="w-8 h-8 text-artwork-buttons-create cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                                              stroke-width="2"/>
-                       <IconX @click="event.copy = false"
-                              class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                              stroke-width="2"/>
-                   </div>
+                                   <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                               </ListboxButton>
+                               <ListboxOptions
+                                   class="w-44 rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
+                                   <ListboxOption v-for="copyType in copyTypes"
+                                                  class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                                  :key="copyType.name"
+                                                  :value="copyType"
+                                                  v-slot="{ active, selected }">
+                                       <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                           {{ copyType.name }}
+                                       </div>
+                                       <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
+                                                  aria-hidden="true"/>
+                                   </ListboxOption>
+                               </ListboxOptions>
+                           </Listbox>
+                           <IconCircleCheckFilled @click="createCopyByEventWithData(event)"
+                                                  class="w-8 h-8 text-artwork-buttons-create cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                                  stroke-width="2"/>
+                           <IconX @click="event.copy = false"
+                                  class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                  stroke-width="2"/>
+                       </div>
+                   </BaseMenu>
+                   <BaseMenu has-no-offset v-if="!isInModal">
+                       <BaseMenuItem icon="IconEdit" title="Edit" @click="openEventComponent(event.id)"/>
+                       <BaseMenuItem v-if="index > 0 && !event.copy || !isInModal" icon="IconTrash" title="Put in the trash" @click="openDeleteEventConfirmModal"/>
+                   </BaseMenu>
                </div>
            </div>
        </div>
@@ -253,6 +229,7 @@
            @closed="onCloseDeleteEventConfirmModal"/>
 
        <AddEditEventNoteModal :event="event" v-if="openNoteModal" @close="openNoteModal = false"/>
+
    </div>
 </template>
 
@@ -286,6 +263,8 @@ import {computed, onMounted, ref} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
 import {inject} from "vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 const props = defineProps({
     event: {
@@ -324,6 +303,11 @@ const props = defineProps({
     eventStatuses: {
         type: Object,
         required: true
+    },
+    multiEdit: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 });
 
@@ -336,6 +320,21 @@ const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'op
 const openEventComponent = (eventId) => {
     emit.call(this, 'openEventComponent', eventId)
 };
+
+const getColumnSize = (column) => {
+    return {
+        minWidth: usePage().props.user.bulk_column_size[column] + 'px',
+        width: usePage().props.user.bulk_column_size[column] + 'px',
+        maxWidth: usePage().props.user.bulk_column_size[column] + 'px'
+    }
+}
+const getColumnTextSize = (column) => {
+    return {
+        minWidth: parseInt(usePage().props.user.bulk_column_size[column]) - 50  + 'px',
+        width: parseInt(usePage().props.user.bulk_column_size[column]) - 50 + 'px',
+        maxWidth: parseInt(usePage().props.user.bulk_column_size[column]) - 50 + 'px'
+    }
+}
 
 const createCopyByEventWithData = (event) => {
     emit('createCopyByEventWithData', event);

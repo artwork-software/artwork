@@ -16,7 +16,7 @@
         "postcss": "^8.4.38",
         "postcss-import": "^16.1.0",
         "tailwindcss": "^3.4.4",
-        "vite": "6.0.9"
+        "vite": "6.1.1"
     },
     "dependencies": {
         "@headlessui-float/vue": "^0.15.0",
@@ -27,9 +27,9 @@
         "@soketi/soketi": "^1.6.1",
         "@tabler/icons": "^3.29.0",
         "@tabler/icons-vue": "^3.29.0",
-        "@vuepic/vue-datepicker": "^8.8.0",
-        "axios": "1.7.4",
-        "dayjs": "^1.11.11",
+        "@vuepic/vue-datepicker": "^11.0.1",
+        "axios": "^1.7.9",
+        "dayjs": "^1.11.13",
         "linkify-it": "^5.0.0",
         "lodash.debounce": "^4.0.8",
         "mathjax": "4.0.0-beta.6",
@@ -38,7 +38,7 @@
         "sass": "^1.77.6",
         "vue": "^3.5.13",
         "vue-cal": "^4.8.1",
-        "vue-i18n": "10.0.5",
+        "vue-i18n": "^11.1.1",
         "vue-mathjax-next": "^0.0.6",
         "vue-tailwind-datepicker": "^1.7.3",
         "vue3-colorpicker": "^2.3.0",

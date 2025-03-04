@@ -23,7 +23,11 @@
                 </BaseMenu>
             </div>
         </div>
-        <div class="w-full flex flex-row-reverse mb-4 items-center">
+        <div class="w-full sticky top-0 z-30 flex flex-row-reverse gap-x-4 py-4 items-center bg-lightBackgroundGray">
+            <button v-if="this.$can('edit budget templates') || !table.is_template"  @click="openAddColumnModal()" type="button" class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
+                <IconPlus stroke-width="2" class="h-4 w-4 mr-2"/>
+                <p class="text-sm"> {{ $t('New column') }}</p>
+            </button>
             <button v-if="!table.is_template" @click="downloadBudgetExport(project.id)" type="button" class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
                 <IconFileAnalytics stroke-width="2" class="h-4 w-4 mr-2"/>
                 <p class="text-sm">{{ $t('Excel-Export') }}</p>
@@ -43,11 +47,14 @@
                     </span>
                 </SwitchLabel>
             </SwitchGroup>
+
         </div>
-        <div class="w-full flex sticky top-0 bg-[#CECDD8] z-30">
+
+
+        <div class="w-full flex sticky top-16 bg-[#CECDD8] z-30">
             <table class="w-full flex ml-10 py-5">
                 <thead>
-                <tr class="">
+                <tr class="relative">
                     <th v-for="(column,index) in computedSortedColumns" v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="index === 0 ? 'w-28' : index === 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48'">
                         <div class="flex items-center group" :key="column.id" :class="index > 2 ? 'justify-end text-right' : ' justify-between'">
                             <div>
@@ -178,18 +185,7 @@
                             </BaseMenu>
                         </div>
                     </th>
-                    <th v-if="this.hasBudgetAccess()">
-                        <div class="flex items-center">
-                        <div class="text-white hidden xl:block ml-10">
-                            {{ $t('New column') }}
-                        </div>
-                        <button v-if="this.$can('edit budget templates') || !table.is_template"
-                                class="font-bold mr-2 ml-2 text-xl hover:bg-artwork-buttons-hover p-1 bg-secondary border-white border-2 rounded-full items-center uppercase shadow-sm text-secondaryHover transition-all duration-150"
-                                @click="openAddColumnModal()">
-                            <IconPlus stroke-width="1.5" class="h-4 w-4"/>
-                        </button>
-                        </div>
-                    </th>
+
                 </tr>
                 </thead>
             </table>

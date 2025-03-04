@@ -1,24 +1,28 @@
 <template>
     <div>
         <div>
-            <div class="text-secondaryHover xsWhiteBold px-1 py-1 rounded-lg"
-                 :style="{backgroundColor: backgroundColorWithOpacity(event.eventTypeColor, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventTypeColor, usePage().props.high_contrast_percent))}">
-                <a v-if="event.projectId" :href="route('projects.tab', {project: event.projectId, projectTab: firstProjectShiftTabId})" class="w-40 truncate cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
-                    {{ event.eventTypeAbbreviation }}: {{ event.eventName ?? event.projectName }}
-                </a>
-                <div v-else class="w-40 truncate">
-                    {{ event.eventTypeAbbreviation }}: {{ event.eventName ?? event.projectName }}
-                </div>
-                <div class="text-xs">
-                    <div v-if="event.allDay">
-                        {{ $t('All day') }}
+            <div class="text-secondaryHover xsWhiteBold px-2 py-1 rounded-lg"
+                 :style="{backgroundColor: backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent)),
+                 borderColor: event.eventType.hex_code}">
+                <div class="px-1.5 py-1 border-l-4 max-w-40 w-40" :style="{borderColor: event.eventType.hex_code}">
+                    <a v-if="event?.project?.id" :href="route('projects.tab', {project: event.project.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
+                        <div class="w-40 max-w-40 truncate ">
+                            {{ event.eventType.abbreviation }}: {{ event.eventName ?? event.project.name }}
+                        </div>
+                    </a>
+                    <div v-else class="truncate">
+                        {{ event.eventType.abbreviation }}: {{ event.eventName ?? event.project.name }}
                     </div>
-                    <div v-else-if="event.days_of_event.length === 1">
-                        <span v-if="event?.timesWithoutDates">{{ event?.timesWithoutDates?.start }} - {{ event?.timesWithoutDates?.end }}</span>
-                        <span v-else>{{ event?.times_without_dates?.start }} - {{ event?.times_without_dates.end }}</span>
-                    </div>
-                    <div v-else>
-                        {{ event.formatted_dates.start }} - {{ event.formatted_dates.end }}
+                    <div class="text-xs">
+                        <div v-if="event.allDay">
+                            {{ $t('All day') }}
+                        </div>
+                        <div v-else-if="event.daysOfEvent.length === 1">
+                            <span >{{ event?.formattedDates?.startTime }} - {{ event?.formattedDates?.endTime }}</span>
+                        </div>
+                        <div v-else>
+                            {{ event.formattedDates.start }} - {{ event.formattedDates.end }}
+                        </div>
                     </div>
                 </div>
             </div>

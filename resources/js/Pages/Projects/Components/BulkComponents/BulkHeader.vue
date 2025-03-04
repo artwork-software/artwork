@@ -1,21 +1,24 @@
 <template>
-    <div class="grid gird-cols-1 md:grid-cols-8 gap-4 mb-3 text-gray-400 text-sm print:xsDark">
-        <div class="font-bold" v-if="usePage().props.event_status_module">
+    <div class="flex items-center gap-4 mb-3 text-gray-400 text-sm print:xsDark mt-5">
+        <div v-if="multiEdit" class="w-8 h-4 block px-4">
+
+        </div>
+        <div class="font-bold" v-if="usePage().props.event_status_module" :style="getColumnSize(1)">
             {{ $t('Event Status') }}
         </div>
-        <div class="font-bold">
+        <div class="font-bold" :style="getColumnSize(2)">
             {{ $t('Event type') }}
         </div>
-        <div class="font-bold">
+        <div class="font-bold" :style="getColumnSize(3)">
             {{ $t('Event name') }}
         </div>
-        <div class="font-bold">
+        <div class="font-bold" :style="getColumnSize(4)">
             {{ $t('Room') }}
         </div>
-        <div class="font-bold print:col-span-2">
+        <div class="font-bold print:col-span-2" :style="getColumnSize(5)">
             {{ $t('Day') }}
         </div>
-        <div class="font-bold col-span-1">
+        <div class="font-bold col-span-1" :style="getColumnSize(6)">
             <SwitchGroup as="div" class="flex items-center" v-if="isInModal">
                 <Switch v-model="localValue"
                         @change="$emit('update:modelValue', localValue)"
@@ -58,8 +61,21 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: false
+    },
+    multiEdit: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 });
+
+const getColumnSize = (column) => {
+    return {
+        minWidth: usePage().props.user.bulk_column_size[column] + 'px',
+        width: usePage().props.user.bulk_column_size[column] + 'px',
+        maxWidth: usePage().props.user.bulk_column_size[column] + 'px'
+    }
+}
 
 // Lokaler Wert, um den Zustand des Switches zu halten
 const localValue = ref(props.modelValue);

@@ -10,8 +10,8 @@
                 <div v-if="event?.id" class="flex items-center">
                     {{ $t('Created by') }}
                     <div>
-                        <UserPopoverTooltip :user="this.event.created_by"
-                                            :id="this.event.created_by?.id ?? 'deletedUserTooltip'"
+                        <UserPopoverTooltip :user="this.event?.created_by"
+                                            :id="this.event?.created_by?.id ?? 'deletedUserTooltip'"
                                             height="7"
                                             width="7"
                                             class="ml-2"/>
@@ -534,11 +534,7 @@
                         </Listbox>
                     </div>
                 </div>
-                <div v-if="!this.$can('request room occupancy')">
-                    <div class="errorText">
-                        {{ $t('You do not have the permission to request a room reservation.') }}
-                    </div>
-                </div>
+
                 <div v-if="showComments" class="my-6" v-for="comment in this.event.comments">
                     <div class="flex justify-between">
                         <div class="flex items-center">
@@ -603,9 +599,9 @@
             </div>
 
             <div v-if="canEdit">
-                <div class="flex justify-center w-full py-4" v-if="(isAdmin || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.user.id) || $can('create events without request'))">
+                <div class="flex justify-center w-full py-4" v-if="hasAdminRole() || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.user.id) || $can('create events without request')">
                     <FormButton
-                        :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
+                        :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '') || !hasAdminRole()"
                         @click="updateOrCreateEvent()"
                         :text="this.event?.occupancy_option ? this.accept ? $t('Commitments') : this.optionAccept ? $t('Optional commitment') : this.adminComment !== '' ? $t('Send message') : $t('Save') : $t('Save')"
                     />
@@ -906,12 +902,14 @@ export default {
         openModal() {
             this.canEdit = (!this.event?.id) || this.isCreator || this.isRoomAdmin || this.hasAdminRole();
             if (!this.event) {
-                if (this.project) {
-                    this.selectedProject = {id: this.project.id, name: this.project.name};
-                }else if (this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id){
-                    this.selectedProject = {id: this.$page.props.user.calendar_settings.time_period_project_id, name: this.$page.props.projectNameOfCalendarProject};
-                }
                 return;
+            }
+
+            if (this.event?.project) {
+                console.log(this.event.project);
+                this.selectedProject = {id: this.event.project.id, name: this.event.project.name};
+            } else if (this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id){
+                this.selectedProject = {id: this.$page.props.user.calendar_settings.time_period_project_id, name: this.$page.props.projectNameOfCalendarProject};
             }
 
             const start = dayjs(this.event.start);
@@ -927,12 +925,16 @@ export default {
             this.oldEndTime = this.endTime;
             this.title = this.event.title;
             this.eventName = this.event.eventName;
-            this.selectedEventStatus = this.eventStatuses.find(status => status.id === this.event.eventStatusId);
+            this.selectedEventStatus = this.eventStatuses.find(status => status.id === this.event?.eventStatus?.id ?? this.event?.eventStatusId);
             this.allDayEvent = this.event.allDay ? this.event.allDay : false;
-            if (!this.event.eventTypeName) {
+            if (!this.event.eventType?.id) {
                 this.selectedEventType = this.eventTypes[0];
             } else {
-                this.selectedEventType = this.eventTypes.find(type => type.name === this.event.eventTypeName);
+                this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventType.id);
+            }
+
+            if (this.event?.eventTypeId) {
+                this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventTypeId);
             }
             this.series = this.event.is_series;
             if (this.series) {
@@ -943,8 +945,8 @@ export default {
                     this.selectedFrequency = frequency;
                 }
             });
-            this.selectedProject = {id: this.event.projectId, name: this.event.projectName};
-            if (this.selectedProject.id) {
+
+            if (this.selectedProject?.id) {
                 this.showProjectInfo = true;
             }
             if (this.wantedRoomId) {

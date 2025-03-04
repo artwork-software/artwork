@@ -1,7 +1,6 @@
 <template>
     <BaseModal @closed="closeModal">
-        <h1 class="headline1 mb-6">{{ day.day_string }} {{ day.full_day }}</h1>
-
+        <h1 class="headline1 mb-6">{{ day.dayString }} {{ day.fullDay }}</h1>
 
         <div class="flex items-center mb-5">
             <div>
@@ -25,7 +24,7 @@
         </div>
         <div class="space-y-2">
             <div v-for="shift in user.element.shifts" class="">
-                <div v-if="shift.days_of_shift?.includes(day.full_day)" class="flex items-center justify-between group" :id="'shift-' + shift.id">
+                <div v-if="shift.days_of_shift?.includes(day.fullDay)" class="flex items-center justify-between group" :id="'shift-' + shift.id">
                     <div>
                         <div class="flex text-sm space-x-1 divide-x divide-gray-600 ">
                             <div>
@@ -97,7 +96,7 @@
                     </div>
                 </div>
                 <div v-for="(individual_time, index) in getIndividualTimesByDate" class="mb-2">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 group" v-if="individual_time?.days_of_individual_time?.includes(day.without_format)">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 group" v-if="individual_time?.days_of_individual_time?.includes(day.withoutFormat)">
                         <TextInputComponent id="title" v-model="individual_time.title" label="Title" :show-label="false" no-margin-top />
                         <div class="flex items-center justify-center col-span-2">
                             <TimeInputComponent id="start_time" classes="rounded-r-none" v-model="individual_time.start_time" label="Startzeit" :show-label="false" no-margin-top />
@@ -139,7 +138,7 @@
         <div class="mt-5 text-sm" v-if="user.availabilities">
             <h3 class="font-bold mb-3">{{ $t('Registered availabilities') }}</h3>
 
-            <div class="my-2" v-for="availability in user.availabilities[day.full_day]">
+            <div class="my-2" v-for="availability in user.availabilities[day.fullDay]">
                 <div>
                     <div class="flex items-center">
                         <div>
@@ -225,13 +224,13 @@ export default defineComponent({
             ],
             vacationTypeBeforeUpdate: null,
             copyOfUserIndividualTimes: [...this.user.individual_times],
-            shiftPlanComment: this.user.shift_comments[this.day.without_format] ? this.user.shift_comments[this.day.without_format][0] : {comment: '', date: this.day.without_format},
+            shiftPlanComment: this.user.shift_comments[this.day.withoutFormat] ? this.user.shift_comments[this.day.withoutFormat][0] : {comment: '', date: this.day.withoutFormat},
         }
     },
     props: ['user', 'day'],
     emits: ['closed', 'delete', 'desiresReload'],
     mounted() {
-        const vacation = this.user.vacations?.find(v => v.date === this.day.without_format);
+        const vacation = this.user.vacations?.find(v => v.date === this.day.withoutFormat);
         if (vacation) {
             const vacationType = this.vacationTypes.find(type => type.type === vacation.type);
             this.checked =  vacationType ? vacationType : this.vacationTypes[0];
@@ -243,7 +242,7 @@ export default defineComponent({
     },
     computed: {
         getIndividualTimesByDate(){
-            return this.user.individual_times.filter(individual_time => individual_time.days_of_individual_time.includes(this.day.without_format));
+            return this.user.individual_times.filter(individual_time => individual_time.days_of_individual_time.includes(this.day.withoutFormat));
         }
     },
     methods: {
@@ -261,8 +260,8 @@ export default defineComponent({
                 title: '',
                 start_time: '',
                 end_time: '',
-                start_date: this.day.without_format,
-                days_of_individual_time: [this.day.without_format]
+                start_date: this.day.withoutFormat,
+                days_of_individual_time: [this.day.withoutFormat]
             })
         },
         closeModal(bool) {
@@ -277,10 +276,10 @@ export default defineComponent({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    document.getElementById('shift-' + shiftId).remove();
+                    document.getElementById('shift-' + shiftId)?.remove();
                 },
                 onFinish: () => {
-                    document.getElementById('shift-' + shiftId).remove();
+                    document.getElementById('shift-' + shiftId)?.remove();
                 }
             });
         },
@@ -318,7 +317,7 @@ export default defineComponent({
             if (this.user.type === 0) {
                 router.patch(route('user.check.vacation', {user: this.user.element.id}), {
                     checked: this.checked,
-                    day: this.day.full_day,
+                    day: this.day.fullDay,
                     vacationTypeBeforeUpdate: this.vacationTypeBeforeUpdate,
                 }, {
                     preserveScroll: true,
@@ -330,7 +329,7 @@ export default defineComponent({
             } else if (this.user.type === 1) {
                 router.patch(route('service_provider.check.vacation', {service_provider: this.user.element.id}), {
                     checked: this.checked,
-                    day: this.day.full_day,
+                    day: this.day.fullDay,
                     vacationTypeBeforeUpdate: this.vacationTypeBeforeUpdate,
                 }, {
                     preserveScroll: true,

@@ -155,7 +155,8 @@ const props = defineProps({
     fullProject: {
         type: Object,
         required: true,
-    }
+    },
+
 });
 
 const menuVisible = ref(false);
@@ -182,7 +183,9 @@ const componentMapping = {
     BuilderDropDown
 };
 
-
+const page = ref(route().params.page ?? 1);
+const perPage = ref(route().params.entitiesPerPage ?? 10);
+const query = ref(route().params.query ?? '');
 const openMenu = (projectId, event) => {
     menuVisible.value = projectId;
     currentProjectId.value = projectId;
@@ -286,14 +289,22 @@ const checkPermission = (project, type) => {
 }
 
 const pinProject = () => {
-    router.post(route('project.pin', {project: props.project.id}), {}, {
+    router.post(route('project.pin', {project: props.project.id}), {
+        page: page.value,
+        entitiesPerPage: perPage.value,
+        query: query.value
+    }, {
         preserveScroll: true,
         preserveState: true,
     });
 }
 
 const duplicateProject = () => {
-    router.post(route('projects.duplicate', {project: props.project.id}), {}, {
+    router.post(route('projects.duplicate', {project: props.project.id}), {
+        page: page.value,
+        entitiesPerPage: perPage.value,
+        query: query.value
+    }, {
         preserveScroll: true,
     });
 }
@@ -303,7 +314,12 @@ const openDeleteProjectModal = () => {
 }
 
 const deleteProject = () => {
-    router.delete(route('projects.destroy', {project: props.project.id}), {}, {
+    router.delete(route('projects.destroy', {project: props.project.id}), {
+        data: {
+            page: page.value,
+            entitiesPerPage: perPage.value,
+            query: query.value
+        },
         preserveScroll: true,
     });
     closeDeleteProjectModal();

@@ -507,8 +507,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Filters
     Route::get('/filters', [FilterController::class, 'index']);
-    Route::post('/filters', [FilterController::class, 'store']);
+    Route::post('/filters', [FilterController::class, 'store'])->name('filter.store');
     Route::delete('/filters/{filter}', [FilterController::class, 'destroy'])->name('filter.destroy');
+    Route::post('/filters/{filter}/{user}', [FilterController::class, 'activate'])->name('filter.activate');
 
     //Shift Filters
     Route::get('/shifts/filters', [ShiftFilterController::class, 'index']);
@@ -531,6 +532,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('event.update.single.bulk');
     Route::post('/events/{project}/single/bulk/create', [EventController::class, 'createSingleBulkEvent'])
         ->name('event.store.bulk.single');
+
+    // events.bulk-multi-edit
+    Route::post('/events/bulk/multi/edit', [EventController::class, 'bulkMultiEditEvent'])
+        ->name('events.bulk-multi-edit');
+
+    // event.bulk.delete
+    Route::delete('/events/bulk/delete', [EventController::class, 'bulkDeleteEvent'])
+        ->name('event.bulk.multi-edit.delete');
+
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
     Route::delete('/events/{event}/bulk', [EventController::class, 'destroyWithoutReturn'])->name('event.bulk.delete');
     Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])
@@ -585,6 +595,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // event.shift.store.multi.add
     Route::post('/event/shift/store/multi/add', [ShiftController::class, 'storeShiftMultiAdd'])
         ->name('event.shift.store.multi.add');
+
 
 
     Route::group(['prefix' => 'settings'], function (): void {
@@ -760,6 +771,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // user.update.daily_view
     Route::patch('/user/{user}/update/daily_view', [UserController::class, 'updateDailyView'])
         ->name('user.update.daily_view');
+
+    Route::patch('/user/{user}/update/bulk-column-size', [UserController::class, 'updateBulkColumnSize'])
+        ->name('user.bulk-column-size.update');
 
     Route::resource(
         'user.commentedBudgetItemsSettings',
@@ -1555,6 +1569,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'reorder'])
                 ->name('sidebar.tab.reorder');
         });
+
+        Route::group(['prefix' => 'calendar'], function () {
+            Route::get('/', [CalendarController::class, 'settingIndex'])->name('calendar.settings');
+
+            // post: calendar-settings.store
+            Route::post('/store', [CalendarController::class, 'storeSettings'])->name('calendar-settings.store');
+        });
     });
 
     Route::group(['prefix' => 'user'], function (): void {
@@ -1907,6 +1928,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/destroy/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'destroy'])
             ->name('project-print-layout.destroy');
     });
+
+
 });
 
 Route::get(

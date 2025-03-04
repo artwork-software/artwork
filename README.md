@@ -93,7 +93,10 @@ Artwork offers a stand alone containerized version of the application. This is u
 ### Prerequisites
 
 Clone the repository `git clone git@github.com:artwork-software/artwork.git`.
-You need [Docker](https://www.docker.com/) and the .env of the repository. It is advised to use the `.env.prod.example` file and rename it to `.env`
+You need [Docker](https://www.docker.com/) and the .env of the repository. It is advised to use the `.env.standalone.example` file and rename it to `.env`
+
+Everytime the container is built it will perform an auto update on database and components. To update Artwork itself please update the Github repository.
+
 
 ### Installation
 

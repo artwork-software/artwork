@@ -309,7 +309,7 @@ export default {
                                   :href="route('projects.tab', {project: headerObject.project.id, projectTab: tab.id})"
                                   :class="[tab.id === headerObject.currentTabId ? 'border-artwork-buttons-hover text-artwork-buttons-hover' : 'border-transparent hover:text-gray-600 hover:border-gray-300 text-artwork-context-dark', 'whitespace-nowrap py-2 px-1 border-b-2 font-black duration-300 ease-in-out']"
                                   :aria-current="tab.id === headerObject.currentTabId ? 'page' : undefined">
-                                {{ $t(tab.name) }}
+                                {{ tab.name }}
                             </Link>
                         </nav>
                     </div>

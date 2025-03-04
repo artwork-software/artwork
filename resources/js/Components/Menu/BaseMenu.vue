@@ -23,10 +23,11 @@
 
                        <ToolTipComponent
                            v-if="showCustomIcon"
-                           direction="bottom"
+                           :direction="tooltipDirection"
                            :tooltip-text="$t(translationKey)"
                            :icon="icon"
                            :icon-size="dotsSize"
+                           :stroke="strokeWidth"
                            :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
                        />
                    </div>
@@ -39,7 +40,7 @@
                         leave-active-class="transition ease-in duration-75"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
-                <MenuItems class="z-50 rounded-lg bg-artwork-navigation-background shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none" :class="[menuWidth]">
+                <MenuItems class="z-50 rounded-lg  shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none" :class="[menuWidth, whiteMenuBackground ? 'bg-white' : 'bg-artwork-navigation-background']">
                     <div>
                         <slot />
                     </div>
@@ -122,6 +123,21 @@ export default defineComponent({
             type: Boolean,
             required: false,
             default: true,
+        },
+        whiteMenuBackground: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        strokeWidth: {
+            type: [String, Number],
+            required: false,
+            default: 1.5,
+        },
+        tooltipDirection: {
+            type: String,
+            required: false,
+            default: 'top',
         },
     },
 

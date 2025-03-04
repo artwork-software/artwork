@@ -60,7 +60,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
@@ -137,6 +136,11 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $checklist_completed_tasks
  * @property boolean $checklist_show_without_tasks
  * @property boolean $is_developer
+ * @property array $show_qualifications
+ * @property boolean $email_private
+ * @property boolean $phone_private
+ * @property boolean $daily_view
+ * @property int $last_project_id
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -212,7 +216,10 @@ class User extends Model implements
         'show_qualifications',
         'email_private',
         'phone_private',
-        'daily_view'
+        'daily_view',
+        'entities_per_page',
+        'last_project_id',
+        'bulk_column_size'
     ];
 
     protected $casts = [
@@ -240,7 +247,8 @@ class User extends Model implements
         'show_qualifications' => 'array',
         'email_private' => 'boolean',
         'phone_private' => 'boolean',
-        'daily_view' => 'boolean'
+        'daily_view' => 'boolean',
+        'bulk_column_size' => 'array',
     ];
 
     protected $hidden = [
@@ -257,7 +265,7 @@ class User extends Model implements
         'assigned_craft_ids',
     ];
 
-    protected $with = ['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'];
+    protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
     public function getTypeAttribute(): string
     {
@@ -387,11 +395,6 @@ class User extends Model implements
         return $this->hasManyThrough(Task::class, Checklist::class);
     }
 
-    public function getPermissionAttribute(): \Illuminate\Support\Collection
-    {
-        return $this->getAllPermissions();
-    }
-
     public function globalNotification(): HasOne
     {
         return $this->hasOne(GlobalNotification::class, 'created_by');
@@ -472,8 +475,9 @@ class User extends Model implements
      */
     public function getAssignedCraftIdsAttribute(): array
     {
-        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
+        return $this->assignedCrafts()->pluck('crafts.id')->all();
     }
+
 
     public function getShiftIdsBetweenStartDateAndEndDate(
         Carbon $startDate,
@@ -487,13 +491,10 @@ class User extends Model implements
      */
     public function allPermissions(): array
     {
-        $permissions = [];
-        foreach (Permission::all() as $permission) {
-            if (Auth::user()->can($permission->name)) {
-                $permissions[] = $permission->name;
-            }
+        if (!$this->exists){
+            return [];
         }
-        return $permissions;
+        return $this->getAllPermissions()->pluck('name')->toArray();
     }
 
     /**
@@ -501,14 +502,13 @@ class User extends Model implements
      */
     public function allRoles(): array
     {
-        $rolesArray = [];
-        foreach (Role::all() as $roles) {
-            if (Auth::user()->hasRole($roles->name)) {
-                $rolesArray[] = $roles->name;
-            }
+        if (!$this->exists) {
+            return [];
         }
-        return $rolesArray;
+
+        return $this->roles()->pluck('name')->toArray();
     }
+
 
     /**
      * @return array<string, mixed>
@@ -596,5 +596,10 @@ class User extends Model implements
     public function getManagingCraftIds(): array
     {
         return $this->craftsToManage()->pluck('id')->toArray();
+    }
+
+    public function lastProject(): HasOne
+    {
+        return $this->hasOne(Project::class, 'id', 'last_project_id');
     }
 }

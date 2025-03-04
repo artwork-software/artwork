@@ -756,6 +756,11 @@ class UserController extends Controller
         $user->update($request->only('daily_view'));
     }
 
+    public function updateBulkColumnSize(User $user, Request $request): void
+    {
+        $user->update($request->only('bulk_column_size'));
+    }
+
     /**
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface

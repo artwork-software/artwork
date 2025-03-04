@@ -81,7 +81,7 @@ export default {
     },
     data() {
         return {
-            entitiesPerPage: [1, 10, 25, 50, 100],
+            entitiesPerPage: [1, 5, 10, 25, 50, 100],
         }
     },
     methods: {

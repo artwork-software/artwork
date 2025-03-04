@@ -6,9 +6,9 @@
                     <div class="w-full flex items-center justify-end">
                         <div class="w-full flex items-center">
                             <div class="w-full flex items-center">
-                                <p class="items-center flex mr-2 headline1">
+                                <h1 class="items-center flex mr-2 headline1">
                                     {{ $t('Projects') }}
-                                </p>
+                                </h1>
                             </div>
                             <div class="flex relative items-center gap-x-3.5">
                                 <div class="flex items-center">
@@ -134,6 +134,14 @@
                                             @click="openCreateProjectModal"/>
                             </div>
                         </div>
+
+
+                    </div>
+                    <div class="mt-4 gap-x-1 flex items-center" v-if="lastProject?.id">
+                        <div class="xsDark">
+                            {{ $t('Last visited project') }}:
+                        </div>
+                        <a class="text-artwork-buttons-create text-sm underline underline-offset-2 font-bold" :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })">{{ lastProject.name }}</a>
                     </div>
                 </div>
             </div>
@@ -350,10 +358,18 @@ const props = defineProps({
     },
     myLastProject: {
         type: Object,
-        required: true,
+        required: false,
     },
     pinnedProjectsAll: {
         type: Object,
+        required: true,
+    },
+    lastProject: {
+        type: Object,
+        required: true,
+    },
+    entitiesPerPage: {
+        type: Number,
         required: true,
     },
 })
@@ -388,7 +404,7 @@ const createProject = ref(false);
 const showExportModal = ref(false);
 const entitiesPerPage = ref([10, 15, 20, 30, 50, 75, 100]);
 const page = ref(route().params.page ?? 1);
-const perPage = ref(route().params.entitiesPerPage ?? 10);
+const perPage = ref(props.entitiesPerPage ?? 10);
 const showAddBulkEventModal = ref(false);
 const dropFeedbackShown = ref(null);
 

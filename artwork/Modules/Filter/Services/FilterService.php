@@ -39,13 +39,36 @@ class FilterService
     /**
      * @return array<string, mixed>
      */
-    public function getCalendarFilterDefinitions(): array
+    public function getCalendarFilterDefinitions(bool $isCalendar = false): array
     {
+        $roomCategories = $this->categoryRepository->getAll();
+        $roomAttributes = $this->roomAttributeRepository->getAll();
+        $eventTypes = $this->eventTypeService->getAll();
+        $eventProperties = $this->eventPropertyRepository->getAll();
+
+        if ($isCalendar) {
+            return [
+                'room_categories' => $this->map($roomCategories),
+                'room_attributes' => $this->map($roomAttributes),
+                'event_types' => $this->map($eventTypes),
+                'event_properties' => $this->map($eventProperties),
+                'areas' => $this->map($this->areaRepository->getAll()),
+                'rooms' => $this->roomRepository
+                    ->allWithoutTrashed()
+                    ->map(fn(Room $room) => [
+                        'id' => $room->getAttribute('id'),
+                        'name' => $room->getAttribute('name'),
+                        'label' => $room->getAttribute('name'),
+                    ]),
+            ];
+        }
+
         return [
-            'roomCategories' => $this->map($this->categoryRepository->getAll()),
-            'roomAttributes' => $this->map($this->roomAttributeRepository->getAll()),
-            'eventTypes' => $this->map($this->eventTypeService->getAll()),
-            'eventProperties' => $this->eventPropertyRepository->getAll(),
+            'roomCategories' => $this->map($roomCategories),
+            'roomAttributes' => $this->map($roomAttributes),
+            'eventTypes' => $this->map($eventTypes),
+            'eventProperties' => $this->map($eventProperties),
+
             'areas' => $this->map($this->areaRepository->getAll()),
             'rooms' => $this->roomRepository
                 ->allWithoutTrashed()
@@ -55,6 +78,7 @@ class FilterService
                     'label' => $room->getAttribute('name'),
                 ]),
         ];
+
     }
 
     private function map(Collection $collection): Collection|\Illuminate\Support\Collection
@@ -62,6 +86,7 @@ class FilterService
         return $collection->map(fn(Model $model) => [
             'id' => $model->getAttribute('id'),
             'name' => $model->getAttribute('name'),
+            'icon' => $model?->getAttribute('icon'),
         ]);
     }
 }

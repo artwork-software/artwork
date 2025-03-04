@@ -17,7 +17,7 @@
                                aria-describedby="candidates-description"
                                name="candidates" type="checkbox"
                                :id="event.id"
-                               class="input-checklist"
+                               class="input-checklist hidden"
                                @change="changeMultiEditCheckbox(
                                    event.id,
                                    event.considerOnMultiEdit,

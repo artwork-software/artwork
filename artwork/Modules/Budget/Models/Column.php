@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $position
  * @property int $linked_first_column
  * @property int $linked_second_column
+ * @property bool $commented
+ * @property bool $relevant_for_project_groups
  * @property Collection<ColumnCell> $cells
  * @property Collection<SubPositionSumDetail> $subPositionSumDetails
  * @property Collection<MainPositionDetails> $mainPositionSumDetails

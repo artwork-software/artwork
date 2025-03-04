@@ -5,7 +5,12 @@
         <div v-if="zoom_factor > 0.4 && multiEdit" @click="clickOnCheckBox"
              class="absolute w-full h-full z-10 rounded-lg group-hover/singleEvent:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
-            <div class="flex justify-center items-center h-full gap-2">
+            <div v-if="event.considerOnMultiEdit" class="flex items-center h-full justify-center align-middle">
+                <div class="bg-white rounded-lg">
+                    <component is="IconSquareCheckFilled" class="size-6 text-green-500" />
+                </div>
+            </div>
+            <div class="justify-center items-center h-full gap-2 hidden">
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
                         <input v-model="event.considerOnMultiEdit"

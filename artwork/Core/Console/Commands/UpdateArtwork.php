@@ -2,7 +2,12 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\SubPosition;
+use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
 use Database\Seeders\ProjectManagementBuilderSeed;
 use Illuminate\Console\Command;
@@ -10,7 +15,8 @@ use Illuminate\Console\Command;
 class UpdateArtwork extends Command
 {
     public function __construct(
-        private readonly ProjectManagementBuilderService $projectManagementBuilderService
+        private readonly ProjectManagementBuilderService $projectManagementBuilderService,
+        private readonly ColumnService $columnService,
     ) {
         parent::__construct();
     }
@@ -60,6 +66,11 @@ class UpdateArtwork extends Command
 
         $this->info('----------------------------------------------------------');
 
+
+        // add to all project Groups the new column with type project_relevant_column
+        $this->info('Add new column to all project groups');
+        $this->call('db:seed', ['--class' => 'UpdateOrCreateProjectRelevantColumn']);
+        $this->info('----------------------------------------------------------');
         $this->info('Artwork Update Command has finished');
     }
 }

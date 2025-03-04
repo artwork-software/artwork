@@ -82,7 +82,8 @@ class BudgetService
                 name: date('Y') . ' €',
                 subName: 'A',
                 type: 'empty',
-                position: 3
+                position: 3,
+                relevant_for_project_groups: !$project->is_group,
             );
 
             if ($project->is_group){

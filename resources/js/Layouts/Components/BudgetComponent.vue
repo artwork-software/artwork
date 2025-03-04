@@ -935,6 +935,7 @@ export default {
             const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
             if (data.length === 0) return 0;
             const relevantData = data[type]?.filter((item) => type === item.type && item.commented);
+            if (relevantData.length === 0) return 0;
             return relevantData.reduce((acc, item) => {
                 const value = parseFloat(item.value.replace(',', '.'));
                 return acc + value;
@@ -944,7 +945,7 @@ export default {
             const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
             if (data.length === 0) return 0;
             const relevantData = data[type]?.filter((item) => type === item.type && !item.commented);
-
+            if (relevantData.length === 0) return 0;
             return relevantData.reduce((acc, item) => {
                 const value = parseFloat(item.value.replace(',', '.'));
                 return acc + value;

@@ -9,7 +9,7 @@
                  class="mx-auto size-8 rounded-full object-cover mr-2">
         </span>
         <div class=" group-hover/project:text-artwork-buttons-create duration-300 ease-in-out text-dark flex items-center gap-x-1">
-            <component v-if="project.icon" :is="project.icon" :style="{color: project?.color}" aria-hidden="true"/>
+            <component v-if="project.icon && project.is_group" :is="project.icon" :style="{color: project?.color}" aria-hidden="true"/>
             {{ project.title }}
         </div>
     </div>

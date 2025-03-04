@@ -154,7 +154,7 @@
                                     index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end',
                                     cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center" v-if="!cell.clicked">
-                                    <div class=" flex items-center">
+                                    <div class=" flex items-center" v-if="cell.column.type !== 'project_relevant_column'">
                                         <div class="cursor-pointer" @click="handleCellClick(cell, 'comment', index, row)" v-if="cell.comments_count > 0">
                                             <IconMessageDots class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
                                         </div>
@@ -169,6 +169,9 @@
                                             <span @click="handleCellClick(cell, '', index, row)" v-else>{{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}</span>
                                         </div>
                                     </div>
+                                    <div v-else class="flex items-center">
+                                        {{ calculateRelevantBudgetDataSumFormProjectsInGroup(cell) }}
+                                    </div>
                                 </div>
                                 <div class="flex items-center relative"
                                      :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'"
@@ -182,8 +185,7 @@
                                            @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
                                     <IconCirclePlus stroke-width="1.5" v-if="index > 2 " @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 absolute right-4 translate-x-1/2 z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
                                 </div>
-                                <div
-                                    :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
+                                <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
                                     class="my-4 h-6 flex items-center justify-end"
                                     @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                                     v-else>
@@ -284,11 +286,14 @@
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'moneySource')"
                                  v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
                                  src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                            <span v-if="column.type !== 'sage'">
+                            <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
                                 {{ this.toCurrencyString(subPosition.columnSums[column.id]?.sum) }}
                             </span>
-                            <span v-else>
+                            <span v-if="column.type === 'sage'">
                                 {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
+                            </span>
+                            <span v-if="column.type === 'project_relevant_column'">
+                                {{ calculateRelevantBudgetDataSumFormProjectsInGroupSubPosition() }}
                             </span>
                             <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                  @click="openSubPositionSumDetailModal(subPosition, column)"
@@ -324,7 +329,7 @@
 import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {Link, useForm} from "@inertiajs/vue3";
+import {Link, useForm, usePage} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {nextTick} from "vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -439,7 +444,9 @@ export default {
                     return acc;
                 }, 0) ?? 0;
             }, 0) ?? 0;
-        }
+        },
+
+        // usePage().props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData
 
     },
     mounted() {
@@ -454,15 +461,11 @@ export default {
         localStorage.removeItem('closedSubPositions')
     },
     methods: {
-<<<<<<< Updated upstream
-=======
         usePage,
         calculateRelevantBudgetDataSumFormProjectsInGroup(cell){
             const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
-
             if (data.length === 0) return 0;
-
-            const relevantData = data[this.mainPosition.type]?.filter((item) => cell.sub_position_row_id === item.groupRowId);
+            const relevantData = data[this.mainPosition.type].filter((item) => cell.sub_position_row_id === item.groupRowId);
             const sum = relevantData.reduce((acc, item) => {
                 const value = parseFloat(item.value.replace(',', '.'));
                 return acc + value;
@@ -472,7 +475,6 @@ export default {
         calculateRelevantBudgetDataSumFormProjectsInGroupSubPosition(){
             const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
             if (data.length === 0) return 0;
-
             const relevantData = data[this.mainPosition.type]?.filter((item) => item.subPositionId === this.subPosition.id && this.mainPosition.type === item.type);
             const sum = relevantData.reduce((acc, item) => {
                 const value = parseFloat(item.value.replace(',', '.'));
@@ -481,7 +483,6 @@ export default {
 
             return this.toCurrencyString(sum);
         },
->>>>>>> Stashed changes
         updateRowCommented(rowId, bool) {
             this.$inertia.patch(
                 route(

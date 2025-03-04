@@ -190,12 +190,33 @@ class EventController extends Controller
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
 
+        $dailyViewInfo = '';
+
+        if($user->daily_view && $startDate->diffInDays($endDate) > 7) {
+            $endDate = $startDate->copy()->addDays(7);
+            $dailyViewInfo = __('calendar.daily_view_info');
+        }
+
         $period = $this->calendarDataService->createCalendarPeriodDto(
             $startDate,
             $endDate,
             $user,
             false
         );
+
+        $months = [];
+        foreach ($period as $periodObject) {
+            $date = Carbon::parse($periodObject->withoutFormat);
+            $month = $date->format('m.Y');
+            if (!array_key_exists($month, $months)) {
+                $months[$month] = [
+                    'first_day_in_period' => $date->format('Y-m-d'),
+                    'month' => $date->monthName,
+                    'year' => $date->format('y'),
+                ];
+            }
+        }
+
 
         $rooms = $this->calendarDataService->getFilteredRooms(
             $userCalendarFilter,
@@ -253,6 +274,8 @@ class EventController extends Controller
             'first_project_shift_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'projectNameUsedForProjectTimePeriod' => $project?->name ?? null,
+            'infoForDailyView' => $dailyViewInfo,
+            'months' => $months,
         ]);
     }
 

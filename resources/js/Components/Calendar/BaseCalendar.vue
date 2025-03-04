@@ -43,13 +43,13 @@
                                 <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day" v-if="!day.isExtraRow"/>
                                 <div v-for="room in newCalendarData" :key="room.id" class="relative" v-if="!day.isExtraRow">
                                     <div v-if="room.content[day.fullDay]?.events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
-                                        <component is="IconChevronDown" @click="scrollToNextEventInDay(day.withoutFormat, room.content[day.fullDay].events.length)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
+                                        <component is="IconChevronDown" @click="scrollToNextEventInDay(day.withoutFormat, room.content[day.fullDay].events.length,room.roomId)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
                                     </div>
                                     <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                          :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                                          class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.withoutFormat">
                                         <div  v-for="(event, index) in room.content[day.fullDay].events">
-                                            <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.withoutFormat">
+                                            <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.withoutFormat + '-room-' + room.roomId">
                                                 <AsyncSingleEventInCalendar
                                                     :event="event"
                                                     v-if="event.roomId === room.roomId"
@@ -332,8 +332,8 @@ const textStyle = computed(() => {
             lineHeight,
         };
     })
-const scrollToNextEventInDay = (day, length) => {
-        let eventScroll = document.getElementById('event_scroll-' + (length - 1) + '-day-' + day);
+const scrollToNextEventInDay = (day, length,room) => {
+        let eventScroll = document.getElementById('event_scroll-' + (length - 1) + '-day-' + day + '-room-' + room);
         if (eventScroll) {
             eventScroll.scrollIntoView({
                 behavior: 'smooth', // Optionale Animation für weiches Scrollen

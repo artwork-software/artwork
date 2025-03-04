@@ -2,6 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
 use Database\Seeders\ProjectManagementBuilderSeed;
 use Illuminate\Console\Command;
@@ -52,6 +53,15 @@ class UpdateArtwork extends Command
 
         $this->info('Update Shift-Qualification-Icons');
         $this->call('db:seed', ['--class' => 'ShiftQualificationIconsSeeder']);
+        $this->info('----------------------------------------------------------');
+
+        $this->info('Change Notification Settings');
+
+        NotificationSetting::where('type', 'NOTIFICATION_ROOM_ANSWER')->update([
+            'title' => 'Room requests answered',
+            'description' => 'Find out if your room requests has been answered.',
+        ]);
+
         $this->info('----------------------------------------------------------');
     }
 }

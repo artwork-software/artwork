@@ -4,6 +4,13 @@
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
                     <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"/>
+
+                    <div v-if="infoForDailyView && !dailyView" class="flex items-center mx-2">
+                        <div class="text-xs text-red-500">
+                            {{ infoForDailyView }}
+                        </div>
+                    </div>
+
                     <div class="flex items-center">
                         <button v-if="!dailyView" class="ml-2 text-black previousTimeRange" @click="previousTimeRange">
                             <IconChevronLeft class="h-5 w-5 text-primary"/>
@@ -19,7 +26,7 @@
                         </button>
 
                     </div>
-                    <BaseMenu show-custom-icon icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
+                    <BaseMenu tooltip-direction="bottom" show-custom-icon icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
                         <BaseMenuItem icon="IconCalendarRepeat" without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>
@@ -160,7 +167,7 @@
                             <MenuButton id="displaySettings">
                             <span class="items-center flex">
                                 <button type="button"
-                                        class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
+                                        class="text-sm flex items-center my-auto text-primary focus:outline-none transition">
                                     <ToolTipComponent
                                         direction="bottom"
                                         :tooltip-text="$t('Display Settings')"
@@ -394,6 +401,7 @@ import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum
 import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
 
 const eventTypes = inject('eventTypes');
+const infoForDailyView = inject('infoForDailyView');
 const rooms = inject('rooms');
 const areas = inject('areas');
 const dateValue = inject('dateValue');
@@ -545,7 +553,7 @@ const changeDailyViewMode = () => {
         daily_view: dailyViewMode.value
     }, {
         preserveScroll: false,
-        preserveState: true
+        preserveState: false
     })
 }
 

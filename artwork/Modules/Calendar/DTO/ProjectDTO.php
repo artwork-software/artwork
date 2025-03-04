@@ -17,7 +17,10 @@ class ProjectDTO extends Data
         public string $name,
         public Lazy|ProjectState|null $status,
         public ?string $artistNames,
-        public Lazy|Collection $leaders
+        public Lazy|Collection $leaders,
+        public ?string $color = null,
+        public ?string $icon = null,
+        public ?bool $isGroup = false,
     ) {
     }
 
@@ -32,6 +35,9 @@ class ProjectDTO extends Data
             $userCalendarSettings?->project_management ?
                 $project->managerUsers :
                 Lazy::inertia(fn() => $project->managerUsers),
+            $project->color,
+            $project->icon,
+            $project->is_group,
         );
     }
 }

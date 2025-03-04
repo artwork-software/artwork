@@ -143,16 +143,18 @@ export default {
         <div class="ml-14 pr-14 mt-5">
             <div class="flex flex-col">
                 <!-- if in group -->
-                <div v-if="headerObject.currentGroup" class="bg-secondaryHover text-sm shadow-sm border border-gray-200 px-3 py-1 rounded-lg -mb-2 z-20 w-fit pr-6 pb-0.5">
+                <div v-if="project?.groups?.length > 0" class="bg-secondaryHover text-sm shadow-sm border border-gray-200 px-3 py-1 rounded-lg -mb-2 z-20 w-fit pr-6 pb-0.5">
                     <div class="flex items-center">
                         <span v-if="!project?.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
                         </span>
                         {{ $t('Belongs to') }}
-                        <!--:href="'/projects/' + headerObject.currentGroup?.id"-->
-                        <a :href="route('projects.tab', {project: headerObject.currentGroup?.id, projectTab: first_project_tab_id})" class="text-artwork-buttons-create ml-1">
-                            {{ headerObject.currentGroup?.name }}
-                        </a>
+                        <span v-for="group in project.groups">
+                            <a :href="route('projects.tab', {project: group?.id, projectTab: first_project_tab_id})" class="text-artwork-buttons-create ml-1">
+                                {{ group?.name }}
+                            </a>,
+                        </span>
+
                     </div>
                 </div>
                 <div class="hidden">

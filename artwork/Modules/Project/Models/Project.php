@@ -96,7 +96,9 @@ class Project extends Model
         'law_size',
         'cost_center_description',
         'is_group',
-        'user_id'
+        'user_id',
+        'color',
+        'icon',
     ];
 
     protected $casts = [
@@ -247,12 +249,12 @@ class Project extends Model
 
     public function groups(): BelongsToMany
     {
-        return $this->belongsToMany(__CLASS__, 'project_groups', 'project_id', 'group_id', 'id');
+        return $this->belongsToMany(__CLASS__, 'project_groups', 'project_id', 'group_id', 'id')->with(['users']);
     }
 
     public function projectsOfGroup(): BelongsToMany
     {
-        return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id', 'project_id', 'id');
+        return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id', 'project_id', 'id')->with(['users']);
     }
 
     public function table(): HasOne

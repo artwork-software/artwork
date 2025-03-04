@@ -178,6 +178,22 @@ class DefaultComponentSeeder extends Seeder
                 'special' => true,
                 'sidebar_enabled' => true,
                 'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ],
+            [
+                'name' => 'Project group display component',
+                'type' => ProjectTabComponentEnum::PROJECT_GROUP_DISPLAY,
+                'data' => [],
+                'special' => false,
+                'sidebar_enabled' => true,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ],
+            [
+                'name' => 'Component Subprojects',
+                'type' => ProjectTabComponentEnum::GROUP_PROJECT_DISPLAY,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => true,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ]
         ];
 

@@ -76,6 +76,8 @@ class EventTypeController extends Controller
         $eventType->project_mandatory = $request->get('project_mandatory', $eventType->project_mandatory);
         $eventType->individual_name = $request->get('individual_name', $eventType->individual_name);
         $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
+        $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
+        $eventType->relevant_for_project_period = $request->get('relevant_for_project_period', $eventType->relevant_for_project_period);
 
         return $eventType;
     }

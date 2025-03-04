@@ -48,6 +48,12 @@
                                     <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                          :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                                          class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.withoutFormat">
+                                        <div v-if="usePage().props.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
+                                            <div class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
+                                                <component :is="group.icon" class="size-4" aria-hidden="true"/>
+                                                <span>{{ group.name }}</span>
+                                            </div>
+                                        </div>
                                         <div  v-for="(event, index) in room.content[day.fullDay].events">
                                             <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.withoutFormat + '-room-' + room.roomId">
                                                 <AsyncSingleEventInCalendar
@@ -432,6 +438,23 @@ const resetMultiEdit = () => {
     editEventsRoomIds.value = [];
     editEventsRoomsDesiredDays.value = [];
     toggleMultiEdit(false);
+};
+
+
+const getAllProjectGroupsInEventsByDay = (events) => {
+    let projectGroups = [];
+
+    events.forEach(event => {
+        if (event?.project?.isGroup) {
+            let projectGroup = projectGroups.find(group => group.id === event.project.id);
+
+            if (!projectGroup) {
+                projectGroups.push(event.project);
+            }
+        }
+    });
+
+    return projectGroups;
 };
 
 const checkIfAnyRoomHasAnEventOrShift = computed(() => {

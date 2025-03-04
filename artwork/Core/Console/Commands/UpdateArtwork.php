@@ -34,26 +34,22 @@ class UpdateArtwork extends Command
             $this->info('----------------------------------------------------------');
             $this->info('Project Management Builder Seed already exists');
         }
-
         $this->info('----------------------------------------------------------');
+
         $this->info('Permissions Update Command is running');
         $this->call('artwork:update-permissions');
         $this->info('Permissions Update Command has been called');
         $this->info('----------------------------------------------------------');
+
         $this->info('Artwork Add New Components Command is running');
         $this->call('artwork:add-new-components');
         $this->info('Artwork Add New Components Command has been called');
         $this->info('----------------------------------------------------------');
-        $this->info('Artwork Update Command has finished');
-
-        $this->info('Artwork add default event properties');
-        $this->call('db:seed', ['--class' => 'DefaultEventPropertiesSeeder']);
-        $this->info('----------------------------------------------------------');
-        $this->info('Artwork Update Command has finished');
 
         $this->info('Update Shift-Qualification-Icons');
         $this->call('db:seed', ['--class' => 'ShiftQualificationIconsSeeder']);
         $this->info('----------------------------------------------------------');
+
 
         $this->info('Change Notification Settings');
 
@@ -63,5 +59,7 @@ class UpdateArtwork extends Command
         ]);
 
         $this->info('----------------------------------------------------------');
+
+        $this->info('Artwork Update Command has finished');
     }
 }

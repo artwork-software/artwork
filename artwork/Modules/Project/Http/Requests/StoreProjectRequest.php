@@ -19,6 +19,8 @@ class StoreProjectRequest extends FormRequest
             'state' => 'nullable|integer|exists:project_states,id',
             'cost_center' => 'nullable|string|max:255',
             'projects.*' => 'exists:projects,id',
+            'color' => 'nullable|string|max:255',
+            'icon' => 'nullable|string|max:255',
         ];
     }
 }

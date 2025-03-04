@@ -3,7 +3,7 @@
         <div class="w-full ml-11 mt-1">
             <BaseCalendar :rooms="rooms"
                           :days="period"
-                          :calendar-data="usePage().props.calendar"
+                          :calendar-data="calendar"
                           :events-without-room="[]"
                           :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
                           :first-project-shift-tab-id="1"

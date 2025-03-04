@@ -4,6 +4,13 @@
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
                     <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"/>
+
+                    <div v-if="infoForDailyView && !dailyView" class="flex items-center mx-2">
+                        <div class="text-xs text-red-500">
+                            {{ infoForDailyView }}
+                        </div>
+                    </div>
+
                     <div class="flex items-center">
                         <button v-if="!dailyView" class="ml-2 text-black previousTimeRange" @click="previousTimeRange">
                             <IconChevronLeft class="h-5 w-5 text-primary"/>
@@ -405,6 +412,7 @@ import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum
 import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
 
 const eventTypes = inject('eventTypes');
+const infoForDailyView = inject('infoForDailyView');
 const rooms = inject('rooms');
 const areas = inject('areas');
 const dateValue = inject('dateValue');
@@ -557,7 +565,7 @@ const changeDailyViewMode = () => {
         daily_view: dailyViewMode.value
     }, {
         preserveScroll: false,
-        preserveState: true
+        preserveState: false
     })
 }
 

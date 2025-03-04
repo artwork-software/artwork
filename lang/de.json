@@ -2388,5 +2388,9 @@
     "Project group display component": "Projektgruppen-Anzeigekomponente",
     "GroupProjectDisplayComponent": "Projektgruppen-Anzeigekomponente",
     "ProjectGroupDisplayComponent": "Unterprojekte-Anzeigekomponente",
-    "Relevant for project period": "Relevant für Projektzeitraum"
+    "Relevant for project period": "Relevant für Projektzeitraum",
+    "Room requests answered": "Raumanfragen beantwortet",
+    "Find out if your room requests has been answered.": "Finde heraus, ob deine Raumanfragen beantwortet wurden.",
+    "Room request reminder": "Raumanfrage-Erinnerung",
+    "Find out if there are any room requests that need to be confirmed or declined.": "Finde heraus, ob es Raumanfragen gibt, die bestätigt oder abgelehnt werden müssen."
 }

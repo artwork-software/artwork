@@ -21,6 +21,9 @@ class ProjectDTO extends Data
         public ?string $color = null,
         public ?string $icon = null,
         public ?bool $isGroup = false,
+        public ?bool $isInGroup = false,
+        public ?Collection $group = null,
+        public ?array $userIds = null,
     ) {
     }
 
@@ -38,6 +41,10 @@ class ProjectDTO extends Data
             $project->color,
             $project->icon,
             $project->is_group,
+            $project->groups->isNotEmpty(),
+            $project->groups->isNotEmpty() ? $project->groups->map(fn(Project $group) => self::fromModel($group, $userCalendarSettings)) : null,
+            $project->users->pluck('id')->toArray(),
         );
     }
+
 }

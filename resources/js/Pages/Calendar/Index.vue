@@ -11,7 +11,6 @@
                           :eventsWithoutRoom="eventsWithoutRoom"
             />
         </div>
-
     </AppLayout>
 </template>
 

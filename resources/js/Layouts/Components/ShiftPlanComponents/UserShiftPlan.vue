@@ -38,7 +38,7 @@
                                 <SingleUserEventShift
                                     :user-to-edit-id="userToEditId"
                                     :first-project-shift-tab-id="firstProjectShiftTabId"
-                                    :event-type="shift?.event?.event_type ?? null"
+                                    :event-type="eventTypes.find(eventType => eventType.id === shift?.event?.event_type_id) ?? null"
                                     :shift="shift"
                                     :event="shift?.event ?? null"
                                     :type="type"

@@ -49,10 +49,10 @@
                                          :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                                          class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.withoutFormat">
                                         <div v-if="usePage().props.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
-                                            <div class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
+                                            <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: first_project_tab_id })"  class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
                                                 <component :is="group.icon" class="size-4" aria-hidden="true"/>
                                                 <span>{{ group.name }}</span>
-                                            </div>
+                                            </Link>
                                         </div>
                                         <div  v-for="(event, index) in room.content[day.fullDay].events">
                                             <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.withoutFormat + '-room-' + room.roomId">
@@ -261,7 +261,7 @@
 
 <script setup>
 import {computed, defineAsyncComponent, inject, onMounted, provide, reactive, ref, watch} from "vue";
-import {router, usePage} from "@inertiajs/vue3";
+import {router, usePage, Link} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import {usePermission} from "@/Composeables/Permission.js";
@@ -445,17 +445,36 @@ const getAllProjectGroupsInEventsByDay = (events) => {
     let projectGroups = [];
 
     events.forEach(event => {
-        if (event?.project?.isGroup) {
-            let projectGroup = projectGroups.find(group => group.id === event.project.id);
+        if (event?.project) {
+            let project = event.project;
 
-            if (!projectGroup) {
-                projectGroups.push(event.project);
+            if (project.isGroup) {
+                // Falls das Projekt selbst eine Gruppe ist, hinzufügen
+                if (!projectGroups.some(group => group.id === project.id)) {
+                    projectGroups.push(project);
+                }
+            } else if (project.isInGroup && Array.isArray(project.group)) {
+                // Falls das Projekt in einer Gruppe ist, die Gruppen-Infos nutzen
+                project.group.forEach(group => {
+                    if (!projectGroups.some(g => g.id === group.id)) {
+                        projectGroups.push(group);
+                    }
+                });
             }
         }
     });
 
     return projectGroups;
 };
+
+const checkIfUserIsAdminOrInGroup = (group) => {
+    if (hasAdminRole()) {
+        return false;
+    }
+
+    return !group.userIds.includes(usePage().props.user.id);
+}
+
 
 const checkIfAnyRoomHasAnEventOrShift = computed(() => {
     // Prüfen, ob irgendein Raum ein Event oder eine Schicht im aktuellen Kalender hat

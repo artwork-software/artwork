@@ -169,8 +169,9 @@
                                             <span @click="handleCellClick(cell, '', index, row)" v-else>{{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}</span>
                                         </div>
                                     </div>
-                                    <div v-else class="flex items-center">
-                                        {{ calculateRelevantBudgetDataSumFormProjectsInGroup(cell) }}
+                                    <div v-else class="flex items-center gap-x-1">
+                                        <component @click="openRelevantBudgetDataSumModalForCell(cell)" v-if="calculateRelevantBudgetDataSumFormProjectsInGroup(cell) > 0" is="IconList" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color" />
+                                        {{ toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroup(cell)) }}
                                     </div>
                                 </div>
                                 <div class="flex items-center relative"
@@ -317,6 +318,13 @@
             </div>
         </div>
     </th>
+
+    <RelevantBudgetDataSumModal
+        v-if="showRelevantBudgetDataSumModal"
+        :data="dataToDisplayInRelevantDataModal"
+        @closed="showRelevantBudgetDataSumModal = false"
+    />
+
     <confirmation-component
         v-if="showDeleteModal"
         :confirm="$t('Delete')"
@@ -339,11 +347,13 @@ import SageDropCellElement from "@/Pages/Projects/Components/SageDropCellElement
 import SageDragCellElement from "@/Pages/Projects/Components/SageDragCellElement.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import RelevantBudgetDataSumModal from "@/Pages/Projects/Components/Budget/RelevantBudgetDataSumModal.vue";
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "SubPositionComponent",
     components: {
+        RelevantBudgetDataSumModal,
         BaseMenu,
         SageDragCellElement,
         SageDropCellElement,
@@ -423,6 +433,8 @@ export default {
                 sub_position_row_id: null,
                 is_verified: false
             }),
+            dataToDisplayInRelevantDataModal: null,
+            showRelevantBudgetDataSumModal: false
         }
     },
     computed: {
@@ -462,27 +474,37 @@ export default {
     },
     methods: {
         usePage,
-        calculateRelevantBudgetDataSumFormProjectsInGroup(cell){
-            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
-            if (data?.length === 0) return 0;
-            const relevantData = data[this.mainPosition.type]?.filter((item) => cell.sub_position_row_id === item.groupRowId);
-            if (relevantData?.length === 0) return 0;
-            const sum = relevantData?.reduce((acc, item) => {
-                const value = parseFloat(item.value.replace(',', '.'));
-                return acc + value;
-            }, 0);
-            return this.toCurrencyString(sum);
-        },
-        calculateRelevantBudgetDataSumFormProjectsInGroupSubPosition(){
-            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
-            if (data?.length === 0) return 0;
-            const relevantData = data[this.mainPosition.type]?.filter((item) => item.subPositionId === this.subPosition.id && this.mainPosition.type === item.type);
-            if (relevantData?.length === 0) return 0;
-            const sum = relevantData?.reduce((acc, item) => {
-                const value = parseFloat(item.value.replace(',', '.'));
-                return acc + value;
-            }, 0);
+        openRelevantBudgetDataSumModalForCell(cell){
+            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
+            if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
+            const relevantData = data[this.mainPosition.type].filter(item => item?.groupRowId === cell?.sub_position_row_id);
 
+            if (!relevantData.length) return false;
+            this.dataToDisplayInRelevantDataModal = relevantData;
+            this.showRelevantBudgetDataSumModal = true;
+        },
+        calculateRelevantBudgetDataSumFormProjectsInGroup(cell) {
+            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
+            if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
+            const relevantData = data[this.mainPosition.type].filter(item => item?.groupRowId === cell?.sub_position_row_id);
+            if (!relevantData.length) return this.toCurrencyString(0);
+            const sum = relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value?.replace(',', '.') || '0');
+                return acc + (isNaN(value) ? 0 : value);
+            }, 0);
+            return sum;
+        },
+        calculateRelevantBudgetDataSumFormProjectsInGroupSubPosition() {
+            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
+            if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
+            const relevantData = data[this.mainPosition.type].filter(item =>
+                item?.subPositionId === this.subPosition?.id && item?.type === this.mainPosition?.type
+            );
+            if (!relevantData.length) return this.toCurrencyString(0);
+            const sum = relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value?.replace(',', '.') || '0');
+                return acc + (isNaN(value) ? 0 : value);
+            }, 0);
             return this.toCurrencyString(sum);
         },
         updateRowCommented(rowId, bool) {

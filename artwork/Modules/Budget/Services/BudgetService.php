@@ -284,23 +284,25 @@ class BudgetService
                 }
             });
         }
+
         $groupedProjectData = [];
-        $existingEntries = []; // Array zum Speichern vorhandener cellId + columnId Kombinationen
+        $existingEntries = [];
 
         if ($project->is_group) {
             $groupProjects = $project->projectsOfGroup;
-            $groupColumns = $project->table()->first()->columns();
-            $firstTwoGroupColumns = $groupColumns->orderBy('position')->take(2)->get();
+            $groupColumns = $project->table()->first()?->columns()->get() ?? collect();
+            $firstTwoGroupColumns = $groupColumns->sortBy('position')->take(2);
+
 
             if ($firstTwoGroupColumns->count() < 2) {
                 return $loadedProjectInformation;
             }
 
-            [$firstGroupColumn, $secondGroupColumn] = [$firstTwoGroupColumns[0], $firstTwoGroupColumns[1]];
+            [$firstGroupColumn, $secondGroupColumn] = [$firstTwoGroupColumns->first(), $firstTwoGroupColumns->last()];
 
-            foreach ($project->table()->first()->mainPositions as $groupMainPosition) {
-                foreach ($groupMainPosition->subPositions as $groupSubPosition) {
-                    foreach ($groupSubPosition->subPositionRows as $groupRow) {
+            foreach ($project->table()->first()?->mainPositions ?? [] as $groupMainPosition) {
+                foreach ($groupMainPosition->subPositions ?? [] as $groupSubPosition) {
+                    foreach ($groupSubPosition->subPositionRows ?? [] as $groupRow) {
                         $groupFirstValue = trim((string) ($groupRow->cells()->where('column_id', $firstGroupColumn->id)->first()?->value ?? ''));
                         $groupSecondValue = trim((string) ($groupRow->cells()->where('column_id', $secondGroupColumn->id)->first()?->value ?? ''));
 
@@ -309,23 +311,28 @@ class BudgetService
                         }
 
                         foreach ($groupProjects as $subProject) {
-                            $subProjectColumns = $subProject->table()->first()->columns();
-                            $firstTwoSubColumns = $subProjectColumns->orderBy('position')->take(2)->get();
+                            $subProjectColumns = $subProject->table()->first()?->columns()->get() ?? collect();
+                            $firstTwoSubColumns = $subProjectColumns->sortBy('position')->take(2);
+
 
                             if ($firstTwoSubColumns->count() < 2) {
                                 continue;
                             }
 
-                            [$firstSubColumn, $secondSubColumn] = [$firstTwoSubColumns[0], $firstTwoSubColumns[1]];
-                            $relevantColumns = $subProjectColumns->where('relevant_for_project_groups', true)->get();
+                            [$firstSubColumn, $secondSubColumn] = [$firstTwoSubColumns->first(), $firstTwoSubColumns->last()];
+                            $relevantColumns = $subProjectColumns->where('relevant_for_project_groups', true);
 
-                            foreach ($subProject->table()->first()->mainPositions as $subMainPosition) {
-                                foreach ($subMainPosition->subPositions as $subPosition) {
-                                    foreach ($subPosition->subPositionRows as $subRow) {
+                            foreach ($subProject->table()->first()?->mainPositions ?? [] as $subMainPosition) {
+                                foreach ($subMainPosition->subPositions ?? [] as $subPosition) {
+                                    foreach ($subPosition->subPositionRows ?? [] as $subRow) {
                                         $subFirstValue = trim((string) ($subRow->cells()->where('column_id', $firstSubColumn->id)->first()?->value ?? ''));
                                         $subSecondValue = trim((string) ($subRow->cells()->where('column_id', $secondSubColumn->id)->first()?->value ?? ''));
 
                                         if ($groupFirstValue === $subFirstValue && $groupSecondValue === $subSecondValue) {
+                                            if ($groupMainPosition->type !== $subMainPosition->type) {
+                                                continue;
+                                            }
+
                                             foreach ($relevantColumns as $relevantColumn) {
                                                 $relevantValue = $subRow->cells()->where('column_id', $relevantColumn->id)->first()?->value ?? 0;
                                                 $cellId = $subRow->cells()->where('column_id', $relevantColumn->id)->first()?->id;
@@ -354,8 +361,7 @@ class BudgetService
                                                         $subSecondValue
                                                     );
 
-                                                    // if relevant column is a sum column, add the sum column to the group
-                                                    if ($subMainPosition->type === 'BUDGET_TYPE_EARNING' && $dtoObject->type === 'BUDGET_TYPE_EARNING') {
+                                                    if ($subMainPosition->type === 'BUDGET_TYPE_EARNING') {
                                                         $groupedProjectData['BUDGET_TYPE_EARNING'][] = $dtoObject;
                                                     } else {
                                                         $groupedProjectData['BUDGET_TYPE_COST'][] = $dtoObject;
@@ -373,8 +379,6 @@ class BudgetService
                 }
             }
         }
-
-
 
         $loadedProjectInformation['BudgetTab'] = [
             'moneySources' => MoneySource::all(),

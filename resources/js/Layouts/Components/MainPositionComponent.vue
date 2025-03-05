@@ -275,16 +275,17 @@ export default {
 
     },
     methods: {
-        calculateRelevantBudgetDataSumFormProjectsInGroupMainPosition(){
-            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
-            if (data?.length === 0) return 0;
-            const relevantData = data[this.mainPosition.type]?.filter((item) => item.mainPositionId === this.mainPosition.id && this.mainPosition.type === item.type);
-            if (relevantData?.length === 0) return 0;
-            const sum = relevantData?.reduce((acc, item) => {
-                const value = parseFloat(item.value.replace(',', '.'));
-                return acc + value;
+        calculateRelevantBudgetDataSumFormProjectsInGroupMainPosition() {
+            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
+            if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
+            const relevantData = data[this.mainPosition.type].filter(item =>
+                item?.mainPositionId === this.mainPosition?.id && item?.type === this.mainPosition?.type
+            );
+            if (!relevantData.length) return this.toCurrencyString(0);
+            const sum = relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value?.replace(',', '.') || '0');
+                return acc + (isNaN(value) ? 0 : value);
             }, 0);
-
             return this.toCurrencyString(sum);
         },
         checkIfMainPositionClosed(){

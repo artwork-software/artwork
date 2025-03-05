@@ -254,7 +254,18 @@
 </template>
 
 <script setup>
-import {computed, defineAsyncComponent, inject, onMounted, provide, reactive, ref, watch} from "vue";
+import {
+    computed,
+    defineAsyncComponent,
+    hydrateOnInteraction,
+    hydrateOnVisible,
+    inject,
+    onMounted,
+    provide,
+    reactive,
+    ref,
+    watch
+} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
@@ -318,12 +329,16 @@ const props = defineProps({
 const $t = useTranslation()
 const { composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
 const {hasAdminRole} = usePermission(usePage().props)
-const AsyncSingleEventInCalendar = defineAsyncComponent(
-        {
-            loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
-            loadingComponent: CalendarPlaceholder
-        }
-    )
+const AsyncSingleEventInCalendar = defineAsyncComponent({
+    loader: () =>
+        new Promise((resolve) => {
+            setTimeout(() => resolve(import('@/Components/Calendar/Elements/SingleEventInCalendar.vue')), 150);
+        }),
+    loadingComponent: CalendarPlaceholder,
+    delay: 150, // Erst nach 150ms wird der Placeholder angezeigt
+    //timeout: 5000, // Falls das Laden zu lange dauert, schlägt es nach 5s fehl
+});
+
 const textStyle = computed(() => {
         const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
         const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;

@@ -34,6 +34,12 @@
 <!--                            </div>-->
 <!--                        </div>-->
                         <div :class="[!day.inRequestedTimeSpan ? 'opacity-30' : '', 'flex flex-col gap-y-2']">
+                            <template v-for="group in getUniqueProjectGroupsForDay(day)" :key="group.id">
+                                <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"  class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
+                                    <component :is="group.icon" class="size-4" aria-hidden="true"/>
+                                    <span>{{ group.name }}</span>
+                                </Link>
+                            </template>
                             <template v-for="shift in $page.props.daysWithData[day.day_without_format]?.shifts">
                                 <SingleUserEventShift
                                     :user-to-edit-id="userToEditId"
@@ -51,6 +57,7 @@
                             </template>
                         </div>
                     </div>
+
                 </template>
             </div>
         </div>
@@ -62,7 +69,7 @@
 import Permissions from "@/Mixins/Permissions.vue";
 import UserShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue";
 import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
-import {router} from "@inertiajs/vue3";
+import {router, Link, usePage} from "@inertiajs/vue3";
 import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue";
 import SingleUserEventShift from "@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue";
 import DayServiceComponent from "@/Layouts/Components/DayService/DayServiceComponent.vue";
@@ -80,7 +87,7 @@ export default {
         SingleUserEventShift,
         SingleShiftPlanEvent,
         ShiftPlanFunctionBar,
-        UserShiftPlanFunctionBar
+        UserShiftPlanFunctionBar, Link
     },
     props: [
         'eventsWithTotalPlannedWorkingHours',
@@ -99,6 +106,43 @@ export default {
         'userToEditId'
     ],
     methods: {
+        getUniqueProjectGroupsForDay(day){
+            let projectGroups = new Map();
+
+            const shifts = this.$page.props.daysWithData[day.day_without_format]?.shifts || [];
+
+            shifts.forEach(shift => {
+                if (shift?.project) {
+                    let project = shift.project;
+
+                    // Falls das Projekt selbst eine Gruppe ist, speichern
+                    if (project.is_group && !projectGroups.has(project.id)) {
+                        projectGroups.set(project.id, project);
+                    }
+
+                    // Falls das Projekt in einer Gruppe ist, die Gruppen speichern
+                    if (!project.is_group && Array.isArray(project.groups)) {
+                        project.groups.forEach(group => {
+                            if (!projectGroups.has(group.id)) {
+                                projectGroups.set(group.id, group);
+                            }
+                        });
+                    }
+                }
+            });
+
+            return Array.from(projectGroups.values());
+        },
+        checkIfUserIsAdminOrInGroup(group) {
+            if (this.hasAdminRole()) {
+                return false;
+            }
+
+            const userId = usePage().props.user.id;
+
+            // Prüft, ob der Benutzer in der Gruppen-User-Liste vorhanden ist
+            return !group.users.some(user => user.id === userId);
+        },
         previousTimeRange() {
             const dayDifference = this.calculateDateDifference();
             this.dateValue[1] = this.getPreviousDay(this.dateValue[0]);

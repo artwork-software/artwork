@@ -583,9 +583,15 @@ readonly class EventService
 
                 $plannedData = $calculatePlannedWorkingHours([$shift]);
 
+                /** @var Project $project */
+                $project = $event->project;
+
                 $daysWithData[$shiftDate]['shifts'][] = [
                     'room' => $shift->room,
                     'project' => $event->project,
+                    'projectIsGroup' => $project->is_group,
+                    'projectIsInGroup' => $project->groups->isNotEmpty(),
+                    'projectGroups' => $project->groups->isNotEmpty() ? $project->groups : null,
                     'event' => $event,
                     'id' => $shift->id,
                     'name' => $shift->name ?? '',

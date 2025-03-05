@@ -1,5 +1,6 @@
 <template>
-    <div :class="[table.is_template ? '' : 'bg-lightBackgroundGray', hideProjectHeader ? '' : 'pt-6']" class="mx-1 pr-10 relative">
+    <div :class="[table.is_template ? '' : 'bg-lightBackgroundGray', hideProjectHeader ? '' : 'pt-6']"
+         class="mx-1 pr-10 relative">
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
                 {{ table.name }}
@@ -24,22 +25,29 @@
             </div>
         </div>
         <div class="w-full sticky top-0 z-30 flex flex-row-reverse gap-x-4 py-4 items-center bg-lightBackgroundGray">
-            <button v-if="this.$can('edit budget templates') || !table.is_template"  @click="openAddColumnModal()" type="button" class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
+            <button v-if="this.$can('edit budget templates') || !table.is_template" @click="openAddColumnModal()"
+                    type="button"
+                    class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
                 <IconPlus stroke-width="2" class="h-4 w-4 mr-2"/>
                 <p class="text-sm"> {{ $t('New column') }}</p>
             </button>
-            <button v-if="!table.is_template" @click="downloadBudgetExport(project.id)" type="button" class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
+            <button v-if="!table.is_template" @click="downloadBudgetExport(project.id)" type="button"
+                    class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
                 <IconFileAnalytics stroke-width="2" class="h-4 w-4 mr-2"/>
                 <p class="text-sm">{{ $t('Excel-Export') }}</p>
             </button>
             <div v-if="!table.is_template">
-                <IconArrowsDiagonal v-if="!hideProjectHeader" @click="$emit('changeProjectHeaderVisualisation',true)" class="h-6 w-6 mx-2 cursor-pointer"/>
-                <IconZoomOut v-else @click="$emit('changeProjectHeaderVisualisation',false)" class="h-7 w-7 mx-2 cursor-pointer"
+                <IconArrowsDiagonal v-if="!hideProjectHeader" @click="$emit('changeProjectHeaderVisualisation',true)"
+                                    class="h-6 w-6 mx-2 cursor-pointer"/>
+                <IconZoomOut v-else @click="$emit('changeProjectHeaderVisualisation',false)"
+                             class="h-7 w-7 mx-2 cursor-pointer"
                 />
             </div>
             <SwitchGroup as="div" v-if="!table.is_template">
-                <Switch v-model="userExcludeCommentedBudgetItems" :class="[userExcludeCommentedBudgetItems ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
-                        <span aria-hidden="true" :class="[userExcludeCommentedBudgetItems ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                <Switch v-model="userExcludeCommentedBudgetItems"
+                        :class="[userExcludeCommentedBudgetItems ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
+                    <span aria-hidden="true"
+                          :class="[userExcludeCommentedBudgetItems ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                 </Switch>
                 <SwitchLabel as="span">
                     <span class="pl-1" :class="[userExcludeCommentedBudgetItems ? 'xsDark' : 'xsLight', 'text-sm']">
@@ -55,18 +63,22 @@
             <table class="w-full flex ml-10 py-5">
                 <thead>
                 <tr class="relative">
-                    <th v-for="(column,index) in computedSortedColumns" v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="index === 0 ? 'w-28' : index === 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48'">
-                        <div class="flex items-center group" :key="column.id" :class="index > 2 ? 'justify-end text-right' : ' justify-between'">
+                    <th v-for="(column,index) in computedSortedColumns"
+                        v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
+                        :class="index === 0 ? 'w-28' : index === 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48'">
+                        <div class="flex items-center group" :key="column.id"
+                             :class="index > 2 ? 'justify-end text-right' : ' justify-between'">
                             <div>
                                 <div>
                                     <div v-if="column.subName" class="flex items-center justify-end">
                                         <div class="flex items-center mr-2" v-if="column.is_locked">
                                             <div>
-                                                <svg  xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686" class="" viewBox="0 0 11.975 13.686">
-                                                <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
-                                                      d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
-                                                      fill="#27233C"/>
-                                                 </svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686"
+                                                     class="" viewBox="0 0 11.975 13.686">
+                                                    <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
+                                                          d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
+                                                          fill="#27233C"/>
+                                                </svg>
                                             </div>
                                             <div class="-ml-0.5">
                                                 <UserPopoverTooltip :user="column.locked_by"
@@ -88,16 +100,19 @@
                                             {{ column.subName }}
                                         </div>
 
-                                        <span v-if="columnCalculatedNames ? columnCalculatedNames[column.id] : false" class="ml-1 truncate columnSubName text-white">
-                                            ({{columnCalculatedNames[column.id]}})
+                                        <span v-if="columnCalculatedNames ? columnCalculatedNames[column.id] : false"
+                                              class="ml-1 truncate columnSubName text-white">
+                                            ({{ columnCalculatedNames[column.id] }})
                                         </span>
                                     </div>
-                                    <span  class="-mt-4" v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
-                                        <Listbox as="div" class="flex ml-2" v-model="column.color" v-if="this.$can('edit budget templates') || !table.is_template">
+                                    <span class="-mt-4"
+                                          v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
+                                        <Listbox as="div" class="flex ml-2" v-model="column.color"
+                                                 v-if="this.$can('edit budget templates') || !table.is_template">
                                             <transition leave-active-class="transition ease-in duration-100"
                                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                                 <ListboxOptions :static="column.showColorMenu"
-                                                    class="absolute w-24 z-10 mt-12 rounded-lg bg-artwork-navigation-background shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                                                class="absolute w-24 z-10 mt-12 rounded-lg bg-artwork-navigation-background shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                                     <ListboxOption as="template" class=""
                                                                    v-for="color in colors"
                                                                    :key="color"
@@ -105,14 +120,16 @@
                                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
                                                             @click="changeColumnColor(color, column.id)">
                                                             <div class="flex">
-                                                                <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'block truncate']">
+                                                                <span
+                                                                    :class="[selected ? 'xsWhiteBold' : 'font-normal', 'block truncate']">
                                                                     <span
                                                                         class="block truncate items-center ml-3 flex rounded-full h-10 w-10"
                                                                         :class="color">
                                                                     </span>
                                                                 </span>
                                                             </div>
-                                                            <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                            <span
+                                                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
                                                                 <CheckIcon v-if="selected"
                                                                            class="h-5 w-5 flex text-success"
                                                                            aria-hidden="true"/>
@@ -136,29 +153,42 @@
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
                             </div>
-                            <BaseMenu dots-color="text-white" has-no-offset menu-width="w-fit" class="invisible group-hover:visible" v-if="this.hasBudgetAccess() || this.$can('edit budget templates')">
+                            <BaseMenu dots-color="text-white" has-no-offset menu-width="w-fit"
+                                      class="invisible group-hover:visible"
+                                      v-if="this.hasBudgetAccess() || this.$can('edit budget templates')">
                                 <MenuItem v-slot="{ active }">
                                     <a @click="column.showColorMenu = true"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                             stroke-width="1.5" stroke="currentColor"
+                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/>
                                         </svg>
                                         {{ $t('Coloring') }}
                                     </a>
                                 </MenuItem>
-                                <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="!column.is_locked">
+                                <MenuItem v-slot="{ active }"
+                                          v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
+                                          v-if="!column.is_locked">
                                     <a @click="lockColumn(column.id)"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                             stroke-width="1.5" stroke="currentColor"
+                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
                                         </svg>
                                         {{ $t('Lock') }}
                                     </a>
                                 </MenuItem>
-                                <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="column.is_locked">
+                                <MenuItem v-slot="{ active }"
+                                          v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
+                                          v-if="column.is_locked">
                                     <a @click="unlockColumn(column.id)"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconLockOpen stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                        <IconLockOpen stroke-width="1.5" stroke="currentColor"
+                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                         {{ $t('Unlock') }}
                                     </a>
                                 </MenuItem>
@@ -176,14 +206,16 @@
                                         {{ $t('Duplicate') }}
                                     </a>
                                 </MenuItem>
-                                <MenuItem v-slot="{ active }" v-if="!column.relevant_for_project_groups && column.type !== 'project_relevant_column' && !project.is_group">
+                                <MenuItem v-slot="{ active }"
+                                          v-if="!column.relevant_for_project_groups && column.type !== 'project_relevant_column' && !project.is_group">
                                     <a v-show="index > 2" @click="setRelevantForProjectGroup(column.id)"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconFlagUp class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                         {{ $t('Relevant for project-group') }}
                                     </a>
                                 </MenuItem>
-                                <MenuItem v-slot="{ active }" v-if="column.relevant_for_project_groups && column.type !== 'project_relevant_column' && !project.is_group">
+                                <MenuItem v-slot="{ active }"
+                                          v-if="column.relevant_for_project_groups && column.type !== 'project_relevant_column' && !project.is_group">
                                     <a v-show="index > 2" @click="setRelevantForProjectGroup(column.id)"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconFlagUp class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
@@ -193,14 +225,18 @@
                                 <MenuItem v-show="index > 2" v-slot="{ active }" v-if="column.commented === 1">
                                     <a @click="updateColumnCommented(column.id, false)"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                        <IconLockOpen stroke-width="1.5"
+                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                      aria-hidden="true"/>
                                         {{ $t('Include column') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-show="index > 2" v-slot="{ active }" v-else>
                                     <a @click="updateColumnCommented(column.id, true)"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                        <IconLock stroke-width="1.5"
+                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                  aria-hidden="true"/>
                                         {{ $t('Exclude column') }}
                                     </a>
                                 </MenuItem>
@@ -221,13 +257,14 @@
                 <div class="w-full flex">
                     <div class="bg-secondaryHover ml-5 w-full" v-if="costsOpened">
                         <div :class="table.columns?.length > 5 ? 'mr-5' : 'w-[97%]'" class="flex justify-between my-10">
-                        <div class="headline4  flex">
-                            {{ $t('Expenses') }}
-                            <button class="w-6" @click="costsOpened = !costsOpened">
-                                <IconChevronUp stroke-width="1.5" v-if="costsOpened" class="h-6 w-6 text-primary my-auto"/>
-                                <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
-                            </button>
-                        </div>
+                            <div class="headline4  flex">
+                                {{ $t('Expenses') }}
+                                <button class="w-6" @click="costsOpened = !costsOpened">
+                                    <IconChevronUp stroke-width="1.5" v-if="costsOpened"
+                                                   class="h-6 w-6 text-primary my-auto"/>
+                                    <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
+                                </button>
+                            </div>
                             <BaseMenu dots-color="text-artwork-context-dark" v-if="this.hasBudgetAccess()">
                                 <MenuItem v-slot="{ active }">
                                     <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateModal()"
@@ -237,14 +274,16 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateFromProjectModal()"
+                                    <a v-show="tableIsEmpty && !table.is_template"
+                                       @click="openUseTemplateFromProjectModal()"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconFileImport class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                         {{ $t('Import from project') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a v-show="!tableIsEmpty && !table.is_template && this.$can('edit budget templates')" @click="openAddBudgetTemplateModal()"
+                                    <a v-show="!tableIsEmpty && !table.is_template && this.$can('edit budget templates')"
+                                       @click="openAddBudgetTemplateModal()"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconFilePlus class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                         {{ $t('Save as template') }}
@@ -301,25 +340,37 @@
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns?.slice(3)"
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
-                                    <div class="w-48 my-2 p-1 flex group relative justify-end items-center" :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
-                                        <img @click="openBudgetSumDetailModal('COST', column, 'comment')" v-if="table.costSumDetails[column.id]?.hasComments && table.costSumDetails[column.id]?.hasMoneySource"
+                                    <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
+                                         :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
+                                        <img @click="openBudgetSumDetailModal('COST', column, 'comment')"
+                                             v-if="table.costSumDetails[column.id]?.hasComments && table.costSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <img @click="openBudgetSumDetailModal('COST', column, 'comment')" v-else-if="table.costSumDetails[column.id]?.hasComments"
+                                        <img @click="openBudgetSumDetailModal('COST', column, 'comment')"
+                                             v-else-if="table.costSumDetails[column.id]?.hasComments"
                                              src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
                                              class="h-5 w-5 mr-1 cursor-pointer"/>
-                                        <img @click="openBudgetSumDetailModal('COST', column, 'moneySource')" v-else-if="table.costSumDetails[column.id]?.hasMoneySource"
+                                        <img @click="openBudgetSumDetailModal('COST', column, 'moneySource')"
+                                             v-else-if="table.costSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">{{ this.toCurrencyString(this.getSumOfTable(0, column.id)) }}</span>
-                                        <span v-if="column.type === 'sage'">{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0)) }}</span>
+                                        <span
+                                            v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">{{
+                                                this.toCurrencyString(this.getSumOfTable(0, column.id))
+                                            }}</span>
+                                        <span v-if="column.type === 'sage'">{{
+                                                this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0))
+                                            }}</span>
                                         <span v-if="column.type === 'project_relevant_column'">
-                                            {{ this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST')) }}
+                                            {{
+                                                this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST'))
+                                            }}
                                         </span>
                                         <div v-if="this.hasBudgetAccess()"
                                              class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('COST', column)">
-                                            <IconCirclePlus class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
+                                            <IconCirclePlus
+                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full "/>
                                         </div>
                                     </div>
                                 </td>
@@ -332,14 +383,19 @@
                                     v-for="column in table.columns.slice(3)"
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
-                                        <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
+                                        <span
+                                            v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
                                             {{ this.toCurrencyString(table.commentedCostSums[column.id]) }}
                                         </span>
                                         <span v-if="column.type === 'sage'">
-                                                {{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(0)) }}
+                                                {{
+                                                this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(0))
+                                            }}
                                         </span>
                                         <span v-if="column.type === 'project_relevant_column'">
-                                            {{ this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_COST')) }}
+                                            {{
+                                                this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_COST'))
+                                            }}
                                         </span>
                                     </div>
                                 </td>
@@ -352,20 +408,22 @@
                         <div class="headline4 my-10 flex">
                             {{ $t('Expenses') }}
                             <button class="w-6" @click="costsOpened = !costsOpened">
-                                <IconChevronUp stroke-width="1.5" v-if="costsOpened" class="h-6 w-6 text-primary my-auto"/>
+                                <IconChevronUp stroke-width="1.5" v-if="costsOpened"
+                                               class="h-6 w-6 text-primary my-auto"/>
                                 <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
                     </div>
                 </div>
                 <!-- Divider -->
-                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12" />
-                    <div class="w-full flex">
+                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12"/>
+                <div class="w-full flex">
                     <div class="ml-5 w-full bg-secondaryHover" v-if="earningsOpened">
                         <div class="headline4 my-10 flex">
                             {{ $t('Revenue') }}
                             <button class="w-6" @click="earningsOpened = !earningsOpened">
-                                <IconChevronUp stroke-width="1.5" v-if="earningsOpened" class="h-6 w-6 text-primary my-auto"/>
+                                <IconChevronUp stroke-width="1.5" v-if="earningsOpened"
+                                               class="h-6 w-6 text-primary my-auto"/>
                                 <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
@@ -381,7 +439,7 @@
                                                        :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"
-                                                        :project-managers="projectManager"
+                                                       :project-managers="projectManager"
                                                        :hasBudgetAccess="this.hasBudgetAccess()"
                                                        type="BUDGET_TYPE_EARNING"
                                 />
@@ -395,24 +453,35 @@
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
                                          :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
-                                        <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')" v-if="table.earningSumDetails[column.id]?.hasComments && table.earningSumDetails[column.id]?.hasMoneySource"
+                                        <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')"
+                                             v-if="table.earningSumDetails[column.id]?.hasComments && table.earningSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')" v-else-if="table.earningSumDetails[column.id]?.hasComments"
+                                        <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')"
+                                             v-else-if="table.earningSumDetails[column.id]?.hasComments"
                                              src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
                                              class="h-5 w-5 mr-1 cursor-pointer"/>
-                                        <img @click="openBudgetSumDetailModal('EARNING', column, 'moneySource')" v-else-if="table.earningSumDetails[column.id]?.hasMoneySource"
+                                        <img @click="openBudgetSumDetailModal('EARNING', column, 'moneySource')"
+                                             v-else-if="table.earningSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">{{ this.toCurrencyString(this.getSumOfTable(1, column.id)) }}</span>
-                                        <span v-if="column.type === 'sage'">{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1)) }}</span>
+                                        <span
+                                            v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">{{
+                                                this.toCurrencyString(this.getSumOfTable(1, column.id))
+                                            }}</span>
+                                        <span v-if="column.type === 'sage'">{{
+                                                this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1))
+                                            }}</span>
                                         <span v-if="column.type === 'project_relevant_column'">
-                                            {{ this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING')) }}
+                                            {{
+                                                this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING'))
+                                            }}
                                         </span>
                                         <div v-if="this.hasBudgetAccess()"
                                              class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('EARNING', column)">
-                                            <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
+                                            <PlusCircleIcon
+                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full "/>
                                         </div>
                                     </div>
                                 </td>
@@ -426,14 +495,19 @@
                                     v-for="column in table.columns.slice(3)"
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
-                                         <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
+                                         <span
+                                             v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
                                             {{ this.toCurrencyString(table.commentedEarningSums[column.id]) }}
                                         </span>
                                         <span v-if="column.type === 'sage'">
-                                                {{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(1)) }}
+                                                {{
+                                                this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(1))
+                                            }}
                                         </span>
                                         <span v-if="column.type === 'project_relevant_column'">
-                                            {{ this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_EARNING')) }}
+                                            {{
+                                                this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_EARNING'))
+                                            }}
                                         </span>
                                     </div>
                                 </td>
@@ -456,7 +530,7 @@
                     </div>
                 </div>
                 <!-- Divider -->
-                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12" />
+                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12"/>
                 <tr class="bg-secondaryHover items-center xsDark flex h-10 mt-4 mb-2 w-full text-right">
                     <td class="w-44 xsDark uppercase flex ml-6">
                         {{ $t('Revenue') }} - {{ $t('Expenses') }}
@@ -472,13 +546,19 @@
                             calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST') < 0 ? 'text-red-500' : ''
                          ]">
                             <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
-                                {{ this.toCurrencyString((this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id))) }}
+                                {{
+                                    this.toCurrencyString((this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)))
+                                }}
                             </span>
                             <span v-if="column.type === 'sage'">
-                                {{ this.toCurrencyString((this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0))) }}
+                                {{
+                                    this.toCurrencyString((this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0)))
+                                }}
                             </span>
                             <span v-if="column.type === 'project_relevant_column'">
-                                {{ this.toCurrencyString((calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST'))) }}
+                                {{
+                                    this.toCurrencyString((calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST')))
+                                }}
                             </span>
                         </div>
                     </td>
@@ -487,64 +567,66 @@
         </div>
     </div>
     <BaseModal @closed="closeSuccessModal" v-if="showSuccessModal" modal-image="/Svgs/Overlays/illu_success.svg">
-            <div class="mx-4">
-                <div class="headline1 my-2">
-                    {{ successHeading }}
-                </div>
-                <div class="successText">
-                    {{ successDescription }}
-                </div>
-                <div class="mt-6">
-                    <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-full"
-                            @click="closeSuccessModal">
-                        <IconCheck stroke-width="1.5" class="h-6 w-6 text-secondaryHover"/>
-                    </button>
-                </div>
+        <div class="mx-4">
+            <div class="headline1 my-2">
+                {{ successHeading }}
             </div>
-        </BaseModal>
+            <div class="successText">
+                {{ successDescription }}
+            </div>
+            <div class="mt-6">
+                <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-full"
+                        @click="closeSuccessModal">
+                    <IconCheck stroke-width="1.5" class="h-6 w-6 text-secondaryHover"/>
+                </button>
+            </div>
+        </div>
+    </BaseModal>
     <BaseModal @closed="closeVerifiedModal" v-if="showVerifiedModal" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
-            <div class="mx-4">
-                <ModalHeader
-                    :title="verifiedTexts.title"
-                    :sub-title="verifiedTexts.positionTitle"
-                    :description="verifiedTexts.description"
-                />
-                <div class="mb-2">
-                    <div class="relative w-full">
-                        <div class="w-full" v-if="showUserAdd">
-                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   :placeholder="$t('Who should verify your calculation?')"
-                                   class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                        </div>
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+        <div class="mx-4">
+            <ModalHeader
+                :title="verifiedTexts.title"
+                :sub-title="verifiedTexts.positionTitle"
+                :description="verifiedTexts.description"
+            />
+            <div class="mb-2">
+                <div class="relative w-full">
+                    <div class="w-full" v-if="showUserAdd">
+                        <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
+                               :placeholder="$t('Who should verify your calculation?')"
+                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                    </div>
+                    <transition leave-active-class="transition ease-in duration-100"
+                                leave-from-class="opacity-100"
+                                leave-to-class="opacity-0">
+                        <div v-if="user_search_results.length > 0 && user_query.length > 0"
+                             class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
-                                    <div v-for="(user, index) in user_search_results" :key="index" class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4" v-if="budgetAccess?.includes(user.id)">
-                                            <p @click="addUserToVerifiedUserArray(user)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ user.first_name }} {{ user.last_name }}
-                                            </p>
-                                        </div>
-                                        <!-- Project Members -->
-                                        <div class="flex-1 text-sm py-4" v-if="projectMembers?.includes(user.id) && !budgetAccess?.includes(user.id)">
-                                            <p @click="addUserToVerifiedUserArray(user)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ user.first_name }} {{ user.last_name }}
-                                            </p>
-                                        </div>
+                            <div class="border-gray-200">
+                                <div v-for="(user, index) in user_search_results" :key="index"
+                                     class="flex items-center cursor-pointer">
+                                    <div class="flex-1 text-sm py-4" v-if="budgetAccess?.includes(user.id)">
+                                        <p @click="addUserToVerifiedUserArray(user)"
+                                           class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                            {{ user.first_name }} {{ user.last_name }}
+                                        </p>
+                                    </div>
+                                    <!-- Project Members -->
+                                    <div class="flex-1 text-sm py-4"
+                                         v-if="projectMembers?.includes(user.id) && !budgetAccess?.includes(user.id)">
+                                        <p @click="addUserToVerifiedUserArray(user)"
+                                           class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                            {{ user.first_name }} {{ user.last_name }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        </transition>
-                    </div>
-                    <div v-if="submitVerifiedModalData.user !== ''" class="mt-2 mb-4 flex items-center">
+                        </div>
+                    </transition>
+                </div>
+                <div v-if="submitVerifiedModalData.user !== ''" class="mt-2 mb-4 flex items-center">
                         <span class="flex mr-5 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
                                 <img class="flex h-11 w-11 rounded-full object-cover"
@@ -555,36 +637,37 @@
                                 <button type="button" @click="deleteUserFromVerifiedUserArray">
                                     <span class="sr-only">{{ $t('Remove user from money source') }}</span>
                                     <IconX stroke-width="1.5"
-                                        class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
+                                           class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                 </button>
                             </div>
                         </span>
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-center">
-                    <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
-                            text-xs font-bold uppercase shadow-sm text-white rounded-full bg-artwork-buttons-create"
-                            @click="submitVerifiedModal">
-                        {{ $t('Request verification') }}
-                    </button>
                 </div>
             </div>
-        </BaseModal>
-    <BaseModal @closed="closeBudgetAccessModal" v-if="showBudgetAccessModal" modal-image="/Svgs/Overlays/illu_budget_access.svg">
-            <div class="mx-4">
-                <ModalHeader
-                    :title="$t('Grant budget access')"
-                    :description="$t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?')"
-                />
-                <div class="mt-6">
-                    <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
+            <div class="mt-6 flex justify-center">
+                <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
                             text-xs font-bold uppercase shadow-sm text-white rounded-full bg-artwork-buttons-create"
-                            @click="submitVerifiedModalWithBudgetAccess">
-                        {{ $t('Issue requests & budget access') }}
-                    </button>
-                </div>
+                        @click="submitVerifiedModal">
+                    {{ $t('Request verification') }}
+                </button>
             </div>
-        </BaseModal>
+        </div>
+    </BaseModal>
+    <BaseModal @closed="closeBudgetAccessModal" v-if="showBudgetAccessModal"
+               modal-image="/Svgs/Overlays/illu_budget_access.svg">
+        <div class="mx-4">
+            <ModalHeader
+                :title="$t('Grant budget access')"
+                :description="$t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?')"
+            />
+            <div class="mt-6">
+                <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
+                            text-xs font-bold uppercase shadow-sm text-white rounded-full bg-artwork-buttons-create"
+                        @click="submitVerifiedModalWithBudgetAccess">
+                    {{ $t('Issue requests & budget access') }}
+                </button>
+            </div>
+        </div>
+    </BaseModal>
     <add-column-component
         v-if="showAddColumnModal"
         :project="project"
@@ -713,7 +796,7 @@ export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
         ToolTipComponent,
-      UserPopoverTooltip,
+        UserPopoverTooltip,
         UserSearch,
         ModalHeader,
         BaseModal,
@@ -769,7 +852,7 @@ export default {
             showRenameTableModal: false,
             showUseTemplateFromProjectModal: false,
             showAddBudgetTemplateModal: false,
-            resetWanted:false,
+            resetWanted: false,
             hoveredRow: null,
             showMenu: null,
             showDeleteModal: false,
@@ -779,8 +862,8 @@ export default {
             rowToDelete: null,
             confirmationTitle: '',
             confirmationDescription: '',
-            errorTitle:'',
-            errorDescription:'',
+            errorTitle: '',
+            errorDescription: '',
             showSuccessModal: false,
             successHeading: '',
             successDescription: '',
@@ -847,7 +930,7 @@ export default {
     ],
     emits: ['changeProjectHeaderVisualisation'],
     computed: {
-        computedSortedColumns: function() {
+        computedSortedColumns: function () {
             return this.sortColumns();
         },
         tablesToShow: function () {
@@ -931,25 +1014,41 @@ export default {
         },
     },
     methods: {
-        calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented(type){
+        calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented(type) {
             const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
-            if (data.length === 0) return 0;
-            const relevantData = data[type]?.filter((item) => type === item.type && item.commented);
-            if (relevantData.length === 0) return 0;
-            return relevantData.reduce((acc, item) => {
-                const value = parseFloat(item.value.replace(',', '.'));
-                return acc + value;
-            }, 0);
+            if (data !== null) {
+                if (data?.length === 0) return 0;
+                const relevantData = data[type]?.filter((item) => type === item.type && item.commented);
+                if (relevantData !== null) {
+                    if (relevantData?.length === 0) return 0;
+                    return relevantData?.reduce((acc, item) => {
+                        const value = parseFloat(item.value.replace(',', '.'));
+                        return acc + value;
+                    }, 0);
+                } else {
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
         },
-        calculateRelevantBudgetDataSumFormProjectsInGroupNormal(type){
+        calculateRelevantBudgetDataSumFormProjectsInGroupNormal(type) {
             const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
-            if (data.length === 0) return 0;
-            const relevantData = data[type]?.filter((item) => type === item.type && !item.commented);
-            if (relevantData.length === 0) return 0;
-            return relevantData.reduce((acc, item) => {
-                const value = parseFloat(item.value.replace(',', '.'));
-                return acc + value;
-            }, 0);
+            if (data !== null) {
+                if (data?.length === 0) return 0;
+                const relevantData = data[type]?.filter((item) => type === item.type && !item.commented);
+                if (relevantData !== null) {
+                    if (relevantData?.length === 0) return 0;
+                    return relevantData?.reduce((acc, item) => {
+                        const value = parseFloat(item.value.replace(',', '.'));
+                        return acc + value;
+                    }, 0);
+                } else {
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
         },
         hasBudgetAccess() {
             return this.hasAdminRole() ||
@@ -963,7 +1062,7 @@ export default {
                     ]
                 );
         },
-        setRelevantForProjectGroup(columnId){
+        setRelevantForProjectGroup(columnId) {
             router.patch(
                 route(
                     'project.budget.column.update.relevant',
@@ -1004,7 +1103,7 @@ export default {
 
             return this.table.columns;
         },
-        duplicateColumn(columnId){
+        duplicateColumn(columnId) {
             router.post(route('project.budget.column.duplicate', columnId), {}, {
                 preserveState: true,
                 preserveScroll: true
@@ -1045,14 +1144,14 @@ export default {
             this.tablesToShow[tableType].forEach((mainPosition) => {
                 sum += mainPosition.columnSums[columnId]?.sum;
             })
-            if(isNaN(sum)){
+            if (isNaN(sum)) {
                 return 0;
-            }else{
+            } else {
                 return sum;
             }
 
         },
-        calculateSageColumnWithCellSageDataCommented(tableType){
+        calculateSageColumnWithCellSageDataCommented(tableType) {
             if (tableType === 0) {
                 // calculate the sum of all buchungsbetrag in the sage_assigned_data array for the cost table (main_position.type === 'BUDGET_TYPE_COST')
                 return this.table.main_positions.filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_COST').reduce((accumulator, mainPosition) => {
@@ -1151,13 +1250,13 @@ export default {
                 data: {
                     useTemplates: true
                 },
-                only: ['selectedSumDetail','table','selectedCell','selectedRow','templates', 'budgetAccess'],
+                only: ['selectedSumDetail', 'table', 'selectedCell', 'selectedRow', 'templates', 'budgetAccess'],
                 onSuccess: () => {
                     this.showUseTemplateModal = true;
                 }
             })
         },
-        openRenameTableModal(){
+        openRenameTableModal() {
             this.showRenameTableModal = true;
         },
         closeUseTemplateModal() {
@@ -1181,7 +1280,7 @@ export default {
                 this.showSuccessModal = true;
             }
         },
-        closeRenameBudgetTemplateModal(){
+        closeRenameBudgetTemplateModal() {
             this.showRenameTableModal = false;
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
@@ -1272,7 +1371,10 @@ export default {
             );
         },
         openBudgetSumDetailModal(type, column, tab = 'comment') {
-            router.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}), {
+            router.get(route('projects.tab', {
+                project: this.project.id,
+                projectTab: this.first_project_budget_tab_id
+            }), {
                 selectedBudgetType: type,
                 selectedColumn: column.id,
             }, {
@@ -1285,7 +1387,10 @@ export default {
             })
         },
         openSubPositionSumDetailModal(subPosition, column, type) {
-            router.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}), {
+            router.get(route('projects.tab', {
+                project: this.project.id,
+                projectTab: this.first_project_budget_tab_id
+            }), {
                 selectedSubPosition: subPosition.id,
                 selectedColumn: column.id,
             }, {
@@ -1343,27 +1448,32 @@ export default {
             this.showDeleteModal = true;
         },
         afterConfirm(bool) {
-            if (!bool){
+            if (!bool) {
                 this.resetWanted = false;
                 return this.showDeleteModal = false;
             }
-            if(this.resetWanted === true)
-            {
+            if (this.resetWanted === true) {
                 this.resetBudgetTable();
-            }else{
+            } else {
                 this.deletePosition();
             }
         },
-        afterErrorConfirm(bool){
+        afterErrorConfirm(bool) {
             this.showErrorModal = false;
         },
         deletePosition() {
             if (this.mainPositionToDelete !== null) {
-                router.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id),{preserveState: true, preserveScroll: true})
+                router.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id), {
+                    preserveState: true,
+                    preserveScroll: true
+                })
                 this.successHeading = this.$t('Main position deleted');
                 this.successDescription = this.$t('Main position successfully deleted', [this.mainPositionToDelete.name]);
             } else if (this.subPositionToDelete !== null) {
-                router.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id),{preserveState: true, preserveScroll: true})
+                router.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id), {
+                    preserveState: true,
+                    preserveScroll: true
+                })
                 this.successHeading = this.$t('Sub-item deleted');
                 this.successDescription = this.$t('Sub-item successfully deleted', [this.subPositionToDelete.name]);
             } else {
@@ -1388,7 +1498,7 @@ export default {
         },
         closeVerifiedModal(deleteAll = false) {
             this.showVerifiedModal = false;
-            if(deleteAll){
+            if (deleteAll) {
                 this.user_query = '';
                 this.showUserAdd = true;
                 this.submitVerifiedModalData.user = '';
@@ -1398,7 +1508,7 @@ export default {
                 this.submitVerifiedModalData.position = [];
             }
         },
-        closeBudgetAccessModal(){
+        closeBudgetAccessModal() {
             this.showBudgetAccessModal = false;
             this.user_query = '';
             this.showUserAdd = true;
@@ -1408,16 +1518,22 @@ export default {
             this.submitVerifiedModalData.is_sub = false;
             this.submitVerifiedModalData.position = [];
         },
-        submitVerifiedModalWithBudgetAccess(){
+        submitVerifiedModalWithBudgetAccess() {
             this.submitVerifiedModalData.giveBudgetAccess = true;
             this.submitVerifiedModal();
         },
         submitVerifiedModal() {
-            if(this.budgetAccess.includes(this.submitVerifiedModalData.user) || this.submitVerifiedModalData.giveBudgetAccess){
+            if (this.budgetAccess.includes(this.submitVerifiedModalData.user) || this.submitVerifiedModalData.giveBudgetAccess) {
                 if (this.submitVerifiedModalData.is_main) {
-                    this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'),{preserveState: true, preserveScroll: true});
+                    this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'), {
+                        preserveState: true,
+                        preserveScroll: true
+                    });
                 } else {
-                    this.submitVerifiedModalData.post(route('project.budget.verified.sub-position.request'),{preserveState: true, preserveScroll: true});
+                    this.submitVerifiedModalData.post(route('project.budget.verified.sub-position.request'), {
+                        preserveState: true,
+                        preserveScroll: true
+                    });
                 }
                 this.closeVerifiedModal(true);
             } else {
@@ -1425,7 +1541,7 @@ export default {
                 this.closeVerifiedModal(false);
             }
 
-            if(this.submitVerifiedModalData.giveBudgetAccess){
+            if (this.submitVerifiedModalData.giveBudgetAccess) {
                 this.closeBudgetAccessModal()
             }
         },
@@ -1478,19 +1594,25 @@ export default {
                 columnId: columnId
             }, {preserveState: true, preserveScroll: true});
         },
-        openResetConfirmation(){
+        openResetConfirmation() {
             this.confirmationTitle = this.$t('Reset budget tables');
             this.confirmationDescription = this.$t('Are you sure you want to reset these tables? All links etc. will also be deleted.');
             this.resetWanted = true;
             this.showDeleteModal = true;
         },
-        resetBudgetTable(){
-            router.patch(this.route('project.budget.reset.table', this.project.id),{}, {preserveState: true, preserveScroll: true})
-            this.resetWanted= false;
+        resetBudgetTable() {
+            router.patch(this.route('project.budget.reset.table', this.project.id), {}, {
+                preserveState: true,
+                preserveScroll: true
+            })
+            this.resetWanted = false;
             this.showDeleteModal = false;
         },
-        deleteBudgetTemplate(){
-          router.delete(this.route('project.budget.table.delete', this.table.id), {preserveState: true, preserveScroll: true})
+        deleteBudgetTemplate() {
+            router.delete(this.route('project.budget.table.delete', this.table.id), {
+                preserveState: true,
+                preserveScroll: true
+            })
         },
         openErrorModal(title, description) {
             this.errorTitle = title;

@@ -277,10 +277,10 @@ export default {
     methods: {
         calculateRelevantBudgetDataSumFormProjectsInGroupMainPosition(){
             const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
-            if (data.length === 0) return 0;
+            if (data?.length === 0) return 0;
             const relevantData = data[this.mainPosition.type]?.filter((item) => item.mainPositionId === this.mainPosition.id && this.mainPosition.type === item.type);
-            if (relevantData.length === 0) return 0;
-            const sum = relevantData.reduce((acc, item) => {
+            if (relevantData?.length === 0) return 0;
+            const sum = relevantData?.reduce((acc, item) => {
                 const value = parseFloat(item.value.replace(',', '.'));
                 return acc + value;
             }, 0);

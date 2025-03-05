@@ -230,12 +230,12 @@ export default {
                     <div class="mt-2 inline-flex gap-2">
                         <div v-for="(groupProject, index) in headerObject.projectsOfGroup" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
                             <div class="flex items-center">
-                                <div>
+                                <a :href="route('projects.tab', {project: groupProject?.id, projectTab: first_project_tab_id})">
                                     <img class="inline-block size-9 rounded-full object-cover" :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject?.key_visual_path : '/storage/logo/artwork_logo_small.svg'" alt="" />
-                                </div>
-                                <div class="mx-2">
+                                </a>
+                                <a :href="route('projects.tab', {project: groupProject?.id, projectTab: first_project_tab_id})" class="mx-2">
                                     <p class="xsDark group-hover:text-gray-900">{{ groupProject.name}}</p>
-                                </div>
+                                </a>
                                 <div class="flex items-center">
                                     <button type="button" @click="deleteProjectFromGroup(groupProject.id)">
                                         <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />

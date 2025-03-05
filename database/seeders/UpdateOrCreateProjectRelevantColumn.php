@@ -25,8 +25,8 @@ class UpdateOrCreateProjectRelevantColumn extends Seeder
         $projects = Project::all();
         foreach ($projects as $project) {
             if ($project->is_group) {
-                $table = $project->table;
-                $column = $table->columns()->where('type', 'project_relevant_column')->first();
+                $table = $project?->table;
+                $column = $table?->columns()->where('type', 'project_relevant_column')->first();
 
                 if (!$column) {
                     $newColumn = $this->columnService->createColumnInTable(
@@ -67,11 +67,11 @@ class UpdateOrCreateProjectRelevantColumn extends Seeder
                 }
             } else {
                 // set last column to relevant_for_project_groups if no column is relevant_for_project_groups
-                $table = $project->table;
-                $columns = $table->columns()->get();
-                $lastColumn = $columns->last();
+                $table = $project?->table;
+                $columns = $table?->columns()->get();
+                $lastColumn = $columns?->last();
 
-                if (!$lastColumn->relevant_for_project_groups) {
+                if (!$lastColumn?->relevant_for_project_groups && $lastColumn) {
                     $lastColumn->update([
                         'relevant_for_project_groups' => true
                     ]);

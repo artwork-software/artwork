@@ -71,7 +71,8 @@ class UpdateOrCreateProjectRelevantColumn extends Seeder
                 $columns = $table?->columns()->get();
                 $lastColumn = $columns?->last();
 
-                if (!$lastColumn?->relevant_for_project_groups && $lastColumn) {
+                // if any column is relevant_for_project_groups return false
+                if ($columns?->where('relevant_for_project_groups', true)->isEmpty()) {
                     $lastColumn->update([
                         'relevant_for_project_groups' => true
                     ]);
@@ -79,6 +80,15 @@ class UpdateOrCreateProjectRelevantColumn extends Seeder
                     // send console message
                     $this->command->info('Project ' . $project->name . ' has been updated');
                 }
+
+                /*if (!$lastColumn?->relevant_for_project_groups && $lastColumn) {
+                    $lastColumn->update([
+                        'relevant_for_project_groups' => true
+                    ]);
+
+                    // send console message
+                    $this->command->info('Project ' . $project->name . ' has been updated');
+                }*/
             }
         }
 

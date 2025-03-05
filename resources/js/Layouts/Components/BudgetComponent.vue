@@ -1,4 +1,5 @@
 <template>
+
     <div :class="[table.is_template ? '' : 'bg-lightBackgroundGray', hideProjectHeader ? '' : 'pt-6']"
          class="mx-1 pr-10 relative">
         <div class="flex justify-between ">
@@ -1015,40 +1016,24 @@ export default {
     },
     methods: {
         calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented(type) {
-            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
-            if (data !== null) {
-                if (data?.length === 0) return 0;
-                const relevantData = data[type]?.filter((item) => type === item.type && item.commented);
-                if (relevantData !== null) {
-                    if (relevantData?.length === 0) return 0;
-                    return relevantData?.reduce((acc, item) => {
-                        const value = parseFloat(item.value.replace(',', '.'));
-                        return acc + value;
-                    }, 0);
-                } else {
-                    return 0;
-                }
-            } else {
-                return 0;
-            }
+            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
+            if (!data || !Array.isArray(data[type])) return 0;
+            const relevantData = data[type].filter(item => item?.type === type && item?.commented);
+            if (!relevantData.length) return 0;
+            return relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value?.replace(',', '.') || '0');
+                return acc + (isNaN(value) ? 0 : value);
+            }, 0);
         },
         calculateRelevantBudgetDataSumFormProjectsInGroupNormal(type) {
-            const data = this.$page.props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData;
-            if (data !== null) {
-                if (data?.length === 0) return 0;
-                const relevantData = data[type]?.filter((item) => type === item.type && !item.commented);
-                if (relevantData !== null) {
-                    if (relevantData?.length === 0) return 0;
-                    return relevantData?.reduce((acc, item) => {
-                        const value = parseFloat(item.value.replace(',', '.'));
-                        return acc + value;
-                    }, 0);
-                } else {
-                    return 0;
-                }
-            } else {
-                return 0;
-            }
+            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
+            if (!data || !Array.isArray(data[type])) return 0;
+            const relevantData = data[type].filter(item => item?.type === type && !item?.commented);
+            if (!relevantData.length) return 0;
+            return relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value?.replace(',', '.') || '0');
+                return acc + (isNaN(value) ? 0 : value);
+            }, 0);
         },
         hasBudgetAccess() {
             return this.hasAdminRole() ||

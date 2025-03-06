@@ -48,7 +48,7 @@
                                     <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                          :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                                          class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.withoutFormat">
-                                        <div  v-for="(event, index) in room.content[day.fullDay].events">
+                                        <div v-if="composedCurrentDaysInViewRef.has(day.fullDay)" v-for="(event, index) in room.content[day.fullDay].events">
                                             <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.withoutFormat + '-room-' + room.roomId">
                                                 <AsyncSingleEventInCalendar
                                                     :event="event"
@@ -78,7 +78,7 @@
                 </div>
             </div>
             <div v-else-if="usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
-                <DailyViewCalendar
+                <AsyncDailyViewCalendar
                     :multi-edit="multiEdit"
                     :rooms="rooms"
                     :days="days"
@@ -105,7 +105,6 @@
                             <SingleRoomInHeader :room="room" is-light   />
                         </div>
                     </div>
-
                 </div>
                 <div class="flex gap-0.5">
                     <div v-for="room in newCalendarData">
@@ -184,7 +183,7 @@
             </div>
         </div>
     </div>
-    <EventComponent
+    <AsyncEventComponent
         v-if="showEventComponent"
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
@@ -240,7 +239,7 @@
         :event-types="eventTypes"
         :sub-event-to-edit="subEventToEdit"
         @close="closeAddSubEventModal"/>
-    <events-without-room-component
+    <AsyncEventsWithoutRoomComponent
         v-if="showEventsWithoutRoomComponent"
         @closed="showEventsWithoutRoomComponent = false"
         :showHints="usePage().props.show_hints"
@@ -257,14 +256,9 @@
 import {
     computed,
     defineAsyncComponent,
-    hydrateOnInteraction,
-    hydrateOnVisible,
     inject,
     onMounted,
-    provide,
-    reactive,
     ref,
-    watch
 } from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
@@ -280,7 +274,6 @@ import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionO
 import MultiDuplicateModal from "@/Layouts/Components/MultiDuplicateModal.vue";
 import DailyViewCalendar from "@/Components/Calendar/DailyViewCalendar.vue";
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
-import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
@@ -327,17 +320,24 @@ const props = defineProps({
         }
     })
 const $t = useTranslation()
-const { composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
+const { composedCurrentDaysInViewRef, composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
 const {hasAdminRole} = usePermission(usePage().props)
 const AsyncSingleEventInCalendar = defineAsyncComponent({
-    loader: () =>
-        new Promise((resolve) => {
-            setTimeout(() => resolve(import('@/Components/Calendar/Elements/SingleEventInCalendar.vue')), 150);
-        }),
+    loader: () =>  import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
     loadingComponent: CalendarPlaceholder,
-    delay: 150, // Erst nach 150ms wird der Placeholder angezeigt
-    //timeout: 5000, // Falls das Laden zu lange dauert, schlägt es nach 5s fehl
 });
+
+const AsyncEventComponent = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/EventComponent.vue'),
+})
+
+const AsyncEventsWithoutRoomComponent = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/EventsWithoutRoomComponent.vue'),
+})
+
+const AsyncDailyViewCalendar = defineAsyncComponent({
+    loader: () => import('@/Components/Calendar/DailyViewCalendar.vue'),
+})
 
 const textStyle = computed(() => {
         const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
@@ -357,7 +357,7 @@ const scrollToNextEventInDay = (day, length,room) => {
             });
         }
     };
-const computedFilteredEvents = computed(() => {
+/*const computedFilteredEvents = computed(() => {
         let getComputedEventsWithoutRoom = () => {
             return eventsWithoutRoomRef.value.filter((event) => {
                 let createdBy = event.created_by;
@@ -379,7 +379,7 @@ const computedFilteredEvents = computed(() => {
         }
 
         return getComputedEventsWithoutRoom();
-    });
+    });*/
 const computedCheckedEventsForMultiEditCount = computed(() => {
         return editEvents.value.length;
     });
@@ -458,12 +458,12 @@ const checkIfAnyRoomHasAnEventOrShift = computed(() => {
     });
 });
 
-const checkIfRoomHasEvents = (room) => {
+/*const checkIfRoomHasEvents = (room) => {
     return room.content && Object.entries(room.content).some(([date, { events }]) => {
         return events && events.length > 0;
     });
 };
-
+*/
 const toggleMultiEdit = (value) => {
     multiEdit.value = value;
 
@@ -613,7 +613,7 @@ const deleteSelectedEvents = () => {
 const dateValue = inject('dateValue');
 
 
-const updateFilterValue = (key, value) => {
+/*const updateFilterValue = (key, value) => {
     router.patch(route('user.calendar.filter.single.value.update', {user: usePage().props.user.id}), {
         key: key,
         value: value
@@ -621,7 +621,7 @@ const updateFilterValue = (key, value) => {
         preserveScroll: true,
         preserveState: false
     });
-}
+}*/
 
 onMounted(() => {
     window.addEventListener(

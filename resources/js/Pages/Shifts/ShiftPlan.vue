@@ -72,143 +72,139 @@
             </div>
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
-                     :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? 'max-h-[var(--dynamic-height)] overflow-y-scroll' : '', 'max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
-
-                    <!-- Header -->
-                    <div class="stickyHeader sticky top-0 z-30 flex bg-artwork-navigation-background w-max">
-                        <div class="z-0" style="width:190px; min-width: 190px"></div>
-                        <div v-for="day in days" :id="day.isExtraRow ? 'extra_row_' + day.weekNumber : day.fullDay"
-                             :style="{ width: day.isExtraRow ? '38px' : '202.5px', minWidth: day.isExtraRow ? '38px' : '202.5px'}"
-                             class="z-20 h-8 border-artwork-navigation-background truncate text-white flex items-center">
-                            <div v-if="day.isExtraRow">
-                                <span class="text-[9px] font-bold">KW{{day.weekNumber }}</span>
-                            </div>
-                            <div v-else class="flex">
-                                <div class="text-xs mx-4 mt-0.5">{{ day.dayString }} {{ day.fullDay }}</div>
-                                <div class="mr-5" v-if="day.holidays.length > 0">
-                                    <HolidayToolTip>
-                                        <div class="space-y-1 divide-dashed divide-gray-500 divide-y">
-                                            <div v-for="holiday in day.holidays" class="pt-1">
-                                                <div :style="{ color: holiday.color}">
-                                                    <div>{{ holiday.name }}</div>
-                                                    <div v-if="holiday.subdivisions.length > 0">
-                                                        {{ holiday.subdivisions.map((person) => person).join(', ') }}
+                     :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
+                    <Table>
+                        <template #head>
+                            <div class="stickyHeader sticky top-0 z-30">
+                                <TableHead id="stickyTableHead" ref="stickyTableHead">
+                                    <th class="z-0" style="width:192px;"></th>
+                                    <th  v-for="day in days" :id="day.isExtraRow ? 'extra_row_' + day.weekNumber : day.fullDay" style="max-width: 204px"
+                                         class="z-20 h-8 py-2 border-r-2 border-artwork-navigation-background truncate text-white">
+                                        <div v-if="day.isExtraRow" style="width:37px">
+                                            <span class="text-[9px] font-bold">KW{{day.weekNumber }}</span>
+                                        </div>
+                                        <div v-else :style="{width:  '200px'}" class="flex items-center h-full justify-between calendarRoomHeaderBold ml-2">
+                                            <div>
+                                                {{ day.dayString }} {{ day.fullDay }}
+                                            </div>
+                                            <div class="mr-5" v-if="day.holidays.length > 0">
+                                                <HolidayToolTip>
+                                                    <div class="space-y-1 divide-dashed divide-gray-500 divide-y">
+                                                        <div v-for="holiday in day.holidays" class="pt-1">
+                                                            <div :style="{ color: holiday.color}">
+                                                                <div>{{ holiday.name }}</div>
+                                                                <div v-if="holiday.subdivisions.length > 0">
+                                                                    {{ holiday.subdivisions.map((person) => person).join(', ') }}
+                                                                </div>
+                                                                <div v-else>
+                                                                    {{ $t('Germany-wide') }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div v-else>
-                                                        {{ $t('Germany-wide') }}
-                                                    </div>
-                                                </div>
+                                                </HolidayToolTip>
                                             </div>
                                         </div>
-                                    </HolidayToolTip>
-                                </div>
+                                    </th>
+                                </TableHead>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Body -->
-                    <div class="eventByDaysContainer w-max">
-                        <div v-for="(room, index) in newShiftPlanData" class="flex w-full"
-                             :class="$page.props.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
-                            <!-- Raum Name -->
-                            <div :id="'roomNameContainer_' + index"
-                                 class="xsDark w-48 flex items-center font-semibold h-full stickyYAxisNoMarginLeft px-4"
-                                 :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover']"
-                                style="max-width: 190px; min-width: 190px"
-                            >
-                                {{ room.roomName }}
-                            </div>
-
-                            <!-- Tage -->
-                            <div v-for="day in days" :data-day="day.fullDay"
-                                 class="relative align-top border-gray-400 flex flex-col"
-                                 :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : 'border-dashed', multiEditModeCalendar ? '' : 'border-r-2', $page.props.user.calendar_settings.expand_days ? '' : 'h-28']">
-
-                                <!-- Multi-Edit Mode Overlay -->
-                                <div v-if="!day.isExtraRow && multiEditModeCalendar"
-                                     :class="[multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ?
-                                 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create' : '',
-                                 checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '']"
-                                     class="absolute w-full h-full"
-                                     @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)">
-                                </div>
-
-                                <!-- Extra Zeile (KW-Wochenanzeige) -->
-                                <div v-if="day.isExtraRow" class="bg-backgroundGray2 h-full mb-3" :style="{ width: day.isExtraRow ? '38px' : '202.5px', minWidth: day.isExtraRow ? '38px' : '202.5px'}"></div>
-
-                                <!-- Inhalt -->
-                                <div v-else class="cell group flex flex-col overflow-y-auto"
-                                     :style="{ width: day.isExtraRow ? '38px' : '202.5px', minWidth: day.isExtraRow ? '38px' : '202.5px'}"
-                                     :class="$page.props.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28'">
-
-                                    <!-- Events -->
-                                    <div v-for="event in room.content[day.fullDay].events" class="mb-1">
-                                        <SingleShiftPlanEvent
-                                            v-if="checkIfEventHasShiftsToDisplay(event)"
-                                            :multiEditMode="multiEditMode"
-                                            :user-for-multi-edit="userForMultiEdit"
-                                            :highlightMode="highlightMode"
-                                            :highlighted-id="idToHighlight"
-                                            :highlighted-type="typeToHighlight"
-                                            :event="event"
-                                            :shift-qualifications="shiftQualifications"
-                                            :day-string="day"
-                                            :firstProjectShiftTabId="firstProjectShiftTabId"
-                                            @dropFeedback="showDropFeedback"
-                                            @event-desires-reload="eventDesiresReload"
-                                            @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
-                                            @click-on-edit="openEditShiftModal"
-                                        />
-                                        <SingleEventInShiftPlan v-else
-                                                                :event="event"
-                                                                :day="day"
-                                                                :firstProjectShiftTabId="firstProjectShiftTabId"/>
-                                    </div>
-
-                                    <!-- Schichten -->
-                                    <div class="space-y-0.5">
-                                        <div v-for="shift in room.content[day.fullDay].shifts">
-                                            <div class="bg-gray-50 rounded-lg border border-gray-100 py-0.5"
-                                                 v-if="shift.daysOfShift.includes(day.fullDay)">
-                                                <SingleShiftInRoom
+                        </template>
+                        <template #body>
+                            <TableBody class="eventByDaysContainer">
+                                <tr v-for="(room,index) in newShiftPlanData" class="w-full table-row" :class="$page.props.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
+                                    <th :id="'roomNameContainer_' + index"
+                                        class="xsDark w-48 table-cell align-middle"
+                                        :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
+                                        <div class="flex font-semibold items-center ml-4">
+                                            {{ room.roomName }}
+                                        </div>
+                                    </th>
+                                    <td :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : 'border-dashed', multiEditModeCalendar ? '' : 'border-r-2 ', $page.props.user.calendar_settings.expand_days ? '' : 'h-28']"
+                                        class="border-gray-400 day-container relative table-cell align-top"
+                                        v-for="day in days" :data-day="day.fullDay">
+                                        <div
+                                            v-if="!day.isExtraRow && multiEditModeCalendar"
+                                            :class="[multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ?
+                                            'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create' : '',
+                                            checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '']"
+                                            class="absolute w-full h-full"
+                                            @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)">
+                                        </div>
+                                        <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.isExtraRow">
+                                        </div>
+                                        <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
+                                        <div v-else style="width: 200px" class="cell group " :class="$page.props.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
+                                            <div v-if="usePage().props.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
+                                                <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"  class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
+                                                    <component :is="group.icon" class="size-4" aria-hidden="true"/>
+                                                    <span>{{ group.name }}</span>
+                                                </Link>
+                                            </div>
+                                            <div v-for="event in room.content[day.fullDay].events" class="mb-1">
+                                                <SingleShiftPlanEvent
+                                                    v-if="checkIfEventHasShiftsToDisplay(event)"
                                                     :multiEditMode="multiEditMode"
                                                     :user-for-multi-edit="userForMultiEdit"
                                                     :highlightMode="highlightMode"
                                                     :highlighted-id="idToHighlight"
                                                     :highlighted-type="typeToHighlight"
-                                                    :shift="shift"
+                                                    :event="event"
                                                     :shift-qualifications="shiftQualifications"
                                                     :day-string="day"
                                                     :firstProjectShiftTabId="firstProjectShiftTabId"
                                                     @dropFeedback="showDropFeedback"
-                                                    @event-desires-reload="eventDesiresReload"
+                                                    @event-desires-reload="this.eventDesiresReload"
                                                     @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
                                                     @click-on-edit="openEditShiftModal"
                                                 />
+                                                <SingleEventInShiftPlan v-else
+                                                                        :event="event"
+                                                                        :day="day"
+                                                                        :firstProjectShiftTabId="firstProjectShiftTabId"/>
+                                            </div>
+                                            <div class="space-y-0.5">
+                                                <div v-for="shift in room.content[day.fullDay].shifts">
+                                                    <div class="bg-gray-50 rounded-lg border border-gray-100 py-0.5"
+                                                         v-if="shift.daysOfShift.includes(day.fullDay)">
+                                                        <SingleShiftInRoom
+                                                            :multiEditMode="multiEditMode"
+                                                            :user-for-multi-edit="userForMultiEdit"
+                                                            :highlightMode="highlightMode"
+                                                            :highlighted-id="idToHighlight"
+                                                            :highlighted-type="typeToHighlight"
+                                                            :shift="shift"
+                                                            :shift-qualifications="shiftQualifications"
+                                                            :day-string="day"
+                                                            :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                            @dropFeedback="showDropFeedback"
+                                                            @event-desires-reload="this.eventDesiresReload"
+                                                            @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
+                                                            @click-on-edit="openEditShiftModal"
+
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div v-if="!multiEditModeCalendar"
+                                                 class="invisible group-hover:visible absolute top-2 right-2 cursor-pointer rounded-full p-0.5 bg-white shadow-md border-2 border-dashed border-artwork-buttons-create"
+                                                 @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)">
+                                                <ToolTipComponent
+                                                    :tooltip-text="$t('Add shift')"
+                                                    direction="bottom"
+                                                    icon="IconPlus"
+                                                    icon-size="h-4 w-4"
+                                                    classes="text-artwork-buttons-create"
+                                                />
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Shift Hinzufügen Button -->
-                                    <div v-if="!multiEditModeCalendar"
-                                         class="invisible group-hover:visible absolute top-2 right-2 cursor-pointer rounded-full p-0.5 bg-white shadow-md border-2 border-dashed border-artwork-buttons-create"
-                                         @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)">
-                                        <ToolTipComponent
-                                            :tooltip-text="$t('Add shift')"
-                                            direction="bottom"
-                                            icon="IconPlus"
-                                            icon-size="h-4 w-4"
-                                            classes="text-artwork-buttons-create"
-                                        />
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                    </td>
+                                </tr>
+                            </TableBody>
+                        </template>
+                    </Table>
                 </div>
             </div>
-
             <div id="userOverview" class="w-full fixed bottom-0 z-40">
                 <div class="flex justify-center overflow-y-scroll pointer-events-none">
                     <div v-if="this.$can('can plan shifts') || this.$can('can view shift plan') || this.hasAdminRole()" @click="showCloseUserOverview"
@@ -1015,6 +1011,39 @@ export default {
         },
     },
     methods: {
+        usePage,
+        getAllProjectGroupsInEventsByDay(events){
+            let projectGroups = [];
+
+            events.forEach(event => {
+                if (event?.project) {
+                    let project = event.project;
+
+                    if (project.isGroup) {
+                        // Falls das Projekt selbst eine Gruppe ist, hinzufügen
+                        if (!projectGroups.some(group => group.id === project.id)) {
+                            projectGroups.push(project);
+                        }
+                    } else if (project.isInGroup && Array.isArray(project.group)) {
+                        // Falls das Projekt in einer Gruppe ist, die Gruppen-Infos nutzen
+                        project.group.forEach(group => {
+                            if (!projectGroups.some(g => g.id === group.id)) {
+                                projectGroups.push(group);
+                            }
+                        });
+                    }
+                }
+            });
+
+            return projectGroups;
+        },
+        checkIfUserIsAdminOrInGroup(group){
+            if (this.hasAdminRole()) {
+                return false;
+            }
+
+            return !group.userIds.includes(usePage().props.user.id);
+        },
         initializeCalendarMultiEditSave() {
             this.showAddShiftModal = true
         },
@@ -1970,6 +1999,7 @@ export default {
     position: sticky;
     align-self: flex-start;
     position: -webkit-sticky;
+    display: block;
     top: 0px;
 }
 

@@ -37,6 +37,7 @@ use Artwork\Modules\Budget\Services\SumCommentService;
 use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
+use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Category\Services\CategoryService;
@@ -75,6 +76,7 @@ use Artwork\Modules\MoneySourceReminder\Services\MoneySourceThresholdReminderSer
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\DTOs\ProjectSearchDTO;
 use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Exports\DetailedBudgetsByBudgetDeadlineExport;
@@ -385,12 +387,14 @@ class ProjectController extends Controller
      * @return array<string, mixed>
      * @throws AuthorizationException
      */
-    public function search(SearchRequest $request, ProjectService $projectService): array
+    public function search(SearchRequest $request, ProjectService $projectService): Collection
     {
         $this->authorize('viewAny', Project::class);
 
         $projects = $projectService->scoutSearch($request->get('query'))->get();
-        return ProjectIndexResource::collection($projects)->resolve();
+
+        return $projects->map(fn(Project $project) => ProjectSearchDTO::fromModel($project));
+        //return ProjectIndexResource::collection($projects)->resolve();
     }
 
     /**

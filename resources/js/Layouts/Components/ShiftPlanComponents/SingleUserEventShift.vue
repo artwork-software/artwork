@@ -16,7 +16,7 @@
         </div>
         <div class="flex flex-col bg-backgroundGray rounded-b-lg px-1 pt-1">
             <div class="flex flex-row justify-between border-b-2 border-dashed border-gray-400 pb-1">
-                <span class="text-sm font-bold">{{ shift.start }} - {{ shift.end }}, {{ shift.room?.name }}</span>
+                <span class="text-sm font-bold">{{ shift.start }} - {{ shift.end }}, {{ shift?.room?.name ?? shift?.event?.room?.name }}</span>
                 <IconCalendarMonth v-if="project" class="w-5 h-5 cursor-pointer" @click="toggleProjectTimePeriodAndRedirect"/>
             </div>
             <div class="border-b-2 border-dashed border-gray-400 pb-1 pt-0.5">

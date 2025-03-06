@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $position
  * @property int $linked_first_column
  * @property int $linked_second_column
+ * @property bool $commented
+ * @property bool $relevant_for_project_groups
  * @property Collection<ColumnCell> $cells
  * @property Collection<SubPositionSumDetail> $subPositionSumDetails
  * @property Collection<MainPositionDetails> $mainPositionSumDetails
@@ -46,10 +48,12 @@ class Column extends Model
         'is_locked',
         'locked_by',
         'commented',
+        'relevant_for_project_groups'
     ];
 
     protected $casts = [
         'is_locked' => 'boolean',
+        'relevant_for_project_groups' => 'boolean',
     ];
 
     protected $with = [

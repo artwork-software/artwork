@@ -13,6 +13,8 @@ enum ProjectTabComponentEnum: string
 
 
     // default tab component types
+    case PROJECT_GROUP_DISPLAY = 'ProjectGroupDisplayComponent';
+    case GROUP_PROJECT_DISPLAY = 'GroupProjectDisplayComponent';
 
     case PROJECT_STATUS = 'ProjectStateComponent';
     case PROJECT_GROUP = 'ProjectGroupComponent';

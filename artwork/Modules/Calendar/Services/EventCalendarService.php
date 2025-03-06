@@ -76,6 +76,7 @@ readonly class EventCalendarService
                     $q->whereIn('event_property_id', $filter->event_properties);
                 });
             })
+            ->orderBy('start_time')
             ->get();
 
         $eventTypeIds = $events->pluck('event_type_id')->unique();
@@ -89,7 +90,7 @@ readonly class EventCalendarService
             ->keyBy('id');
 
         $projects = Project::whereIn('id', $projectIds)
-            ->select(['id', 'name', 'state', 'artists'])
+            ->select(['id', 'name', 'state', 'artists', 'is_group', 'color', 'icon'])
             ->with([
                 'status:id,name,color',
                 'managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
@@ -117,7 +118,6 @@ readonly class EventCalendarService
         ))->groupBy('roomId');
 
         foreach ($rooms as $room) {
-
             $room->events = $eventDTOs[$room->id] ?? collect();
         }
 

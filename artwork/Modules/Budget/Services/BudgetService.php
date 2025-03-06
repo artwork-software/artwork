@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Budget\Services;
 
+use Artwork\Modules\Budget\DTOs\MatchRelevantProjectGroupDTO;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\Column;
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BudgetService
 {
@@ -58,6 +60,7 @@ class BudgetService
                 type: 'empty',
                 position: 0
             );
+
             $columns[] = $columnService->createColumnInTable(
                 table: $table,
                 name: $columnSettingService->getColumnNameByColumnPosition(1),
@@ -65,6 +68,7 @@ class BudgetService
                 type: 'empty',
                 position: 1
             );
+
             $columns[] = $columnService->createColumnInTable(
                 table: $table,
                 name: $columnSettingService->getColumnNameByColumnPosition(2),
@@ -72,13 +76,25 @@ class BudgetService
                 type: 'empty',
                 position: 2
             );
+
             $columns[] = $columnService->createColumnInTable(
                 table: $table,
                 name: date('Y') . ' €',
                 subName: 'A',
                 type: 'empty',
-                position: 3
+                position: 3,
+                relevant_for_project_groups: !$project->is_group,
             );
+
+            if ($project->is_group){
+                $columns[] = $columnService->createColumnInTable(
+                    table: $table,
+                    name: 'Unterprojekte',
+                    subName: '-',
+                    type: 'project_relevant_column',
+                    position: 100
+                );
+            }
 
             $costMainPosition = $mainPositionService->createMainPosition(
                 table: $table,
@@ -269,6 +285,100 @@ class BudgetService
             });
         }
 
+        $groupedProjectData = [];
+        $existingEntries = [];
+
+        if ($project->is_group) {
+            $groupProjects = $project->projectsOfGroup;
+            $groupColumns = $project->table()->first()?->columns()->get() ?? collect();
+            $firstTwoGroupColumns = $groupColumns->sortBy('position')->take(2);
+
+
+            if ($firstTwoGroupColumns->count() < 2) {
+                return $loadedProjectInformation;
+            }
+
+            [$firstGroupColumn, $secondGroupColumn] = [$firstTwoGroupColumns->first(), $firstTwoGroupColumns->last()];
+
+            foreach ($project->table()->first()?->mainPositions ?? [] as $groupMainPosition) {
+                foreach ($groupMainPosition->subPositions ?? [] as $groupSubPosition) {
+                    foreach ($groupSubPosition->subPositionRows ?? [] as $groupRow) {
+                        $groupFirstValue = trim((string) ($groupRow->cells()->where('column_id', $firstGroupColumn->id)->first()?->value ?? ''));
+                        $groupSecondValue = trim((string) ($groupRow->cells()->where('column_id', $secondGroupColumn->id)->first()?->value ?? ''));
+
+                        if ($groupFirstValue === '' || $groupSecondValue === '') {
+                            continue;
+                        }
+
+                        foreach ($groupProjects as $subProject) {
+                            $subProjectColumns = $subProject->table()->first()?->columns()->get() ?? collect();
+                            $firstTwoSubColumns = $subProjectColumns->sortBy('position')->take(2);
+
+
+                            if ($firstTwoSubColumns->count() < 2) {
+                                continue;
+                            }
+
+                            [$firstSubColumn, $secondSubColumn] = [$firstTwoSubColumns->first(), $firstTwoSubColumns->last()];
+                            $relevantColumns = $subProjectColumns->where('relevant_for_project_groups', true);
+
+                            foreach ($subProject->table()->first()?->mainPositions ?? [] as $subMainPosition) {
+                                foreach ($subMainPosition->subPositions ?? [] as $subPosition) {
+                                    foreach ($subPosition->subPositionRows ?? [] as $subRow) {
+                                        $subFirstValue = trim((string) ($subRow->cells()->where('column_id', $firstSubColumn->id)->first()?->value ?? ''));
+                                        $subSecondValue = trim((string) ($subRow->cells()->where('column_id', $secondSubColumn->id)->first()?->value ?? ''));
+
+                                        if ($groupFirstValue === $subFirstValue && $groupSecondValue === $subSecondValue) {
+                                            if ($groupMainPosition->type !== $subMainPosition->type) {
+                                                continue;
+                                            }
+
+                                            foreach ($relevantColumns as $relevantColumn) {
+                                                $relevantValue = $subRow->cells()->where('column_id', $relevantColumn->id)->first()?->value ?? 0;
+                                                $cellId = $subRow->cells()->where('column_id', $relevantColumn->id)->first()?->id;
+
+                                                if (!$cellId) {
+                                                    continue;
+                                                }
+
+                                                $uniqueKey = $cellId . '-' . $relevantColumn->id;
+
+                                                if (!isset($existingEntries[$uniqueKey])) {
+                                                    $dtoObject = new MatchRelevantProjectGroupDTO(
+                                                        $subProject->id,
+                                                        $subProject->name,
+                                                        $groupRow->id,
+                                                        $groupRow->name,
+                                                        $groupSubPosition->id,
+                                                        $groupMainPosition->id,
+                                                        $relevantColumn->id,
+                                                        $relevantColumn->name,
+                                                        $relevantValue,
+                                                        $cellId,
+                                                        $subMainPosition->type,
+                                                        $groupRow->commented,
+                                                        $subFirstValue,
+                                                        $subSecondValue
+                                                    );
+
+                                                    if ($subMainPosition->type === 'BUDGET_TYPE_EARNING') {
+                                                        $groupedProjectData['BUDGET_TYPE_EARNING'][] = $dtoObject;
+                                                    } else {
+                                                        $groupedProjectData['BUDGET_TYPE_COST'][] = $dtoObject;
+                                                    }
+
+                                                    $existingEntries[$uniqueKey] = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         $loadedProjectInformation['BudgetTab'] = [
             'moneySources' => MoneySource::all(),
@@ -334,7 +444,8 @@ class BudgetService
             ],
             'recentlyCreatedSageAssignedDataComment' => $this->determineRecentlyCreatedSageAssignedDataComment(
                 $sageAssignedDataCommentService
-            )
+            ),
+            'projectGroupRelevantBudgetData' => $groupedProjectData
         ];
 
         return $loadedProjectInformation;

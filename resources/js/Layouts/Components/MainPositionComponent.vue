@@ -116,8 +116,15 @@
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-if="mainPosition.columnSums[column.id]?.hasComments && mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-else-if="mainPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments_white.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'moneySource')" v-else-if="mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                        <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(mainPosition.columnSums[column.id]?.sum) }}</span>
-                        <span v-else>{{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}</span>
+                        <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
+                            {{ this.toCurrencyString(mainPosition.columnSums[column.id]?.sum) }}
+                        </span>
+                        <span v-if="column.type === 'sage'">
+                            {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
+                        </span>
+                        <span v-if="column.type === 'project_relevant_column'">
+                            {{ calculateRelevantBudgetDataSumFormProjectsInGroupMainPosition() }}
+                        </span>
                         <div v-if="this.hasBudgetAccess" class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openMainPositionSumDetailModal(mainPosition, column)">
                             <IconCirclePlus stroke-width="1.5" class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
                         </div>
@@ -268,6 +275,19 @@ export default {
 
     },
     methods: {
+        calculateRelevantBudgetDataSumFormProjectsInGroupMainPosition() {
+            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
+            if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
+            const relevantData = data[this.mainPosition.type].filter(item =>
+                item?.mainPositionId === this.mainPosition?.id && item?.type === this.mainPosition?.type
+            );
+            if (!relevantData.length) return this.toCurrencyString(0);
+            const sum = relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value?.replace(',', '.') || '0');
+                return acc + (isNaN(value) ? 0 : value);
+            }, 0);
+            return this.toCurrencyString(sum);
+        },
         checkIfMainPositionClosed(){
             if(localStorage.getItem('closedMainPositions') !== null){
                 let closedMainPositions = JSON.parse(localStorage.getItem('closedMainPositions'))

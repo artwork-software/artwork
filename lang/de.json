@@ -2380,8 +2380,19 @@
     "Active filters": "Aktive Filter",
     "Your active filters. Click on a filter to remove it.": "Deine aktiven Filter. Klicke auf einen Filter, um ihn zu entfernen.",
     "General Filters": "Allgemeine Filter",
+    "Show project group": "Projektgruppe anzeigen",
+    "Relevant for project-group": "Relevant für Projektgruppe",
+    "Not Relevant for project-group": "Nicht relevant für Projektgruppe",
+    "This Column is relevant for project groups": "Diese Spalte ist relevant für Projektgruppen",
+    "Component Subprojects": "Unterprojekte-Anzeigekomponente",
+    "Project group display component": "Projektgruppen-Anzeigekomponente",
+    "GroupProjectDisplayComponent": "Projektgruppen-Anzeigekomponente",
+    "ProjectGroupDisplayComponent": "Unterprojekte-Anzeigekomponente",
+    "Relevant for project period": "Relevant für Projektzeitraum",
     "Room requests answered": "Raumanfragen beantwortet",
     "Find out if your room requests has been answered.": "Finde heraus, ob deine Raumanfragen beantwortet wurden.",
     "Room request reminder": "Raumanfrage-Erinnerung",
-    "Find out if there are any room requests that need to be confirmed or declined.": "Finde heraus, ob es Raumanfragen gibt, die bestätigt oder abgelehnt werden müssen."
+    "Find out if there are any room requests that need to be confirmed or declined.": "Finde heraus, ob es Raumanfragen gibt, die bestätigt oder abgelehnt werden müssen.",
+    "Details of the Selected Cell": "Details der ausgewählten Zelle",
+    "Here you can view the relevant budget data for the selected cell. The displayed values come from the linked sub-projects and were determined based on the matching criteria of the group project.": "Hier siehst du die relevanten Budgetdaten der ausgewählten Zelle. Die angezeigten Werte stammen aus den verknüpften Unterprojekten und wurden basierend auf der Übereinstimmung mit den Gruppenprojekt-Kriterien ermittelt."
 }

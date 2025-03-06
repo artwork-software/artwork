@@ -145,6 +145,16 @@
                                         {{ $t('Expand days') }}
                                     </label>
                                 </div>
+                                <div class="flex items-center py-1">
+                                    <input id="cb-expand-days" v-model="userCalendarSettings.display_project_groups"
+                                           type="checkbox"
+                                           class="input-checklist"/>
+                                    <label for="cb-expand-days"
+                                           :class="userCalendarSettings.display_project_groups ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary cursor-pointer">
+                                        {{ $t('Show project group') }}
+                                    </label>
+                                </div>
                             </div>
                             <div class="flex justify-end">
                                 <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">
@@ -268,6 +278,7 @@ export default {
                 shift_notes: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.shift_notes : false,
                 high_contrast: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.high_contrast : false,
                 expand_days: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.expand_days : false,
+                display_project_groups: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.display_project_groups : false,
             })
         }
     },

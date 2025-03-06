@@ -75,6 +75,7 @@ use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
 use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Http\Resources\TaskDashboardResource;
 use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
@@ -129,6 +130,7 @@ class EventController extends Controller
         private readonly WorkingHourService $workingHourService,
         private readonly UserService $userService,
         private readonly ShiftTimePresetService $shiftTimePresetService,
+        private readonly ProjectService $projectService,
     ) {
     }
 
@@ -186,6 +188,7 @@ class EventController extends Controller
         $user = $this->authManager->user();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
         $userCalendarSettings = $user->getAttribute('calendar_settings');
+
 
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
@@ -273,7 +276,8 @@ class EventController extends Controller
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
             'first_project_shift_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'projectNameUsedForProjectTimePeriod' => $project?->name ?? null,
+            'projectNameUsedForProjectTimePeriod' => $userCalendarSettings->getAttribute('time_period_project_id') ?
+                $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'))->name : null,
             'infoForDailyView' => $dailyViewInfo,
             'months' => $months,
         ]);

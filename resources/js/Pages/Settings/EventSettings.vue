@@ -27,25 +27,27 @@
                                    <p class="mDark">{{ eventType.name }}</p>
                                    <div class="ml-2 mDark">({{eventType.abbreviation}})</div>
                                </div>
-                               <div class="flex mt-2">
-                                   <div class="xsLight mr-2">
+                               <div class="flex mt-2 divide-x space-x-2">
+                                   <div class="xxsLight">
                                        {{
                                            eventType.project_mandatory ? $t('Project assignment mandatory') : $t('Project assignment optional')
                                        }}
                                    </div>
-                                   <div class="xsLight">
-                                       |
-                                   </div>
-                                   <div class="xsLight ml-2">
+                                   <div class="xxsLight pl-2">
                                        {{
                                            eventType.individual_name ? $t('individual event name mandatory') : $t('individual event name optional')
+                                       }}
+                                   </div>
+                                   <div class="xxsLight pl-2" v-if="eventType.relevant_for_project_period">
+                                       {{
+                                            $t('Relevant for project period')
                                        }}
                                    </div>
                                </div>
                            </div>
                        </div>
                        <div class="flex items-center">
-                           <BaseMenu>
+                           <BaseMenu has-no-offset>
                                <MenuItem v-slot="{ active }">
                                    <a href="#" @click="openEditEventTypeModal(eventType)"
                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -109,6 +111,13 @@
                             <p :class="[eventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
                                class="ml-4 my-auto ">{{$t('individual event name mandatory')}}</p>
                         </div>
+                        <div class="flex items-center">
+                            <input v-model="eventTypeForm.relevant_for_project_period"
+                                   type="checkbox"
+                                   class="input-checklist"/>
+                            <p :class="[eventTypeForm.relevant_for_project_period ? 'xsDark' : 'xsLight']"
+                               class="ml-4 my-auto ">{{$t('Relevant for project period')}}</p>
+                        </div>
                         <div class="mt-5 w-full flex justify-center items-center text-center">
                             <FormButton
                                 type="submit"
@@ -156,6 +165,14 @@
                             <p :class="[editEventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
                                class="ml-4 my-auto">{{$t('individual event name mandatory')}}</p>
                         </div>
+                        <div class="flex items-center">
+                            <input v-model="editEventTypeForm.relevant_for_project_period"
+                                   type="checkbox"
+                                   class="input-checklist"/>
+                            <p :class="[editEventTypeForm.relevant_for_project_period ? 'xsDark' : 'xsLight']"
+                               class="ml-4 my-auto">{{$t('Relevant for project period')}}</p>
+                        </div>
+
                         <div class="mt-8 w-full justify-center flex">
                             <FormButton
                                 type="submit"
@@ -305,6 +322,7 @@ export default {
                 individual_name: false,
                 abbreviation: '',
                 hex_code: '#EC7A3D',
+                relevant_for_project_period: false
             }),
             editEventTypeForm: this.$inertia.form({
                 _method: 'PATCH',
@@ -313,6 +331,7 @@ export default {
                 project_mandatory: false,
                 individual_name: false,
                 abbreviation: '',
+                relevant_for_project_period: false,
                 id: null
             })
         }
@@ -334,6 +353,7 @@ export default {
             this.editEventTypeForm.project_mandatory = eventType.project_mandatory;
             this.editEventTypeForm.individual_name = eventType.individual_name;
             this.editEventTypeForm.abbreviation = eventType.abbreviation;
+            this.editEventTypeForm.relevant_for_project_period = eventType.relevant_for_project_period;
             this.editingEventType = true;
         },
         closeEditEventTypeModal() {
@@ -342,6 +362,7 @@ export default {
             this.editEventTypeForm.id = null;
             this.editEventTypeForm.project_mandatory = false;
             this.editEventTypeForm.individual_name = false;
+            this.editEventTypeForm.relevant_for_project_period = false;
             this.editingEventType = false;
         },
         closeAddEventTypeModal() {
@@ -350,6 +371,7 @@ export default {
             this.eventTypeForm.hex_code = "";
             this.eventTypeForm.project_mandatory = false;
             this.eventTypeForm.individual_name = false;
+            this.eventTypeForm.relevant_for_project_period = false;
             this.eventTypeForm.abbreviation = '';
         },
         addEventType() {
@@ -368,7 +390,7 @@ export default {
             this.deletingEventType = true;
         },
         closeDeletingUndefined() {
-            this.deletingUndefined = false,
+            this.deletingUndefined = false;
                 this.eventTypeToDelete = null
         },
         closeDeleteEventTypeModal() {

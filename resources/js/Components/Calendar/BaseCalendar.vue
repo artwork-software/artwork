@@ -54,7 +54,7 @@
                                                 <span>{{ group.name }}</span>
                                             </Link>
                                         </div>
-                                        <div  v-for="(event, index) in room.content[day.fullDay].events">
+                                        <div v-if="composedCurrentDaysInViewRef.has(day.fullDay)" v-for="(event, index) in room.content[day.fullDay].events">
                                             <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.withoutFormat + '-room-' + room.roomId">
                                                 <AsyncSingleEventInCalendar
                                                     :event="event"
@@ -84,7 +84,7 @@
                 </div>
             </div>
             <div v-else-if="usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
-                <DailyViewCalendar
+                <AsyncDailyViewCalendar
                     :multi-edit="multiEdit"
                     :rooms="rooms"
                     :days="days"
@@ -111,7 +111,6 @@
                             <SingleRoomInHeader :room="room" is-light   />
                         </div>
                     </div>
-
                 </div>
                 <div class="flex gap-0.5">
                     <div v-for="room in newCalendarData">
@@ -190,7 +189,7 @@
             </div>
         </div>
     </div>
-    <EventComponent
+    <AsyncEventComponent
         v-if="showEventComponent"
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
@@ -246,7 +245,7 @@
         :event-types="eventTypes"
         :sub-event-to-edit="subEventToEdit"
         @close="closeAddSubEventModal"/>
-    <events-without-room-component
+    <AsyncEventsWithoutRoomComponent
         v-if="showEventsWithoutRoomComponent"
         @closed="showEventsWithoutRoomComponent = false"
         :showHints="usePage().props.show_hints"
@@ -260,22 +259,19 @@
 </template>
 
 <script setup>
-import {computed, defineAsyncComponent, inject, onMounted, provide, reactive, ref, watch} from "vue";
+import {computed, defineAsyncComponent, inject, onMounted, ref} from "vue";
 import {router, usePage, Link} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionObserver.js";
 import MultiDuplicateModal from "@/Layouts/Components/MultiDuplicateModal.vue";
-import DailyViewCalendar from "@/Components/Calendar/DailyViewCalendar.vue";
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
-import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
@@ -322,14 +318,25 @@ const props = defineProps({
         }
     })
 const $t = useTranslation()
-const { composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
+const { composedCurrentDaysInViewRef, composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
 const {hasAdminRole} = usePermission(usePage().props)
-const AsyncSingleEventInCalendar = defineAsyncComponent(
-        {
-            loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
-            loadingComponent: CalendarPlaceholder
-        }
-    )
+const AsyncSingleEventInCalendar = defineAsyncComponent({
+    loader: () =>  import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
+    loadingComponent: CalendarPlaceholder,
+});
+
+const AsyncEventComponent = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/EventComponent.vue'),
+})
+
+const AsyncEventsWithoutRoomComponent = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/EventsWithoutRoomComponent.vue'),
+})
+
+const AsyncDailyViewCalendar = defineAsyncComponent({
+    loader: () => import('@/Components/Calendar/DailyViewCalendar.vue'),
+})
+
 const textStyle = computed(() => {
         const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
         const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
@@ -348,7 +355,7 @@ const scrollToNextEventInDay = (day, length,room) => {
             });
         }
     };
-const computedFilteredEvents = computed(() => {
+/*const computedFilteredEvents = computed(() => {
         let getComputedEventsWithoutRoom = () => {
             return eventsWithoutRoomRef.value.filter((event) => {
                 let createdBy = event.created_by;
@@ -370,7 +377,7 @@ const computedFilteredEvents = computed(() => {
         }
 
         return getComputedEventsWithoutRoom();
-    });
+    });*/
 const computedCheckedEventsForMultiEditCount = computed(() => {
         return editEvents.value.length;
     });
@@ -485,12 +492,12 @@ const checkIfAnyRoomHasAnEventOrShift = computed(() => {
     });
 });
 
-const checkIfRoomHasEvents = (room) => {
+/*const checkIfRoomHasEvents = (room) => {
     return room.content && Object.entries(room.content).some(([date, { events }]) => {
         return events && events.length > 0;
     });
 };
-
+*/
 const toggleMultiEdit = (value) => {
     multiEdit.value = value;
 
@@ -640,7 +647,7 @@ const deleteSelectedEvents = () => {
 const dateValue = inject('dateValue');
 
 
-const updateFilterValue = (key, value) => {
+/*const updateFilterValue = (key, value) => {
     router.patch(route('user.calendar.filter.single.value.update', {user: usePage().props.user.id}), {
         key: key,
         value: value
@@ -648,7 +655,7 @@ const updateFilterValue = (key, value) => {
         preserveScroll: true,
         preserveState: false
     });
-}
+}*/
 
 onMounted(() => {
     window.addEventListener(

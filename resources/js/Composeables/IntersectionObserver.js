@@ -1,6 +1,6 @@
 import {ref} from "vue";
 
-export function useDaysAndEventsIntersectionObserver(rootMargin = '0px') {
+export function useDaysAndEventsIntersectionObserver(rootMargin = '100px') {
     const composedCurrentDaysInViewRef = ref(new Set()),
         composedEventsByDaysContainerClassRef = ref('.events-by-days-container'),
         composedDayContainerClassRef = ref('.day-container'),

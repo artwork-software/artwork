@@ -24,6 +24,8 @@ class UpdateProjectRequest extends FormRequest
             'assigned_departments' => ['sometimes', 'array'],
             'assigned_departments.?' => ['exists:departments,id'],
             'budget_deadline' => 'nullable|date',
+            'color' => ['sometimes', 'nullable', 'string'],
+            'icon' => ['sometimes', 'nullable', 'string'],
         ];
     }
 }

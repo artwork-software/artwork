@@ -38,6 +38,8 @@ export default {
     <IconCurrencyEuro class="w-6 h-6" v-if="type === 'BudgetInformations'" />
     <IconApps class="w-6 h-6" v-if="type === 'BulkBody'" />
     <component is="IconHomeStar" class="w-6 h-6" v-if="type === 'ArtistResidenciesComponent'" />
+    <component is="IconCornerDownRightDouble" class="w-6 h-6" v-if="type === 'GroupProjectDisplayComponent'" />
+    <component is="IconDeviceProjector" class="w-6 h-6" v-if="type === 'ProjectGroupDisplayComponent'" />
 
     <!-- TextField, Checkbox, TextArea, Title, DropDown -->
 </template>

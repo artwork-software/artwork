@@ -906,7 +906,7 @@ export default {
             }
 
             if (this.event?.project) {
-                console.log(this.event.project);
+                //console.log(this.event.project);
                 this.selectedProject = {id: this.event.project.id, name: this.event.project.name};
             } else if (this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id){
                 this.selectedProject = {id: this.$page.props.user.calendar_settings.time_period_project_id, name: this.$page.props.projectNameOfCalendarProject};

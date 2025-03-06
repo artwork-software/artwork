@@ -37,7 +37,14 @@
                         </div>
                     </HolidayToolTip>
                 </div>
-                <div></div>
+                <div class="ml-10 flex items-center h-full truncate">
+                    <div class="flex items-center h-full gap-x-2" v-if="usePage().props.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInAllRoomsAndEventsByDay(day)" :key="group.id">
+                        <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: firstProjectTabId })" class=" text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1 border" :style="{ backgroundColor: group.color + '22' ?? '#ccc', color: group.color, borderColor: group.color }">
+                            <component :is="group.icon" class="size-4" aria-hidden="true"/>
+                            <span>{{ group.name }}</span>
+                        </Link>
+                    </div>
+                </div>
             </div>
             <div v-for="hour in day.hoursOfDay">
                 <div v-if="shouldShowHour(hour, calendarData, day)" class="border-b border-dashed">
@@ -97,11 +104,14 @@
 
 <script setup>
 import {ref} from "vue";
-import {usePage} from "@inertiajs/vue3";
+import {Link, usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import SingleEventInCalendar from "@/Components/Calendar/Elements/SingleEventInCalendar.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
+import {usePermission} from "@/Composeables/Permission.js";
+const { can, canAny, hasAdminRole } = usePermission(usePage().props)
+
 
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const props = defineProps({
@@ -192,6 +202,38 @@ const shouldShowHour = (hour, calendarData, day) => {
     return true;
 };
 
+const getAllProjectGroupsInAllRoomsAndEventsByDay = (day) => {
+    let projectGroups = new Map();
+
+    for (const room of props.calendarData) {
+        for (const event of room.content[day.fullDay]?.events || []) {
+            if (event?.project?.isGroup) {
+                if (!projectGroups.has(event.project.id)) {
+                    projectGroups.set(event.project.id, event.project);
+                }
+            } else if (event?.project?.isInGroup && Array.isArray(event.project.group)) {
+                // Falls das Projekt in einer Gruppe ist, die Gruppen speichern
+                event.project.group.forEach(group => {
+                    if (!projectGroups.has(group.id)) {
+                        projectGroups.set(group.id, group);
+                    }
+                });
+            }
+        }
+    }
+
+    return Array.from(projectGroups.values());
+};
+
+const checkIfUserIsAdminOrInGroup = (group) => {
+    if (hasAdminRole()) {
+        return false;
+    }
+
+    return !group.userIds.includes(usePage().props.user.id);
+}
+
+
 
 const hasOverlappingEvents = (events, day, hour) => {
     if (!events || events.length < 2) return false;
@@ -204,7 +246,6 @@ const hasOverlappingEvents = (events, day, hour) => {
 };
 
 const shouldRenderEvent = (event, day, hour) => {
-    console.log(event, day, hour);
     const isStartDay = day.fullDay === event.daysOfEvent[0];
     const isEndDay = day.fullDay === event.daysOfEvent[event.daysOfEvent.length - 1];
     const isMiddleDay =

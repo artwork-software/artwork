@@ -53,6 +53,7 @@ class MinimalCalendarEventResource extends JsonResource
                 'first_name' => $creator->getAttribute('first_name'),
                 'last_name' => $creator->getAttribute('last_name')
             ],
+            'project' => $this->getAttribute('project'),
             'start' => $startTime->utc()->toIso8601String(),
             'startTime' => $startTime,
             'end' => $this->getAttribute('end_time')->utc()->toIso8601String(),

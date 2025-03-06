@@ -320,6 +320,17 @@
                                             {{ $t('Hide unoccupied rooms') }}
                                         </label>
                                     </div>
+                                    <div class="flex items-center py-1">
+                                        <input id="cb-use-event-status-color"
+                                               v-model="userCalendarSettings.display_project_groups"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-use-event-status-color"
+                                               :class="userCalendarSettings.display_project_groups ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Show project group') }}
+                                        </label>
+                                    </div>
                                 </div>
                                 <div class="flex justify-end">
                                     <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">
@@ -441,6 +452,7 @@ const userCalendarSettings = useForm({
     expand_days: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.expand_days : false,
     use_event_status_color: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.use_event_status_color : false,
     hide_unoccupied_rooms: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.hide_unoccupied_rooms : false,
+    display_project_groups: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.display_project_groups : false,
 });
 
 

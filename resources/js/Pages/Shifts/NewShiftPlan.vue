@@ -123,16 +123,16 @@
                                         class="border-gray-400 relative table-cell align-top day-container"
                                         v-for="day in days" :data-day="day.fullDay">
                                         <div v-if="!day.isExtraRow && multiEditModeCalendar"
-                                            :class="[multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ?
+                                             :class="[multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ?
                                             'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create' : '',
                                             checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '']"
-                                            class="absolute w-full h-full"
-                                            @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)">
+                                             class="absolute w-full h-full"
+                                             @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)">
                                         </div>
                                         <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.isExtraRow">
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
-                                        <div v-else style="width: 200px" class="cell group " :class="$page.props.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
+                                        <div v-if="composedCurrentDaysInViewRef.has(day.fullDay)" style="width: 200px" class="cell group " :class="$page.props.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
                                             <div v-if="usePage().props.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
                                                 <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"  class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
                                                     <component :is="group.icon" class="size-4" aria-hidden="true"/>
@@ -225,7 +225,7 @@
                 <div class=" bg-artwork-navigation-background">
                     <div v-show="showUserOverview" ref="userOverview"
                          class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-20 overflow-y-scroll"
-                         :style="showUserOverview ? { height: userOverviewHeight.height + 'px'} : {height: 20 + 'px'}">
+                         :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
                         <div class="flex items-center justify-between w-full fixed py-3 z-20 bg-artwork-navigation-background px-3" :style="{top: calculateTopPositionOfUserOverView}">
                             <div class="flex items-center justify-end gap-x-3">
                                 <Switch @click="toggleMultiEditMode" v-model="multiEditMode" :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
@@ -692,1344 +692,317 @@
         :rooms-and-dates-for-multi-edit="multiEditCalendarDays"
     />
 </template>
-<script>
-import AppLayout from '@/Layouts/AppLayout.vue'
-import Permissions from "@/Mixins/Permissions.vue";
-import {ChevronDownIcon, LightBulbIcon} from "@heroicons/vue/outline";
-import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue";
-import EventComponent from "@/Layouts/Components/EventComponent.vue";
-import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
-import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
-import {Link, router, useForm, usePage} from "@inertiajs/vue3";
-import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
-import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
-import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
-import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
-import ShowUserShiftsModal from "@/Pages/Shifts/Components/ShowUserShiftsModal.vue";
-import DragElement from "@/Pages/Projects/Components/DragElement.vue";
-import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
-import {MenuItem, Switch} from "@headlessui/vue";
-import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
-import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
-import Table from "@/Components/Table/Table.vue";
-import TableHead from "@/Components/Table/TableHead.vue";
-import TableBody from "@/Components/Table/TableBody.vue";
-import {SelectorIcon} from "@heroicons/vue/solid";
+
+<script setup>
+
+import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
+import {IconArrowDown, IconArrowUp, IconCheck, IconChevronDown, IconChevronUp} from "@tabler/icons-vue";
+import DeleteEntriesModal from "@/Pages/Shifts/Components/DeleteEntriesModal.vue";
 import ShiftsQualificationsAssignmentModal
     from "@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue";
-import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {IconArrowDown, IconArrowUp, IconChevronDown, IconFileText, IconPencil, IconX} from "@tabler/icons-vue";
-import CraftFilter from "@/Components/Filter/CraftFilter.vue";
+import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
-import {useEvent} from "@/Composeables/Event.js";
-import {reactive, ref} from "vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
-import dayjs from "dayjs";
-import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import ShiftPlanCell from "@/Pages/Shifts/Components/ShiftPlanCell.vue";
-import debounce from "lodash.debounce";
-import CellMultiEditModal from "@/Pages/Shifts/Components/CellMultiEditModal.vue";
-import DeleteEntriesModal from "@/Pages/Shifts/Components/DeleteEntriesModal.vue";
-import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
-import NewShiftWithoutEventModal
-    from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/NewShiftWithoutEventModal.vue";
-import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue";
-import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
-import DeleteCalendarMultiEditEntities from "@/Pages/Shifts/Components/DeleteCalendarMultiEditEntities.vue";
 import DeleteCalendarRoomShiftEntriesModal from "@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue";
-import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
-const {getSortEnumTranslation} = useSortEnumTranslation();
-import { useDaysAndEventsIntersectionObserver } from "@/Composeables/IntersectionObserver.js";
+import TableHead from "@/Components/Table/TableHead.vue";
+import ShowUserShiftsModal from "@/Pages/Shifts/Components/ShowUserShiftsModal.vue";
+import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
+import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue";
+import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
+import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
+import CraftFilter from "@/Components/Filter/CraftFilter.vue";
+import ShiftPlanCell from "@/Pages/Shifts/Components/ShiftPlanCell.vue";
+import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
+import {SelectorIcon} from "@heroicons/vue/solid";
+import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue";
+import CellMultiEditModal from "@/Pages/Shifts/Components/CellMultiEditModal.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
+import {Link, usePage} from "@inertiajs/vue3";
+import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
+import TableBody from "@/Components/Table/TableBody.vue";
+import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
+import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
+import {ChevronDownIcon} from "@heroicons/vue/outline";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import Table from "@/Components/Table/Table.vue";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
+import {computed, nextTick, onMounted, onUnmounted, ref} from "vue";
+import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionObserver.js";
 
+const props = defineProps({
+    events: Array,
+    projects: Array,
+    shiftPlan: Object,
+    days: Array,
+    filterOptions: Object,
+    dateValue: [String, Date],
+    personalFilters: Object,
+    selectedDate: [String, Date],
+    history: Array,
+    usersForShifts: Array,
+    freelancersForShifts: Array,
+    serviceProvidersForShifts: Array,
+    user_filters: Object,
+    crafts: Array,
+    shiftQualifications: Array,
+    dayServices: Array,
+    firstProjectShiftTabId: [Number, null],
+    shiftPlanWorkerSortEnums: Array,
+    useFirstNameForSort: Boolean,
+    userShiftPlanShiftQualificationFilters: Object
+});
 
+const { composedCurrentDaysInViewRef, composedStartDaysAndEventsIntersectionObserving } = useDaysAndEventsIntersectionObserver();
 
+const showUserOverview = computed(() => props.$can('can plan shifts') || hasAdminRole());
+const isFullscreen = ref(false);
+const showHistoryModal = ref(false);
+const showUserShifts = ref(false);
+const userToShow = ref(null);
+const dayToShow = ref(null);
+const highlightMode = ref(false);
+const idToHighlight = ref(null);
+const typeToHighlight = ref(null);
+const multiEditMode = ref(false);
+const dayServiceMode = ref(false);
+const selectedDayService = ref(props.dayServices ? props.dayServices[0] : null);
+const userForMultiEdit = ref(null);
+const userToMultiEditCurrentShifts = ref([]);
+const userToMultiEditCheckedShiftsAndEvents = ref([]);
+const dropFeedback = ref(null);
+const closedCrafts = ref([]);
+const userOverviewHeight = ref(usePage().props.user.drawer_height);
+const startY = ref(0);
+const startHeight = ref(0);
+const windowHeight = ref(window.innerHeight);
+const shiftsToHandleOnMultiEdit = ref({
+    assignToShift: [],
+    removeFromShift: []
+});
+const showShiftsQualificationsAssignmentModal = ref(false);
+const showShiftsQualificationsAssignmentModalShifts = ref([]);
+const firstDayPosition = computed(() => props.days ? props.days.find(day => !day.isExtraRow) : null);
+const currentDayOnView = computed(() => props.days ? props.days.find(day => !day.isExtraRow) : null);
+const currentDaysInView = ref(new Set());
+const shiftPlanRef = ref(JSON.parse(JSON.stringify(props.shiftPlan)));
+const screenHeight = ref(screen.height);
+const showFreelancers = ref(true);
+const multiEditCellByDayAndUser = ref({});
+const showCellMultiEditModal = ref(false);
+const openCellMultiEditDelete = ref(false);
+const preventNextNavigation = ref(false);
+const resolveModalClose = ref(null);
+const waitForModalClose = ref(false);
+const navigationGuardActive = ref(true);
+const originalVisit = ref(null);
+const showShiftQualificationFilter = ref(false);
+const multiEditModeCalendar = ref(false);
+const multiEditCalendarDays = ref([]);
+const dayForShiftAdd = ref(null);
+const roomForShiftAdd = ref(null);
+const showAddShiftModal = ref(false);
+const shiftToEdit = ref(null);
+const newShiftPlanData = ref(props.shiftPlan);
+const openCellMultiEditCalendarDelete = ref(false);
 
-export default {
-    name: "ShiftPlan",
-    mixins: [Permissions, IconLib],
-    components: {
-        DeleteCalendarRoomShiftEntriesModal,
-        DeleteCalendarMultiEditEntities,
-        AddShiftModal,
-        SingleShiftInRoom,
-        NewShiftWithoutEventModal,
-        HolidayToolTip,
-        DeleteEntriesModal,
-        CellMultiEditModal,
-        ShiftPlanCell,
-        ToolTipComponent,
-        MenuItem,
-        BaseMenu,
-        DayServiceFilter,
-        IconPencil,
-        SingleEventInShiftPlan,
-        CraftFilter,
-        IconChevronDown,
-        IconX,
-        IconFileText,
-        BaseFilter,
-        ShiftsQualificationsAssignmentModal,
-        TableBody,
-        TableHead,
-        Table,
-        ChevronDownIcon,
-        SideNotification,
-        MultiEditUserCell,
-        Switch,
-        DragElement,
-        ShowUserShiftsModal,
-        ShiftHistoryModal,
-        ShiftHeader,
-        ShiftTabs,
-        Link,
-        CalendarFunctionBar,
-        SingleCalendarEvent,
-        EventComponent,
-        SingleShiftPlanEvent,
-        LightBulbIcon,
-        AppLayout,
-        ShiftPlanFunctionBar,
-        HighlightUserCell,
-        SelectorIcon,
-        IconArrowDown,
-        IconArrowUp
-    },
-    props: [
-        'events',
-        'projects',
-        'shiftPlan',
-        'days',
-        'filterOptions',
-        'dateValue',
-        'personalFilters',
-        'selectedDate',
-        'history',
-        'usersForShifts',
-        'freelancersForShifts',
-        'serviceProvidersForShifts',
-        'user_filters',
-        'crafts',
-        'shiftQualifications',
-        'dayServices',
-        'firstProjectShiftTabId',
-        'shiftPlanWorkerSortEnums',
-        'useFirstNameForSort',
-        'userShiftPlanShiftQualificationFilters',
-    ],
-    data() {
-        const { composedCurrentDaysInViewRef, composedStartDaysAndEventsIntersectionObserving } = useDaysAndEventsIntersectionObserver();
-        return {
-            showUserOverview: this.$can('can plan shifts') || this.hasAdminRole(),
-            isFullscreen: false,
-            showHistoryModal: false,
-            showUserShifts: false,
-            userToShow: null,
-            dayToShow: null,
-            highlightMode: false,
-            idToHighlight: null,
-            typeToHighlight: null,
-            multiEditMode: false,
-            dayServiceMode: false,
-            selectedDayService: this.dayServices ? this.dayServices[0] : null,
-            userForMultiEdit: null,
-            userToMultiEditCurrentShifts: [],
-            userToMultiEditCheckedShiftsAndEvents: [],
-            dropFeedback: null,
-            closedCrafts: [],
-            userOverviewHeight: useForm({
-                height: usePage().props.user.drawer_height
-            }),
-            startY: 0,
-            startHeight: 0,
-            windowHeight: window.innerHeight,
-            shiftsToHandleOnMultiEdit: {
-                assignToShift: [],
-                removeFromShift: []
-            },
-            showShiftsQualificationsAssignmentModal: false,
-            showShiftsQualificationsAssignmentModalShifts: [],
-            firstDayPosition: this.days ? this.days[this.days.findIndex((day) => !day.isExtraRow)] : null,
-            currentDayOnView:  this.days ? this.days[this.days.findIndex((day) => !day.isExtraRow)] : null,
-            currentDaysInView: new Set(),
-            shiftPlanRef: ref(JSON.parse(JSON.stringify(this.shiftPlan))),
-            screenHeight: screen.height,
-            showFreelancers: true,
-            multiEditCellByDayAndUser: {},
-            showCellMultiEditModal: false,
-            openCellMultiEditDelete: false,
-            preventNextNavigation: false,
-            resolveModalClose: null,
-            waitForModalClose: false,
-            navigationGuardActive: true,
-            originalVisit: null,
-            showShiftQualificationFilter: false,
-            multiEditModeCalendar: false,
-            multiEditCalendarDays: [],
-            dayForShiftAdd: null,
-            roomForShiftAdd: null,
-            showAddShiftModal: false,
-            shiftToEdit: null,
-            newShiftPlanData: ref(this.shiftPlan),
-            openCellMultiEditCalendarDelete: false,
-            composedCurrentDaysInViewRef,
-            composedStartDaysAndEventsIntersectionObserving,
+const shiftPlanElement = ref(null);
+const userOverviewElement = ref(null);
+// Event Listener für Fenstergröße
+const updateWindowHeight = () => {
+    windowHeight.value = window.innerHeight;
+};
+
+onMounted(() => {
+    composedStartDaysAndEventsIntersectionObserving();
+
+    const ShiftCalendarListener = useShiftCalendarListener(newShiftPlanData);
+    ShiftCalendarListener.init();
+
+    nextTick(() => {
+        if (shiftPlanElement.value) {
+            shiftPlanElement.value.addEventListener('scroll', syncScrollShiftPlan);
         }
-    },
-    mounted() {
-        this.composedStartDaysAndEventsIntersectionObserving();
+        if (userOverviewElement.value) {
+            userOverviewElement.value.addEventListener('scroll', syncScrollUserOverview);
+        }
+    });
 
-        const ShiftCalendarListener = useShiftCalendarListener(this.newShiftPlanData);
-        ShiftCalendarListener.init();
+    window.addEventListener('resize', updateHeight);
+    updateHeight();
 
-        // Listen for scroll events on both sections
-        this.$refs.shiftPlan?.addEventListener('scroll', this.syncScrollShiftPlan);
-        this.$refs.userOverview?.addEventListener('scroll', this.syncScrollUserOverview);
-        window.addEventListener('resize', this.updateHeight);
-        this.updateHeight();
+    setupInertiaNavigationGuard();
 
-        this.setupInertiaNavigationGuard();
+    // Intersection Observer für sichtbare Tage
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                const day = entry.target.dataset.day;
 
-        /**
-         * this code needs to be built in, when the observer is fixed and the observer is used
-         *  const observer = new IntersectionObserver(
-         *                 (entries) => {
-         *                     entries.forEach((entry) => {
-         *                         const day = entry.target.dataset.day;
-         *
-         *                         if (entry.intersectionRatio > 0) {
-         *                             this.currentDaysInView.add(day);
-         *                         } else {
-         *                             this.currentDaysInView.delete(day);
-         *                         }
-         *                     });
-         *                 },
-         *                 {
-         *                     root: document.getElementsByClassName('.eventByDaysContainer')[0],
-         *                     rootMargin: '5000px'
-         *                 }
-         *             ),
-         *             dayContainers = document.querySelectorAll('.day-container');
-         *
-         *         dayContainers.forEach((container) => {
-         *             observer.observe(container);
-         *         });
-         */
-    },
-    created() {
-        window.addEventListener("resize", this.updateHeight);
-    },
-    computed: {
-        //composedCurrentDaysInViewRef,
-        craftsToDisplay() {
-            const crafts = this.crafts
-                .map(
-                    (craft) => {
-                        return {
-                            id: craft.id,
-                            name: craft.name,
-                            abbreviation: craft.abbreviation,
-                            users: this.filterAndSortWorkersOfCraft(craft),
-                            color: craft?.color,
-                            universally_applicable: craft.universally_applicable,
-                        };
-                    }
-                );
-
-            crafts.forEach((craft) => {
-                crafts.users = craft.users;
-            });
-
-            if (this.$page.props.user.show_crafts?.length === 0 || this.$page.props.user.show_crafts === null) {
-                return crafts;
-            } else {
-                return crafts.filter((craft) => this.$page.props.user.show_crafts.includes(craft.id));
-            }
-        },
-        workersWithoutCraft() {
-            let workersWithoutCraft = this.filterNonManagingWorkersByShiftQualificationFilter(
-                this.getDropWorkers().filter(user => user.assigned_craft_ids.length === 0)
-            );
-
-            if (this.$page.props.user.shift_plan_user_sort_by_id === null) {
-                return workersWithoutCraft;
-            }
-
-            //simple sort by first/last name ascending or descending
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
-                return this.sortAscendingByUseFirstNameForSort(workersWithoutCraft);
-            }
-
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING') {
-                return this.sortDescendingByUseFirstNameForSort(workersWithoutCraft);
-            }
-
-            //prepare intern/extern sort
-            let assignedInternWorkers = workersWithoutCraft.filter(
-                (workerWithoutCraft) => this.isWorkerUser(workerWithoutCraft)
-            ), assignedExternWorkers = workersWithoutCraft.filter(
-                (assignedNonManagingWorker) => this.isWorkerFreelancer(assignedNonManagingWorker) ||
-                    this.isWorkerServiceProvider(assignedNonManagingWorker)
-            );
-
-            //intern/extern alphabetically by name ascending -> managing workers first, intern, extern afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
-                return this
-                    .sortAscendingByUseFirstNameForSort(assignedInternWorkers)
-                    .concat(this.sortAscendingByUseFirstNameForSort(assignedExternWorkers));
-            }
-
-            //intern/extern alphabetically by name descending -> managing workers first, extern, intern afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING') {
-                return this
-                    .sortDescendingByUseFirstNameForSort(assignedExternWorkers)
-                    .concat(this.sortDescendingByUseFirstNameForSort(assignedInternWorkers));
-            }
-
-            return workersWithoutCraft;
-        },
-        computedShiftPlanWorkerSortEnums() {
-            let nameSortEnums = [
-                    'ALPHABETICALLY_NAME_ASCENDING',
-                    'ALPHABETICALLY_NAME_DESCENDING'
-                ],
-                sortConfig = [];
-
-            if (nameSortEnums.includes(this.$page.props.user.shift_plan_user_sort_by_id)) {
-                sortConfig.push('INTERN_EXTERN_ASCENDING');
-
-                if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
-                    sortConfig.push('ALPHABETICALLY_NAME_DESCENDING');
+                if (entry.intersectionRatio > 0) {
+                    currentDaysInView.value.add(day);
                 } else {
-                    sortConfig.push('ALPHABETICALLY_NAME_ASCENDING');
-                }
-
-                return sortConfig;
-            }
-
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
-                sortConfig.push('INTERN_EXTERN_DESCENDING');
-            } else {
-                sortConfig.push('INTERN_EXTERN_ASCENDING');
-            }
-
-            sortConfig.push('ALPHABETICALLY_NAME_ASCENDING');
-
-            return sortConfig;
-        },
-    },
-    methods: {
-        usePage,
-        getAllProjectGroupsInEventsByDay(events){
-            let projectGroups = [];
-
-            events.forEach(event => {
-                if (event?.project) {
-                    let project = event.project;
-
-                    if (project.isGroup) {
-                        // Falls das Projekt selbst eine Gruppe ist, hinzufügen
-                        if (!projectGroups.some(group => group.id === project.id)) {
-                            projectGroups.push(project);
-                        }
-                    } else if (project.isInGroup && Array.isArray(project.group)) {
-                        // Falls das Projekt in einer Gruppe ist, die Gruppen-Infos nutzen
-                        project.group.forEach(group => {
-                            if (!projectGroups.some(g => g.id === group.id)) {
-                                projectGroups.push(group);
-                            }
-                        });
-                    }
+                    currentDaysInView.value.delete(day);
                 }
             });
-
-            return projectGroups;
         },
-        checkIfUserIsAdminOrInGroup(group){
-            if (this.hasAdminRole()) {
-                return false;
-            }
-
-            return !group.userIds.includes(usePage().props.user.id);
-        },
-        initializeCalendarMultiEditSave() {
-            this.showAddShiftModal = true
-        },
-        closeCellMultiEditCalendarDelete(boolean) {
-            if(boolean){
-                this.openCellMultiEditCalendarDelete = false;
-                this.showAddShiftModal = true;
-            } else {
-                this.openCellMultiEditCalendarDelete = false;
-                this.multiEditCalendarDays = [];
-            }
-        },
-        openEditShiftModal(shift) {
-            this.shiftToEdit = shift;
-            this.showAddShiftModal = true;
-
-        },
-        openAddShiftForRoomAndDay(day, roomId){
-            this.shiftToEdit = null;
-            this.roomForShiftAdd = roomId;
-            this.dayForShiftAdd = day;
-            this.showAddShiftModal = true;
-        },
-        closeAddShiftModal() {
-            this.showAddShiftModal = false;
-            this.roomForShiftAdd = null;
-            this.dayForShiftAdd = null;
-            this.multiEditCalendarDays = [];
-        },
-        checkIfRoomAndDayIsInMultiEditCalendar(day, roomId){
-            return this.multiEditCalendarDays.some((dayAndRoom) => dayAndRoom.day === day && dayAndRoom.roomId === roomId)
-        },
-        addDayAndRoomToMultiEditCalendar(day, roomId){
-            const exists = this.multiEditCalendarDays.some(
-                (dayAndRoom) => dayAndRoom.day === day && dayAndRoom.roomId === roomId
-            );
-
-            if (exists) {
-                this.multiEditCalendarDays = this.multiEditCalendarDays.filter(
-                    (dayAndRoom) => !(dayAndRoom.day === day && dayAndRoom.roomId === roomId)
-                );
-            } else {
-                this.multiEditCalendarDays.push({ day: day, roomId: roomId });
-            }
-        },
-        setupInertiaNavigationGuard() {
-            this.originalVisit = router.visit;
-            window.onbeforeunload = (event) => {
-                if (this.multiEditMode && this.userForMultiEdit && !this.preventNextNavigation) {
-                    event.preventDefault();
-                    event.returnValue = this.$t('Would you like to save the changes before you leave the page?');
-                }
-            };
-
-            router.visit = async (url, options = {}) => {
-                if (this.multiEditMode && this.userForMultiEdit && !this.preventNextNavigation) {
-                    this.preventNextNavigation = true;
-
-                    try {
-                        //await this.initializeMultiEditSave();
-                        if (!this.waitForModalClose) {
-                            this.originalVisit.call(router, url, options);
-                        }
-                    } finally {
-                        this.preventNextNavigation = false;
-                    }
-                } else if (!this.waitForModalClose) {
-                    this.originalVisit.call(router, url, options);
-                }
-            };
-        },
-        isWorkerUser(worker) {
-            return worker.type === 0;
-        },
-        isWorkerFreelancer(worker) {
-            return worker.type === 1;
-        },
-        isWorkerServiceProvider(worker) {
-            return worker.type === 2;
-        },
-        isManagingWorker(craft, worker) {
-            if (this.isWorkerUser(worker)) {
-                return craft.managing_users.findIndex(
-                    (managingUser) => managingUser.id === worker.element.id
-                ) > -1;
-            }
-
-            if (this.isWorkerFreelancer(worker)) {
-                return craft.managing_freelancers.findIndex(
-                    (managingUser) => managingUser.id === worker.element.id
-                ) > -1;
-            }
-
-            if (this.isWorkerServiceProvider(worker)) {
-                return craft.managing_service_providers.findIndex(
-                    (managingUser) => managingUser.id === worker.element.id
-                ) > -1;
-            }
-        },
-        getAssignedWorkerOfCraft(craftId, dropWorkers) {
-            return dropWorkers.filter((dropWorker) => dropWorker.assigned_craft_ids.includes(craftId))
-        },
-        sortAscendingByUseFirstNameForSort(workers) {
-            if (!this.useFirstNameForSort) {
-                return workers.sort((a, b) => {
-                    let compareNameA = (this.isWorkerServiceProvider(a)) ?
-                        a.element.provider_name :
-                        a.element.first_name;
-
-                    let compareNameB = (this.isWorkerServiceProvider(b)) ?
-                        b.element.provider_name :
-                        b.element.first_name;
-
-                    if (compareNameA < compareNameB) return -1;
-                    if (compareNameA > compareNameB) return 1;
-                    return 0;
-                });
-            } else {
-                return workers.sort((a, b) => {
-                    let compareNameA = (this.isWorkerServiceProvider(a)) ?
-                        a.element.provider_name :
-                        a.element.last_name;
-
-                    let compareNameB = (this.isWorkerServiceProvider(b)) ?
-                        b.element.provider_name :
-                        b.element.last_name;
-
-                    if (compareNameA < compareNameB) return -1;
-                    if (compareNameA > compareNameB) return 1;
-                    return 0;
-                });
-            }
-        },
-        sortDescendingByUseFirstNameForSort(workers) {
-            if (!this.useFirstNameForSort) {
-                return workers.sort((a, b) => {
-                    let compareNameA = (this.isWorkerServiceProvider(a)) ?
-                        a.element.provider_name :
-                        a.element.first_name;
-
-                    let compareNameB = (this.isWorkerServiceProvider(b)) ?
-                        b.element.provider_name :
-                        b.element.first_name;
-
-                    if (compareNameA > compareNameB) return -1;
-                    if (compareNameA < compareNameB) return 1;
-                    return 0;
-                });
-            } else {
-                return workers.sort((a, b) => {
-                    let compareNameA = (this.isWorkerServiceProvider(a)) ?
-                        a.element.provider_name :
-                        a.element.last_name;
-
-                    let compareNameB = (this.isWorkerServiceProvider(b)) ?
-                        b.element.provider_name :
-                        b.element.last_name;
-
-                    if (compareNameA > compareNameB) return -1;
-                    if (compareNameA < compareNameB) return 1;
-                    return 0;
-                });
-            }
-        },
-        filterAndSortWorkersOfCraft(craft) {
-            let dropWorkers = this.getDropWorkers(),
-                //all assigned workers of given craft contained
-                assignedWorkersOfCraft = this.getAssignedWorkerOfCraft(craft.id, dropWorkers),
-                //all managing worker of given craft filtered from assignedWorkersOfCraft
-                assignedManagingWorkers = assignedWorkersOfCraft.filter(
-                    (assignedWorkerOfCraft) => this.isManagingWorker(craft, assignedWorkerOfCraft)
-                ),
-                //all non managing worker of given craft filtered from assignedWorkersOfCraft
-                assignedNonManagingWorkers = assignedWorkersOfCraft.filter(
-                    (assignedWorkerOfCraft) => !this.isManagingWorker(craft, assignedWorkerOfCraft)
-                ),
-                assignedNonManagingWorkersFiltered = this.filterNonManagingWorkersByShiftQualificationFilter(
-                    assignedNonManagingWorkers
-                );
-
-            if (this.$page.props.user.shift_plan_user_sort_by_id === null) {
-                return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered);
-            }
-
-            //alphabetically by name ascending -> managing workers first, other users afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
-                return this
-                    .sortAscendingByUseFirstNameForSort(assignedManagingWorkers)
-                    .concat(this.sortAscendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered));
-            }
-
-            //alphabetically by name descending -> managing workers first, other users afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING') {
-                return this
-                    .sortDescendingByUseFirstNameForSort(assignedManagingWorkers)
-                    .concat(this.sortDescendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered));
-            }
-
-            //prepare intern/extern sort
-            let assignedNonManagingInternWorkers = assignedNonManagingWorkers.filter(
-                (assignedNonManagingWorker) => this.isWorkerUser(assignedNonManagingWorker)
-            ), assignedNonManagingExternWorkers = assignedNonManagingWorkers.filter(
-                (assignedNonManagingWorker) => this.isWorkerFreelancer(assignedNonManagingWorker) ||
-                    this.isWorkerServiceProvider(assignedNonManagingWorker)
-            );
-
-            //intern/extern alphabetically by name ascending -> managing workers first, intern, extern afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
-                return this
-                    .sortAscendingByUseFirstNameForSort(assignedManagingWorkers)
-                    .concat(this.sortAscendingByUseFirstNameForSort(assignedNonManagingInternWorkers))
-                    .concat(this.sortAscendingByUseFirstNameForSort(assignedNonManagingExternWorkers));
-            }
-
-            //intern/extern alphabetically by name descending -> managing workers first, extern, intern afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING') {
-                return this
-                    .sortDescendingByUseFirstNameForSort(assignedManagingWorkers)
-                    .concat(this.sortDescendingByUseFirstNameForSort(assignedNonManagingExternWorkers))
-                    .concat(this.sortDescendingByUseFirstNameForSort(assignedNonManagingInternWorkers));
-            }
-        },
-        filterNonManagingWorkersByShiftQualificationFilter(workers) {
-            if (this.userShiftPlanShiftQualificationFilters.length === 0) {
-                return workers;
-            }
-
-            let workersWithShiftQualifications = workers.filter(
-                (worker) => worker.element.shift_qualifications.length > 0
-            );
-
-            return workersWithShiftQualifications.filter(
-                (worker) => worker.element.shift_qualifications.some(
-                    (shift_qualification) => this.userShiftPlanShiftQualificationFilters.includes(
-                        shift_qualification.id
-                    )
-                )
-            );
-        },
-        getSortEnumTranslation,
-        userShiftModalDesiresReload(shiftId, userId, userType, desiredDay) {
-
-        },
-        eventDesiresReload(userId, userType, event, seriesShiftData) {
-
-        },
-        getDropWorkers() {
-            const users = [];
-            this.usersForShifts.forEach((user) => {
-                if(!this.showFreelancers && user.user.is_freelancer) {
-                    return;
-                }
-                users.push({
-                    element: user.user,
-                    type: 0,
-                    plannedWorkingHours: user.plannedWorkingHours,
-                    expectedWorkingHours: user.expectedWorkingHours,
-                    vacations: user.vacations,
-                    assigned_craft_ids: user.user.assigned_craft_ids,
-                    availabilities: user.availabilities,
-                    weeklyWorkingHours: user.weeklyWorkingHours,
-                    dayServices: user.dayServices,
-                    individual_times: user.individual_times,
-                    shift_comments: user.shift_comments
-                });
-            })
-            if (this.showFreelancers) {
-                this.freelancersForShifts.forEach((freelancer) => {
-                    users.push({
-                        element: freelancer.freelancer,
-                        type: 1,
-                        plannedWorkingHours: freelancer.plannedWorkingHours,
-                        vacations: freelancer.vacations,
-                        assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
-                        availabilities: freelancer.availabilities,
-                        dayServices: freelancer.dayServices,
-                        individual_times: freelancer.individual_times,
-                        shift_comments: freelancer.shift_comments
-                    });
-                })
-            }
-
-            this.serviceProvidersForShifts.forEach((service_provider) => {
-                users.push({
-                    element: service_provider.service_provider,
-                    type: 2,
-                    plannedWorkingHours: service_provider.plannedWorkingHours,
-                    assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
-                    dayServices: service_provider.dayServices,
-                    individual_times: service_provider.individual_times,
-                    shift_comments: service_provider.shift_comments
-                });
-            })
-            return users;
-        },
-        handleMultiEdit(user, day) {
-            // Erstelle einen eindeutigen Schlüssel aus der User-ID und dem Typ
-            const userKey = `${user.element.id}_${user.type}`;
-
-            // Prüfen, ob der Eintrag für die Kombination aus User-ID und Typ existiert
-            if (!this.multiEditCellByDayAndUser[userKey]) {
-                this.multiEditCellByDayAndUser[userKey] = {
-                    days: [],
-                    type: user.type,
-                    id: user.element.id,
-                    entity: user.element,
-                };
-            }
-            const userData = this.multiEditCellByDayAndUser[userKey];
-
-            // Prüfen, ob der Tag bereits für diesen Benutzer vorhanden ist
-            if (userData.days.includes(day.withoutFormat)) {
-                // Entferne den Tag (deselect)
-                userData.days = userData.days.filter((d) => d !== day.withoutFormat);
-
-                // Wenn keine Tage mehr vorhanden sind, lösche das Benutzerobjekt
-                if (userData.days.length === 0) {
-                    delete this.multiEditCellByDayAndUser[userKey];
-                }
-            } else {
-                // Wenn der Tag nicht vorhanden ist, füge ihn hinzu (select)
-                userData.days.push(day.withoutFormat);
-            }
-        },
-        handleCellClick(user, day) {
-            if(this.multiEditMode && !this.userForMultiEdit) {
-                this.handleMultiEdit(user, day);
-                return;
-            }
-
-            if(this.multiEditMode && this.userForMultiEdit) {
-                return;
-            }
-
-            if (this.dayServiceMode) {
-                let type = null;
-                switch (user.type) {
-                    case 0:
-                        type = 'user';
-                        break;
-                    case 1:
-                        type = 'freelancer';
-                        break;
-                    case 2:
-                        type = 'service_provider';
-                        break;
-                }
-                const hasDayService = user.dayServices?.[day.withoutFormat]?.some(dayService => dayService.id === this.selectedDayService.id)
-                // check if user has allready the selected day service, if yes remove it. the dayServices in User are group by day
-
-                let setWorkerDayServicesCallback = (response) => {
-                    let data = response.data;
-                    let dayServicesRef = data.dayServices;
-
-                    switch (data.type) {
-                        case 'user':
-                            this.usersForShifts.find(
-                                (user) => user.user.id === data.id
-                            ).dayServices = dayServicesRef;
-                            break;
-                        case 'freelancer':
-                            this.freelancersForShifts.find(
-                                (freelancer) => freelancer.freelancer.id === data.id
-                            ).dayServices = dayServicesRef;
-                            break;
-                        case 'service_provider':
-                            this.serviceProvidersForShifts.find(
-                                (service_provider) => service_provider.service_provider.id === data.id
-                            ).dayServices = dayServicesRef;
-                            break;
-                    }
-                };
-
-                if (hasDayService) {
-                    axios.patch(
-                        route(
-                            'remove.day.service.from.user',
-                            {
-                                dayServiceable: user.element.id,
-                            }
-                        ),
-                        {
-                            dayService: this.selectedDayService.id,
-                            date: day.withoutFormat,
-                            modelType: type
-                        }
-                    ).then(setWorkerDayServicesCallback);
-                } else {
-                    axios.post(
-                        route(
-                            'day-service.attach',
-                            {
-                                dayServiceable: user.element.id,
-                                dayService: this.selectedDayService.id,
-                            }
-                        ),
-                        {
-                            date: day.withoutFormat,
-                            modelType: type
-                        }
-                    ).then(setWorkerDayServicesCallback);
-                }
-
-            } else {
-                this.openShowUserShiftModal(user, day)
-            }
-        },
-        updateSelectedDayService(dayService) {
-            this.selectedDayService = dayService;
-        },
-        calculateTopPositionOfUserOverView() {
-            return this.showUserOverview ? this.userOverviewHeight.height + 'px' : '0';
-        },
-        checkIfEventHasShiftsToDisplay(event) {
-            if (this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null || this.$page.props.user?.show_crafts === undefined) {
-                return event.shifts?.length > 0;
-            } else {
-                return event.shifts?.length > 0 && event.shifts.some(shift => this.$page.props.user.show_crafts?.includes(shift.craft.id));
-            }
-        },
-        showDropFeedback(feedback) {
-            this.dropFeedback = feedback;
-            setTimeout(() => {
-                this.dropFeedback = null
-            }, 2000)
-        },
-        openFullscreen() {
-            let elem = document.getElementById('shiftPlan');
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen();
-                this.isFullscreen = true;
-            } else if (elem.webkitRequestFullscreen) { /* Safari */
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) { /* IE11 */
-                elem.msRequestFullscreen();
-            }
-        },
-        previousTimeRange() {
-            const dateDifference = this.calculateDateDifference();
-            this.dateValue[0] = dayjs(this.dateValue[0]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD');
-            this.dateValue[1] = dayjs(this.dateValue[1]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD');
-            this.updateTimes();
-
-        },
-        nextTimeRange() {
-            const dateDifference = this.calculateDateDifference();
-            this.dateValue[0] = dayjs(this.dateValue[0]).add(dateDifference + 1, 'day').format('YYYY-MM-DD');
-            this.dateValue[1] = dayjs(this.dateValue[1]).add(dateDifference + 1, 'day').format('YYYY-MM-DD');
-            this.updateTimes();
-        },
-
-        calculateDateDifference() {
-            const date1 = new Date(this.dateValue[0]);
-            const date2 = new Date(this.dateValue[1]);
-            const timeDifference = date2.getTime() - date1.getTime();
-            return timeDifference / (1000 * 3600 * 24);
-        },
-        updateTimes() {
-            router.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
-                start_date: this.dateValue[0],
-                end_date: this.dateValue[1],
-            }, {
-                preserveScroll: true,
-                preserveState: false
-            });
-        },
-        openHistoryModal() {
-            this.showHistoryModal = true;
-        },
-        showCloseUserOverview() {
-            this.showUserOverview = !this.showUserOverview
-            //this.$emit('isOpen', this.showUserOverview)
-        },
-        syncScrollShiftPlan(event) {
-            if (this.$refs.userOverview) {
-                this.$refs.userOverview.scrollLeft = event.target.scrollLeft;
-                const scrollableContainer = this.$refs.shiftPlan;
-                const roomNameFixedPosition = scrollableContainer.getBoundingClientRect().left + 200;
-                let closestDayIndex = null;
-                let closestDayDistance = Infinity;
-
-                for (let i = 0; i < this.days.length; i++) {
-                    const day = this.days[i];
-                    const dayElement = document.getElementById(day.fullDay || `extra_row_${day.weekNumber}`);
-                    if (!dayElement) continue;
-                    const elementLeft = dayElement.getBoundingClientRect().left;
-                    const elementCenter = elementLeft + (dayElement.offsetWidth / 2);
-                    const distanceToRoomName = Math.abs(roomNameFixedPosition - elementCenter);
-                    if (distanceToRoomName < closestDayDistance) {
-                        closestDayDistance = distanceToRoomName;
-                        closestDayIndex = i;
-                    }
-                }
-
-                if (closestDayIndex !== null) {
-                    const selectedDay = this.days[closestDayIndex];
-                    if (selectedDay.isExtraRow) {
-                        for (let j = closestDayIndex + 1; j < this.days.length; j++) {
-                            if (this.days[j].isMonday) {
-                                this.currentDayOnView = this.days[j];
-                                return;
-                            }
-                        }
-                    } else {
-                        this.currentDayOnView = selectedDay;
-                    }
-                }
-            }
-        },
-        selectGoToMode(direction) {
-            const gotoMode = this.$page.props.user.goto_mode;
-            this.scrollToPeriod(gotoMode, direction);
-        },
-        scrollToPeriod(period, direction) {
-            let indexModifier = direction === 'next' ? 1 : -1;
-            let periodKey, periodValue, scrollOffset;
-
-            if (period === 'day') {
-                let currentIndex = this.days.indexOf(this.currentDayOnView);
-                let targetIndex = currentIndex + indexModifier;
-                while (targetIndex >= 0 && targetIndex < this.days.length) {
-                    const targetDay = this.days[targetIndex];
-                    if (!targetDay.isExtraRow) {
-                        scrollOffset = targetIndex;
-                        break;
-                    }
-                    targetIndex += indexModifier;
-                }
-
-            } else if (period === 'week') {
-                periodKey = 'weekNumber';
-                periodValue = this.currentDayOnView.weekNumber;
-                scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.isMonday);
-            } else if (period === 'month') {
-                periodKey = 'monthNumber';
-                periodValue = this.currentDayOnView.monthNumber;
-                scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.isFirstDayOfMonth);
-            }
-            if (scrollOffset !== undefined && scrollOffset !== null) {
-                const targetDay = this.days[scrollOffset];
-                this.currentDayOnView = targetDay;
-                const targetElement = document.getElementById(targetDay.fullDay);
-                if (targetElement) {
-                    const roomNameElement = document.getElementById('roomNameContainer_0');
-                    const scrollableContainer = this.$refs.shiftPlan;
-
-                    if (roomNameElement) {
-                        const roomNameLeft = roomNameElement.getBoundingClientRect().left;
-                        const containerLeft = scrollableContainer.getBoundingClientRect().left;
-                        scrollableContainer.scrollLeft = targetElement.offsetLeft - (roomNameLeft + containerLeft + 65);
-                    }
-                }
-            }
-        },
-        getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, conditionCallback) {
-            let targetIndex = this.days.findIndex(day => day[periodKey] === periodValue && conditionCallback(day));
-            while (true) {
-                targetIndex += indexModifier;
-                if (targetIndex < 0 || targetIndex >= this.days.length) {
-                    return null;
-                }
-                const day = this.days[targetIndex];
-                if (!day.isExtraRow && conditionCallback(day)) {
-                    return targetIndex;
-                }
-            }
-        },
-        selectGoToNextMode() {
-            this.selectGoToMode('next');
-        },
-        selectGoToPreviousMode() {
-            this.selectGoToMode('previous');
-        },
-        syncScrollUserOverview(event) {
-            if (this.$refs.shiftPlan) {
-                this.$refs.shiftPlan.scrollLeft = event.target.scrollLeft;
-            }
-        },
-        openShowUserShiftModal(user, day) {
-            this.userToShow = user
-            this.dayToShow = day
-            this.showUserShifts = true
-        },
-        toggleHighlightMode() {
-            this.idToHighlight = null;
-            this.typeToHighlight = null;
-            this.multiEditMode = false;
-            this.dayServiceMode = false;
-            this.highlightMode = !this.highlightMode;
-        },
-        toggleMultiEditMode() {
-            this.highlightMode = false;
-            this.dayServiceMode = false;
-            this.multiEditMode = !this.multiEditMode;
-
-            if (!this.multiEditMode) {
-                this.userForMultiEdit = null;
-                this.multiEditCellByDayAndUser = {};
-            }
-        },
-        toggleMultiEditModeCalendar() {
-            this.highlightMode = false;
-            this.dayServiceMode = false;
-            this.multiEditModeCalendar = !this.multiEditModeCalendar;
-
-            if (!this.multiEditModeCalendar){
-                this.multiEditCalendarDays = [];
-            }
-        },
-        closeMultiEditCellModal(bool){
-            this.showCellMultiEditModal = false;
-
-
-            if (bool) {
-                this.multiEditCellByDayAndUser = {};
-            }
-        },
-        closeCellMultiEditDelete(boolean) {
-            if(boolean.closing) {
-                this.openCellMultiEditDelete = false;
-                return;
-            }
-
-            this.openCellMultiEditDelete = false;
-
-            if(boolean) {
-                this.showCellMultiEditModal = true;
-            }
-            if (!boolean) {
-                this.multiEditCellByDayAndUser = {};
-            }
-        },
-        toggleDayServiceMode() {
-            this.highlightMode = false;
-            this.multiEditMode = false;
-            this.dayServiceMode = !this.dayServiceMode;
-        },
-        toggleCompactMode() {
-            router.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {
-                compact_mode: !this.$page.props.user.compact_mode
-            }, {
-                preserveScroll: true,
-                preserveState: true
-            });
-        },
-        highlightShiftsOfUser(id, type) {
-            this.idToHighlight = id;
-            this.typeToHighlight = type;
-        },
-        addUserToMultiEdit(item) {
-            this.userToMultiEditCheckedShiftsAndEvents = [];
-            this.userForMultiEdit = item;
-            if (item !== null) {
-                this.userToMultiEditCurrentShifts = this.userForMultiEdit.shift_ids;
-            }
-        },
-        async initializeMultiEditSave() {
-            this.shiftsToHandleOnMultiEdit.removeFromShift = this.userToMultiEditCurrentShifts.filter(
-                (shift_id) => !this.userForMultiEdit.shift_ids.includes(shift_id)
-            );
-
-            if (this.userForMultiEdit.shift_qualifications.length > 0) {
-                this.userToMultiEditCheckedShiftsAndEvents.forEach((shiftAndEvent) => {
-                    let desiredShift = shiftAndEvent.shift;
-
-                    if (desiredShift.shifts_qualifications.length === 0) {
-                        this.showShiftsQualificationsAssignmentModalShifts.push({
-                            shift: desiredShift,
-                            availableSlots: this.userForMultiEdit.shift_qualifications
-                        });
-                        return;
-                    }
-
-                    if (this.userForMultiEdit.shift_qualifications.length === 1) {
-                        this.shiftsToHandleOnMultiEdit.assignToShift.push({
-                            shiftId: desiredShift.id,
-                            shiftQualificationId: this.userForMultiEdit.shift_qualifications[0].id
-                        });
-                        return;
-                    }
-
-                    let availableShiftQualificationSlots = [];
-                    this.userForMultiEdit.shift_qualifications.forEach((userShiftQualification) => {
-                        desiredShift.shifts_qualifications.forEach((shiftsQualification) => {
-                            if (userShiftQualification.id === shiftsQualification.shift_qualification_id) {
-                                availableShiftQualificationSlots.push(userShiftQualification);
-                            }
-                        });
-                    });
-
-                    if (availableShiftQualificationSlots.length === 0) {
-                        return;
-                    }
-
-                    if (availableShiftQualificationSlots.length === 1) {
-                        this.shiftsToHandleOnMultiEdit.assignToShift.push({
-                            shiftId: desiredShift.id,
-                            shiftQualificationId: availableShiftQualificationSlots[0].id
-                        });
-                        return;
-                    }
-
-                    this.showShiftsQualificationsAssignmentModalShifts.push({
-                        shift: desiredShift,
-                        availableSlots: availableShiftQualificationSlots
-                    });
-                });
-            }
-
-            if (this.showShiftsQualificationsAssignmentModalShifts.length > 0) {
-                this.showShiftsQualificationsAssignmentModal = true;
-                this.waitForModalClose = true;
-
-                return new Promise((resolve) => {
-                    this.resolveModalClose = resolve;
-                });
-            }
-            await this.saveMultiEdit();
-            this.waitForModalClose = false;
-        },
-        async closeShiftsQualificationsAssignmentModal(closedForAssignment, assignedShifts) {
-            this.showShiftsQualificationsAssignmentModal = false;
-            this.showShiftsQualificationsAssignmentModalShifts = [];
-
-            if (!closedForAssignment) {
-                if (this.resolveModalClose) {
-                    this.resolveModalClose();
-                    this.resolveModalClose = null;
-                }
-                this.waitForModalClose = false;
-                return;
-            }
-
-            assignedShifts.forEach((shiftToBeAssigned) => {
-                this.shiftsToHandleOnMultiEdit.assignToShift.push({
-                    shiftId: shiftToBeAssigned.shiftId,
-                    shiftQualificationId: shiftToBeAssigned.shiftQualificationId
-                });
-            });
-
-            await this.saveMultiEdit();
-
-            if (this.resolveModalClose) {
-                this.resolveModalClose();
-                this.resolveModalClose = null;
-            }
-            this.waitForModalClose = false;
-        },
-        async saveMultiEdit() {
-            if (
-                this.shiftsToHandleOnMultiEdit.assignToShift.length === 0 &&
-                this.shiftsToHandleOnMultiEdit.removeFromShift.length === 0
-            ) {
-                this.resetMultiEditMode();
-                return;
-            }
-            axios.post(route('shift.multi.edit.save'), {
-                userType: this.userForMultiEdit.type,
-                userTypeId: this.userForMultiEdit.id,
-                craft_abbreviation: this.userForMultiEdit.craft_abbreviation,
-                shiftsToHandle: this.shiftsToHandleOnMultiEdit
-            }).then(() => {
-                this.resetMultiEditMode(false);
-            });
-        },
-        resetMultiEditMode(closeMultiEdit = true) {
-            this.shiftsToHandleOnMultiEdit = {
-                assignToShift: [],
-                removeFromShift: []
-            };
-            this.userToMultiEditCheckedShiftsAndEvents = [];
-
-            if (closeMultiEdit) {
-                this.multiEditMode = false;
-                this.multiEditCellByDayAndUser = {};
-            }
-        },
-        changeCraftVisibility(id) {
-            if (this.closedCrafts.includes(id)) {
-                this.closedCrafts.splice(this.closedCrafts.indexOf(id), 1);
-            } else {
-                this.closedCrafts.push(id);
-            }
-        },
-        startResize(event) {
-            event.preventDefault();
-            this.startY = event.clientY;
-            this.startHeight = this.userOverviewHeight.height;
-
-            document.addEventListener('mousemove', this.resizing);
-            document.addEventListener('mouseup', this.stopResize);
-        },
-        resizing(event) {
-            const currentY = event.clientY;
-            const diff = this.startY - currentY;
-            if (this.startHeight + diff < 100) {
-                this.userOverviewHeight.height = 100;
-                this.updateHeight()
-                return;
-            }
-
-            if ((window.innerHeight - 100) - (this.startHeight + diff) < 100) {
-                this.userOverviewHeight.height = (window.innerHeight - 100) - 200;
-                this.updateHeight()
-                return;
-            }
-
-            this.userOverviewHeight.height = this.startHeight + diff;
-            this.updateHeight()
-        },
-        stopResize(event) {
-            event.preventDefault();
-            this.saveUserOverviewHeight();
-            document.removeEventListener('mousemove', this.resizing);
-            document.removeEventListener('mouseup', this.stopResize);
-        },
-        updateHeight() {
-            if (!this.showUserOverview) {
-                this.windowHeight = (window.innerHeight - 100);
-            } else {
-                this.windowHeight = (window.innerHeight - 100) - this.userOverviewHeight.height;
-            }
-
-            if (window.innerHeight - 100 < 400) {
-                this.userOverviewHeight.height = window.innerHeight - 200;
-            }
-
-            if (this.userOverviewHeight.height < 100) {
-                this.userOverviewHeight.height = 100;
-            }
-        },
-        saveUserOverviewHeight: debounce(function () {
-            this.applyUserOverviewHeight();
-        }, 500),
-        applyUserOverviewHeight() {
-            if(!this.userOverviewHeight.isDirty){
-                return
-            }
-
-            router.patch(route('user.update.userOverviewHeight', {user: usePage().props.user.id}), {
-                drawer_height: this.userOverviewHeight.height
-            }, {
-                preserveScroll: true,
-                preserveState: true
-            });
-        },
-        applySort(shiftPlanWorkerSortEnumName) {
-            this.$page.props.user.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName;
-            router.patch(
-                route('user.update.shiftPlanUserSortBy', {user: this.$page.props.user.id}),
-                {
-                    sortBy: shiftPlanWorkerSortEnumName
-                }, {
-                    preserveState: true,
-                    preserveScroll: true,
-                }
-            );
-        },
-        resetSort() {
-            this.$page.props.user.shift_plan_user_sort_by_id = null;
-            router.patch(
-                route('user.update.shiftPlanUserSortBy', {user: this.$page.props.user.id}),
-                {
-                    sortBy: null
-                }, {
-                    preserveState: false,
-                    preserveScroll: true,
-                }
-            );
-        },
-        handleShiftAndEventForMultiEdit(checked, shift, event) {
-            if (checked && this.userToMultiEditCurrentShifts.includes(shift.id)) {
-                //return as the shift is already assigned to user and checkbox was unchecked and checked again
-                return;
-            }
-
-            if (!checked) {
-                //remove shift and event from shiftsAndEventsForMultiEdit
-                let idx = this.userToMultiEditCheckedShiftsAndEvents.findIndex(
-                    (shiftAndEvent) => shiftAndEvent.shift.id === shift.id
-                );
-
-                if (idx > -1) {
-                    this.userToMultiEditCheckedShiftsAndEvents.splice(idx, 1);
-                }
-
-                return;
-            }
-
-            this.userToMultiEditCheckedShiftsAndEvents.push({
-                shift: shift,
-                event: event
-            });
-        },
-        saveShiftQualificationFilter(event) {
-            let isChecked = event.target.checked,
-                shiftQualificationId = Number.parseInt(event.target.value);
-
-            if (!isChecked) {
-                this.userShiftPlanShiftQualificationFilters.splice(
-                    this.userShiftPlanShiftQualificationFilters.findIndex((id) => id === shiftQualificationId),
-                    1
-                );
-            } else {
-                this.userShiftPlanShiftQualificationFilters.push(shiftQualificationId);
-            }
-
-            router.patch(
-                route(
-                    'user.update.show_shift-qualifications',
-                    {
-                        user: this.$page.props.user.id
-                    }
-                ),
-                {
-                    show_qualifications: this.userShiftPlanShiftQualificationFilters
-                },
-                {
-                    preserveScroll: true,
-                    preserveState: true
-                }
-            );
-        },
-    },
-    beforeUnmount() {
-        window.removeEventListener('resize', this.updateHeight);
-        document.removeEventListener('mousemove', this.resizing);
-        document.removeEventListener('mouseup', this.stopResize);
-        if (this.originalVisit) {
-            router.visit = this.originalVisit;
+        {
+            root: document.querySelector('.eventByDaysContainer'),
+            rootMargin: '5000px'
         }
-        this.applyUserOverviewHeight();
-    },
-    beforeDestroy() {
-        this.$refs.shiftPlan.removeEventListener('scroll', this.syncScrollShiftPlan);
-        this.$refs.userOverview.removeEventListener('scroll', this.syncScrollUserOverview);
-    },
-    watch: {
-        showUserOverview: {
-            handler() {
-                this.updateHeight();
-            },
-            deep: true
-        }
+    );
+
+    const dayContainers = document.querySelectorAll('.day-container');
+    dayContainers.forEach((container) => observer.observe(container));
+});
+
+
+onUnmounted(() => {
+    if (shiftPlanElement.value) {
+        shiftPlanElement.value.removeEventListener('scroll', syncScrollShiftPlan);
     }
+    if (userOverviewElement.value) {
+        userOverviewElement.value.removeEventListener('scroll', syncScrollUserOverview);
+    }
+    window.removeEventListener('resize', updateHeight);
+});
+
+const craftsToDisplay = computed(() => {
+    const crafts = props.crafts.map((craft) => ({
+        id: craft.id,
+        name: craft.name,
+        abbreviation: craft.abbreviation,
+        users: filterAndSortWorkersOfCraft(craft),
+        color: craft?.color,
+        universally_applicable: craft.universally_applicable
+    }));
+
+    if (!usePage().props.user.show_crafts?.length) {
+        return crafts;
+    }
+    return crafts.filter(craft => usePage().props.user.show_crafts.includes(craft.id));
+});
+
+const workersWithoutCraft = computed(() => {
+    let workers = filterNonManagingWorkersByShiftQualificationFilter(
+        getDropWorkers().filter(user => user.assigned_craft_ids.length === 0)
+    );
+
+    if (usePage().props.user.shift_plan_user_sort_by_id === null) {
+        return workers;
+    }
+
+    if (usePage().props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
+        return sortAscendingByUseFirstNameForSort(workers);
+    }
+
+    if (usePage().props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING') {
+        return sortDescendingByUseFirstNameForSort(workers);
+    }
+
+    let assignedInternWorkers = workers.filter(worker => isWorkerUser(worker));
+    let assignedExternWorkers = workers.filter(worker => isWorkerFreelancer(worker) || isWorkerServiceProvider(worker));
+
+    if (usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
+        return sortAscendingByUseFirstNameForSort(assignedInternWorkers)
+            .concat(sortAscendingByUseFirstNameForSort(assignedExternWorkers));
+    }
+
+    if (usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING') {
+        return sortDescendingByUseFirstNameForSort(assignedExternWorkers)
+            .concat(sortDescendingByUseFirstNameForSort(assignedInternWorkers));
+    }
+
+    return workers;
+});
+
+const computedShiftPlanWorkerSortEnums = computed(() => {
+    let nameSortEnums = ['ALPHABETICALLY_NAME_ASCENDING', 'ALPHABETICALLY_NAME_DESCENDING'];
+    let sortConfig = [];
+
+    if (nameSortEnums.includes(usePage().props.user.shift_plan_user_sort_by_id)) {
+        sortConfig.push('INTERN_EXTERN_ASCENDING');
+
+        if (usePage().props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
+            sortConfig.push('ALPHABETICALLY_NAME_DESCENDING');
+        } else {
+            sortConfig.push('ALPHABETICALLY_NAME_ASCENDING');
+        }
+
+        return sortConfig;
+    }
+
+    if (usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
+        sortConfig.push('INTERN_EXTERN_DESCENDING');
+    } else {
+        sortConfig.push('INTERN_EXTERN_ASCENDING');
+    }
+
+    sortConfig.push('ALPHABETICALLY_NAME_ASCENDING');
+
+    return sortConfig;
+});
+
+const getAllProjectGroupsInEventsByDay = (events) => {
+    let projectGroups = [];
+
+    events.forEach(event => {
+        if (event?.project) {
+            let project = event.project;
+
+            if (project.isGroup) {
+                // Falls das Projekt selbst eine Gruppe ist, hinzufügen
+                if (!projectGroups.some(group => group.id === project.id)) {
+                    projectGroups.push(project);
+                }
+            } else if (project.isInGroup && Array.isArray(project.group)) {
+                // Falls das Projekt in einer Gruppe ist, die Gruppen-Infos nutzen
+                project.group.forEach(group => {
+                    if (!projectGroups.some(g => g.id === group.id)) {
+                        projectGroups.push(group);
+                    }
+                });
+            }
+        }
+    });
+
+    return projectGroups;
+}
+
+const checkIfUserIsAdminOrInGroup = (group) => {
+    if (hasAdminRole()) {
+        return false;
+    }
+
+    return !group.userIds.includes(usePage().props.user.id);
+}
+
+const initializeCalendarMultiEditSave = () => {
+    showAddShiftModal.value = true
+}
+
+const closeCellMultiEditCalendarDelete = (boolean) => {
+    if(boolean){
+        openCellMultiEditCalendarDelete.value = false;
+        showAddShiftModal.value = true;
+    } else {
+        openCellMultiEditCalendarDelete.value = false;
+        multiEditCalendarDays.value = [];
+    }
+}
+
+const openEditShiftModal = (shift) => {
+    shiftToEdit.value = shift;
+    showAddShiftModal.value = true;
+}
+
+const openAddShiftForRoomAndDay = (day, roomId) => {
+    shiftToEdit.value = null;
+    roomForShiftAdd.value = roomId;
+    dayForShiftAdd.value = day;
+    showAddShiftModal.value = true;
 }
 </script>
 
 <style scoped>
 
-/* this only works in some browsers but is wanted by the client */
-.cell {
-    overflow: overlay;
-}
-
-.stickyHeader {
-    position: sticky;
-    align-self: flex-start;
-    position: -webkit-sticky;
-    display: block;
-    top: 0px;
-}
-
-.stickyYAxis {
-    position: sticky;
-    align-self: flex-start;
-    position: -webkit-sticky;
-    left: 60px;
-    z-index: 12;
-}
-
-.stickyYAxisNoMarginLeft {
-    position: sticky;
-    align-self: flex-start;
-    position: -webkit-sticky;
-    left: 0;
-    z-index: 12;
-}
 </style>

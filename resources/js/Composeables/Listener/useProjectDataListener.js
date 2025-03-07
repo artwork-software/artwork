@@ -7,9 +7,6 @@ export function useProjectDataListener(componentData, projectId) {
                 const updatedData = data.data;
                 const projectData = componentData.project_value;
 
-                console.log(data)
-                console.log(componentData)
-
                 if (projectData !== null) {
                     if (
                         projectData.id === updatedData.id &&

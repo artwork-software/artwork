@@ -172,7 +172,7 @@
                                     v-model="this.userAndTeamsQuery"
                                     id="searchUsersAndTeams"/>
                             </div>
-                            <div v-if="(this.userAndTeamsSearchResult?.users.length > 0 || this.userAndTeamsSearchResult?.users.length > 0) && this.userAndTeamsQuery.length > 0"
+                            <div v-if="(this.userAndTeamsSearchResult?.users.length > 0 || this.userAndTeamsSearchResult?.departments.length > 0) && this.userAndTeamsQuery.length > 0"
                                  class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg rounded-lg
                                                             text-base ring-1 ring-black ring-opacity-5
                                                             overflow-auto focus:outline-none sm:text-sm">
@@ -200,8 +200,8 @@
                                                                     :alt="department.name"
                                                                     class="rounded-full h-8 w-8 object-cover"/>
                                                 <span class="ml-2">
-                                                                        {{ department.name }}
-                                                                    </span>
+                                                    {{ department.name }}
+                                                </span>
                                             </p>
                                         </div>
                                     </div>
@@ -250,7 +250,7 @@
                                 @input="this.searchUsersAndTeams()"
                                 v-model="this.userAndTeamsQuery"
                             />
-                            <div v-if="(this.userAndTeamsSearchResult?.users.length > 0 || this.userAndTeamsSearchResult?.users.length > 0) && this.userAndTeamsQuery.length > 0"
+                            <div v-if="(this.userAndTeamsSearchResult?.users.length > 0 || this.userAndTeamsSearchResult?.departments.length > 0) && this.userAndTeamsQuery.length > 0"
                                  class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg rounded-lg
                                                             text-base ring-1 ring-black ring-opacity-5
                                                             overflow-auto focus:outline-none sm:text-sm">

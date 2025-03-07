@@ -286,8 +286,7 @@ class User extends Model implements
     {
         return $this->profile_photo_path
             ? asset('storage/' . $this->profile_photo_path)
-            : 'https://ui-avatars.com/api/?name=' .
-            urlencode($this->first_name . ' ' . $this->last_name) . '&color=7F9CF5&background=EBF4FF';
+            : route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
     }
 
 

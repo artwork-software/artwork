@@ -1,5 +1,5 @@
 <template>
-   <div class="print:w-full flex relative" :class="[event?.isNew ? 'border-2 rounded-lg border-pink-500 border-dashed py-2 px-1' : '']">
+   <div class="print:w-full flex relative" :class="[event?.isNew ? 'border-2 rounded-lg border-pink-500 border-dashed w-max py-2 px-1' : '']">
        <div class="flex items-center gap-4 relative">
            <div class="flex items-center justify-center pr-2" v-if="multiEdit">
                <input
@@ -18,35 +18,37 @@
                         as="div"
                         class="relative"
                         :disabled="canEditComponent === false">
-                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class="print:border-0">
-                       <div class="flex items-center gap-x-2">
-                           <div>
-                               <div class="block w-5 h-5 rounded-full"
-                                    :style="{'backgroundColor' : event.status?.color }"/>
-                           </div>
-                           <div class="truncate print:w-full" :style="getColumnTextSize(1)">
-                               {{ event.status?.name }}
-                           </div>
-                       </div>
-                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
-                   </ListboxButton>
-                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
-                       <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
-                                      v-for="status in eventStatuses"
-                                      :key="status.name"
-                                      :value="status"
-                                      v-slot="{ active, selected }">
-                           <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']" class="flex items-center gap-x-2">
+                   <Float auto-placement :offset="4" class="relative w-fit" floating-as="div">
+                       <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class="print:border-0">
+                           <div class="flex items-center gap-x-2">
                                <div>
-                                   <div class="block w-3 h-3 rounded-full"
-                                        :style="{'backgroundColor' : status?.color }"/>
+                                   <div class="block w-5 h-5 rounded-full"
+                                        :style="{'backgroundColor' : event.status?.color }"/>
                                </div>
-                               {{ status.name }}
+                               <div class="truncate print:w-full" :style="getColumnTextSize(1)">
+                                   {{ event.status?.name }}
+                               </div>
                            </div>
-                           <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
-                                      aria-hidden="true"/>
-                       </ListboxOption>
-                   </ListboxOptions>
+                           <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
+                       </ListboxButton>
+                       <ListboxOptions class="w-fit rounded-lg bg-primary max-h-56 overflow-y-auto text-sm z-30">
+                           <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                          v-for="status in eventStatuses"
+                                          :key="status.name"
+                                          :value="status"
+                                          v-slot="{ active, selected }">
+                               <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']" class="flex items-center gap-x-2">
+                                   <div>
+                                       <div class="block w-3 h-3 rounded-full"
+                                            :style="{'backgroundColor' : status?.color }"/>
+                                   </div>
+                                   {{ status.name }}
+                               </div>
+                               <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
+                                          aria-hidden="true"/>
+                           </ListboxOption>
+                       </ListboxOptions>
+                   </Float>
                </Listbox>
            </div>
            <div class="" :style="getColumnSize(2)">
@@ -54,37 +56,39 @@
                         @update:model-value="updateEventInDatabase"
                         id="type"
                         as="div"
-                        class="relative"
+                        class="relative w-full"
                         :disabled="canEditComponent === false">
-                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class="print:border-0 ">
-                       <div class="flex items-center gap-x-2">
-                           <div class="">
-                               <div class="block w-5 h-5 rounded-full"
-                                    :style="{'backgroundColor' : event.type?.hex_code }"/>
-                           </div>
-                           <div class="truncate print:w-full" :style="getColumnTextSize(2)">
-                               {{ event.type?.name }}
-                           </div>
-                       </div>
-                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
-                   </ListboxButton>
-                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
-                       <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
-                                      v-for="eventType in sortedEventTypes"
-                                      :key="eventType.name"
-                                      :value="eventType"
-                                      v-slot="{ active, selected }">
-                           <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']" class="flex items-center gap-x-2">
-                               <div>
-                                   <div class="block w-3 h-3 rounded-full"
-                                        :style="{'backgroundColor' : eventType?.hex_code }"/>
+                   <Float auto-placement :offset="4" class="relative w-fit" floating-as="div">
+                       <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class="print:border-0 active:ring-primary active:ring-1">
+                           <div class="flex items-center gap-x-2">
+                               <div class="">
+                                   <div class="block w-5 h-5 rounded-full"
+                                        :style="{'backgroundColor' : event.type?.hex_code }"/>
                                </div>
-                               {{ eventType.name }}
+                               <div class="truncate print:w-full" :style="getColumnTextSize(2)">
+                                   {{ event.type?.name }}
+                               </div>
                            </div>
-                           <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
-                                      aria-hidden="true"/>
-                       </ListboxOption>
-                   </ListboxOptions>
+                           <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
+                       </ListboxButton>
+                       <ListboxOptions class="w-fit rounded-lg bg-primary max-h-56 h-full overflow-y-auto text-sm z-30">
+                           <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                          v-for="eventType in sortedEventTypes"
+                                          :key="eventType.name"
+                                          :value="eventType"
+                                          v-slot="{ active, selected }">
+                               <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']" class="flex items-center gap-x-2">
+                                   <div>
+                                       <div class="block w-3 h-3 rounded-full"
+                                            :style="{'backgroundColor' : eventType?.hex_code }"/>
+                                   </div>
+                                   {{ eventType.name }}
+                               </div>
+                               <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
+                                          aria-hidden="true"/>
+                           </ListboxOption>
+                       </ListboxOptions>
+                   </Float>
                </Listbox>
            </div>
            <div :style="getColumnSize(3)">
@@ -105,13 +109,14 @@
                         v-model="event.room"
                         @update:model-value="updateEventInDatabase"
                         :disabled="canEditComponent === false">
+                   <Float auto-placement :offset="4" class="relative w-fit" floating-as="div">
                    <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class=" print:border-0">
                        <div class="truncate xsDark"  :style="getColumnTextSize(4)">
                            {{ event.room?.name }}
                        </div>
                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true"/>
                    </ListboxButton>
-                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
+                   <ListboxOptions class="w-fit rounded-lg bg-primary max-h-56 overflow-y-auto text-sm z-30">
                        <ListboxOption v-for="room in sortedRooms"
                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
                                       :key="room.name"
@@ -124,6 +129,7 @@
                                       aria-hidden="true"/>
                        </ListboxOption>
                    </ListboxOptions>
+                   </Float>
                </Listbox>
            </div>
            <div class="print:col-span-2" :style="getColumnSize(5)">
@@ -265,6 +271,7 @@ import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/Ad
 import {inject} from "vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import {Float} from "@headlessui-float/vue";
 
 const props = defineProps({
     event: {

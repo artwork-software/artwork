@@ -5,7 +5,7 @@
                 <div class="group block flex-shrink-0">
                     <div class="flex items-center">
                         <div>
-                            <img class="inline-block h-16 w-16 rounded-full object-cover" :src="serviceProvider.profile_image" alt="" />
+                            <img class="inline-block h-16 w-16 rounded-full object-cover" :src="serviceProvider.profile_photo_url" alt="" />
                         </div>
                         <div class="ml-3">
                             <h3 class="headline1">
@@ -56,7 +56,7 @@
 
                         <!-- Current Profile Photo -->
                         <div v-show="! photoPreview" class="mt-2">
-                            <img :src="serviceProvider.profile_image" :alt="serviceProvider.provider_name" @click="selectNewPhoto" class="rounded-full h-20 w-20 object-cover cursor-pointer">
+                            <img :src="serviceProvider.profile_photo_url" :alt="serviceProvider.provider_name" @click="selectNewPhoto" class="rounded-full h-20 w-20 object-cover cursor-pointer">
                         </div>
 
                         <!-- New Profile Photo Preview -->

@@ -18,6 +18,7 @@ class ServiceProviderShowResource extends JsonResource
         return [
             'id' => $this->id,
             'profile_image' => $this->profile_image,
+            'profile_photo_url' => $this->profile_photo_url,
             'provider_name' => $this->provider_name,
             'email' => $this->email,
             'phone_number' => $this->phone_number,

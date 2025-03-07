@@ -44,7 +44,7 @@ export default defineComponent({
                     name: 'Teams',
                     href: route('departments'),
                     current: route().current('departments'),
-                    hasPermission: this.$can('teammanagement')
+                    hasPermission: this.$can('teammanagement') || this.hasAdminRole()
                 },
                 {
                     name: 'Permission presets',

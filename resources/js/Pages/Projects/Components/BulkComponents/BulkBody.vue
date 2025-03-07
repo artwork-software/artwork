@@ -55,9 +55,9 @@
         </div>
 
 
-        <div class="max-w-7xl overflow-x-scroll pb-5">
+        <div class="max-w-7xl overflow-x-scroll relative" >
             <BulkHeader v-model="timeArray" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
-            <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll' : ''">
+            <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
                 <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
                     <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
                         <BulkSingleEvent

@@ -32,9 +32,7 @@ class FreelancerController extends Controller
 {
     public function store(): \Symfony\Component\HttpFoundation\Response
     {
-        $freelancer = Freelancer::create(
-            ['profile_image' => 'https://ui-avatars.com/api/?name=NEU&color=7F9CF5&background=EBF4FF']
-        );
+        $freelancer = Freelancer::create();
 
         return Inertia::location(route('freelancer.show', $freelancer->id));
     }

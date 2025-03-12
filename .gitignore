@@ -31,3 +31,4 @@ phpstan.neon
 public/build
 profiling.*
 cachegrind.*
+/bootstrap/ssr/*

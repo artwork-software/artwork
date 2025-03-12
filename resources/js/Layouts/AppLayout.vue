@@ -596,7 +596,7 @@ export default {
                     route: ['/money_sources'],
                     has_permission: this.moduleIsVisible('sources_of_funding') && this.$canAny(
                         ['view edit add money_sources', 'can edit and delete money sources']
-                    ),
+                    ) || this.hasAdminRole(),
                     icon: IconCurrencyEuro,
                     showToolTipForItem: false
                 },
@@ -613,7 +613,7 @@ export default {
                     href: route('contracts.index'),
                     route: ['/contracts/view'],
                     has_permission: this.moduleIsVisible('contracts') &&
-                        this.$canAny(['view edit upload contracts', 'can see and download contract modules']),
+                        this.$canAny(['view edit upload contracts', 'can see and download contract modules']) || this.hasAdminRole(),
                     icon: IconFileText,
                     showToolTipForItem: false
                 }],

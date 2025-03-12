@@ -1,29 +1,3 @@
-<script>
-import { ColorPicker } from "vue3-colorpicker";
-import "vue3-colorpicker/style.css";
-export default {
-    name: "ColorPickerComponent",
-    components: {
-        ColorPicker
-    },
-    emits: ['updateColor'],
-    props: {
-        color: String
-    },
-    methods: {
-        updateColor(color) {
-            // return the color value to the parent component
-            this.$emit("updateColor", color);
-        },
-    },
-    computed: {
-        selectedColor() {
-            return this.color ?? "#ffffff";
-        },
-    }
-}
-</script>
-
 <template>
     <ColorPicker
         format="hex"
@@ -44,6 +18,31 @@ export default {
         class="w-full"
     />
 </template>
+
+<script>
+import { defineAsyncComponent } from "vue";
+
+export default {
+    name: "ColorPickerComponent",
+    components: {
+        ColorPicker: defineAsyncComponent(() => import("vue3-colorpicker"))
+    },
+    emits: ['updateColor'],
+    props: {
+        color: String
+    },
+    methods: {
+        updateColor(color) {
+            this.$emit("updateColor", color);
+        },
+    },
+    computed: {
+        selectedColor() {
+            return this.color ?? "#ffffff";
+        },
+    }
+}
+</script>
 
 <style>
 .vc-color-wrap {

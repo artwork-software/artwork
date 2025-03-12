@@ -6,6 +6,19 @@ const port = 5173;
 const origin = `${process.env.DDEV_PRIMARY_URL}:${port}`;
 
 export default defineConfig({
+    ssr: {
+        noExternal: [
+            "vue3-colorpicker",
+            "@aesoper/normal-utils",
+            "vue-cal",
+            "headlessui-float/vue",
+            "headlessui/vue",
+            "vue-tailwind-datepicker",
+            "vuedraggable",
+            "ColorPicker",
+            "vue"
+        ]
+    },
     server: {
         // respond to all network requests
         host: '0.0.0.0',
@@ -23,6 +36,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: ['resources/js/app.js'],
+            ssr: 'resources/js/ssr.js',
             refresh: true,
         }),
         vue({

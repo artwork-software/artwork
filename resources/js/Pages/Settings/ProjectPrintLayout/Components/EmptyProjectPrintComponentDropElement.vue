@@ -60,8 +60,6 @@ import {onMounted, onUnmounted, ref, watch} from "vue";
 import {router} from "@inertiajs/vue3";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import {Popover, PopoverButton, PopoverPanel} from "@headlessui/vue";
-import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
-import DropComponentsToolTip from "@/Components/ToolTips/DropComponentsToolTip.vue";
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 import {Float} from "@headlessui-float/vue";
 

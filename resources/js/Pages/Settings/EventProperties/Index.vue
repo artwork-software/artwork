@@ -75,7 +75,6 @@ import EventPropertyModal from "@/Pages/Settings/EventProperties/EventPropertyMo
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import {provide} from "vue";
-import IconSelector from "@/Components/Icon/IconSelector.vue";
 
 const props = defineProps({
         event_properties: {

@@ -2,7 +2,7 @@ import './bootstrap';
 import '../css/app.scss';
 import '../css/global.css';
 
-import {createApp, h, reactive, provide} from 'vue';
+import {createApp, h, reactive, provide, createSSRApp} from 'vue';
 import {createInertiaApp} from '@inertiajs/vue3';
 import VueTailwindDatepicker from 'vue-tailwind-datepicker';
 import VueMathjax from 'vue-mathjax-next';
@@ -33,9 +33,6 @@ const messages = {
 
 // Globaler Zustand für Dragging
 
-
-
-
 const i18n = VueI18n.createI18n({
     legacy: false, // Verwende die Composition API
     locale: document.documentElement.lang || 'de', // Standard-Sprache
@@ -58,7 +55,7 @@ createInertiaApp({
         return component;
     },
     setup({ el, App: inertiaApp, props, plugin }) {
-        const app = createApp({ render: () => h(inertiaApp, props) })
+        const app = createSSRApp({ render: () => h(inertiaApp, props) })
             .use(plugin)
             .mixin({ methods: { route }});
         app.config.globalProperties.$svgColors = svgColors;

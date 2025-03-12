@@ -3,7 +3,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
+        "build": "vite build && vite build --ssr",
         "sockets": "soketi start --config=./soketi.config.json"
     },
     "devDependencies": {
@@ -27,6 +27,7 @@
         "@soketi/soketi": "^1.6.1",
         "@tabler/icons": "^3.29.0",
         "@tabler/icons-vue": "^3.29.0",
+        "@vue/server-renderer": "^3.5.13",
         "@vuepic/vue-datepicker": "^11.0.1",
         "axios": "^1.7.9",
         "dayjs": "^1.11.13",

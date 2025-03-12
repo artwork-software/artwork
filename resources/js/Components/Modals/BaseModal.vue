@@ -90,12 +90,14 @@ export default {
         }
     },
     mounted() {
+        if (typeof window === "undefined") return; // Stoppt den Code, wenn er im SSR läuft
+
         this.$nextTick(() => {
             const container = this.$refs.containerRef?.$el || this.$refs.containerRef || null;
-            if (container instanceof HTMLElement) {
+            if (container && typeof container === "object" && container.nodeType === 1) {
                 this.makeContainerDraggable();
             } else {
-                console.error('containerRef is not a valid DOM element');
+                console.error("containerRef is not a valid DOM element");
             }
         });
     },

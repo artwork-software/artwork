@@ -24,7 +24,8 @@ class ComponentInTab extends Model
         'project_tab_id',
         'component_id',
         'order',
-        'scope'
+        'scope',
+        'note'
     ];
 
     protected $casts = [

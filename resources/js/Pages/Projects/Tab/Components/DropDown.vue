@@ -3,10 +3,12 @@ import { Menu, MenuButton, MenuItem, MenuItems,Listbox, ListboxButton, ListboxLa
 } from '@headlessui/vue'
 import IconLib from "@/Mixins/IconLib.vue";
 import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
+import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 export default {
     name: "DropDown",
     mixins: [IconLib],
     components: {
+        InfoButtonComponent,
         Menu,
         MenuButton,
         MenuItem,
@@ -28,6 +30,10 @@ export default {
         },
         canEditComponent: {
             type: Boolean,
+            required: true
+        },
+        component: {
+            type: Object,
             required: true
         }
     },
@@ -68,33 +74,36 @@ export default {
 </script>
 
 <template>
-    <Listbox as="div" class="w-96" v-model="selected" :disabled="!this.canEditComponent">
-        <ListboxLabel class="block text-sm font-medium leading-6"  :class="inSidebar ? 'text-white' : 'text-gray-900'">
-            {{ data.data.label }}
-        </ListboxLabel>
-        <div class="relative mt-2">
-            <ListboxButton class="menu-button" :class="inSidebar ? 'bg-primary text-white border  border-gray-300' : ''">
-                <div class="block truncate">{{ selected }}</div>
-                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+    <div class="flex items-center justify-between">
+        <Listbox as="div" class="w-96" v-model="selected" :disabled="!this.canEditComponent">
+            <ListboxLabel class="block text-sm font-medium leading-6"  :class="inSidebar ? 'text-white' : 'text-gray-900'">
+                {{ data.data.label }}
+            </ListboxLabel>
+            <div class="relative mt-2">
+                <ListboxButton class="menu-button" :class="inSidebar ? 'bg-primary text-white border  border-gray-300' : ''">
+                    <div class="block truncate">{{ selected }}</div>
+                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                     <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </span>
-            </ListboxButton>
+                </ListboxButton>
 
-            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto  py-1 text-base ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
-                :class="inSidebar ? 'bg-primary text-white border border-gray-300' : 'bg-white'">
-                    <ListboxOption as="template" v-for="item in data.data.options" :key="item.value" :value="item.value" v-slot="{ active, selected }">
-                        <li @click="updateTextData(item.value)" :class="[active ? 'bg-indigo-600 text-white' : inSidebar ? 'text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ item.value }}</span>
-                            <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                    <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto  py-1 text-base ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
+                                    :class="inSidebar ? 'bg-primary text-white border border-gray-300' : 'bg-white'">
+                        <ListboxOption as="template" v-for="item in data.data.options" :key="item.value" :value="item.value" v-slot="{ active, selected }">
+                            <li @click="updateTextData(item.value)" :class="[active ? 'bg-indigo-600 text-white' : inSidebar ? 'text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ item.value }}</span>
+                                <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                 <IconCircleCheck class="h-5 w-5" aria-hidden="true" />
                               </span>
-                        </li>
-                    </ListboxOption>
-                </ListboxOptions>
-            </transition>
-        </div>
-    </Listbox>
+                            </li>
+                        </ListboxOption>
+                    </ListboxOptions>
+                </transition>
+            </div>
+        </Listbox>
+        <InfoButtonComponent :component="component" />
+    </div>
 
 </template>
 

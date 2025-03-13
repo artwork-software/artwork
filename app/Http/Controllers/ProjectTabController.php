@@ -127,4 +127,8 @@ class ProjectTabController extends Controller
         ProjectTab::where('default', true)->update(['default' => false]);
         $projectTab->update(['default' => true]);
     }
+
+    public function updateComponentNote(ComponentInTab $componentInTab, Request $request): void {
+        $componentInTab->update($request->only('note'));
+    }
 }

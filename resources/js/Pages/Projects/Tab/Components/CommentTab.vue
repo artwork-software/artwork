@@ -1,7 +1,6 @@
 <template>
     <div class="mt-6 p-5 bg-lightBackgroundGray">
-        <div
-            class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
+        <div class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
             <div v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id) || isMemberOfADepartment)" class="relative">
                         <TextareaComponent
                             :label="$t('What should the other project members know about the project?')"

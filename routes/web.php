@@ -1497,6 +1497,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ProjectTabController::class,
                 'removeComponent'
             ])->name('tab.remove.component');
+
+            // post tab.update.component.note
+            Route::patch('/{componentInTab}/update/component/note', [ProjectTabController::class, 'updateComponentNote'])
+                ->name('tab.update.component.note');
             // tab.destroy
             Route::delete('/{projectTab}/destroy', [ProjectTabController::class, 'destroy'])
                 ->name('tab.destroy');

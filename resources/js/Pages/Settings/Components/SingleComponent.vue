@@ -28,6 +28,17 @@ export default {
                 }
             );
         },
+        updateNote() {
+            this.$inertia.patch(route('tab.update.component.note', {componentInTab: this.element.id}), {
+                note: this.element.note
+            }, {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    this.element.openNoteInput = false
+                }
+            })
+        }
     }
 }
 </script>
@@ -50,10 +61,19 @@ export default {
                                         {{ element.component.data.title_size }} Pixel
                                     </div>
                                 </div>
-
-
                                 <div class="col-span-2 text-xs flex items-center">
                                     {{ $t(element.component.type)}}
+                                </div>
+                                <div class="my-2">
+                                    <div class="xxsDarkBold">
+                                        Informationstext (optional):
+                                    </div>
+                                    <div class="cursor-pointer my-1.5" @click="element.openNoteInput = !element.openNoteInput" v-if="!element.openNoteInput" :class="element.note ? 'xxsDark' : 'xxsLight'">
+                                        {{ element.note ?? $t('Click here to add text') }}
+                                    </div>
+                                    <div v-else class="my-1">
+                                        <input type="text" v-model="element.note" @focusout="updateNote" class="w-full border border-gray-300 rounded-lg p-2" placeholder="Hier Text eingeben">
+                                    </div>
                                 </div>
                             </div>
 

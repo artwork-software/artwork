@@ -34,6 +34,7 @@
                     :eventsInProject="headerObject.project.events"
                     :eventStatuses="headerObject.eventStatuses"
                     :event_properties="headerObject.event_properties"
+                    :component="component"
                 />
             </div>
         </div>

@@ -1,13 +1,16 @@
 <script>
 import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
+import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 
 export default {
     name: "Checkbox",
+    components: {InfoButtonComponent},
     props: [
         'data',
         'projectId',
         'inSidebar',
-        'canEditComponent'
+        'canEditComponent',
+        'component',
     ],
     data() {
         return {
@@ -46,24 +49,28 @@ export default {
 </script>
 
 <template>
-    <div class="relative flex items-start">
-        <div class="flex h-6 items-center">
-            <input :disabled="!this.canEditComponent"
-                   id="comments"
-                   aria-describedby="comments-description"
-                   v-model="checked"
-                   @change="updateCheckedData"
-                   :checked="checked"
-                   name="comments"
-                   type="checkbox"
-                   class="input-checklist"
-            />
+    <div class="flex items-center justify-between">
+        <div class="relative flex items-start">
+            <div class="flex h-6 items-center">
+                <input :disabled="!this.canEditComponent"
+                       id="comments"
+                       aria-describedby="comments-description"
+                       v-model="checked"
+                       @change="updateCheckedData"
+                       :checked="checked"
+                       name="comments"
+                       type="checkbox"
+                       class="input-checklist"
+                />
+            </div>
+            <div class="ml-3 text-sm leading-6">
+                <label for="comments" class="font-medium " :class="inSidebar ? 'text-white' : 'text-gray-900'">
+                    {{ data.data.label }}
+                </label>
+            </div>
         </div>
-        <div class="ml-3 text-sm leading-6">
-            <label for="comments" class="font-medium " :class="inSidebar ? 'text-white' : 'text-gray-900'">
-                {{ data.data.label }}
-            </label>
-        </div>
+
+        <InfoButtonComponent :component="component" />
     </div>
 </template>
 

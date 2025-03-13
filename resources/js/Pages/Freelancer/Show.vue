@@ -82,6 +82,10 @@
                         <TextInputComponent id="last_name" v-model="freelancerData.last_name" @focusout="saveFreelancer" :label="$t('Last name')" />
                     </div>
                 </div>
+                <div>
+                    <VisualFeedback v-show="showSuccessModal" :text="$t('The changes have been saved successfully.')" />
+
+                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                     <div class="col-span-1">
                         <TextInputComponent readonly label="" id="textFreelancer" disabled v-model="freelancerData.placeholder" />
@@ -117,7 +121,9 @@
                 <WorkProfileTab user-type="freelancer" :user="freelancer" :shift-qualifications="shiftQualifications"/>
             </div>
         </div>
-        <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" :title="$t('Freelancer successfully processed')" :description="$t('The changes have been saved successfully.')" :button="$t('Ok')" />
+        <!--<SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" :title="$t('Freelancer successfully processed')" :description="$t('The changes have been saved successfully.')" :button="$t('Ok')" />-->
+
+
     </AppLayout>
 </template>
 
@@ -137,11 +143,13 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 
 export default {
     name: "Show",
     mixins: [Permissions],
     components: {
+        VisualFeedback,
         TextareaComponent,
         TextInputComponent,
         BaseMenu,

@@ -5,6 +5,7 @@ import '../css/global.css';
 import {createApp, h, reactive, provide} from 'vue';
 import {createInertiaApp} from '@inertiajs/vue3';
 import VueTailwindDatepicker from 'vue-tailwind-datepicker';
+import LaravelPermissionToVueJS from 'laravel-permission-to-vuejs'
 import VueMathjax from 'vue-mathjax-next';
 import * as VueI18n from 'vue-i18n';
 
@@ -66,6 +67,7 @@ createInertiaApp({
         app.use(VueMathjax);
         app.use(i18n);
         app.use(Icons);
+        app.use(LaravelPermissionToVueJS)
         app.mount(el);
         app.config.globalProperties.$updateLocale = function (newLocale) {
             this.$i18n.locale = newLocale;

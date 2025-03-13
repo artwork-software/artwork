@@ -64,6 +64,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Scout\Searchable;
+use LaravelAndVueJS\Traits\LaravelPermissionToVueJS;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
@@ -167,6 +168,7 @@ class User extends Model implements
     use CanHasDayServices;
     use HasIndividualTimes;
     use HasShiftPlanComments;
+    use LaravelPermissionToVueJS;
 
     protected $fillable = [
         'first_name',

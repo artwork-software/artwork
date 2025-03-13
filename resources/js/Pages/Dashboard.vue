@@ -235,7 +235,7 @@ import DashboardCard from "@/Components/DashboardCard.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import SingleUserEventShift from "@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue";
 import DayServiceComponent from "@/Layouts/Components/DayService/DayServiceComponent.vue";
-
+import { reloadRolesAndPermissions } from 'laravel-permission-to-vuejs'
 export default defineComponent({
     mixins: [Permissions],
     props: [
@@ -319,6 +319,9 @@ export default defineComponent({
             }),
         }
     },
+    mounted() {
+        reloadRolesAndPermissions()
+    }
 
 })
 </script>

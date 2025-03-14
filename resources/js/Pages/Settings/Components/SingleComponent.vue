@@ -3,10 +3,12 @@ import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 import {IconDotsVertical, IconDragDrop, IconTrash} from "@tabler/icons-vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default {
     name: "SingleComponent",
     components: {
+        TextareaComponent,
         BaseMenu, IconTrash, IconDragDrop, IconDotsVertical, ComponentIcons,
         Menu,
         MenuButton,
@@ -66,19 +68,33 @@ export default {
                                 </div>
                                 <div class="my-2">
                                     <div class="xxsDarkBold">
-                                        Informationstext (optional):
+                                        Tooltip Text (optional):
                                     </div>
                                     <div class="cursor-pointer my-1.5" @click="element.openNoteInput = !element.openNoteInput" v-if="!element.openNoteInput" :class="element.note ? 'xxsDark' : 'xxsLight'">
                                         {{ element.note ?? $t('Click here to add text') }}
                                     </div>
                                     <div v-else class="my-1">
-                                        <input type="text" v-model="element.note" @focusout="updateNote" class="w-full border border-gray-300 rounded-lg p-2" placeholder="Hier Text eingeben">
+                                        <TextareaComponent v-model="element.note" id="note" :label="$t('Enter text here')" :show-label="false" @focusout="updateNote" />
                                     </div>
                                 </div>
+
+                                <div v-if="element.component.type === 'DisclosureComponent'">
+                                    <div class="xsDark">
+                                        Components in Disclosure
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <div v-for="component in element.disclosure_components" :key="component.id" class="flex items-center gap-x-1">
+                                            <component is="IconRadiusBottomLeft" class="size-4 -mt-2" />
+                                            {{ component.component.name }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <pre>
+                                    {{ element }}
+                                </pre>
                             </div>
-
                         </div>
-
                     </div>
                 </div>
                 <IconDragDrop class="xsDark h-5 w-5 hidden group-hover:block cursor-pointer relative z-100"/>

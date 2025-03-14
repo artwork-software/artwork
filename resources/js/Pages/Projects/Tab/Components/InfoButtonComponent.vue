@@ -1,7 +1,7 @@
 <template>
     <Popover v-if="component?.note" v-slot="{ open }" class="relative">
         <PopoverButton class="group inline-flex items-center ring-0 focus:outline-none focus-within:outline-none">
-            <component is="IconInfoCircle" class="size-5" />
+            <component is="IconInfoCircle" class="size-4" />
         </PopoverButton>
 
         <transition

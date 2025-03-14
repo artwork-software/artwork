@@ -5,6 +5,7 @@ namespace Artwork\Modules\ProjectTab\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
 * Class ComponentInTab
@@ -32,10 +33,16 @@ class ComponentInTab extends Model
         'scope' => 'array'
     ];
 
-    protected $with = ['component'];
+    protected $with = ['component', 'disclosureComponents'];
 
     public function component(): BelongsTo
     {
         return $this->belongsTo(Component::class, 'component_id', 'id', 'component');
+    }
+
+
+    public function disclosureComponents(): HasMany
+    {
+        return $this->hasMany(DisclosureComponents::class, 'disclosure_id', 'id');
     }
 }

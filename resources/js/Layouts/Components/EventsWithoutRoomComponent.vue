@@ -15,6 +15,7 @@
                     :isAdmin="isAdmin"
                     :remove-notification-on-action="removeNotificationOnAction"
                     :show-hints="showHints"
+                    :event-statuses="eventStatuses"
                     @desires-reload="this.requestReload"
                 />
             </div>
@@ -137,7 +138,8 @@ export default {
         'isAdmin',
         'eventsWithoutRoom',
         'removeNotificationOnAction',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'eventStatuses',
     ],
     emits: ['closed', 'desiresReload'],
     watch: {

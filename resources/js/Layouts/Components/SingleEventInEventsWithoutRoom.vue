@@ -93,6 +93,61 @@
                 />
                 <p class="text-xs text-red-800">{{ event.error?.eventName?.join('. ') }}</p>
             </div>
+            <div class="grid gird-cols-1 gap-x-4 mb-4" v-if="usePage().props.event_status_module">
+                <div class="h-full">
+                    <Listbox as="div" class="" v-model="selectedEventStatus" id="eventType">
+                        <ListboxLabel class="xsLight mb-0">{{ $t('Event Status') }}</ListboxLabel>
+                        <ListboxButton class="menu-button">
+                            <div class="flex w-full justify-between">
+                                <div class="flex items-center gap-x-2">
+                                    <div>
+                                        <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventStatus?.color }"/>
+                                    </div>
+                                    <div class="truncate w-56">
+                                        {{ selectedEventStatus?.name }}
+                                    </div>
+                                </div>
+                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            </div>
+                        </ListboxButton>
+
+                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                            <ListboxOptions class="absolute w-72 z-10 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                <ListboxOption as="template" class="max-h-8"
+                                               v-for="status in eventStatuses"
+                                               :key="status.name"
+                                               :value="status"
+                                               v-slot="{ active, selected }">
+                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <div class="flex">
+                                            <div>
+                                                <div class="block w-3 h-3 rounded-full"
+                                                     :style="{'backgroundColor' : status?.color }"/>
+                                            </div>
+                                            <span
+                                                :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate w-52']">
+                                                {{ status.name }}
+                                            </span>
+                                        </div>
+                                        <span
+                                            :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                      <IconCheck stroke-width="1.5" v-if="selected"
+                                                                 class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                    </li>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </transition>
+                    </Listbox>
+                    <p class="text-xs text-red-800"
+                       v-html="Array.isArray(error?.eventType) ? error.eventType.join('.<br> ') : error?.eventType">
+                    </p>
+                </div>
+                <div>
+                </div>
+            </div>
+
             <!--    Properties    -->
             <div class="flex">
                 <TagComponent v-for="eventProperty in this.event?.eventProperties"
@@ -433,7 +488,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {
     Listbox,
-    ListboxButton,
+    ListboxButton, ListboxLabel,
     ListboxOption,
     ListboxOptions,
     Menu,
@@ -462,6 +517,7 @@ export default {
 name: "SingleEventInEventsWithoutRoom",
     mixins: [Permissions, IconLib],
     components: {
+        ListboxLabel,
         TextareaComponent,
         TimeInputComponent,
         DateInputComponent,
@@ -500,7 +556,8 @@ name: "SingleEventInEventsWithoutRoom",
         'first_project_calendar_tab_id',
         'event',
         'computedEventsWithoutRoom',
-        'showHints'
+        'showHints',
+        'eventStatuses'
     ],
     data() {
         return {
@@ -544,7 +601,8 @@ name: "SingleEventInEventsWithoutRoom",
                     name: this.$t('Monthly')
                 }
             ],
-            event_properties: inject('event_properties')
+            event_properties: inject('event_properties'),
+            selectedEventStatus: this.eventStatuses?.find(status => status.default),
         }
     },
     emits: ['desiresReload'],
@@ -799,10 +857,9 @@ name: "SingleEventInEventsWithoutRoom",
                 eventTypeId: event.eventType.id,
                 projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventType.id)?.project_mandatory && !this.creatingProject,
                 creatingProject: event.creatingProject,
-                // TODO add event Status to events without room
-                eventStatusId : 1,
                 isOption: this.isOption,
                 allDay: event.allDay,
+                eventStatusId: this.selectedEventStatus?.id,
                 is_series: event.series ? event.series : false,
                 event_properties: this.event_properties
                     .filter((eventProperty) => eventProperty.checked)

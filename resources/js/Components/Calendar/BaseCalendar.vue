@@ -253,6 +253,7 @@
         :rooms="rooms"
         :eventsWithoutRoom="usePage().props.eventsWithoutRoom"
         :isAdmin="hasAdminRole()"
+        :event-statuses="eventStatuses"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
     />
 

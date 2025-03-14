@@ -17,12 +17,11 @@
                 <Listbox v-model="event.status"
                          @update:model-value="updateEventInDatabase"
                          :id="'status-' + index"
-                         @mousedown="storeFocus('status-' + index)"
                          as="div"
                          class="relative"
                          :disabled="canEditComponent === false">
                     <Float auto-placement :offset="4" class="relative w-fit" floating-as="div">
-                        <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']"
+                        <ListboxButton :id="'status-' + index + 'button'" @click="storeFocus('status-' + index + 'button', 'listbox')" :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']"
                                        class="print:border-0">
                             <div class="flex items-center gap-x-2">
                                 <div>
@@ -66,7 +65,7 @@
                          class="relative w-full"
                          :disabled="canEditComponent === false">
                     <Float auto-placement :offset="4" class="relative w-fit" floating-as="div">
-                        <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']"
+                        <ListboxButton :id="'type-'+ index + 'button'" @click="storeFocus('type-' + index + 'button', 'listbox')" :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']"
                                        class="print:border-0 active:ring-primary active:ring-1">
                             <div class="flex items-center gap-x-2">
                                 <div class="">
@@ -123,7 +122,7 @@
                          @update:model-value="updateEventInDatabase"
                          :disabled="canEditComponent === false">
                     <Float auto-placement :offset="4" class="relative w-fit" floating-as="div">
-                        <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']"
+                        <ListboxButton :id="'room-'+ index + 'button'" @click="storeFocus('room-' + index + 'button', 'listbox')" :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']"
                                        class=" print:border-0">
                             <div class="truncate xsDark" :style="getColumnTextSize(4)">
                                 {{ event.room?.name }}
@@ -417,7 +416,12 @@ const updateEventInDatabase = async () => {
                         if (lastFocusedField.value) {
                             const field = document.getElementById(lastFocusedField.value);
                             if (field) {
-                                field.focus();
+                                if(lastFocusedField.type === 'listbox') {
+                                    field.click()
+                                }else{
+                                    field.focus();
+                                }
+
                             }
                         }
                     }, 400);
@@ -428,8 +432,12 @@ const updateEventInDatabase = async () => {
 }
 
 const lastFocusedField = ref(null);
-const storeFocus = (fieldId) => {
+const storeFocus = (fieldId, type) => {
+    console.log(fieldId, type);
     lastFocusedField.value = fieldId;
+    if(type){
+        lastFocusedField.type = type;
+    }
 };
 
 const sortedRooms = computed(() => {

@@ -74,7 +74,7 @@ export default {
 </script>
 
 <template>
-    <div class="flex items-center justify-between">
+    <div class="flex items-start justify-between">
         <Listbox as="div" class="w-96" v-model="selected" :disabled="!this.canEditComponent">
             <ListboxLabel class="block text-sm font-medium leading-6"  :class="inSidebar ? 'text-white' : 'text-gray-900'">
                 {{ data.data.label }}

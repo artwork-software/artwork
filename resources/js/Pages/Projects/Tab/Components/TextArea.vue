@@ -1,5 +1,5 @@
 <template>
-    <div class="my-2 flex items-center justify-between w-full">
+    <div class="my-2 flex items-start justify-between w-full">
         <div>
             <label for="email" class="block text-sm font-medium leading-6" :class="inSidebar ? 'text-white' : 'text-gray-900'">
                 {{ data.data.label }}

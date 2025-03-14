@@ -51,7 +51,7 @@ export default {
 </script>
 
 <template>
-    <div class="mb-3 flex items-center justify-between">
+    <div class="mb-3 flex items-start justify-between">
         <div>
             <label for="email" class="block text-sm font-medium leading-6" :class="inSidebar ? 'text-white' : ' text-gray-900' ">
                 {{ projectData.data.label }}

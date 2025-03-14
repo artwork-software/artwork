@@ -49,7 +49,7 @@ export default {
 </script>
 
 <template>
-    <div class="flex items-center justify-between">
+    <div class="flex items-start justify-between">
         <div class="relative flex items-start">
             <div class="flex h-6 items-center">
                 <input :disabled="!this.canEditComponent"

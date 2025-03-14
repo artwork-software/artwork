@@ -1,13 +1,19 @@
 <script>
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 import {IconDotsVertical, IconDragDrop, IconTrash} from "@tabler/icons-vue";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import DropComponentInDisclosureComponentElement
+    from "@/Pages/Settings/Components/DropComponentInDisclosureComponentElement.vue";
 
 export default {
     name: "SingleComponent",
     components: {
+        DisclosurePanel,
+        DisclosureButton,
+        Disclosure,
+        DropComponentInDisclosureComponentElement,
         TextareaComponent,
         BaseMenu, IconTrash, IconDragDrop, IconDotsVertical, ComponentIcons,
         Menu,
@@ -39,6 +45,15 @@ export default {
                 onSuccess: () => {
                     this.element.openNoteInput = false
                 }
+            })
+        },
+        requestDeleteComponentInDisclosure(componentId) {
+            this.$inertia.delete(route('tab.remove.component.in.disclosure'), {
+                data: {
+                    id: componentId,
+                },
+                preserveScroll: true,
+                preserveState: true,
             })
         }
     }
@@ -79,20 +94,39 @@ export default {
                                 </div>
 
                                 <div v-if="element.component.type === 'DisclosureComponent'">
-                                    <div class="xsDark">
-                                        Components in Disclosure
-                                    </div>
-                                    <div class="flex flex-wrap gap-2">
-                                        <div v-for="component in element.disclosure_components" :key="component.id" class="flex items-center gap-x-1">
-                                            <component is="IconRadiusBottomLeft" class="size-4 -mt-2" />
-                                            {{ component.component.name }}
-                                        </div>
-                                    </div>
+                                    <Disclosure as="div" class="" v-slot="{ open }">
+                                        <DisclosureButton class=" xsDark">
+                                            <div class="flex items-center gap-2">
+                                                {{ $t('Components in Disclosure') }}
+                                                <div>
+                                                    <component is="IconChevronDown" class="size-3" :class="{ 'transform rotate-180': open }" />
+                                                </div>
+                                            </div>
+                                            <DropComponentInDisclosureComponentElement v-if="!open" :element="element" :index="1" />
+                                        </DisclosureButton>
+                                        <DisclosurePanel>
+                                            <DropComponentInDisclosureComponentElement  :element="element" :index="1" />
+                                            <div v-for="(component, index) in element.disclosure_components" :key="component.id" class="">
+                                                <div class="flex items-center gap-x-5 justify-between w-full group/component">
+                                                    <div>
+                                                        <div class="flex items-center gap-x-1 xsDark">
+                                                            <component is="IconRadiusBottomLeft" class="size-3 -mt-2" />
+                                                            <ComponentIcons :type="component.component.type" />
+                                                            {{ $t(component.component.name) }}
+                                                        </div>
+                                                        <div class="xxsLight">
+                                                            {{ $t(component.component.type) }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="invisible group-hover/component:visible">
+                                                        <component is="IconTrash" class="size-5 hover:text-red-500 cursor-pointer" @click="requestDeleteComponentInDisclosure(component.id)" />
+                                                    </div>
+                                                </div>
+                                                <DropComponentInDisclosureComponentElement :element="element" :index="component.order + 1" />
+                                            </div>
+                                        </DisclosurePanel>
+                                    </Disclosure>
                                 </div>
-
-                                <pre>
-                                    {{ element }}
-                                </pre>
                             </div>
                         </div>
                     </div>

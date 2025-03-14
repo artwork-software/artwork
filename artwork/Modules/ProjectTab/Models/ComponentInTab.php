@@ -43,6 +43,7 @@ class ComponentInTab extends Model
 
     public function disclosureComponents(): HasMany
     {
-        return $this->hasMany(DisclosureComponents::class, 'disclosure_id', 'id');
+        return $this->hasMany(DisclosureComponents::class, 'disclosure_id', 'id')
+            ->orderBy('order');
     }
 }

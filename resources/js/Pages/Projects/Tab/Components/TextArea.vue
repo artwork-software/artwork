@@ -1,14 +1,14 @@
 <template>
     <div class="my-2 flex items-start gap-x-4 w-full">
         <div>
-            <label for="email" class="block text-sm font-medium leading-6" :class="inSidebar ? 'text-white' : 'text-gray-900'">
+            <label for="email" class="xsDark" :class="inSidebar ? 'xsLight' : 'xsDark'">
                 {{ data.data.label }}
             </label>
-            <span v-if="descriptionClicked === false"
+            <div v-if="descriptionClicked === false"
                   class="mt-2 subpixel-antialiased xsDark"
                   @click="handleDescriptionClick()"
                   v-html="projectData.project_value?.data?.text ? projectData.project_value.data.text : (this.canEditComponent ? $t('Click here to add text') : '')">
-        </span>
+        </div>
             <TextareaComponent
                 v-else
                 :disabled="!this.canEditComponent"

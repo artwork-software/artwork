@@ -17,7 +17,8 @@ export default {
                     type: this.component.type,
                     name: this.component.name,
                     drop_type: 'component',
-                    sidebar_enabled: this.component.sidebar_enabled
+                    sidebar_enabled: this.component.sidebar_enabled,
+                    special: this.component.special,
                 })
             );
             dispatchEventStart()

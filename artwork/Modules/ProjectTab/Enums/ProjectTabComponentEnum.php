@@ -16,6 +16,8 @@ enum ProjectTabComponentEnum: string
     case PROJECT_GROUP_DISPLAY = 'ProjectGroupDisplayComponent';
     case GROUP_PROJECT_DISPLAY = 'GroupProjectDisplayComponent';
 
+    case DISCLOSURE_COMPONENT = 'DisclosureComponent';
+
     case PROJECT_STATUS = 'ProjectStateComponent';
     case PROJECT_GROUP = 'ProjectGroupComponent';
     case PROJECT_TEAM = 'ProjectTeamComponent';
@@ -98,6 +100,12 @@ enum ProjectTabComponentEnum: string
                     'showLine' => false,
                 ]
             ],
+            self::DISCLOSURE_COMPONENT->value => [
+                'name' => self::DISCLOSURE_COMPONENT->value,
+                'availableFields' => [
+                    'label' => '',
+                ]
+            ]
         ];
     }
 }

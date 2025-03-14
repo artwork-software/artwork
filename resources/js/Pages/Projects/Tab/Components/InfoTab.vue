@@ -6,7 +6,7 @@
                 <div >
                     <div class="sDark">{{ $t('Short description') }}</div>
                     <div v-if="descriptionClicked === false"
-                         class="mt-2 subpixel-antialiased text-secondary"
+                         class="mt-2 subpixel-antialiased xsDark"
                          @click="handleDescriptionClick()" v-html="project.description ? project.description : $t('Click here to add text')">
                     </div>
                     <TextareaComponent
@@ -22,7 +22,7 @@
                 <!-- Individual Projectinformation -->
                 <div v-for="headline in project.project_headlines" class="mt-7">
                     <div class="sDark" >{{ headline.name }}</div>
-                    <div v-if="!headline.clicked" class="mt-2 subpixel-antialiased text-secondary"
+                    <div v-if="!headline.clicked" class="mt-2 subpixel-antialiased xsDark"
                          @click="handleTextClick(headline)">
                         <p v-if="headline.text" v-html="headline.text"></p>
                         <p v-else>{{ $t('Click here to add text') }}</p>

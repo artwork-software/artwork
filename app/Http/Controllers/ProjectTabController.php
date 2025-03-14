@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ComponentInTab;
+use Artwork\Modules\ProjectTab\Models\DisclosureComponents;
 use Artwork\Modules\ProjectTab\Models\ProjectComponentValue;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
@@ -127,4 +128,28 @@ class ProjectTabController extends Controller
         ProjectTab::where('default', true)->update(['default' => false]);
         $projectTab->update(['default' => true]);
     }
+
+    public function updateComponentNote(ComponentInTab $componentInTab, Request $request): void {
+        $componentInTab->update($request->only('note'));
+    }
+
+    public function addDisclosureComponent(Request $request): void {
+        // Verschiebe alle bestehenden Elemente mit gleicher oder größerer Order nach oben
+        DisclosureComponents::where('disclosure_id', $request->get('disclosure_id'))
+            ->where('order', '>=', $request->get('order'))
+            ->increment('order');
+
+        // Erst danach das neue Element mit der übergebenen Order einfügen
+        DisclosureComponents::create([
+            'component_id' => $request->get('component_id'),
+            'disclosure_id' => $request->get('disclosure_id'),
+            'order' => $request->get('order'),
+        ]);
+    }
+
+    public function removeComponentFormDisclosure(Request $request): void {
+        // Verschiebe alle bestehenden Elemente mit größerer Order nach oben
+        DisclosureComponents::find($request->get('id'))->delete();
+    }
+
 }

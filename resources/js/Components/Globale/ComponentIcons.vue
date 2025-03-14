@@ -40,6 +40,7 @@ export default {
     <component is="IconHomeStar" class="w-6 h-6" v-if="type === 'ArtistResidenciesComponent'" />
     <component is="IconCornerDownRightDouble" class="w-6 h-6" v-if="type === 'GroupProjectDisplayComponent'" />
     <component is="IconDeviceProjector" class="w-6 h-6" v-if="type === 'ProjectGroupDisplayComponent'" />
+    <component is="IconLayoutNavbarCollapse" class="w-6 h-6" v-if="type === 'DisclosureComponent'" />
 
     <!-- TextField, Checkbox, TextArea, Title, DropDown -->
 </template>

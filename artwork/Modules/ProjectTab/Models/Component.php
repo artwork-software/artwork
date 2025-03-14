@@ -59,7 +59,7 @@ class Component extends Model
 
     protected $with = [
         'users',
-        'departments'
+        'departments',
     ];
 
     /**

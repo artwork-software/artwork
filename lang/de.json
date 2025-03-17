@@ -2396,7 +2396,7 @@
     "Details of the Selected Cell": "Details der ausgewählten Zelle",
     "Here you can view the relevant budget data for the selected cell. The displayed values come from the linked sub-projects and were determined based on the matching criteria of the group project.": "Hier siehst du die relevanten Budgetdaten der ausgewählten Zelle. Die angezeigten Werte stammen aus den verknüpften Unterprojekten und wurden basierend auf der Übereinstimmung mit den Gruppenprojekt-Kriterien ermittelt.",
     "Enter text here": "Text hier eingeben",
-    "Disclosure component": "Offenlegungskomponente",
-    "DisclosureComponent": "Offenlegungskomponente",
-    "Components in Disclosure": "Komponenten in Offenlegung"
+    "Disclosure component": "Ordnerkomponente",
+    "DisclosureComponent": "Ordnerkomponente",
+    "Components in Disclosure": "Komponenten in Ordner"
 }

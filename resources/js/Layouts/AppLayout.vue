@@ -583,6 +583,14 @@ export default {
                     showToolTipForItem: false
                 },
                 {
+                    name: 'Inventory',
+                    href: route('inventory.index'),
+                    route: ['inventory.index'],
+                    has_permission: this.moduleIsVisible('inventory'),
+                    icon: IconBuildingWarehouse,
+                    showToolTipForItem: false
+                },
+                {
                     name: 'To-dos',
                     href: route('tasks.own'),
                     route: ['/tasks/own'],

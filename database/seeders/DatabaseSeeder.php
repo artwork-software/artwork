@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
             PermissionPresetSeeder::class,
             ChangeEventTypeSvgToHexSeed::class,
             InventoryManagementDevSeeder::class,
-            ProjectManagementBuilderSeed::class
+            ProjectManagementBuilderSeed::class,
+            InventoryCategorySeeder::class
         ]);
     }
 }

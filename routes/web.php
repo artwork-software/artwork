@@ -96,6 +96,7 @@ use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
+use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
@@ -1665,6 +1666,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [DayServiceController::class, 'attachDayServiceable']
     )
         ->name('day-service.attach');
+
+
+    Route::group(['prefix' => 'inventory'], function (): void {
+        Route::get('/', [\App\Http\Controllers\InventoryCategoryController::class, 'index'])
+            ->name('inventory.index');
+
+        Route::get('/category/{inventoryCategory}', [\App\Http\Controllers\InventoryCategoryController::class, 'show'])
+            ->name('inventory.category.show');
+
+        Route::get('/category/{inventoryCategory}/sub/{subCategory}', [\App\Http\Controllers\InventoryCategoryController::class, 'showSubCategory'])
+            ->name('inventory.sub.category.show');
+    });
+
 
     //remove.day.service.from.user
     Route::patch(

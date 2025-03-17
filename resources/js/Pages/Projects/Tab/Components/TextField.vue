@@ -2,15 +2,17 @@
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
 import {reactive, ref} from "vue";
+import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 
 export default {
     name: "TextField",
-    components: {TextInputComponent},
+    components: {InfoButtonComponent, TextInputComponent},
     props: [
         'data',
         'projectId',
         'inSidebar',
-        'canEditComponent'
+        'canEditComponent',
+        'component',
     ],
     data() {
         return {
@@ -49,24 +51,26 @@ export default {
 </script>
 
 <template>
-    <div class="mb-3">
-        <label for="email" class="block text-sm font-medium leading-6" :class="inSidebar ? 'text-white' : ' text-gray-900' ">
-            {{ projectData.data.label }}
-        </label>
-        <div class="mt-2 w-96">
-
-            <TextInputComponent
-                type="text"
-                :disabled="!this.canEditComponent"
-                @focusout="updateTextData"
-                v-model="text"
-                :label="text"
-                name="email" id="email"
-                :show-label="false"
-                no-margin-top
-                :class="inSidebar ? 'bg-primary text-white' : ''"
-            />
+    <div class="mb-3 flex items-start gap-x-4">
+        <div>
+            <label for="email" class="block text-sm font-medium leading-6" :class="inSidebar ? 'text-white' : ' text-gray-900' ">
+                {{ projectData.data.label }}
+            </label>
+            <div class="mt-2 w-96">
+                <TextInputComponent
+                    type="text"
+                    :disabled="!this.canEditComponent"
+                    @focusout="updateTextData"
+                    v-model="text"
+                    :label="text"
+                    name="email" id="email"
+                    :show-label="false"
+                    no-margin-top
+                    :class="inSidebar ? 'bg-primary text-white' : ''"
+                />
+            </div>
         </div>
+        <InfoButtonComponent :component="component" />
     </div>
 
 

@@ -107,7 +107,7 @@
             <div class="mt-[4.5rem] w-max" v-else>
                 <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
                     <div v-for="room in newCalendarData" :key="room.roomId">
-                        <div v-if="checkIfRoomHasEvents(room)" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
+                        <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
                             <SingleRoomInHeader :room="room" is-light   />
                         </div>
                     </div>

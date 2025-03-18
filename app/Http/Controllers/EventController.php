@@ -193,11 +193,22 @@ class EventController extends Controller
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
 
-        $dailyViewInfo = '';
+        $calendarWarningText = '';
 
         if($user->daily_view && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
-            $dailyViewInfo = __('calendar.daily_view_info');
+            $calendarWarningText = __('calendar.daily_view_info');
+            $user->calendar_filter->update([
+                'end_date' => $endDate->format('Y-m-d')
+            ]);
+        }
+
+        if ($startDate->diffInDays($endDate) > (365 * 2)) {
+            $endDate = $startDate->copy()->addYears(2);
+            $calendarWarningText = __('calendar.calendar_limit_two_years');
+            $user->calendar_filter->update([
+                'end_date' => $endDate->format('Y-m-d')
+            ]);
         }
 
         $period = $this->calendarDataService->createCalendarPeriodDto(
@@ -278,7 +289,7 @@ class EventController extends Controller
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'projectNameUsedForProjectTimePeriod' => $userCalendarSettings->getAttribute('time_period_project_id') ?
                 $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'))->name : null,
-            'infoForDailyView' => $dailyViewInfo,
+            'calendarWarningText' => $calendarWarningText,
             'months' => $months,
         ]);
     }

@@ -19,6 +19,7 @@ class FreelancerShowResource extends JsonResource
             'id' => $this->id,
             'position' => $this->position,
             'profile_image' => $this->profile_image,
+            'profile_photo_url' => $this->profile_photo_url,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'email' => $this->email,

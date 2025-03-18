@@ -2061,6 +2061,9 @@ class ProjectController extends Controller
             $query->orderBy('order');
         }, 'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {
             $query->where('project_id', $project->id);
+        },
+            'components.disclosureComponents.component.projectValue' => function ($query) use ($project): void {
+            $query->where('project_id', $project->id);
         }]);
 
         $projectTabComponents = $projectTab->components()->with('component')->get()->concat(

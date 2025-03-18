@@ -1,5 +1,21 @@
 <template>
     <AppLayout>
+
+        <transition name="fade" appear>
+            <div class="pointer-events-none fixed z-50 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
+                <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
+                    <component :is="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
+                    <p class="text-sm/6 text-white">
+                        {{ showCalendarWarning }}
+                    </p>
+                    <button type="button" class="-m-1.5 flex-none p-1.5">
+                        <span class="sr-only">Dismiss</span>
+                        <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
+                    </button>
+                </div>
+            </div>
+        </transition>
+
         <div class="w-full ml-11 mt-1">
             <BaseCalendar :rooms="rooms"
                           :days="period"
@@ -19,7 +35,8 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {usePage} from "@inertiajs/vue3";
 import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
-import {provide} from "vue";
+import {computed, onMounted, provide, ref} from "vue";
+import { IconAlertSquareRounded } from "@tabler/icons-vue";
 
 const props = defineProps({
     period: {
@@ -88,7 +105,7 @@ const props = defineProps({
         type: Object,
         required: true
     },
-    infoForDailyView: {
+    calendarWarningText: {
         type: String,
         required: false,
         default: ''
@@ -107,7 +124,14 @@ provide('eventStatuses', props.eventStatuses);
 provide('months', props.months);
 provide('event_properties', props.event_properties);
 provide('areas', props.areas);
-provide('infoForDailyView', props.infoForDailyView);
+
+const showCalendarWarning = ref(props.calendarWarningText)
+
+onMounted(() => {
+    setTimeout(() => {
+        showCalendarWarning.value = ''
+    }, 5000)
+})
 </script>
 
 <style scoped>

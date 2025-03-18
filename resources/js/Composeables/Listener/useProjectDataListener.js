@@ -6,6 +6,7 @@ export function useProjectDataListener(componentData, projectId) {
             .listen('.data.updated', (data) => {
                 const updatedData = data.data;
                 const projectData = componentData.project_value;
+
                 if (projectData !== null) {
                     if (
                         projectData.id === updatedData.id &&
@@ -15,7 +16,9 @@ export function useProjectDataListener(componentData, projectId) {
                         Object.assign(componentData.project_value, updatedData);
                     }
                 } else {
-                    componentData.project_value = updatedData
+                    if( updatedData.project_id === projectId && updatedData.component_id === componentData.id) {
+                        componentData.project_value = updatedData
+                    }
                 }
             })
     }

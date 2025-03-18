@@ -1497,12 +1497,26 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ProjectTabController::class,
                 'removeComponent'
             ])->name('tab.remove.component');
+
+            // post tab.update.component.note
+            Route::patch('/{componentInTab}/update/component/note', [ProjectTabController::class, 'updateComponentNote'])
+                ->name('tab.update.component.note');
+
+            // post project-management-builder.add.disclosure.component
+            Route::post('/add/disclosure/component', [ProjectTabController::class, 'addDisclosureComponent'])
+                ->name('project-management-builder.add.disclosure.component');
+
             // tab.destroy
             Route::delete('/{projectTab}/destroy', [ProjectTabController::class, 'destroy'])
                 ->name('tab.destroy');
             // tab.update
             Route::patch('/{projectTab}/update', [ProjectTabController::class, 'update'])
                 ->name('tab.update');
+
+            //delete tab.remove.component.in.disclosure
+            Route::delete('/remove/component/disclosure', [ProjectTabController::class, 'removeComponentFormDisclosure'])
+                ->name('tab.remove.component.in.disclosure');
+
             // tab.store
             Route::post('/store', [ProjectTabController::class, 'store'])->name('tab.store');
             //tab.reorder

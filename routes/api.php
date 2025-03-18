@@ -24,3 +24,7 @@ Route::get('/timeline-preset/search', [
     \App\Http\Controllers\TimelinePresetController::class,
     'search'
 ])->name('timeline-preset.search');
+
+
+Route::get('/generate-avatar-image/{letters}', [\App\Http\Controllers\UserController::class, 'createAvatarImage'])
+    ->name('generate-avatar-image');

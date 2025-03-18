@@ -117,7 +117,7 @@
 <script setup>
 import {usePermission} from "@/Composeables/Permission.js";
 import {usePage} from "@inertiajs/vue3";
-const { can, canAny, hasAdminRole } = usePermission(usePage().props);
+import { is, can } from 'laravel-permission-to-vuejs'
 import {computed, onMounted, ref} from "vue";
 import {router} from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
@@ -201,7 +201,7 @@ const emits = defineEmits(['isEditingCellValue']),
         return props.cell.column.type === 99;
     },
     toggleCellEdit = () => {
-        if (!can('can manage inventory stock') || !hasAdminRole()) {
+        if ( !(is('artwork admin') || can('can manage inventory stock')) ) {
             return;
         }
 

@@ -2406,5 +2406,9 @@
     "datetime": "Datum & Zeit",
     "Select a type": "Wähle einen Typ",
     "Create Property": "Eigenschaft erstellen",
-    "Sub-Categories": "Unterkategorien"
+    "Sub-Categories": "Unterkategorien",
+    "Enter text here": "Text hier eingeben",
+    "Disclosure component": "Ordnerkomponente",
+    "DisclosureComponent": "Ordnerkomponente",
+    "Components in Disclosure": "Komponenten in Ordner"
 }

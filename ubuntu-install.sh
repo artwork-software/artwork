@@ -151,7 +151,8 @@ sudo systemctl restart nginx
 log "Richte die Datenbank ein..."
 MYSQL_PASSWORD=$(openssl rand -hex 24)
 sudo mysql -uroot -e "CREATE DATABASE artwork_tools;CREATE USER artwork@\"localhost\" IDENTIFIED BY \"$MYSQL_PASSWORD\"; GRANT ALL PRIVILEGES ON artwork_tools.* TO \"artwork\"@\"localhost\"; FLUSH PRIVILEGES;"
-sudo sed -i "s/DB_PASSWORD=/DB_PASSWORD=$MYSQL_PASSWORD/g" /var/www/html/.env
+sudo sed -i "s/DB_HOST=db/DB_HOST=localhost/g" /var/www/html/.env
+sudo sed -i "s/DB_PASSWORD=artwork/DB_PASSWORD=$MYSQL_PASSWORD/g" /var/www/html/.env
 
 # Setup Meilisearch
 log "Richte Meilisearch ein..."
@@ -190,11 +191,11 @@ PUSHER_SECRET=$(openssl rand -hex 16)
 PUSHER_ID=$(openssl rand -hex 16)
 sudo cp /var/www/html/.install/artwork-sockets.service /etc/systemd/system/artwork-sockets.service
 sudo echo "PUSHER_APP_KEY=$PUSHER_KEY" >> /var/www/html/.env
-sudo echo "PUSHER_APP_ID=$PUSHER_SECRET" >> /var/www/html/.env
-sudo echo "PUSHER_APP_SECRET=$PUSHER_ID" >> /var/www/html/.env
+sudo echo "PUSHER_APP_ID=$PUSHER_ID" >> /var/www/html/.env
+sudo echo "PUSHER_APP_SECRET=$PUSHER_SECRET" >> /var/www/html/.env
 sudo echo "VITE_PUSHER_APP_KEY=$PUSHER_KEY" >> /var/www/html/.env
-sudo echo "VITE_PUSHER_APP_ID=$PUSHER_SECRET" >> /var/www/html/.env
-sudo echo "VITE_PUSHER_APP_SECRET=$PUSHER_ID" >> /var/www/html/.env
+sudo echo "VITE_PUSHER_APP_ID=$PUSHER_ID" >> /var/www/html/.env
+sudo echo "VITE_PUSHER_APP_SECRET=$PUSHER_SECRET" >> /var/www/html/.env
 sudo sed -i "s/__ID/$PUSHER_ID/g" /var/www/html/soketi.config.json
 sudo sed -i "s/__KEY/$PUSHER_KEY/g" /var/www/html/soketi.config.json
 sudo sed -i "s/__SECRET/$PUSHER_SECRET/g" /var/www/html/soketi.config.json

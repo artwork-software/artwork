@@ -68,6 +68,18 @@ class ComponentController extends Controller
             }
         }
 
+        if ($component->componentInPrintLayouts()->exists()) {
+            foreach ($component->componentInPrintLayouts()->get() as $printLayout) {
+                $printLayout->delete();
+            }
+        }
+
+        if ($component->componentInDisclosures()->exists()) {
+            foreach ($component->componentInDisclosures()->get() as $disclosure) {
+                $disclosure->delete();
+            }
+        }
+
         // now check if the component is in the sidebar or in a tab
         if ($component->sidebarTabComponent()->exists()) {
             foreach ($component->sidebarTabComponent()->get() as $sidebarTabComponent) {

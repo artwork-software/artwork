@@ -2405,5 +2405,8 @@
     "datetime": "Date and Time",
     "Select a type": "Select a type",
     "Create Property": "Create Property",
-    "Sub-Categories": "Sub-Categories"
+    "Sub-Categories": "Sub-Categories",
+    "Enter text here": "Enter text here",
+    "Disclosure component": "Disclosure component",
+    "Components in Disclosure": "Components in Disclosure"
 }

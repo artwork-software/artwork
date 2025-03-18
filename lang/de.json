@@ -2395,5 +2395,16 @@
     "Find out if there are any room requests that need to be confirmed or declined.": "Finde heraus, ob es Raumanfragen gibt, die bestätigt oder abgelehnt werden müssen.",
     "Details of the Selected Cell": "Details der ausgewählten Zelle",
     "Here you can view the relevant budget data for the selected cell. The displayed values come from the linked sub-projects and were determined based on the matching criteria of the group project.": "Hier siehst du die relevanten Budgetdaten der ausgewählten Zelle. Die angezeigten Werte stammen aus den verknüpften Unterprojekten und wurden basierend auf der Übereinstimmung mit den Gruppenprojekt-Kriterien ermittelt.",
-    "No products found": "Keine Produkte gefunden"
+    "No products found": "Keine Produkte gefunden",
+    "Categories & Sub-Categories": "Kategorien & Unterkategorien",
+    "Properties": "Eigenschaften",
+    "string": "Text",
+    "number": "Zahl",
+    "boolean": "Ja/Nein",
+    "date": "Datum",
+    "time": "Zeit",
+    "datetime": "Datum & Zeit",
+    "Select a type": "Wähle einen Typ",
+    "Create Property": "Eigenschaft erstellen",
+    "Sub-Categories": "Unterkategorien"
 }

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Inventory\Models;
 
+use Artwork\Core\Casts\TranslatedDateTimeCast;
 use Artwork\Modules\Inventory\Models\Traits\HasCategoryProperties;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +26,9 @@ class InventoryCategory extends Model
         'name',
     ];
 
+    protected $casts = [
+        'created_at' => TranslatedDateTimeCast::class,
+    ];
 
     public function subCategories(): HasMany
     {

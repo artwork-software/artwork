@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticlePropertiesRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticlePropertiesRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
+use Inertia\Inertia;
 
 class InventoryArticlePropertiesController extends Controller
 {
@@ -13,7 +14,9 @@ class InventoryArticlePropertiesController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('InventorySetting/Properties', [
+            'properties' => InventoryArticleProperties::paginate(50),
+        ]);
     }
 
     /**

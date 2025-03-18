@@ -89,4 +89,11 @@ class InventoryCategoryController extends Controller
     {
         //
     }
+
+    public function settings()
+    {
+        return Inertia::render('InventorySetting/Categories', [
+            'categories' => InventoryCategory::with(['properties', 'subcategories', 'subcategories.properties'])->paginate(50),
+        ]);
+    }
 }

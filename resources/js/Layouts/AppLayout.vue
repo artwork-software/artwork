@@ -441,8 +441,8 @@ export default {
                 {
                     has_permission: this.hasAdminRole(),
                     name: 'Inventory',
-                    href: route('inventory-management.settings'),
-                    isCurrent: route().current('inventory-management.settings')
+                    href: route('inventory-management.settings.index'),
+                    isCurrent: route().current('inventory-management.settings.index')
                 },
                 {
                     name: 'Rooms',

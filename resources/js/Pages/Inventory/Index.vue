@@ -57,10 +57,10 @@
                         <ol role="list" class="flex items-center space-x-4">
                             <li>
                                 <div>
-                                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                                    <Link preserve-scroll :href="route('inventory.index')" class="text-gray-400 hover:text-gray-500">
                                         <component is="IconHome" class="size-5 shrink-0" aria-hidden="true" />
                                         <span class="sr-only">Inventory</span>
-                                    </a>
+                                    </Link>
                                 </div>
                             </li>
                             <li v-if="currentCategory?.id">
@@ -86,11 +86,11 @@
                     </nav>
                     <h2 id="product-heading" class="sr-only">Products</h2>
                     <div v-if="props.articles.data.length > 0">
-                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-8 gap-4">
                             <div v-for="item in props.articles.data">
                                 <div class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden">
                                     <div class="flex items-center justify-center">
-                                        <img src="https://tailwindcss.com/plus-assets/img/ecommerce-images/category-page-02-image-card-01.jpg" alt="" class="w-32 h-32 object-center object-cover">
+                                        <img src="https://tailwindcss.com/plus-assets/img/ecommerce-images/category-page-02-image-card-01.jpg" alt="" class="w-44 h-44 object-center object-cover">
                                     </div>
                                     <div>
                                         <nav class="flex py-2" aria-label="Breadcrumb">

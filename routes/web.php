@@ -37,6 +37,8 @@ use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\IndividualTimeController;
+use App\Http\Controllers\InventoryArticlePropertiesController;
+use App\Http\Controllers\InventoryCategoryController;
 use App\Http\Controllers\MoneySourceCategoryController;
 use App\Http\Controllers\MoneySourceController;
 use App\Http\Controllers\MoneySourceFileController;
@@ -96,6 +98,7 @@ use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
+use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
@@ -1693,7 +1696,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::group(['prefix' => 'settings'], function (): void {
             Route::get('/index', [InventorySettingsController::class, 'index'])
-                ->name('inventory-management.settings');
+                ->name('inventory-management.settings.index');
+
+            Route::get('/categories', [InventoryCategoryController::class, 'settings'])
+                ->name('inventory-management.settings.category');
+
+            Route::get('/properties', [InventoryArticlePropertiesController::class, 'index'])
+                ->name('inventory-management.settings.properties');
         });
 
         Route::group(['prefix' => 'inventory'], function (): void {

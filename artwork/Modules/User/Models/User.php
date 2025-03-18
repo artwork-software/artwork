@@ -64,6 +64,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Scout\Searchable;
+use LaravelAndVueJS\Traits\LaravelPermissionToVueJS;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
@@ -167,6 +168,7 @@ class User extends Model implements
     use CanHasDayServices;
     use HasIndividualTimes;
     use HasShiftPlanComments;
+    use LaravelPermissionToVueJS;
 
     protected $fillable = [
         'first_name',
@@ -286,8 +288,7 @@ class User extends Model implements
     {
         return $this->profile_photo_path
             ? asset('storage/' . $this->profile_photo_path)
-            : 'https://ui-avatars.com/api/?name=' .
-            urlencode($this->first_name . ' ' . $this->last_name) . '&color=7F9CF5&background=EBF4FF';
+            : route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
     }
 
 

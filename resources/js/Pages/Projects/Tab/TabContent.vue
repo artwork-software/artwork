@@ -34,6 +34,7 @@
                     :eventsInProject="headerObject.project.events"
                     :eventStatuses="headerObject.eventStatuses"
                     :event_properties="headerObject.event_properties"
+                    :component="component"
                 />
             </div>
         </div>
@@ -122,6 +123,7 @@ import BulkBody from "@/Pages/Projects/Components/BulkComponents/BulkBody.vue";
 import ArtistResidenciesComponent from "@/Pages/Projects/Tab/Components/ArtistResidenciesComponent.vue";
 import GroupProjectDisplayComponent from "@/Pages/Projects/Components/GroupProjectDisplayComponent.vue";
 import ProjectGroupDisplayComponent from "@/Pages/Projects/Components/ProjectGroupDisplayComponent.vue";
+import DisclosureComponent from "@/Pages/Projects/Tab/Components/DisclosureComponent.vue";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
@@ -157,7 +159,8 @@ const componentMapping = {
     BulkBody,
     ArtistResidenciesComponent,
     GroupProjectDisplayComponent,
-    ProjectGroupDisplayComponent
+    ProjectGroupDisplayComponent,
+    DisclosureComponent
 };
 
 const props = defineProps({
@@ -194,6 +197,13 @@ const props = defineProps({
         required: true
     }
 });
+
+provide('headerObject', props.headerObject);
+provide('currentTab', props.currentTab);
+provide('loadedProjectInformation', props.loadedProjectInformation);
+provide('first_project_tab_id', props.first_project_tab_id);
+provide('first_project_calendar_tab_id', props.first_project_calendar_tab_id);
+provide('first_project_budget_tab_id', props.first_project_budget_tab_id);
 
 const show = ref(false);
 const currentSideBarTab = ref(0);

@@ -896,4 +896,18 @@ class UserController extends Controller
             'checklist_show_without_tasks'
         ]));
     }
+
+    public function createAvatarImage($letters)
+    {
+        // Sicherheitsprüfung (max. 2 Buchstaben)
+        $letters = strtoupper(substr($letters, 0, 2));
+
+        // Hintergrundfarbe über Parameter oder Standardwert setzen
+        $bgColor = request()?->query('bg', '#eb7a3d'); // Standard: Blau
+        $textColor = request()?->query('color', '#ffffff'); // Standard: Weiß
+
+        // SVG in Blade rendern
+        return response()->view('avatar', compact('letters', 'bgColor', 'textColor'))
+            ->header('Content-Type', 'image/svg+xml');
+    }
 }

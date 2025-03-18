@@ -1012,30 +1012,30 @@ export default {
     },
     methods: {
         usePage,
-       getAllProjectGroupsInEventsByDay(events){
-           let projectGroups = [];
+        getAllProjectGroupsInEventsByDay(events){
+            let projectGroups = [];
 
-           events.forEach(event => {
-               if (event?.project) {
-                   let project = event.project;
+            events.forEach(event => {
+                if (event?.project) {
+                    let project = event.project;
 
-                   if (project.isGroup) {
-                       // Falls das Projekt selbst eine Gruppe ist, hinzufügen
-                       if (!projectGroups.some(group => group.id === project.id)) {
-                           projectGroups.push(project);
-                       }
-                   } else if (project.isInGroup && Array.isArray(project.group)) {
-                       // Falls das Projekt in einer Gruppe ist, die Gruppen-Infos nutzen
-                       project.group.forEach(group => {
-                           if (!projectGroups.some(g => g.id === group.id)) {
-                               projectGroups.push(group);
-                           }
-                       });
-                   }
-               }
-           });
+                    if (project.isGroup) {
+                        // Falls das Projekt selbst eine Gruppe ist, hinzufügen
+                        if (!projectGroups.some(group => group.id === project.id)) {
+                            projectGroups.push(project);
+                        }
+                    } else if (project.isInGroup && Array.isArray(project.group)) {
+                        // Falls das Projekt in einer Gruppe ist, die Gruppen-Infos nutzen
+                        project.group.forEach(group => {
+                            if (!projectGroups.some(g => g.id === group.id)) {
+                                projectGroups.push(group);
+                            }
+                        });
+                    }
+                }
+            });
 
-           return projectGroups;
+            return projectGroups;
         },
         checkIfUserIsAdminOrInGroup(group){
             if (this.hasAdminRole()) {

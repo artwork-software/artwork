@@ -26,9 +26,7 @@ class ServiceProviderController extends Controller
 {
     public function store(): \Symfony\Component\HttpFoundation\Response
     {
-        $serviceProvider = ServiceProvider::create(
-            ['profile_image' => 'https://ui-avatars.com/api/?name=NEU&color=7F9CF5&background=EBF4FF']
-        );
+        $serviceProvider = ServiceProvider::create();
 
         return Inertia::location(route('service_provider.show', $serviceProvider->id));
     }

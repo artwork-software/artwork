@@ -4,6 +4,7 @@ namespace Artwork\Modules\ProjectTab\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\ProjectPrintLayout\Models\PrintLayoutComponents;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -59,7 +60,7 @@ class Component extends Model
 
     protected $with = [
         'users',
-        'departments'
+        'departments',
     ];
 
     /**
@@ -139,5 +140,15 @@ class Component extends Model
     public function scopeIsSpecial(\Illuminate\Database\Eloquent\Builder $query): Builder
     {
         return $query->where('special', true);
+    }
+
+    public function componentInPrintLayouts(): HasMany
+    {
+        return $this->hasMany(PrintLayoutComponents::class, 'component_id', 'id');
+    }
+
+    public function componentInDisclosures(): HasMany
+    {
+        return $this->hasMany(DisclosureComponents::class, 'component_id', 'id');
     }
 }

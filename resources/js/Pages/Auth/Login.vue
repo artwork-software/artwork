@@ -82,7 +82,7 @@ import JetInputError from "@/Jetstream/InputError.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-
+import { reloadRolesAndPermissions } from 'laravel-permission-to-vuejs'
 
 export default defineComponent({
     mixins: [Permissions],
@@ -131,7 +131,10 @@ export default defineComponent({
                     remember: this.rememberCheckbox.checked ? 'on' : ''
                 }))
                 .post(this.route('login'), {
-                    onFinish: () => this.form.reset('password'),
+                    onFinish: () => {
+                        reloadRolesAndPermissions();
+                        this.form.reset('password')
+                    },
                 })
         }
     },

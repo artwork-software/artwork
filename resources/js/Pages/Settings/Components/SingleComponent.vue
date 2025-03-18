@@ -127,6 +127,9 @@ export default {
                                         </DisclosurePanel>
                                     </Disclosure>
                                 </div>
+                                <pre>
+                                    {{ element }}
+                                </pre>
                             </div>
                         </div>
                     </div>

@@ -55,13 +55,11 @@ const onDrop = (event) => {
         return false;
     }
 
-    console.log(props.index);
-
 
     router.post(route('project-management-builder.add.disclosure.component'), {
         order: props.index,
         component_id: data.id,
-        disclosure_id: props.element.id
+        disclosure_id: props.element.component.id
     }, {
         preserveState: true,
         preserveScroll: true,

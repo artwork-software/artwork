@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('inventory_article_properties', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->text('tooltip_text')->nullable();
             $table->string('type')->default('string');
             $table->boolean('is_filterable')->default(false);
             $table->boolean('show_in_list')->default(false);

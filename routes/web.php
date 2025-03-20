@@ -1717,6 +1717,26 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             Route::get('/properties', [InventoryArticlePropertiesController::class, 'index'])
                 ->name('inventory-management.settings.properties');
+
+            // post create Article Property
+            Route::post('/properties/create', [InventoryArticlePropertiesController::class, 'store'])
+                ->name('inventory-management.settings.properties.create');
+
+            // delete Article Property
+            Route::delete('/properties/{inventoryArticleProperty}', [InventoryArticlePropertiesController::class, 'destroy'])
+                ->name('inventory-management.settings.properties.delete');
+
+            // patch inventory-management.settings.properties.update
+            Route::patch('/properties/{inventoryArticleProperty}/update', [InventoryArticlePropertiesController::class, 'update'])
+                ->name('inventory-management.settings.properties.update');
+
+            // inventory-management.settings.categories.create
+            Route::post('/categories/create', [InventoryCategoryController::class, 'store'])
+                ->name('inventory-management.settings.categories.create');
+
+            // update inventory-management.settings.categories.update
+            Route::patch('/categories/{inventoryCategory}/update', [InventoryCategoryController::class, 'update'])
+                ->name('inventory-management.settings.categories.update');
         });
 
         Route::group(['prefix' => 'inventory'], function (): void {

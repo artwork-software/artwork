@@ -11,7 +11,7 @@ class StoreInventoryCategoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,14 @@ class StoreInventoryCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => ['required', 'string', 'max:55'],
+            'properties' => ['nullable', 'array'],
+            'properties.*.id' => ['required', 'exists:inventory_article_properties,id'],
+            'properties.*.defaultValue' => ['nullable'],
+            'subcategories' => ['array'],
+            'subcategories.*.name' => ['required', 'string', 'max:55'],
+            'subcategories.*.properties' => ['nullable', 'array'],
+            'subcategories.*.properties.*.id' => ['required', 'exists:inventory_article_properties,id'],
         ];
     }
 }

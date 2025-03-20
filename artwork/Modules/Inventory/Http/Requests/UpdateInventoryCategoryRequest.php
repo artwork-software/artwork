@@ -11,7 +11,7 @@ class UpdateInventoryCategoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,11 @@ class UpdateInventoryCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'id' => ['required', 'integer', 'exists:inventory_categories,id'],
+            'name' => ['required', 'string', 'max:55'],
+            'properties' => ['nullable', 'array'],
+            'properties.*.id' => ['required', 'exists:inventory_article_properties,id'],
+            'properties.*.defaultValue' => ['nullable'],
         ];
     }
 }

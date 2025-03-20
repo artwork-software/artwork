@@ -31,6 +31,7 @@ class InventorySubCategory extends Model
 
     protected $fillable = [
         'name',
+        'inventory_category_id'
     ];
 
     protected $casts = [

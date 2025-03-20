@@ -14,6 +14,7 @@ class InventoryArticleProperties extends Model
         'type',
         'is_filterable',
         'show_in_list',
+        'tooltip_text'
     ];
 
     /**
@@ -24,4 +25,8 @@ class InventoryArticleProperties extends Model
         'show_in_list' => 'boolean',
     ];
 
+
+    public function scopeFilterable($query) {
+        return $query->where('is_filterable', true);
+    }
 }

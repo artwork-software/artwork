@@ -32,7 +32,7 @@ class InventoryArticlePropertiesController extends Controller
      */
     public function store(StoreInventoryArticlePropertiesRequest $request)
     {
-        //
+        InventoryArticleProperties::create($request->validated());
     }
 
     /**
@@ -54,16 +54,16 @@ class InventoryArticlePropertiesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInventoryArticlePropertiesRequest $request, InventoryArticleProperties $inventoryArticleProperties)
+    public function update(UpdateInventoryArticlePropertiesRequest $request, InventoryArticleProperties $inventoryArticleProperty)
     {
-        //
+        $inventoryArticleProperty->update($request->validated());
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(InventoryArticleProperties $inventoryArticleProperties)
+    public function destroy(InventoryArticleProperties $inventoryArticleProperty)
     {
-        //
+        $inventoryArticleProperty->delete();
     }
 }

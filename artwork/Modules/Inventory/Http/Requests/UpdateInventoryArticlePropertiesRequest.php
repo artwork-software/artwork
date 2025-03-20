@@ -11,7 +11,7 @@ class UpdateInventoryArticlePropertiesRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,12 @@ class UpdateInventoryArticlePropertiesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'id' => ['required', 'exists:inventory_article_properties,id'],
+            'name' => ['string', 'max:255', 'required'],
+            'tooltip_text' => ['string', 'nullable', 'max:255'],
+            'type' => ['string', 'max:255', 'required'],
+            'is_filterable' => ['boolean', 'required'],
+            'show_in_list' => ['boolean', 'required'],
         ];
     }
 }

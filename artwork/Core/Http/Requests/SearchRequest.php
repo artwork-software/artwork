@@ -13,6 +13,8 @@ class SearchRequest extends FormRequest
     {
         return [
             'query' => 'required|string',
+            'type' => 'nullable|string',
+            'projectId' => 'nullable|integer',
         ];
     }
 }

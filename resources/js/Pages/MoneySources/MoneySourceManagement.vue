@@ -225,7 +225,7 @@
                             :key="moneySource.id"
                         >
                             <div class="py-5 flex flex-col justify-between border-b-2 border-gray-200 my-2"
-                                 v-if="($page.props.myMoneySources.some(source => source.money_source_id === moneySource.id) || $canAny('view edit add money_sources','can edit and delete money sources'))">
+                                 v-if="(moneySources.some(source => source.money_source_id === moneySource.id) || $canAny('view edit add money_sources','can edit and delete money sources')) || hasAdminRole()">
                                 <div class="flex flex-row w-full">
                                     <div class="flex w-full items-center">
                                         <div class="flex items-center w-full">

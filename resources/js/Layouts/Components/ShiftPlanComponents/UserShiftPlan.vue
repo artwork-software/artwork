@@ -250,7 +250,7 @@ export default {
 
                 dayServicesToReturn = dayServicesToReturn.concat(
                     user.day_services.filter(
-                        (dayService) => shift.days_of_shift.includes(
+                        (dayService) => shift.daysOfShift?.includes(
                             dayService.pivot.date.split('-').reverse().join('.')
                         )
                     )

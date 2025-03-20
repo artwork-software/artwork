@@ -6,12 +6,13 @@ log() {
 }
 
 # Setze die Umgebungsvariable für nicht-interaktive Installationen
-export DEBIAN_FRONTEND=noninteractive
-
+export DEBIAN_FRONTEND=noninteractive APT_LISTCHANGES_FRONTEND=none
+sudo sh -c 'echo "\$nrconf{restart} = \"a\";" > /etc/needrestart/needrestart.conf'
 # Aktualisiere und installiere Basissoftware
 log "Aktualisiere Paketlisten und installiere Basissoftware..."
 sudo apt-get update -y
-sudo apt-get install -y curl \
+sudo apt-get install -o Dpkg::Options::="--force-confdef" \
+                     -o Dpkg::Options::="--force-confold" -y curl \
  git \
  python3 \
  gcc \
@@ -90,7 +91,8 @@ echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | sudo tee /etc/apt/
 # Installiere neue Pakete
 log "Aktualisiere Paketlisten und installiere zusätzliche Pakete..."
 sudo apt-get update -y
-sudo apt-get install -y php8.2-cli php8.2-dev php8.2-fpm \
+sudo apt-get install -o Dpkg::Options::="--force-confdef" \
+                       -o Dpkg::Options::="--force-confold" -y php8.2-cli php8.2-dev php8.2-fpm \
        php8.2-pgsql php8.2-sqlite3 php8.2-gd php8.2-imagick \
        php8.2-curl \
        php8.2-imap php8.2-mysql php8.2-mbstring \

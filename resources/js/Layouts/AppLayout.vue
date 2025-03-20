@@ -621,7 +621,7 @@ export default {
                     href: route('contracts.index'),
                     route: ['/contracts/view'],
                     has_permission: this.moduleIsVisible('contracts') &&
-                        this.$canAny(['view edit upload contracts', 'can see and download contract modules'])  || this.hasAdminRole(),
+                        this.$canAny(['view edit upload contracts', 'can see and download contract modules']) || this.hasAdminRole(),
                     icon: IconFileText,
                     showToolTipForItem: false
                 }],

@@ -165,7 +165,7 @@ sudo chown -R meilisearch:meilisearch /var/lib/meilisearch
 sudo chmod 750 /var/lib/meilisearch
 sudo wget https://raw.githubusercontent.com/meilisearch/meilisearch/latest/config.toml -O /etc/meilisearch.toml
 MEILI_KEY=$(openssl rand -hex 16)
-sudo echo "MEILISEARCH_KEY=$MEILI_KEY" >> /var/www/html/.env
+echo "MEILISEARCH_KEY=$MEILI_KEY" | sudo tee -a /var/www/html/.env
 sudo sed -i "s/env = \"development\"/env = \"production\"/g" /etc/meilisearch.toml
 sudo sed -i "s/# master_key = \"YOUR_MASTER_KEY_VALUE\"/master_key = \"$MEILI_KEY\"/g" /etc/meilisearch.toml
 sudo sed -i "s/db_path = \".\/data.ms\"/db_path =\"\/var\/lib\/meilisearch\/data\"/g" /etc/meilisearch.toml

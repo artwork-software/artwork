@@ -5,20 +5,20 @@
         </button>
 
         <div class="hidden group-hover/tooltip:block">
-            <div v-if="direction === 'top'" :class="tooltipWidth" class="absolute z-50 -top-3 text-center text-nowrap p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-x-1/2 -translate-y-full left-1/2">
+            <div v-if="direction === 'top'" :class="tooltipWidth" class="absolute z-50 -top-3 text-center  p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-x-1/2 -translate-y-full left-1/2">
                 {{ tooltipText }}
                 <div class="absolute bg-black h-3 w-3 transform rounded-sm rotate-45 left-1/2 -translate-x-1/2 -bottom-1.5"></div>
             </div>
-            <div v-if="direction === 'left'" :class="tooltipWidth" class="absolute z-50 text-nowrap p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-y-1/2 right-full mr-3 top-1/2">
+            <div v-if="direction === 'left'" :class="tooltipWidth" class="absolute z-50  p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-y-1/2 right-full mr-3 top-1/2">
                 {{ tooltipText }}
                 <div class="absolute bg-black h-3 w-3 transform rounded-sm rotate-45 left-full -translate-x-1/2 top-1/2 -mt-1.5"></div>
             </div>
-            <div v-if="direction === 'bottom'" :class="tooltipWidth" class="absolute z-50 -bottom-3 text-nowrap text-center p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-x-1/2 translate-y-full left-1/2">
+            <div v-if="direction === 'bottom'" :class="tooltipWidth" class="absolute z-50 -bottom-3  text-center p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-x-1/2 translate-y-full left-1/2">
                 {{ tooltipText }}
                 <div class="absolute bg-black h-3 w-3 transform rounded-sm rotate-45 left-1/2 -translate-x-1/2 -top-1.5"></div>
             </div>
             <!-- right -->
-            <div v-if="direction === 'right'" :class="tooltipWidth" class="absolute z-50 text-nowrap p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-y-1/2 left-full ml-3 top-1/2">
+            <div v-if="direction === 'right'" :class="tooltipWidth" class="absolute z-50  p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-y-1/2 left-full ml-3 top-1/2">
                 {{ tooltipText }}
                 <div class="absolute bg-black h-3 w-3 transform rounded-sm rotate-45 right-full translate-x-1/2 top-1/2 -mt-1.5"></div>
             </div>

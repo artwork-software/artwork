@@ -2443,5 +2443,10 @@
     "Please select a Sub-Category": "Bitte wähle eine Unterkategorie",
     "Please select a Category": "Bitte wähle eine Kategorie",
     "Select Category": "Kategorie auswählen",
-    "Select Sub-Category": "Unterkategorie auswählen"
+    "Select Sub-Category": "Unterkategorie auswählen",
+    "Category & subcategory based properties": "Kategorie- & Unterkategorie-basierte Eigenschaften",
+    "Add properties that are specific to the selected category and subcategory": "Füge Eigenschaften hinzu, die spezifisch für die ausgewählte Kategorie und Unterkategorie sind",
+    "Own article properties": "Eigene Artikel-Eigenschaften",
+    "Add properties that are specific to this article": "Füge Eigenschaften hinzu, die spezifisch für diesen Artikel sind",
+    "All properties are already added": "Alle Eigenschaften sind bereits hinzugefügt"
 }

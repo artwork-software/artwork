@@ -1,28 +1,25 @@
 <template>
-    <BaseModal @closed="$emit('close')" modal-size="max-w-3xl" full-modal>
+    <BaseModal @closed="$emit('close')" modal-size="max-w-4xl" full-modal>
         <div class="px-6 py-4">
             <ModalHeader
                 :title="article ? $t('Edit article') : $t('Add Article')"
             />
         </div>
 
-        <form>
+        <form @submit.prevent="submit">
             <div class="px-6 pb-4">
-                <div @click="addImage" class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
+                <div @click="addImage"  class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
                     <component is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true" />
                     <span class="mt-2 block text-sm font-semibold text-gray-900">Upload Images</span>
                     <input type="file" accept="image/*"  class="sr-only" ref="articleImageInput" multiple @input="articleForm.images = $event.target.files"/>
                 </div>
-                <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200">
-                    <li class="flex items-center justify-between py-4 pr-5 pl-4 text-sm/6" v-for="image in articleForm.images" :key="image.id">
+                <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200" v-if="articleForm.images.length > 0">
+                    <li class="flex items-center justify-between py-4 pr-5 pl-4 text-sm/6" v-for="(image,index) in articleForm.images" :key="image.id">
                         <div class="flex w-0 flex-1 items-center">
                             <component is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
                             <div class="ml-4 flex min-w-0 flex-1 gap-2">
                                 <span class="truncate font-medium">{{ image.name }}</span>
                             </div>
-                        </div>
-                        <div class="ml-4 shrink-0">
-                            <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">Remove</a>
                         </div>
                     </li>
                 </ul>
@@ -31,6 +28,7 @@
                         <TextInputComponent
                             id="name" v-model="articleForm.name"
                             :label="$t('Name')"
+                            required
                         />
                     </div>
 
@@ -46,6 +44,7 @@
                         <NumberInputComponent
                             id="quantity" v-model="articleForm.quantity"
                             :label="$t('Quantity')"
+                            required
                         />
                     </div>
                 </div>
@@ -115,46 +114,101 @@
             </div>
 
             <!-- category properties -->
+            <div class="px-6" v-if="articleForm.properties.length > 0 && selectedCategory">
+                <TinyPageHeadline
+                    :title="$t('Category & subcategory based properties')"
+                    :description="$t('Add properties that are specific to the selected category and subcategory')"
+                />
+            </div>
             <div class="my-8 flow-root px-6 pb-4" v-if="articleForm.properties.length > 0">
                 <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                     <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                         <table class="min-w-full divide-y divide-gray-300">
                             <thead>
-                            <tr class="divide-x divide-gray-200">
-                                <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
-                                <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Type') }}</th>
-                                <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Value') }}</th>
-                            </tr>
+                                <tr class="divide-x divide-gray-200">
+                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Type') }}</th>
+                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Value') }}</th>
+                                </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 bg-white">
-                            <tr v-for="property in articleForm.properties" :key="property?.id" class="divide-x divide-gray-200">
-                                <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-                                    <div class="flex items-center justify-between">
-                                        {{ property?.name }}
-                                        <ToolTipComponent
-                                            v-if="property?.tooltip_text"
-                                            :tooltip-text="property?.tooltip_text"
-                                            icon="IconInfoCircle"
-                                            direction="top"
-                                            tooltip-width="w-48 break-words"
+                                <tr v-for="property in articleForm.properties" :key="property?.id" class="divide-x divide-gray-200">
+                                    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                        <div class="flex items-center justify-between">
+                                            {{ property?.name }}
+                                            <div class="flex items-center gap-x-2">
+                                                <ToolTipComponent
+                                                    v-if="property?.tooltip_text"
+                                                    :tooltip-text="property?.tooltip_text"
+                                                    icon="IconInfoCircle"
+                                                    icon-size="size-4"
+                                                    direction="top"
+                                                    tooltip-width="break-all !text-xs"
+                                                />
+                                                <component is="IconTrash" class="h-5 w-5 text-red-600 cursor-pointer" v-if="!property.categoryProperty" @click="articleForm.properties = articleForm.properties.filter(prop => prop.id !== property.id)" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
+                                        {{ $t(capitalizeFirstLetter(property?.type)) }}
+                                    </td>
+                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                        <input v-if="property.type !== 'file'"
+                                               :type="property.type" v-model="property.value"
+                                               class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                               :placeholder="$t('Value')"
                                         />
-                                    </div>
-                                </td>
-                                <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
-                                    {{ $t(capitalizeFirstLetter(property?.type)) }}
-                                </td>
-                                <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
-                                    <input v-if="property.type !== 'file'"
-                                           :type="property.type" v-model="property.value"
-                                           class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                                           :placeholder="$t('Value')"
-                                    />
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
+                                <tr class="divide-x divide-gray-200">
+                                    <td colspan="3" class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                        <PropertiesMenu white-menu-background has-no-offset>
+                                            <template v-slot:button>
+                                                <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
+                                                    <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
+                                                    <span>
+                                                        {{ $t('Add property') }}
+                                                    </span>
+                                                </div>
+                                            </template>
+                                            <template v-slot:menu>
+                                                <div v-if="computedProperties.length > 0">
+                                                    <div v-for="property in computedProperties">
+                                                        <div @click="addPropertyToArticle(property)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
+                                                            <div class="xsDark">
+                                                                {{ property.name }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-else class="p-2">
+                                                    <div class="rounded-md bg-red-50 p-4">
+                                                        <div class="flex">
+                                                            <div class="shrink-0">
+                                                                <component is="IconInfoSquareRoundedFilled" class="size-5 text-red-400" aria-hidden="true" />
+                                                            </div>
+                                                            <div class="ml-3">
+                                                                <p class="text-sm font-medium text-red-800">
+                                                                    {{ $t('All properties are already added') }}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </PropertiesMenu>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
+            </div>
+
+
+
+            <div class="flex items-center justify-center my-10">
+                <FormButton type="submit" :text="article ? $t('Update') : $t('Create')" :disabled="articleForm.processing" :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''" />
             </div>
         </form>
     </BaseModal>
@@ -171,6 +225,9 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
+import PropertiesMenu from "@/Components/Menu/PropertiesMenu.vue";
 
 const props = defineProps({
     article: {
@@ -179,6 +236,10 @@ const props = defineProps({
         default: null
     },
     categories: {
+        type: Object,
+        required: false
+    },
+    properties: {
         type: Object,
         required: false
     }
@@ -196,39 +257,87 @@ const articleForm = useForm({
     inventory_sub_category_id: null,
     quantity: props.article ? props.article.quantity : 0,
     images: [],
-    properties: []
+    properties: [],
 })
+
 
 const addImage = () => {
     articleImageInput.value.click();
 }
 
-const uploadImages = (file) => {
-    articleForm.images = file.files;
-}
+const computedProperties = computed(() => {
+    return props.properties.filter(prop => !articleForm.properties.find(p => p.id === prop.id));
+})
 
 const capitalizeFirstLetter = (val) => {
     return String(val).charAt(0).toUpperCase() + String(val).slice(1);
 }
 
+const submit = () =>  {
+    articleForm.post(route('inventory-management.articles.store'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            articleForm.reset();
+            selectedCategory.value = null;
+            selectedSubCategory.value = null;
+            articleImageInput.value.value = null;
+            emits('close');
+        }
+    });
+}
+
+const addPropertyToArticle = (property) => {
+    // add property to article properties if it doesn't exist
+    if (!articleForm.properties.find(prop => prop.id === property.id)) {
+        articleForm.properties.push({
+            id: property.id,
+            name: property.name,
+            tooltip_text: property.tooltip_text,
+            type: property.type,
+            value: '',
+            categoryProperty: false
+        });
+    }
+}
+
 
 watch(selectedCategory, (value) => {
-    if (!value || !Array.isArray(value.properties)) return;
+    if (!value || !Array.isArray(value.properties)) {
+        // Wenn die Kategorie entfernt wird, alle Eigenschaften zurücksetzen
+        articleForm.inventory_category_id = null;
+        articleForm.properties = [];
+        return;
+    }
 
     articleForm.inventory_category_id = value.id;
     selectedSubCategory.value = null;
+
     // Setze die Eigenschaften basierend auf der ausgewählten Kategorie
     articleForm.properties = value.properties.map(prop => ({
         id: prop.id,
         name: prop.name,
         tooltip_text: prop.tooltip_text,
         type: prop.type,
-        value: prop.pivot?.value ?? ''
+        value: prop.pivot?.value ?? '',
+        categoryProperty: true
     }));
 });
 
 watch(selectedSubCategory, (value) => {
-    if (!value || !Array.isArray(value.properties)) return;
+    if (!value) {
+        // Wenn die Unterkategorie entfernt wird, entferne nur die Eigenschaften, die nicht in der Hauptkategorie sind
+        if (selectedCategory.value) {
+            const categoryPropertyIds = new Set(selectedCategory.value.properties.map(prop => prop.id));
+            articleForm.properties = articleForm.properties.filter(prop => categoryPropertyIds.has(prop.id));
+        } else {
+            articleForm.properties = []; // Falls keine Hauptkategorie vorhanden ist, alles leeren
+        }
+
+        articleForm.inventory_sub_category_id = null;
+        return;
+    }
+
+    if (!Array.isArray(value.properties)) return;
 
     articleForm.inventory_sub_category_id = value.id;
 
@@ -242,11 +351,13 @@ watch(selectedSubCategory, (value) => {
             name: prop.name,
             tooltip_text: prop.tooltip_text,
             type: prop.type,
-            value: ''
+            value: '',
+            categoryProperty: true
         }));
 
     articleForm.properties.push(...newProperties);
 });
+
 </script>
 
 <style scoped>

@@ -104,6 +104,7 @@
                 :article="null"
                 :category="props.currentCategory"
                 :categories="props.categories"
+                :properties="props.properties"
             />
         </div>
     </AppLayout>
@@ -149,6 +150,10 @@ const props = defineProps({
         required: true
     },
     filterableProperties: {
+        type: Object,
+        required: true
+    },
+    properties: {
         type: Object,
         required: true
     }

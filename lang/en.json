@@ -2441,5 +2441,10 @@
     "Please select a Sub-Category": "Please select a Sub-Category",
     "Please select a Category": "Please select a Category",
     "Select Category": "Select Category",
-    "Select Sub-Category": "Select Sub-Category"
+    "Select Sub-Category": "Select Sub-Category",
+    "Category & subcategory based properties": "Category & subcategory based properties",
+    "Add properties that are specific to the selected category and subcategory": "Add properties that are specific to the selected category and subcategory",
+    "Own article properties": "Own article properties",
+    "Add properties that are specific to this article": "Add properties that are specific to this article",
+    "All properties are already added": "All properties are already added"
 }

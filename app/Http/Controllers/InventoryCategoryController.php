@@ -22,6 +22,7 @@ class InventoryCategoryController extends Controller
             'articles' => InventoryArticle::paginate(50),
             'articlesCount' => InventoryArticle::count(),
             'filterableProperties' => InventoryArticleProperties::filterable()->get(),
+            'properties' => InventoryArticleProperties::all(),
         ]);
     }
 
@@ -65,11 +66,12 @@ class InventoryCategoryController extends Controller
         $filterableProperties = $inventoryCategory->properties()->filterable()->get();
 
         return Inertia::render('Inventory/Index', [
-            'categories' => InventoryCategory::with(['subcategories', 'properties'])->get(),
+            'categories' => InventoryCategory::with(['subcategories', 'subcategories.properties', 'articles', 'properties'])->get(),
             'currentCategory' => $inventoryCategory,
             'articles' => $inventoryCategory->articles()->paginate(50),
             'articlesCount' => InventoryArticle::count(),
             'filterableProperties' => $filterableProperties,
+            'properties' => InventoryArticleProperties::all(),
         ]);
     }
 
@@ -84,12 +86,13 @@ class InventoryCategoryController extends Controller
         $filterableProperties = $filterablePropertiesCategory->merge($filterablePropertiesSubCategory)->unique('id');
 
         return Inertia::render('Inventory/Index', [
-            'categories' => InventoryCategory::with('subcategories')->get(),
+            'categories' => InventoryCategory::with(['subcategories', 'subcategories.properties', 'articles', 'properties'])->get(),
             'currentCategory' => $inventoryCategory,
             'currentSubCategory' => $subCategory,
             'articles' => $subCategory->articles()->paginate(50),
             'articlesCount' => InventoryArticle::count(),
             'filterableProperties' => $filterableProperties,
+            'properties' => InventoryArticleProperties::all(),
         ]);
     }
 

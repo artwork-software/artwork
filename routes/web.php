@@ -37,6 +37,7 @@ use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\IndividualTimeController;
+use App\Http\Controllers\InventoryArticleController;
 use App\Http\Controllers\InventoryArticlePropertiesController;
 use App\Http\Controllers\InventoryCategoryController;
 use App\Http\Controllers\MoneySourceCategoryController;
@@ -1694,6 +1695,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::get('/category/{inventoryCategory}/sub/{subCategory}', [\App\Http\Controllers\InventoryCategoryController::class, 'showSubCategory'])
             ->name('inventory.sub.category.show');
+
+        // post inventory-management.articles.store
+        Route::post('/articles/store', [InventoryArticleController::class, 'store'])
+            ->name('inventory-management.articles.store');
     });
 
 

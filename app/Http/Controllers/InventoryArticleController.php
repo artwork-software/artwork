@@ -4,16 +4,25 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
+use Artwork\Modules\Inventory\InventoryArticleRepository;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Services\InventoryArticleService;
+use Illuminate\Auth\AuthManager;
 
 class InventoryArticleController extends Controller
 {
+
+    public function __construct(
+        private readonly InventoryArticleService $inventoryArticleService,
+        private readonly AuthManager $authManager
+    ){
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
     }
 
     /**
@@ -29,7 +38,7 @@ class InventoryArticleController extends Controller
      */
     public function store(StoreInventoryArticleRequest $request)
     {
-        //
+        dd($request->all());
     }
 
     /**

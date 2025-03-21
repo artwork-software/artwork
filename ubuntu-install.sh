@@ -6,12 +6,13 @@ log() {
 }
 
 # Setze die Umgebungsvariable für nicht-interaktive Installationen
-export DEBIAN_FRONTEND=noninteractive
-
+export DEBIAN_FRONTEND=noninteractive APT_LISTCHANGES_FRONTEND=none
+sudo sh -c 'echo "\$nrconf{restart} = \"a\";" > /etc/needrestart/needrestart.conf'
 # Aktualisiere und installiere Basissoftware
 log "Aktualisiere Paketlisten und installiere Basissoftware..."
 sudo apt-get update -y
-sudo apt-get install -y curl \
+sudo apt-get install -o Dpkg::Options::="--force-confdef" \
+                     -o Dpkg::Options::="--force-confold" -y curl \
  git \
  python3 \
  gcc \
@@ -69,6 +70,7 @@ else
     log "Änderung der SSH-Authentifizierung übersprungen."
 fi
 
+
 # Installiere nur notwendige Pakete von Repositories
 log "Füge benutzerdefinierte Repositories hinzu..."
 ## Node.js
@@ -89,7 +91,8 @@ echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | sudo tee /etc/apt/
 # Installiere neue Pakete
 log "Aktualisiere Paketlisten und installiere zusätzliche Pakete..."
 sudo apt-get update -y
-sudo apt-get install -y php8.2-cli php8.2-dev php8.2-fpm \
+sudo apt-get install -o Dpkg::Options::="--force-confdef" \
+                       -o Dpkg::Options::="--force-confold" -y php8.2-cli php8.2-dev php8.2-fpm \
        php8.2-pgsql php8.2-sqlite3 php8.2-gd php8.2-imagick \
        php8.2-curl \
        php8.2-imap php8.2-mysql php8.2-mbstring \
@@ -162,7 +165,7 @@ sudo chown -R meilisearch:meilisearch /var/lib/meilisearch
 sudo chmod 750 /var/lib/meilisearch
 sudo wget https://raw.githubusercontent.com/meilisearch/meilisearch/latest/config.toml -O /etc/meilisearch.toml
 MEILI_KEY=$(openssl rand -hex 16)
-sudo echo "MEILISEARCH_KEY=$MEILI_KEY" >> /var/www/html/.env
+echo "MEILISEARCH_KEY=$MEILI_KEY" | sudo tee -a /var/www/html/.env
 sudo sed -i "s/env = \"development\"/env = \"production\"/g" /etc/meilisearch.toml
 sudo sed -i "s/# master_key = \"YOUR_MASTER_KEY_VALUE\"/master_key = \"$MEILI_KEY\"/g" /etc/meilisearch.toml
 sudo sed -i "s/db_path = \".\/data.ms\"/db_path =\"\/var\/lib\/meilisearch\/data\"/g" /etc/meilisearch.toml
@@ -201,6 +204,7 @@ sudo sed -i "s/__KEY/$PUSHER_KEY/g" /var/www/html/soketi.config.json
 sudo sed -i "s/__SECRET/$PUSHER_SECRET/g" /var/www/html/soketi.config.json
 
 #Set Redis Password
+sudo sed -i "s/REDIS_HOST=redis/REDIS_HOST=localhost/g" /var/www/html/.env
 sudo sed -i "s/REDIS_PASSWORD=null/REDIS_PASSWORD=$REDIS_PASSWORD/g" /var/www/html/.env
 
 # Setup Laravel
@@ -247,12 +251,12 @@ log "Richte Scheduler ein..."
 (crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run >> /dev/null 2>&1") | sudo crontab -
 
 # AppArmor-Profil für Nginx hinzufügen
-log "Füge AppArmor-Profil für Nginx hinzu..."
-sudo systemctl enable apparmor
-sudo systemctl start apparmor
+#log "Füge AppArmor-Profil für Nginx hinzu..."
+#sudo systemctl enable apparmor
+#sudo systemctl start apparmor
 # Beispiel: Aktivieren eines vordefinierten Profils oder Erstellen eines benutzerdefinierten Profils
 # Hier wird ein Standardprofil angenommen
-sudo aa-enforce /etc/apparmor.d/usr.sbin.nginx
+#sudo aa-enforce /etc/apparmor.d/usr.sbin.nginx
 
 # Abschlussmeldung
 log "Installation und Sicherheitskonfiguration abgeschlossen!"

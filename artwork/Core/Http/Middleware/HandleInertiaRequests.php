@@ -6,8 +6,11 @@ use App\Settings\EventSettings;
 use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
+use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -48,7 +51,9 @@ class HandleInertiaRequests extends Middleware
         $banner = $generalSettings->banner_path ? $storage->url($generalSettings->banner_path) : null;
 
         $rolesArray = $user ? $user->allRoles() : [];
-        $permissionsArray = $user ?  $user->allPermissions() : [];
+        $permissionsArray = $user ?  $user->hasRole([RoleEnum::ARTWORK_ADMIN->value]) ?
+            Permission::all()->pluck('name') :
+            $user->allPermissions() : [];
 
         // erstelle mir ein Array aus $generalCalendarSettings (Start und end ) für stunden z.b. Start: 22:00 end: 08:00 array = [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
         $start = explode(':', $generalCalendarSettings->start);

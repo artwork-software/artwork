@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('type')->default('string');
             $table->boolean('is_filterable')->default(false);
             $table->boolean('show_in_list')->default(false);
+            $table->boolean('is_required')->default(false);
+            $table->boolean('is_deletable')->default(true);
             $table->timestamps();
         });
     }

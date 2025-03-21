@@ -24,7 +24,7 @@
                         />
                     </div>
 
-                    <div class="col-span-full">
+                    <div class="col-span-full" v-if="!property && property?.type !== 'room' || property?.type !== 'manufacturer'">
                         <Listbox as="div" v-model="selectedType" v-slot="{ open }">
                             <ListboxLabel class="block text-sm/6 font-medium text-gray-900">
                                 {{ $t('Select a type') }}
@@ -82,6 +82,21 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-span-2">
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input id="is_required" aria-describedby="is_required-description" v-model="propertyForm.is_required" name="is_required" type="checkbox" class="input-checklist" />
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="is_required" class="font-medium text-gray-900">Wert verpflichtend</label>
+                                <p id="is_required-description" class="text-gray-500">
+                                    Muss dieser Wert bei der Artikelanlage angegeben werden?
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-center my-10">
@@ -131,10 +146,11 @@ const propertyForm = useForm({
     type: props.property ? props.property.type : types[0].type,
     is_filterable: props.property ? props.property.is_filterable : false,
     show_in_list: props.property ? props.property.show_in_list : false,
+    is_required: props.property ? props.property.is_required : false,
 })
 
 const addEditProperty = () => {
-    propertyForm.type = selectedType.value.type
+    propertyForm.type = selectedType?.value?.type
 
     if (props.property) {
         propertyForm.patch(route('inventory-management.settings.properties.update', {inventoryArticleProperty: props.property.id}), {

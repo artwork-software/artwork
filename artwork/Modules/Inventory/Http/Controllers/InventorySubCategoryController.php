@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Artwork\Modules\Inventory\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventorySubCategoryRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventorySubCategoryRequest;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;

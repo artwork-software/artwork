@@ -14,7 +14,9 @@ class InventoryArticleProperties extends Model
         'type',
         'is_filterable',
         'show_in_list',
-        'tooltip_text'
+        'tooltip_text',
+        'is_required',
+        'is_deletable',
     ];
 
     /**
@@ -23,6 +25,8 @@ class InventoryArticleProperties extends Model
     protected $casts = [
         'is_filterable' => 'boolean',
         'show_in_list' => 'boolean',
+        'is_required' => 'boolean',
+        'is_deletable' => 'boolean',
     ];
 
 

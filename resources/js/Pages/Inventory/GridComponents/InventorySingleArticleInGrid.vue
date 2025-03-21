@@ -1,7 +1,7 @@
 <template>
     <div class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden">
         <div class="flex items-center justify-center">
-            <img src="https://tailwindcss.com/plus-assets/img/ecommerce-images/category-page-02-image-card-01.jpg" alt="" class="w-44 h-44 object-center object-cover">
+            <img :src="getMainImageInImage.image" alt="" class="w-44 h-44 object-center rounded-lg">
         </div>
         <div>
             <nav class="flex py-2" aria-label="Breadcrumb">
@@ -27,7 +27,18 @@
                 </ol>
             </nav>
             <h3 class="xsDark">{{ item.name }}</h3>
+            <p class="text-xs text-gray-500 line-clamp-2">
+                {{ item.description }}
+            </p>
             <div class="my-2 xxsDark">
+                <div class="flex items-center justify-between py-1 text-artwork-buttons-create">
+                    <div>
+                        {{ $t('Quantity') }}
+                    </div>
+                    <div>
+                        {{ item.quantity }}
+                    </div>
+                </div>
                 <div v-for="property in item.properties">
                     <div class="flex items-center justify-between py-1" v-if="property.show_in_list">
                         <div>
@@ -39,14 +50,7 @@
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between py-1">
-                    <div>
-                        {{ $t('Quantity') }}
-                    </div>
-                    <div>
-                        {{ item.quantity }}
-                    </div>
-                </div>
+
             </div>
         </div>
     </div>
@@ -54,7 +58,8 @@
 
 <script setup>
 
-import {Link} from "@inertiajs/vue3";
+import {Link, usePage} from "@inertiajs/vue3";
+import {computed} from "vue";
 
 const props = defineProps({
     item: {
@@ -62,6 +67,27 @@ const props = defineProps({
         required: true
     }
 })
+
+const getMainImageInImage = computed(() => {
+    const images = props.item.images || [];
+
+    // 1. Suche nach dem Hauptbild
+    const mainImage = images.find(image => image.is_main_image);
+    if (mainImage) return {
+        image: '/storage/' + mainImage.image,
+    };
+
+    // 2. Wenn kein Hauptbild, nimm das erste Bild
+    if (images.length > 0) return {
+        image: '/storage/' + images[0].image,
+    };
+
+    // 3. Wenn keine Bilder vorhanden sind, gib ein Standardbild zurück
+    return {
+        image: usePage().props.big_logo, // Passe den Pfad zu deinem Standardbild an
+    };
+});
+
 
 </script>
 

@@ -2445,8 +2445,18 @@
     "Select Category": "Kategorie auswählen",
     "Select Sub-Category": "Unterkategorie auswählen",
     "Category & subcategory based properties": "Kategorie- & Unterkategorie-basierte Eigenschaften",
-    "Add properties that are specific to the selected category and subcategory": "Füge Eigenschaften hinzu, die spezifisch für die ausgewählte Kategorie und Unterkategorie sind",
+    "Add properties that are specific to the selected category and subcategory. You can add further non-specific properties using the “Add individual properties” button": "Füge Eigenschaften hinzu, die spezifisch für die ausgewählte Kategorie und Unterkategorie sind. Du kannst weitere nicht spezifische Eigenschaften mit dem Button „Individuelle Eigenschaften hinzufügen“ hinzufügen",
     "Own article properties": "Eigene Artikel-Eigenschaften",
     "Add properties that are specific to this article": "Füge Eigenschaften hinzu, die spezifisch für diesen Artikel sind",
-    "All properties are already added": "Alle Eigenschaften sind bereits hinzugefügt"
+    "All properties are already added": "Alle Eigenschaften sind bereits hinzugefügt",
+    "Manufacturer": "Hersteller",
+    "Required field": "Pflichtfeld",
+    "Value*": "Wert*",
+    "Images": "Bilder",
+    "Category & Properties": "Kategorie & Eigenschaften",
+    "Detailed Quantity": "Detaillierte Menge",
+    "Single inventory capable": "Einzelbestandsfähig",
+    "Add individual properties": "Individuelle Eigenschaften hinzufügen",
+    "If activated, each individual piece of this article can be provided with its own properties": "Wenn aktiviert, kann jedes einzelne Stück dieses Artikels mit eigenen Eigenschaften versehen werden",
+    "Main Image": "Hauptbild"
 }

@@ -28,6 +28,7 @@
                                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Type') }}</th>
                                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Filterable') }}</th>
                                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('In article overview') }}</th>
+                                <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Required field') }}</th>
                                 <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Actions') }}</th>
                             </tr>
                             </thead>

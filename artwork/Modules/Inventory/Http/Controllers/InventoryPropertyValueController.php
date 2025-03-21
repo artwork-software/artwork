@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Artwork\Modules\Inventory\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryPropertyValueRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryPropertyValueRequest;
 use Artwork\Modules\Inventory\Models\InventoryPropertyValue;

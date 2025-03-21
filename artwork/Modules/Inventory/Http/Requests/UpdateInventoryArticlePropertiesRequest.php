@@ -25,9 +25,10 @@ class UpdateInventoryArticlePropertiesRequest extends FormRequest
             'id' => ['required', 'exists:inventory_article_properties,id'],
             'name' => ['string', 'max:255', 'required'],
             'tooltip_text' => ['string', 'nullable', 'max:255'],
-            'type' => ['string', 'max:255', 'required'],
+            'type' => ['string', 'max:255', 'nullable'],
             'is_filterable' => ['boolean', 'required'],
             'show_in_list' => ['boolean', 'required'],
+            'is_required' => ['boolean', 'required'],
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace Artwork\Modules\Inventory\Models\Traits;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Models\InventoryPropertyValue;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 trait HasInventoryProperties
 {
@@ -19,32 +20,15 @@ trait HasInventoryProperties
     /**
      * Gibt alle Eigenschaften mit Werten zurück.
      */
-    public function properties(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function properties(): MorphToMany
     {
-        return $this->belongsToMany(
+        return $this->morphToMany(
             InventoryArticleProperties::class,
+            'inventory_propertyable',
             'inventory_property_values',
             'inventory_propertyable_id',
             'inventory_article_property_id'
         )->withPivot('value');
     }
 
-    /**
-     * Fügt eine Property hinzu oder aktualisiert sie.
-     */
-    public function setProperty($propertyId, $value): \Illuminate\Database\Eloquent\Model
-    {
-        return $this->propertyValues()->updateOrCreate(
-            ['inventory_article_property_id' => $propertyId],
-            ['value' => $value]
-        );
-    }
-
-    /**
-     * Holt den Wert einer bestimmten Property.
-     */
-    public function getProperty($propertyId)
-    {
-        return $this->propertyValues()->where('inventory_article_property_id', $propertyId)->first()?->value;
-    }
 }

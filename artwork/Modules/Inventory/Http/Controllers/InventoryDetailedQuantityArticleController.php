@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Artwork\Modules\Inventory\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryDetailedQuantityArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryDetailedQuantityArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;

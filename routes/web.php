@@ -37,9 +37,6 @@ use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\IndividualTimeController;
-use App\Http\Controllers\InventoryArticleController;
-use App\Http\Controllers\InventoryArticlePropertiesController;
-use App\Http\Controllers\InventoryCategoryController;
 use App\Http\Controllers\MoneySourceCategoryController;
 use App\Http\Controllers\MoneySourceController;
 use App\Http\Controllers\MoneySourceFileController;
@@ -98,9 +95,10 @@ use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
-use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
-use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
@@ -116,8 +114,6 @@ use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
-
-use FiveamCode\LaravelNotionApi\Notion;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -1687,13 +1683,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
 
     Route::group(['prefix' => 'inventory'], function (): void {
-        Route::get('/', [\App\Http\Controllers\InventoryCategoryController::class, 'index'])
+        Route::get('/', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
             ->name('inventory.index');
 
-        Route::get('/category/{inventoryCategory}', [\App\Http\Controllers\InventoryCategoryController::class, 'show'])
+        Route::get('/category/{inventoryCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'show'])
             ->name('inventory.category.show');
 
-        Route::get('/category/{inventoryCategory}/sub/{subCategory}', [\App\Http\Controllers\InventoryCategoryController::class, 'showSubCategory'])
+        Route::get('/category/{inventoryCategory}/sub/{subCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'showSubCategory'])
             ->name('inventory.sub.category.show');
 
         // post inventory-management.articles.store

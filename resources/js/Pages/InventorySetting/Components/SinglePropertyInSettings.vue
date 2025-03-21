@@ -10,12 +10,16 @@
         <span v-if="property?.show_in_list" class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset">{{ $t('Yes') }}</span>
         <span v-else class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-red-600/20 ring-inset">{{ $t('No') }}</span>
     </td>
+    <td class="p-4 text-sm whitespace-nowrap text-gray-500">
+        <span v-if="property?.is_required" class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset">{{ $t('Yes') }}</span>
+        <span v-else class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-red-600/20 ring-inset">{{ $t('No') }}</span>
+    </td>
     <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0">
         <div class="flex items-center gap-x-4">
             <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover">
                 <component is="IconEdit" class="h-5 w-5" aria-hidden="true" @click="showAddEditPropertyModal = true" />
             </button>
-            <button type="button" class="text-red-600 hover:text-red-900">
+            <button type="button" class="text-red-600 hover:text-red-900" v-if="property.is_deletable">
                 <component is="IconTrash" class="h-5 w-5" aria-hidden="true" @click="showDeleteConfirmation = true" />
             </button>
 

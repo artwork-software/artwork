@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\Shift\Events;
 
+use Artwork\Modules\Calendar\DTO\ShiftDTO;
+use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -24,7 +26,6 @@ class MultiShiftCreateInShiftPlan implements ShouldBroadcastNow
     public function __construct(Collection $shifts)
     {
         $this->shifts = $shifts;
-        Log::info('MultiShiftCreateInShiftPlan');
     }
 
 
@@ -48,7 +49,7 @@ class MultiShiftCreateInShiftPlan implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'shifts' => $this->shifts,
+            'shifts' => $this->shifts->map(fn(Shift $shift) => ShiftDTO::fromModel($shift->fresh())),
         ];
     }
 }

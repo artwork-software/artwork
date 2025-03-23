@@ -6,7 +6,7 @@ export default {
 
 <template>
     <thead>
-        <tr class="flex w-full bg-secondaryHover">
+        <tr class="flex w-full bg-artwork-navigation-background">
             <slot />
         </tr>
     </thead>

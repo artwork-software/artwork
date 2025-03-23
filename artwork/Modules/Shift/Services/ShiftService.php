@@ -14,6 +14,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Shift\Events\AssignUserToShift;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\User\Models\User;
@@ -344,6 +345,6 @@ class ShiftService
                 ),
             };
         }
-        //broadcast(new ShiftAssigned($entityModel, $shift))->toOthers();
+
     }
 }

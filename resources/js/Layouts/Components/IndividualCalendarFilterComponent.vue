@@ -24,10 +24,11 @@
                         <div class="flex items-center">
                             <TextInputComponent
                                 id="saveFilter"
-                                autocomplete="off"
                                 v-model="filterName"
                                 label="Name des Filters"
-                                is-small/>
+                                is-small
+                                @keydown.space.prevent
+                            />
                             <button @click="saveFilter"
                                 class="rounded-full mt-5 bg-artwork-buttons-create cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
                                 <label class="cursor-pointer text-white text-xs">

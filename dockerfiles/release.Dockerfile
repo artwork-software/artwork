@@ -1,98 +1,93 @@
-FROM ubuntu:24.04
+FROM ubuntu:22.04
 
-MAINTAINER "Caldero Systems GmbH"
+ENV DEBIAN_FRONTEND=noninteractive
+ENV    VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+ENV    VITE_PUSHER_HOST="${PUSHER_HOST}"
+ENV    VITE_PUSHER_APP_ID='${PUSHER_APP_ID}'
+ENV    VITE_PUSHER_APP_SECRET='${PUSHER_APP_SECRET}'
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV TZ=UTC
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+      curl \
+      git \
+      python3 \
+      gcc \
+      wget \
+      gosu \
+      build-essential \
+      ca-certificates \
+      gnupg \
+      nginx \
+      openssl \
+      unzip \
+      netcat \
+      supervisor \
+      libcap2-bin \
+      libpng-dev \
+      dnsutils \
+      librsvg2-bin \
+      fswatch \
+      apt-transport-https \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-ARG BRANCH
-ARG TAG
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+        | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" \
+        > /etc/apt/sources.list.d/nodesource.list && \
+    curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c' \
+        | gpg --dearmor \
+        > /etc/apt/keyrings/ppa_ondrej_php.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" \
+        > /etc/apt/sources.list.d/ppa_ondrej_php.list && \
+    apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+        php8.2-cli php8.2-dev php8.2-fpm \
+        php8.2-pgsql php8.2-sqlite3 php8.2-gd php8.2-imagick \
+        php8.2-curl \
+        php8.2-imap php8.2-mysql php8.2-mbstring \
+        php8.2-xml php8.2-zip php8.2-bcmath php8.2-soap \
+        php8.2-intl php8.2-readline \
+        php8.2-ldap \
+        php8.2-msgpack php8.2-igbinary php8.2-redis php8.2-swoole \
+        php8.2-memcached php8.2-pcov \
+        nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /var/www/html && \
+    mkdir -p /var/log/supervisor
 
 WORKDIR /var/www/html
+COPY . /var/www/html
 
-RUN apt-get update && apt-get install -y ca-certificates  \
-    gcc \
-    curl \
-    git \
-    sudo \
-    gosu \
-    nano \
-    cron \
-    build-essential \
-    ca-certificates \
-    gnupg \
-    redis \
-    libxml2-dev \
-    mysql-client \
-    mysql-server \
-    openssl \
-    unzip \
-    libxml2-dev \
-    libpng-dev \
-    libzip-dev \
-    libxslt-dev \
-    imagemagick\
-    libmagickwand-dev \
-    wget \
-    htop \
-    supervisor \
-    dnsutils \
-    librsvg2-bin \
-    python3 \
-    python3-pip
+RUN cp .env.standalone.example .env || true
 
-RUN mkdir -p /etc/apt/keyrings \
-    && echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | tee /etc/apt/sources.list.d/fury.list \
-    && apt-get update \
-    && apt-get install -y php-cli php-dev \
-           php-pgsql php-sqlite3 php-gd php-imagick \
-           php-curl \
-           php-imap php-mysql php-mbstring \
-           php-xml php-zip php-bcmath php-soap \
-           php-intl php-readline \
-           php-ldap \
-           php-msgpack php-igbinary php-redis \
-           php-memcached php-pcov \
-           meilisearch=1.9.* \
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-               && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
-               && apt-get update \
-               && apt-get install -y nodejs \
-               && npm install -g npm
+RUN cp -rf .install/artwork.vhost.conf /etc/nginx/sites-available/default && \
+    echo "\n    add_header X-Frame-Options \"SAMEORIGIN\" always;" \
+    "\n    add_header X-XSS-Protection \"1; mode=block\" always;" \
+    "\n    add_header X-Content-Type-Options \"nosniff\" always;" \
+    "\n    add_header Referrer-Policy \"no-referrer-when-downgrade\" always;" \
+    "\n    add_header Content-Security-Policy \"default-src 'self';\" always;" \
+    "\n    # add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains; preload\" always;\n" \
+    >> /etc/nginx/sites-available/default
 
-RUN git config --global --add safe.directory /var/www/html
+RUN wget -O composer.phar https://getcomposer.org/download/2.6.5/composer.phar && \
+    php composer.phar --no-interaction install
 
-RUN git init  \
-    && git remote add origin https://github.com/artwork-software/artwork.git  \
-    && git pull origin main  \
-    && git checkout main \
-    && git fetch --all
+RUN php artisan key:generate && php artisan storage:link
 
-RUN if [ -n "$TAG" ]; then \
-      git checkout tags/$TAG; \
-    elif [ -n "$BRANCH" ]; then  \
-     git checkout $BRANCH; \
-    fi \
-    && git pull
+RUN npm install && npm run build
 
-RUN curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
+RUN chown -R www-data:www-data /var/www/html && \
+    chmod -R 750 /var/www/html && \
+    chmod 640 /var/www/html/.env || true
+EXPOSE 80
 
-RUN npm -g install cross-env @soketi/soketi
+COPY dockerfiles/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer --no-interaction install
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-RUN php /var/www/html/artisan storage:link
-
-COPY dockerfiles/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY dockerfiles/php/php.ini /etc/php//cli/conf.d/99-artwork.ini
-COPY dockerfiles/php/fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
-COPY dockerfiles/redis.conf /etc/redis/redis.conf
-
-RUN (crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run") | crontab -
-
-RUN npm install
-
-RUN chown -R www-data:www-data /var/www/html
-RUN chown -R mysql:mysql /var/lib/mysql
-
-ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["sh", "-c", "php-fpm8.2 -F & nginx -g 'daemon off;'"]

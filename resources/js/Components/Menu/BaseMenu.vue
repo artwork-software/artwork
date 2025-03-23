@@ -23,7 +23,7 @@
 
                        <ToolTipComponent
                            v-if="showCustomIcon"
-                           direction="bottom"
+                           :direction="tooltipDirection"
                            :tooltip-text="$t(translationKey)"
                            :icon="icon"
                            :icon-size="dotsSize"
@@ -133,6 +133,11 @@ export default defineComponent({
             type: [String, Number],
             required: false,
             default: 1.5,
+        },
+        tooltipDirection: {
+            type: String,
+            required: false,
+            default: 'top',
         },
     },
 

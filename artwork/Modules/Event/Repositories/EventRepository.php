@@ -7,6 +7,7 @@ use Artwork\Core\Database\Models\CanSubstituteBaseModel;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
+use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventProperty\Models\EventProperty;
 use Artwork\Modules\Project\Models\Project;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\DB;
 
 class EventRepository extends BaseRepository
 {
@@ -339,5 +341,81 @@ class EventRepository extends BaseRepository
         $event->eventProperties()->attach($eventProperty->getAttribute('id'));
 
         return $event;
+    }
+
+    public function updateEvents(SupportCollection $eventIds, array $updates, $selectedDay, $selectedStartTime, $selectedEndTime): void
+    {
+        DB::transaction(function () use ($eventIds, $updates, $selectedDay, $selectedStartTime, $selectedEndTime) {
+            foreach ($eventIds as $eventId) {
+                $event = Event::findOrFail($eventId);
+                $event->update($updates);
+
+                if ($selectedDay || $selectedStartTime || $selectedEndTime) {
+                    $startTime = $event->start_time;
+                    $endTime = $event->end_time;
+                    $allDay = $event->allDay;
+
+                    if ($selectedDay && !$selectedStartTime && !$selectedEndTime) {
+                        $startTime = Carbon::parse($selectedDay)->setTimeFrom($startTime);
+                        $endTime = Carbon::parse($selectedDay)->setTimeFrom($endTime);
+                    } elseif ($selectedStartTime || $selectedEndTime) {
+                        $day = optional($startTime)->toDateString() ?? Carbon::now()->toDateString();
+                        if ($selectedStartTime) $startTime = Carbon::parse("$day $selectedStartTime");
+                        if ($selectedEndTime) $endTime = Carbon::parse("$day $selectedEndTime");
+                    }
+
+                    if ($selectedDay && $selectedStartTime && $selectedEndTime) {
+                        [$startTime, $endTime, $allDay] = $this->processEventTimes(
+                            Carbon::parse($selectedDay),
+                            $selectedStartTime,
+                            $selectedEndTime
+                        );
+                    }
+
+                    $event->update([
+                        'start_time' => $startTime,
+                        'end_time' => $endTime,
+                        'allDay' => $allDay,
+                    ]);
+                }
+
+                broadcast(new EventCreated($event->fresh(), $event->room_id));
+            }
+        });
+    }
+
+    public function deleteEvents(SupportCollection $eventIds): void
+    {
+        DB::transaction(function () use ($eventIds) {
+            Event::whereIn('id', $eventIds)->delete();
+        });
+    }
+
+    /**
+     * @param Carbon $day
+     * @param string|null $startTime
+     * @param string|null $endTime
+     * @return array{Carbon, Carbon, bool}
+     */
+    public function processEventTimes(Carbon $day, ?string $startTime, ?string $endTime): array
+    {
+        $endDay = clone $day;
+        $allDay = !$startTime || !$endTime;
+
+        if (!$allDay) {
+            $startTime = Carbon::parse($startTime);
+            $endTime = Carbon::parse($endTime);
+
+            if ($endTime->lt($startTime) || $endTime->eq($startTime)) {
+                $endDay->addDay();
+            }
+
+            $day->setTimeFromTimeString($startTime->toTimeString());
+            $endDay->setTimeFromTimeString($endTime->toTimeString());
+        } else {
+            $day->startOfDay();
+            $endDay->endOfDay();
+        }
+        return [$day, $endDay, $allDay];
     }
 }

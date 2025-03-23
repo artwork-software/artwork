@@ -26,7 +26,8 @@ readonly class ColumnService
         string $type,
         int $position,
         int|null $linked_first_column = null,
-        int|null $linked_second_column = null
+        int|null $linked_second_column = null,
+        bool|null $relevant_for_project_groups = false,
     ): Column|Model {
         $column = new Column();
         $column->table_id = $table->id;
@@ -36,6 +37,7 @@ readonly class ColumnService
         $column->subName = $subName;
         $column->type = $type;
         $column->position = $position;
+        $column->relevant_for_project_groups = $relevant_for_project_groups;
         return $this->columnRepository->save($column);
     }
 

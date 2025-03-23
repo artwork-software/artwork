@@ -20,7 +20,7 @@
                                 leave-active-class="transition-leave-active"
                                 leave-from-class="transition-leave-from"
                                 leave-to-class="transition-leave-to">
-                        <MenuItems class="absolute right-0 z-10 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <MenuItems class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                             <div class="py-1">
                                 <MenuItem v-slot="{ active }">
                                     <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
@@ -143,6 +143,16 @@
                                            :class="userCalendarSettings.expand_days ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class="ml-4 my-auto text-secondary cursor-pointer">
                                         {{ $t('Expand days') }}
+                                    </label>
+                                </div>
+                                <div class="flex items-center py-1">
+                                    <input id="cb-expand-days" v-model="userCalendarSettings.display_project_groups"
+                                           type="checkbox"
+                                           class="input-checklist"/>
+                                    <label for="cb-expand-days"
+                                           :class="userCalendarSettings.display_project_groups ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary cursor-pointer">
+                                        {{ $t('Show project group') }}
                                     </label>
                                 </div>
                             </div>
@@ -268,6 +278,7 @@ export default {
                 shift_notes: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.shift_notes : false,
                 high_contrast: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.high_contrast : false,
                 expand_days: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.expand_days : false,
+                display_project_groups: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.display_project_groups : false,
             })
         }
     },

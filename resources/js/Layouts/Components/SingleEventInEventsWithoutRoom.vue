@@ -1,6 +1,6 @@
 
 <template>
-    <div class="flex w-full border border-gray-300 rounded-lg border-l-0">
+    <div class="flex w-full border border-gray-300 rounded-lg">
         <button v-if="this.computedEventsWithoutRoom.length > 1" class="bg-artwork-buttons-create w-6 rounded-l-lg"
                 @click="event.opened = !event.opened">
             <IconChevronUp  stroke-width="1.5" v-if="event.opened"
@@ -8,49 +8,37 @@
             <IconChevronDown stroke-width="1.5" v-else
                              class="h-6 w-6 text-white my-auto"></IconChevronDown>
         </button>
-        <div class="mx-2 mt-2 w-full grid grid-cols-1 md:grid-cols-2 gap-4" v-if="(event.opened || this.computedEventsWithoutRoom.length === 1) && event.canEdit">
+        <div class="mx-2 mt-2 w-full grid grid-cols-1 md:grid-cols-2 gap-4" v-if="(event.opened || this.computedEventsWithoutRoom.length === 1) && event?.user_id === usePage().props.user.id || isAdmin">
             <div class="flex w-full justify-between col-span-full">
                 <div
                     class="flex justify-start my-auto items-center mt-3.5 ml-1 text-error line-through">
                     {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }}
                 </div>
                 <div class="flex justify-end">
-                    <div v-if="event?.canDelete"
+                    <div v-if="event?.user_id === usePage().props.user.id || isAdmin"
                          class="flex  justify-end">
                         <div class="flex mt-1 mr-2 cursor-pointer" @click="openDeleteEventModal(event)">
                             <IconTrash class="text-primary h-6 w-6 hover:text-artwork-messages-error transition-all duration-150 ease-in-out" />
                         </div>
                     </div>
-                    <div v-else>
-                        <!-- //@todo: jgl -->
-                        <div v-if="event.audience || event.isLoud"
-                             class="flex justify-end mt-6">
-                            <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg"
-                                 class="h-6 w-6 mx-2"
-                                 alt="audienceIcon"/>
-                            <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_adjustments.svg"
-                                 class="h-5 w-5 mx-2"
-                                 alt="attributeIcon"/>
-                        </div>
-                    </div>
                 </div>
             </div>
             <div class="">
-                <div class="h-12 flex w-full truncate p-2" v-if="!event.canEdit">
+                <div class="h-12 flex w-full truncate p-2" v-if="(event?.user_id === usePage().props.user.id) || !isAdmin">
                     <div>
-                        <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventTypeId)?.hex_code }" />
+                        <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventType.id)?.hex_code }" />
                     </div>
-                    <p class="ml-2 headline2">{{ this.eventTypes.find(type => type.id === event.eventTypeId).name }}</p>
+                    <p class="ml-2 headline2">{{ this.eventTypes.find(type => type.id === event.eventType.id).name }}</p>
                 </div>
-                <Listbox as="div" class="flex h-12 mr-2" v-model="event.eventTypeId" v-if="event.canEdit" :onchange="checkCollisions()" id="eventType">
+                <Listbox as="div" class="flex h-12 mr-2 relative" v-model="event.eventTypeId" v-else :onchange="checkCollisions()" id="eventType">
                     <ListboxButton class="menu-button mt-5">
                         <div class="flex items-center justify-between w-full">
                             <div class="flex items-center gap-x-2">
                                 <div>
-                                    <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventTypeId)?.hex_code }" />
+                                    <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventType.id)?.hex_code }" />
                                 </div>
                                 <span class="truncate items-center flex">
-                                    <span>{{this.eventTypes.find(type => type.id === event.eventTypeId)?.name }}</span>
+                                    <span>{{this.eventTypes.find(type => type.id === event.eventType.id)?.name }}</span>
                                 </span>
                             </div>
                             <span class="pointer-events-none">
@@ -61,7 +49,7 @@
                     <transition leave-active-class="transition ease-in duration-100"
                                 leave-from-class="opacity-100" leave-to-class="opacity-0">
                         <ListboxOptions
-                            class="absolute w-64 z-10 mt-12 bg-artwork-navigation-background shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                            class="absolute w-full z-10 mt-16 bg-artwork-navigation-background shadow-lg max-h-32 pr-2 rounded-lg pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                             <ListboxOption as="template" class="max-h-8"
                                            v-for="eventType in eventTypes"
                                            :key="eventType.name"
@@ -95,16 +83,71 @@
                     v-model="event.eventName"
                     id="eventTitle"
                     :label="$t('Event name') + '*'"
-                    :disabled="!event.canEdit"
+                    :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
                 />
                 <TextInputComponent v-else
                                     v-model="event.eventName"
                                     id="eventTitle"
                                     :label="$t('Event name')"
-                                    :disabled="!event.canEdit"
+                                    :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
                 />
                 <p class="text-xs text-red-800">{{ event.error?.eventName?.join('. ') }}</p>
             </div>
+            <div class="grid gird-cols-1 gap-x-4 mb-4" v-if="usePage().props.event_status_module">
+                <div class="h-full">
+                    <Listbox as="div" class="" v-model="selectedEventStatus" id="eventType">
+                        <ListboxLabel class="xsLight mb-0">{{ $t('Event Status') }}</ListboxLabel>
+                        <ListboxButton class="menu-button">
+                            <div class="flex w-full justify-between">
+                                <div class="flex items-center gap-x-2">
+                                    <div>
+                                        <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventStatus?.color }"/>
+                                    </div>
+                                    <div class="truncate w-56">
+                                        {{ selectedEventStatus?.name }}
+                                    </div>
+                                </div>
+                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            </div>
+                        </ListboxButton>
+
+                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                            <ListboxOptions class="absolute w-72 z-10 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                <ListboxOption as="template" class="max-h-8"
+                                               v-for="status in eventStatuses"
+                                               :key="status.name"
+                                               :value="status"
+                                               v-slot="{ active, selected }">
+                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <div class="flex">
+                                            <div>
+                                                <div class="block w-3 h-3 rounded-full"
+                                                     :style="{'backgroundColor' : status?.color }"/>
+                                            </div>
+                                            <span
+                                                :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate w-52']">
+                                                {{ status.name }}
+                                            </span>
+                                        </div>
+                                        <span
+                                            :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                      <IconCheck stroke-width="1.5" v-if="selected"
+                                                                 class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                    </li>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </transition>
+                    </Listbox>
+                    <p class="text-xs text-red-800"
+                       v-html="Array.isArray(error?.eventType) ? error.eventType.join('.<br> ') : error?.eventType">
+                    </p>
+                </div>
+                <div>
+                </div>
+            </div>
+
             <!--    Properties    -->
             <div class="flex">
                 <TagComponent v-for="eventProperty in this.event?.eventProperties"
@@ -136,7 +179,7 @@
                             v-model="event.startDate"
                             id="startDate"
                             @change="checkChanges(event)"
-                            :disabled="!event.canEdit"
+                            :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
                             required
                             :label="$t('Start*')"
                             :classes="!event.allDay ? 'border-r-0 rounded-r-none' : ''"
@@ -146,7 +189,7 @@
                             v-if="!event.allDay"
                             id="changeStartTime"
                             @change="checkChanges(event)"
-                            :disabled="!event.canEdit"
+                            :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
                             required
                             label="hh:mm"
                             :classes="event.allDay ? '' : 'rounded-l-none'"
@@ -160,7 +203,7 @@
                             v-model="event.endDate"
                             id="endDate"
                             @change="checkChanges(event)"
-                            :disabled="!event.canEdit"
+                            :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
                             required
                             :label="$t('End*')"
                             :classes="!event.allDay ? 'border-r-0 rounded-r-none' : ''"
@@ -170,7 +213,7 @@
                             v-if="!event.allDay"
                             id="changeEndTime"
                             @change="checkChanges(event)"
-                            :disabled="!event.canEdit"
+                            :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
                             required
                             label="hh:mm"
                             :classes="event.allDay ? '' : 'rounded-l-none'"
@@ -184,10 +227,10 @@
             <div v-if="event?.is_series" class="xsLight mb-2 col-span-full">{{ $t('Cycle: {0} to {1}', {0: event.selectedFrequencyName, 1: convertDateFormat(event.series.end_date) } )}}</div>
             <!--    Room    -->
             <div class="col-span-full">
-                <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!event.canEdit">
+                <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!event?.user_id === usePage().props.user.id || !isAdmin" >
                     {{ this.rooms.find(room => room.id === event.roomId)?.name }}
                 </div>
-                <Listbox as="div" v-model="event.roomId" id="room" v-if="event.canEdit">
+                <Listbox as="div" v-model="event.roomId" id="room" v-if="event?.user_id === usePage().props.user.id || isAdmin">
                     <ListboxButton
                         class="menu-button">
                         <div v-if="event.roomId" class="flex-grow text-left">
@@ -235,14 +278,14 @@
                     <div class="xsLight flex" v-if="!event.creatingProject">
                         {{$t('Currently assigned to:')}}
                         <a v-if="event.projectId"
-                           :href="route('projects.tab', {project: event.projectId, projectTab: this.first_project_calendar_tab_id})"
+                           :href="route('projects.tab', {project: event.project.id, projectTab: this.first_project_calendar_tab_id})"
                            class="ml-3 flex xsDark">
                             {{ event.project?.name }}
                         </a>
                         <div v-else class="xsDark ml-2">
                             {{ event.project?.name ?? 'Keinem Projekt' }}
                         </div>
-                        <div v-if="event.project?.id && event.canEdit" class="flex items-center my-auto">
+                        <div v-if="event.project?.id && (event?.user_id !== usePage().props.user.id) || !isAdmin" class="flex items-center my-auto">
                             <button type="button"
                                     @click="this.deleteProject(event)">
                                 <IconCircleX stroke-width="1.5" class="pl-2 h-6 w-6 hover:text-error text-primary"/>
@@ -253,7 +296,7 @@
                         {{$t('The project is created when it is saved.')}}
                     </div>
 
-                    <div class="my-2" v-if="event.canEdit">
+                    <div class="my-2" v-if="(event?.user_id !== usePage().props.user.id) || !isAdmin">
                         <div class="flex pb-2">
                             <span class="mr-4 text-sm"
                                   :class="[!event.creatingProject ? 'xsDark' : 'xsLight', '']">
@@ -310,7 +353,7 @@
                     <TextareaComponent
                         :label="$t('What do I need to bear in mind for the event?')"
                         id="description"
-                        :disabled="!event.canEdit"
+                        :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
                         v-model="event.description"
                         rows="4"
                     />
@@ -352,7 +395,7 @@
                     </Menu>
                 </div>
             </div>
-            <div class="flex justify-center w-full col-span-full pb-3" v-if="event.canEdit">
+            <div class="flex justify-center w-full col-span-full pb-3" v-if="(event?.user_id === usePage().props.user.id) || isAdmin">
                 <button
                     :disabled="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent)"
                     :class="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent) ? 'bg-secondary hover:bg-secondary' : ''"
@@ -445,7 +488,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {
     Listbox,
-    ListboxButton,
+    ListboxButton, ListboxLabel,
     ListboxOption,
     ListboxOptions,
     Menu,
@@ -466,7 +509,7 @@ import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {inject} from "vue";
-import {router, useForm} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 
 const {getDaysOfEvent, formatEventDateByDayJs} = useEvent();
 
@@ -474,6 +517,7 @@ export default {
 name: "SingleEventInEventsWithoutRoom",
     mixins: [Permissions, IconLib],
     components: {
+        ListboxLabel,
         TextareaComponent,
         TimeInputComponent,
         DateInputComponent,
@@ -512,7 +556,8 @@ name: "SingleEventInEventsWithoutRoom",
         'first_project_calendar_tab_id',
         'event',
         'computedEventsWithoutRoom',
-        'showHints'
+        'showHints',
+        'eventStatuses'
     ],
     data() {
         return {
@@ -556,7 +601,8 @@ name: "SingleEventInEventsWithoutRoom",
                     name: this.$t('Monthly')
                 }
             ],
-            event_properties: inject('event_properties')
+            event_properties: inject('event_properties'),
+            selectedEventStatus: this.eventStatuses?.find(status => status.default),
         }
     },
     emits: ['desiresReload'],
@@ -581,6 +627,7 @@ name: "SingleEventInEventsWithoutRoom",
         });
     },
     methods: {
+        usePage,
         getTimeOfDate(date) {
             //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object
             return ('0' + date.getHours()).slice(-2) + ":" + ('0' + date.getMinutes()).slice(-2);
@@ -753,7 +800,7 @@ name: "SingleEventInEventsWithoutRoom",
                 preserveState: true,
                 onSuccess: () => {
                     router.reload({
-                        only: ['eventsWithoutRoom', 'calendar']
+                        only: ['eventsWithoutRoom']
                     })
                 },
                 onError: (error) => {
@@ -775,6 +822,7 @@ name: "SingleEventInEventsWithoutRoom",
                     router.reload({
                         only: ['eventsWithoutRoom']
                     })
+                    this.deleteComponentVisible = false;
                 },
                 onError: (error) => {
                     this.event.error = error.response.data.errors;
@@ -803,14 +851,15 @@ name: "SingleEventInEventsWithoutRoom",
                 end: this.formatDate(event.endDate, event.endTime),
                 roomId: event.roomId,
                 description: event.description,
-                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
-                projectId: this.showProjectInfo ? event.projectId : null,
-                projectName: event.creatingProject ? event.projectName : '',
-                eventTypeId: event.eventTypeId,
-                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
+                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventType.id)?.individual_name,
+                projectId: this.showProjectInfo ? event.project.id : null,
+                projectName: event.creatingProject ? event.project.name : '',
+                eventTypeId: event.eventType.id,
+                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventType.id)?.project_mandatory && !this.creatingProject,
                 creatingProject: event.creatingProject,
                 isOption: this.isOption,
                 allDay: event.allDay,
+                eventStatusId: this.selectedEventStatus?.id,
                 is_series: event.series ? event.series : false,
                 event_properties: this.event_properties
                     .filter((eventProperty) => eventProperty.checked)

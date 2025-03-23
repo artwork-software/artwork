@@ -13,8 +13,8 @@
 
                 <div>
                     <TinyPageHeadline
-                        :title="$t('Weekly View Calendar Settings')"
-                        :description="$t('Specify the times that are to be displayed in a reduced or compressed form in the weekly view. With this setting, you determine which time intervals are highlighted less to improve the clarity of the weekly view. Specify the exact time period you want so that the hours in your weekly calendar are displayed in a clear and structured way.')" />
+                        :title="$t('Daily View Calendar Settings')"
+                        :description="$t('Specify the times that are to be displayed in a reduced or compressed form in the daily view. With this setting, you determine which time intervals are highlighted less to improve the clarity of the daily view. Specify the exact time period you want so that the hours in your daily calendar are displayed in a clear and structured way.')" />
                 </div>
 
                 <div class="my-5">
@@ -39,11 +39,6 @@
                             />
                         </div>
                     </div>
-
-
-                    <pre>
-                        {{ usePage().props.calendarHours }}
-                    </pre>
                 </div>
             </div>
         </div>

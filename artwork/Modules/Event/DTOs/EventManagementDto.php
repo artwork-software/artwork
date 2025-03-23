@@ -4,9 +4,12 @@ namespace Artwork\Modules\Event\DTOs;
 
 use Artwork\Core\Abstracts\BaseDto;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
+use Artwork\Modules\Event\Models\EventStatus;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
+use Inertia\Inertia;
 
 class EventManagementDto extends BaseDto
 {
@@ -345,7 +348,8 @@ class EventManagementDto extends BaseDto
     public function toArray(): array
     {
         return [
-            'eventTypes' => $this->getEventTypes(),
+            'eventTypes' => Inertia::lazy(static fn () => EventType::all()),
+            'eventStatuses' => Inertia::lazy(static fn () => EventStatus::orderBy('order')->get()),
             'calendar' => $this->getCalendar(),
             'days' => $this->getDays(),
             'months' => $this->getMonths(),
@@ -364,7 +368,7 @@ class EventManagementDto extends BaseDto
             'first_project_shift_tab_id' => $this->getFirstProjectShiftTabId(),
             'areas' => $this->getAreas(),
             'projectNameUsedForProjectTimePeriod' => $this->getProjectNameUsedForProjectTimePeriod(),
-            'eventStatuses' => $this->getEventStatuses(),
+            //'eventStatuses' => $this->getEventStatuses(),
             'show_artists' => $this->getShowArtists(),
             'event_properties' => $this->getEventProperties()
         ];

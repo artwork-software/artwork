@@ -425,7 +425,7 @@ export default {
 
             return [
                 {
-                    has_permission: this.$can('change tool settings'),
+                    has_permission: this.$can('change tool settings') || this.hasAdminRole(),
                     name: 'Tool Settings',
                     href: route('tool.branding'),
                     isCurrent: route().current('tool.branding') ||
@@ -489,7 +489,7 @@ export default {
                             'view budget templates',
                             'edit budget templates'
                         ]
-                    ),
+                    ) || this.hasAdminRole(),
                     href: desiredBudgetRoute,
                     isCurrent: route().current('budget-settings.general') ||
                         route().current('budget-settings.account-management') ||
@@ -570,7 +570,7 @@ export default {
                     href: route('shifts.plan'),
                     route: ['/shifts/view'],
                     has_permission: this.moduleIsVisible('shift_plan') &&
-                        this.$can('can view shift plan'),
+                        this.$can('can view shift plan')  || this.hasAdminRole(),
                     icon: IconCalendarUser,
                     showToolTipForItem: false
                 },
@@ -596,7 +596,7 @@ export default {
                     route: ['/money_sources'],
                     has_permission: this.moduleIsVisible('sources_of_funding') && this.$canAny(
                         ['view edit add money_sources', 'can edit and delete money sources']
-                    ),
+                    )  || this.hasAdminRole(),
                     icon: IconCurrencyEuro,
                     showToolTipForItem: false
                 },
@@ -613,7 +613,7 @@ export default {
                     href: route('contracts.index'),
                     route: ['/contracts/view'],
                     has_permission: this.moduleIsVisible('contracts') &&
-                        this.$canAny(['view edit upload contracts', 'can see and download contract modules']),
+                        this.$canAny(['view edit upload contracts', 'can see and download contract modules']) || this.hasAdminRole(),
                     icon: IconFileText,
                     showToolTipForItem: false
                 }],

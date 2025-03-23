@@ -6,8 +6,11 @@ use App\Settings\EventSettings;
 use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
+use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -30,11 +33,27 @@ class HandleInertiaRequests extends Middleware
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function share(Request $request): array
     {
-        /** @var GeneralSettings $generalSettings */
         $generalSettings = app(GeneralSettings::class);
         $generalCalendarSettings = app(GeneralCalendarSettings::class);
         $eventSettings = app(EventSettings::class);
-        $calendarSettings = Auth::user()?->calendar_settings;
+
+        $user = Auth::user();
+        $calendarSettings = $user?->calendar_settings;
+
+        $projectName = null;
+        if ($calendarSettings?->use_project_time_period) {
+            $projectName = $this->projectService->findById($calendarSettings->time_period_project_id)?->name;
+        }
+
+        $storage = Storage::disk('public');
+        $smallLogo = $generalSettings->small_logo_path ? $storage->url($generalSettings->small_logo_path) : null;
+        $bigLogo = $generalSettings->big_logo_path ? $storage->url($generalSettings->big_logo_path) : null;
+        $banner = $generalSettings->banner_path ? $storage->url($generalSettings->banner_path) : null;
+
+        $rolesArray = $user ? $user->allRoles() : [];
+        $permissionsArray = $user ?  $user->hasRole([RoleEnum::ARTWORK_ADMIN->value]) ?
+            Permission::all()->pluck('name') :
+            $user->allPermissions() : [];
 
         // erstelle mir ein Array aus $generalCalendarSettings (Start und end ) für stunden z.b. Start: 22:00 end: 08:00 array = [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
         $start = explode(':', $generalCalendarSettings->start);
@@ -66,19 +85,10 @@ class HandleInertiaRequests extends Middleware
             parent::share($request),
             [
                 'name' => config('app.name'),
-                'small_logo' => $generalSettings->small_logo_path !== "" ?
-                    Storage::disk('public')->url($generalSettings->small_logo_path) :
-                    null,
-                'big_logo' => $generalSettings->big_logo_path !== "" ?
-                    Storage::disk('public')->url($generalSettings->big_logo_path) :
-                    null,
-                'banner' => $generalSettings->banner_path !== "" ?
-                    Storage::disk('public')->url($generalSettings->banner_path) :
-                    null,
-                'projectNameOfCalendarProject' => $calendarSettings?->getAttribute('use_project_time_period') ?
-                    $this->projectService->findById(
-                        $calendarSettings?->getAttribute('time_period_project_id')
-                    )->getAttribute('name') : null,
+                'small_logo' => $smallLogo,
+                'big_logo' => $bigLogo,
+                'banner' => $banner,
+                'projectNameOfCalendarProject' => $projectName,
                 'businessName' => $generalSettings->business_name,
                 'page_title' => $generalSettings->page_title ?? config('app.name'),
                 'impressumLink' => $generalSettings->impressum_link,
@@ -88,11 +98,9 @@ class HandleInertiaRequests extends Middleware
                 'businessEmail' => $generalSettings->business_email,
                 'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
                 'show_hints' => Auth::guest() ? false : false,
-                'rolesArray' => Auth::guest() ? [] : json_encode(Auth::user()->allRoles(), true),
-                'permissionsArray' => Auth::guest() ? [] : json_encode(Auth::user()->allPermissions(), true),
-                'myMoneySources' => Auth::guest() ?
-                    false :
-                    Auth::user()->accessMoneySources()->get(['money_source_id']),
+                'rolesArray' => $rolesArray,
+                'permissionsArray' => $permissionsArray,
+                'myMoneySources' => $user ? $user->accessMoneySources()->pluck('money_source_id') : [],
                 'urlParameters' => $request->query(),
                 'flash' => [
                     'success' => fn() => $request->session()->get('success'),
@@ -100,7 +108,7 @@ class HandleInertiaRequests extends Middleware
                 ],
                 'event_status_module' => $eventSettings->enable_status,
                 'default_language' => config('app.fallback_locale'),
-                'selected_language' => Auth::guest() ? app()->getLocale() : Auth::user()->language,
+                'selected_language' => Auth::guest() ? app()->getLocale() : $user->language,
                 'sageApiEnabled' => $sageApiEnabled,
                 'calendar_settings' => $calendarSettings,
                 'module_settings' => $this->moduleSettingsService->getModuleSettings(),

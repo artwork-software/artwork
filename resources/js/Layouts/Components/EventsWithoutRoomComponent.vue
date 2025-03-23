@@ -15,6 +15,7 @@
                     :isAdmin="isAdmin"
                     :remove-notification-on-action="removeNotificationOnAction"
                     :show-hints="showHints"
+                    :event-statuses="eventStatuses"
                     @desires-reload="this.requestReload"
                 />
             </div>
@@ -137,7 +138,8 @@ export default {
         'isAdmin',
         'eventsWithoutRoom',
         'removeNotificationOnAction',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'eventStatuses',
     ],
     emits: ['closed', 'desiresReload'],
     watch: {
@@ -378,11 +380,11 @@ export default {
                 description: event.description,
                 audience: event.audience,
                 isLoud: event.isLoud,
-                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
+                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventType.id)?.individual_name,
                 projectId: event.showProjectInfo ? event.projectId : null,
                 projectName: event.creatingProject ? event.projectName : '',
-                eventTypeId: event.eventTypeId,
-                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
+                eventTypeId: event.eventType.id,
+                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventType.id)?.project_mandatory && !this.creatingProject,
                 creatingProject: event.creatingProject,
                 isOption: this.isOption,
                 allDay: event.allDay,

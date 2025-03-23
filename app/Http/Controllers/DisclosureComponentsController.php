@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\ProjectPrintLayout\Models\PrintLayoutFooterComponents;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreDisclosureComponentsRequest;
+use App\Http\Requests\UpdateDisclosureComponentsRequest;
+use Artwork\Modules\ProjectTab\Models\DisclosureComponents;
 
-class PrintLayoutFooterComponentsController extends Controller
+class DisclosureComponentsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -26,7 +27,7 @@ class PrintLayoutFooterComponentsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreDisclosureComponentsRequest $request)
     {
         //
     }
@@ -34,7 +35,7 @@ class PrintLayoutFooterComponentsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(PrintLayoutFooterComponents $printLayoutFooterComponents)
+    public function show(DisclosureComponents $disclosureComponents)
     {
         //
     }
@@ -42,7 +43,7 @@ class PrintLayoutFooterComponentsController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(PrintLayoutFooterComponents $printLayoutFooterComponents)
+    public function edit(DisclosureComponents $disclosureComponents)
     {
         //
     }
@@ -50,7 +51,7 @@ class PrintLayoutFooterComponentsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, PrintLayoutFooterComponents $printLayoutFooterComponents)
+    public function update(UpdateDisclosureComponentsRequest $request, DisclosureComponents $disclosureComponents)
     {
         //
     }
@@ -58,7 +59,7 @@ class PrintLayoutFooterComponentsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PrintLayoutFooterComponents $printLayoutFooterComponents)
+    public function destroy(DisclosureComponents $disclosureComponents)
     {
         //
     }

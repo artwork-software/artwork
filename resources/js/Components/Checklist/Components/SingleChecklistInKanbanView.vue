@@ -1,5 +1,5 @@
 <template>
-    <div class="relative w-72 max-w-72">
+    <div class="relative w-72 max-w-72 mb-4">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-x-1">
                 <span v-if="checklist.private">

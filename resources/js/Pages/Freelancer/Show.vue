@@ -4,8 +4,8 @@
             <div class="flex justify-between items-center">
                 <div class="group block flex-shrink-0">
                     <div class="flex items-center">
-                        <div>
-                            <img class="inline-block h-16 w-16 rounded-full object-cover" :src="freelancer.profile_image" alt="" />
+                        <div class="flex items-center justify-center">
+                            <img class="inline-block h-16 w-16 rounded-full object-fill" :src="freelancer.profile_photo_url" alt="" />
                         </div>
                         <div class="ml-3">
                             <h3 class="headline1">
@@ -64,7 +64,7 @@
                         >
                         <!-- Current Profile Photo -->
                         <div v-show="! photoPreview" class="mt-2">
-                            <img :src="freelancer.profile_image" :alt="freelancer.first_name"  @click="selectNewPhoto" class="rounded-full h-20 w-20 object-cover cursor-pointer">
+                            <img :src="freelancer.profile_photo_url" :alt="freelancer.first_name"  @click="selectNewPhoto" class="rounded-full h-20 w-20 object-cover cursor-pointer">
                         </div>
                         <!-- New Profile Photo Preview -->
                         <div v-show="photoPreview" class="mt-2" @click="selectNewPhoto">
@@ -76,11 +76,15 @@
 
                     </div>
                     <div class="col-span-3">
-                        <TextInputComponent id="first_name" v-model="freelancerData.first_name" :label="$t('First name')" />
+                        <TextInputComponent id="first_name" v-model="freelancerData.first_name" @focusout="saveFreelancer" :label="$t('First name')" />
                     </div>
                     <div class="col-span-4">
-                        <TextInputComponent id="last_name" v-model="freelancerData.last_name" :label="$t('Last name')" />
+                        <TextInputComponent id="last_name" v-model="freelancerData.last_name" @focusout="saveFreelancer" :label="$t('Last name')" />
                     </div>
+                </div>
+                <div>
+                    <VisualFeedback v-show="showSuccessModal" :text="$t('The changes have been saved successfully.')" />
+
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                     <div class="col-span-1">
@@ -117,7 +121,9 @@
                 <WorkProfileTab user-type="freelancer" :user="freelancer" :shift-qualifications="shiftQualifications"/>
             </div>
         </div>
-        <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" :title="$t('Freelancer successfully processed')" :description="$t('The changes have been saved successfully.')" :button="$t('Ok')" />
+        <!--<SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" :title="$t('Freelancer successfully processed')" :description="$t('The changes have been saved successfully.')" :button="$t('Ok')" />-->
+
+
     </AppLayout>
 </template>
 
@@ -137,11 +143,13 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 
 export default {
     name: "Show",
     mixins: [Permissions],
     components: {
+        VisualFeedback,
         TextareaComponent,
         TextInputComponent,
         BaseMenu,

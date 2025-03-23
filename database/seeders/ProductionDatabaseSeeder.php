@@ -16,7 +16,6 @@ class ProductionDatabaseSeeder extends Seeder
             PermissionPresetSeeder::class,
             ShiftQualificationSeeder::class,
             DefaultComponentSeeder::class,
-            DefaultEventPropertiesSeeder::class,
             InventoryManagementDefaultColumnsSeeder::class,
             SubdivisionSeeder::class,
         ]);

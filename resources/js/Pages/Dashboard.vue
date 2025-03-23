@@ -235,7 +235,7 @@ import DashboardCard from "@/Components/DashboardCard.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import SingleUserEventShift from "@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue";
 import DayServiceComponent from "@/Layouts/Components/DayService/DayServiceComponent.vue";
-
+import { reloadRolesAndPermissions } from 'laravel-permission-to-vuejs'
 export default defineComponent({
     mixins: [Permissions],
     props: [
@@ -291,12 +291,12 @@ export default defineComponent({
     },
     methods: {
         backgroundColorWithOpacity(event){
-            const color = event.event_type.hex_code;
-            return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, 15%)`;
+            const color = event.event_type?.hex_code;
+            return `rgb(${parseInt(color?.slice(-6, -4), 16)}, ${parseInt(color?.slice(-4, -2), 16)}, ${parseInt(color?.slice(-2), 16)}, 15%)`;
         },
         TextColorWithDarken(event){
-            const color = event.event_type.hex_code;
-            return `rgb(${parseInt(color.slice(-6, -4), 16) - 75}, ${parseInt(color.slice(-4, -2), 16) - 75}, ${parseInt(color.slice(-2), 16) - 75})`;
+            const color = event.event_type?.hex_code;
+            return `rgb(${parseInt(color?.slice(-6, -4), 16) - 75}, ${parseInt(color?.slice(-4, -2), 16) - 75}, ${parseInt(color?.slice(-2), 16) - 75})`;
         },
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
@@ -319,6 +319,9 @@ export default defineComponent({
             }),
         }
     },
+    mounted() {
+        reloadRolesAndPermissions()
+    }
 
 })
 </script>

@@ -30,5 +30,33 @@ class AddNewComponents extends Command
         } else {
             $this->info('Artist residencies component already exists');
         }
+
+        if (!Component::query()->where('type', ProjectTabComponentEnum::PROJECT_GROUP_DISPLAY)->first()) {
+            Component::create([
+                'name' => 'Project group display component',
+                'type' => ProjectTabComponentEnum::PROJECT_GROUP_DISPLAY,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => false,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ]);
+            $this->info('Project group component component added');
+        } else {
+            $this->info('Project group component component already exists');
+        }
+
+        if (!Component::query()->where('type', ProjectTabComponentEnum::GROUP_PROJECT_DISPLAY)->first()) {
+            Component::create([
+                'name' => 'Component Subprojects',
+                'type' => ProjectTabComponentEnum::GROUP_PROJECT_DISPLAY,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => false,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ]);
+            $this->info('Component Subprojects component added');
+        } else {
+            $this->info('Component Subprojects component already exists');
+        }
     }
 }

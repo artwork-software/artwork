@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @closed="this.$emit('closeCreateProjectModal')" full-modal>
+    <BaseModal @closed="this.$emit('closeCreateProjectModal')" full-modal modal-size="max-w-3xl">
             <div class="">
 
                 <div class="px-6 mt-5 modal-header"  v-if="!project">
@@ -278,12 +278,39 @@
                 </div>
                 <div v-if="createProjectGroup && !project">
                     <div class="px-6 pb-6">
-                        <div class="py-4 w-full">
+                        <div class="flex justify-between">
+                            <div class="flex items-center gap-x-2">
+                                <IconSelector @update:modelValue="addIconToForm" :current-icon="createProjectForm.icon" />
+                                <TinyPageHeadline
+                                    title="Icon"
+                                    description="Wähle ein Icon für die Projektgruppe aus."
+                                />
+
+                            </div>
+                            <div class="flex items-center gap-x-2">
+                                <div class="">
+                                    <ColorPickerComponent @updateColor="addColorToProject" color="#ccc" />
+                                </div>
+                                <TinyPageHeadline
+                                    title="Farbe"
+                                    description="Wähle eine Farbe für die Projektgruppe aus."
+                                    />
+
+                            </div>
+                        </div>
+                        <div class="w-full col-span-4">
                             <TextInputComponent
                                 id="sourceName"
                                 v-model="createProjectForm.name"
                                 :label="$t('Title*')"
                             />
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-6 gap-x-4">
+                            <div class="flex flex-col items-center justify-center w-full h-full">
+
+                            </div>
+
+
                         </div>
                         <div class="mb-2 mt-5" v-if="createSettings.attributes">
                             <Menu as="div" class="inline-block text-left w-full">
@@ -504,11 +531,17 @@ import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import IconSelector from "@/Components/Icon/IconSelector.vue";
+import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
+import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 
 export default {
     name: 'ProjectCreateModal',
     mixins: [IconLib, ColorHelper, Permissions],
     components: {
+        TinyPageHeadline,
+        ColorPickerComponent,
+        IconSelector,
         TextareaComponent,
         BaseButton,
         Switch,
@@ -559,7 +592,7 @@ export default {
         return {
             isCreateProjectTab: true,
             isCreateProjectGroupTab: false,
-            addToProjectGroup: false,
+            addToProjectGroup: this.project ? !!this.project?.groups[0] : false,
             createProjectForm: useForm({
                 name: this.project ? this.project.name : '',
                 artists: this.project ? this.project.artists : '',
@@ -568,11 +601,13 @@ export default {
                 assignedGenreIds: this.project ? this.project?.genres?.map(genre => genre.id) : [],
                 isGroup: this.project ? this.project.is_group : false,
                 projects: [],
-                selectedGroup: null,
+                selectedGroup: this.project ? this.project?.groups[0] : null,
                 budget_deadline: this.project ? this.project.budget_deadline : '',
                 state: null,
                 assignedUsers: [],
                 cost_center: this.project ? this.project?.cost_center?.name : '',
+                icon: this.project ? this.project.icon : 'IconPhotoCircle',
+                color: this.project ? this.project.color : null,
             }),
             projectGroupProjects: [],
             projectGroupSearchResults: [],
@@ -584,7 +619,8 @@ export default {
             }),
             uploadKeyVisualFeedback: "",
             createProjectGroup: false,
-            showInvalidProjectNameHelpText: false
+            showInvalidProjectNameHelpText: false,
+
         }
     },
     computed: {
@@ -621,6 +657,12 @@ export default {
                 this.isCreateProjectTab = false;
                 this.createProjectForm.isGroup = true;
             }
+        },
+        addIconToForm(icon){
+            this.createProjectForm.icon = icon;
+        },
+        addColorToProject(color){
+            this.createProjectForm.color = color;
         },
         addProject(bool) {
             if (this.createProjectForm.name === '') {

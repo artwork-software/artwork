@@ -718,7 +718,8 @@ class UserController extends Controller
             'use_event_status_color',
             'show_qualifications',
             'shift_notes',
-            'hide_unoccupied_rooms'
+            'hide_unoccupied_rooms',
+            'display_project_groups',
         ]));
     }
 
@@ -754,6 +755,11 @@ class UserController extends Controller
     public function updateDailyView(User $user, Request $request): void
     {
         $user->update($request->only('daily_view'));
+    }
+
+    public function updateBulkColumnSize(User $user, Request $request): void
+    {
+        $user->update($request->only('bulk_column_size'));
     }
 
     /**
@@ -889,5 +895,19 @@ class UserController extends Controller
             'checklist_completed_tasks',
             'checklist_show_without_tasks'
         ]));
+    }
+
+    public function createAvatarImage($letters)
+    {
+        // Sicherheitsprüfung (max. 2 Buchstaben)
+        $letters = strtoupper(substr($letters, 0, 2));
+
+        // Hintergrundfarbe über Parameter oder Standardwert setzen
+        $bgColor = request()?->query('bg', '#eb7a3d'); // Standard: Blau
+        $textColor = request()?->query('color', '#ffffff'); // Standard: Weiß
+
+        // SVG in Blade rendern
+        return response()->view('avatar', compact('letters', 'bgColor', 'textColor'))
+            ->header('Content-Type', 'image/svg+xml');
     }
 }

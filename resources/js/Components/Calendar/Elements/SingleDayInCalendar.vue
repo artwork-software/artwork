@@ -1,13 +1,13 @@
 <template>
-    <div :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="[isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays', hour ? '!bg-gray-200' : '']" class=" text-calendarText text-right">
+    <div :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="[isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays', hour ? '!bg-gray-200' : '']" class=" text-calendarText text-right bg-gray-200">
         <div :style="textStyle" class="mt-3 mr-2" v-if="day">
             <div>
-                {{ zoom_factor >= 0.8 ? day.day_string : '' }}
+                {{ zoom_factor >= 0.8 ? day.dayString : '' }}
             </div>
             <div>
-                {{ zoom_factor >= 0.8 ? day.full_day_display : day.short_day }}
+                {{ zoom_factor >= 0.8 ? day.fullDayDisplay : day.shortDay }}
             </div>
-            <div v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</div>
+            <div v-if="day.isMonday" class="text-[10px] font-normal ml-2">(KW{{ day.weekNumber }})</div>
             <HolidayToolTip v-if="day?.holidays?.length > 0" class="mt-2">
                 <div class="space-y-1 divide-dashed divide-gray-500 divide-y">
                     <div v-for="holiday in day.holidays" class="pt-1">
@@ -77,7 +77,6 @@ const textStyle = computed(() => {
     position: -webkit-sticky;
     left: 4rem;
     z-index: 22;
-    background-color: #EDEDEC;
 }
 
 .stickyDaysNoMarginleft {
@@ -85,7 +84,6 @@ const textStyle = computed(() => {
     position: -webkit-sticky;
     left: 0;
     z-index: 22;
-    background-color: #EDEDEC;
 }
 
 </style>

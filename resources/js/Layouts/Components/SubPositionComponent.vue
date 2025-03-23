@@ -79,8 +79,9 @@
                                     :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center"
                                     v-if="!cell.clicked">
-                                    <div class=" flex items-center">
+                                    <div class=" flex items-center cell-button">
                                         <div :class="cell.value === '' ? 'w-6 cursor-pointer h-6' : ''"
+                                             @mousedown="storeFocus(cell.id)"
                                              @click="this.handleCellClick(cell, '', index, row)">
                                             {{ cell.value }}
                                         </div>
@@ -153,8 +154,8 @@
                                 <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '',
                                     index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end',
                                     cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
-                                    class="my-4 h-6 flex items-center" v-if="!cell.clicked">
-                                    <div class=" flex items-center">
+                                    class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
+                                    <div class=" flex items-center" v-if="cell.column.type !== 'project_relevant_column'">
                                         <div class="cursor-pointer" @click="handleCellClick(cell, 'comment', index, row)" v-if="cell.comments_count > 0">
                                             <IconMessageDots class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
                                         </div>
@@ -166,8 +167,12 @@
                                                 <SageDropCellElement :cell="cell" :value="this.toCurrencyString(cell.sage_value)"/>
                                                 <SageDragCellElement v-if="cell.sage_assigned_data.length >= 1" :cell="cell" class="hidden group-hover:block"/>
                                             </div>
-                                            <span @click="handleCellClick(cell, '', index, row)" v-else>{{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}</span>
+                                            <span @mousedown="storeFocus(cell.id)" @click="handleCellClick(cell, '', index, row)" v-else>{{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}</span>
                                         </div>
+                                    </div>
+                                    <div v-else class="flex items-center gap-x-1">
+                                        <component @click="openRelevantBudgetDataSumModalForCell(cell)" v-if="calculateRelevantBudgetDataSumFormProjectsInGroup(cell) > 0" is="IconList" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color" />
+                                        {{ toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroup(cell)) }}
                                     </div>
                                 </div>
                                 <div class="flex items-center relative"
@@ -182,8 +187,7 @@
                                            @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
                                     <IconCirclePlus stroke-width="1.5" v-if="index > 2 " @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 absolute right-4 translate-x-1/2 z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
                                 </div>
-                                <div
-                                    :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
+                                <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
                                     class="my-4 h-6 flex items-center justify-end"
                                     @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                                     v-else>
@@ -284,11 +288,14 @@
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'moneySource')"
                                  v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
                                  src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                            <span v-if="column.type !== 'sage'">
+                            <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
                                 {{ this.toCurrencyString(subPosition.columnSums[column.id]?.sum) }}
                             </span>
-                            <span v-else>
+                            <span v-if="column.type === 'sage'">
                                 {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
+                            </span>
+                            <span v-if="column.type === 'project_relevant_column'">
+                                {{ calculateRelevantBudgetDataSumFormProjectsInGroupSubPosition() }}
                             </span>
                             <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                  @click="openSubPositionSumDetailModal(subPosition, column)"
@@ -312,6 +319,13 @@
             </div>
         </div>
     </th>
+
+    <RelevantBudgetDataSumModal
+        v-if="showRelevantBudgetDataSumModal"
+        :data="dataToDisplayInRelevantDataModal"
+        @closed="showRelevantBudgetDataSumModal = false"
+    />
+
     <confirmation-component
         v-if="showDeleteModal"
         :confirm="$t('Delete')"
@@ -324,7 +338,7 @@
 import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {Link, useForm} from "@inertiajs/vue3";
+import {Link, useForm, usePage} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {nextTick} from "vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -334,11 +348,13 @@ import SageDropCellElement from "@/Pages/Projects/Components/SageDropCellElement
 import SageDragCellElement from "@/Pages/Projects/Components/SageDragCellElement.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import RelevantBudgetDataSumModal from "@/Pages/Projects/Components/Budget/RelevantBudgetDataSumModal.vue";
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "SubPositionComponent",
     components: {
+        RelevantBudgetDataSumModal,
         BaseMenu,
         SageDragCellElement,
         SageDropCellElement,
@@ -418,6 +434,9 @@ export default {
                 sub_position_row_id: null,
                 is_verified: false
             }),
+            dataToDisplayInRelevantDataModal: null,
+            showRelevantBudgetDataSumModal: false,
+            nextCellId: localStorage.getItem('nextCellId') ?? null,
         }
     },
     computed: {
@@ -439,21 +458,58 @@ export default {
                     return acc;
                 }, 0) ?? 0;
             }, 0) ?? 0;
-        }
+        },
+
+        // usePage().props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData
 
     },
     mounted() {
         // check if main Position in localStorage in "closedSubPositions"
-        this.checkIfSubPositionClosed()
+        this.checkIfSubPositionClosed();
     },
     updated() {
         this.checkIfSubPositionClosed();
     },
     beforeUnmount() {
         // remove localeStorage key "closedSubPositions"
+        localStorage.removeItem('nextCellId');
         localStorage.removeItem('closedSubPositions')
     },
     methods: {
+        usePage,
+        openRelevantBudgetDataSumModalForCell(cell){
+            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
+            if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
+            const relevantData = data[this.mainPosition.type].filter(item => item?.groupRowId === cell?.sub_position_row_id);
+
+            if (!relevantData.length) return false;
+            this.dataToDisplayInRelevantDataModal = relevantData;
+            this.showRelevantBudgetDataSumModal = true;
+        },
+        calculateRelevantBudgetDataSumFormProjectsInGroup(cell) {
+            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
+            if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
+            const relevantData = data[this.mainPosition.type].filter(item => item?.groupRowId === cell?.sub_position_row_id);
+            if (!relevantData.length) return this.toCurrencyString(0);
+            const sum = relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value?.replace(',', '.') || '0');
+                return acc + (isNaN(value) ? 0 : value);
+            }, 0);
+            return sum;
+        },
+        calculateRelevantBudgetDataSumFormProjectsInGroupSubPosition() {
+            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
+            if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
+            const relevantData = data[this.mainPosition.type].filter(item =>
+                item?.subPositionId === this.subPosition?.id && item?.type === this.mainPosition?.type
+            );
+            if (!relevantData.length) return this.toCurrencyString(0);
+            const sum = relevantData.reduce((acc, item) => {
+                const value = parseFloat(item.value?.replace(',', '.') || '0');
+                return acc + (isNaN(value) ? 0 : value);
+            }, 0);
+            return this.toCurrencyString(sum);
+        },
         updateRowCommented(rowId, bool) {
             this.$inertia.patch(
                 route(
@@ -620,9 +676,28 @@ export default {
 
             let onFinish = () => {
                 cell.clicked = false;
-                //this.alreadyCellClicked = false;
-                //this.editedCellOriginalValue = null;
+                if (this.nextCellId) {
+                    let nextCell = this.subPosition.sub_position_rows.find(row => row.cells.find(cell => cell.id === this.nextCellId))?.cells.find(cell => cell.id === this.nextCellId);
+                    if(nextCell) {
+                        if (cell.id !== nextCell.id) {
+                            nextCell.clicked = !nextCell.clicked
+                            if (nextCell.clicked) {
+                                nextTick( () => {
+                                    this.$refs[`cell-${nextCell.id}`][0].select();
+                                    localStorage.removeItem('nextCellId');
+                                })
+                            }
+                        } {
+                            localStorage.removeItem('nextCellId');
+                        }
+                    }
+                }
             };
+
+            if (cell.value === this.editedCellOriginalValue) {
+                onFinish();
+                return;
+            }
 
             /*if (cell.value === this.editedCellOriginalValue) {
                 onFinish();
@@ -637,12 +712,16 @@ export default {
             this.updateCellForm.value = cell.value;
             this.updateCellForm.sub_position_row_id = cell.sub_position_row_id;
             this.updateCellForm.is_verified = mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED';
-            //
+
             this.updateCellForm.patch(route('project.budget.cell.update'), {
                 preserveState: true,
                 preserveScroll: true,
                 onFinish: onFinish
             });
+        },
+        storeFocus(cellId){
+            this.nextCellId = cellId;
+            localStorage.setItem('nextCellId', cellId);
         },
         openCellDetailModal(cell) {
             this.$emit('openCellDetailModal', cell)
@@ -695,7 +774,7 @@ export default {
 
                 if (cell.clicked) {
                     //this.alreadyCellClicked = true;
-                    //this.editedCellOriginalValue = cell.value;
+                    this.editedCellOriginalValue = cell.value;
 
                     await nextTick()
 

@@ -37,6 +37,7 @@ use Artwork\Modules\Budget\Services\SumCommentService;
 use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
+use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Category\Services\CategoryService;
@@ -75,6 +76,7 @@ use Artwork\Modules\MoneySourceReminder\Services\MoneySourceThresholdReminderSer
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\DTOs\ProjectSearchDTO;
 use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Exports\DetailedBudgetsByBudgetDeadlineExport;
@@ -223,16 +225,12 @@ class ProjectController extends Controller
                 'project_filters' => $projectFilters->toArray()
             ]
         );
-
-        //dd($request->all());
     }
-
 
     public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
     {
 
         $user = $this->userService->getAuthUser();
-        //$saveFilterAndSort = $request->boolean('saveFilterAndSort');
         $userProjectManagementSetting = $this->userProjectManagementSettingService
             ->getFromUser($user)
             ->getAttribute('settings');
@@ -240,8 +238,6 @@ class ProjectController extends Controller
         if($request->integer('entitiesPerPage') && $user->entities_per_page !== $request->integer('entitiesPerPage')) {
             $user->update(['entities_per_page' => $request->integer('entitiesPerPage')]);
         }
-
-        //dd($userProjectManagementSetting);
 
         $projects = $this->projectService->paginateProjects(
             $request->string('query'),
@@ -251,161 +247,19 @@ class ProjectController extends Controller
             Collection::make($userProjectManagementSetting['project_filters'])
         );
 
-        $components = $this->projectManagementBuilderService->getProjectManagementBuilder(['component']);
+        $components = $this->projectManagementBuilderService
+            ->getProjectManagementBuilder(['component']);
+        $componentData = Component::whereIn('id', $components->pluck('component_id'))->get()
+            ->keyBy('id');
+
         $pinnedProjects = $this->projectService->pinnedProjects($this->authManager->id());
 
-        $pinnedProjectsComponents = $pinnedProjects->map(function ($project) use ($components) {
-            /** @var Project $project */
-            $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
-            $projectData->id = $project->id;
-            $projectData->firstTabId = $this->projectTabService->getDefaultOrFirstProjectTabId();
-            $projectData->project_managers = $project->managerUsers;
-            $projectData->write_auth = $project->writeUsers;
-            $projectData->delete_permission_users = $project->delete_permission_users;
-
-            foreach ($components as $component) {
-                /** @var Component $componentFullData */
-                $componentFullData = Component::find($component->component_id);
-
-                switch ($component->type) {
-                    case ProjectTabComponentEnum::PROJECT_TITLE->value:
-                        $projectData->title = $project->name;
-                        $projectData->key_visual_path = $project->key_visual_path;
-                        $projectData->is_group = $project->is_group;
-                        break;
-                    case ProjectTabComponentEnum::PROJECT_STATUS->value:
-                        $projectData->state = ProjectState::find($project->state);
-                        break;
-                    case ProjectTabComponentEnum::PROJECT_GROUP->value:
-                        $projectData->group = $project->groups;
-                        $projectData->is_group = $project->is_group;
-                        break;
-                    case ProjectTabComponentEnum::PROJECT_TEAM->value:
-                        $projectData->team = $project->users;
-                        break;
-                    case ProjectTabComponentEnum::PROJECT_ATTRIBUTES->value:
-                        $categories = $project->categories;
-                        $genres = $project->genres;
-                        $sectors = $project->sectors;
-                        $projectData->attributes = [
-                            'Categories' => $categories,
-                            'Genres' => $genres,
-                            'Sectors' => $sectors
-                        ];
-                        break;
-                    case ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING->value:
-                        $projectData->shift_relevant_event_types = $project->shiftRelevantEventTypes;
-                        break;
-                    case ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value:
-                        $projectData->shift_contact = $project->shift_contact;
-                        break;
-                    case ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION->value:
-                        $projectData->shift_description = $project->shift_description;
-                        break;
-                    case ProjectTabComponentEnum::PROJECT_BUDGET_DEADLINE->value:
-                        $projectData->budget_deadline = $project->budget_deadline ?
-                            Carbon::parse($project->budget_deadline)->translatedFormat('D, d F Y') : null;
-                        break;
-                    case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
-                        $projectData->collecting_society = $project->collectingSociety;
-                        $projectData->cost_center = $project->costCenter;
-                        $projectData->own_copyright = $project->own_copyright;
-                        $projectData->cost_center_description = $project->cost_center_description;
-                        break;
-                }
-
-                if ($componentFullData) {
-                    if (!$componentFullData?->special) {
-                        $projectData->{$component->type}[$componentFullData->id] =
-                            $componentFullData->projectValue()
-                                ->where('project_id', $project->id)
-                                ->first();
-                    }
-                }
-            }
-
-            return $projectData;
-        });
-
-        $projectComponents = $projects->map(function ($project) use ($components) {
-            /** @var Project $project */
-            $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
-            $projectData->id = $project->id;
-            $projectData->firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
-            $projectData->project_managers = $project->managerUsers;
-            $projectData->write_auth = $project->writeUsers;
-            $projectData->delete_permission_users = $project->delete_permission_users;
-
-            foreach ($components as $component) {
-                /** @var Component $componentFullData */
-                $componentFullData = Component::find($component->component_id);
-
-                switch ($component->type) {
-                    case ProjectTabComponentEnum::PROJECT_TITLE->value:
-                        $projectData->title = $project->name;
-                        $projectData->key_visual_path = $project->key_visual_path;
-                        $projectData->is_group = $project->is_group;
-                        break;
-                    case ProjectTabComponentEnum::PROJECT_STATUS->value:
-                        $projectData->state = ProjectState::find($project->state);
-                        break;
-                    case ProjectTabComponentEnum::PROJECT_GROUP->value:
-                        $projectData->group = $project->groups;
-                        $projectData->is_group = $project->is_group;
-                        break;
-                    case ProjectTabComponentEnum::PROJECT_TEAM->value:
-                        $projectData->team = $project->users;
-                        break;
-                    case ProjectTabComponentEnum::PROJECT_ATTRIBUTES->value:
-                        $categories = $project->categories;
-                        $genres = $project->genres;
-                        $sectors = $project->sectors;
-                        $projectData->attributes = [
-                            'Categories' => $categories,
-                            'Genres' => $genres,
-                            'Sectors' => $sectors
-                        ];
-                        break;
-                    case ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING->value:
-                        $projectData->shift_relevant_event_types = $project->shiftRelevantEventTypes;
-                        break;
-                    case ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value:
-                        $projectData->shift_contact = $project->shift_contact;
-                        break;
-                    case ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION->value:
-                        $projectData->shift_description = $project->shift_description;
-                        break;
-                    case ProjectTabComponentEnum::PROJECT_BUDGET_DEADLINE->value:
-                        $projectData->budget_deadline = $project->budget_deadline ?
-                            Carbon::parse($project->budget_deadline)->translatedFormat('D, d F Y') : null;
-                        break;
-                    case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
-                        $projectData->collecting_society = $project->collectingSociety;
-                        $projectData->cost_center = $project->costCenter;
-                        $projectData->own_copyright = $project->own_copyright;
-                        $projectData->cost_center_description = $project->cost_center_description;
-                        break;
-                }
-
-                if ($componentFullData) {
-                    if (!$componentFullData?->special) {
-                        $projectData->{$component->type}[$componentFullData->id] =
-                            $componentFullData->projectValue()
-                                ->where('project_id', $project->id)
-                                ->first();
-                    }
-                }
-            }
-
-            return $projectData;
-        });
-
-
-        //dd($projectComponents);
+        $pinnedProjectsComponents = $this->mapProjectsToComponents($pinnedProjects, $components, $componentData);
+        $projectComponents = $this->mapProjectsToComponents($projects, $components, $componentData);
 
         return inertia('Projects/NewProjectManagement', [
-            'projects' => $projects, // enthält paginierte und sortierte Projekte
-            'projectComponents' => $projectComponents, // angereicherte Daten pro Projekt
+            'projects' => $projects,
+            'projectComponents' => $projectComponents,
             'components' => $components,
             'pinnedProjects' => $pinnedProjectsComponents,
             'pinnedProjectsAll' => $pinnedProjects,
@@ -419,77 +273,90 @@ class ProjectController extends Controller
             'myLastProject' => $this->projectService->getMyLastProject($this->authManager->id()),
             'eventTypes' => $this->eventTypeService->getAll(),
             'rooms' => $this->roomService->getAllWithoutTrashed(),
-            'projectSortEnumNames' => array_map(
-                function (ProjectSortEnum $enum): string {
-                    return $enum->name;
-                },
-                ProjectSortEnum::cases()
-            ),
+            'projectSortEnumNames' => array_column(ProjectSortEnum::cases(), 'name'),
             'userProjectManagementSetting' => $userProjectManagementSetting,
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'lastProject' => $this->userService->getAuthUser()->lastProject,
             'entitiesPerPage' => $user->entities_per_page
         ]);
-        /*$saveFilterAndSort = $request->boolean('saveFilterAndSort');
-        $userProjectManagementSetting = $this->userProjectManagementSettingService
-            ->getFromUser($this->userService->getAuthUser())
-            ->getAttribute('settings');
-
-        $projects = $this->projectService->paginateProjects(
-            $saveFilterAndSort,
-            $request->string('query'),
-            $request->integer('entitiesPerPage', 10),
-            $saveFilterAndSort ?
-                $request->enum('sort', ProjectSortEnum::class) :
-                (
-                $userProjectManagementSetting['sort_by'] ?
-                    ProjectSortEnum::from($userProjectManagementSetting['sort_by']) :
-                    null
-                ),
-            $saveFilterAndSort ?
-                $request->collect('project_state_ids')->map(fn(string $id) => (int)$id) :
-                Collection::make($userProjectManagementSetting['project_state_ids']),
-            $saveFilterAndSort ? $request
-                ->collect('project_filters')
-                ->mapWithKeys(
-                    function (string $filter, string $key): array {
-                        return [
-                            $key => (bool)$filter,
-                        ];
-                    }
-                ) :
-                Collection::make($userProjectManagementSetting['project_filters'])
-        );
-
-        $components = $this->projectManagementBuilderService->getProjectManagementBuilder();
-
-        return inertia('Projects/NewProjectManagement', [
-
-            'components' => $this->projectManagementBuilderService->getProjectManagementBuilder(),
-            'projects' => $projects
-            'pinnedProjects' => $this->projectService->pinnedProjects($this->authManager->id()),
-            'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
-            'states' => $this->projectStateService->getAll(),
-            'projectGroups' => $this->projectService->getProjectGroups(),
-            'categories' => $this->categoryService->getAll(),
-            'genres' => $this->genreService->getAll(),
-            'sectors' => $this->sectorService->getAll(),
-            'createSettings' => app(ProjectCreateSettings::class),
-            'myLastProject' => $this->projectService->getMyLastProject($this->authManager->id()),
-            'eventTypes' => $this->eventTypeService->getAll(),
-            'rooms' => $this->roomService->getAllWithoutTrashed(),
-            'projectSortEnumNames' => array_map(
-                function (ProjectSortEnum $enum): string {
-                    return $enum->name;
-                },
-                ProjectSortEnum::cases()
-            ),
-            'userProjectManagementSetting' => $this->userProjectManagementSettingService
-                ->getFromUser($this->userService->getAuthUser())
-                ->getAttribute('settings'),
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
-        ]); */
     }
+
+    /**
+     * Hilfsfunktion zur Vermeidung von Code-Duplikation
+     */
+    private function mapProjectsToComponents($projects, $components, $componentData)
+    {
+        return $projects->map(function ($project) use ($components, $componentData) {
+            /** @var Project $project */
+            $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
+            $projectData->id = $project->id;
+            $projectData->firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
+            $projectData->project_managers = $project->managerUsers;
+            $projectData->write_auth = $project->writeUsers;
+            $projectData->delete_permission_users = $project->delete_permission_users;
+
+            foreach ($components as $component) {
+                $componentFullData = $componentData[$component->component_id] ?? null;
+
+                switch ($component->type) {
+                    case ProjectTabComponentEnum::PROJECT_TITLE->value:
+                        $projectData->title = $project->name;
+                        $projectData->key_visual_path = $project->key_visual_path;
+                        $projectData->is_group = $project->is_group;
+                        $projectData->color = $project->color;
+                        $projectData->icon = $project->icon;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_STATUS->value:
+                        $projectData->state = ProjectState::find($project->state);
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_GROUP->value:
+                        $projectData->group = $project->groups;
+                        $projectData->is_group = $project->is_group;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_TEAM->value:
+                        $projectData->team = $project->users;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_ATTRIBUTES->value:
+                        $projectData->attributes = [
+                            'Categories' => $project->categories,
+                            'Genres' => $project->genres,
+                            'Sectors' => $project->sectors
+                        ];
+                        break;
+                    case ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING->value:
+                        $projectData->shift_relevant_event_types = $project->shiftRelevantEventTypes;
+                        break;
+                    case ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value:
+                        $projectData->shift_contact = $project->shift_contact;
+                        break;
+                    case ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION->value:
+                        $projectData->shift_description = $project->shift_description;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_BUDGET_DEADLINE->value:
+                        $projectData->budget_deadline = $project->budget_deadline
+                            ? Carbon::parse($project->budget_deadline)->translatedFormat('D, d F Y')
+                            : null;
+                        break;
+                    case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
+                        $projectData->collecting_society = $project->collectingSociety;
+                        $projectData->cost_center = $project->costCenter;
+                        $projectData->own_copyright = $project->own_copyright;
+                        $projectData->cost_center_description = $project->cost_center_description;
+                        break;
+                }
+
+                if ($componentFullData && !$componentFullData->special) {
+                    $projectData->{$component->type}[$componentFullData->id] =
+                        $componentFullData->projectValue()
+                            ->where('project_id', $project->id)
+                            ->first();
+                }
+            }
+
+            return $projectData;
+        });
+    }
+
 
     public function updateSettings(
         ProjectCreateSettingsUpdateRequest $request,
@@ -520,12 +387,14 @@ class ProjectController extends Controller
      * @return array<string, mixed>
      * @throws AuthorizationException
      */
-    public function search(SearchRequest $request, ProjectService $projectService): array
+    public function search(SearchRequest $request, ProjectService $projectService): Collection
     {
         $this->authorize('viewAny', Project::class);
 
         $projects = $projectService->scoutSearch($request->get('query'))->get();
-        return ProjectIndexResource::collection($projects)->resolve();
+
+        return $projects->map(fn(Project $project) => ProjectSearchDTO::fromModel($project));
+        //return ProjectIndexResource::collection($projects)->resolve();
     }
 
     /**
@@ -573,6 +442,8 @@ class ProjectController extends Controller
             'name' => $request->name,
             'user_id' => $this->authManager->id(),
             'number_of_participants' => $request->number_of_participants,
+            'color' => $request->get('color'),
+            'icon' => $request->get('icon'),
         ]);
 
         $is_manager = in_array(Auth::id(), $request->get('assignedUsers'), true);
@@ -1687,33 +1558,41 @@ class ProjectController extends Controller
     private function setColumnSubName(int $table_id): void
     {
         $table = Table::find($table_id);
-        $columns = $table->columns()->get();
 
+        // Spalten abrufen und nach Position sortieren
+        $columns = $table->columns()->orderBy('position')->get();
+
+        // Nur Spalten, die einen subName bekommen sollen (nach den ersten 3)
+        $filteredColumns = $columns->skip(3)->values();
+
+        $totalColumns = $filteredColumns->count(); // Anzahl der betroffenen Spalten
         $count = 1;
 
-        foreach ($columns as $column) {
-            // Skip columns without subname
-            if ($column->subName === null || empty($column->subName)) {
-                continue;
-            }
-            $column->update([
-                'subName' => $this->getNameFromNumber($count)
-            ]);
+        foreach ($filteredColumns as $column) {
+            // Wenn es die Spalte mit Position 100 ist, bekommt sie den letzten Buchstaben
+            $subName = ($column->position == 100) ? $this->getNameFromNumber($totalColumns) : $this->getNameFromNumber($count);
+
+            $column->update(['subName' => $subName]);
+
             $count++;
         }
     }
 
     public function getNameFromNumber(int $num): string
     {
-        $numeric = ($num - 1) % 26;
-        $letter = chr(65 + $numeric);
-        $num2 = intval(($num - 1) / 26);
-        if ($num2 > 0) {
-            return $this->getNameFromNumber($num2) . $letter;
-        } else {
-            return $letter;
+        $num--; // Da A = 0 ist
+        $letters = '';
+
+        while ($num >= 0) {
+            $letters = chr(65 + ($num % 26)) . $letters;
+            $num = intdiv($num, 26) - 1;
         }
+
+        return $letters;
     }
+
+
+
 
     public function addColumn(Request $request): void
     {
@@ -1726,7 +1605,7 @@ class ProjectController extends Controller
                 'type' => 'empty',
                 'linked_first_column' => null,
                 'linked_second_column' => null,
-                'position' => $table->columns()->max('position') + 1
+                'position' => $table->columns()->whereNot('position', 100)->max('position') + 1
             ]);
             $this->setColumnSubName($request->table_id);
 
@@ -1785,7 +1664,7 @@ class ProjectController extends Controller
                 'type' => 'sum',
                 'linked_first_column' => $request->first_column_id,
                 'linked_second_column' => $request->second_column_id,
-                'position' => $table->columns()->max('position') + 1
+                'position' => $table->columns()->whereNot('position', 100)->max('position') + 1
             ]);
             $this->setColumnSubName($request->table_id);
             foreach ($firstColumns as $firstColumn) {
@@ -1812,7 +1691,7 @@ class ProjectController extends Controller
                 'type' => 'difference',
                 'linked_first_column' => $request->first_column_id,
                 'linked_second_column' => $request->second_column_id,
-                'position' => $table->columns()->max('position') + 1
+                'position' => $table->columns()->whereNot('position', 100)->max('position') + 1
             ]);
             $this->setColumnSubName($request->table_id);
             foreach ($firstColumns as $firstColumn) {
@@ -2071,11 +1950,11 @@ class ProjectController extends Controller
             $firstRowValue = ColumnCell::where('column_id', $column->linked_first_column)
                 ->where('sub_position_row_id', $subPositionRowId)
                 ->first()
-                ->value;
+                ?->value;
             $secondRowValue = ColumnCell::where('column_id', $column->linked_second_column)
                 ->where('sub_position_row_id', $subPositionRowId)
                 ->first()
-                ->value;
+                ?->value;
             $updateColumn = ColumnCell::where('sub_position_row_id', $subPositionRowId)
                 ->where('column_id', $column->id)
                 ->first();
@@ -2171,8 +2050,8 @@ class ProjectController extends Controller
 
         $user = $userService->getAuthUser();
         /** @var User $user */
-        if ($user->last_project_id !== $project->id) {
-            $user->update(['last_project_id' => $project->id]);
+        if ($user?->last_project_id !== $project->id) {
+            $user?->update(['last_project_id' => $project->id]);
         }
 
 
@@ -2181,6 +2060,9 @@ class ProjectController extends Controller
         }, 'components' => function ($query): void {
             $query->orderBy('order');
         }, 'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {
+            $query->where('project_id', $project->id);
+        },
+            'components.disclosureComponents.component.projectValue' => function ($query) use ($project): void {
             $query->where('project_id', $project->id);
         }]);
 
@@ -2559,7 +2441,9 @@ class ProjectController extends Controller
             'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
             'cost_center_id' => $request->string('cost_center') !== null ?
-                $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null
+                $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null,
+            'icon' => $request->get('icon'),
+            'color' => $request->get('color'),
         ]);
 
         $this->projectService->detachManagementUsers($project, true);
@@ -2708,7 +2592,6 @@ class ProjectController extends Controller
 
     public function deleteProjectFromGroup(Project $project, Project $projectGroup): void
     {
-        //dd($project, $projectGroup);
         $project->projectsOfGroup()->detach($projectGroup->id);
     }
 

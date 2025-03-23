@@ -259,15 +259,12 @@ class ProjectPrintLayoutController extends Controller
                             $componentFullData->projectValue()
                                 ->where('project_id', $project->id)
                                 ->first() ?? $componentFullData->data;
-                        //dd($projectData);
                     }
                 }
             }
 
             return $projectData;
         });
-
-        //dd($loadedProjectInformation);
 
         return Inertia::render('Projects/ProjectPrintLayoutWindow', [
             'project' => $projectComponents[0],

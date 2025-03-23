@@ -70,6 +70,7 @@ use Laravel\Scout\Searchable;
  * @property Collection<Project> $projectsOfGroup
  * @property Collection<Comment> $comments
  * @property Collection<ArtistResidency> $artistResidencies
+ * @property Collection<ProjectState> $status
  */
 class Project extends Model
 {
@@ -95,7 +96,9 @@ class Project extends Model
         'law_size',
         'cost_center_description',
         'is_group',
-        'user_id'
+        'user_id',
+        'color',
+        'icon',
     ];
 
     protected $casts = [
@@ -106,8 +109,8 @@ class Project extends Model
     ];
 
     protected $with = [
-        'shiftRelevantEventTypes',
-        'state'
+        //'shiftRelevantEventTypes',
+        //'status'
     ];
 
     public static function booting(): void
@@ -246,12 +249,12 @@ class Project extends Model
 
     public function groups(): BelongsToMany
     {
-        return $this->belongsToMany(__CLASS__, 'project_groups', 'project_id', 'group_id', 'id');
+        return $this->belongsToMany(__CLASS__, 'project_groups', 'project_id', 'group_id', 'id')->with(['users']);
     }
 
     public function projectsOfGroup(): BelongsToMany
     {
-        return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id', 'project_id', 'id');
+        return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id', 'project_id', 'id')->with(['users']);
     }
 
     public function table(): HasOne
@@ -264,7 +267,7 @@ class Project extends Model
         return $this->belongsToMany(MoneySource::class, 'money_source_project');
     }
 
-    public function state(): HasOne
+    public function status(): HasOne
     {
         return $this->hasOne(
             ProjectState::class,

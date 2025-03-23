@@ -69,7 +69,17 @@ class ProjectRepository extends BaseRepository
         }
 
         /** @var Event|null $firstEvent */
-        $firstEvent = $project->events()->orderByStartTime()->limit(1)->first();
+        $firstEvent = $project->events()
+            ->select('events.*')
+            ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+            ->where('event_types.relevant_for_project_period', true)
+            ->orderBy('start_time', 'asc')
+            ->first();
+        //$firstEvent = $project->events()
+        //->orderByStartTime()
+        //->where('event_type.relevant_for_project_period', true)
+        //->limit(1)
+        //->first();
 
         return $firstEvent;
     }
@@ -84,7 +94,14 @@ class ProjectRepository extends BaseRepository
         }
 
         /** @var Event|null $lastEvent */
-        $lastEvent = $project->events()->orderByStartTime('DESC')->limit(1)->first();
+        $lastEvent = $project->events()
+            ->select('events.*')
+            ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+            ->where('event_types.relevant_for_project_period', true)
+            ->orderByStartTime('DESC')
+            ->limit(1)
+            ->first();
+        //$lastEvent = $project->events()->orderByStartTime('DESC')->limit(1)->first();
 
         return $lastEvent;
     }
@@ -154,7 +171,7 @@ class ProjectRepository extends BaseRepository
                 'writeUsers' => function ($query): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
                 },
-                'state',
+                'status',
                 'delete_permission_users' => function ($query): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
                 }

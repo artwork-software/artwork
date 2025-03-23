@@ -223,10 +223,10 @@
                     </div>
                 </div>
             </div>
-            <div class="flex w-full items-center px-6" :class="!shift?.room_id ? 'justify-center' : 'justify-between'">
+            <div class="flex w-full items-center px-6" :class="!shift?.roomId ? 'justify-center' : 'justify-between'">
                 <FormButton :text="$t('Save')" type="submit" :disabled="shiftForm.processing"/>
 
-                <div @click="showComfirmDeleteModal = true" class="text-sm underline cursor-pointer hover:text-red-600 ease-in-out duration-300 transition-colors" v-if="shift?.room_id">
+                <div @click="showComfirmDeleteModal = true" class="text-sm underline cursor-pointer hover:text-red-600 ease-in-out duration-300 transition-colors" v-if="shift?.roomId">
                     {{ $t('Delete shift without Event') }}
                 </div>
             </div>
@@ -453,9 +453,9 @@ export default defineComponent({
             if (((shiftEndDateTime - shiftStartDateTime) / 60000) > 600) {
                 this.validationMessages.warnings.shift_start.push(this.$t('The shift is over 10 hours long!'));
             }
-            if (shiftStartDateTime > shiftEndDateTime) {
+            /*if (shiftStartDateTime > shiftEndDateTime) {
                 this.validationMessages.warnings.shift_end.push(this.$t('The shift ends before it starts!'));
-            }
+            }*/
 
             if(!this.shiftPlanModal){
                 // check warnings
@@ -473,15 +473,15 @@ export default defineComponent({
                     );
                 }
 
-                if (shiftEndDateTime < eventStartDateTime) {
+                /*if (shiftEndDateTime < eventStartDateTime) {
                     this.validationMessages.warnings.shift_end.push(this.$t('The shift ends before the event starts!'));
-                }
+                }*/
             }
-            if (shiftStartDateTime > shiftEndDateTime) {
+            /*if (shiftStartDateTime > shiftEndDateTime) {
                 this.validationMessages.warnings.shift_end.push(
                     this.$t('The end time must be after the start time.')
                 );
-            }
+            }*/
 
             //check errors
             if (!this.shiftForm.automaticMode) {
@@ -489,12 +489,12 @@ export default defineComponent({
                     this.validationMessages.errors.shift_start.push(this.$t('Please enter a start time and date.'));
                     hasErrors = true;
                 }
-                if (shiftStartDateTime >= shiftEndDateTime) {
+                /*if (shiftStartDateTime >= shiftEndDateTime) {
                     this.validationMessages.errors.shift_end.push(
                         this.$t('The shift end time cannot be before the shift start time.')
                     );
                     hasErrors = true;
-                }
+                }*/
                 if ((this.shiftForm.end === null || this.shiftForm.end === '') || this.shiftForm.end_date === null) {
                     this.validationMessages.errors.shift_end.push(this.$t('Please enter an end time and date.'));
                     hasErrors = true;

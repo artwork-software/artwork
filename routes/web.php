@@ -507,8 +507,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Filters
     Route::get('/filters', [FilterController::class, 'index']);
-    Route::post('/filters', [FilterController::class, 'store']);
+    Route::post('/filters', [FilterController::class, 'store'])->name('filter.store');
     Route::delete('/filters/{filter}', [FilterController::class, 'destroy'])->name('filter.destroy');
+    Route::post('/filters/{filter}/{user}', [FilterController::class, 'activate'])->name('filter.activate');
 
     //Shift Filters
     Route::get('/shifts/filters', [ShiftFilterController::class, 'index']);
@@ -531,6 +532,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('event.update.single.bulk');
     Route::post('/events/{project}/single/bulk/create', [EventController::class, 'createSingleBulkEvent'])
         ->name('event.store.bulk.single');
+
+    // events.bulk-multi-edit
+    Route::post('/events/bulk/multi/edit', [EventController::class, 'bulkMultiEditEvent'])
+        ->name('events.bulk-multi-edit');
+
+    // event.bulk.delete
+    Route::delete('/events/bulk/delete', [EventController::class, 'bulkDeleteEvent'])
+        ->name('event.bulk.multi-edit.delete');
+
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
     Route::delete('/events/{event}/bulk', [EventController::class, 'destroyWithoutReturn'])->name('event.bulk.delete');
     Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])
@@ -585,6 +595,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // event.shift.store.multi.add
     Route::post('/event/shift/store/multi/add', [ShiftController::class, 'storeShiftMultiAdd'])
         ->name('event.shift.store.multi.add');
+
 
 
     Route::group(['prefix' => 'settings'], function (): void {
@@ -761,6 +772,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/user/{user}/update/daily_view', [UserController::class, 'updateDailyView'])
         ->name('user.update.daily_view');
 
+    Route::patch('/user/{user}/update/bulk-column-size', [UserController::class, 'updateBulkColumnSize'])
+        ->name('user.bulk-column-size.update');
+
     Route::resource(
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class
@@ -886,6 +900,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             // GET
             Route::get('/cell/comments', [CellCommentsController::class, 'get'])
                 ->name('project.budget.cell.comment.get');
+
+            // patch project.budget.column.update.relevant
+            Route::patch('/column/{column}/update/relevant', [BudgetGeneralController::class, 'updateColumnRelevant'])
+                ->name('project.budget.column.update.relevant');
 
             // POST
             Route::post('/column/add', [ProjectController::class, 'addColumn'])->name('project.budget.column.add');
@@ -1479,12 +1497,26 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ProjectTabController::class,
                 'removeComponent'
             ])->name('tab.remove.component');
+
+            // post tab.update.component.note
+            Route::patch('/{componentInTab}/update/component/note', [ProjectTabController::class, 'updateComponentNote'])
+                ->name('tab.update.component.note');
+
+            // post project-management-builder.add.disclosure.component
+            Route::post('/add/disclosure/component', [ProjectTabController::class, 'addDisclosureComponent'])
+                ->name('project-management-builder.add.disclosure.component');
+
             // tab.destroy
             Route::delete('/{projectTab}/destroy', [ProjectTabController::class, 'destroy'])
                 ->name('tab.destroy');
             // tab.update
             Route::patch('/{projectTab}/update', [ProjectTabController::class, 'update'])
                 ->name('tab.update');
+
+            //delete tab.remove.component.in.disclosure
+            Route::delete('/remove/component/disclosure', [ProjectTabController::class, 'removeComponentFormDisclosure'])
+                ->name('tab.remove.component.in.disclosure');
+
             // tab.store
             Route::post('/store', [ProjectTabController::class, 'store'])->name('tab.store');
             //tab.reorder

@@ -29,23 +29,24 @@ use Illuminate\Support\Facades\Log;
 
 class BudgetService
 {
+    public function __construct(
+        private readonly ColumnService $columnService,
+        private readonly MainPositionService $mainPositionService,
+        private readonly BudgetColumnSettingService $columnSettingService,
+        private readonly TableService $tableService,
+        private readonly SageAssignedDataCommentService $sageAssignedDataCommentService,
+        private readonly SageApiSettingsService $sageApiSettingsService
+    )
+    {
+    }
+
     public function generateBasicBudgetValues(
         Project $project,
-        TableService $tableService,
-        ColumnService $columnService,
-        MainPositionService $mainPositionService,
-        BudgetColumnSettingService $columnSettingService,
-        SageApiSettingsService $sageApiSettingsService
     ): void {
         DB::transaction(function () use (
             $project,
-            $tableService,
-            $columnService,
-            $mainPositionService,
-            $columnSettingService,
-            $sageApiSettingsService
         ): void {
-            $table = $tableService->createTableInProject(
+            $table = $this->tableService->createTableInProject(
                 $project,
                 $project->name . ' Budgettabelle',
                 false
@@ -53,31 +54,31 @@ class BudgetService
 
             $columns = new Collection();
 
-            $columns[] = $columnService->createColumnInTable(
+            $columns[] = $this->columnService->createColumnInTable(
                 table: $table,
-                name: $columnSettingService->getColumnNameByColumnPosition(0),
+                name: $this->columnSettingService->getColumnNameByColumnPosition(0),
                 subName: '',
                 type: 'empty',
                 position: 0
             );
 
-            $columns[] = $columnService->createColumnInTable(
+            $columns[] = $this->columnService->createColumnInTable(
                 table: $table,
-                name: $columnSettingService->getColumnNameByColumnPosition(1),
+                name: $this->columnSettingService->getColumnNameByColumnPosition(1),
                 subName: '',
                 type: 'empty',
                 position: 1
             );
 
-            $columns[] = $columnService->createColumnInTable(
+            $columns[] = $this->columnService->createColumnInTable(
                 table: $table,
-                name: $columnSettingService->getColumnNameByColumnPosition(2),
+                name: $this->columnSettingService->getColumnNameByColumnPosition(2),
                 subName: '',
                 type: 'empty',
                 position: 2
             );
 
-            $columns[] = $columnService->createColumnInTable(
+            $columns[] = $this->columnService->createColumnInTable(
                 table: $table,
                 name: date('Y') . ' €',
                 subName: 'A',
@@ -96,7 +97,7 @@ class BudgetService
                 );
             }
 
-            $costMainPosition = $mainPositionService->createMainPosition(
+            $costMainPosition = $this->mainPositionService->createMainPosition(
                 table: $table,
                 budgetTypesEnum: BudgetTypeEnum::BUDGET_TYPE_COST,
                 name: 'Hauptpostion',
@@ -105,7 +106,7 @@ class BudgetService
                     ->max('position') + 1
             );
 
-            $earningMainPosition = $mainPositionService->createMainPosition(
+            $earningMainPosition = $this->mainPositionService->createMainPosition(
                 table: $table,
                 budgetTypesEnum: BudgetTypeEnum::BUDGET_TYPE_EARNING,
                 name: 'Hauptpostion',
@@ -205,8 +206,6 @@ class BudgetService
     public function getBudgetForProjectTab(
         Project $project,
         array $loadedProjectInformation,
-        SageAssignedDataCommentService $sageAssignedDataCommentService,
-        SageApiSettingsService $sageApiSettingsService
     ): array {
         $columns = $project->table()->first()->columns()->get();
 
@@ -269,7 +268,7 @@ class BudgetService
         $projectsGroup = collect();
         $globalGroup = collect();
 
-        if ($sageApiSettingsService->getFirst()?->enabled) {
+        if ($this->sageApiSettingsService->getFirst()?->enabled) {
             $sageNotAssigned = SageNotAssignedData::query()
                 ->where('project_id', $project->id)
                 ->orWhere('project_id', null)
@@ -442,9 +441,7 @@ class BudgetService
                 'projectsGroup' => $projectsGroup,
                 'globalGroup' => $globalGroup
             ],
-            'recentlyCreatedSageAssignedDataComment' => $this->determineRecentlyCreatedSageAssignedDataComment(
-                $sageAssignedDataCommentService
-            ),
+            'recentlyCreatedSageAssignedDataComment' => $this->determineRecentlyCreatedSageAssignedDataComment(),
             'projectGroupRelevantBudgetData' => $groupedProjectData
         ];
 
@@ -453,14 +450,13 @@ class BudgetService
 
 
     private function determineRecentlyCreatedSageAssignedDataComment(
-        SageAssignedDataCommentService $sageAssignedDataCommentService
     ): SageAssignedDataComment|null {
         //if there's a recently created comment for any SageAssignedData-Models retrieve corresponding model by id
         //to display it right after the request finished without reopening the SageAssignedDataModal
         $recentlyCreatedSageAssignedDataComment = null;
 
         if ($recentlyCreatedSageAssignedDataCommentId = session('recentlyCreatedSageAssignedDataCommentId')) {
-            $recentlyCreatedSageAssignedDataComment = $sageAssignedDataCommentService->getById(
+            $recentlyCreatedSageAssignedDataComment = $this->sageAssignedDataCommentService->getById(
                 $recentlyCreatedSageAssignedDataCommentId
             );
         }

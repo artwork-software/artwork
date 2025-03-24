@@ -33,4 +33,12 @@ class SageNotAssignedDataRepository extends BaseRepository
     {
         return SageNotAssignedData::where('sage_id', $sageId)->first();
     }
+
+    public function findBySageIdKtoSollAndKtoHaben(int $sageId, string $ktoSoll, string $ktoHaben): SageNotAssignedData|null
+    {
+        return SageNotAssignedData::where('sage_id', $sageId)
+            ->where('kto_soll', $ktoSoll)
+            ->where('kto_haben', $ktoHaben)
+            ->first();
+    }
 }

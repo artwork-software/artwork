@@ -80,6 +80,11 @@ readonly class SageNotAssignedDataService
         return $this->sageNotAssignedDataRepository->findBySageId($sageId);
     }
 
+    public function findBySageIdKtoSollAndKtoHaben(int $sageId, string $ktoSoll, string $ktoHaben): SageNotAssignedData|null
+    {
+        return $this->sageNotAssignedDataRepository->findBySageIdKtoSollAndKtoHaben($sageId, $ktoSoll, $ktoHaben);
+    }
+
     public function delete(SageNotAssignedData $sageNotAssignedData): void
     {
         $this->sageNotAssignedDataRepository->delete($sageNotAssignedData);

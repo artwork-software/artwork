@@ -1359,8 +1359,6 @@ class ProjectController extends Controller
         CellCalculationService $cellCalculationService,
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService,
-        BudgetColumnSettingService $columnSettingService,
-        SageApiSettingsService $sageApiSettingsService
     ): RedirectResponse {
         $budgetTemplateController = new BudgetTemplateController($tableService);
         $budgetTemplateController->deleteOldTable(
@@ -1385,11 +1383,6 @@ class ProjectController extends Controller
         );
         $this->budgetService->generateBasicBudgetValues(
             $project,
-            $tableService,
-            $columnService,
-            $mainPositionService,
-            $columnSettingService,
-            $sageApiSettingsService
         );
 
         return Redirect::back();
@@ -2189,8 +2182,6 @@ class ProjectController extends Controller
                         ->getBudgetForProjectTab(
                             $project,
                             $loadedProjectInformation,
-                            $sageAssignedDataCommentService,
-                            $sageApiSettingsService
                         );
                     $headerObject->project->users = $this->mapProjectUsers($project);
                     break;

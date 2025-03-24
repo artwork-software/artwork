@@ -18,6 +18,8 @@ use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Sage100\Clients\Sage100Client;
+use Artwork\Modules\Sage100\Clients\SageClient;
+use Artwork\Modules\Sage100\Clients\SageClientFactory;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -30,8 +32,10 @@ class Sage100Service
 {
     private const FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
 
+    private SageClient $sage100Client;
+
     public function __construct(
-        private readonly Sage100Client $sage100Client,
+        private readonly SageClientFactory $sage100ClientFactory,
         private readonly DatabaseService $databaseService,
         private readonly ColumnService $columnService,
         private readonly SageAssignedDataCommentService $sageAssignedDataCommentService,
@@ -40,6 +44,7 @@ class Sage100Service
         private readonly SageApiSettingsService $sageApiSettingsService,
         private readonly ProjectService $projectService
     ) {
+        $this->sage100Client = $this->sage100ClientFactory->createClient();
     }
 
     public function importDataToBudget(
@@ -528,7 +533,11 @@ class Sage100Service
     private function updateExistingSageNotAssignedDataIfExists(
         array $item,
     ): SageNotAssignedData|null {
-        $sageNotAssignedData = $this->sageNotAssignedDataService->findBySageId($item['ID']);
+        $sageNotAssignedData = $this->sageNotAssignedDataService->findBySageIdKtoSollAndKtoHaben(
+            $item['ID'],
+            $item['KtoSoll'],
+            $item['KtoHaben'],
+        );
 
         if ($sageNotAssignedData instanceof SageNotAssignedData) {
             $this->sageNotAssignedDataService->update(
@@ -548,16 +557,18 @@ class Sage100Service
         array $item,
         ?int $projectId = null,
     ): void {
-        SageNotAssignedData::query()
-            ->where('sage_id', $item['ID'])
-            ->existsOr(
-                function () use ($item, $projectId): void {
-                    $this->sageNotAssignedDataService->createFromSageApiData(
-                        $item,
-                        $projectId
-                    );
-                }
+        $sageData = $this->sageNotAssignedDataService->findBySageIdKtoSollAndKtoHaben(
+            $item['ID'],
+            $item['KtoSoll'],
+            $item['KtoHaben'],
+        );
+
+        if (!$sageData) {
+            $this->sageNotAssignedDataService->createFromSageApiData(
+                $item,
+                $projectId
             );
+        }
     }
 
     private function updateSageApiSettingsBookingDateFromData(

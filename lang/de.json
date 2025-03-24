@@ -2458,5 +2458,9 @@
     "Single inventory capable": "Einzelbestandsfähig",
     "Add individual properties": "Individuelle Eigenschaften hinzufügen",
     "If activated, each individual piece of this article can be provided with its own properties": "Wenn aktiviert, kann jedes einzelne Stück dieses Artikels mit eigenen Eigenschaften versehen werden",
-    "Main Image": "Hauptbild"
+    "Main Image": "Hauptbild",
+    "Add new detailed article": "Neuen detaillierten Artikel hinzufügen",
+    "Detailed Article without name. Please add a name": "Detaillierter Artikel ohne Namen. Bitte füge einen Namen hinzu",
+    "Detailed article properties": "Detaillierte Artikel-Eigenschaften",
+    "New detailed article": "Neuer detaillierter Artikel"
 }

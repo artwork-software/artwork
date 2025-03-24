@@ -1,13 +1,14 @@
 <template>
     <BaseModal @closed="$emit('close')" modal-size="max-w-4xl" full-modal>
-        <div class="px-6 py-4">
+        <div class="px-6 pt-4">
             <ModalHeader
                 :title="article ? $t('Edit article') : $t('Add Article')"
+                :description="article ? $t('Edit the article details') : $t('Add a new article')"
             />
         </div>
 
         <form @submit.prevent="submit">
-            <div class="px-6 pb-4">
+            <div class="px-6 pb-4" v-if="currentTabId !== 2 || showArticleHeader">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="col-span-full">
                         <TextInputComponent
@@ -39,7 +40,7 @@
 
             </div>
 
-            <div class="px-6 bg-gray-50 py-6">
+            <div class="px-6 bg-gray-50 py-6" v-if="currentTabId !== 2 || showArticleHeader">
                 <div class="flex gap-3">
                     <div class="flex h-6 shrink-0 items-center">
                         <div class="group grid size-4 grid-cols-1">
@@ -62,6 +63,7 @@
                 <ArticleModalTabs :is-detailed-quantity="articleForm.is_detailed_quantity" @update:current-tab="updateTabId"/>
             </div>
 
+            <!-- Images -->
             <div class="px-6 py-6 mb-5" v-if="currentTabId === 0">
                 <div @click="addImage"  class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
                     <component is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true" />
@@ -92,6 +94,7 @@
                 </ul>
             </div>
 
+            <!-- Category selector -->
             <div class="bg-gray-50 px-6 py-6 mb-5" v-if="currentTabId === 1">
                 <div class="mb-5">
                     <Listbox as="div" v-model="selectedCategory">
@@ -250,6 +253,150 @@
             </div>
 
 
+            <!-- Detailed quantity -->
+            <div class="px-6 divide-y-2 divide-dashed" v-if="currentTabId === 2">
+
+                <div class="flow-root py-4" v-for="(detailedArticle, index) in articleForm.detailed_article_quantities">
+                    <div class="flex items-center justify-center xsLight">
+                        {{ $t('New detailed article') }}
+                    </div>
+                    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead>
+                                <tr class="divide-x divide-gray-200">
+                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Description') }}</th>
+                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Quantity') }}</th>
+                                </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 bg-white">
+                                    <tr class="divide-x divide-gray-200">
+                                        <td class="w-[25%] py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                            <input type="text" v-model="detailedArticle.name"
+                                                   required
+                                                   class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                                   placeholder="Name"
+                                            />
+                                        </td>
+                                        <td class="w-[60%] p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
+                                            <input type="text" v-model="detailedArticle.description"
+                                                   class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                                   :placeholder="$t('Description')"
+                                            />
+                                        </td>
+                                        <td class="w-[15%] text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                            <input type="text" v-model="detailedArticle.quantity"
+                                                   required
+                                                   class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                                   :placeholder="$t('Quantity')"
+                                            />
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+
+                            <div class="my-3 xsDark">
+                                {{ $t('Detailed article properties') }}
+                            </div>
+
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead>
+                                    <tr class="divide-x divide-gray-200">
+                                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Type') }}</th>
+                                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Value') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 bg-white">
+                                    <tr class="divide-x divide-gray-200" v-for="(property, index) in detailedArticle.properties" :key="property?.id">
+                                        <td class="w-[25%] py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                            <div class="flex items-center justify-between">
+                                                {{ property?.name }}
+                                                <div class="flex items-center gap-x-2">
+                                                    <ToolTipComponent
+                                                        v-if="property?.tooltip_text"
+                                                        :tooltip-text="property?.tooltip_text"
+                                                        icon="IconInfoCircle"
+                                                        icon-size="size-4"
+                                                        direction="top"
+                                                        tooltip-width="break-all !text-xs"
+                                                    />
+                                                    <component
+                                                        is="IconTrash" class="h-5 w-5 text-red-600 cursor-pointer"
+                                                        @click="detailedArticle.properties = detailedArticle.properties.filter(prop => prop.id !== property.id)"
+
+                                                    />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="w-[60%] p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
+                                            {{ $t(capitalizeFirstLetter(property?.type)) }}
+                                        </td>
+                                        <td class="w-[15%] text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                            <input v-if="property.type !== 'file'"
+                                                   :type="property.type" v-model="property.value"
+                                                   :required="property.is_required"
+                                                   class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                                   :placeholder="property.is_required ? $t('Value*') : $t('Value')"
+                                            />
+                                        </td>
+                                    </tr>
+                                    <tr class="divide-x divide-gray-200">
+                                        <td colspan="3" class="py-2 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                            <PropertiesMenu white-menu-background has-no-offset>
+                                                <template v-slot:button>
+                                                    <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
+                                                        <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
+                                                        <span>
+                                                            {{ $t('Add property') }}
+                                                        </span>
+                                                    </div>
+                                                </template>
+                                                <template v-slot:menu>
+                                                    <div v-if="showOnlyPropertiesWhereAreNotInDetailedArticle(detailedArticle.properties).length > 0">
+                                                        <div v-for="property in showOnlyPropertiesWhereAreNotInDetailedArticle(detailedArticle.properties)">
+                                                            <div @click="addPropertyToDetailedArticleIndex(property, index)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
+                                                                <div class="xsDark">
+                                                                    {{ property.name }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div v-else class="p-2">
+                                                        <div class="rounded-md bg-red-50 p-4">
+                                                            <div class="flex">
+                                                                <div class="shrink-0">
+                                                                    <component is="IconInfoSquareRoundedFilled" class="size-5 text-red-400" aria-hidden="true" />
+                                                                </div>
+                                                                <div class="ml-3">
+                                                                    <p class="text-sm font-medium text-red-800">
+                                                                        {{ $t('All properties are already added') }}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </PropertiesMenu>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="border-t pt-5">
+                    <div @click="addNewDetailedArticle" class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
+                        <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
+                        <span>
+                            {{ $t('Add new detailed article') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex items-center justify-center my-10">
                 <FormButton type="submit" :text="article ? $t('Update') : $t('Create')" :disabled="articleForm.processing" :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''" />
             </div>
@@ -266,7 +413,15 @@ import {computed, ref, watch} from "vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
-import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
+import {
+    Disclosure,
+    DisclosureButton, DisclosurePanel,
+    Listbox,
+    ListboxButton,
+    ListboxLabel,
+    ListboxOption,
+    ListboxOptions
+} from "@headlessui/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
@@ -295,6 +450,7 @@ const selectedCategory = ref(null);
 const selectedSubCategory = ref(null);
 const currentTabId = ref(0);
 const currentMainImage = ref(0);
+const showArticleHeader = ref(true);
 
 const articleForm = useForm({
     name: props.article ? props.article.name : "",
@@ -305,12 +461,16 @@ const articleForm = useForm({
     is_detailed_quantity: props.article ? props.article.is_detailed_quantity : false,
     images: [],
     properties: [],
+    detailed_article_quantities: [],
     main_image_index: 0
 })
 
 
 const updateTabId = (id) => {
     currentTabId.value = id;
+    if (id === 2){
+        showArticleHeader.value = false
+    }
 }
 
 const addImage = () => {
@@ -335,7 +495,7 @@ const submit = () =>  {
             articleForm.reset();
             selectedCategory.value = null;
             selectedSubCategory.value = null;
-            articleImageInput.value.value = null;
+            articleImageInput.value = 0;
             emits('close');
         }
     });
@@ -356,6 +516,35 @@ const addPropertyToArticle = (property) => {
     }
 }
 
+
+const addNewDetailedArticle = () => {
+    articleForm.detailed_article_quantities.push({
+        name: '',
+        description: '',
+        quantity: '',
+        properties: []
+    });
+}
+
+
+const addPropertyToDetailedArticleIndex = (property, detailedArticleIndex) => {
+    // add property to detailed article properties if it doesn't exist
+    if (!articleForm.detailed_article_quantities[detailedArticleIndex].properties.find(prop => prop.id === property.id)) {
+        articleForm.detailed_article_quantities[detailedArticleIndex].properties.push({
+            id: property.id,
+            name: property.name,
+            tooltip_text: property.tooltip_text,
+            type: property.type,
+            value: property.pivot?.value ?? '',
+            is_required: property.is_required,
+            categoryProperty: false
+        });
+    }
+}
+
+const showOnlyPropertiesWhereAreNotInDetailedArticle = (detailedArticleProperties) => {
+    return props.properties.filter(property => !detailedArticleProperties.find(prop => prop.id === property.id));
+}
 
 watch(selectedCategory, (value) => {
     // Entferne alle Eigenschaften, die categoryProperty: true haben
@@ -436,3 +625,5 @@ watch(selectedSubCategory, (value) => {
 <style scoped>
 
 </style>
+<script setup lang="ts">
+</script>

@@ -45,7 +45,7 @@
                         <InventoryFilterComponent :filterableProperties="filterableProperties" />
                     </div>
                     <div v-if="props.articles.data.length > 0">
-                        <div class="grid grid-cols-1 md:grid-cols-8 gap-4" v-if="gridLayout">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-7 3xl:grid-cols-8 gap-4" v-if="gridLayout">
                             <div v-for="item in props.articles.data">
                                 <InventorySingleArticleInGrid :item="item" />
                             </div>
@@ -67,20 +67,7 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
                                 <tr v-for="item in props.articles.data" :key="item?.id" class="divide-x divide-gray-200">
-                                    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-                                        <img :src="'/storage/' + item?.images[0]?.image" alt="" class="w-12 h-12 object-center object-cover rounded-lg">
-                                    </td>
-                                    <td class="p-4 text-sm whitespace-nowrap text-gray-500">{{ item?.name }}</td>
-                                    <td class="p-4 text-sm whitespace-nowrap text-gray-500" v-for="property in allPropertiesFromArticles">
-                                        {{ item?.properties.find(p => p.id === property.id)?.pivot.value }}
-                                    </td>
-                                    <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0">
-                                        <div class="flex items-center gap-x-4">
-                                            <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover">
-                                                <component is="IconEye" class="h-5 w-5" aria-hidden="true" />
-                                            </button>
-                                        </div>
-                                    </td>
+                                    <InventorySingleArticleInTable :item="item" :all-properties-from-articles="allPropertiesFromArticles" />
                                 </tr>
                                 </tbody>
                             </table>
@@ -123,6 +110,7 @@ import {computed, onMounted, ref} from "vue";
 import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
 import InventoryFilterComponent from "@/Pages/Inventory/LayoutComponents/InventoryFilterComponent.vue";
 import InventoryLayoutSwitchComponent from "@/Pages/Inventory/LayoutComponents/InventoryLayoutSwitchComponent.vue";
+import InventorySingleArticleInTable from "@/Pages/Inventory/TableComponents/InventorySingleArticleInTable.vue";
 const props = defineProps({
     categories: {
         type: Object,

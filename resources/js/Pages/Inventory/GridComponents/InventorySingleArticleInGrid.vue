@@ -1,7 +1,7 @@
 <template>
-    <div class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden">
+    <div class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden" @click="showArticleDetail = true">
         <div class="flex items-center justify-center">
-            <img :src="getMainImageInImage.image" alt="" class="w-44 h-44 object-center rounded-lg">
+            <img :src="getMainImageInImage.image" alt="" class="w-44 h-44 object-fill rounded-lg">
         </div>
         <div>
             <nav class="flex py-2" aria-label="Breadcrumb">
@@ -54,12 +54,15 @@
             </div>
         </div>
     </div>
+
+    <ArticleDetailModal :article="item" v-if="showArticleDetail" @close="showArticleDetail = false" />
 </template>
 
 <script setup>
 
 import {Link, usePage} from "@inertiajs/vue3";
-import {computed} from "vue";
+import {computed, ref} from "vue";
+import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
 
 const props = defineProps({
     item: {
@@ -67,6 +70,8 @@ const props = defineProps({
         required: true
     }
 })
+
+const showArticleDetail = ref(false)
 
 const getMainImageInImage = computed(() => {
     const images = props.item.images || [];

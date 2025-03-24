@@ -2456,5 +2456,9 @@
     "Single inventory capable": "Single inventory capable",
     "If activated, each individual piece of this article can be provided with its own properties": "If activated, each individual piece of this article can be provided with its own properties",
     "Add individual properties": "Add individual properties",
-    "Main Image": "Main Image"
+    "Main Image": "Main Image",
+    "Add new detailed article": "Add new detailed article",
+    "Detailed Article without name. Please add a name": "Detailed Article without name. Please add a name",
+    "Detailed article properties": "Detailed article properties",
+    "New detailed article": "New detailed article"
 }

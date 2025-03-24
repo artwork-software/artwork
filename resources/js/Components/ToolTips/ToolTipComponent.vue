@@ -1,6 +1,6 @@
 <template>
     <div class="flex items-center group/tooltip" :class="noRelative ? '' : 'relative' ">
-        <button class="focus:outline-none" :class="classes" :disabled="disabled">
+        <button class="focus:outline-none" type="button" :class="classes" :disabled="disabled">
             <component :is="icon" class=" cursor-pointer" :class="[iconSize, classes, whiteIcon ? 'text-white' : grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context']" :stroke-width="stroke"/>
         </button>
 

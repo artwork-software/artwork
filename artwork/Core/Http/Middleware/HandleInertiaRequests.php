@@ -63,12 +63,22 @@ class HandleInertiaRequests extends Middleware
         $startHour = (int)$start[0];
         $endHour = (int)$end[0];
         $currentHour = $startHour;
+
+        $failSave = 0;
         while (true) {
             $hours[] = str_pad($currentHour, 2, '0', STR_PAD_LEFT) . ':00';
-            if ($currentHour === $endHour) {
+            if ($currentHour === $endHour || $failSave === 24) {
                 break;
             }
             $currentHour = ($currentHour + 1) % 24;
+            $failSave++;
+        }
+        $sageApiEnabled = false;
+
+        if (env('SAGE_API_ENABLED', false)) {
+            $sageApiSettingsService = app(SageApiSettingsService::class);
+            $sageApiSettings = $sageApiSettingsService->getFirst();
+            $sageApiEnabled = !is_null($sageApiSettings) && $sageApiSettings->enabled;
         }
 
         return array_merge(
@@ -99,7 +109,7 @@ class HandleInertiaRequests extends Middleware
                 'event_status_module' => $eventSettings->enable_status,
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => Auth::guest() ? app()->getLocale() : $user->language,
-                'sageApiEnabled' => app(SageApiSettingsService::class)->getFirst()?->enabled ?? false,
+                'sageApiEnabled' => $sageApiEnabled,
                 'calendar_settings' => $calendarSettings,
                 'module_settings' => $this->moduleSettingsService->getModuleSettings(),
                 'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,

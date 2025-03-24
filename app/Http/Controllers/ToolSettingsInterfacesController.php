@@ -19,19 +19,23 @@ use Throwable;
 
 class ToolSettingsInterfacesController extends Controller
 {
+    public function __construct(
+        private readonly SageApiSettingsService $sageApiSettingsService,
+        private readonly TableColumnOrderService $tableColumnOrderService
+    )
+    {
+    }
+
     /**
      * @throws AuthorizationException
      */
-    public function index(
-        SageApiSettingsService $sageApiSettingsService,
-        TableColumnOrderService $tableColumnOrderService,
-    ): Response {
+    public function index(): Response {
         $this->authorize('view', SageApiSettings::class);
         return Inertia::render(
             'Interfaces/Index',
             [
-                'sageSettings' => $sageApiSettingsService->getFirst(),
-                'tableColumnOrder' => $tableColumnOrderService->getAllOrderedByPosition()
+                'sageSettings' => $this->sageApiSettingsService->getFirst(),
+                'tableColumnOrder' => $this->tableColumnOrderService->getAllOrderedByPosition()
             ]
         );
     }
@@ -41,12 +45,11 @@ class ToolSettingsInterfacesController extends Controller
      */
     public function createOrUpdate(
         CreateOrUpdateSageApiSettingsRequest $createOrUpdateSageApiSettingsRequest,
-        SageApiSettingsService $sageApiSettingsService
     ): RedirectResponse {
         $this->authorize('updateInterfaceSettings', SageApiSettings::class);
 
         try {
-            $sageApiSettingsService->createOrUpdateFromRequest($createOrUpdateSageApiSettingsRequest);
+            $this->sageApiSettingsService->createOrUpdateFromRequest($createOrUpdateSageApiSettingsRequest);
         } catch (Throwable $t) {
             Log::error($t->getMessage());
 
@@ -56,7 +59,7 @@ class ToolSettingsInterfacesController extends Controller
             );
         }
 
-        if (!$sageApiSettingsService->testConnection()) {
+        if (!$this->sageApiSettingsService->testConnection()) {
             return Redirect::back()->with(
                 'error',
                 __('flash-messages.interfaces.connection_test_failed')

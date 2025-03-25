@@ -49,6 +49,20 @@ class InventoryArticleRepository
                     return;
                 }
 
+                if ($property && $property->type === 'manufacturer') {
+                    $q->join('manufacturers', 'inventory_property_values.value', '=', 'manufacturers.id');
+
+                    match ($filter['operator']) {
+                        'like' => $q->where('manufacturers.name', 'like', '%' . $filter['value'] . '%'),
+                        'starts_with' => $q->where('manufacturers.name', 'like', $filter['value'] . '%'),
+                        'ends_with' => $q->where('manufacturers.name', 'like', '%' . $filter['value']),
+                        'exact', 'equals' => $q->where('manufacturers.name', '=', $filter['value']),
+                        'not_equals' => $q->where('manufacturers.name', '!=', $filter['value']),
+                    };
+
+                    return;
+                }
+
                 $q->where(function ($subQuery) use ($filter) {
                     $column = 'inventory_property_values.value';
 

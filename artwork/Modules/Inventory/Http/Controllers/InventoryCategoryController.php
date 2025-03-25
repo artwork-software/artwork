@@ -12,6 +12,7 @@ use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Repositories\InventoryPropertyRepository;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Inventory\Services\InventoryCategoryService;
+use Artwork\Modules\Manufacturer\Models\Manufacturer;
 use Artwork\Modules\Room\Models\Room;
 use Inertia\Inertia;
 
@@ -58,6 +59,7 @@ class InventoryCategoryController extends Controller
             'filterableProperties' => $filterableProperties,
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::all(),
+            'manufacturers' => Manufacturer::all(),
         ]);
     }
 

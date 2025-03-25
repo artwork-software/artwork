@@ -221,14 +221,36 @@
                                                 </div>
                                             </Combobox>
 
-                                            <input v-else-if="property.type !== 'file' && property.type !== 'checkbox'"
+                                            <Combobox v-if="property.type === 'manufacturer'" as="div" v-model="property.value" @update:modelValue="queryManufacturer = ''">
+                                                <div class="relative">
+                                                    <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="queryManufacturer = $event.target.value" @blur="queryManufacturer = ''" :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === property.value ).name : ''" />
+                                                    <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                        <component is="IconSelector" class="size-5 text-gray-400" aria-hidden="true" />
+                                                    </ComboboxButton>
+
+                                                    <ComboboxOptions v-if="filteredManufacturers.length > 0" class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                        <ComboboxOption v-for="person in filteredManufacturers" :key="person.id" :value="person.id" as="template" v-slot="{ active, selected }">
+                                                            <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                <span :class="['block truncate', selected && 'font-semibold']">
+                                                                  {{ person.name }}
+                                                                </span>
+                                                                <span v-if="selected" :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                  <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                                                </span>
+                                                            </li>
+                                                        </ComboboxOption>
+                                                    </ComboboxOptions>
+                                                </div>
+                                            </Combobox>
+
+                                            <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer'"
                                                    :type="property.type" v-model="property.value"
                                                    :required="property.is_required"
                                                    class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                                    :placeholder="property.is_required ? $t('Value*') : $t('Value')"
                                             />
 
-                                            <div v-else-if="property.type === 'file'">
+                                            <div v-if="property.type === 'file'">
                                                 <input type="file" @input="property.value = $event.target.files" class="sr-only" />
                                                 <div class="flex items-center gap-x-2">
                                                     <div class="flex items-center gap-x-2">
@@ -243,7 +265,7 @@
                                                 </div>
                                             </div>
 
-                                            <div v-else-if="property.type === 'checkbox'" class="px-3">
+                                            <div v-if="property.type === 'checkbox'" class="px-3">
                                                 <input type="checkbox" v-model="property.value" class="input-checklist" />
                                             </div>
 
@@ -459,9 +481,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import {
-    Combobox, ComboboxButton, ComboboxInput, ComboboxLabel, ComboboxOption, ComboboxOptions,
-    Disclosure,
-    DisclosureButton, DisclosurePanel,
+    Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions,
     Listbox,
     ListboxButton,
     ListboxLabel,
@@ -491,6 +511,10 @@ const props = defineProps({
     rooms: {
         type: Object,
         required: false
+    },
+    manufacturers: {
+        type: Object,
+        required: false
     }
 })
 
@@ -501,7 +525,7 @@ const selectedSubCategory = ref(null);
 const currentTabId = ref(0);
 const currentMainImage = ref(0);
 const showArticleHeader = ref(true);
-const selectedRoom = ref(null);
+const queryManufacturer = ref('');
 
 const query = ref('')
 const filteredPeople = computed(() =>
@@ -509,6 +533,14 @@ const filteredPeople = computed(() =>
         ? props.rooms
         : props.rooms.filter((room) => {
             return room.name.toLowerCase().includes(query.value.toLowerCase())
+        }),
+)
+
+const filteredManufacturers = computed(() =>
+    queryManufacturer.value === ''
+        ? props.manufacturers
+        : props.manufacturers.filter((manufacturer) => {
+            return manufacturer.name.toLowerCase().includes(queryManufacturer.value.toLowerCase())
         }),
 )
 

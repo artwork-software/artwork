@@ -141,6 +141,10 @@ const formatProperty = (property) => {
         return props.article.room?.name === 'Room not found' ? $t(props.article.room?.name) : props.article.room?.name;
     }
 
+    if (property.type === 'manufacturer') {
+        return props.article.manufacturer?.name === 'Room not found' ? $t(props.article.manufacturer?.name) : props.article.manufacturer?.name;
+    }
+
     if (property.type === 'date') {
         return new Date(property.pivot.value).toLocaleDateString();
     }

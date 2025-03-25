@@ -99,6 +99,7 @@
                 :categories="props.categories"
                 :properties="props.properties"
                 :rooms="props.rooms"
+                :manufacturers="props.manufacturers"
             />
         </div>
     </AppLayout>
@@ -156,6 +157,10 @@ const props = defineProps({
         required: true
     },
     rooms: {
+        type: Object,
+        required: true
+    },
+    manufacturers: {
         type: Object,
         required: true
     }

@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Inventory\Models;
 
 use Artwork\Modules\Inventory\Models\Traits\HasInventoryProperties;
+use Artwork\Modules\Manufacturer\Models\Manufacturer;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -44,7 +45,7 @@ class InventoryArticle extends Model
 
     //protected $with = ['category', 'subCategory', 'properties', 'images'];
 
-    protected $appends = ['room'];
+    protected $appends = ['room', 'manufacturer'];
 
     public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -76,6 +77,7 @@ class InventoryArticle extends Model
             'sub_category' => $this?->subCategory?->name ?? null,
             'quantity' => $this->quantity ?? 0,
             'room' => $this?->room['name'] ?? null,
+            'manufacturer' => $this?->manufacturer['name'] ?? null,
             'properties' => $this?->properties?->map(function ($property) {
                 return [
                     'id' => $property->id,
@@ -119,6 +121,42 @@ class InventoryArticle extends Model
             'id' => $room->id,
             'name' => $room->name,
             'property_id' => $roomProperty->id,
+        ];
+    }
+
+    public function getManufacturerAttribute(): array
+    {
+        $manufacturerProperty = $this->properties->firstWhere('type', 'manufacturer');
+
+        if (!$manufacturerProperty || !$manufacturerProperty->pivot->value) {
+            return [
+                'name' => 'Manufacturer not found',
+            ];
+        }
+
+        // Optimierung: Verwende Relation oder eager loading statt einzelner Query
+        static $manufacturerCache = [];
+
+        $manufacturerId = $manufacturerProperty->pivot->value;
+
+        if (!isset($manufacturerCache[$manufacturerId])) {
+            $manufacturerCache[$manufacturerId] = Manufacturer::select('id', 'name')->find($manufacturerId);
+        }
+
+        $manufacturer = $manufacturerCache[$manufacturerId];
+
+        if (!$manufacturer) {
+            return [
+                'id' => $manufacturerId,
+                'name' => 'Manufacturer not found',
+                'property_id' => $manufacturerProperty->id,
+            ];
+        }
+
+        return [
+            'id' => $manufacturer->id,
+            'name' => $manufacturer->name,
+            'property_id' => $manufacturerProperty->id,
         ];
     }
 

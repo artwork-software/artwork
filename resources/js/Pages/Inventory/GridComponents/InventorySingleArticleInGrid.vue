@@ -8,17 +8,17 @@
             <p class="text-xs text-gray-500 line-clamp-2">
                 {{ item.description }}
             </p>
-            <div class="my-2 xxsDark">
-                <div class="flex items-center justify-between py-1 text-artwork-buttons-create">
-                    <div>
+            <div class="my-2 text-xs divide-y divide-gray-100 divide-dashed">
+                <div class="flex items-center justify-between py-2 font-bold font-lexend">
+                    <div class="text-gray-500">
                         {{ $t('Quantity') }}
                     </div>
-                    <div>
-                        {{ item.quantity }}
+                    <div :class="item.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create'">
+                        {{ formatQuantity(item.quantity) }}
                     </div>
                 </div>
                 <div v-for="property in item.properties">
-                    <div class="flex items-center justify-between py-1" v-if="property.show_in_list">
+                    <div class="flex items-center justify-between py-2 font-lexend" v-if="property.show_in_list">
                         <div>
                             {{ property.name }}
                         </div>
@@ -40,6 +40,8 @@
 
 import {Link, usePage} from "@inertiajs/vue3";
 import {computed, defineAsyncComponent, ref} from "vue";
+import {useTranslation} from "@/Composeables/Translation.js";
+const $t = useTranslation()
 
 const props = defineProps({
     item: {
@@ -104,6 +106,14 @@ const formatProperty = (property) => {
     }
 
     return property.pivot.value;
+}
+
+const formatQuantity = (quantity) => {
+
+    if (quantity === 0) return $t('Out of stock');
+    // if not return 10000 to 10.000
+
+    return quantity.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
 </script>

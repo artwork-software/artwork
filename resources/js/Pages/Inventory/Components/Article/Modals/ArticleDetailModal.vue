@@ -40,9 +40,15 @@
                 <!-- Product info -->
                 <div class="px-4 sm:mt-16 sm:px-0 lg:mt-0">
                     <h1 class="text-3xl font-lexend font-bold tracking-tight text-gray-900">{{ article.name }}</h1>
+
+
+                    <div class="mt-4">
+                        <div class="space-y-6 text-sm italic text-gray-500 font-lexend font-extralight" v-html="article.description" />
+                    </div>
+
                     <div class="mt-4">
                         <h2 class="font-lexend font-semibold text-xs">{{ $t('Quantity') }}</h2>
-                        <p class="text-3xl font-bold tracking-tight text-artwork-buttons-create">{{ article.quantity }}</p>
+                        <p class="text-3xl font-bold tracking-tight" :class="article.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create'">{{ formatQuantity(article.quantity) }}</p>
                     </div>
 
                     <!-- Reviews -->
@@ -56,9 +62,6 @@
                         </div>
                     </div>-->
 
-                    <div class="mt-4">
-                        <div class="space-y-6 text-sm italic text-gray-500 font-lexend font-extralight" v-html="article.description" />
-                    </div>
 
                     <section aria-labelledby="details-heading" class="mt-12">
 
@@ -164,6 +167,14 @@ const formatProperty = (property) => {
     return property.pivot.value;
 }
 
+
+const formatQuantity = (quantity) => {
+
+    if (quantity === 0) return $t('Out of stock');
+    // if not return 10000 to 10.000
+
+    return quantity.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
 </script>
 
 <style scoped>

@@ -26,9 +26,8 @@ const props = defineProps({
 const isDetailedQuantity = ref(props.isDetailedQuantity)
 
 const tabs = ref([
-    { id: 0, name: 'Images', current: true, show: true},
-    { id: 1, name: 'Category & Properties', current: false, show: true},
-    { id: 2, name: 'Detailed Quantity', current: false, show: isDetailedQuantity.value },
+    { id: 0, name: 'Category & Properties', current: true, show: true},
+    { id: 1, name: 'Detailed Quantity', current: false, show: isDetailedQuantity.value },
 ])
 
 const updateTab = (tabId) => {
@@ -45,7 +44,7 @@ const emits = defineEmits(['update:currentTab'])
 // watch on props.isDetailedQuantity
 watch(() => props.isDetailedQuantity, (value) => {
     isDetailedQuantity.value = value
-    tabs.value[2].show = value
+    tabs.value[1].show = value
 })
 </script>
 

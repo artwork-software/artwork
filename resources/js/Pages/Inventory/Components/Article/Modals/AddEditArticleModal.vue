@@ -8,7 +8,37 @@
         </div>
 
         <form @submit.prevent="submit">
-            <div class="px-6 pb-4" v-if="currentTabId !== 2 || showArticleHeader">
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-6" v-if="currentTabId !== 1">
+                <div class="col-span-1">
+                    <div @click="addImage"  class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
+                        <component is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true" />
+                        <span class="mt-2 block text-sm font-semibold text-gray-900">Upload Images</span>
+                        <input type="file" accept="image/*"  class="sr-only" ref="articleImageInput" multiple @input="articleForm.images = $event.target.files"/>
+                    </div>
+                </div>
+                <div class="col-span-3">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div v-for="(image, index) in articleForm.images"
+                             :key="image.id"
+                             class="p-2 rounded-lg border bg-white shadow-sm hover:border-yellow-500 cursor-pointer transition duration-200 ease-in-out"
+                             @click="currentMainImage = index"
+                             :class="currentMainImage === index ? 'border-yellow-400' : 'border-gray-200'"
+                        >
+                            <div class="flex flex-col items-center justify-center w-full truncate min-h-16 gap-y-2">
+                                <component is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
+                                <div class="flex w-full justify-center">
+                                    <div class="truncate font-medium font-lexend text-xs">{{ image.name }}</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="px-6 pb-4" v-if="currentTabId !== 1 || showArticleHeader">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="col-span-full">
                         <TextInputComponent
@@ -40,7 +70,7 @@
 
             </div>
 
-            <div class="px-6 bg-gray-50 py-6" v-if="currentTabId !== 2 || showArticleHeader">
+            <div class="px-6 bg-gray-50 py-6" v-if="currentTabId !== 1 || showArticleHeader">
                 <div class="flex gap-3">
                     <div class="flex h-6 shrink-0 items-center">
                         <div class="group grid size-4 grid-cols-1">
@@ -63,39 +93,8 @@
                 <ArticleModalTabs :is-detailed-quantity="articleForm.is_detailed_quantity" @update:current-tab="updateTabId"/>
             </div>
 
-            <!-- Images -->
-            <div class="px-6 py-6 mb-5" v-if="currentTabId === 0">
-                <div @click="addImage"  class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
-                    <component is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true" />
-                    <span class="mt-2 block text-sm font-semibold text-gray-900">Upload Images</span>
-                    <input type="file" accept="image/*"  class="sr-only" ref="articleImageInput" multiple @input="articleForm.images = $event.target.files"/>
-                </div>
-                <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200 mt-5" v-if="articleForm.images.length > 0">
-                    <li class="flex items-center justify-between py-4 pr-5 pl-4 text-sm/6" v-for="(image, index) in articleForm.images" :key="image.id">
-                        <div class="flex items-center justify-between w-full gap-x-2">
-                            <div class="flex items-center gap-x-2">
-                                <component is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
-                                <div class="flex">
-                                    <div class="truncate font-medium">{{ image.name }}</div>
-                                </div>
-                            </div>
-                            <div v-if="currentMainImage === index">
-                                <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
-                                    {{ $t('Main Image') }}
-                                </span>
-                            </div>
-                            <div v-else>
-                                <button type="button" class="text-gray-400 hover:text-yellow-400 hover:animate-pulse duration-200 ease-in-out" @click="currentMainImage = index">
-                                    <component is="IconStar" class="h-5 w-5" aria-hidden="true" />
-                                </button>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
             <!-- Category selector -->
-            <div class="bg-gray-50 px-6 py-6 mb-5" v-if="currentTabId === 1">
+            <div class="bg-gray-50 px-6 py-6 mb-5" v-if="currentTabId === 0">
                 <div class="mb-5">
                     <Listbox as="div" v-model="selectedCategory">
                         <ListboxLabel class="xsDark">
@@ -158,7 +157,7 @@
             </div>
 
             <!-- category properties -->
-            <div class="px-6" v-if="articleForm.properties.length > 0 && selectedCategory && currentTabId === 1">
+            <div class="px-6" v-if="articleForm.properties.length > 0 && selectedCategory && currentTabId === 0">
                 <div>
                     <TinyPageHeadline
                         :title="$t('Category & subcategory based properties')"
@@ -321,7 +320,7 @@
 
 
             <!-- Detailed quantity -->
-            <div class="px-6 divide-y-2 divide-dashed" v-if="currentTabId === 2">
+            <div class="px-6 divide-y-2 divide-dashed" v-if="currentTabId === 1">
 
                 <div class="flow-root py-4" v-for="(detailedArticle, index) in articleForm.detailed_article_quantities">
                     <div class="flex items-center justify-center xsLight">
@@ -560,7 +559,7 @@ const articleForm = useForm({
 
 const updateTabId = (id) => {
     currentTabId.value = id;
-    if (id === 2){
+    if (id === 1){
         showArticleHeader.value = false
     }
 }

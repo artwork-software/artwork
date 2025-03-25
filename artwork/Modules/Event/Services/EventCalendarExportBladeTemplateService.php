@@ -31,7 +31,6 @@ class EventCalendarExportBladeTemplateService
     private ?Carbon $dateEnd;
 
     public function __construct(
-        private readonly Logger $logger,
         private readonly CarbonService $carbonService,
         private readonly Translator $translator,
     ) {
@@ -46,7 +45,6 @@ class EventCalendarExportBladeTemplateService
         Carbon $dateEnd,
         ?array $projects,
     ): void {
-        $this->logger->debug(sprintf('Initialize %s"', self::class));
 
         $this->desiresTimespanExport = $desiresTimespanExport;
         $this->createdBy = $createdBy;
@@ -56,8 +54,6 @@ class EventCalendarExportBladeTemplateService
         $this->dateStart = $dateStart;
         $this->dateEnd = $dateEnd;
 
-        $this->logger->debug(sprintf('-> Initialized %s"', self::class));
-
         $desiredLocale = $this->translator->getLocale();
 
         $output = '<table>';
@@ -65,7 +61,6 @@ class EventCalendarExportBladeTemplateService
         $output .= $this->createDateHeadingAndRooms();
 
         if ($this->events->isEmpty()) {
-            $this->logger->debug('-> No Events given, echo and return.');
             echo $output . '</table>';
 
             return;
@@ -74,15 +69,11 @@ class EventCalendarExportBladeTemplateService
         $output .= $this->createTableBody($desiredLocale);
         $output .= '</table>';
 
-        $this->logger->debug('Echo output...');
-        $this->logger->debug($output);
-
         echo $output;
     }
 
     private function renderDateAndCreator(string $desiredLocale): string
     {
-        $this->logger->debug('-> Create date and creator row...');
         $desiredFormat = $this->carbonService->getDesiredDateFormatFromLocale($desiredLocale);
 
         return sprintf(
@@ -114,8 +105,6 @@ class EventCalendarExportBladeTemplateService
 
     private function createDateHeadingAndRooms(): string
     {
-        $this->logger->debug('-> Create date and room header...');
-
         $markup = '';
         foreach ($this->rooms as $room) {
             $markup .= sprintf(
@@ -133,17 +122,9 @@ class EventCalendarExportBladeTemplateService
 
     private function createTableBody(string $desiredLocale): string
     {
-        $this->logger->debug('-> Create table body...');
         $period = $this->carbonService->createPeriodOf($this->dateStart, $this->dateEnd);
 
         $desiredDateFormat = $this->carbonService->getDesiredDateFormatFromLocale($desiredLocale);
-        $this->logger->debug(
-            sprintf(
-                '-> Used date period: "%s" - "%s"',
-                $period->first()->format($desiredDateFormat),
-                $period->last()->format($desiredDateFormat)
-            )
-        );
 
         return $this->handleRoomsAndEvents($period, $desiredLocale);
     }
@@ -165,7 +146,6 @@ class EventCalendarExportBladeTemplateService
                     $biggestEventCountInRoomsOfDate = $eventCount;
                 }
             }
-            $this->logger->debug('-> Process row...');
 
             if ($biggestEventCountInRoomsOfDate === 0) {
                 //empty row for given date
@@ -189,12 +169,6 @@ class EventCalendarExportBladeTemplateService
                 }
                 $markup .= '</tr>';
 
-                $this->logger->debug(
-                    sprintf(
-                        '--> Created empty row for: %s',
-                        $date->format($this->carbonService->getDesiredDateFormatFromLocale($desiredLocale))
-                    )
-                );
                 continue;
             }
 
@@ -259,13 +233,6 @@ class EventCalendarExportBladeTemplateService
 
         foreach (range(1, ($biggestEventCountInRoomsOfDate * 2)) as $rowOfDay) {
             $markup .= '<tr>';
-            $this->logger->debug(
-                sprintf(
-                    '--> Create row number: %s for day %s',
-                    $rowOfDay,
-                    $date->format($this->carbonService->getDesiredDateFormatFromLocale($desiredLocale))
-                )
-            );
 
             $markup .= $rowOfDay === 1 ?
                 $this->createDateColumn($date, $desiredLocale) :
@@ -273,24 +240,20 @@ class EventCalendarExportBladeTemplateService
 
             foreach ($this->rooms as $room) {
                 $roomId = $room->getAttribute('id');
-                $this->logger->debug('Room id: ' . $roomId);
                 if (!isset($roomEventIndicesOfDay[$roomId])) {
                     $roomEventIndicesOfDay[$roomId] = 0;
                 }
 
                 if (count($eventsForRoomsOnDate[$roomId]) === 0) {
-                    $this->logger->debug('--> Skip because there are no events');
                     $markup .= '<td style="width: 125px;"></td>' .
                         '<td style="width: 125px; border-right:1px solid #000000;"></td>';
                     continue;
                 }
-                $this->logger->debug(sprintf('--> Event count: %d ', count($eventsForRoomsOnDate[$roomId])));
 
                 $event = $eventsForRoomsOnDate[$roomId][$roomEventIndicesOfDay[$roomId]] ?? null;
                 $hasEvent = $event instanceof Event;
                 if ($rowOfDay % 2 === 0) {
                     if ($hasEvent) {
-                        $this->logger->debug('--> Create event name and description columns...');
                         $markup .= sprintf(
                             '<td style="%s">%s %s %s</td><td style="%s"></td>',
                             'width: 125px; border-bottom:1px solid #000000; border-left:1px solid #000000;',
@@ -302,9 +265,6 @@ class EventCalendarExportBladeTemplateService
                             'width: 125px; border-bottom:1px solid #000000; border-right:1px solid #000000;'
                         );
                     } else {
-                        $this->logger->debug(
-                            '--> Create empty event type, event status and description columns...'
-                        );
                         $markup .= sprintf(
                             '<td style="%s"></td><td style="%s"></td>',
                             'width: 125px; border-bottom:1px solid #000000; border-left:1px solid #000000;',
@@ -315,7 +275,6 @@ class EventCalendarExportBladeTemplateService
                     $roomEventIndicesOfDay[$roomId]++;
                 } elseif ($rowOfDay % 2 === 1) {
                     if ($hasEvent) {
-                        $this->logger->debug('--> Create event type and start columns...');
                         $eventType = $event->getAttribute('event_type');
 
                         $eventNameBackgroundColorHexCode = $eventType?->getAttribute('hex_code') ?? '#FFFFFF';
@@ -338,7 +297,6 @@ class EventCalendarExportBladeTemplateService
                             $event->getAttribute('end_time')->format('H:i'),
                         );
                     } else {
-                        $this->logger->debug('--> Create empty name and start time columns...');
                         $markup .= sprintf(
                             '<td style="%s"></td><td style="%s"></td>',
                             'width: 125px; border-top:1px solid #000000; border-left:1px solid #000000;',

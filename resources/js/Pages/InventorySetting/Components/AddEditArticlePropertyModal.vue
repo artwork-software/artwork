@@ -24,14 +24,14 @@
                         />
                     </div>
 
-                    <div class="col-span-full" v-if="!property && property?.type !== 'room' || property?.type !== 'manufacturer'">
+                    <div class="col-span-full" v-if="(property?.type !== 'room') || (property?.type !== 'manufacturer')">
                         <Listbox as="div" v-model="selectedType" v-slot="{ open }">
                             <ListboxLabel class="block text-sm/6 font-medium text-gray-900">
                                 {{ $t('Select a type') }}
                             </ListboxLabel>
                             <div class="relative mt-2">
                                 <ListboxButton class="menu-button">
-                                    <div class="col-start-1 row-start-1 xsDark truncate pr-6">{{ $t(selectedType.name) }}</div>
+                                    <div class="col-start-1 row-start-1 xsDark truncate pr-6">{{ selectedType?.name ? $t(selectedType?.name) : '' }}</div>
                                     <component is="IconChevronDown" class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4" :class="open ? 'rotate-180' : '' " aria-hidden="true" />
                                 </ListboxButton>
 
@@ -133,7 +133,7 @@ const types = [
     { name: 'Date', type: 'date' },
     { name: 'Time', type: 'time' },
     { name: 'Datetime', type: 'datetime' },
-    { name: 'Boolean', type: 'boolean' },
+    { name: 'Checkbox', type: 'checkbox' },
     { name: 'Upload', type: 'file' },
 ]
 

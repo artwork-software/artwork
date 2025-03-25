@@ -5,7 +5,6 @@ namespace Database\Factories\Artwork\Modules\UserCalendarAbo\Models;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 class UserCalendarAboFactory extends Factory
 {

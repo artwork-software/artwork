@@ -1,5 +1,5 @@
 <template>
-    <nav class="flex mb-5" aria-label="Breadcrumb">
+    <nav class="flex mb-5 font-lexend" aria-label="Breadcrumb">
         <ol role="list" class="flex items-center space-x-2">
             <li>
                 <div>
@@ -18,7 +18,7 @@
             <li v-if="currentSubCategory?.id">
                 <div class="flex items-center">
                     <component is="IconPointFilled" class="size-4 shrink-0 text-gray-300" aria-hidden="true" />
-                    <Link  preserve-scroll :href="route('inventory.sub.category.show', { inventoryCategory: currentCategory.id,subCategory: currentSubCategory.id})" class="ml-2 text-sm font-medium text-gray-500 hover:text-gray-700 first-letter:capitalize">
+                    <Link  preserve-scroll :href="route('inventory.sub.category.show', { inventoryCategory: currentCategory.id, inventorySubCategory: currentSubCategory.id})" class="ml-2 text-sm font-medium text-gray-500 hover:text-gray-700 first-letter:capitalize">
                         {{ currentSubCategory.name }}
                     </Link>
                 </div>

@@ -4,7 +4,7 @@
     </td>
     <td class="p-4 text-sm whitespace-nowrap text-gray-500">{{ item?.name }}</td>
     <td class="p-4 text-sm whitespace-nowrap text-gray-500" v-for="property in allPropertiesFromArticles">
-        {{ item?.properties.find(p => p.id === property.id)?.pivot.value }}
+        {{ formatProperty(property) }}
     </td>
     <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0">
         <div class="flex items-center gap-x-4">
@@ -19,6 +19,8 @@
 
 import {computed} from "vue";
 import {usePage} from "@inertiajs/vue3";
+import {useTranslation} from "@/Composeables/Translation.js";
+const $t = useTranslation()
 
 const props = defineProps({
     item: {
@@ -50,6 +52,30 @@ const getMainImageInImage = computed(() => {
         image: usePage().props.big_logo, // Passe den Pfad zu deinem Standardbild an
     };
 });
+
+const formatProperty = (property) => {
+    if (property.type === 'room') {
+        return props.item.room?.name === 'Room not found' ? $t(props.item?.room?.name) : props.item?.room?.name;
+    }
+
+    if (property.type === 'date') {
+        return new Date(property.pivot.value).toLocaleDateString();
+    }
+
+    if (property.type === 'time') {
+        return new Date(property.pivot.value).toLocaleTimeString();
+    }
+
+    if (property.type === 'datetime') {
+        return new Date(property.pivot.value).toLocaleString();
+    }
+
+    if (property.type === 'checkbox') {
+        return property.pivot.value ? $t('Yes') : $t('No');
+    }
+
+    return property.pivot.value;
+}
 
 </script>
 

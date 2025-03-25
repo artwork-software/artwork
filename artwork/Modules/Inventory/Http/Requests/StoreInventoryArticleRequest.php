@@ -30,7 +30,7 @@ class StoreInventoryArticleRequest extends FormRequest
             'quantity' => ['required', 'integer'],
             'properties' => ['nullable', 'array'],
             'properties.*.id' => ['required', 'integer', 'exists:inventory_article_properties,id'],
-            'properties.*.value' => ['nullable', 'string', 'max:255'],
+            'properties.*.value' => ['nullable', 'max:255'],
             'main_image_index' => ['required', 'integer'],
         ];
     }

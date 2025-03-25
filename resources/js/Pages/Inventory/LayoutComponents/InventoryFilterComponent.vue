@@ -11,7 +11,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-6 gap-4">
                 <div  v-for="filterProperty in newFilterObject" :key="filterProperty.id">
                     <div>
-                        <label for="filter" class="xxsDark mb-1">{{ filterProperty.name }}</label>
+                        <label for="filter" class="font-lexend text-xs  mb-1">{{ filterProperty.name }}</label>
                     </div>
                     <div class="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500">
                         <select v-model="filterProperty.operator" class="text-gray-700 text-sm px-2 py-2 border-none rounded-l-lg focus:outline-none focus:ring-0">
@@ -28,8 +28,8 @@
                     </div>
                 </div>
             </div>
-            <div class="mt-3 flex justify-end">
-                <SmallFormButton type="submit">
+            <div class="mt-3 flex justify-between">
+                <SmallFormButton type="button" @click="submitFilter">
                     {{ $t('Apply Filter') }}
                 </SmallFormButton>
             </div>
@@ -43,6 +43,7 @@ import {onMounted, ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
+import {router, usePage} from "@inertiajs/vue3";
 
 const props = defineProps({
     filterableProperties: {
@@ -71,20 +72,52 @@ const filterTypes = [
 ];
 
 const newFilterObject = ref([]);
+
 onMounted(() => {
+    let activeFilters = [];
+
+    try {
+        const queryFilters = usePage().props.urlParameters.filters;
+
+        if (Array.isArray(queryFilters)) {
+            activeFilters = queryFilters;
+        } else if (typeof queryFilters === 'string') {
+            activeFilters = JSON.parse(queryFilters);
+        }
+    } catch (e) {
+        console.warn('Fehler beim Parsen der Filter:', e);
+    }
+
     props.filterableProperties.forEach((property) => {
         if (property.type !== "file") {
+            const existingFilter = activeFilters.find(f => f.property_id === property.id);
+
             newFilterObject.value.push({
                 id: property.id,
                 name: property.name,
-                operator: 'like',
-                value: '',
+                operator: existingFilter?.operator ?? 'like',
+                value: existingFilter?.value ?? '',
                 type: property.type
-            })
+            });
         }
+    });
+});
 
-    })
-})
+const submitFilter = () => {
+    const cleanFilters = newFilterObject.value
+        .filter(f => f.value !== '' && f.value !== null)
+        .map(f => ({
+            property_id: f.id,
+            operator: f.operator,
+            value: f.value,
+        }));
+
+    router.reload({
+        data: {
+            filters: JSON.stringify(cleanFilters),
+        },
+    });
+}
 
 </script>
 

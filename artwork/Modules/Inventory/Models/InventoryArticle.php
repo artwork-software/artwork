@@ -42,7 +42,9 @@ class InventoryArticle extends Model
         'is_detailed_quantity',
     ];
 
-    protected $with = ['category', 'subCategory', 'properties', 'images'];
+    //protected $with = ['category', 'subCategory', 'properties', 'images'];
+
+    protected $appends = ['room'];
 
     public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -73,24 +75,51 @@ class InventoryArticle extends Model
             'category' => $this?->category?->name ?? null,
             'sub_category' => $this?->subCategory?->name ?? null,
             'quantity' => $this->quantity ?? 0,
+            'room' => $this?->room['name'] ?? null,
             'properties' => $this?->properties?->map(function ($property) {
                 return [
                     'id' => $property->id,
                     'name' => $property->name,
                     'value' => $property->pivot->value
                 ];
-            }) ?? [],
+            })->toArray() ?? [],
         ];
     }
 
-    public function getRoomAttribute()
+    public function getRoomAttribute(): array
     {
         $roomProperty = $this->properties->firstWhere('type', 'room');
 
         if (!$roomProperty || !$roomProperty->pivot->value) {
-            return null;
+            return [
+                'name' => 'Room not found',
+            ];
         }
 
-        return Room::find($roomProperty->pivot->value);
+        // Optimierung: Verwende Relation oder eager loading statt einzelner Query
+        static $roomCache = [];
+
+        $roomId = $roomProperty->pivot->value;
+
+        if (!isset($roomCache[$roomId])) {
+            $roomCache[$roomId] = Room::select('id', 'name')->find($roomId);
+        }
+
+        $room = $roomCache[$roomId];
+
+        if (!$room) {
+            return [
+                'id' => $roomId,
+                'name' => 'Room not found',
+                'property_id' => $roomProperty->id,
+            ];
+        }
+
+        return [
+            'id' => $room->id,
+            'name' => $room->name,
+            'property_id' => $roomProperty->id,
+        ];
     }
+
 }

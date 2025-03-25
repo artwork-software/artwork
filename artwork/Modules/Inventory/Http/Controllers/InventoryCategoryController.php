@@ -9,145 +9,82 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
+use Artwork\Modules\Inventory\Repositories\InventoryPropertyRepository;
+use Artwork\Modules\Inventory\Services\InventoryArticleService;
+use Artwork\Modules\Inventory\Services\InventoryCategoryService;
+use Artwork\Modules\Room\Models\Room;
 use Inertia\Inertia;
 
 class InventoryCategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        return Inertia::render('Inventory/Index', [
-            'categories' => InventoryCategory::with(['subcategories', 'subcategories.properties', 'properties'])->get(),
-            'articles' => InventoryArticle::paginate(50),
-            'articlesCount' => InventoryArticle::count(),
-            'filterableProperties' => InventoryArticleProperties::filterable()->get(),
-            'properties' => InventoryArticleProperties::all(),
-        ]);
-    }
+    public function __construct(
+        protected InventoryCategoryService $categoryService,
+        protected InventoryArticleService $articleService,
+        protected InventoryPropertyRepository $propertyRepository,
+    ) {}
 
     /**
-     * Show the form for creating a new resource.
+     * @throws \JsonException
      */
-    public function create()
-    {
-        //
-    }
+    public function index(
+        ?InventoryCategory $inventoryCategory = null,
+        ?InventorySubCategory $inventorySubCategory = null
+    ): \Inertia\Response {
+        $inventoryCategory?->load(['subcategories', 'properties']);
+        $inventorySubCategory?->load(['properties']);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreInventoryCategoryRequest $request)
-    {
-        $properties = $request->collect('properties');
-        $subcategories = $request->collect('subcategories');
-        $category = InventoryCategory::create($request->validated());
+        $filterableProperties = collect();
 
-        // attach properties to category with defaultValue as value
-        foreach ($properties as $property) {
-            $category->properties()->attach($property['id'], ['value' => $property['defaultValue']]);
+        if ($inventoryCategory) {
+            $filterableProperties = $inventoryCategory->properties()->filterable()->get();
         }
 
-        foreach ($subcategories as $subcategory) {
-            $subCategory = $category->subcategories()->create($subcategory);
-            foreach ($subcategory['properties'] as $property) {
-                $subCategory->properties()->attach($property['id'], ['value' => $property['defaultValue']]);
-            }
+        if ($inventorySubCategory) {
+            $filterableProperties = $filterableProperties
+                ->merge($inventorySubCategory->properties()->filterable()->get())
+                ->unique('id');
         }
-    }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(InventoryCategory $inventoryCategory): \Inertia\Response
-    {
-        $inventoryCategory->load(['subcategories', 'subcategories.properties', 'articles', 'properties']);
-
-        $filterableProperties = $inventoryCategory->properties()->filterable()->get();
+        if (!$inventoryCategory && !$inventorySubCategory) {
+            $filterableProperties = $this->propertyRepository->filterable();
+        }
 
         return Inertia::render('Inventory/Index', [
-            'categories' => InventoryCategory::with(['subcategories', 'subcategories.properties', 'articles', 'properties'])->get(),
+            'categories' => $this->categoryService->getAllWithRelations(),
             'currentCategory' => $inventoryCategory,
-            'articles' => $inventoryCategory->articles()->paginate(50),
-            'articlesCount' => InventoryArticle::count(),
+            'currentSubCategory' => $inventorySubCategory,
+            'articles' => $this->articleService->getArticleList($inventoryCategory, $inventorySubCategory, request('search')),
+            'articlesCount' => $this->articleService->count(),
             'filterableProperties' => $filterableProperties,
-            'properties' => InventoryArticleProperties::all(),
+            'properties' => $this->propertyRepository->all(),
+            'rooms' => Room::all(),
         ]);
     }
 
-    public function showSubCategory(InventoryCategory $inventoryCategory, InventorySubCategory $subCategory): \Inertia\Response
+    public function store(StoreInventoryCategoryRequest $request): void
     {
-        $inventoryCategory->load(['subcategories', 'properties', 'articles']);
-        $subCategory->load(['properties', 'articles']);
-
-        $filterablePropertiesCategory = $inventoryCategory->properties()->filterable()->get();
-        $filterablePropertiesSubCategory = $subCategory->properties()->filterable()->get();
-
-        $filterableProperties = $filterablePropertiesCategory->merge($filterablePropertiesSubCategory)->unique('id');
-
-        return Inertia::render('Inventory/Index', [
-            'categories' => InventoryCategory::with(['subcategories', 'subcategories.properties', 'articles', 'properties'])->get(),
-            'currentCategory' => $inventoryCategory,
-            'currentSubCategory' => $subCategory,
-            'articles' => $subCategory->articles()->paginate(50),
-            'articlesCount' => InventoryArticle::count(),
-            'filterableProperties' => $filterableProperties,
-            'properties' => InventoryArticleProperties::all(),
-        ]);
+        $this->categoryService->createWithRelations(
+            $request->validated(),
+            $request->collect('properties'),
+            $request->collect('subcategories')
+        );
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(InventoryCategory $inventoryCategory)
+    public function update(UpdateInventoryCategoryRequest $request, InventoryCategory $inventoryCategory): void
     {
-        //
+        $this->categoryService->updateWithRelations(
+            $inventoryCategory,
+            $request->validated(),
+            $request->collect('properties'),
+            $request->collect('subcategories')
+        );
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateInventoryCategoryRequest $request, InventoryCategory $inventoryCategory)
-    {
-        $inventoryCategory->update($request->validated());
-        $properties = $request->collect('properties');
-        $subcategories = $request->collect('subcategories');
-        // detach all properties
-        $inventoryCategory->properties()->detach();
-
-        foreach ($properties as $property) {
-            $inventoryCategory->properties()->attach($property['id'], ['value' => $property['defaultValue']]);
-        }
-
-        foreach ($subcategories as $subcategory) {
-            $subcategory['inventory_category_id'] = $inventoryCategory->id;
-            $subCategoryUpdated = InventorySubCategory::updateOrCreate(
-                ['id' => $subcategory['id']], // Find by ID
-                $subcategory // Update with request data
-            );
-
-            $subCategoryUpdated = $subCategoryUpdated->fresh();
-            $subCategoryUpdated->properties()->detach();
-            foreach ($subcategory['properties'] as $property) {
-                $subCategoryUpdated->properties()->attach($property['id'], ['value' => $property['defaultValue']]);
-            }
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(InventoryCategory $inventoryCategory)
-    {
-        //
-    }
-
-    public function settings()
+    public function settings(): \Inertia\Response
     {
         return Inertia::render('InventorySetting/Categories', [
-            'categories' => InventoryCategory::with(['properties', 'subcategories', 'subcategories.properties'])->paginate(50),
-            'properties' => InventoryArticleProperties::all(),
+            'categories' => $this->categoryService->paginateWithRelations(),
+            'properties' => $this->propertyRepository->all(),
         ]);
     }
 }

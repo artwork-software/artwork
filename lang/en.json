@@ -2399,7 +2399,6 @@
     "Properties": "Eigenschaften",
     "String": "String",
     "Number": "Number",
-    "Boolean": "True/False",
     "Date": "Date",
     "Time": "Time",
     "Datetime": "Date and Time",
@@ -2460,5 +2459,11 @@
     "Add new detailed article": "Add new detailed article",
     "Detailed Article without name. Please add a name": "Detailed Article without name. Please add a name",
     "Detailed article properties": "Detailed article properties",
-    "New detailed article": "New detailed article"
+    "New detailed article": "New detailed article",
+    "Search Articles": "Search Articles",
+    "No properties were specified for this article": "No properties were specified for this article",
+    "Room not found": "Room not found",
+    "Manufacturers": "Manufacturers",
+    "Edit and create manufacturers for your inventory.": "Edit and create manufacturers for your inventory.",
+    "Customer Number": "Customer Number"
 }

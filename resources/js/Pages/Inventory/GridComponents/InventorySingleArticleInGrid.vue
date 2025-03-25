@@ -1,31 +1,9 @@
 <template>
-    <div class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden" @click="showArticleDetail = true">
+    <div class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden font-lexend" @click="showArticleDetail = true">
         <div class="flex items-center justify-center">
             <img :src="getMainImageInImage.image" alt="" class="w-44 h-44 object-fill rounded-lg">
         </div>
-        <div>
-            <nav class="flex py-2" aria-label="Breadcrumb">
-                <ol role="list" class="flex items-center space-x-1 text-xs text-artwork-buttons-create cursor-pointer">
-                    <li>
-                        <div class="flex items-center gap-x-1">
-                            <Link preserve-scroll :href="route('inventory.category.show', item.category.id)" class="font-medium  hover:text-gray-700 first-letter:capitalize truncate">
-                                {{ item.category.name }}
-                            </Link>
-                        </div>
-                    </li>
-                    <li v-if="item.sub_category">
-                        <div class="flex items-center gap-x-1">
-                            <component is="IconChevronRight" class="size-3 shrink-0 text-gray-400" aria-hidden="true" />
-                            <Link preserve-scroll :href="route('inventory.sub.category.show', {
-                                                                inventoryCategory: item.category.id,
-                                                                subCategory: item.sub_category.id
-                                                            })" class="font-medium  hover:text-gray-700 first-letter:capitalize truncate">
-                                {{ item.sub_category.name }}
-                            </Link>
-                        </div>
-                    </li>
-                </ol>
-            </nav>
+        <div class="mt-4">
             <h3 class="xsDark">{{ item.name }}</h3>
             <p class="text-xs text-gray-500 line-clamp-2">
                 {{ item.description }}
@@ -45,7 +23,7 @@
                             {{ property.name }}
                         </div>
                         <div>
-                            {{ property.pivot.value }}
+                            {{ formatProperty(property) }}
                         </div>
                     </div>
                 </div>
@@ -61,13 +39,19 @@
 <script setup>
 
 import {Link, usePage} from "@inertiajs/vue3";
-import {computed, ref} from "vue";
-import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
+import {computed, defineAsyncComponent, ref} from "vue";
 
 const props = defineProps({
     item: {
         type: Object,
         required: true
+    }
+})
+
+const ArticleDetailModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue'),
+    loadingComponent: {
+        template: '<div>Loading...</div>'
     }
 })
 
@@ -93,6 +77,29 @@ const getMainImageInImage = computed(() => {
     };
 });
 
+const formatProperty = (property) => {
+    if (property.type === 'room') {
+        return props.item.room?.name === 'Room not found' ? $t(props.item?.room?.name) : props.item?.room?.name;
+    }
+
+    if (property.type === 'date') {
+        return new Date(property.pivot.value).toLocaleDateString();
+    }
+
+    if (property.type === 'time') {
+        return new Date(property.pivot.value).toLocaleTimeString();
+    }
+
+    if (property.type === 'datetime') {
+        return new Date(property.pivot.value).toLocaleString();
+    }
+
+    if (property.type === 'checkbox') {
+        return property.pivot.value ? $t('Yes') : $t('No');
+    }
+
+    return property.pivot.value;
+}
 
 </script>
 

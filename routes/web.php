@@ -109,6 +109,7 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnCo
 use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
+use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
@@ -1686,15 +1687,20 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
             ->name('inventory.index');
 
-        Route::get('/category/{inventoryCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'show'])
+        Route::get('/category/{inventoryCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
             ->name('inventory.category.show');
 
-        Route::get('/category/{inventoryCategory}/sub/{subCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'showSubCategory'])
+        Route::get('/category/{inventoryCategory}/sub/{inventorySubCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
             ->name('inventory.sub.category.show');
 
         // post inventory-management.articles.store
         Route::post('/articles/store', [InventoryArticleController::class, 'store'])
             ->name('inventory-management.articles.store');
+    });
+
+
+    Route::group(['prefix' => 'manufacturers'], function (): void {
+        Route::get('/', [ManufacturerController::class, 'index'])->name('manufacturers.index');
     });
 
 

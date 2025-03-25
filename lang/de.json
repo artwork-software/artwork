@@ -2400,7 +2400,6 @@
     "Properties": "Eigenschaften",
     "String": "Text",
     "Number": "Zahl",
-    "Boolean": "Ja/Nein",
     "Date": "Datum",
     "Time": "Zeit",
     "Datetime": "Datum & Zeit",
@@ -2462,5 +2461,11 @@
     "Add new detailed article": "Neuen detaillierten Artikel hinzufügen",
     "Detailed Article without name. Please add a name": "Detaillierter Artikel ohne Namen. Bitte füge einen Namen hinzu",
     "Detailed article properties": "Detaillierte Artikel-Eigenschaften",
-    "New detailed article": "Neuer detaillierter Artikel"
+    "New detailed article": "Neuer detaillierter Artikel",
+    "Search Articles": "Artikel suchen",
+    "No properties were specified for this article": "Es wurden keine Eigenschaften für diesen Artikel angegeben",
+    "Room not found": "Raum nicht gefunden",
+    "Manufacturers": "Hersteller",
+    "Edit and create manufacturers for your inventory.": "Bearbeite und erstelle Hersteller für dein Inventar.",
+    "Customer Number": "Kundennummer"
 }

@@ -1,26 +1,35 @@
 <template>
     <AppLayout>
         <div class="w-full ml-5 px-10 bg-gray-50 min-h-screen">
-            <div class="border-b border-gray-200 pt-8 pb-5">
+            <div class="border-b border-gray-200 pt-8 pb-5 flex items-center justify-between">
                 <div class="max-w-3xl">
-                    <TinyPageHeadline
-                        :title="$t('Inventory')"
-                        :description="$t('Welcome to the {0} inventory! Here you will find a complete overview of all available products. You can browse through the various items, view details and manage which products are currently in stock.', [usePage().props.name])"
-                    />
+                    <div>
+                        <TinyPageHeadline
+                            :title="$t('Inventory')"
+                            :description="$t('Welcome to the {0} inventory! Here you will find a complete overview of all available products. You can browse through the various items, view details and manage which products are currently in stock.', [usePage().props.name])"
+                        />
+                    </div>
+
+                    <div class="max-w-xs pt-5">
+                        <!-- name filter and search -->
+                        <TextInputComponent
+                            id="productSearch"
+                            v-model="searchArticleInput"
+                            :label="$t('Search Articles')"
+                            />
+                    </div>
                 </div>
 
-                <div class="">
-                    <!-- name filter and search -->
-                </div>
 
                 <div class="mt-5">
-                    <div @click="showAddEditArticleModal = true" class="flex items-center gap-x-2 text-gray-400 font-lexend font-semibold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
+                    <SmallFormButton class="flex items-center gap-x-2 font-lexend" @click="showAddEditArticleModal = true">
                         <component is="IconBarcode" class="size-5" aria-hidden="true" />
                         <span>
                             {{ $t('Add Article') }}
                         </span>
-                    </div>
+                    </SmallFormButton>
                 </div>
+
             </div>
 
             <div class="pt-12 pb-24 lg:grid lg:grid-cols-3 lg:gap-x-8 xl:grid-cols-8">
@@ -89,6 +98,7 @@
                 :category="props.currentCategory"
                 :categories="props.categories"
                 :properties="props.properties"
+                :rooms="props.rooms"
             />
         </div>
     </AppLayout>
@@ -97,7 +107,7 @@
 <script setup>
 
 import AppLayout from "@/Layouts/AppLayout.vue";
-import {Link, usePage} from "@inertiajs/vue3"
+import {Link, router, usePage} from "@inertiajs/vue3"
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import InventorySidebarComponent from "@/Pages/Inventory/LayoutComponents/InventorySidebarComponent.vue";
 import InventoryBreadcrumbComponent from "@/Pages/Inventory/LayoutComponents/InventoryBreadcrumbComponent.vue";
@@ -106,11 +116,14 @@ import InventoryEmptyProductsAlertComponent
 import InventorySingleArticleInGrid from "@/Pages/Inventory/GridComponents/InventorySingleArticleInGrid.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {Switch} from "@headlessui/vue";
-import {computed, onMounted, ref} from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
 import InventoryFilterComponent from "@/Pages/Inventory/LayoutComponents/InventoryFilterComponent.vue";
 import InventoryLayoutSwitchComponent from "@/Pages/Inventory/LayoutComponents/InventoryLayoutSwitchComponent.vue";
 import InventorySingleArticleInTable from "@/Pages/Inventory/TableComponents/InventorySingleArticleInTable.vue";
+import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import debounce from "lodash.debounce";
 const props = defineProps({
     categories: {
         type: Object,
@@ -141,11 +154,15 @@ const props = defineProps({
     properties: {
         type: Object,
         required: true
+    },
+    rooms: {
+        type: Object,
+        required: true
     }
 })
 
 const gridLayout = ref(true)
-
+const searchArticleInput = ref(usePage().props?.urlParameters?.search ?? '')
 const showAddEditArticleModal = ref(false);
 
 const updateGridLayout = (value) => {
@@ -166,7 +183,24 @@ const allPropertiesFromArticles = computed(() => {
     })
 
     return properties;
+})
 
+const searchArticles = debounce(() => {
+    // search for articles
+    router.reload({
+        data: {
+            search: searchArticleInput.value
+        },
+        preserveScroll: true,
+        only: ['articles']
+    })
+}, 500)
+
+
+// watch for search input
+watch(searchArticleInput, (value) => {
+    // search for articles with debounce
+    searchArticles()
 })
 </script>
 

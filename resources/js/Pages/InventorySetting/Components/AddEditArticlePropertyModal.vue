@@ -134,7 +134,7 @@ const types = [
     { name: 'Time', type: 'time' },
     { name: 'Datetime', type: 'datetime' },
     { name: 'Checkbox', type: 'checkbox' },
-    { name: 'Upload', type: 'file' },
+    //{ name: 'Upload', type: 'file' },
 ]
 
 const selectedType = ref(props.property ? types.find(type => type.type === props.property.type) : types[0])

@@ -117,7 +117,7 @@ import InventoryEmptyProductsAlertComponent
 import InventorySingleArticleInGrid from "@/Pages/Inventory/GridComponents/InventorySingleArticleInGrid.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {Switch} from "@headlessui/vue";
-import {computed, onMounted, ref, watch} from "vue";
+import {computed, onMounted, ref, watch, provide} from "vue";
 import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
 import InventoryFilterComponent from "@/Pages/Inventory/LayoutComponents/InventoryFilterComponent.vue";
 import InventoryLayoutSwitchComponent from "@/Pages/Inventory/LayoutComponents/InventoryLayoutSwitchComponent.vue";
@@ -165,6 +165,13 @@ const props = defineProps({
         required: true
     }
 })
+
+provide('properties', props.properties)
+provide('rooms', props.rooms)
+provide('manufacturers', props.manufacturers)
+provide('categories', props.categories)
+
+
 
 const gridLayout = ref(true)
 const searchArticleInput = ref(usePage().props?.urlParameters?.search ?? '')

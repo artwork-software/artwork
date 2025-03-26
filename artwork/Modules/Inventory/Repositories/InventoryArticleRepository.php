@@ -4,6 +4,7 @@ namespace Artwork\Modules\Inventory\Repositories;
 
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
+use Illuminate\Support\Collection;
 
 class InventoryArticleRepository
 {
@@ -24,7 +25,7 @@ class InventoryArticleRepository
 
     public function withRelations($query, int $perPage = 50)
     {
-        return $query->with(['properties', 'category', 'subCategory', 'images'])->paginate($perPage);
+        return $query->with(['properties', 'category', 'subCategory', 'images', 'detailedArticleQuantities'])->paginate($perPage);
     }
 
     public function applyFilters($query, array $filters)
@@ -88,4 +89,73 @@ class InventoryArticleRepository
 
         return $query;
     }
+
+    public function create(array $data): InventoryArticle
+    {
+        return InventoryArticle::create($data);
+    }
+
+    public function addImages(InventoryArticle $article, array $images, ?int $mainImageIndex = null): void
+    {
+        foreach ($images as $index => $image) {
+            $created = $article->images()->create([
+                'image' => $image->store('inventory_articles', 'public'),
+                'is_main_image' => false,
+                'order' => 0
+            ]);
+
+            if ($index === $mainImageIndex) {
+                $created->update(['is_main_image' => true]);
+            }
+        }
+    }
+
+    public function attachProperties(InventoryArticle $article, Collection $properties): void
+    {
+        foreach ($properties as $property) {
+            $article->properties()->attach((int)$property['id'], [
+                'value' => (string)$property['value']
+            ]);
+        }
+    }
+
+    public function addDetailedArticles(InventoryArticle $article, Collection $detailedArticles): void
+    {
+        foreach ($detailedArticles as $detailedArticleData) {
+            $detailedArticle = $article->detailedArticleQuantities()->create([
+                'name' => $detailedArticleData['name'],
+                'quantity' => $detailedArticleData['quantity'],
+                'description' => $detailedArticleData['description'],
+            ]);
+
+            foreach ($detailedArticleData['properties'] as $property) {
+                $detailedArticle->properties()->attach((int)$property['id'], [
+                    'value' => (string)$property['value']
+                ]);
+            }
+        }
+    }
+
+    public function update(InventoryArticle $article, array $data): void
+    {
+        $article->update($data);
+    }
+
+    public function detachAllProperties(InventoryArticle $article): void
+    {
+        $article->properties()->detach();
+    }
+
+    public function detachAllDetailedArticleProperties(InventoryArticle $article): void
+    {
+        foreach ($article->detailedArticleQuantities as $detailedArticle) {
+            $detailedArticle->properties()->detach();
+        }
+    }
+
+    public function deleteAllDetailedArticles(InventoryArticle $article): void
+    {
+        $article->detailedArticleQuantities()->delete();
+    }
+
 }

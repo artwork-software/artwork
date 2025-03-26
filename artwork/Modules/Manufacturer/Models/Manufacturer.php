@@ -4,6 +4,7 @@ namespace Artwork\Modules\Manufacturer\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Scout\Searchable;
 
 /**
  * @property string name
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 class Manufacturer extends Model
 {
     use HasFactory;
+    use Searchable;
 
     protected $fillable = [
         'name',
@@ -27,4 +29,23 @@ class Manufacturer extends Model
         'phone',
         'email',
     ];
+
+    public function searchableAs(): string
+    {
+        return 'manufacturers_index';
+    }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'address' => $this->address,
+            'website' => $this->website,
+            'customer_number' => $this->customer_number,
+            'contact_person' => $this->contact_person,
+            'phone' => $this->phone,
+            'email' => $this->email,
+        ];
+    }
 }

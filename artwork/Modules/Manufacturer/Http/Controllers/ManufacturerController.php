@@ -6,65 +6,38 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Manufacturer\Http\Requests\StoreManufacturerRequest;
 use Artwork\Modules\Manufacturer\Http\Requests\UpdateManufacturerRequest;
 use Artwork\Modules\Manufacturer\Models\Manufacturer;
+use Artwork\Modules\Manufacturer\Services\ManufacturerService;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ManufacturerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(protected ManufacturerService $service) {}
+
+    public function index(Request $request)
     {
+        $search = $request->get('search');
+        $perPage = $request->get('entitiesPerPage', 10);
+
+        $manufacturers = $this->service->getAll($search, $perPage);
+
         return Inertia::render('Manufacturer/Index', [
-            'manufacturers' => Manufacturer::all()
+            'manufacturers' => $manufacturers,
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreManufacturerRequest $request)
     {
-        //
+        $this->service->store($request->validated());
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Manufacturer $manufacturer)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Manufacturer $manufacturer)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateManufacturerRequest $request, Manufacturer $manufacturer)
     {
-        //
+        $this->service->update($manufacturer, $request->validated());
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Manufacturer $manufacturer)
     {
-        //
+        $this->service->delete($manufacturer);
     }
 }

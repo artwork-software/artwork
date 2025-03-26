@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @closed="$emit('close')" modal-size="max-w-4xl" full-modal>
+    <BaseModal @closed="$emit('close')" :modal-size="articleForm.is_detailed_quantity ? 'max-w-7xl' : 'max-w-4xl'" full-modal>
         <div class="px-6 pt-4">
             <ModalHeader
                 :title="article ? $t('Edit article') : $t('Add Article')"
@@ -9,7 +9,7 @@
 
         <form @submit.prevent="submit">
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-6" v-if="currentTabId !== 1">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-6 pb-4">
                 <div class="col-span-1">
                     <div @click="addImage"  class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
                         <component is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true" />
@@ -38,12 +38,12 @@
             </div>
 
 
-            <div class="px-6 pb-4" v-if="currentTabId !== 1 || showArticleHeader">
+            <div class="px-6 pb-4">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="col-span-full">
                         <TextInputComponent
                             id="name" v-model="articleForm.name"
-                            :label="$t('Name')"
+                            :label="$t('Name*')"
                             required
                         />
                     </div>
@@ -59,7 +59,7 @@
                     <div class="col-span-full">
                         <NumberInputComponent
                             id="quantity" v-model="articleForm.quantity"
-                            :label="$t('Quantity')"
+                            :label="$t('Quantity*')"
                             :max="10000000"
                             :maxlength="1000000"
                             required
@@ -70,31 +70,14 @@
 
             </div>
 
-            <div class="px-6 bg-gray-50 py-6" v-if="currentTabId !== 1 || showArticleHeader">
-                <div class="flex gap-3">
-                    <div class="flex h-6 shrink-0 items-center">
-                        <div class="group grid size-4 grid-cols-1">
-                            <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description" v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity" type="checkbox" class="input-checklist" />
-                        </div>
-                    </div>
-                    <div class="text-sm/6">
-                        <label for="is_detailed_quantity" class="font-medium text-gray-900">
-                            {{ $t('Single inventory capable') }}
-                        </label>
-                        <p id="is_required-description" class="text-gray-500">
-                            {{ $t('If activated, each individual piece of this article can be provided with its own properties') }}
-                        </p>
-                    </div>
-                </div>
-            </div>
 
             <!-- Tabs -->
-            <div class="px-6 pb-4">
+            <div class="px-6 pb-4 hidden">
                 <ArticleModalTabs :is-detailed-quantity="articleForm.is_detailed_quantity" @update:current-tab="updateTabId"/>
             </div>
 
             <!-- Category selector -->
-            <div class="bg-gray-50 px-6 py-6 mb-5" v-if="currentTabId === 0">
+            <div class="bg-gray-50 px-6 py-6 mb-5">
                 <div class="mb-5">
                     <Listbox as="div" v-model="selectedCategory">
                         <ListboxLabel class="xsDark">
@@ -154,10 +137,26 @@
                         <div class="text-xs text-artwork-buttons-create underline underline-offset-4 hover:text-artwork-buttons-hover duration-200 ease-in-out cursor-pointer" @click="selectedSubCategory = null">{{ $t('Remove the sub-category assignment')}}</div>
                     </div>
                 </div>
+
+                <div class="flex gap-3" v-if="selectedCategory">
+                    <div class="flex h-6 shrink-0 items-center">
+                        <div class="group grid size-4 grid-cols-1">
+                            <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description" v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity" type="checkbox" class="input-checklist" />
+                        </div>
+                    </div>
+                    <div class="text-sm/6">
+                        <label for="is_detailed_quantity" class="font-medium text-gray-900">
+                            {{ $t('Single inventory capable') }}
+                        </label>
+                        <p id="is_required-description" class="text-gray-500">
+                            {{ $t('If activated, each individual piece of this article can be provided with its own properties') }}
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <!-- category properties -->
-            <div class="px-6" v-if="articleForm.properties.length > 0 && selectedCategory && currentTabId === 0">
+            <div class="px-6" v-if="articleForm.properties.length > 0 && selectedCategory && !articleForm.is_detailed_quantity">
                 <div>
                     <TinyPageHeadline
                         :title="$t('Category & subcategory based properties')"
@@ -189,7 +188,7 @@
                                                         direction="top"
                                                         tooltip-width="break-all !text-xs"
                                                     />
-                                                    <component is="IconTrash" class="h-5 w-5 text-red-600 cursor-pointer" v-if="!property.categoryProperty" @click="articleForm.properties = articleForm.properties.filter(prop => prop.id !== property.id)" />
+                                                    <component is="IconTrash" class="h-5 w-5 text-red-600 cursor-pointer" v-if="property.categoryProperty" @click="articleForm.properties = articleForm.properties.filter(prop => prop.id !== property.id)" />
                                                 </div>
                                             </div>
                                         </td>
@@ -319,133 +318,158 @@
             </div>
 
 
-            <!-- Detailed quantity -->
-            <div class="px-6 divide-y-2 divide-dashed" v-if="currentTabId === 1">
-
-                <div class="flow-root py-4" v-for="(detailedArticle, index) in articleForm.detailed_article_quantities">
-                    <div class="flex items-center justify-center xsLight">
-                        {{ $t('New detailed article') }}
+            <div class="px-6 bg-gray-50 py-6 hidden">
+                <div class="flex gap-3">
+                    <div class="flex h-6 shrink-0 items-center">
+                        <div class="group grid size-4 grid-cols-1">
+                            <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description" v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity" type="checkbox" class="input-checklist" />
+                        </div>
                     </div>
-                    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                    <div class="text-sm/6">
+                        <label for="is_detailed_quantity" class="font-medium text-gray-900">
+                            {{ $t('Single inventory capable') }}
+                        </label>
+                        <p id="is_required-description" class="text-gray-500">
+                            {{ $t('If activated, each individual piece of this article can be provided with its own properties') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed quantity -->
+            <div class="px-6" v-if="articleForm.is_detailed_quantity">
+                <div class="flow-root py-4">
+                    <div class="-my-2">
+                        <div class="inline-block min-w-full py-2 align-middle">
                             <table class="min-w-full divide-y divide-gray-300">
                                 <thead>
                                 <tr class="divide-x divide-gray-200">
                                     <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
                                     <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Description') }}</th>
                                     <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Quantity') }}</th>
+                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0" v-for="property in articleForm.detailed_article_quantities?.[0]?.properties">{{ property.name }}</th>
                                 </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
-                                    <tr class="divide-x divide-gray-200">
-                                        <td class="w-[25%] py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                    <tr class="divide-x divide-gray-200" v-for="(detailedArticle, index) in articleForm?.detailed_article_quantities">
+                                        <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0">
                                             <input type="text" v-model="detailedArticle.name"
                                                    required
                                                    class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                                    placeholder="Name"
                                             />
                                         </td>
-                                        <td class="w-[60%] p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
+                                        <td class="p-4 text-sm whitespace-nowrap text-gray-500 xsLight cursor-default">
                                             <input type="text" v-model="detailedArticle.description"
                                                    class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                                    :placeholder="$t('Description')"
                                             />
                                         </td>
-                                        <td class="w-[15%] text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                        <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
                                             <input type="text" v-model="detailedArticle.quantity"
                                                    required
                                                    class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                                                   :placeholder="$t('Quantity')"
+                                                   :placeholder="$t('Quantity*')"
                                             />
                                         </td>
-                                    </tr>
+                                        <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0" v-for="property in detailedArticle.properties">
+                                            <Combobox v-if="property.type === 'room'" as="div" v-model="property.value" @update:modelValue="query = ''">
+                                                <div class="relative">
+                                                    <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="query = $event.target.value" @blur="query = ''" :display-value="(person) => property.value ? rooms?.find((room) => room.id === parseInt(property.value) )?.name : ''"/>
+                                                    <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                        <component is="IconSelector" class="size-5 text-gray-400" aria-hidden="true" />
+                                                    </ComboboxButton>
 
-                                </tbody>
-                            </table>
-
-                            <div class="my-3 xsDark">
-                                {{ $t('Detailed article properties') }}
-                            </div>
-
-                            <table class="min-w-full divide-y divide-gray-300">
-                                <thead>
-                                    <tr class="divide-x divide-gray-200">
-                                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Type') }}</th>
-                                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Value') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200 bg-white">
-                                    <tr class="divide-x divide-gray-200" v-for="(property, index) in detailedArticle.properties" :key="property?.id">
-                                        <td class="w-[25%] py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-                                            <div class="flex items-center justify-between">
-                                                {{ property?.name }}
-                                                <div class="flex items-center gap-x-2">
-                                                    <ToolTipComponent
-                                                        v-if="property?.tooltip_text"
-                                                        :tooltip-text="property?.tooltip_text"
-                                                        icon="IconInfoCircle"
-                                                        icon-size="size-4"
-                                                        direction="top"
-                                                        tooltip-width="break-all !text-xs"
-                                                    />
-                                                    <component
-                                                        is="IconTrash" class="h-5 w-5 text-red-600 cursor-pointer"
-                                                        @click="detailedArticle.properties = detailedArticle.properties.filter(prop => prop.id !== property.id)"
-
-                                                    />
+                                                    <ComboboxOptions v-if="filteredPeople.length > 0" class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                        <ComboboxOption v-for="person in filteredPeople" :key="person.id" :value="person.id" as="template" v-slot="{ active, selected }">
+                                                            <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                <span :class="['block truncate', selected && 'font-semibold']">
+                                                                  {{ person.name }}
+                                                                </span>
+                                                                <span v-if="selected" :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                  <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                                                </span>
+                                                            </li>
+                                                        </ComboboxOption>
+                                                    </ComboboxOptions>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td class="w-[60%] p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
-                                            {{ $t(capitalizeFirstLetter(property?.type)) }}
-                                        </td>
-                                        <td class="w-[15%] text-sm whitespace-nowrap text-gray-500 sm:pr-0">
-                                            <input v-if="property.type !== 'file'"
+                                            </Combobox>
+
+                                            <Combobox v-if="property.type === 'manufacturer'" as="div" v-model="property.value" @update:modelValue="queryManufacturer = ''">
+                                                <div class="relative">
+                                                    <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="queryManufacturer = $event.target.value" @blur="queryManufacturer = ''"  :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.value) )?.name : ''" />
+                                                    <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                        <component is="IconSelector" class="size-5 text-gray-400" aria-hidden="true" />
+                                                    </ComboboxButton>
+
+                                                    <ComboboxOptions v-if="filteredManufacturers.length > 0" class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                        <ComboboxOption v-for="person in filteredManufacturers" :key="person.id" :value="person.id" as="template" v-slot="{ active, selected }">
+                                                            <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                <span :class="['block truncate', selected && 'font-semibold']">
+                                                                  {{ person.name }}
+                                                                </span>
+                                                                <span v-if="selected" :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                  <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                                                </span>
+                                                            </li>
+                                                        </ComboboxOption>
+                                                    </ComboboxOptions>
+                                                </div>
+                                            </Combobox>
+
+                                            <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer'"
                                                    :type="property.type" v-model="property.value"
                                                    :required="property.is_required"
                                                    class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                                    :placeholder="property.is_required ? $t('Value*') : $t('Value')"
                                             />
+                                            <div v-if="property.type === 'file'">
+                                                <input type="file" @input="property.value = $event.target.files" class="sr-only" />
+                                                <div class="flex items-center gap-x-2">
+                                                    <div class="flex items-center gap-x-2">
+                                                        <component is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
+                                                        <div class="flex">
+                                                            <div class="truncate font-medium">{{ property.value ? property.value[0].name : $t('Select a file') }}</div>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out" @click="property.value = null">
+                                                        <component is="IconTrash" class="h-5 w-5" aria-hidden="true" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div v-if="property.type === 'checkbox'" class="px-3">
+                                                <input type="checkbox" v-model="property.value" class="input-checklist" />
+                                            </div>
                                         </td>
                                     </tr>
+
                                     <tr class="divide-x divide-gray-200">
-                                        <td colspan="3" class="py-2 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-                                            <PropertiesMenu white-menu-background has-no-offset>
-                                                <template v-slot:button>
-                                                    <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
-                                                        <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
-                                                        <span>
-                                                            {{ $t('Add property') }}
-                                                        </span>
-                                                    </div>
-                                                </template>
-                                                <template v-slot:menu>
-                                                    <div v-if="showOnlyPropertiesWhereAreNotInDetailedArticle(detailedArticle.properties).length > 0">
-                                                        <div v-for="property in showOnlyPropertiesWhereAreNotInDetailedArticle(detailedArticle.properties)">
-                                                            <div @click="addPropertyToDetailedArticleIndex(property, index)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
-                                                                <div class="xsDark">
-                                                                    {{ property.name }}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div v-else class="p-2">
-                                                        <div class="rounded-md bg-red-50 p-4">
-                                                            <div class="flex">
-                                                                <div class="shrink-0">
-                                                                    <component is="IconInfoSquareRoundedFilled" class="size-5 text-red-400" aria-hidden="true" />
-                                                                </div>
-                                                                <div class="ml-3">
-                                                                    <p class="text-sm font-medium text-red-800">
-                                                                        {{ $t('All properties are already added') }}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                            </PropertiesMenu>
+                                        <td colspan="2" class="py-2 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+
+                                        </td>
+                                        <td colspan="1" class="p-2 text-xs whitespace-nowrap text-gray-500 font-lexend font-medium cursor-default">
+                                            <div class="flex items-center justify-between">
+                                                <span>{{ $t('Total quantity') }}:</span>
+                                                <span v-if="calculateTotalQuantity > articleForm.quantity" @click="articleForm.quantity = calculateTotalQuantity" class="flex items-center gap-x-0.5  cursor-pointer">
+                                                    <ToolTipWithTextComponent
+                                                        :text="formatQuantity(calculateTotalQuantity)"
+                                                        classes="text-artwork-buttons-create"
+                                                        icon-right
+                                                        stroke="2"
+                                                        icon="IconClick"
+                                                        icon-size="size-4"
+                                                        :tooltip-text="$t('Click to set the article quantity to the detailed article quantity')" />
+                                                </span>
+                                                <span class="font-bold" v-else>{{ formatQuantity(calculateTotalQuantity) ?? 0 }}</span>
+                                            </div>
+                                        </td>
+                                        <td :colspan="articleForm.detailed_article_quantities?.[0].properties.length ?? 0" class="p-2 text-xs whitespace-nowrap text-gray-500 font-lexend font-medium cursor-default flex items-center justify-between">
+                                            <div v-if="calculateTotalQuantity > articleForm.quantity" class="text-red-600">
+                                                <div>
+                                                    {{ $t('Detailed Article quantity is greater than article quantity') }}
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -453,8 +477,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="border-t pt-5">
-                    <div @click="addNewDetailedArticle" class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
+
+                <div class="pt-5">
+                    <div @click="addNewDetailedArticle" class="w-fit flex items-center gap-x-2 text-gray-400 font-lexend font-bold select-none cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
                         <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
                         <span>
                             {{ $t('Add new detailed article') }}
@@ -462,9 +487,8 @@
                     </div>
                 </div>
             </div>
-
             <div class="flex items-center justify-center my-10">
-                <FormButton type="submit" :text="article ? $t('Update') : $t('Create')" :disabled="articleForm.processing" :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''" />
+                <FormButton type="submit" :text="article ? $t('Update') : $t('Create')" :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory || calculateTotalQuantity > articleForm.quantity" :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''" />
             </div>
         </form>
     </BaseModal>
@@ -475,7 +499,7 @@
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {useForm} from "@inertiajs/vue3";
-import {computed, ref, watch} from "vue";
+import {computed, inject, ref, watch} from "vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
@@ -492,6 +516,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import PropertiesMenu from "@/Components/Menu/PropertiesMenu.vue";
 import ArticleModalTabs from "@/Pages/Inventory/Components/Article/Modals/Components/ArticleModalTabs.vue";
+import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
 
 const props = defineProps({
     article: {
@@ -499,28 +524,17 @@ const props = defineProps({
         required: false,
         default: null
     },
-    categories: {
-        type: Object,
-        required: false
-    },
-    properties: {
-        type: Object,
-        required: false
-    },
-    rooms: {
-        type: Object,
-        required: false
-    },
-    manufacturers: {
-        type: Object,
-        required: false
-    }
 })
+
+const properties = inject('properties');
+const categories = inject('categories');
+const rooms = inject('rooms');
+const manufacturers = inject('manufacturers');
 
 const emits = defineEmits(["close"]);
 const articleImageInput = ref(null);
-const selectedCategory = ref(null);
-const selectedSubCategory = ref(null);
+const selectedCategory = ref(props.article ? categories.find((cate) => cate.id === props.article.inventory_category_id) : null);
+const selectedSubCategory = ref(props.article ? categories.find((cate) => cate.id === props.article.inventory_sub_category_id) : null);
 const currentTabId = ref(0);
 const currentMainImage = ref(0);
 const showArticleHeader = ref(true);
@@ -529,32 +543,58 @@ const queryManufacturer = ref('');
 const query = ref('')
 const filteredPeople = computed(() =>
     query.value === ''
-        ? props.rooms
-        : props.rooms.filter((room) => {
+        ? rooms
+        : rooms.filter((room) => {
             return room.name.toLowerCase().includes(query.value.toLowerCase())
         }),
 )
 
 const filteredManufacturers = computed(() =>
     queryManufacturer.value === ''
-        ? props.manufacturers
-        : props.manufacturers.filter((manufacturer) => {
+        ? manufacturers
+        : manufacturers.filter((manufacturer) => {
             return manufacturer.name.toLowerCase().includes(queryManufacturer.value.toLowerCase())
         }),
 )
+const getValue = (prop) => {
+    return prop.value ?? prop.pivot?.value ?? '';
+}
+
+const getIsDeletable = (id) => {
+    return properties?.find(p => p.id === id)?.is_deletable ?? false;
+}
 
 const articleForm = useForm({
     name: props.article ? props.article.name : "",
     description: props.article ? props.article.description : "",
-    inventory_category_id: null,
-    inventory_sub_category_id: null,
+    inventory_category_id: props.article ? props.article.inventory_category_id : null,
+    inventory_sub_category_id: props.article ? props.article.inventory_sub_category_id : null,
     quantity: props.article ? props.article.quantity : 0,
     is_detailed_quantity: props.article ? props.article.is_detailed_quantity : false,
     images: [],
-    properties: [],
-    detailed_article_quantities: [],
+    properties: props.article ? props.article.properties : [],
+    detailed_article_quantities: props.article ? props.article.detailed_article_quantities.map((detailedArticle) => {
+        return {
+            name: detailedArticle.name,
+            description: detailedArticle.description,
+            quantity: detailedArticle.quantity,
+            properties: detailedArticle.properties.map((prop) => {
+                return {
+                    id: prop.id,
+                    name: prop.name,
+                    tooltip_text: prop.tooltip_text,
+                    type: prop.type,
+                    value: getValue(prop),
+                    is_required: prop.is_required,
+                    categoryProperty: getIsDeletable(prop.id)
+                }
+            })
+        }
+    }) : [],
     main_image_index: 0
 })
+
+
 
 
 const updateTabId = (id) => {
@@ -564,12 +604,36 @@ const updateTabId = (id) => {
     }
 }
 
+const checkIfEveryPropertyWhereAreRequiredIsFilled = computed(() => {
+    if (articleForm.is_detailed_quantity) {
+        return articleForm.detailed_article_quantities?.every(detailedArticle => {
+            return detailedArticle.properties?.every(property => {
+                return !property.is_required || getValue(property);
+            });
+        });
+    }
+
+    return articleForm.properties?.every(property => {
+        return !property.is_required || getValue(property);
+    });
+})
+
+const formatQuantity = (quantity) => {
+
+    //if (quantity === 0) return $t('Out of stock');
+    // if not return 10000 to 10.000
+
+    return quantity?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+
+
 const addImage = () => {
     articleImageInput.value.click();
 }
 
 const computedProperties = computed(() => {
-    return props.properties.filter(prop => !articleForm.properties.find(p => p.id === prop.id));
+    return properties.filter(prop => !articleForm.properties.find(p => p.id === prop.id));
 })
 
 const capitalizeFirstLetter = (val) => {
@@ -579,18 +643,26 @@ const capitalizeFirstLetter = (val) => {
 const submit = () =>  {
     articleForm.main_image_index = currentMainImage.value;
 
-    articleForm.post(route('inventory-management.articles.store'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            articleForm.reset();
-            selectedCategory.value = null;
-            selectedSubCategory.value = null;
-            articleImageInput.value = 0;
-            emits('close');
-        }
-    });
+    if (props.article) {
+        articleForm.patch(route('inventory-management.articles.update', props.article.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                emits('close');
+            }
+        });
+    } else {
+        articleForm.post(route('inventory-management.articles.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                articleForm.reset();
+                selectedCategory.value = null;
+                selectedSubCategory.value = null;
+                articleImageInput.value = 0;
+                emits('close');
+            }
+        });
+    }
 }
-
 const addPropertyToArticle = (property) => {
     // add property to article properties if it doesn't exist
     if (!articleForm.properties.find(prop => prop.id === property.id)) {
@@ -599,9 +671,9 @@ const addPropertyToArticle = (property) => {
             name: property.name,
             tooltip_text: property.tooltip_text,
             type: property.type,
-            value: property.pivot?.value ?? '',
+            value: getValue(property) ?? '',
             is_required: property.is_required,
-            categoryProperty: false
+            categoryProperty: getIsDeletable(property.id)
         });
     }
 }
@@ -612,10 +684,24 @@ const addNewDetailedArticle = () => {
         name: '',
         description: '',
         quantity: '',
-        properties: []
+        properties: articleForm.detailed_article_quantities[0].properties.map(prop => ({
+            id: prop.id,
+            name: prop.name,
+            tooltip_text: prop.tooltip_text,
+            type: prop.type,
+            value: '',
+            is_required: prop.is_required,
+            categoryProperty: getIsDeletable(prop.id)
+        }))
     });
 }
 
+const calculateTotalQuantity = computed(() => {
+    return articleForm.detailed_article_quantities?.reduce((total, detailedArticle) => {
+        const quantity = parseInt(detailedArticle?.quantity, 10);
+        return total + (isNaN(quantity) ? 0 : quantity);
+    }, 0);
+});
 
 const addPropertyToDetailedArticleIndex = (property, detailedArticleIndex) => {
     // add property to detailed article properties if it doesn't exist
@@ -625,24 +711,40 @@ const addPropertyToDetailedArticleIndex = (property, detailedArticleIndex) => {
             name: property.name,
             tooltip_text: property.tooltip_text,
             type: property.type,
-            value: property.pivot?.value ?? '',
+            value: getValue(property) ?? '',
             is_required: property.is_required,
-            categoryProperty: false
+            categoryProperty: getIsDeletable(property.id)
         });
     }
 }
 
 const showOnlyPropertiesWhereAreNotInDetailedArticle = (detailedArticleProperties) => {
-    return props.properties.filter(property => !detailedArticleProperties.find(prop => prop.id === property.id));
+    return properties.filter(property => !detailedArticleProperties.find(prop => prop.id === property.id));
 }
 
 watch(selectedCategory, (value) => {
-    // Entferne alle Eigenschaften, die categoryProperty: true haben
-    articleForm.properties = articleForm.properties.filter(prop => !prop.categoryProperty);
+    const updateProps = (props) => {
+        if (articleForm.is_detailed_quantity && articleForm.detailed_article_quantities.length) {
+            articleForm.detailed_article_quantities.forEach(item => {
+                item.properties = [...props];
+            });
+        } else {
+            articleForm.properties = props;
+        }
+    };
+
+    const getCurrentProps = () => {
+        if (articleForm.is_detailed_quantity && articleForm.detailed_article_quantities.length) {
+            return articleForm.detailed_article_quantities[0].properties;
+        }
+        return articleForm.properties;
+    };
+
+    let props = getCurrentProps().filter(prop => !prop.categoryProperty);
 
     if (!value || !Array.isArray(value.properties)) {
-        // Kategorie wurde entfernt
         articleForm.inventory_category_id = null;
+        updateProps(props);
         return;
     }
 
@@ -650,39 +752,56 @@ watch(selectedCategory, (value) => {
     selectedSubCategory.value = null;
 
     value.properties.forEach(prop => {
-        const existing = articleForm.properties.find(p => p.id === prop.id);
-
+        const existing = props.find(p => p.id === prop.id);
         if (existing) {
             existing.categoryProperty = true;
         } else {
-            articleForm.properties.push({
+            props.push({
                 id: prop.id,
                 name: prop.name,
                 tooltip_text: prop.tooltip_text,
                 type: prop.type,
-                value: prop.pivot?.value ?? '',
+                value: '',
                 is_required: prop.is_required,
-                categoryProperty: true
+                categoryProperty: getIsDeletable(prop.id)
             });
         }
     });
+
+    updateProps(props);
 });
 
 watch(selectedSubCategory, (value) => {
+    const updateProps = (props) => {
+        if (articleForm.is_detailed_quantity && articleForm.detailed_article_quantities.length) {
+            articleForm.detailed_article_quantities.forEach(item => {
+                item.properties = [...props];
+            });
+        } else {
+            articleForm.properties = props;
+        }
+    };
+
+    const getCurrentProps = () => {
+        if (articleForm.is_detailed_quantity && articleForm.detailed_article_quantities.length) {
+            return articleForm.detailed_article_quantities[0].properties;
+        }
+        return articleForm.properties;
+    };
+
+    let props = getCurrentProps();
+
     if (!value) {
-        // Subkategorie entfernt
         articleForm.inventory_sub_category_id = null;
 
         if (selectedCategory.value) {
             const categoryPropertyIds = new Set(selectedCategory.value.properties.map(p => p.id));
-
-            articleForm.properties = articleForm.properties.filter(prop => {
-                return !prop.categoryProperty || categoryPropertyIds.has(prop.id);
-            });
+            props = props.filter(prop => !prop.categoryProperty || categoryPropertyIds.has(prop.id));
         } else {
-            articleForm.properties = articleForm.properties.filter(prop => !prop.categoryProperty);
+            props = props.filter(prop => !prop.categoryProperty);
         }
 
+        updateProps(props);
         return;
     }
 
@@ -691,29 +810,65 @@ watch(selectedSubCategory, (value) => {
     articleForm.inventory_sub_category_id = value.id;
 
     value.properties.forEach(prop => {
-        const existing = articleForm.properties.find(p => p.id === prop.id);
-
+        const existing = props.find(p => p.id === prop.id);
         if (existing) {
             existing.categoryProperty = true;
         } else {
-            articleForm.properties.push({
+            props.push({
                 id: prop.id,
                 name: prop.name,
                 tooltip_text: prop.tooltip_text,
                 type: prop.type,
-                value: prop.pivot?.value ?? '',
+                value: '',
                 is_required: prop.is_required,
-                categoryProperty: true
+                categoryProperty: getIsDeletable(prop.id)
             });
         }
     });
+
+    updateProps(props);
 });
 
+// watch on articleForm.is_detailed_quantity if it is true, then remove all properties from articleForm.properties
+// and add one new articleForm.detailed_article_quantities with the properties form articleForm.properties
+
+watch(() => articleForm.is_detailed_quantity, (value) => {
+    if (value) {
+        articleForm.detailed_article_quantities = [{
+            name: articleForm.name,
+            description: articleForm.description,
+            quantity: '',
+            properties: articleForm.properties.map(prop => {
+                return ({
+                    id: prop.id,
+                    name: prop.name,
+                    tooltip_text: prop.tooltip_text,
+                    type: prop.type,
+                    value: '',
+                    is_required: prop.is_required,
+                    categoryProperty: getIsDeletable(prop.id)
+                })
+            })
+        }];
+        articleForm.properties = [];
+    } else {
+        articleForm.properties = articleForm.detailed_article_quantities[0].properties.map(prop => {
+            return ({
+                id: prop.id,
+                name: prop.name,
+                tooltip_text: prop.tooltip_text,
+                type: prop.type,
+                value: '',
+                is_required: prop.is_required,
+                categoryProperty: getIsDeletable(prop.id)
+            })
+        });
+        articleForm.detailed_article_quantities = [];
+    }
+})
 
 </script>
 
 <style scoped>
 
 </style>
-<script setup lang="ts">
-</script>

@@ -3,6 +3,9 @@
 namespace Artwork\Modules\Inventory\Services;
 
 
+use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
+use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
+use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Repositories\InventoryArticleRepository;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
@@ -42,4 +45,64 @@ class InventoryArticleService
     {
         return $this->articleRepository->count();
     }
+
+    public function store(StoreInventoryArticleRequest $request): ?InventoryArticle
+    {
+        $article = $this->articleRepository->create([
+            'name' => $request->get('name'),
+            'description' => $request->get('description'),
+            'inventory_category_id' => $request->integer('inventory_category_id'),
+            'quantity' => $request->integer('quantity'),
+            'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
+        ]);
+
+        $images = $request->file('images') ?? [];
+        $mainImageIndex = $request->integer('main_image_index');
+
+        $this->articleRepository->addImages($article, $images, $mainImageIndex);
+
+        $article = $article->fresh();
+
+        $this->articleRepository->attachProperties($article, $request->collect('properties'));
+        $this->articleRepository->addDetailedArticles($article, $request->collect('detailed_article_quantities'));
+
+        return $article;
+    }
+
+
+    public function update(InventoryArticle $article, UpdateInventoryArticleRequest $request): ?InventoryArticle
+    {
+        $data = [
+            'name' => $request->get('name'),
+            'description' => $request->get('description'),
+            'inventory_category_id' => $request->integer('inventory_category_id'),
+            'quantity' => $request->integer('quantity'),
+            'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
+        ];
+
+        $this->articleRepository->update($article, $data);
+
+        // Remove old images
+        $article->images()->delete();
+
+        // Re-upload images
+        $images = $request->file('images') ?? [];
+        $mainImageIndex = $request->integer('main_image_index');
+        $this->articleRepository->addImages($article, $images, $mainImageIndex);
+
+        // Detach old properties
+        $this->articleRepository->detachAllProperties($article);
+        $this->articleRepository->detachAllDetailedArticleProperties($article);
+
+        // Remove old detailed articles
+        $this->articleRepository->deleteAllDetailedArticles($article);
+
+        $article = $article?->fresh();
+
+        $this->articleRepository->attachProperties($article, $request->collect('properties'));
+        $this->articleRepository->addDetailedArticles($article, $request->collect('detailed_article_quantities'));
+
+        return $article;
+    }
+
 }

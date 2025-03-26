@@ -1,7 +1,7 @@
 <template>
     <div class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden font-lexend" @click="showArticleDetail = true">
         <div class="flex items-center justify-center">
-            <img :src="getMainImageInImage.image" alt="" class="w-44 h-44 object-fill rounded-lg">
+            <img :src="getMainImageInImage.image" @error="(e) => e.target.src = usePage().props.big_logo" alt="" class="w-44 h-44 object-fill rounded-lg">
         </div>
         <div class="mt-4">
             <h3 class="xsDark">{{ item.name }}</h3>
@@ -27,13 +27,17 @@
                         </div>
                     </div>
                 </div>
-
-
             </div>
         </div>
     </div>
 
-    <ArticleDetailModal :article="item" v-if="showArticleDetail" @close="showArticleDetail = false" />
+    <ArticleDetailModal :article="item" v-if="showArticleDetail" @close="showArticleDetail = false" @openArticleEditModal="openEditArticleModal"  />
+
+    <AddEditArticleModal
+        v-if="showEditArticleModal"
+        @close="showEditArticleModal = false"
+        :article="item"
+    />
 </template>
 
 <script setup>
@@ -41,6 +45,7 @@
 import {Link, usePage} from "@inertiajs/vue3";
 import {computed, defineAsyncComponent, ref} from "vue";
 import {useTranslation} from "@/Composeables/Translation.js";
+import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
 const $t = useTranslation()
 
 const props = defineProps({
@@ -49,6 +54,13 @@ const props = defineProps({
         required: true
     }
 })
+
+const showEditArticleModal = ref(false);
+
+const openEditArticleModal = () => {
+    showArticleDetail.value = false;
+    showEditArticleModal.value = true;
+}
 
 const ArticleDetailModal = defineAsyncComponent({
     loader: () => import('@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue'),

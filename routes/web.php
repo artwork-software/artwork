@@ -1696,12 +1696,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // post inventory-management.articles.store
         Route::post('/articles/store', [InventoryArticleController::class, 'store'])
             ->name('inventory-management.articles.store');
+
+        // patch inventory-management.articles.update
+        Route::patch('/articles/{inventoryArticle}/update', [InventoryArticleController::class, 'update'])
+            ->name('inventory-management.articles.update');
     });
 
 
-    Route::group(['prefix' => 'manufacturers'], function (): void {
-        Route::get('/', [ManufacturerController::class, 'index'])->name('manufacturers.index');
-    });
+    Route::resource('manufacturers', ManufacturerController::class)->only(
+        [
+            'index',
+            'store',
+            'update',
+            'destroy'
+        ]
+    );
 
 
     //remove.day.service.from.user

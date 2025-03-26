@@ -43,6 +43,10 @@ class InventoryArticle extends Model
         'is_detailed_quantity',
     ];
 
+    protected $casts = [
+        'is_detailed_quantity' => 'boolean',
+    ];
+
     //protected $with = ['category', 'subCategory', 'properties', 'images'];
 
     protected $appends = ['room', 'manufacturer'];
@@ -60,6 +64,11 @@ class InventoryArticle extends Model
     public function images(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(InventoryArticleImage::class, 'inventory_article_id', 'id');
+    }
+
+    public function detailedArticleQuantities(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(InventoryDetailedQuantityArticle::class, 'inventory_article_id', 'id');
     }
 
     public function searchableAs(): string

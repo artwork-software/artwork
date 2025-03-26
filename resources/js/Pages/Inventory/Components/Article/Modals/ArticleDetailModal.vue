@@ -63,7 +63,7 @@
                     </div>-->
 
 
-                    <section aria-labelledby="details-heading" class="mt-12">
+                    <section aria-labelledby="details-heading" class="mt-12" v-if="!article.is_detailed_quantity">
 
                         <div class="divide-y divide-gray-200 border-t">
                             <Disclosure as="div" v-slot="{ open }">
@@ -83,7 +83,66 @@
                                         <div class="px-2 py-4 flex items-center justify-between" v-for="property in article.properties" :key="property.id">
                                             <dt class="text-xs font-bold text-gray-900 font-lexend">{{ property.name }}</dt>
                                             <dd class="font-lexend text-xs text-artwork-buttons-create">
-                                                <span>{{ formatProperty(property) }}</span>
+                                                <span>{{ formatProperty(article, property) }}</span>
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                    <div v-else>
+                                        <div class="rounded-md bg-red-50 p-4">
+                                            <div class="flex">
+                                                <div class="shrink-0">
+                                                    <component is="IconAlertSquareRoundedFilled" class="size-5 text-red-400" aria-hidden="true" />
+                                                </div>
+                                                <div class="ml-3">
+                                                    <p class="text-sm font-medium text-red-800">{{ $t('No properties were specified for this article') }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </DisclosurePanel>
+                            </Disclosure>
+                        </div>
+                    </section>
+
+                    <section aria-labelledby="details-heading" class="mt-12" v-if="article.is_detailed_quantity">
+                        <div class="font-lexend font-semibold text-gray-900">
+                            {{ $t('Detailed Articles')}}
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            <Disclosure as="div" v-slot="{ open }" v-for="detailedArticle in article.detailed_article_quantities">
+                                <h3>
+                                    <DisclosureButton class="group relative flex w-full items-center justify-between py-3 text-left">
+                                    <span :class="[open ? 'text-artwork-buttons-default' : 'text-gray-900', 'text-sm font-medium font-lexend']">
+                                        {{ detailedArticle.name }}
+                                    </span>
+                                    <span class="ml-6 flex items-center gap-x-3">
+                                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-lexend font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset">
+                                            {{ formatQuantity(detailedArticle.quantity) }}
+                                        </span>
+                                        <component is="IconPlus" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true" />
+                                        <component is="IconMinus" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true" />
+                                    </span>
+                                    </DisclosureButton>
+                                </h3>
+                                <DisclosurePanel as="div" class="">
+
+                                    <div class="">
+                                        <div class="space-y-6 text-xs italic text-gray-500 font-lexend font-extralight" v-html="detailedArticle.description" />
+                                    </div>
+
+                                    <dl class="divide-y divide-gray-100">
+                                        <div class="px-2 py-4 flex items-center justify-between">
+                                            <dt class="text-xs font-bold text-gray-900 font-lexend">{{ $t('Quantity') }}</dt>
+                                            <dd class="font-lexend text-xs text-artwork-buttons-create">
+                                                <span>{{ formatQuantity(detailedArticle.quantity) }}</span>
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                    <dl class="divide-y divide-gray-100" v-if="detailedArticle.properties.length > 0">
+                                        <div class="px-2 py-4 flex items-center justify-between" v-for="property in detailedArticle.properties" :key="property.id">
+                                            <dt class="text-xs font-bold text-gray-900 font-lexend">{{ property.name }}</dt>
+                                            <dd class="font-lexend text-xs text-artwork-buttons-create">
+                                                <span>{{ formatProperty(detailedArticle, property) }}</span>
                                             </dd>
                                         </div>
                                     </dl>
@@ -105,6 +164,12 @@
                     </section>
                 </div>
             </div>
+
+            <div class="flex items-center justify-end px-2">
+                <div class="w-fit text-artwork-buttons-create font-lexend font-semibold text-sm cursor-pointer" @click="openArticleEditModal">
+                    {{ $t('Article edit') }}
+                </div>
+            </div>
         </div>
     </BaseModal>
 </template>
@@ -115,8 +180,6 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {
     Disclosure,
     DisclosureButton, DisclosurePanel,
-    RadioGroup,
-    RadioGroupOption,
     Tab,
     TabGroup,
     TabList,
@@ -125,8 +188,9 @@ import {
 } from "@headlessui/vue";
 import {usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
+import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
+import {nextTick, ref} from "vue";
 const $t = useTranslation()
-
 
 const props = defineProps({
     article: {
@@ -136,16 +200,23 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-    'close'
+    'close',
+    'openArticleEditModal'
 ])
 
-const formatProperty = (property) => {
+const openArticleEditModal = () => {
+    emit('openArticleEditModal')
+}
+
+
+
+const formatProperty = (article, property) => {
     if (property.type === 'room') {
-        return props.article.room?.name === 'Room not found' ? $t(props.article.room?.name) : props.article.room?.name;
+        return article.room?.name === 'Room not found' ? $t(article.room?.name) : article.room?.name;
     }
 
     if (property.type === 'manufacturer') {
-        return props.article.manufacturer?.name === 'Room not found' ? $t(props.article.manufacturer?.name) : props.article.manufacturer?.name;
+        return article.manufacturer?.name === 'Room not found' ? $t(article.manufacturer?.name) : article.manufacturer?.name;
     }
 
     if (property.type === 'date') {

@@ -38,8 +38,8 @@
                 </div>
 
                 <!-- Product info -->
-                <div class="px-4 sm:mt-16 sm:px-0 lg:mt-0">
-                    <h1 class="text-3xl font-lexend font-bold tracking-tight text-gray-900">{{ article.name }}</h1>
+                <div class="px-4 sm:mt-16 sm:px-0 lg:mt-0 w-full">
+                    <h1 class="text-3xl font-lexend font-bold tracking-tight text-gray-900 line-clamp-3">{{ article.name }}</h1>
 
 
                     <div class="mt-4">

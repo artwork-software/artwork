@@ -199,7 +199,7 @@
 
                                             <Combobox v-if="property.type === 'room'" as="div" v-model="property.value" @update:modelValue="query = ''">
                                                 <div class="relative">
-                                                    <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="query = $event.target.value" @blur="query = ''" :display-value="(person) => property.value ? rooms?.find((room) => room.id === property.value ).name : ''" />
+                                                    <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="query = $event.target.value" @blur="query = ''" :display-value="(person) => property.value ? rooms?.find((room) => room.id === parseInt(property.value) ).name : ''" />
                                                     <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
                                                         <component is="IconSelector" class="size-5 text-gray-400" aria-hidden="true" />
                                                     </ComboboxButton>
@@ -221,7 +221,7 @@
 
                                             <Combobox v-if="property.type === 'manufacturer'" as="div" v-model="property.value" @update:modelValue="queryManufacturer = ''">
                                                 <div class="relative">
-                                                    <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="queryManufacturer = $event.target.value" @blur="queryManufacturer = ''" :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === property.value ).name : ''" />
+                                                    <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="queryManufacturer = $event.target.value" @blur="queryManufacturer = ''" :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.value) ).name : ''" />
                                                     <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
                                                         <component is="IconSelector" class="size-5 text-gray-400" aria-hidden="true" />
                                                     </ComboboxButton>
@@ -271,7 +271,7 @@
 
                                         </td>
                                     </tr>
-                                    <tr class="divide-x divide-gray-200">
+                                    <!--<tr class="divide-x divide-gray-200">
                                         <td colspan="3" class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
                                             <PropertiesMenu white-menu-background has-no-offset>
                                                 <template v-slot:button>
@@ -309,7 +309,7 @@
                                                 </template>
                                             </PropertiesMenu>
                                         </td>
-                                    </tr>
+                                    </tr>-->
                                 </tbody>
                             </table>
                         </div>
@@ -372,7 +372,7 @@
                                                    :placeholder="$t('Quantity*')"
                                             />
                                         </td>
-                                        <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0" v-for="property in detailedArticle.properties">
+                                        <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0" v-for="property in detailedArticle?.properties">
                                             <Combobox v-if="property.type === 'room'" as="div" v-model="property.value" @update:modelValue="query = ''">
                                                 <div class="relative">
                                                     <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="query = $event.target.value" @blur="query = ''" :display-value="(person) => property.value ? rooms?.find((room) => room.id === parseInt(property.value) )?.name : ''"/>
@@ -464,7 +464,7 @@
                                                 <span class="font-bold" v-else>{{ formatQuantity(calculateTotalQuantity) ?? 0 }}</span>
                                             </div>
                                         </td>
-                                        <td :colspan="articleForm.detailed_article_quantities?.[0].properties.length ?? 0" class="p-2 text-xs whitespace-nowrap text-gray-500 font-lexend font-medium cursor-default flex items-center justify-between">
+                                        <td :colspan="articleForm.detailed_article_quantities?.[0]?.properties.length ?? 0" class="p-2 text-xs whitespace-nowrap text-gray-500 font-lexend font-medium cursor-default flex items-center justify-between">
                                             <div v-if="calculateTotalQuantity > articleForm.quantity" class="text-red-600">
                                                 <div>
                                                     {{ $t('Detailed Article quantity is greater than article quantity') }}
@@ -499,7 +499,7 @@
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {useForm} from "@inertiajs/vue3";
-import {computed, inject, ref, watch} from "vue";
+import {computed, inject, onMounted, ref, watch} from "vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
@@ -514,7 +514,6 @@ import {
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
-import PropertiesMenu from "@/Components/Menu/PropertiesMenu.vue";
 import ArticleModalTabs from "@/Pages/Inventory/Components/Article/Modals/Components/ArticleModalTabs.vue";
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
 
@@ -534,7 +533,7 @@ const manufacturers = inject('manufacturers');
 const emits = defineEmits(["close"]);
 const articleImageInput = ref(null);
 const selectedCategory = ref(props.article ? categories.find((cate) => cate.id === props.article.inventory_category_id) : null);
-const selectedSubCategory = ref(props.article ? categories.find((cate) => cate.id === props.article.inventory_sub_category_id) : null);
+const selectedSubCategory = ref(props.article ? categories.forEach((cate) => cate.subcategories.find((subCate) => subCate.id === props.article.inventory_sub_category_id)) : null);
 const currentTabId = ref(0);
 const currentMainImage = ref(0);
 const showArticleHeader = ref(true);
@@ -572,7 +571,17 @@ const articleForm = useForm({
     quantity: props.article ? props.article.quantity : 0,
     is_detailed_quantity: props.article ? props.article.is_detailed_quantity : false,
     images: [],
-    properties: props.article ? props.article.properties : [],
+    properties: props.article ? props.article.properties.map((prop) => {
+        return {
+            id: prop.id,
+            name: prop.name,
+            tooltip_text: prop.tooltip_text,
+            type: prop.type,
+            value: getValue(prop),
+            is_required: prop.is_required,
+            categoryProperty: getIsDeletable(prop.id)
+        }
+    }) : [],
     detailed_article_quantities: props.article ? props.article.detailed_article_quantities.map((detailedArticle) => {
         return {
             name: detailedArticle.name,
@@ -588,14 +597,11 @@ const articleForm = useForm({
                     is_required: prop.is_required,
                     categoryProperty: getIsDeletable(prop.id)
                 }
-            })
+            }) ?? []
         }
     }) : [],
     main_image_index: 0
 })
-
-
-
 
 const updateTabId = (id) => {
     currentTabId.value = id;
@@ -619,22 +625,12 @@ const checkIfEveryPropertyWhereAreRequiredIsFilled = computed(() => {
 })
 
 const formatQuantity = (quantity) => {
-
-    //if (quantity === 0) return $t('Out of stock');
-    // if not return 10000 to 10.000
-
     return quantity?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
-
-
 
 const addImage = () => {
     articleImageInput.value.click();
 }
-
-const computedProperties = computed(() => {
-    return properties.filter(prop => !articleForm.properties.find(p => p.id === prop.id));
-})
 
 const capitalizeFirstLetter = (val) => {
     return String(val).charAt(0).toUpperCase() + String(val).slice(1);
@@ -663,28 +659,13 @@ const submit = () =>  {
         });
     }
 }
-const addPropertyToArticle = (property) => {
-    // add property to article properties if it doesn't exist
-    if (!articleForm.properties.find(prop => prop.id === property.id)) {
-        articleForm.properties.push({
-            id: property.id,
-            name: property.name,
-            tooltip_text: property.tooltip_text,
-            type: property.type,
-            value: getValue(property) ?? '',
-            is_required: property.is_required,
-            categoryProperty: getIsDeletable(property.id)
-        });
-    }
-}
-
 
 const addNewDetailedArticle = () => {
     articleForm.detailed_article_quantities.push({
         name: '',
         description: '',
         quantity: '',
-        properties: articleForm.detailed_article_quantities[0].properties.map(prop => ({
+        properties: articleForm.detailed_article_quantities?.[0]?.properties.map(prop => ({
             id: prop.id,
             name: prop.name,
             tooltip_text: prop.tooltip_text,
@@ -692,7 +673,7 @@ const addNewDetailedArticle = () => {
             value: '',
             is_required: prop.is_required,
             categoryProperty: getIsDeletable(prop.id)
-        }))
+        })) ?? []
     });
 }
 
@@ -703,24 +684,6 @@ const calculateTotalQuantity = computed(() => {
     }, 0);
 });
 
-const addPropertyToDetailedArticleIndex = (property, detailedArticleIndex) => {
-    // add property to detailed article properties if it doesn't exist
-    if (!articleForm.detailed_article_quantities[detailedArticleIndex].properties.find(prop => prop.id === property.id)) {
-        articleForm.detailed_article_quantities[detailedArticleIndex].properties.push({
-            id: property.id,
-            name: property.name,
-            tooltip_text: property.tooltip_text,
-            type: property.type,
-            value: getValue(property) ?? '',
-            is_required: property.is_required,
-            categoryProperty: getIsDeletable(property.id)
-        });
-    }
-}
-
-const showOnlyPropertiesWhereAreNotInDetailedArticle = (detailedArticleProperties) => {
-    return properties.filter(property => !detailedArticleProperties.find(prop => prop.id === property.id));
-}
 
 watch(selectedCategory, (value) => {
     const updateProps = (props) => {
@@ -829,9 +792,6 @@ watch(selectedSubCategory, (value) => {
     updateProps(props);
 });
 
-// watch on articleForm.is_detailed_quantity if it is true, then remove all properties from articleForm.properties
-// and add one new articleForm.detailed_article_quantities with the properties form articleForm.properties
-
 watch(() => articleForm.is_detailed_quantity, (value) => {
     if (value) {
         articleForm.detailed_article_quantities = [{
@@ -865,6 +825,69 @@ watch(() => articleForm.is_detailed_quantity, (value) => {
         });
         articleForm.detailed_article_quantities = [];
     }
+})
+
+onMounted(() => {
+    if (props.article) {
+        selectedCategory.value = categories?.find(c => c.id === props.article.inventory_category_id) ?? null;
+        selectedSubCategory.value = categories.forEach((cate) => cate.subcategories.find((subCate) => subCate.id === props.article.inventory_sub_category_id));
+
+        const categoryProps = [
+            ...(selectedCategory.value?.properties ?? []),
+            ...(selectedSubCategory.value?.properties ?? [])
+        ].map(prop => ({
+            id: prop.id,
+            name: prop.name,
+            tooltip_text: prop.tooltip_text,
+            type: prop.type,
+            value: '',
+            is_required: prop.is_required,
+            categoryProperty: getIsDeletable(prop.id)
+        }));
+
+        if (props.article.is_detailed_quantity) {
+            if (!props.article.detailed_article_quantities?.length || !props.article.detailed_article_quantities[0].properties?.length) {
+                articleForm.detailed_article_quantities = [{
+                    name: props.article.name,
+                    description: props.article.description,
+                    quantity: '',
+                    properties: [...categoryProps]
+                }];
+            } else {
+                articleForm.detailed_article_quantities = props.article.detailed_article_quantities.map(da => ({
+                    name: da.name,
+                    description: da.description,
+                    quantity: da.quantity,
+                    properties: da.properties.map(prop => ({
+                        id: prop.id,
+                        name: prop.name,
+                        tooltip_text: prop.tooltip_text,
+                        type: prop.type,
+                        value: prop.value ?? prop.pivot?.value ?? '',
+                        is_required: prop.is_required,
+                        categoryProperty: getIsDeletable(prop.id)
+                    }))
+                }));
+            }
+            articleForm.properties = [];
+        } else {
+            if (!props.article.properties?.length) {
+                articleForm.properties = [...categoryProps];
+            } else {
+                articleForm.properties = props.article.properties.map(prop => ({
+                    id: prop.id,
+                    name: prop.name,
+                    tooltip_text: prop.tooltip_text,
+                    type: prop.type,
+                    value: prop.value ?? prop.pivot?.value ?? '',
+                    is_required: prop.is_required,
+                    categoryProperty: getIsDeletable(prop.id)
+                }));
+            }
+            articleForm.detailed_article_quantities = [];
+        }
+    }
+
 })
 
 </script>

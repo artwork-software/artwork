@@ -45,7 +45,6 @@
 import {Link, usePage} from "@inertiajs/vue3";
 import {computed, defineAsyncComponent, ref} from "vue";
 import {useTranslation} from "@/Composeables/Translation.js";
-import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
 const $t = useTranslation()
 
 const props = defineProps({
@@ -64,9 +63,10 @@ const openEditArticleModal = () => {
 
 const ArticleDetailModal = defineAsyncComponent({
     loader: () => import('@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue'),
-    loadingComponent: {
-        template: '<div>Loading...</div>'
-    }
+})
+
+const AddEditArticleModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue'),
 })
 
 const showArticleDetail = ref(false)

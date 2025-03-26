@@ -1,23 +1,33 @@
 <template>
-    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+    <td class="py-3 pr-3 pl-3 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
         <img :src="getMainImageInImage.image" alt="" class="w-12 h-12 object-fill rounded-lg">
     </td>
-    <td class="p-4 text-sm whitespace-nowrap text-gray-500">{{ item?.name }}</td>
-    <td class="p-4 text-sm whitespace-nowrap text-gray-500" v-for="property in allPropertiesFromArticles">
+    <td class="p-3 text-sm whitespace-nowrap text-gray-500">{{ item?.name }}</td>
+    <td class="p-3 text-sm whitespace-nowrap" :class="item.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create'">{{ formatQuantity(item?.quantity) }}</td>
+    <td class="p-3 text-sm whitespace-nowrap text-gray-500" v-for="property in allPropertiesFromArticles">
         {{ formatProperty(property) }}
     </td>
-    <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+    <td class="py-3 pr-3 pl-3 text-sm whitespace-nowrap text-gray-500 sm:pr-0">
         <div class="flex items-center gap-x-4">
-            <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover">
+            <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover" @click="showArticleDetail = true">
                 <component is="IconEye" class="h-5 w-5" aria-hidden="true" />
             </button>
         </div>
     </td>
+
+
+    <ArticleDetailModal :article="item" v-if="showArticleDetail" @close="showArticleDetail = false" @openArticleEditModal="openEditArticleModal"  />
+
+    <AddEditArticleModal
+        v-if="showEditArticleModal"
+        @close="showEditArticleModal = false"
+        :article="item"
+    />
 </template>
 
 <script setup>
 
-import {computed} from "vue";
+import {computed, defineAsyncComponent, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
 const $t = useTranslation()
@@ -32,6 +42,30 @@ const props = defineProps({
         required: true
     }
 })
+
+const showEditArticleModal = ref(false);
+const showArticleDetail = ref(false);
+
+const ArticleDetailModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue'),
+})
+
+const AddEditArticleModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue'),
+})
+
+const formatQuantity = (quantity) => {
+
+    if (quantity === 0) return $t('Out of stock');
+    // if not return 10000 to 10.000
+
+    return quantity.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+const openEditArticleModal = () => {
+    showArticleDetail.value = false;
+    showEditArticleModal.value = true;
+}
 
 const getMainImageInImage = computed(() => {
     const images = props.item.images || [];
@@ -59,7 +93,7 @@ const formatProperty = (property) => {
     }
 
     if (property.type === 'manufacturer') {
-        return props.item.manufacturer?.name === 'Room not found' ? $t(props.item.manufacturer?.name) : props.item.manufacturer?.name;
+        return props.item.manufacturer?.name === 'Manufacturer not found' ? $t(props.item.manufacturer?.name) : props.item.manufacturer?.name;
     }
 
     if (property.type === 'date') {

@@ -68,6 +68,9 @@
                                     <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
                                         {{ $t('Name') }}
                                     </th>
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                        {{ $t('Quantity') }}
+                                    </th>
                                     <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900" v-for="property in allPropertiesFromArticles">
                                         {{ property?.name }}
                                     </th>
@@ -117,8 +120,7 @@ import InventoryEmptyProductsAlertComponent
 import InventorySingleArticleInGrid from "@/Pages/Inventory/GridComponents/InventorySingleArticleInGrid.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {Switch} from "@headlessui/vue";
-import {computed, onMounted, ref, watch, provide} from "vue";
-import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
+import {computed, onMounted, ref, watch, provide, defineAsyncComponent} from "vue";
 import InventoryFilterComponent from "@/Pages/Inventory/LayoutComponents/InventoryFilterComponent.vue";
 import InventoryLayoutSwitchComponent from "@/Pages/Inventory/LayoutComponents/InventoryLayoutSwitchComponent.vue";
 import InventorySingleArticleInTable from "@/Pages/Inventory/TableComponents/InventorySingleArticleInTable.vue";
@@ -176,6 +178,10 @@ provide('categories', props.categories)
 const gridLayout = ref(true)
 const searchArticleInput = ref(usePage().props?.urlParameters?.search ?? '')
 const showAddEditArticleModal = ref(false);
+
+const AddEditArticleModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue'),
+})
 
 const updateGridLayout = (value) => {
     gridLayout.value = value

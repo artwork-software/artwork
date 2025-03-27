@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Inventory\Services;
 
-
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
@@ -14,7 +13,9 @@ use Illuminate\Support\Facades\Request;
 class InventoryArticleService
 {
 
-    public function __construct(protected InventoryArticleRepository $articleRepository) {}
+    public function __construct(protected InventoryArticleRepository $articleRepository)
+    {
+    }
 
     /**
      * @throws \JsonException
@@ -52,6 +53,7 @@ class InventoryArticleService
             'name' => $request->get('name'),
             'description' => $request->get('description'),
             'inventory_category_id' => $request->integer('inventory_category_id'),
+            'inventory_sub_category_id' => $request->integer('inventory_sub_category_id'),
             'quantity' => $request->integer('quantity'),
             'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
         ]);
@@ -72,13 +74,25 @@ class InventoryArticleService
 
     public function update(InventoryArticle $article, UpdateInventoryArticleRequest $request): ?InventoryArticle
     {
-        $data = [
-            'name' => $request->get('name'),
-            'description' => $request->get('description'),
-            'inventory_category_id' => $request->integer('inventory_category_id'),
-            'quantity' => $request->integer('quantity'),
-            'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
-        ];
+        if ($request->get('inventory_sub_category_id')) {
+            $data = [
+                'name' => $request->get('name'),
+                'description' => $request->get('description'),
+                'inventory_category_id' => $request->integer('inventory_category_id'),
+                'inventory_sub_category_id' => $request->integer('inventory_sub_category_id'),
+                'quantity' => $request->integer('quantity'),
+                'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
+            ];
+        } else {
+            $data = [
+                'name' => $request->get('name'),
+                'description' => $request->get('description'),
+                'inventory_category_id' => $request->integer('inventory_category_id'),
+                'quantity' => $request->integer('quantity'),
+                'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
+            ];
+        }
+
 
         $this->articleRepository->update($article, $data);
 
@@ -104,5 +118,4 @@ class InventoryArticleService
 
         return $article;
     }
-
 }

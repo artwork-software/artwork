@@ -27,7 +27,7 @@
                     <div class="col-span-full" v-if="(property?.type !== 'room') || (property?.type !== 'manufacturer')">
                         <Listbox as="div" v-model="selectedType" v-slot="{ open }">
                             <ListboxLabel class="block text-sm/6 font-medium text-gray-900">
-                                {{ $t('Select a type') }}
+                                {{ $t('Select a data type') }}
                             </ListboxLabel>
                             <div class="relative mt-2">
                                 <ListboxButton class="menu-button">

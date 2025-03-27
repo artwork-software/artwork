@@ -2491,5 +2491,17 @@
     "Click to set the article quantity to the detailed article quantity": "Klicke, um die Artikelmenge auf die detaillierte Artikelmenge zu setzen",
     "Detailed Articles": "Detaillierte Artikel",
     "Article edit": "Artikel bearbeiten",
-    "Manufacturer not found": "Hersteller nicht gefunden"
+    "Manufacturer not found": "Hersteller nicht gefunden",
+    "Edit article": "Artikel bearbeiten",
+    "Edit the article details": "Bearbeite die Artikel-Details",
+    "Upload images": "Bilder hochladen",
+    "Add a new article": "Füge einen neuen Artikel hinzu",
+    "Tooltip text": "Tooltip-Text",
+    "Select a data type": "Wähle einen Datentyp",
+    "No date set": "Kein Datum festgelegt",
+    "No manufacturer set": "Kein Hersteller festgelegt",
+    "No room set": "Kein Raum festgelegt",
+    "No time set": "Keine Zeit festgelegt",
+    "These properties are based on the selected category and subcategory, here you can delete unwanted properties for this article and set the values for the others": "Diese Eigenschaften basieren auf der ausgewählten Kategorie und Unterkategorie, hier kannst du unerwünschte Eigenschaften für diesen Artikel löschen und die Werte für die anderen festlegen",
+    "Full Quantity": "Gesamt-Menge"
 }

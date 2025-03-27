@@ -6,9 +6,7 @@
                 :description="article ? $t('Edit the article details') : $t('Add a new article')"
             />
         </div>
-
         <form @submit.prevent="submit">
-
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-6 pb-4">
                 <div class="col-span-1">
                     <div @click="addImage"  class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
@@ -105,7 +103,6 @@
                         </div>
                     </Listbox>
                 </div>
-
                 <div class="pb-4" v-if="selectedCategory && selectedCategory.subcategories.length > 0">
                     <Listbox as="div" v-model="selectedSubCategory">
                         <ListboxLabel class="xsDark">
@@ -160,12 +157,12 @@
                 <div>
                     <TinyPageHeadline
                         :title="$t('Category & subcategory based properties')"
-                        :description="$t('Add properties that are specific to the selected category and subcategory. You can add further non-specific properties using the “Add individual properties” button')"
+                        :description="$t('These properties are based on the selected category and subcategory, here you can delete unwanted properties for this article and set the values for the others')"
                     />
                 </div>
-                <div class="my-8 flow-root px-6 pb-4" v-if="articleForm.properties.length > 0">
-                    <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
-                        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                <div class="my-8 flow-root pb-4" v-if="articleForm.properties.length > 0">
+                    <div class="-my-2">
+                        <div class="inline-block min-w-full py-2 align-middle">
                             <table class="min-w-full divide-y divide-gray-300">
                                 <thead>
                                     <tr class="divide-x divide-gray-200">
@@ -533,7 +530,7 @@ const manufacturers = inject('manufacturers');
 const emits = defineEmits(["close"]);
 const articleImageInput = ref(null);
 const selectedCategory = ref(props.article ? categories.find((cate) => cate.id === props.article.inventory_category_id) : null);
-const selectedSubCategory = ref(props.article ? categories.forEach((cate) => cate.subcategories.find((subCate) => subCate.id === props.article.inventory_sub_category_id)) : null);
+const selectedSubCategory = ref(props.article ? categories.find((cate) => cate.id === props.article.inventory_category_id)?.subcategories.find((subCate) => subCate.id === props.article.inventory_sub_category_id) : null);
 const currentTabId = ref(0);
 const currentMainImage = ref(0);
 const showArticleHeader = ref(true);
@@ -638,6 +635,7 @@ const capitalizeFirstLetter = (val) => {
 
 const submit = () =>  {
     articleForm.main_image_index = currentMainImage.value;
+    articleForm.inventory_sub_category_id = selectedSubCategory?.value ? selectedSubCategory.value.id : null;
 
     if (props.article) {
         articleForm.patch(route('inventory-management.articles.update', props.article.id), {
@@ -830,7 +828,7 @@ watch(() => articleForm.is_detailed_quantity, (value) => {
 onMounted(() => {
     if (props.article) {
         selectedCategory.value = categories?.find(c => c.id === props.article.inventory_category_id) ?? null;
-        selectedSubCategory.value = categories.forEach((cate) => cate.subcategories.find((subCate) => subCate.id === props.article.inventory_sub_category_id));
+        selectedSubCategory.value = props.article ? categories.find((cate) => cate.id === props.article.inventory_category_id)?.subcategories.find((subCate) => subCate.id === props.article.inventory_sub_category_id) : null;
 
         const categoryProps = [
             ...(selectedCategory.value?.properties ?? []),

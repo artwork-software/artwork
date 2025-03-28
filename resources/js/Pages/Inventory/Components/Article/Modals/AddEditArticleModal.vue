@@ -26,11 +26,7 @@
                              :class="currentMainImage === index ? 'border-yellow-400' : 'border-gray-200'">
 
                             <!-- X-Button zum Entfernen -->
-                            <button type="button"
-                                    class="absolute top-1 right-1 bg-white rounded-full p-1 shadow hover:bg-red-500 text-red-500 hover:text-white"
-                                    @click.stop="removeImage(image)">
-                                &times;
-                            </button>
+                          <XCircleIcon @click.stop="removeImage(image)" class="absolute top-1 right-1 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
 
                             <div class="flex flex-col items-center justify-center w-full truncate min-h-16 gap-y-2">
                                 <!-- Für alte Bilder: Bild-Preview anzeigen, ansonsten den Dateinamen -->
@@ -668,6 +664,7 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import ArticleModalTabs from "@/Pages/Inventory/Components/Article/Modals/Components/ArticleModalTabs.vue";
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
 import cloneDeep from 'lodash/cloneDeep';
+import {XCircleIcon} from "@heroicons/vue/solid";
 
 const props = defineProps({
     article: {

@@ -95,6 +95,9 @@ use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
@@ -106,13 +109,12 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnCo
 use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
+use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
-
-use FiveamCode\LaravelNotionApi\Notion;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -1680,6 +1682,37 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )
         ->name('day-service.attach');
 
+
+    Route::group(['prefix' => 'inventory'], function (): void {
+        Route::get('/', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
+            ->name('inventory.index');
+
+        Route::get('/category/{inventoryCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
+            ->name('inventory.category.show');
+
+        Route::get('/category/{inventoryCategory}/sub/{inventorySubCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
+            ->name('inventory.sub.category.show');
+
+        // post inventory-management.articles.store
+        Route::post('/articles/store', [InventoryArticleController::class, 'store'])
+            ->name('inventory-management.articles.store');
+
+        // patch inventory-management.articles.update
+        Route::patch('/articles/{inventoryArticle}/update', [InventoryArticleController::class, 'update'])
+            ->name('inventory-management.articles.update');
+    });
+
+
+    Route::resource('manufacturers', ManufacturerController::class)->only(
+        [
+            'index',
+            'store',
+            'update',
+            'destroy'
+        ]
+    );
+
+
     //remove.day.service.from.user
     Route::patch(
         '/day-service/remove/{dayServiceable}',
@@ -1693,7 +1726,33 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::group(['prefix' => 'settings'], function (): void {
             Route::get('/index', [InventorySettingsController::class, 'index'])
-                ->name('inventory-management.settings');
+                ->name('inventory-management.settings.index');
+
+            Route::get('/categories', [InventoryCategoryController::class, 'settings'])
+                ->name('inventory-management.settings.category');
+
+            Route::get('/properties', [InventoryArticlePropertiesController::class, 'index'])
+                ->name('inventory-management.settings.properties');
+
+            // post create Article Property
+            Route::post('/properties/create', [InventoryArticlePropertiesController::class, 'store'])
+                ->name('inventory-management.settings.properties.create');
+
+            // delete Article Property
+            Route::delete('/properties/{inventoryArticleProperty}', [InventoryArticlePropertiesController::class, 'destroy'])
+                ->name('inventory-management.settings.properties.delete');
+
+            // patch inventory-management.settings.properties.update
+            Route::patch('/properties/{inventoryArticleProperty}/update', [InventoryArticlePropertiesController::class, 'update'])
+                ->name('inventory-management.settings.properties.update');
+
+            // inventory-management.settings.categories.create
+            Route::post('/categories/create', [InventoryCategoryController::class, 'store'])
+                ->name('inventory-management.settings.categories.create');
+
+            // update inventory-management.settings.categories.update
+            Route::patch('/categories/{inventoryCategory}/update', [InventoryCategoryController::class, 'update'])
+                ->name('inventory-management.settings.categories.update');
         });
 
         Route::group(['prefix' => 'inventory'], function (): void {

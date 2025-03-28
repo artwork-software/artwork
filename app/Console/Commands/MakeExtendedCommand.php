@@ -132,7 +132,7 @@ class MakeExtendedCommand extends Command
 
         // Konstruktor mit private readonly hinzufügen
         $constructor = <<<EOD
-            public function __construct(private readonly $serviceClass \$projectService)
+            public function __construct(private readonly $serviceClass $$serviceClass)
             {
             }
         EOD;

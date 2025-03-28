@@ -112,7 +112,6 @@ export default {
         updateEntitiesPerPage(entitiesToShow) {
             if (this.emitUpdateEntitiesPerPage) {
                 this.$emit('updateEntitiesPerPage', entitiesToShow);
-
                 return;
             }
 

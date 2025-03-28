@@ -5,7 +5,6 @@ namespace Artwork\Modules\UserCalendarAbo\Services;
 use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarAbo\Repositories\UserCalendarAboRepository;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Spatie\IcalendarGenerator\Enums\EventStatus;
 

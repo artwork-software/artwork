@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarAbo\Services\UserCalendarAboService;
-use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Spatie\IcalendarGenerator\Components\Calendar;

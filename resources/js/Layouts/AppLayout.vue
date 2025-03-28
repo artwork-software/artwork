@@ -440,9 +440,15 @@ export default {
                 },
                 {
                     has_permission: this.hasAdminRole(),
+                    name: 'Manufacturers',
+                    href: route('manufacturers.index'),
+                    isCurrent: route().current('manufacturers.index')
+                },
+                {
+                    has_permission: this.hasAdminRole(),
                     name: 'Inventory',
-                    href: route('inventory-management.settings'),
-                    isCurrent: route().current('inventory-management.settings')
+                    href: route('inventory-management.settings.index'),
+                    isCurrent: route().current('inventory-management.settings.index')
                 },
                 {
                     name: 'Rooms',
@@ -578,6 +584,14 @@ export default {
                     name: 'Inventory',
                     href: route('inventory-management.inventory'),
                     route: ['/inventory-management', '/inventory-management/scheduling'],
+                    has_permission: this.moduleIsVisible('inventory'),
+                    icon: IconBuildingWarehouse,
+                    showToolTipForItem: false
+                },
+                {
+                    name: 'Inventory',
+                    href: route('inventory.index'),
+                    route: ['inventory'],
                     has_permission: this.moduleIsVisible('inventory'),
                     icon: IconBuildingWarehouse,
                     showToolTipForItem: false

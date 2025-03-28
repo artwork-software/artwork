@@ -126,6 +126,7 @@ import InventoryLayoutSwitchComponent from "@/Pages/Inventory/LayoutComponents/I
 import InventorySingleArticleInTable from "@/Pages/Inventory/TableComponents/InventorySingleArticleInTable.vue";
 import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import {IconIdBadge} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 const props = defineProps({
     categories: {

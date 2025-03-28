@@ -2,12 +2,12 @@
     <td class="py-3 pr-3 pl-3 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
         <img :src="getMainImageInImage.image" alt="" class="w-12 h-12 object-fill rounded-lg">
     </td>
-    <td class="p-3 text-sm whitespace-nowrap text-gray-500">{{ item?.name }}</td>
+    <td class="p-3 text-sm whitespace-nowrap text-secondary font-semibold"><div class="flex items-center">{{ item?.name }}<IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-secondary font-semibold ml-2" /> </div></td>
     <td class="p-3 text-sm whitespace-nowrap" :class="item.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create'">{{ formatQuantity(item?.quantity) }}</td>
-    <td class="p-3 text-sm whitespace-nowrap text-gray-500" v-for="property in allPropertiesFromArticles">
+    <td class="p-3 text-sm whitespace-nowrap text-secondary font-semibold" v-for="property in allPropertiesFromArticles">
         {{ formatProperty(property) }}
     </td>
-    <td class="py-3 pr-3 pl-3 text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+    <td class="py-3 pr-3 pl-3 text-sm whitespace-nowrap text-secondary font-semibold sm:pr-0">
         <div class="flex items-center gap-x-4">
             <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover" @click="showArticleDetail = true">
                 <component is="IconEye" class="h-5 w-5" aria-hidden="true" />
@@ -30,6 +30,7 @@
 import {computed, defineAsyncComponent, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
+import {IconIdBadge} from "@tabler/icons-vue";
 const $t = useTranslation()
 
 const props = defineProps({

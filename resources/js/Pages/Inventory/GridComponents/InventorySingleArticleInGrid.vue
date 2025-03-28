@@ -4,7 +4,9 @@
             <img :src="getMainImageInImage.image" @error="(e) => e.target.src = usePage().props.big_logo" alt="" class="w-44 h-44 object-fill rounded-lg">
         </div>
         <div class="mt-4">
-            <h3 class="xsDark">{{ item.name }}</h3>
+            <div class="flex items-center">
+            <h3 class="xsDark">{{ item.name }}</h3><IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 xsDark ml-2" />
+            </div>
             <p class="text-xs text-gray-500 line-clamp-2">
                 {{ item.description }}
             </p>
@@ -45,6 +47,7 @@
 import {Link, usePage} from "@inertiajs/vue3";
 import {computed, defineAsyncComponent, ref} from "vue";
 import {useTranslation} from "@/Composeables/Translation.js";
+import {IconIdBadge} from "@tabler/icons-vue";
 const $t = useTranslation()
 
 const props = defineProps({

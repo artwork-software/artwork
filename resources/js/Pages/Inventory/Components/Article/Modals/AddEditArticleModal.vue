@@ -261,7 +261,7 @@
                                             </div>
 
                                             <div v-if="property.type === 'checkbox'" class="px-3">
-                                                <input type="checkbox" v-model="property.value" class="input-checklist" />
+                                                <input type="checkbox" :checked="booleanValue(property.value)" @change="property.value = $event.target.checked" class="input-checklist" />
                                             </div>
 
 
@@ -436,7 +436,7 @@
                                             </div>
 
                                             <div v-if="property.type === 'checkbox'" class="px-3">
-                                                <input type="checkbox" v-model="property.value" class="input-checklist" />
+                                                <input type="checkbox" :checked="booleanValue(property.value)" @change="property.value = $event.target.checked" class="input-checklist" />
                                             </div>
                                         </td>
                                     </tr>
@@ -555,6 +555,10 @@ const filteredManufacturers = computed(() =>
 const getValue = (prop) => {
     return prop.value ?? prop.pivot?.value ?? '';
 }
+
+const booleanValue = (val) => {
+    return val === true || val === 1 || val === "1" || val === "true";
+};
 
 const getIsDeletable = (id) => {
     return properties?.find(p => p.id === id)?.is_deletable ?? false;

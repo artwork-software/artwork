@@ -53,12 +53,16 @@ class InventoryArticleService
             'name' => $request->get('name'),
             'description' => $request->get('description'),
             'inventory_category_id' => $request->integer('inventory_category_id'),
-            'inventory_sub_category_id' => $request->integer('inventory_sub_category_id'),
+            'inventory_sub_category_id' => $request->filled('inventory_sub_category_id')
+                ? $request->integer('inventory_sub_category_id')
+                : null,
             'quantity' => $request->integer('quantity'),
             'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
         ]);
 
-        $images = $request->file('images') ?? [];
+
+
+        $images = $request->file('newImages') ?? [];
         $mainImageIndex = $request->integer('main_image_index');
 
         $this->articleRepository->addImages($article, $images, $mainImageIndex);
@@ -74,45 +78,39 @@ class InventoryArticleService
 
     public function update(InventoryArticle $article, UpdateInventoryArticleRequest $request): ?InventoryArticle
     {
+        $data = [
+            'name' => $request->get('name'),
+            'description' => $request->get('description'),
+            'inventory_category_id' => $request->integer('inventory_category_id'),
+            'quantity' => $request->integer('quantity'),
+            'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
+        ];
         if ($request->get('inventory_sub_category_id')) {
-            $data = [
-                'name' => $request->get('name'),
-                'description' => $request->get('description'),
-                'inventory_category_id' => $request->integer('inventory_category_id'),
-                'inventory_sub_category_id' => $request->integer('inventory_sub_category_id'),
-                'quantity' => $request->integer('quantity'),
-                'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
-            ];
-        } else {
-            $data = [
-                'name' => $request->get('name'),
-                'description' => $request->get('description'),
-                'inventory_category_id' => $request->integer('inventory_category_id'),
-                'quantity' => $request->integer('quantity'),
-                'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
-            ];
+            $data['inventory_sub_category_id'] = $request->integer('inventory_sub_category_id');
         }
-
-
         $this->articleRepository->update($article, $data);
 
-        // Remove old images
-        $article->images()->delete();
+        // Entfernen selektiv markierter Bilder (wenn IDs übergeben wurden)
+        $removedImageIds = $request->get('removed_image_ids');
+        if (is_array($removedImageIds) && count($removedImageIds) > 0) {
+            $article->images()->whereIn('id', $removedImageIds)->delete();
+        }
 
-        // Re-upload images
-        $images = $request->file('images') ?? [];
-        $mainImageIndex = $request->integer('main_image_index');
-        $this->articleRepository->addImages($article, $images, $mainImageIndex);
+        // Neue Bilder hinzufügen, falls welche hochgeladen wurden
+        $images = $request->file('newImages') ?? [];
+        if (count($images) > 0) {
+            $mainImageIndex = $request->integer('main_image_index');
+            $this->articleRepository->addImages($article, $images, $mainImageIndex);
+        }
 
-        // Detach old properties
+        // Alte Properties und detaillierte Artikel-Informationen entfernen
         $this->articleRepository->detachAllProperties($article);
         $this->articleRepository->detachAllDetailedArticleProperties($article);
-
-        // Remove old detailed articles
         $this->articleRepository->deleteAllDetailedArticles($article);
 
         $article = $article?->fresh();
 
+        // Neue Properties und detaillierte Artikel-Informationen anhängen
         $this->articleRepository->attachProperties($article, $request->collect('properties'));
         $this->articleRepository->addDetailedArticles($article, $request->collect('detailed_article_quantities'));
 

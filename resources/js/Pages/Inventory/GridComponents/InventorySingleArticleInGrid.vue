@@ -96,11 +96,11 @@ const getMainImageInImage = computed(() => {
 
 const formatProperty = (property) => {
     if (property.type === 'room') {
-        return props.item.room?.name === 'Room not found' ? $t(props.item?.room?.name) : props.item?.room?.name;
+        return props.item.room?.name === 'Room not found' ? '-' : props.item?.room?.name;
     }
 
     if (property.type === 'manufacturer') {
-        return props.item.manufacturer?.name === 'Room not found' ? $t(props.item.manufacturer?.name) : props.item.manufacturer?.name;
+        return props.item.manufacturer?.name === 'Manufacturer not found' ? '-' : props.item.manufacturer?.name;
     }
 
 

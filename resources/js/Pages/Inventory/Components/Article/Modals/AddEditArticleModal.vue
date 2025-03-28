@@ -1,5 +1,6 @@
 <template>
-    <BaseModal @closed="$emit('close')" :modal-size="articleForm.is_detailed_quantity ? 'max-w-7xl' : 'max-w-4xl'" full-modal>
+    <BaseModal @closed="$emit('close')" :modal-size="articleForm.is_detailed_quantity ? 'max-w-7xl' : 'max-w-4xl'"
+               full-modal>
         <div class="px-6 pt-4">
             <ModalHeader
                 :title="article ? $t('Edit article') : $t('Add Article')"
@@ -9,32 +10,48 @@
         <form @submit.prevent="submit">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-6 pb-4">
                 <div class="col-span-1">
-                    <div @click="addImage"  class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
-                        <component is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true" />
+                    <div @click="addImage"
+                         class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
+                        <component is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true"/>
                         <span class="mt-2 block text-sm font-semibold text-gray-900">Upload Images</span>
-                        <input type="file" accept="image/*"  class="sr-only" ref="articleImageInput" multiple @input="articleForm.images = $event.target.files"/>
+                        <input type="file" accept="image/*" class="sr-only" ref="articleImageInput" multiple
+                               @input="handleImageInput"/>
                     </div>
                 </div>
                 <div class="col-span-3">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div v-for="(image, index) in articleForm.images"
-                             :key="image.id"
-                             class="p-2 rounded-lg border bg-white shadow-sm hover:border-yellow-500 cursor-pointer transition duration-200 ease-in-out"
+                        <div v-for="(image, index) in allImages" :key="image._origin === 'old' ? image.id : index"
+                             class="relative p-2 rounded-lg border bg-white shadow-sm hover:border-yellow-500 cursor-pointer transition duration-200 ease-in-out"
                              @click="currentMainImage = index"
-                             :class="currentMainImage === index ? 'border-yellow-400' : 'border-gray-200'"
-                        >
+                             :class="currentMainImage === index ? 'border-yellow-400' : 'border-gray-200'">
+
+                            <!-- X-Button zum Entfernen -->
+                            <button type="button"
+                                    class="absolute top-1 right-1 bg-white rounded-full p-1 shadow hover:bg-red-500 text-red-500 hover:text-white"
+                                    @click.stop="removeImage(image)">
+                                &times;
+                            </button>
+
                             <div class="flex flex-col items-center justify-center w-full truncate min-h-16 gap-y-2">
-                                <component is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
+                                <!-- Für alte Bilder: Bild-Preview anzeigen, ansonsten den Dateinamen -->
+                                <div v-if="image._origin === 'old'">
+                                    <img :src="createImageURL(image)" alt="New image preview"
+                                         class="w-full h-24 object-cover"/>
+                                </div>
+                                <div v-else>
+                                    <img :src="createImageURL(image)" alt="New image preview"
+                                         class="w-full h-24 object-cover"/>
+                                </div>
                                 <div class="flex w-full justify-center">
-                                    <div class="truncate font-medium font-lexend text-xs">{{ image.name }}</div>
+                                    <div class="truncate font-medium font-lexend text-xs">
+                                        {{ image._origin === 'old' ? image.image.split('/').pop() : image.name }}
+                                    </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
             </div>
-
 
             <div class="px-6 pb-4">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -71,7 +88,8 @@
 
             <!-- Tabs -->
             <div class="px-6 pb-4 hidden">
-                <ArticleModalTabs :is-detailed-quantity="articleForm.is_detailed_quantity" @update:current-tab="updateTabId"/>
+                <ArticleModalTabs :is-detailed-quantity="articleForm.is_detailed_quantity"
+                                  @update:current-tab="updateTabId"/>
             </div>
 
             <!-- Category selector -->
@@ -83,18 +101,29 @@
                         </ListboxLabel>
                         <div class="relative mt-2">
                             <ListboxButton class="menu-button">
-                                <div class="col-start-1 row-start-1 truncate pr-6">{{ selectedCategory?.name ?? $t('Please select a Category') }}</div>
-                                <component is="IconChevronUp" class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4" aria-hidden="true" />
+                                <div class="col-start-1 row-start-1 truncate pr-6">
+                                    {{ selectedCategory?.name ?? $t('Please select a Category') }}
+                                </div>
+                                <component is="IconChevronUp"
+                                           class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+                                           aria-hidden="true"/>
                             </ListboxButton>
 
-                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
-                                    <ListboxOption as="template" v-for="category in categories" :key="category.id" :value="category" v-slot="{ active, selected }">
+                            <transition leave-active-class="transition ease-in duration-100"
+                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions
+                                    class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                    <ListboxOption as="template" v-for="category in categories" :key="category.id"
+                                                   :value="category" v-slot="{ active, selected }">
                                         <li :class="[active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900', 'relative cursor-default py-2 pr-9 pl-3 select-none']">
-                                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ category.name }}</span>
+                                            <span
+                                                :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{
+                                                    category.name
+                                                }}</span>
 
-                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                            <span v-if="selected"
+                                                  :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                <component is="IconCheck" class="size-5" aria-hidden="true"/>
                                             </span>
                                         </li>
                                     </ListboxOption>
@@ -110,18 +139,29 @@
                         </ListboxLabel>
                         <div class="relative mt-2">
                             <ListboxButton class="menu-button">
-                                <div class="col-start-1 row-start-1 truncate pr-6">{{ selectedSubCategory?.name ?? $t('Please select a Sub-Category') }}</div>
-                                <component is="IconChevronUp" class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4" aria-hidden="true" />
+                                <div class="col-start-1 row-start-1 truncate pr-6">
+                                    {{ selectedSubCategory?.name ?? $t('Please select a Sub-Category') }}
+                                </div>
+                                <component is="IconChevronUp"
+                                           class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+                                           aria-hidden="true"/>
                             </ListboxButton>
 
-                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
-                                    <ListboxOption as="template" v-for="category in selectedCategory.subcategories" :key="category.id" :value="category" v-slot="{ active, selected }">
+                            <transition leave-active-class="transition ease-in duration-100"
+                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions
+                                    class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                    <ListboxOption as="template" v-for="category in selectedCategory.subcategories"
+                                                   :key="category.id" :value="category" @click="updateSelectedSubCategory(category)" v-slot="{ active, selected }">
                                         <li :class="[active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900', 'relative cursor-default py-2 pr-9 pl-3 select-none']">
-                                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ category.name }}</span>
+                                            <span
+                                                :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{
+                                                    category.name
+                                                }}</span>
 
-                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                            <span v-if="selected"
+                                                  :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                <component is="IconCheck" class="size-5" aria-hidden="true"/>
                                             </span>
                                         </li>
                                     </ListboxOption>
@@ -131,14 +171,19 @@
                     </Listbox>
 
                     <div class="flex items-center justify-end mt-3" v-if="selectedSubCategory">
-                        <div class="text-xs text-artwork-buttons-create underline underline-offset-4 hover:text-artwork-buttons-hover duration-200 ease-in-out cursor-pointer" @click="selectedSubCategory = null">{{ $t('Remove the sub-category assignment')}}</div>
+                        <div
+                            class="text-xs text-artwork-buttons-create underline underline-offset-4 hover:text-artwork-buttons-hover duration-200 ease-in-out cursor-pointer"
+                            @click="selectedSubCategory = null">{{ $t('Remove the sub-category assignment') }}
+                        </div>
                     </div>
                 </div>
 
                 <div class="flex gap-3" v-if="selectedCategory">
                     <div class="flex h-6 shrink-0 items-center">
                         <div class="group grid size-4 grid-cols-1">
-                            <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description" v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity" type="checkbox" class="input-checklist" />
+                            <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description"
+                                   v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity"
+                                   type="checkbox" class="input-checklist"/>
                         </div>
                     </div>
                     <div class="text-sm/6">
@@ -146,14 +191,17 @@
                             {{ $t('Single inventory capable') }}
                         </label>
                         <p id="is_required-description" class="text-gray-500">
-                            {{ $t('If activated, each individual piece of this article can be provided with its own properties') }}
+                            {{
+                                $t('If activated, each individual piece of this article can be provided with its own properties')
+                            }}
                         </p>
                     </div>
                 </div>
             </div>
 
             <!-- category properties -->
-            <div class="px-6" v-if="articleForm.properties.length > 0 && selectedCategory && !articleForm.is_detailed_quantity">
+            <div class="px-6"
+                 v-if="articleForm.properties.length > 0 && selectedCategory && !articleForm.is_detailed_quantity">
                 <div>
                     <TinyPageHeadline
                         :title="$t('Category & subcategory based properties')"
@@ -165,148 +213,193 @@
                         <div class="inline-block min-w-full py-2 align-middle">
                             <table class="min-w-full divide-y divide-gray-300">
                                 <thead>
-                                    <tr class="divide-x divide-gray-200">
-                                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Type') }}</th>
-                                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Value') }}</th>
-                                    </tr>
+                                <tr class="divide-x divide-gray-200">
+                                    <th scope="col"
+                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                                        Name
+                                    </th>
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                        {{ $t('Type') }}
+                                    </th>
+                                    <th scope="col"
+                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
+                                        {{ $t('Value') }}
+                                    </th>
+                                </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
-                                    <tr v-for="property in articleForm.properties" :key="property?.id" class="divide-x divide-gray-200">
-                                        <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-                                            <div class="flex items-center justify-between">
-                                                {{ property?.name }}
-                                                <div class="flex items-center gap-x-2">
-                                                    <ToolTipComponent
-                                                        v-if="property?.tooltip_text"
-                                                        :tooltip-text="property?.tooltip_text"
-                                                        icon="IconInfoCircle"
-                                                        icon-size="size-4"
-                                                        direction="top"
-                                                        tooltip-width="break-all !text-xs"
-                                                    />
-                                                    <component is="IconTrash" class="h-5 w-5 text-red-600 cursor-pointer" v-if="property.categoryProperty" @click="articleForm.properties = articleForm.properties.filter(prop => prop.id !== property.id)" />
-                                                </div>
+                                <tr v-for="property in articleForm.properties" :key="property?.id"
+                                    class="divide-x divide-gray-200">
+                                    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                        <div class="flex items-center justify-between">
+                                            {{ property?.name }}
+                                            <div class="flex items-center gap-x-2">
+                                                <ToolTipComponent
+                                                    v-if="property?.tooltip_text"
+                                                    :tooltip-text="property?.tooltip_text"
+                                                    icon="IconInfoCircle"
+                                                    icon-size="size-4"
+                                                    direction="top"
+                                                    tooltip-width="break-all !text-xs"
+                                                />
+                                                <component is="IconTrash" class="h-5 w-5 text-red-600 cursor-pointer"
+                                                           v-if="property.categoryProperty"
+                                                           @click="articleForm.properties = articleForm.properties.filter(prop => prop.id !== property.id)"/>
                                             </div>
-                                        </td>
-                                        <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
-                                            {{ $t(capitalizeFirstLetter(property?.type)) }}
-                                        </td>
-                                        <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
+                                        {{ $t(capitalizeFirstLetter(property?.type)) }}
+                                    </td>
+                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
 
-                                            <Combobox v-if="property.type === 'room'" as="div" v-model="property.value" @update:modelValue="query = ''">
-                                                <div class="relative">
-                                                    <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="query = $event.target.value" @blur="query = ''" :display-value="(person) => property.value ? rooms?.find((room) => room.id === parseInt(property.value) ).name : ''" />
-                                                    <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                        <component is="IconSelector" class="size-5 text-gray-400" aria-hidden="true" />
-                                                    </ComboboxButton>
+                                        <Combobox v-if="property.type === 'room'" as="div" v-model="property.value"
+                                                  @update:modelValue="query = ''">
+                                            <div class="relative">
+                                                <ComboboxInput
+                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6"
+                                                    @change="query = $event.target.value" @blur="query = ''"
+                                                    :display-value="(person) => property.value ? rooms?.find((room) => room.id === parseInt(property.value) ).name : ''"/>
+                                                <ComboboxButton
+                                                    class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                    <component is="IconSelector" class="size-5 text-gray-400"
+                                                               aria-hidden="true"/>
+                                                </ComboboxButton>
 
-                                                    <ComboboxOptions v-if="filteredPeople.length > 0" class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
-                                                        <ComboboxOption v-for="person in filteredPeople" :key="person.id" :value="person.id" as="template" v-slot="{ active, selected }">
-                                                            <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
-                                                                <span :class="['block truncate', selected && 'font-semibold']">
+                                                <ComboboxOptions v-if="filteredPeople.length > 0"
+                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                    <ComboboxOption v-for="person in filteredPeople" :key="person.id"
+                                                                    :value="person.id" as="template"
+                                                                    v-slot="{ active, selected }">
+                                                        <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                <span
+                                                                    :class="['block truncate', selected && 'font-semibold']">
                                                                   {{ person.name }}
                                                                 </span>
-                                                                <span v-if="selected" :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                  <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                                            <span v-if="selected"
+                                                                  :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                  <component is="IconCheck" class="size-5"
+                                                                             aria-hidden="true"/>
                                                                 </span>
-                                                            </li>
-                                                        </ComboboxOption>
-                                                    </ComboboxOptions>
-                                                </div>
-                                            </Combobox>
+                                                        </li>
+                                                    </ComboboxOption>
+                                                </ComboboxOptions>
+                                            </div>
+                                        </Combobox>
 
-                                            <Combobox v-if="property.type === 'manufacturer'" as="div" v-model="property.value" @update:modelValue="queryManufacturer = ''">
-                                                <div class="relative">
-                                                    <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="queryManufacturer = $event.target.value" @blur="queryManufacturer = ''" :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.value) ).name : ''" />
-                                                    <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                        <component is="IconSelector" class="size-5 text-gray-400" aria-hidden="true" />
-                                                    </ComboboxButton>
+                                        <Combobox v-if="property.type === 'manufacturer'" as="div"
+                                                  v-model="property.value" @update:modelValue="queryManufacturer = ''">
+                                            <div class="relative">
+                                                <ComboboxInput
+                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6"
+                                                    @change="queryManufacturer = $event.target.value"
+                                                    @blur="queryManufacturer = ''"
+                                                    :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.value) ).name : ''"/>
+                                                <ComboboxButton
+                                                    class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                    <component is="IconSelector" class="size-5 text-gray-400"
+                                                               aria-hidden="true"/>
+                                                </ComboboxButton>
 
-                                                    <ComboboxOptions v-if="filteredManufacturers.length > 0" class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
-                                                        <ComboboxOption v-for="person in filteredManufacturers" :key="person.id" :value="person.id" as="template" v-slot="{ active, selected }">
-                                                            <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
-                                                                <span :class="['block truncate', selected && 'font-semibold']">
+                                                <ComboboxOptions v-if="filteredManufacturers.length > 0"
+                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                    <ComboboxOption v-for="person in filteredManufacturers"
+                                                                    :key="person.id" :value="person.id" as="template"
+                                                                    v-slot="{ active, selected }">
+                                                        <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                <span
+                                                                    :class="['block truncate', selected && 'font-semibold']">
                                                                   {{ person.name }}
                                                                 </span>
-                                                                <span v-if="selected" :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                  <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                                            <span v-if="selected"
+                                                                  :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                  <component is="IconCheck" class="size-5"
+                                                                             aria-hidden="true"/>
                                                                 </span>
-                                                            </li>
-                                                        </ComboboxOption>
-                                                    </ComboboxOptions>
-                                                </div>
-                                            </Combobox>
+                                                        </li>
+                                                    </ComboboxOption>
+                                                </ComboboxOptions>
+                                            </div>
+                                        </Combobox>
 
-                                            <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer'"
-                                                   :type="property.type" v-model="property.value"
-                                                   :required="property.is_required"
-                                                   class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                                                   :placeholder="property.is_required ? $t('Value*') : $t('Value')"
-                                            />
+                                        <input
+                                            v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer'"
+                                            :type="property.type" v-model="property.value"
+                                            :required="property.is_required"
+                                            class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                            :placeholder="property.is_required ? $t('Value*') : $t('Value')"
+                                        />
 
-                                            <div v-if="property.type === 'file'">
-                                                <input type="file" @input="property.value = $event.target.files" class="sr-only" />
+                                        <div v-if="property.type === 'file'">
+                                            <input type="file" @input="property.value = $event.target.files"
+                                                   class="sr-only"/>
+                                            <div class="flex items-center gap-x-2">
                                                 <div class="flex items-center gap-x-2">
-                                                    <div class="flex items-center gap-x-2">
-                                                        <component is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
+                                                    <component is="IconPhoto" class="size-5 shrink-0 text-gray-400"
+                                                               aria-hidden="true"/>
+                                                    <div class="flex">
+                                                        <div class="truncate font-medium">{{
+                                                                property.value ? property.value[0].name : $t('Select a file')
+                                                            }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button type="button"
+                                                        class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
+                                                        @click="property.value = null">
+                                                    <component is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div v-if="property.type === 'checkbox'" class="px-3">
+                                            <input type="checkbox" :checked="booleanValue(property.value)"
+                                                   @change="property.value = $event.target.checked"
+                                                   class="input-checklist"/>
+                                        </div>
+
+
+                                    </td>
+                                </tr>
+                                <!--<tr class="divide-x divide-gray-200">
+                                    <td colspan="3" class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                        <PropertiesMenu white-menu-background has-no-offset>
+                                            <template v-slot:button>
+                                                <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
+                                                    <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
+                                                    <span>
+                                                        {{ $t('Add individual properties') }}
+                                                    </span>
+                                                </div>
+                                            </template>
+                                            <template v-slot:menu>
+                                                <div v-if="computedProperties.length > 0">
+                                                    <div v-for="property in computedProperties">
+                                                        <div @click="addPropertyToArticle(property)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
+                                                            <div class="xsDark">
+                                                                {{ property.name }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-else class="p-2">
+                                                    <div class="rounded-md bg-red-50 p-4">
                                                         <div class="flex">
-                                                            <div class="truncate font-medium">{{ property.value ? property.value[0].name : $t('Select a file') }}</div>
+                                                            <div class="shrink-0">
+                                                                <component is="IconInfoSquareRoundedFilled" class="size-5 text-red-400" aria-hidden="true" />
+                                                            </div>
+                                                            <div class="ml-3">
+                                                                <p class="text-sm font-medium text-red-800">
+                                                                    {{ $t('All properties are already added') }}
+                                                                </p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <button type="button" class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out" @click="property.value = null">
-                                                        <component is="IconTrash" class="h-5 w-5" aria-hidden="true" />
-                                                    </button>
                                                 </div>
-                                            </div>
-
-                                            <div v-if="property.type === 'checkbox'" class="px-3">
-                                                <input type="checkbox" :checked="booleanValue(property.value)" @change="property.value = $event.target.checked" class="input-checklist" />
-                                            </div>
-
-
-
-                                        </td>
-                                    </tr>
-                                    <!--<tr class="divide-x divide-gray-200">
-                                        <td colspan="3" class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-                                            <PropertiesMenu white-menu-background has-no-offset>
-                                                <template v-slot:button>
-                                                    <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
-                                                        <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
-                                                        <span>
-                                                            {{ $t('Add individual properties') }}
-                                                        </span>
-                                                    </div>
-                                                </template>
-                                                <template v-slot:menu>
-                                                    <div v-if="computedProperties.length > 0">
-                                                        <div v-for="property in computedProperties">
-                                                            <div @click="addPropertyToArticle(property)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
-                                                                <div class="xsDark">
-                                                                    {{ property.name }}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div v-else class="p-2">
-                                                        <div class="rounded-md bg-red-50 p-4">
-                                                            <div class="flex">
-                                                                <div class="shrink-0">
-                                                                    <component is="IconInfoSquareRoundedFilled" class="size-5 text-red-400" aria-hidden="true" />
-                                                                </div>
-                                                                <div class="ml-3">
-                                                                    <p class="text-sm font-medium text-red-800">
-                                                                        {{ $t('All properties are already added') }}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                            </PropertiesMenu>
-                                        </td>
-                                    </tr>-->
+                                            </template>
+                                        </PropertiesMenu>
+                                    </td>
+                                </tr>-->
                                 </tbody>
                             </table>
                         </div>
@@ -319,7 +412,9 @@
                 <div class="flex gap-3">
                     <div class="flex h-6 shrink-0 items-center">
                         <div class="group grid size-4 grid-cols-1">
-                            <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description" v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity" type="checkbox" class="input-checklist" />
+                            <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description"
+                                   v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity"
+                                   type="checkbox" class="input-checklist"/>
                         </div>
                     </div>
                     <div class="text-sm/6">
@@ -327,7 +422,9 @@
                             {{ $t('Single inventory capable') }}
                         </label>
                         <p id="is_required-description" class="text-gray-500">
-                            {{ $t('If activated, each individual piece of this article can be provided with its own properties') }}
+                            {{
+                                $t('If activated, each individual piece of this article can be provided with its own properties')
+                            }}
                         </p>
                     </div>
                 </div>
@@ -341,114 +438,166 @@
                             <table class="min-w-full divide-y divide-gray-300">
                                 <thead>
                                 <tr class="divide-x divide-gray-200">
-                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Description') }}</th>
-                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Quantity') }}</th>
-                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0" v-for="property in articleForm.detailed_article_quantities?.[0]?.properties">{{ property.name }}<span v-if="property.is_required">*</span></th>
+                                    <th scope="col"
+                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                                        Name
+                                    </th>
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                        {{ $t('Description') }}
+                                    </th>
+                                    <th scope="col"
+                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
+                                        {{ $t('Quantity') }}
+                                    </th>
+                                    <th scope="col"
+                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0"
+                                        v-for="property in articleForm.detailed_article_quantities?.[0]?.properties">
+                                        {{ property.name }}<span v-if="property.is_required">*</span></th>
                                 </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
-                                    <tr class="divide-x divide-gray-200" v-for="(detailedArticle, index) in articleForm?.detailed_article_quantities">
-                                        <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0">
-                                            <input type="text" v-model="detailedArticle.name"
-                                                   required
-                                                   class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                                                   placeholder="Name"
-                                            />
-                                        </td>
-                                        <td class="p-4 text-sm whitespace-nowrap text-gray-500 xsLight cursor-default">
-                                            <input type="text" v-model="detailedArticle.description"
-                                                   class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                                                   :placeholder="$t('Description')"
-                                            />
-                                        </td>
-                                        <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
-                                            <input type="text" v-model="detailedArticle.quantity"
-                                                   required
-                                                   class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                                                   :placeholder="$t('Quantity*')"
-                                            />
-                                        </td>
-                                        <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0" v-for="property in detailedArticle?.properties">
-                                            <Combobox v-if="property.type === 'room'" as="div" v-model="property.value" @update:modelValue="query = ''">
-                                                <div class="relative">
-                                                    <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="query = $event.target.value" @blur="query = ''" :display-value="(person) => property.value ? rooms?.find((room) => room.id === parseInt(property.value) )?.name : ''"/>
-                                                    <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                        <component is="IconSelector" class="size-5 text-gray-400" aria-hidden="true" />
-                                                    </ComboboxButton>
+                                <tr class="divide-x divide-gray-200"
+                                    v-for="(detailedArticle, index) in articleForm?.detailed_article_quantities">
+                                    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0">
+                                        <input type="text" v-model="detailedArticle.name"
+                                               required
+                                               class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                               placeholder="Name"
+                                        />
+                                    </td>
+                                    <td class="p-4 text-sm whitespace-nowrap text-gray-500 xsLight cursor-default">
+                                        <input type="text" v-model="detailedArticle.description"
+                                               class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                               :placeholder="$t('Description')"
+                                        />
+                                    </td>
+                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                        <input type="text" v-model="detailedArticle.quantity"
+                                               required
+                                               class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                               :placeholder="$t('Quantity*')"
+                                        />
+                                    </td>
+                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0"
+                                        v-for="property in detailedArticle?.properties">
+                                        <Combobox v-if="property.type === 'room'" as="div" v-model="property.value"
+                                                  @update:modelValue="query = ''">
+                                            <div class="relative">
+                                                <ComboboxInput
+                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6"
+                                                    @change="query = $event.target.value" @blur="query = ''"
+                                                    :display-value="(person) => property.value ? rooms?.find((room) => room.id === parseInt(property.value) )?.name : ''"/>
+                                                <ComboboxButton
+                                                    class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                    <component is="IconSelector" class="size-5 text-gray-400"
+                                                               aria-hidden="true"/>
+                                                </ComboboxButton>
 
-                                                    <ComboboxOptions v-if="filteredPeople.length > 0" class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
-                                                        <ComboboxOption v-for="person in filteredPeople" :key="person.id" :value="person.id" as="template" v-slot="{ active, selected }">
-                                                            <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
-                                                                <span :class="['block truncate', selected && 'font-semibold']">
+                                                <ComboboxOptions v-if="filteredPeople.length > 0"
+                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                    <ComboboxOption v-for="person in filteredPeople" :key="person.id"
+                                                                    :value="person.id" as="template"
+                                                                    v-slot="{ active, selected }">
+                                                        <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                <span
+                                                                    :class="['block truncate', selected && 'font-semibold']">
                                                                   {{ person.name }}
                                                                 </span>
-                                                                <span v-if="selected" :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                  <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                                            <span v-if="selected"
+                                                                  :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                  <component is="IconCheck" class="size-5"
+                                                                             aria-hidden="true"/>
                                                                 </span>
-                                                            </li>
-                                                        </ComboboxOption>
-                                                    </ComboboxOptions>
-                                                </div>
-                                            </Combobox>
+                                                        </li>
+                                                    </ComboboxOption>
+                                                </ComboboxOptions>
+                                            </div>
+                                        </Combobox>
 
-                                            <Combobox v-if="property.type === 'manufacturer'" as="div" v-model="property.value" @update:modelValue="queryManufacturer = ''">
-                                                <div class="relative">
-                                                    <ComboboxInput class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6" @change="queryManufacturer = $event.target.value" @blur="queryManufacturer = ''"  :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.value) )?.name : ''" />
-                                                    <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                        <component is="IconSelector" class="size-5 text-gray-400" aria-hidden="true" />
-                                                    </ComboboxButton>
+                                        <Combobox v-if="property.type === 'manufacturer'" as="div"
+                                                  v-model="property.value" @update:modelValue="queryManufacturer = ''">
+                                            <div class="relative">
+                                                <ComboboxInput
+                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6"
+                                                    @change="queryManufacturer = $event.target.value"
+                                                    @blur="queryManufacturer = ''"
+                                                    :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.value) )?.name : ''"/>
+                                                <ComboboxButton
+                                                    class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                    <component is="IconSelector" class="size-5 text-gray-400"
+                                                               aria-hidden="true"/>
+                                                </ComboboxButton>
 
-                                                    <ComboboxOptions v-if="filteredManufacturers.length > 0" class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
-                                                        <ComboboxOption v-for="person in filteredManufacturers" :key="person.id" :value="person.id" as="template" v-slot="{ active, selected }">
-                                                            <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
-                                                                <span :class="['block truncate', selected && 'font-semibold']">
+                                                <ComboboxOptions v-if="filteredManufacturers.length > 0"
+                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                    <ComboboxOption v-for="person in filteredManufacturers"
+                                                                    :key="person.id" :value="person.id" as="template"
+                                                                    v-slot="{ active, selected }">
+                                                        <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                <span
+                                                                    :class="['block truncate', selected && 'font-semibold']">
                                                                   {{ person.name }}
                                                                 </span>
-                                                                <span v-if="selected" :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                  <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                                            <span v-if="selected"
+                                                                  :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                  <component is="IconCheck" class="size-5"
+                                                                             aria-hidden="true"/>
                                                                 </span>
-                                                            </li>
-                                                        </ComboboxOption>
-                                                    </ComboboxOptions>
-                                                </div>
-                                            </Combobox>
+                                                        </li>
+                                                    </ComboboxOption>
+                                                </ComboboxOptions>
+                                            </div>
+                                        </Combobox>
 
-                                            <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer'"
-                                                   :type="property.type" v-model="property.value"
-                                                   :required="property.is_required"
-                                                   class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                                                   :placeholder="property.is_required ? $t('Value*') : $t('Value')"
-                                            />
-                                            <div v-if="property.type === 'file'">
-                                                <input type="file" @input="property.value = $event.target.files" class="sr-only" />
+                                        <input
+                                            v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer'"
+                                            :type="property.type" v-model="property.value"
+                                            :required="property.is_required"
+                                            class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                            :placeholder="property.is_required ? $t('Value*') : $t('Value')"
+                                        />
+                                        <div v-if="property.type === 'file'">
+                                            <input type="file" @input="property.value = $event.target.files"
+                                                   class="sr-only"/>
+                                            <div class="flex items-center gap-x-2">
                                                 <div class="flex items-center gap-x-2">
-                                                    <div class="flex items-center gap-x-2">
-                                                        <component is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
-                                                        <div class="flex">
-                                                            <div class="truncate font-medium">{{ property.value ? property.value[0].name : $t('Select a file') }}</div>
+                                                    <component is="IconPhoto" class="size-5 shrink-0 text-gray-400"
+                                                               aria-hidden="true"/>
+                                                    <div class="flex">
+                                                        <div class="truncate font-medium">{{
+                                                                property.value ? property.value[0].name : $t('Select a file')
+                                                            }}
                                                         </div>
                                                     </div>
-                                                    <button type="button" class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out" @click="property.value = null">
-                                                        <component is="IconTrash" class="h-5 w-5" aria-hidden="true" />
-                                                    </button>
                                                 </div>
+                                                <button type="button"
+                                                        class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
+                                                        @click="property.value = null">
+                                                    <component is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
+                                                </button>
                                             </div>
+                                        </div>
 
-                                            <div v-if="property.type === 'checkbox'" class="px-3">
-                                                <input type="checkbox" :checked="booleanValue(property.value)" @change="property.value = $event.target.checked" class="input-checklist" />
-                                            </div>
-                                        </td>
-                                    </tr>
+                                        <div v-if="property.type === 'checkbox'" class="px-3">
+                                            <input type="checkbox" :checked="booleanValue(property.value)"
+                                                   @change="property.value = $event.target.checked"
+                                                   class="input-checklist"/>
+                                        </div>
+                                    </td>
+                                </tr>
 
-                                    <tr class="divide-x divide-gray-200">
-                                        <td colspan="2" class="py-2 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                <tr class="divide-x divide-gray-200">
+                                    <td colspan="2"
+                                        class="py-2 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
 
-                                        </td>
-                                        <td colspan="1" class="p-2 text-xs whitespace-nowrap text-gray-500 font-lexend font-medium cursor-default">
-                                            <div class="flex items-center justify-between">
-                                                <span>{{ $t('Total quantity') }}:</span>
-                                                <span v-if="calculateTotalQuantity > articleForm.quantity" @click="articleForm.quantity = calculateTotalQuantity" class="flex items-center gap-x-0.5  cursor-pointer">
+                                    </td>
+                                    <td colspan="1"
+                                        class="p-2 text-xs whitespace-nowrap text-gray-500 font-lexend font-medium cursor-default">
+                                        <div class="flex items-center justify-between">
+                                            <span>{{ $t('Total quantity') }}:</span>
+                                            <span v-if="calculateTotalQuantity > articleForm.quantity"
+                                                  @click="articleForm.quantity = calculateTotalQuantity"
+                                                  class="flex items-center gap-x-0.5  cursor-pointer">
                                                     <ToolTipWithTextComponent
                                                         :text="formatQuantity(calculateTotalQuantity)"
                                                         classes="text-artwork-buttons-create"
@@ -456,19 +605,21 @@
                                                         stroke="2"
                                                         icon="IconClick"
                                                         icon-size="size-4"
-                                                        :tooltip-text="$t('Click to set the article quantity to the detailed article quantity')" />
+                                                        :tooltip-text="$t('Click to set the article quantity to the detailed article quantity')"/>
                                                 </span>
-                                                <span class="font-bold" v-else>{{ formatQuantity(calculateTotalQuantity) ?? 0 }}</span>
+                                            <span class="font-bold"
+                                                  v-else>{{ formatQuantity(calculateTotalQuantity) ?? 0 }}</span>
+                                        </div>
+                                    </td>
+                                    <td :colspan="articleForm.detailed_article_quantities?.[0]?.properties.length ?? 0"
+                                        class="p-2 text-xs whitespace-nowrap text-gray-500 font-lexend font-medium cursor-default flex items-center justify-between">
+                                        <div v-if="calculateTotalQuantity > articleForm.quantity" class="text-red-600">
+                                            <div>
+                                                {{ $t('Detailed Article quantity is greater than article quantity') }}
                                             </div>
-                                        </td>
-                                        <td :colspan="articleForm.detailed_article_quantities?.[0]?.properties.length ?? 0" class="p-2 text-xs whitespace-nowrap text-gray-500 font-lexend font-medium cursor-default flex items-center justify-between">
-                                            <div v-if="calculateTotalQuantity > articleForm.quantity" class="text-red-600">
-                                                <div>
-                                                    {{ $t('Detailed Article quantity is greater than article quantity') }}
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                        </div>
+                                    </td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -476,8 +627,9 @@
                 </div>
 
                 <div class="pt-5">
-                    <div @click="addNewDetailedArticle" class="w-fit flex items-center gap-x-2 text-gray-400 font-lexend font-bold select-none cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
-                        <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
+                    <div @click="addNewDetailedArticle"
+                         class="w-fit flex items-center gap-x-2 text-gray-400 font-lexend font-bold select-none cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
+                        <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true"/>
                         <span>
                             {{ $t('Add new detailed article') }}
                         </span>
@@ -485,7 +637,9 @@
                 </div>
             </div>
             <div class="flex items-center justify-center my-10">
-                <FormButton type="submit" :text="article ? $t('Update') : $t('Create')" :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory || calculateTotalQuantity > articleForm.quantity" :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''" />
+                <FormButton type="submit" :text="article ? $t('Update') : $t('Create')"
+                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory || calculateTotalQuantity > articleForm.quantity"
+                            :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''"/>
             </div>
         </form>
     </BaseModal>
@@ -496,7 +650,7 @@
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {useForm} from "@inertiajs/vue3";
-import {computed, inject, onMounted, ref, watch} from "vue";
+import {computed, inject, onMounted, ref, watch, nextTick} from "vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
@@ -513,6 +667,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import ArticleModalTabs from "@/Pages/Inventory/Components/Article/Modals/Components/ArticleModalTabs.vue";
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
+import cloneDeep from 'lodash/cloneDeep';
 
 const props = defineProps({
     article: {
@@ -571,7 +726,9 @@ const articleForm = useForm({
     inventory_sub_category_id: props.article ? props.article.inventory_sub_category_id : null,
     quantity: props.article ? props.article.quantity : 0,
     is_detailed_quantity: props.article ? props.article.is_detailed_quantity : false,
-    images: [],
+    oldImages: [],
+    newImages: [],
+    removed_image_ids: [],
     properties: props.article ? props.article.properties.map((prop) => {
         return {
             id: prop.id,
@@ -606,7 +763,7 @@ const articleForm = useForm({
 
 const updateTabId = (id) => {
     currentTabId.value = id;
-    if (id === 1){
+    if (id === 1) {
         showArticleHeader.value = false
     }
 }
@@ -637,13 +794,18 @@ const capitalizeFirstLetter = (val) => {
     return String(val).charAt(0).toUpperCase() + String(val).slice(1);
 }
 
-const submit = () =>  {
+const submit = () => {
     articleForm.main_image_index = currentMainImage.value;
     articleForm.inventory_sub_category_id = selectedSubCategory?.value ? selectedSubCategory.value.id : null;
 
     if (props.article) {
-        articleForm.patch(route('inventory-management.articles.update', props.article.id), {
+        articleForm.transform((data) => {
+            data._method = 'PATCH';
+            return data;
+        });
+        articleForm.post(route('inventory-management.articles.update', props.article.id), {
             preserveScroll: true,
+            forceFormData: true,
             onSuccess: () => {
                 emits('close');
             }
@@ -651,6 +813,7 @@ const submit = () =>  {
     } else {
         articleForm.post(route('inventory-management.articles.store'), {
             preserveScroll: true,
+            forceFormData: true,
             onSuccess: () => {
                 articleForm.reset();
                 selectedCategory.value = null;
@@ -686,15 +849,58 @@ const calculateTotalQuantity = computed(() => {
     }, 0);
 });
 
+const handleImageInput = (event) => {
+    // Wir konvertieren die FileList in ein Array
+    articleForm.newImages = Array.from(event.target.files);
+};
+
+const allImages = computed(() => {
+    // Kennzeichnen der Herkunft, damit wir später unterscheiden können
+    const old = articleForm.oldImages.map(img => ({...img, _origin: 'old'}));
+    const neu = articleForm.newImages.map(file => ({
+        _origin: 'new',
+        file,
+    }));
+    return [...old, ...neu];
+});
+const updateSelectedSubCategory = (newSubCategory) => {
+    // Setze zuerst auf null, um den Watcher zu triggern
+    selectedSubCategory.value = null;
+    nextTick(() => {
+        selectedSubCategory.value = newSubCategory;
+    });
+};
 
 watch(selectedCategory, (value) => {
-    const updateProps = (props) => {
+    const updateProps = (newProps) => {
         if (articleForm.is_detailed_quantity && articleForm.detailed_article_quantities.length) {
-            articleForm.detailed_article_quantities.forEach(item => {
-                item.properties = [...props];
+            articleForm.detailed_article_quantities.forEach((detailedArticle) => {
+                // Falls detailedArticle.properties null ist, benutze ein leeres Array
+                const currentProps = detailedArticle.properties || [];
+                const mergedProps = [];
+
+                newProps.forEach((np) => {
+                    // Suche nach einer bestehenden Property mit derselben ID
+                    const existing = currentProps.find((oldProp) => oldProp.id === np.id);
+                    if (existing) {
+                        // Behalte den alten Wert, aber aktualisiere andere Felder (wie Name, Tooltip, etc.)
+                        mergedProps.push({
+                            ...np,
+                            value: existing.value,
+                        });
+                    } else {
+                        // Neue Property erhält einen leeren Wert
+                        mergedProps.push({
+                            ...np,
+                            value: '',
+                        });
+                    }
+                });
+
+                detailedArticle.properties = mergedProps;
             });
         } else {
-            articleForm.properties = props;
+            articleForm.properties = newProps;
         }
     };
 
@@ -737,13 +943,35 @@ watch(selectedCategory, (value) => {
 });
 
 watch(selectedSubCategory, (value) => {
-    const updateProps = (props) => {
+    const updateProps = (newProps) => {
         if (articleForm.is_detailed_quantity && articleForm.detailed_article_quantities.length) {
-            articleForm.detailed_article_quantities.forEach(item => {
-                item.properties = [...props];
+            articleForm.detailed_article_quantities.forEach((detailedArticle) => {
+                // Falls detailedArticle.properties null ist, benutze ein leeres Array
+                const currentProps = detailedArticle.properties || [];
+                const mergedProps = [];
+
+                newProps.forEach((np) => {
+                    // Suche nach einer bestehenden Property mit derselben ID
+                    const existing = currentProps.find((oldProp) => oldProp.id === np.id);
+                    if (existing) {
+                        // Behalte den alten Wert, aber aktualisiere andere Felder (wie Name, Tooltip, etc.)
+                        mergedProps.push({
+                            ...np,
+                            value: existing.value,
+                        });
+                    } else {
+                        // Neue Property erhält einen leeren Wert
+                        mergedProps.push({
+                            ...np,
+                            value: '',
+                        });
+                    }
+                });
+
+                detailedArticle.properties = mergedProps;
             });
         } else {
-            articleForm.properties = props;
+            articleForm.properties = newProps;
         }
     };
 
@@ -829,6 +1057,42 @@ watch(() => articleForm.is_detailed_quantity, (value) => {
     }
 })
 
+const removeImage = (image) => {
+    if (image._origin === 'old') {
+        // Bei alten Bildern: ID merken und aus dem Array entfernen
+        articleForm.removed_image_ids.push(image.id);
+        const index = articleForm.oldImages.findIndex(i => i.id === image.id);
+        if (index > -1) {
+            articleForm.oldImages.splice(index, 1);
+        }
+    } else if (image._origin === 'new') {
+        // Bei neuen Bildern: Greife auf image.file zu
+        const index = articleForm.newImages.findIndex(file =>
+            file.name === image.file.name &&
+            file.lastModified === image.file.lastModified
+        );
+        if (index > -1) {
+            articleForm.newImages.splice(index, 1);
+        }
+    }
+};
+
+const createImageURL = (imageObj) => {
+    if (!imageObj) return '';
+
+    // Altes Bild?
+    if (imageObj._origin === 'old' && imageObj.image) {
+        return '/storage/' + imageObj.image;
+    }
+
+    // Neues Bild?
+    if (imageObj._origin === 'new' && imageObj.file instanceof Blob) {
+        return window.URL.createObjectURL(imageObj.file);
+    }
+
+    return '';
+};
+
 onMounted(() => {
     if (props.article) {
         selectedCategory.value = categories?.find(c => c.id === props.article.inventory_category_id) ?? null;
@@ -887,6 +1151,9 @@ onMounted(() => {
                 }));
             }
             articleForm.detailed_article_quantities = [];
+        }
+        if (props.article.images) {
+            articleForm.oldImages = [...props.article.images];
         }
     }
 

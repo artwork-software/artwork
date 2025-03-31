@@ -10,10 +10,12 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\User\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -114,7 +116,9 @@ class HandleInertiaRequests extends Middleware
                 'module_settings' => $this->moduleSettingsService->getModuleSettings(),
                 'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,
                 'isNotionKeySet' => config('app.notion_api_token') !== null && config('app.notion_api_token') !== '',
-                'calendarHours' => $hours
+                'calendarHours' => $hours,
+                // chatUsers only on reload and not on page change
+                'chats' => Inertia::lazy(fn() => $user?->chats()->with(['users'])->get()),
             ]
         );
     }

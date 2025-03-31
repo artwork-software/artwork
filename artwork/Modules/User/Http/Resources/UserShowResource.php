@@ -41,6 +41,7 @@ class UserShowResource extends JsonResource
             'language' => $this->language,
             'email_private' => $this->email_private,
             'phone_private' => $this->phone_private,
+            'use_chat' => $this->use_chat,
         ];
     }
 }

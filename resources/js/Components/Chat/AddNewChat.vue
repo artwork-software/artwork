@@ -1,0 +1,115 @@
+<template>
+    <BaseModal @close="$emit('close')">
+        <div>
+            <ModalHeader title="Neuen Chat erstellen" description="Wähle einen Namen für deinen neuen Chat." />
+
+        </div>
+
+        <div class="">
+            <UserSearch
+                @userSelected="addUserToChat"
+                label="Benutzer hinzufügen"
+                placeholder="Benutzer hinzufügen"
+                :only-use-chat-users="true"
+                :without-self="true"
+            />
+        </div>
+
+        <div>
+            <div v-if="newChat.users.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-3 ">
+                <div v-for="(user, index) in newChat.users" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                    <div class="flex items-center">
+                        <div>
+                            <img class="inline-block size-9 rounded-full object-cover" :src="user?.profile_photo_url" alt="" />
+                        </div>
+                        <div class="mx-2">
+                            <p class="xsDark group-hover:text-gray-900">{{ user.name }}</p>
+                        </div>
+                        <div class="flex items-center">
+                            <button type="button" @click="deleteUserFromForm(index)">
+                                <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="newChat.users.length > 1">
+            <div class="rounded-md bg-yellow-50 p-4">
+                <div class="flex">
+                    <div class="shrink-0">
+                        <component is="IconInfoSquareRoundedFilled" class="size-5 min-w-5 min-h-5 text-yellow-400" aria-hidden="true" />
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-yellow-800">
+                            Du hast mehr als einen Benutzer hinzugefügt. Dieser Chat wird nun ein Gruppenchat. Gebe bitte für die Gruppe einen Namen an.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <TextInputComponent
+                    id="chatName" v-model="newChat.name" label="Name"
+                />
+            </div>
+
+        </div>
+
+        <div>
+            <div class="flex justify-end mt-4">
+                <FormButton type="submit" @click="createChat" :text="$t('Create')" class="w-full sm:w-auto" />
+            </div>
+        </div>
+
+
+
+
+    </BaseModal>
+</template>
+
+<script setup>
+
+import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import {useForm} from "@inertiajs/vue3";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import {XIcon} from "@heroicons/vue/outline";
+import Button from "@/Jetstream/Button.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+const props = defineProps({
+
+})
+
+const emit = defineEmits(['close'])
+
+
+const newChat = useForm({
+    name: '',
+    users: [],
+})
+
+const addUserToChat = (user) => {
+    if (!newChat.users.some(u => u.id === user.id)) {
+        newChat.users.push(user);
+    }
+}
+
+const deleteUserFromForm = (index) => {
+    newChat.users.splice(index, 1);
+}
+
+const createChat = () => {
+    newChat.post(route('chat.store'), {
+        onSuccess: () => {
+            emit('close')
+        }
+    })
+}
+</script>
+
+<style scoped>
+
+</style>

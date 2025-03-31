@@ -92,6 +92,7 @@ use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
+use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
@@ -1878,6 +1879,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/search/users', [UserController::class, 'scoutSearch'])->name('user.scoutSearch');
         Route::post('/search/workers', [WorkerController::class, 'scoutWorkerSearch'])->name('worker.scoutSearch');
         Route::post('/search/projects', [ProjectController::class, 'scoutSearch'])->name('project.scoutSearch');
+    });
+
+    Route::group(['prefix' => 'chat'], function (): void {
+        // chat.store
+        Route::post('/store', [ChatController::class, 'store'])->name('chat.store');
     });
 
     Route::resource('holidays', HolidayController::class)

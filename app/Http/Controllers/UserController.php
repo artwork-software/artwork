@@ -494,7 +494,8 @@ class UserController extends Controller
                 'email',
                 'language',
                 'email_private',
-                'phone_private'
+                'phone_private',
+                'use_chat'
             )
         );
 

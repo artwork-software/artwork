@@ -198,6 +198,14 @@
             </div>
 
             <main class="main mx-5">
+                <PopupChat v-if="$page.props.user.use_chat"/>
+
+                <div class="ml-20">
+                    <pre>
+                    {{ $page.props.chats }}
+                </pre>
+                </div>
+
                 <slot></slot>
             </main>
         </div>
@@ -228,6 +236,7 @@ import NumberComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateComponent from "@/Components/Inputs/DateInputComponent.vue";
 import Linkifyit from 'linkify-it';
+import PopupChat from "@/Components/Chat/PopupChat.vue";
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
@@ -249,6 +258,7 @@ const managementRoutes = [
 export default {
     mixins: [Permissions, IconLib],
     components: {
+        PopupChat,
         DateComponent,
         TextareaComponent,
         NumberComponent,

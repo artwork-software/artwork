@@ -5,6 +5,8 @@ namespace Artwork\Modules\User\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
+use Artwork\Modules\Chat\Models\Chat;
+use Artwork\Modules\Chat\Models\ChatUser;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
@@ -221,7 +223,9 @@ class User extends Model implements
         'daily_view',
         'entities_per_page',
         'last_project_id',
-        'bulk_column_size'
+        'bulk_column_size',
+        'chat_public_key',
+        'use_chat'
     ];
 
     protected $casts = [
@@ -251,6 +255,7 @@ class User extends Model implements
         'phone_private' => 'boolean',
         'daily_view' => 'boolean',
         'bulk_column_size' => 'array',
+        'use_chat' => 'boolean',
     ];
 
     protected $hidden = [
@@ -527,6 +532,8 @@ class User extends Model implements
             'business' => $this->business,
             'phone_number' => $this->phone_number,
             'email' => $this->email,
+            'chat_public_key' => $this->chat_public_key,
+            'use_chat' => $this->use_chat,
         ];
     }
 
@@ -602,5 +609,11 @@ class User extends Model implements
     public function lastProject(): HasOne
     {
         return $this->hasOne(Project::class, 'id', 'last_project_id');
+    }
+
+    public function chats(): BelongsToMany
+    {
+        return $this->belongsToMany(Chat::class, 'chat_users')
+            ->using(ChatUser::class);
     }
 }

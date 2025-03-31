@@ -178,6 +178,21 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-span-1">
+                    <div class="relative flex items-start">
+                        <div class="flex h-6 items-center">
+                            <input id="phone_private" v-model="userForm.use_chat" @change="editUser" aria-describedby="use_chat-description" name="use_chat" type="checkbox" class="input-checklist" />
+                        </div>
+                        <div class="ml-3 text-sm leading-6">
+                            <label for="phone_private" class="font-medium text-gray-900">
+                                {{ $t('Use Artwork Chat')}}
+                            </label>
+                            <p id="phone_private-description" class="text-gray-500">
+                                {{ $t('Use the chat function in the application.')}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
                 <div class="sm:col-span-6">
                     <div class="mt-1">
                         <TextareaComponent
@@ -393,6 +408,7 @@ export default {
                 email_private: this.user_to_edit.email_private,
                 phone_private: this.user_to_edit.phone_private,
                 high_contrast: this.calendar_settings.high_contrast,
+                use_chat: this.user_to_edit.use_chat,
             }),
             resetPasswordForm: this.$inertia.form({
                 email: this.user_to_edit.email

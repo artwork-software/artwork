@@ -80,6 +80,8 @@ export default {
         onlyTeam: booleanDefaultFalseCfg,
         searchWorkers: booleanDefaultFalseCfg,
         dontCloseOnSelect: booleanDefaultFalseCfg,
+        onlyUseChatUsers: booleanDefaultFalseCfg,
+        withoutSelf: booleanDefaultFalseCfg,
         currentCraft: {
             type: Object,
             required: false
@@ -106,6 +108,14 @@ export default {
 
             if (this.onlyTeam) {
                 return this.teamMember.includes(user.id)
+            }
+
+            if (this.onlyUseChatUsers) {
+                return user.use_chat;
+            }
+
+            if (this.withoutSelf) {
+                return user.id !== this.$page.props.user.id;
             }
 
             return true;

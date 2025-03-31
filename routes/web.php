@@ -1943,6 +1943,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'chat'], function (): void {
         // chat.store
         Route::post('/store', [ChatController::class, 'store'])->name('chat.store');
+
+        // get chat-system.get-chats
+        Route::get('/get-chats', [ChatController::class, 'getChats'])->name('chat-system.get-chats');
+
+        // chat-system.get-chat-messages
+        Route::get('/get-chat-messages/{chat}', [ChatController::class, 'getChatMessages'])
+            ->name('chat-system.get-chat-messages');
     });
 
     Route::resource('holidays', HolidayController::class)

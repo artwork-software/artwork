@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Chat\Http\Requests\StoreChatRequest;
 use Artwork\Modules\Chat\Http\Requests\UpdateChatRequest;
 use Artwork\Modules\Chat\Models\Chat;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\AuthManager;
+use Inertia\Inertia;
 
 class ChatController extends Controller
 {
@@ -88,5 +90,26 @@ class ChatController extends Controller
     public function destroy(Chat $chat)
     {
         //
+    }
+
+    public function getChats()
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        $chats = $user->chats()->with('users')->get();
+
+        return response()->json([
+            'chats' => $chats,
+        ]);
+    }
+
+    public function getChatMessages(Chat $chat)
+    {
+        $chat->load(['users', 'messages']);
+
+        return response()->json([
+            'chat' => $chat,
+        ]);
     }
 }

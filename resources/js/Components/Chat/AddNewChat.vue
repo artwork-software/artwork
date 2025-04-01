@@ -9,15 +9,14 @@
             <UserSearch
                 @userSelected="addUserToChat"
                 label="Benutzer hinzufügen"
-                placeholder="Benutzer hinzufügen"
                 :only-use-chat-users="true"
                 :without-self="true"
             />
         </div>
 
         <div>
-            <div v-if="newChat.users.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-3 ">
-                <div v-for="(user, index) in newChat.users" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+            <div v-if="chatUsers.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-3 ">
+                <div v-for="(user, index) in chatUsers" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
                     <div class="flex items-center">
                         <div>
                             <img class="inline-block size-9 rounded-full object-cover" :src="user?.profile_photo_url" alt="" />
@@ -35,7 +34,7 @@
             </div>
         </div>
 
-        <div v-if="newChat.users.length > 1">
+        <div v-if="chatUsers.length > 1">
             <div class="rounded-md bg-yellow-50 p-4">
                 <div class="flex">
                     <div class="shrink-0">
@@ -51,7 +50,7 @@
 
             <div class="pt-2">
                 <TextInputComponent
-                    id="chatName" v-model="newChat.name" label="Name"
+                    id="chatName" v-model="chatName" label="Name"
                 />
             </div>
 
@@ -79,34 +78,52 @@ import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import Button from "@/Jetstream/Button.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import {ref} from "vue";
 const props = defineProps({
 
 })
 
 const emit = defineEmits(['close'])
 
-
-const newChat = useForm({
-    name: '',
-    users: [],
-})
+const chatName = ref('')
+const chatUsers = ref([])
 
 const addUserToChat = (user) => {
-    if (!newChat.users.some(u => u.id === user.id)) {
-        newChat.users.push(user);
+    if (!chatUsers.value.some(u => u.id === user.id)) {
+        chatUsers.value.push(user);
     }
 }
 
 const deleteUserFromForm = (index) => {
-    newChat.users.splice(index, 1);
+    chatUsers.value.splice(index, 1);
 }
 
-const createChat = () => {
-    newChat.post(route('chat.store'), {
-        onSuccess: () => {
-            emit('close')
+const createChat = async () => {
+    try {
+        const response = await fetch("/api/chat/store", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({
+                name: chatName.value,
+                users: chatUsers.value.map(user => user.id),
+            }),
+        })
+
+        const contentType = response.headers.get('Content-Type')
+        const isJson = contentType && contentType.includes('application/json')
+        const data = isJson ? await response.json() : null
+        if (!response.ok || !data?.chat) {
+            console.error('Chat konnte nicht erstellt werden:', data)
+            return
         }
-    })
+        emit('close', data.chat.id)
+
+    } catch (err) {
+        console.error('Fehler bei der Anfrage:', err)
+    }
 }
 </script>
 

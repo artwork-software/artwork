@@ -176,7 +176,7 @@ const checklistForm = useForm({
     private: props.checklistToEdit ? props.checklistToEdit.private : false,
     template_id: null,
     user_id: null,
-    creator_id: usePage().props.user.id,
+    creator_id: usePage().props.auth.user.id,
     tab_id: props.tab_id ? props.tab_id : null
 });
 

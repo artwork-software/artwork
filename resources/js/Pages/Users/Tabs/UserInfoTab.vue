@@ -432,7 +432,7 @@ export default {
     },
     methods: {
         isSignedInUser() {
-            return this.user_to_edit.id === this.$page.props.user.id;
+            return this.user_to_edit.id === this.$page.props.auth.user.id;
         },
         openChangeTeamsModal() {
             this.departments.forEach((team) => {

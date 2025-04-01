@@ -16,7 +16,7 @@
             </div>
             <div class="flex items-center justify-end gap-x-3 print:hidden">
                 <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-5 w-5 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" @click="openAddTaskModal = true"/>
-                <BaseMenu v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id))) || isInOwnTaskManagement">
+                <BaseMenu v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement">
                     <MenuItem v-slot="{ active }" v-if="!checklist.private">
                         <div @click="openEditChecklistTeamsModal = true"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
@@ -59,7 +59,7 @@
                             {{ $t('Duplicate') }}
                         </div>
                     </MenuItem>
-                    <MenuItem as="div" v-slot="{ active }" v-if="can('can use checklists') && checklist.user_id === usePage().props.user.id || can('can edit checklist') || isAdmin || checklist.user_id === usePage().props.user.id">
+                    <MenuItem as="div" v-slot="{ active }" v-if="can('can use checklists') && checklist.user_id === usePage().props.auth.user.id || can('can edit checklist') || isAdmin || checklist.user_id === usePage().props.auth.user.id">
                         <div @click="showDeleteChecklistModal = true"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
                             <IconTrash stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
@@ -247,7 +247,7 @@ const templateForm = useForm({
 const checkIfUserIsInTaskIfInOwnTaskManagement = (task) => {
     // if isInOwnTaskManagement is true, check if the current user ist in the task
     if (props.isInOwnTaskManagement && !props.checklist.private) {
-        return task?.users.map(user => user.id).includes(usePage().props.user.id);
+        return task?.users.map(user => user.id).includes(usePage().props.auth.user.id);
     } else {
         return true;
     }

@@ -285,7 +285,7 @@ export default {
             if (this.userIsProjectManager) {
                 return true;
             }
-            if (this.$page.props.user.id === user.id && user.project_management) {
+            if (this.$page.props.auth.user.id === user.id && user.project_management) {
                 return true;
             }
 

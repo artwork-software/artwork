@@ -476,10 +476,10 @@ export default {
                 let projectLeaders = event.projectLeaders;
 
                 if (projectLeaders && projectLeaders.length > 0) {
-                    if (createdBy.id === this.$page.props.user.id || projectLeaders.some((leader) => leader.id === this.$page.props.user.id)) {
+                    if (createdBy.id === this.$page.props.auth.user.id || projectLeaders.some((leader) => leader.id === this.$page.props.auth.user.id)) {
                         return true;
                     }
-                } else if (createdBy.id === this.$page.props.user.id) {
+                } else if (createdBy.id === this.$page.props.auth.user.id) {
                     return true;
                 }
 
@@ -668,7 +668,7 @@ export default {
             this.$refs.vuecal.next();
             this.dateValueArray[0] = this.addOneDay(this.dateValueArray[0]);
             this.dateValueArray[1] = this.addOneDay(this.dateValueArray[1]);
-            router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+            router.patch(route('update.user.calendar.filter.dates', this.$page.props.auth.user.id), {
                 start_date: this.dateValueArray[0],
                 end_date: this.dateValueArray[1],
             }, {
@@ -680,7 +680,7 @@ export default {
             this.$refs.vuecal.previous();
             this.dateValueArray[0] = this.subtractOneDay(this.dateValueArray[0]);
             this.dateValueArray[1] = this.subtractOneDay(this.dateValueArray[1]);
-            router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+            router.patch(route('update.user.calendar.filter.dates', this.$page.props.auth.user.id), {
                 start_date: this.dateValueArray[0],
                 end_date: this.dateValueArray[1],
             }, {

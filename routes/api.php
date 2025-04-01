@@ -1,5 +1,7 @@
 <?php
 
+use Artwork\Modules\Chat\Http\Controllers\ChatController;
+use Artwork\Modules\User\Services\UserStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -30,11 +32,11 @@ Route::get('/generate-avatar-image/{letters}', [\App\Http\Controllers\UserContro
     ->name('generate-avatar-image');
 
 
-Route::middleware('auth:sanctum')->post('/user/set-public-key', function (Request $request) {
-    $request->validate(['chat_public_key' => 'required|string']);
-    $user = $request->user();
-    $user->chat_public_key = $request->chat_public_key;
-    $user->save();
+Route::middleware('auth:sanctum')->post('/user/set-public-key', [ChatController::class, 'setPublicKey'])->name('keypair.store');
+Route::middleware('auth:sanctum')->post('/chat/store', [ChatController::class, 'storeChat'])->name('chat.store');
+Route::middleware('auth:sanctum')->post('/chat/message/{message}/read', [ChatController::class, 'markAsRead'])->name('chat-system.mark-as-read');
+Route::middleware('auth:sanctum')->post('/chat/messages/read', [ChatController::class, 'markMultipleAsRead'])->name('chat-system.mark-multiple-as-read');
 
-    //return response()->json(['status' => 'ok']);
-})->name('keypair.store');
+Route::get('/user-status/{id}', function ($id, UserStatusService $service) {
+    return response()->json(['status' => $service->getStatus($id)]);
+});

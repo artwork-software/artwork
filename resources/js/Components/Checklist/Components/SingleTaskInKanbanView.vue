@@ -20,7 +20,7 @@
                 </div>
             </div>
             <div>
-                <BaseMenu class="ml-3" v-if="(canEditComponent && (projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds?.includes($page.props.user.id) || isAdmin)) || isInOwnTaskManagement">
+                <BaseMenu class="ml-3" v-if="(canEditComponent && (projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds?.includes($page.props.auth.user.id) || isAdmin)) || isInOwnTaskManagement">
                     <MenuItem v-slot="{ active }">
                         <div @click="openEditTaskModal = true"
                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -172,7 +172,7 @@ const onDragEnd = () => {
 };
 
 const filteredUsers = computed(() => {
-    return props.task.users.filter(user => user.id !== usePage().props.user.id);
+    return props.task.users.filter(user => user.id !== usePage().props.auth.user.id);
 })
 
 const deleteTask = () => {

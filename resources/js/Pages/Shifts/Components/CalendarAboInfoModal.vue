@@ -20,9 +20,9 @@ export default {
             }
             let url = '';
             if (this.is_shift_calendar_abo) {
-                url = this.$page.props.user.shift_calendar_abo.calendar_abo_url;
+                url = this.$page.props.auth.user.shift_calendar_abo.calendar_abo_url;
             } else {
-                url = this.$page.props.user.calendar_abo.calendar_abo_url;
+                url = this.$page.props.auth.user.calendar_abo.calendar_abo_url;
             }
             navigator.clipboard.writeText(url).then(() => {
                 this.copyText = this.$t('Copied');
@@ -34,9 +34,9 @@ export default {
         downloadICSFile() {
             let url = '';
             if (this.is_shift_calendar_abo) {
-                url = this.$page.props.user.shift_calendar_abo.calendar_abo_url;
+                url = this.$page.props.auth.user.shift_calendar_abo.calendar_abo_url;
             } else {
-                url = this.$page.props.user.calendar_abo.calendar_abo_url;
+                url = this.$page.props.auth.user.calendar_abo.calendar_abo_url;
             }
             const a = document.createElement('a');
             a.href = url;
@@ -166,7 +166,7 @@ export default {
                         {{ $t('Use the following URL to import the calendar into your calendar application and stay up to date:') }}
                     </p>
                     <div class="mt-1 relative rounded-md shadow-sm">
-                        <input @click="$event.target.select()" type="text" name="calendar-url" id="calendar-url" class="focus:ring-primary focus:border-primary block w-full pr-10 sm:text-sm border-gray-300 rounded-md" :value="is_shift_calendar_abo ? $page.props.user.shift_calendar_abo.calendar_abo_url : $page.props.user.calendar_abo.calendar_abo_url" readonly>
+                        <input @click="$event.target.select()" type="text" name="calendar-url" id="calendar-url" class="focus:ring-primary focus:border-primary block w-full pr-10 sm:text-sm border-gray-300 rounded-md" :value="is_shift_calendar_abo ? $page.props.auth.user.shift_calendar_abo.calendar_abo_url : $page.props.auth.user.calendar_abo.calendar_abo_url" readonly>
                         <button type="button" class="absolute flex items-center inset-y-0 right-0 px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover focus:outline-none focus-visible:ring focus-visible:ring-purple-500/75" @click="copyAboUrlToClipboard">
                             <IconCircleCheck class="h-4 w-4 mr-1" v-if="copyText"/> {{ copyText ? copyText : $t('Copy') }}
                         </button>

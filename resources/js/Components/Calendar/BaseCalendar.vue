@@ -28,27 +28,27 @@
 
 
         <div>
-            <div v-if="!usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
+            <div v-if="!usePage().props.auth.user.daily_view && !usePage().props.auth.user.at_a_glance">
                 <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? 'mt-8' : ''">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white px-5'">
                         <CalendarHeader :rooms="rooms" :filtered-events-length="eventsWithoutRoom.length"/>
                         <div class="w-fit events-by-days-container mt-16" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '',]" ref="calendarToCalculate">
                             <div v-for="day in days"
                                  :key="day.fullDay"
-                                 :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                                 :style="{ height: usePage().props.auth.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                  class="flex gap-0.5 day-container"
                                  :class="day.isWeekend ? 'bg-gray-50' : ''"
                                  :data-day="day.fullDay"
                                  :data-day-to-jump="day.withoutFormat">
                                 <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day" v-if="!day.isExtraRow"/>
                                 <div v-for="room in newCalendarData" :key="room.id" class="relative" v-if="!day.isExtraRow">
-                                    <div v-if="room.content[day.fullDay]?.events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
+                                    <div v-if="room.content[day.fullDay]?.events.length > 1 && !usePage().props.auth.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
                                         <component is="IconChevronDown" @click="scrollToNextEventInDay(day.withoutFormat, room.content[day.fullDay].events.length,room.roomId)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
                                     </div>
-                                    <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                                    <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.auth.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                          :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                                          class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.withoutFormat">
-                                        <div v-if="usePage().props.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
+                                        <div v-if="usePage().props.auth.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
                                             <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: first_project_tab_id })"  class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
                                                 <component :is="group.icon" class="size-4" aria-hidden="true"/>
                                                 <span>{{ group.name }}</span>
@@ -83,7 +83,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
+            <div v-else-if="usePage().props.auth.user.daily_view && !usePage().props.auth.user.at_a_glance">
                 <AsyncDailyViewCalendar
                     :multi-edit="multiEdit"
                     :rooms="rooms"
@@ -141,7 +141,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="!checkIfAnyRoomHasAnEventOrShift && usePage().props.user.calendar_settings.use_project_time_period">
+        <div v-if="!checkIfAnyRoomHasAnEventOrShift && usePage().props.auth.user.calendar_settings.use_project_time_period">
             <div class="mt-24 ml-4">
                 <div class="border-l-4 border-red-400 bg-red-50 p-4 w-fit">
                     <div class="flex">
@@ -194,7 +194,7 @@
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :calendarProjectPeriod="usePage().props.user.calendar_settings.use_project_time_period"
+        :calendarProjectPeriod="usePage().props.auth.user.calendar_settings.use_project_time_period"
         :project="project"
         :event="eventToEdit"
         :wantedRoomId="wantedRoom"
@@ -364,12 +364,12 @@ const scrollToNextEventInDay = (day, length,room) => {
 
                 if (projectLeaders && projectLeaders.length > 0) {
                     if (
-                        createdBy.id === usePage().props.user.id ||
-                        projectLeaders.some((leader) => leader.id === usePage().props.user.id)
+                        createdBy.id === usePage().props.auth.user.id ||
+                        projectLeaders.some((leader) => leader.id === usePage().props.auth.user.id)
                     ) {
                         return true;
                     }
-                } else if (createdBy.id === usePage().props.user.id) {
+                } else if (createdBy.id === usePage().props.auth.user.id) {
                     return true;
                 }
 
@@ -388,7 +388,7 @@ const first_project_tab_id = inject('first_project_tab_id');
 const eventTypes = inject('eventTypes');
 const multiEdit = ref(false);
 const isFullscreen = ref(false);
-const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
+const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const showMultiEditModal = ref(false);
 const editEvents = ref([]);
 const editEventsRoomIds = ref([]);
@@ -480,7 +480,7 @@ const checkIfUserIsAdminOrInGroup = (group) => {
         return false;
     }
 
-    return !group.userIds.includes(usePage().props.user.id);
+    return !group.userIds.includes(usePage().props.auth.user.id);
 }
 
 
@@ -593,7 +593,7 @@ const closeMultiDuplicateModal = (closedOnPurpose, desiredRoomIds, desiredDays) 
     }
 const eventComponentClosed = (closedOnPurpose) => {
         if (closedOnPurpose) {
-            let calendar_settings = usePage().props.user.calendar_settings;
+            let calendar_settings = usePage().props.auth.user.calendar_settings;
 
             //@todo: temporary see ARTWORK-300
             if (calendar_settings.use_project_time_period) {
@@ -649,7 +649,7 @@ const dateValue = inject('dateValue');
 
 
 /*const updateFilterValue = (key, value) => {
-    router.patch(route('user.calendar.filter.single.value.update', {user: usePage().props.user.id}), {
+    router.patch(route('user.calendar.filter.single.value.update', {user: usePage().props.auth.user.id}), {
         key: key,
         value: value
     }, {

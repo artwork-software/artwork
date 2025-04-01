@@ -115,7 +115,7 @@ export default {
             }
 
             if (this.withoutSelf) {
-                return user.id !== this.$page.props.user.id;
+                return user.id !== this.$page.props.auth.user.id;
             }
 
             return true;

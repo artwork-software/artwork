@@ -77,7 +77,7 @@
                                                           :shift="shift"
                                                           :project="this.findProjectById(shift.event.project_id)"
                                                           :event-type="this.findEventTypeById(shift.event.event_type_id)"
-                                                          :user-to-edit-id="this.$page.props.user.id"
+                                                          :user-to-edit-id="this.$page.props.auth.user.id"
                                                           :first-project-shift-tab-id="this.first_project_shift_tab_id"/>
                                 </div>
                             </div>

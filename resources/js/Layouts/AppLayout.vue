@@ -123,7 +123,7 @@
                        @mouseleave="hoverNotificationsMenu = false" :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
                         <div class="relative flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs">
                             <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                            <div v-if="this.$page.props.user.show_notification_indicator === true"
+                            <div v-if="this.$page.props.auth.user.show_notification_indicator === true"
                                  style="font-size: 7px;"
                                  class="w-3 h-3 block absolute top-0 right-0 rounded-full bg-white text-black text-center">
                             </div>
@@ -140,10 +140,10 @@
                     <Menu as="div" class="flex flex-col items-center">
                         <MenuButton @mouseover="!fullSidenav ? hoverUserMenu = true : null"
                                     @mouseleave="hoverUserMenu = false" ref="menuButton" @click="setHeightOfMenuItems" class="text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs hover:bg-artwork-navigation-color/10">
-                            <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.user.profile_photo_url" alt=""/>
+                            <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url" alt=""/>
                             <div class="ml-4 w-32 text-left" v-if="fullSidenav">
                                 Hallo
-                                {{ $page.props.user.first_name }}
+                                {{ $page.props.auth.user.first_name }}
                             </div>
                             <div :style="[{ display: hoverUserMenu ? 'block' : 'none' }]" class="absolute left-14">
                                 <div class="p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit">
@@ -160,7 +160,7 @@
                             <MenuItems ref="menuItems" :class="[fullSidenav ? 'ml-40' : 'ml-14', '']" class="z-50 managementMenu rounded-lg max-h-40 overflow-y-auto opacity-100 absolute origin-top-left w-44 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
                                 <div class="z-50">
                                     <MenuItem v-slot="{ active }">
-                                        <Link :href="route('user.edit.info', {user: this.$page.props.user.id})"
+                                        <Link :href="route('user.edit.info', {user: this.$page.props.auth.user.id})"
                                               :class="[active ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
                                             {{ $t('Your account')}}
                                         </Link>
@@ -198,7 +198,7 @@
             </div>
 
             <main class="main mx-5">
-                <PopupChat v-if="$page.props.user.use_chat"/>
+                <PopupChat v-if="$page.props.auth.user.use_chat"/>
 
                 <div class="ml-20">
                     <pre>
@@ -531,7 +531,7 @@ export default {
         window.document.dispatchEvent(ev);
         this.$i18n.locale = this.$page.props.selected_language;
         document.documentElement.lang = this.$page.props.selected_language;
-        Echo.private('App.Models.User.' + this.$page.props.user.id)
+        Echo.private('App.Models.User.' + this.$page.props.auth.user.id)
             .notification((notification) => {
                 this.pushNotifications.push(notification.message);
                 setTimeout(() => {

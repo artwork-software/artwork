@@ -34,7 +34,7 @@
                 </div>
             </div>
         </div>
-        <div class="w-full px-1" v-if="usePage().props.user.calendar_settings.show_qualifications">
+        <div class="w-full px-1" v-if="usePage().props.auth.user.calendar_settings.show_qualifications">
             <div class="w-full flex flex-row flex-wrap">
                 <div
                     v-for="(computedShiftsQualificationWithWorkerCount) in this.computedShiftsQualificationsWithWorkerCount"
@@ -47,7 +47,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="usePage().props.user.calendar_settings.shift_notes" class="px-1 xsLight">
+        <div v-if="usePage().props.auth.user.calendar_settings.shift_notes" class="px-1 xsLight">
             {{ shift.description }}
         </div>
     </div>

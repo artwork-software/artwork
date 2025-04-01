@@ -24,7 +24,7 @@ class StoreChatRequest extends FormRequest
         return [
             'name' => ['nullable', 'string', 'max:55'],
             'users' => ['required', 'array'],
-            'users.*.id' => ['required', 'integer', 'exists:users,id'],
+            'users.*' => ['required', 'integer', 'exists:users,id'],
         ];
     }
 }

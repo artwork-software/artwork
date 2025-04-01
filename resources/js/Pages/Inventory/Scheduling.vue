@@ -271,7 +271,7 @@ const $t = useTranslation(),
 const isFullscreen = ref(false);
 const showUserOverview = ref(true);
 const windowHeight = ref(window.innerHeight);
-const userOverviewHeight = ref(usePage().props.user.drawer_height);
+const userOverviewHeight = ref(usePage().props.auth.user.drawer_height);
 const userOverview = ref(null);
 const dateValueCopy = ref(props.dateValue);
 const shiftPlan = ref(null);
@@ -418,7 +418,7 @@ const calculateDateDifference = () => {
 
 const updateTimes = () => {
     console.log('updateTimes', dateValueCopy.value[0], dateValueCopy.value[1]);
-    router.patch(route('update.user.calendar.filter.dates', usePage().props.user.id), {
+    router.patch(route('update.user.calendar.filter.dates', usePage().props.auth.user.id), {
         start_date: dateValueCopy.value[0],
         end_date: dateValueCopy.value[1],
     }, {
@@ -551,7 +551,7 @@ const scrollToPrevious = () => {
 };
 
 const handleScroll = (type) => {
-    const mode = usePage().props.user.goto_mode;
+    const mode = usePage().props.auth.user.goto_mode;
     if (mode === 'day') {
         goToPeriod('day', type);
     } else if (mode === 'week') {
@@ -589,7 +589,7 @@ const goToPeriod = (period, type) => {
 };
 
 const applyUserOverviewHeight = () => {
-    router.patch(route('user.update.userOverviewHeight', {user: usePage().props.user.id}), {
+    router.patch(route('user.update.userOverviewHeight', {user: usePage().props.auth.user.id}), {
         drawer_height: userOverviewHeight.value
     }, {
         preserveState: true,

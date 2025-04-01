@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Chat\Models;
 
+use Artwork\Core\Casts\TranslatedDateTimeCast;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,10 @@ class ChatMessage extends Model
         'chat_id', 'sender_id', 'cipher_for_sender', 'ciphers_json', 'type'
     ];
 
-    protected $casts = ['ciphers_json' => 'array'];
+    protected $casts = [
+        'ciphers_json' => 'array',
+        'created_at' => TranslatedDateTimeCast::class,
+    ];
 
     public function chat(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

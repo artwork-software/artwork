@@ -20,17 +20,17 @@ export default {
     data() {
         return {
             aboForm: useForm({
-                id: this.$page.props.user.shift_calendar_abo ? this.$page.props.user.shift_calendar_abo.id : null,
-                date_range: this.$page.props.user.shift_calendar_abo ? this.$page.props.user.shift_calendar_abo.date_range : false,
-                start_date: this.$page.props.user.shift_calendar_abo ? this.$page.props.user.shift_calendar_abo.start_date : null,
-                end_date: this.$page.props.user.shift_calendar_abo ? this.$page.props.user.shift_calendar_abo.end_date : null,
-                specific_event_types: this.$page.props.user.shift_calendar_abo ? this.$page.props.user.shift_calendar_abo.specific_event_types : false,
+                id: this.$page.props.auth.user.shift_calendar_abo ? this.$page.props.auth.user.shift_calendar_abo.id : null,
+                date_range: this.$page.props.auth.user.shift_calendar_abo ? this.$page.props.auth.user.shift_calendar_abo.date_range : false,
+                start_date: this.$page.props.auth.user.shift_calendar_abo ? this.$page.props.auth.user.shift_calendar_abo.start_date : null,
+                end_date: this.$page.props.auth.user.shift_calendar_abo ? this.$page.props.auth.user.shift_calendar_abo.end_date : null,
+                specific_event_types: this.$page.props.auth.user.shift_calendar_abo ? this.$page.props.auth.user.shift_calendar_abo.specific_event_types : false,
                 event_types: [],
-                enable_notification: this.$page.props.user.shift_calendar_abo ? this.$page.props.user.shift_calendar_abo.enable_notification : false,
-                notification_time: this.$page.props.user.shift_calendar_abo ? this.$page.props.user.shift_calendar_abo.notification_time : 0,
-                notification_time_unit: this.$page.props.user.shift_calendar_abo ? this.$page.props.user.shift_calendar_abo.notification_time_unit : 'minutes',
+                enable_notification: this.$page.props.auth.user.shift_calendar_abo ? this.$page.props.auth.user.shift_calendar_abo.enable_notification : false,
+                notification_time: this.$page.props.auth.user.shift_calendar_abo ? this.$page.props.auth.user.shift_calendar_abo.notification_time : 0,
+                notification_time_unit: this.$page.props.auth.user.shift_calendar_abo ? this.$page.props.auth.user.shift_calendar_abo.notification_time_unit : 'minutes',
             }),
-            event_types: this.$page.props.user.shift_calendar_abo ? this.eventTypes.filter((eventType) => this.$page.props.user.shift_calendar_abo.event_types.includes(eventType.id)) : [],
+            event_types: this.$page.props.auth.user.shift_calendar_abo ? this.eventTypes.filter((eventType) => this.$page.props.auth.user.shift_calendar_abo.event_types.includes(eventType.id)) : [],
             showCalendarAboInfoModal: false
         }
     },

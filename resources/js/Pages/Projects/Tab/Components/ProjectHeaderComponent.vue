@@ -89,7 +89,7 @@ export default {
     },
     methods: {
         hasBudgetAccess() {
-            return this.access_budget.filter((user) => user.id === this.$page.props.user.id).length > 0;
+            return this.access_budget.filter((user) => user.id === this.$page.props.auth.user.id).length > 0;
         },
         openProjectHistoryModal() {
             this.showProjectHistory = true;
@@ -187,9 +187,9 @@ export default {
                     <div class="flex items-center justify-center gap-x-4">
                         <ToolTipComponent :tooltip-text="$t('Select print layout')" icon="IconPrinter" :direction="'bottom'" @click="showPrintLayoutSelectorModal = true" stroke="2" />
 
-                        <BaseMenu v-if="$can('write projects') || $role('artwork admin') || headerObject.projectManagerIds.includes(this.$page.props.user.id) || headerObject.projectWriteIds.includes(this.$page.props.user.id)">
+                        <BaseMenu v-if="$can('write projects') || $role('artwork admin') || headerObject.projectManagerIds.includes(this.$page.props.auth.user.id) || headerObject.projectWriteIds.includes(this.$page.props.auth.user.id)">
                             <MenuItem
-                                v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.user.id) || headerObject.projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')"
+                                v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.auth.user.id) || headerObject.projectManagerIds.includes(this.$page.props.auth.user.id) || $can('write projects')"
                                 v-slot="{ active }">
                                 <a @click="openEditProjectModal"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
@@ -209,7 +209,7 @@ export default {
                                 </a>
                             </MenuItem>
                             <MenuItem
-                                v-if="headerObject.projectDeleteIds.includes(this.$page.props.user.id) ||$role('artwork admin')"
+                                v-if="headerObject.projectDeleteIds.includes(this.$page.props.auth.user.id) ||$role('artwork admin')"
                                 v-slot="{ active }">
                                 <a @click="openDeleteProjectModal(this.project)"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
@@ -243,7 +243,7 @@ export default {
                                 </div>
                             </div>
                         </div>
-                        <div class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300 cursor-pointer hover:bg-gray-200 duration-300 ease-in-out" @click="showAddProjectToGroup = true" v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.user.id) || headerObject.projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')">
+                        <div class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300 cursor-pointer hover:bg-gray-200 duration-300 ease-in-out" @click="showAddProjectToGroup = true" v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.auth.user.id) || headerObject.projectManagerIds.includes(this.$page.props.auth.user.id) || $can('write projects')">
                             <div class="flex items-center">
                                 <div>
                                     <img class="inline-block size-9 rounded-full object-cover" src="/storage/logo/artwork_logo_small.svg" alt="" />
@@ -256,7 +256,7 @@ export default {
                     </div>
                 </div>
                 <div v-else-if="headerObject.projectsOfGroup.length <= 0 && headerObject.project.is_group" class="my-3">
-                    <div class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300 cursor-pointer hover:bg-gray-200 duration-300 ease-in-out" v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.user.id) || headerObject.projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')" @click="showAddProjectToGroup = true">
+                    <div class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300 cursor-pointer hover:bg-gray-200 duration-300 ease-in-out" v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.auth.user.id) || headerObject.projectManagerIds.includes(this.$page.props.auth.user.id) || $can('write projects')" @click="showAddProjectToGroup = true">
                         <div class="flex items-center">
                             <div>
                                 <img class="inline-block size-9 rounded-full object-cover" src="/storage/logo/artwork_logo_small.svg" alt="" />

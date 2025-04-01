@@ -57,7 +57,7 @@ const onDragStart = (event) => {
     if (
         !can('can plan inventory') ||
         !hasAdminRole() ||
-        !props.inventory_planer_ids.includes(usePage().props.user.id)
+        !props.inventory_planer_ids.includes(usePage().props.auth.user.id)
     ) {
         showInsufficientPermissionsErrorComponent.value = true;
         return;
@@ -74,11 +74,11 @@ const checkPermissionForMultiEdit = computed(() => {
     if(props.inventory_planned_by_all) {
         return can('can plan inventory') || hasAdminRole();
     } else {
-        return hasAdminRole() || props.inventory_planer_ids.includes(usePage().props.user.id)
+        return hasAdminRole() || props.inventory_planer_ids.includes(usePage().props.auth.user.id)
     }
 })
 
-// can('can plan inventory') || hasAdminRole() || inventory_planer_ids.includes(usePage().props.user.id)
+// can('can plan inventory') || hasAdminRole() || inventory_planer_ids.includes(usePage().props.auth.user.id)
 </script>
 
 <style scoped>

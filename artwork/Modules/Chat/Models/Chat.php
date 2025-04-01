@@ -39,12 +39,12 @@ class Chat extends Model
 
     public function messages(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(ChatMessage::class);
+        return $this->hasMany(ChatMessage::class)->with('sender');
     }
 
     public function lastMessage(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasOne(ChatMessage::class)->latest();
+        return $this->hasOne(ChatMessage::class)->latest()->with('sender');
     }
 
     public function getLastMessageAttribute(): Model|null

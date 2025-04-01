@@ -641,7 +641,7 @@ export default defineComponent({
             this.applyFiltersAndSort();
         },
         getUserProjectManagementSetting() {
-            return this.$page.props.userProjectManagementSetting;
+            return this.$page.props.auth.userProjectManagementSetting;
         },
         reloadProjects() {
             router.reload({

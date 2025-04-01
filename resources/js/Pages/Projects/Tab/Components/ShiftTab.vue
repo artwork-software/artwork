@@ -49,7 +49,7 @@
                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                     {{ getSortEnumTranslation(type) }}
                                     <IconCheck class="w-5 h-5 ml-3"
-                                               v-if="$page.props.user.sort_type_shift_tab === type"/>
+                                               v-if="$page.props.auth.user.sort_type_shift_tab === type"/>
                                 </div>
                             </MenuItem>
                         </BaseMenu>
@@ -93,15 +93,15 @@
                             </div>
                             <div class="flex items-center pl-2 py-1">
                                 <Switch @click="toggleCompactMode"
-                                        :class="[this.$page.props.user.compact_mode ?
+                                        :class="[this.$page.props.auth.user.compact_mode ?
                                         'bg-artwork-buttons-create' :
                                         'bg-darkGrayBg',
                                         'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
                                     <span aria-hidden="true"
-                                          :class="[this.$page.props.user.compact_mode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                                          :class="[this.$page.props.auth.user.compact_mode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
                                 </Switch>
                                 <div
-                                    :class="[this.$page.props.user.compact_mode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
+                                    :class="[this.$page.props.auth.user.compact_mode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
                                     {{ $t('Compact Mode') }}
                                 </div>
                             </div>
@@ -386,7 +386,7 @@ export default defineComponent({
         },
         craftsToDisplay() {
             const users = this.dropUsers;
-            if (this.$page.props.user.show_crafts?.length === 0) {
+            if (this.$page.props.auth.user.show_crafts?.length === 0) {
                 return this.loadedProjectInformation['ShiftTab'].crafts?.map(craft => ({
                     name: craft.name,
                     id: craft.id,
@@ -403,7 +403,7 @@ export default defineComponent({
                     color: craft?.color,
                     universally_applicable: craft.universally_applicable,
                     abbreviation: craft.abbreviation,
-                })).filter(craft => this.$page.props.user.show_crafts?.includes(craft.id));
+                })).filter(craft => this.$page.props.auth.user.show_crafts?.includes(craft.id));
             }
         },
         usersWithNoCrafts() {
@@ -475,9 +475,9 @@ export default defineComponent({
     },
     methods: {
         applySort(sort_type_shift_tab) {
-            this.$page.props.user.sort_type_shift_tab = sort_type_shift_tab;
+            this.$page.props.auth.user.sort_type_shift_tab = sort_type_shift_tab;
             router.patch(
-                route('user.update.shift_tab_sort', {user: this.$page.props.user.id}),
+                route('user.update.shift_tab_sort', {user: this.$page.props.auth.user.id}),
                 {
                     sortBy: sort_type_shift_tab
                 }, {
@@ -487,9 +487,9 @@ export default defineComponent({
             );
         },
         resetSort() {
-            this.$page.props.user.sort_type_shift_tab = null;
+            this.$page.props.auth.user.sort_type_shift_tab = null;
             router.patch(
-                route('user.update.shift_tab_sort', {user: this.$page.props.user.id}),
+                route('user.update.shift_tab_sort', {user: this.$page.props.auth.user.id}),
                 {
                     sortBy: null
                 }, {
@@ -507,8 +507,8 @@ export default defineComponent({
             }
         },
         toggleCompactMode() {
-            router.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {
-                compact_mode: !this.$page.props.user.compact_mode
+            router.post(route('user.compact.mode.toggle', {user: this.$page.props.auth.user.id}), {
+                compact_mode: !this.$page.props.auth.user.compact_mode
             }, {
                 preserveScroll: true,
                 preserveState: true
@@ -540,7 +540,7 @@ export default defineComponent({
                     event => event.shifts.map(shift => shift.id)
                 ),
                 is_committed: this.hasUncommittedShift,
-                committing_user_id: this.$page.props.user.id
+                committing_user_id: this.$page.props.auth.user.id
             }, {
                 preserveScroll: true
             })

@@ -111,7 +111,7 @@
                         </template>
                         <template #body>
                             <TableBody class="eventByDaysContainer">
-                                <tr v-for="(room,index) in newShiftPlanData" class="w-full table-row" :class="$page.props.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
+                                <tr v-for="(room,index) in newShiftPlanData" class="w-full table-row" :class="$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
                                     <th :id="'roomNameContainer_' + index"
                                         class="xsDark w-48 table-cell align-middle"
                                         :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
@@ -119,7 +119,7 @@
                                             {{ room.roomName }}
                                         </div>
                                     </th>
-                                    <td :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : 'border-dashed', multiEditModeCalendar ? '' : 'border-r-2 ', $page.props.user.calendar_settings.expand_days ? '' : 'h-28']"
+                                    <td :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : 'border-dashed', multiEditModeCalendar ? '' : 'border-r-2 ', $page.props.auth.user.calendar_settings.expand_days ? '' : 'h-28']"
                                         class="border-gray-400 day-container relative table-cell align-top"
                                         v-for="day in days" :data-day="day.fullDay">
                                         <div
@@ -133,8 +133,8 @@
                                         <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.isExtraRow">
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
-                                        <div v-else style="width: 200px" class="cell group " :class="$page.props.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
-                                            <div v-if="usePage().props.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
+                                        <div v-else style="width: 200px" class="cell group " :class="$page.props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
+                                            <div v-if="usePage().props.auth.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
                                                 <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"  class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
                                                     <component :is="group.icon" class="size-4" aria-hidden="true"/>
                                                     <span>{{ group.name }}</span>
@@ -353,13 +353,13 @@
                                       </span>
                                 </span>
                                 </Switch>
-                                <Switch @click="toggleCompactMode" v-model="$page.props.user.compact_mode"
-                                        :class="[$page.props.user.compact_mode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                <Switch @click="toggleCompactMode" v-model="$page.props.auth.user.compact_mode"
+                                        :class="[$page.props.auth.user.compact_mode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
                                     <span
-                                        :class="[$page.props.user.compact_mode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                        :class="[$page.props.auth.user.compact_mode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span
-                                          :class="[$page.props.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          :class="[$page.props.auth.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
                                               icon="IconList"
@@ -369,7 +369,7 @@
                                           />
                                       </span>
                                       <span
-                                          :class="[$page.props.user.compact_mode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          :class="[$page.props.auth.user.compact_mode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
                                               icon="IconList"
@@ -427,28 +427,28 @@
                                         <div @click="this.applySort(computedShiftPlanWorkerSortEnum)"
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                             <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
-                                                    <span :class="this.$page.props.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                    <span :class="this.$page.props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                         {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                     </span>
                                                 <IconArrowUp class="w-5 h-5"/>
-                                                <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'" class="w-5 h-5"/>
+                                                <IconCheck v-if="this.$page.props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'" class="w-5 h-5"/>
                                             </template>
                                             <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_DESCENDING'">
-                                                    <span :class="this.$page.props.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                    <span :class="this.$page.props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                         {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                     </span>
                                                 <IconArrowDown class="w-5 h-5"/>
-                                                <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'" class="w-5 h-5"/>
+                                                <IconCheck v-if="this.$page.props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'" class="w-5 h-5"/>
                                             </template>
                                             <template v-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_ASCENDING'">
                                                 {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!this.useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
                                                 <IconArrowUp class="w-5 h-5"/>
-                                                <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'" class="w-5 h-5"/>
+                                                <IconCheck v-if="this.$page.props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'" class="w-5 h-5"/>
                                             </template>
                                             <template v-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_DESCENDING'">
                                                 {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!this.useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
                                                 <IconArrowDown class="w-5 h-5"/>
-                                                <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'" class="w-5 h-5"/>
+                                                <IconCheck v-if="this.$page.props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'" class="w-5 h-5"/>
                                             </template>
                                         </div>
                                     </MenuItem>
@@ -509,7 +509,7 @@
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
                                             <div v-if="!day.isExtraRow" :class="[
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
-                                                    $page.props.user.compact_mode ? 'h-8' : '',
+                                                    $page.props.auth.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     multiEditMode && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-100 !overflow-hidden' : ''
                                                 ]"
@@ -521,7 +521,7 @@
                                             <div v-else
                                                  class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
                                                  style="width: 39px"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <span v-if="user.type === 0">
                                                     {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
@@ -588,7 +588,7 @@
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
                                             <div v-if="!day.isExtraRow"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-100 !overflow-hidden' : '',
                                                     multiEditMode ? '!overflow-hidden' : '']"
@@ -598,7 +598,7 @@
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 39px"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <span v-if="user.type === 0">
                                                     {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
@@ -835,7 +835,7 @@ export default {
             userToMultiEditCheckedShiftsAndEvents: [],
             dropFeedback: null,
             closedCrafts: [],
-            userOverviewHeight: usePage().props.user.drawer_height,
+            userOverviewHeight: usePage().props.auth.user.drawer_height,
             startY: 0,
             startHeight: 0,
             windowHeight: window.innerHeight,
@@ -932,10 +932,10 @@ export default {
                 crafts.users = craft.users;
             });
 
-            if (this.$page.props.user.show_crafts?.length === 0 || this.$page.props.user.show_crafts === null) {
+            if (this.$page.props.auth.user.show_crafts?.length === 0 || this.$page.props.auth.user.show_crafts === null) {
                 return crafts;
             } else {
-                return crafts.filter((craft) => this.$page.props.user.show_crafts.includes(craft.id));
+                return crafts.filter((craft) => this.$page.props.auth.user.show_crafts.includes(craft.id));
             }
         },
         workersWithoutCraft() {
@@ -943,16 +943,16 @@ export default {
                 this.getDropWorkers().filter(user => user.assigned_craft_ids.length === 0)
             );
 
-            if (this.$page.props.user.shift_plan_user_sort_by_id === null) {
+            if (this.$page.props.auth.user.shift_plan_user_sort_by_id === null) {
                 return workersWithoutCraft;
             }
 
             //simple sort by first/last name ascending or descending
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
+            if (this.$page.props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
                 return this.sortAscendingByUseFirstNameForSort(workersWithoutCraft);
             }
 
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING') {
+            if (this.$page.props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING') {
                 return this.sortDescendingByUseFirstNameForSort(workersWithoutCraft);
             }
 
@@ -965,14 +965,14 @@ export default {
             );
 
             //intern/extern alphabetically by name ascending -> managing workers first, intern, extern afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
+            if (this.$page.props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
                 return this
                     .sortAscendingByUseFirstNameForSort(assignedInternWorkers)
                     .concat(this.sortAscendingByUseFirstNameForSort(assignedExternWorkers));
             }
 
             //intern/extern alphabetically by name descending -> managing workers first, extern, intern afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING') {
+            if (this.$page.props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING') {
                 return this
                     .sortDescendingByUseFirstNameForSort(assignedExternWorkers)
                     .concat(this.sortDescendingByUseFirstNameForSort(assignedInternWorkers));
@@ -987,10 +987,10 @@ export default {
                 ],
                 sortConfig = [];
 
-            if (nameSortEnums.includes(this.$page.props.user.shift_plan_user_sort_by_id)) {
+            if (nameSortEnums.includes(this.$page.props.auth.user.shift_plan_user_sort_by_id)) {
                 sortConfig.push('INTERN_EXTERN_ASCENDING');
 
-                if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
+                if (this.$page.props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
                     sortConfig.push('ALPHABETICALLY_NAME_DESCENDING');
                 } else {
                     sortConfig.push('ALPHABETICALLY_NAME_ASCENDING');
@@ -999,7 +999,7 @@ export default {
                 return sortConfig;
             }
 
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
+            if (this.$page.props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
                 sortConfig.push('INTERN_EXTERN_DESCENDING');
             } else {
                 sortConfig.push('INTERN_EXTERN_ASCENDING');
@@ -1042,7 +1042,7 @@ export default {
                 return false;
             }
 
-            return !group.userIds.includes(usePage().props.user.id);
+            return !group.userIds.includes(usePage().props.auth.user.id);
         },
         initializeCalendarMultiEditSave() {
             this.showAddShiftModal = true
@@ -1224,19 +1224,19 @@ export default {
                     assignedNonManagingWorkers
                 );
 
-            if (this.$page.props.user.shift_plan_user_sort_by_id === null) {
+            if (this.$page.props.auth.user.shift_plan_user_sort_by_id === null) {
                 return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered);
             }
 
             //alphabetically by name ascending -> managing workers first, other users afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
+            if (this.$page.props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
                 return this
                     .sortAscendingByUseFirstNameForSort(assignedManagingWorkers)
                     .concat(this.sortAscendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered));
             }
 
             //alphabetically by name descending -> managing workers first, other users afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING') {
+            if (this.$page.props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING') {
                 return this
                     .sortDescendingByUseFirstNameForSort(assignedManagingWorkers)
                     .concat(this.sortDescendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered));
@@ -1251,7 +1251,7 @@ export default {
             );
 
             //intern/extern alphabetically by name ascending -> managing workers first, intern, extern afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
+            if (this.$page.props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
                 return this
                     .sortAscendingByUseFirstNameForSort(assignedManagingWorkers)
                     .concat(this.sortAscendingByUseFirstNameForSort(assignedNonManagingInternWorkers))
@@ -1259,7 +1259,7 @@ export default {
             }
 
             //intern/extern alphabetically by name descending -> managing workers first, extern, intern afterward
-            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING') {
+            if (this.$page.props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING') {
                 return this
                     .sortDescendingByUseFirstNameForSort(assignedManagingWorkers)
                     .concat(this.sortDescendingByUseFirstNameForSort(assignedNonManagingExternWorkers))
@@ -1458,10 +1458,10 @@ export default {
             return this.showUserOverview ? this.userOverviewHeight + 'px' : '0';
         },
         checkIfEventHasShiftsToDisplay(event) {
-            if (this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null || this.$page.props.user?.show_crafts === undefined) {
+            if (this.$page.props.auth.user?.show_crafts?.length === 0 || this.$page.props.auth.user?.show_crafts === null || this.$page.props.auth.user?.show_crafts === undefined) {
                 return event.shifts?.length > 0;
             } else {
-                return event.shifts?.length > 0 && event.shifts.some(shift => this.$page.props.user.show_crafts?.includes(shift.craft.id));
+                return event.shifts?.length > 0 && event.shifts.some(shift => this.$page.props.auth.user.show_crafts?.includes(shift.craft.id));
             }
         },
         showDropFeedback(feedback) {
@@ -1502,7 +1502,7 @@ export default {
             return timeDifference / (1000 * 3600 * 24);
         },
         updateTimes() {
-            router.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
+            router.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.auth.user.id), {
                 start_date: this.dateValue[0],
                 end_date: this.dateValue[1],
             }, {
@@ -1554,7 +1554,7 @@ export default {
             }
         },
         selectGoToMode(direction) {
-            const gotoMode = this.$page.props.user.goto_mode;
+            const gotoMode = this.$page.props.auth.user.goto_mode;
             this.scrollToPeriod(gotoMode, direction);
         },
         scrollToPeriod(period, direction) {
@@ -1682,8 +1682,8 @@ export default {
             this.dayServiceMode = !this.dayServiceMode;
         },
         toggleCompactMode() {
-            router.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {
-                compact_mode: !this.$page.props.user.compact_mode
+            router.post(route('user.compact.mode.toggle', {user: this.$page.props.auth.user.id}), {
+                compact_mode: !this.$page.props.auth.user.compact_mode
             }, {
                 preserveScroll: true,
                 preserveState: true
@@ -1879,7 +1879,7 @@ export default {
             this.applyUserOverviewHeight();
         }, 500),
         applyUserOverviewHeight() {
-            router.patch(route('user.update.userOverviewHeight', {user: usePage().props.user.id}), {
+            router.patch(route('user.update.userOverviewHeight', {user: usePage().props.auth.user.id}), {
                 drawer_height: this.userOverviewHeight
             }, {
                 preserveScroll: true,
@@ -1887,9 +1887,9 @@ export default {
             });
         },
         applySort(shiftPlanWorkerSortEnumName) {
-            this.$page.props.user.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName;
+            this.$page.props.auth.user.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName;
             router.patch(
-                route('user.update.shiftPlanUserSortBy', {user: this.$page.props.user.id}),
+                route('user.update.shiftPlanUserSortBy', {user: this.$page.props.auth.user.id}),
                 {
                     sortBy: shiftPlanWorkerSortEnumName
                 }, {
@@ -1899,9 +1899,9 @@ export default {
             );
         },
         resetSort() {
-            this.$page.props.user.shift_plan_user_sort_by_id = null;
+            this.$page.props.auth.user.shift_plan_user_sort_by_id = null;
             router.patch(
-                route('user.update.shiftPlanUserSortBy', {user: this.$page.props.user.id}),
+                route('user.update.shiftPlanUserSortBy', {user: this.$page.props.auth.user.id}),
                 {
                     sortBy: null
                 }, {
@@ -1951,7 +1951,7 @@ export default {
                 route(
                     'user.update.show_shift-qualifications',
                     {
-                        user: this.$page.props.user.id
+                        user: this.$page.props.auth.user.id
                     }
                 ),
                 {

@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Http\Middleware\SetDeveloperEnvironment;
+use App\Http\Middleware\UpdateUserStatus;
 use Artwork\Core\Http\Middleware\Authenticate;
 use Artwork\Core\Http\Middleware\EncryptCookies;
 use Artwork\Core\Http\Middleware\HandleInertiaRequests;
@@ -57,7 +58,8 @@ class Kernel extends HttpKernel
             ModuleSettingsMiddleware::class,
             HandleInertiaRequests::class,
             Localization::class,
-            SetDeveloperEnvironment::class
+            SetDeveloperEnvironment::class,
+            UpdateUserStatus::class,
         ],
 
         'api' => [

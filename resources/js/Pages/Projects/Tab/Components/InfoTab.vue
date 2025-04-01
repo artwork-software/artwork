@@ -83,7 +83,7 @@ export default{
     },
     methods:{
         async handleDescriptionClick() {
-            if (this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id) || this.project.isMemberOfADepartment){
+            if (this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.auth.user.id) || this.projectManagerIds.includes(this.$page.props.auth.user.id) || this.project.isMemberOfADepartment){
                 this.descriptionClicked = true;
 
                 await nextTick()
@@ -92,7 +92,7 @@ export default{
             }
         },
         async handleTextClick(headline) {
-            if (this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id) || this.project.isMemberOfADepartment) {
+            if (this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.auth.user.id) || this.projectManagerIds.includes(this.$page.props.auth.user.id) || this.project.isMemberOfADepartment) {
                 headline.clicked = !headline.clicked
 
                 if (headline.clicked) {

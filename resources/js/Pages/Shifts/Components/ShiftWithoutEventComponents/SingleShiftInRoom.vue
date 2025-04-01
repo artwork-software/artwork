@@ -63,7 +63,7 @@ const areAllShiftsCommitted = (event) => {
 }
 
 const checkIfShiftInDayString = (shift) => {
-    const user = usePage().props.user;
+    const user = usePage().props.auth.user;
     if (user?.show_crafts?.length === 0 || user?.show_crafts === null) {
         return shift.formatted_dates.start === props.dayString['full_day'];
     } else {

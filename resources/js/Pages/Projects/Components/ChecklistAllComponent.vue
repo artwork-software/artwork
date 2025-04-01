@@ -1,5 +1,5 @@
 <template>
-    <div :class="usePage().props.user.checklist_style !== 'list' ? '-mx-5 py-10 px-20 bg-lightBackgroundGray' : 'ml-14 pt-4 pr-14'" class="print:bg-white print:ml-0 print:mr-0 print:pt-0 print:pr-0 print:px-0 print:py-0">
+    <div :class="usePage().props.auth.user.checklist_style !== 'list' ? '-mx-5 py-10 px-20 bg-lightBackgroundGray' : 'ml-14 pt-4 pr-14'" class="print:bg-white print:ml-0 print:mr-0 print:pt-0 print:pr-0 print:px-0 print:py-0">
         <ChecklistFunctionBar
             :project-manager-ids="projectManagerIds"
             :project-can-write-ids="projectCanWriteIds"
@@ -50,7 +50,7 @@
             </template>
         </ChecklistFunctionBar>
 
-        <div v-if="usePage().props.user.checklist_style === 'list'">
+        <div v-if="usePage().props.auth.user.checklist_style === 'list'">
             <ChecklistListView
                 :checklists="filteredChecklists"
                 :can-edit-component="canEditComponent"

@@ -8,9 +8,9 @@
                 <Menu as="div" class="relative inline-block text-left">
                     <div class="flex items-center">
                         <MenuButton class="">
-                            <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'month'"/>
-                            <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'week'"/>
-                            <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'day'"/>
+                            <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'month'"/>
+                            <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'week'"/>
+                            <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'day'"/>
                         </MenuButton>
                     </div>
 
@@ -274,11 +274,11 @@ export default {
             showConfirmCommitModal: false,
             scrollDays: 1,
             userCalendarSettings: useForm({
-                show_qualifications: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.show_qualifications : false,
-                shift_notes: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.shift_notes : false,
-                high_contrast: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.high_contrast : false,
-                expand_days: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.expand_days : false,
-                display_project_groups: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.display_project_groups : false,
+                show_qualifications: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_qualifications : false,
+                shift_notes: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.shift_notes : false,
+                high_contrast: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.high_contrast : false,
+                expand_days: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.expand_days : false,
+                display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
             })
         }
     },
@@ -302,17 +302,17 @@ export default {
     },
     methods: {
         saveUserCalendarSettings() {
-            this.userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}), {
+            this.userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.auth.user.id}), {
                 preserveScroll: true
             })
             document.getElementById('displaySettings').click();
         },
         usePage,
         changeUserSelectedGoTo(type) {
-            axios.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.user.id}), {
+            axios.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.auth.user.id}), {
                 goto_mode: type,
             }).then(() => {
-                this.$page.props.user.goto_mode = type;
+                this.$page.props.auth.user.goto_mode = type;
             });
         },
         removeFilter(filter) {
@@ -326,7 +326,7 @@ export default {
             }
         },
         updateFilterValue(key, value) {
-            router.patch(route('user.shift.calendar.filter.single.value.update', {user: this.$page.props.user.id}), {
+            router.patch(route('user.shift.calendar.filter.single.value.update', {user: this.$page.props.auth.user.id}), {
                 key: key,
                 value: value
             }, {

@@ -599,7 +599,7 @@
             </div>
 
             <div v-if="canEdit">
-                <div class="flex justify-center w-full py-4" v-if="hasAdminRole() || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.user.id) || $can('create events without request')">
+                <div class="flex justify-center w-full py-4" v-if="hasAdminRole() || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.auth.user.id) || $can('create events without request')">
                     <FormButton
                         :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '') || !hasAdminRole()"
                         @click="updateOrCreateEvent()"
@@ -788,7 +788,7 @@ export default {
             eventTypeName: null,
             selectedEventType: this.eventTypes[0],
             selectedEventStatus: this.eventStatuses?.find(status => status.default),
-            showProjectInfo: this.project ? true : this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id ? true :false,
+            showProjectInfo: this.project ? true : this.calendarProjectPeriod && this.$page.props.auth.user.calendar_settings.time_period_project_id ? true :false,
             allDayEvent: false,
             selectedProject: null,
             selectedRoom: null,
@@ -872,11 +872,11 @@ export default {
         },
         isRoomAdmin() {
             return this.rooms.find(room => room.id === this.event?.roomId)?.admins.some(
-                admin => admin.id === this.$page.props.user.id
+                admin => admin.id === this.$page.props.auth.user.id
             ) || false;
         },
         isCreator() {
-            return this.event ? this.event.created_by?.id === this.$page.props.user.id : false
+            return this.event ? this.event.created_by?.id === this.$page.props.auth.user.id : false
         },
         sortedEventTypes() {
             return this.eventTypes.sort((a, b) => a.name.localeCompare(b.name));
@@ -908,8 +908,8 @@ export default {
             if (this.event?.project) {
                 //console.log(this.event.project);
                 this.selectedProject = {id: this.event.project.id, name: this.event.project.name};
-            } else if (this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id){
-                this.selectedProject = {id: this.$page.props.user.calendar_settings.time_period_project_id, name: this.$page.props.projectNameOfCalendarProject};
+            } else if (this.calendarProjectPeriod && this.$page.props.auth.user.calendar_settings.time_period_project_id){
+                this.selectedProject = {id: this.$page.props.auth.user.calendar_settings.time_period_project_id, name: this.$page.props.projectNameOfCalendarProject};
             }
 
             const start = dayjs(this.event.start);
@@ -1161,7 +1161,7 @@ export default {
                 !this.requiresAxiosRequests && (
                     this.usedInBulkComponent ||
                     (
-                        this.$page.props.user.calendar_settings.time_period_project_id === this.selectedProject?.id &&
+                        this.$page.props.auth.user.calendar_settings.time_period_project_id === this.selectedProject?.id &&
                         this.calendarProjectPeriod
                     )
                 )

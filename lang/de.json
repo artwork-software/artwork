@@ -2434,7 +2434,7 @@
     "Category Name": "Kategoriename",
     "Add properties to the category that the items in this category should have.": "Füge der Kategorie Eigenschaften hinzu, die die Artikel in dieser Kategorie haben sollen.",
     "Article properties": "Artikel-Eigenschaften",
-    "Are you sure you want to delete this category?": "Möchtest du diese Kategorie wirklich löschen?",
+    "Are you sure you want to delete this category? Articles and Sub-Categories in this category will be deleted as well.": "Möchtest du diese Kategorie wirklich löschen? Artikel und Unterkategorien in dieser Kategorie werden ebenfalls gelöscht.",
     "No default value possible": "Kein Standardwert möglich",
     "Add sub-categories to the category.": "Füge der Kategorie Unterkategorien hinzu.",
     "Add sub-category": "Unterkategorie hinzufügen",

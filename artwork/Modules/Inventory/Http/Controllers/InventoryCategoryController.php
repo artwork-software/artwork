@@ -22,6 +22,7 @@ class InventoryCategoryController extends Controller
         protected InventoryCategoryService $categoryService,
         protected InventoryArticleService $articleService,
         protected InventoryPropertyRepository $propertyRepository,
+        protected InventoryArticleService $inventoryArticleService
     ) {}
 
     /**
@@ -88,5 +89,25 @@ class InventoryCategoryController extends Controller
             'categories' => $this->categoryService->paginateWithRelations(),
             'properties' => $this->propertyRepository->all(),
         ]);
+    }
+
+    public function destroy(InventoryCategory $inventoryCategory): void
+    {
+        $inventoryCategory->articles()->each(function (InventoryArticle $article) {
+            $this->inventoryArticleService->delete($article);
+            $this->inventoryArticleService->forceDelete($article);
+        });
+
+        $inventoryCategory->properties()->detach();
+        $inventoryCategory->subcategories()->each(function (InventorySubCategory $subcategory) {
+            $subcategory->articles()->each(function (InventoryArticle $article) {
+                $this->inventoryArticleService->delete($article);
+                $this->inventoryArticleService->forceDelete($article);
+            });
+            $subcategory->properties()->detach();
+            $subcategory->delete();
+        });
+
+        $inventoryCategory->delete();
     }
 }

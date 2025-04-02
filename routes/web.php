@@ -100,6 +100,7 @@ use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
+use Artwork\Modules\Inventory\Http\Controllers\InventorySubCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
@@ -1772,6 +1773,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             // update inventory-management.settings.categories.update
             Route::patch('/categories/{inventoryCategory}/update', [InventoryCategoryController::class, 'update'])
                 ->name('inventory-management.settings.categories.update');
+
+            // delete inventory-management.settings.categories.subcategories.delete
+            Route::delete('/sub-categories/{inventorySubCategory}/destroy', [InventorySubCategoryController::class, 'destroy'])
+                ->name('inventory-management.settings.categories.subcategories.delete');
+
+            // delete categories.destroy
+            Route::delete('/categories/{inventoryCategory}/destroy', [InventoryCategoryController::class, 'destroy'])
+                ->name('inventory-management.settings.categories.delete');
         });
 
         Route::group(['prefix' => 'inventory'], function (): void {

@@ -9,13 +9,13 @@
         </div>
         <div v-if="showFilter">
             <div class="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-6 gap-4">
-                <div  v-for="filterProperty in newFilterObject" :key="filterProperty.id">
+                <div v-for="filterProperty in newFilterObject" :key="filterProperty.id">
                     <div>
-                        <label for="filter" class="font-lexend text-xs  mb-1">{{ filterProperty.name }}</label>
+                        <label class="font-lexend text-xs mb-1">{{ filterProperty.name }}</label>
                     </div>
                     <div class="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500">
-                        <select v-model="filterProperty.operator" class="text-gray-700 text-sm px-2 py-2 border-none rounded-l-lg focus:outline-none focus:ring-0">
-                            <option v-for="filter in filterTypes" :key="filter.type" :value="filter.type">
+                        <select v-model="filterProperty.operator" class="text-gray-700 min-w-28 text-sm px-2 py-2 border-none rounded-l-lg focus:outline-none focus:ring-0">
+                            <option v-for="filter in getAllowedFilters(filterProperty.type)" :key="filter.type" :value="filter.type">
                                 {{ filter.name }}
                             </option>
                         </select>
@@ -27,11 +27,25 @@
                         />
                     </div>
                 </div>
+
             </div>
             <div class="mt-3 flex justify-between">
                 <SmallFormButton type="button" @click="submitFilter">
                     {{ $t('Apply Filter') }}
                 </SmallFormButton>
+            </div>
+        </div>
+        <div>
+            <!-- filter Tags -->
+            <div v-if="newFilterObject.length > 0" class="mt-4 flex flex-wrap gap-2">
+                <div v-for="(filter, index) in newFilterObject" :key="index">
+                    <div v-if="filter.value" class="flex items-center bg-blue-50 rounded-full px-3 py-1 text-sm font-medium text-blue-700 border border-blue-100">
+                        <span>{{ filter.name }}: {{ filter.value }}</span>
+                        <button type="button" @click="removeFilter(filter)" class="ml-2 text-blue-500 hover:text-blue-700">
+                            <component is="IconX" class="size-4" />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -55,17 +69,17 @@ const props = defineProps({
 const showFilter = ref(false);
 
 const filterTypes = [
-    { name: 'Enthält', type: 'like', allowedTypes: ['string'] },
-    { name: 'Beginnt mit', type: 'starts_with', allowedTypes: ['string'] },
-    { name: 'Endet mit', type: 'ends_with', allowedTypes: ['string'] },
-    { name: 'Genau', type: 'exact', allowedTypes: ['string'] },
-    { name: 'Kleiner als', type: 'less_than', allowedTypes: ['string'] },
-    { name: 'Größer als', type: 'greater_than', allowedTypes: ['string'] },
-    { name: 'Bis', type: 'until', allowedTypes: ['string'] },
-    { name: 'Von', type: 'from', allowedTypes: ['string'] },
-    { name: 'Gleich', type: 'equals', allowedTypes: ['string'] },
-    { name: 'Ungleich', type: 'not_equals', allowedTypes: ['boolean'] },
-    { name: 'Ist leer', type: 'is_null', allowedTypes: ['string'] },
+    { name: 'Enthält', type: 'like', allowedTypes: ['string', 'room', 'manufacturer'] },
+    { name: 'Beginnt mit', type: 'starts_with', allowedTypes: ['string', 'room', 'manufacturer'] },
+    { name: 'Endet mit', type: 'ends_with', allowedTypes: ['string', 'room', 'manufacturer'] },
+    { name: 'Genau', type: 'exact', allowedTypes: ['string', 'date'] },
+    { name: 'Kleiner als', type: 'less_than', allowedTypes: ['string', 'date'] },
+    { name: 'Größer als', type: 'greater_than', allowedTypes: ['string', 'date'] },
+    { name: 'Bis', type: 'until', allowedTypes: ['date'] },
+    { name: 'Von', type: 'from', allowedTypes: ['date'] },
+    { name: 'Gleich', type: 'equals', allowedTypes: ['string', 'date', 'room', 'manufacturer'] },
+    { name: 'Ungleich', type: 'not_equals', allowedTypes: ['boolean', 'date'] },
+    { name: 'Ist leer', type: 'is_null', allowedTypes: ['string', 'date', 'boolean'] },
     { name: 'Enthält nicht', type: 'not_like', allowedTypes: ['string'] },
     { name: 'Datum vor', type: 'date_before', allowedTypes: ['date', 'datetime', 'time'] },
     { name: 'Datum nach', type: 'date_after', allowedTypes: ['date', 'datetime', 'time'] },
@@ -117,6 +131,16 @@ const submitFilter = () => {
             filters: JSON.stringify(cleanFilters),
         },
     });
+}
+
+const getAllowedFilters = (type) => {
+    if (!type) return [];
+    return filterTypes.filter(f => f.allowedTypes.includes(type));
+}
+
+const removeFilter = (filter) => {
+    filter.value = '';
+    submitFilter()
 }
 
 </script>

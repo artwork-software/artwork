@@ -116,4 +116,24 @@ class InventoryArticleService
 
         return $article;
     }
+
+    public function delete(InventoryArticle $article): void
+    {
+        $this->articleRepository->delete($article);
+    }
+
+    public function getAllTrashed(): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->articleRepository->getAllTrashed();
+    }
+
+    public function forceDelete(InventoryArticle $article): void
+    {
+        $this->articleRepository->forceDelete($article);
+    }
+
+    public function restore(InventoryArticle $article): void
+    {
+        $this->articleRepository->restore($article);
+    }
 }

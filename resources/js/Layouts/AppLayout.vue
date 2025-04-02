@@ -199,13 +199,6 @@
 
             <main class="main mx-5">
                 <PopupChat v-if="$page.props.auth.user.use_chat"/>
-
-                <div class="ml-20">
-                    <pre>
-                    {{ $page.props.chats }}
-                </pre>
-                </div>
-
                 <slot></slot>
             </main>
         </div>

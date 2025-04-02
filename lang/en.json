@@ -2504,5 +2504,17 @@
     "No time set": "No time set",
     "These properties are based on the selected category and subcategory, here you can delete unwanted properties for this article and set the values for the others": "These properties are based on the selected category and subcategory, here you can delete unwanted properties for this article and set the values for the others",
     "Full Quantity": "Full Quantity",
-    "You": "You"
+    "You": "You",
+    "Save chat key": "Save chat key",
+    "Upload a Backup keypair": "Upload a Backup keypair",
+    "Delete article": "Delete article",
+    "Are you sure you want to delete this article?": "Are you sure you want to delete this article?",
+    "Articles": "Articles",
+    "created at": "created at",
+    "updated at": "updated at",
+    "deleted at": "deleted at",
+    "This article was in the category": "This article was in the category",
+    "This article has detailed quantities": "This article has detailed quantities",
+    "No articles found": "No articles found",
+    "Are you sure you want to delete this article permanently?": "Are you sure you want to delete this article permanently?"
 }

@@ -1701,7 +1701,25 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // patch inventory-management.articles.update
         Route::patch('/articles/{inventoryArticle}/update', [InventoryArticleController::class, 'update'])
             ->name('inventory-management.articles.update');
+
+        // delete articles.destroy
+        Route::delete('/articles/{inventoryArticle}/destroy', [InventoryArticleController::class, 'destroy'])
+            ->name('articles.destroy');
+
+        // get inventory.articles.trash
+        Route::get('/articles/trash', [InventoryArticleController::class, 'indexTrash'])
+            ->name('inventory.articles.trash');
+
+        // delete articles.forceDelete
+        Route::delete('/articles/{inventoryArticle}/forceDelete', [InventoryArticleController::class, 'forceDelete'])
+            ->name('articles.forceDelete');
+
+        // patch articles.restore
+        Route::patch('/articles/{inventoryArticle}/restore', [InventoryArticleController::class, 'restore'])
+            ->name('articles.restore');
     });
+
+
 
 
     Route::resource('manufacturers', ManufacturerController::class)->only(

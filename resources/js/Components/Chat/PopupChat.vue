@@ -84,14 +84,30 @@
                 <div v-else>
                     <div class="bg-white rounded-b-lg max-h-96 min-h-96 overflow-y-auto" ref="scrollContainer" @scroll="handleScroll">
                         <div class="space-y-3" v-if="!checkIfChatIsSelected">
-                            <div class="px-3 py-2 hover:bg-blue-50 transition duration-200 ease-in-out" v-for="chat in filteredChats">
-                                <div class=" flex items-center justify-between cursor-pointer" @click="openChatPage(chat.id)">
-                                    <div>
-                                        <SingleChatInOverview :chat="chat" />
-                                    </div>
-                                    <span v-if="chat.unread_count > 0" class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold leading-none text-red-700 border-red-100 border  bg-red-50 font-lexend   rounded-full">
+                            <div v-if="filteredChats.length > 0">
+                                <div class="px-3 py-2 hover:bg-blue-50 transition duration-200 ease-in-out" v-for="chat in filteredChats">
+                                    <div class=" flex items-center justify-between cursor-pointer" @click="openChatPage(chat.id)">
+                                        <div>
+                                            <SingleChatInOverview :chat="chat" />
+                                        </div>
+                                        <span v-if="chat.unread_count > 0" class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold leading-none text-red-700 border-red-100 border  bg-red-50 font-lexend   rounded-full">
                                         {{ chat.unread_count }}
                                     </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="px-4">
+                                <div class="rounded-md bg-red-50 p-4 mb-5">
+                                    <div class="flex items-center">
+                                        <div class="shrink-0">
+                                            <component is="IconInfoSquareRoundedFilled" class="size-6 text-red-400" aria-hidden="true" />
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-xs font-lexend font-medium text-red-800">
+                                                Du hast noch keine Chats. Klicke auf das Plus-Symbol, um einen neuen Chat zu starten.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -183,6 +199,10 @@ const isLoadingMore = ref(false);
 const initialScrollDone = ref(false);
 const openShowChatInfo = ref(false);
 const searchChat = ref('')
+const currentUserId = usePage().props.auth.user.id
+const status = ref(null)
+const userIdForStatus = ref(null)
+// Wenn sich chatPartner  ändert, Status neu laden
 const closeChat = () => {
     isChatOpen.value = false
     chatPartner.value = null
@@ -416,7 +436,20 @@ onMounted(() => {
             .listen('.chat.created', (e) => {
                 chats.value.push(e.chat);
             });
+
+
     });
+
+    window.Echo.channel('users.status')
+        .listen('UserStatusUpdated', (data) => {
+            const userId = data?.userId;
+            const newStatus = data?.status;
+
+            if (userId === userIdForStatus.value) {
+                // Wenn der Status des Chat-Partners aktualisiert wird
+                status.value = newStatus;
+            }
+        })
 });
 
 
@@ -526,9 +559,7 @@ const showToast = async (message, chat) => {
     }, 5500)
 }
 
-const currentUserId = usePage().props.auth.user.id
-const status = ref(null)
-// Wenn sich chatPartner ändert, Status neu laden
+
 watch(
     () => chatPartner.value,
     async (newVal) => {
@@ -536,11 +567,14 @@ watch(
             const partner = newVal.users.find(user => user.id !== currentUserId)
             if (partner) {
                 status.value = await getUserStatus(partner.id)
+                userIdForStatus.value = partner.id
             } else {
                 status.value = null
+                userIdForStatus.value = null
             }
         } else {
             status.value = null
+            userIdForStatus.value = null
         }
     },
     { immediate: true, deep: true } // auch beim ersten Laden ausführen

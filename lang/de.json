@@ -2506,5 +2506,17 @@
     "No time set": "Keine Zeit festgelegt",
     "These properties are based on the selected category and subcategory, here you can delete unwanted properties for this article and set the values for the others": "Diese Eigenschaften basieren auf der ausgewählten Kategorie und Unterkategorie, hier kannst du unerwünschte Eigenschaften für diesen Artikel löschen und die Werte für die anderen festlegen",
     "Full Quantity": "Gesamt-Menge",
-    "You": "Du"
+    "You": "Du",
+    "Save chat key": "Chat-Schlüssel speichern",
+    "Upload a Backup keypair": "Lade ein Backup-Schlüsselpaar hoch",
+    "Delete article": "Artikel löschen",
+    "Are you sure you want to delete this article?": "Möchtest du diesen Artikel wirklich löschen?",
+    "Articles": "Artikel",
+    "created at": "Erstellt am",
+    "updated at": "Aktualisiert am",
+    "deleted at": "Gelöscht am",
+    "This article was in the category": "Dieser Artikel war in der Kategorie",
+    "This article has detailed quantities": "Dieser Artikel hat detaillierte Mengen",
+    "No articles found": "Keine Artikel gefunden",
+    "Are you sure you want to delete this article permanently?": "Möchtest du diesen Artikel wirklich dauerhaft löschen?"
 }

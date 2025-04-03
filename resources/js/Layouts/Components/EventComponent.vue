@@ -833,7 +833,9 @@ export default {
         'usedInBulkComponent',
         'requiresAxiosRequests',
         'calendarProjectPeriod',
-        'eventStatuses'
+        'eventStatuses',
+        'isPlanning',
+        'wantedDate'
     ],
     emits: ['closed'],
     watch: {
@@ -881,6 +883,23 @@ export default {
         sortedEventTypes() {
             return this.eventTypes.sort((a, b) => a.name.localeCompare(b.name));
         },
+    },
+    mounted() {
+        if (this.wantedDate){
+            // set StartDate to wantedDate with time 00:00
+            this.startDate = this.wantedDate;
+            this.startTime = '09:00';
+
+            // set EndDate to wantedDate with time 23:59
+            this.endDate = this.wantedDate;
+            this.endTime = '10:00';
+        }
+
+        if (this.wantedRoomId) {
+            this.selectedRoom = this.rooms.find(room => room.id === this.wantedRoomId);
+        } else if (this.event) {
+            this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId);
+        }
     },
     methods: {
         usePage,
@@ -954,6 +973,17 @@ export default {
             } else if (this.event) {
                 this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId);
             }
+
+            if (this.wantedDate){
+                // set StartDate to wantedDate with time 00:00
+                this.startDate = this.wantedDate;
+                this.startTime = '09:00';
+
+                // set EndDate to wantedDate with time 23:59
+                this.endDate = this.wantedDate;
+                this.endTime = '10:00';
+            }
+
 
             this.initialRoomId = this.selectedRoom?.id;
             this.selectedRoom = this.rooms.find(room => room.id === this.event.roomId);
@@ -1309,7 +1339,8 @@ export default {
                 showProjectPeriodInCalendar: this.calendarProjectPeriod,
                 event_properties: this.event_properties
                     .filter((eventProperty) => eventProperty.checked)
-                    .map((eventProperty) => eventProperty.id)
+                    .map((eventProperty) => eventProperty.id),
+                isPlanning: this.isPlanning,
             };
         },
     },

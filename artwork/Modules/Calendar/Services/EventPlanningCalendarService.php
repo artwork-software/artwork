@@ -2,27 +2,20 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
-use Artwork\Modules\Calendar\DTO\EventCalendarDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
-use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
-use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
-use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Collection;
-use Psy\Util\Str;
 
-readonly class EventCalendarService
+class EventPlanningCalendarService
 {
     public function __construct(
         // private AuthManager         $auth,
@@ -55,7 +48,7 @@ readonly class EventCalendarService
 
         $events = Event::select([
             'id', 'start_time', 'end_time', 'eventName', 'description', 'project_id',
-            'event_type_id', 'event_status_id', 'allDay', 'room_id', 'user_id', 'occupancy_option', 'declined_room_id'
+            'event_type_id', 'event_status_id', 'allDay', 'room_id', 'user_id', 'occupancy_option', 'declined_room_id', 'is_planning'
         ])
             ->with($eventWith)
             ->whereIn('room_id', $roomIds)
@@ -76,7 +69,6 @@ readonly class EventCalendarService
                     $q->whereIn('event_property_id', $filter->event_properties);
                 });
             })
-            ->isNotPlanning()
             ->orderBy('start_time')
             ->get();
 

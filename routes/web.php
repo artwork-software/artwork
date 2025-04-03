@@ -1732,6 +1732,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ]
     );
 
+    Route::group(['prefix' => 'planning-event-calendar'], function (): void {
+        Route::get('/', [EventController::class, 'viewPlanningCalendar'])->name('planning-event-calendar.index');
+    });
+
 
     //remove.day.service.from.user
     Route::patch(

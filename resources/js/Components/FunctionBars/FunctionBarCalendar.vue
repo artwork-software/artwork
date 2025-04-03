@@ -53,7 +53,7 @@
                         &nbsp;- {{ formatDateStringToGermanFormat(dateValue[0]) }} - {{ formatDateStringToGermanFormat(dateValue[1]) }}
                     </template>
                 </div>
-                <Switch v-if="!project"
+                <Switch v-if="!project && !isPlanning"
                         v-model="usePage().props.auth.user.calendar_settings.use_project_time_period"
                         @update:model-value="handleUseTimePeriodChange"
                         :class="[isCalendarUsingProjectTimePeriod ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
@@ -82,7 +82,11 @@
                 </Switch>
             </div>
 
-
+            <div v-if="isPlanning">
+                <div class="font-lexend text-sm font-bold text-red-500 select-none pointer-events-none">
+                    {{ $t('Attention! You are in the planning calendar')}}
+                </div>
+            </div>
 
             <div class="flex items-center gap-x-2">
                 <div class="flex items-center">
@@ -525,6 +529,11 @@ const props = defineProps({
         type: String,
         required: false,
         default: ''
+    },
+    isPlanning: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 

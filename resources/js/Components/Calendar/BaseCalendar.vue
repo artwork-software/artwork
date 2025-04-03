@@ -11,6 +11,7 @@
                 @wants-to-add-new-event="showEditEventModel(null)"
                 @update-multi-edit="toggleMultiEdit"
                 @jump-to-day-of-month="jumpToDayOfMonth"
+                :is-planning="isPlanning"
             />
             <div class="w-full h-8 px-4 py-2 bg-red-500 cursor-pointer" v-if="eventsWithoutRoom.length > 0" @click="showEventsWithoutRoomComponent = true">
                 <div class="flex items-center justify-center w-full h-full gap-x-1">
@@ -25,8 +26,6 @@
                 </div>
             </div>
         </div>
-
-
         <div>
             <div v-if="!usePage().props.auth.user.daily_view && !usePage().props.auth.user.at_a_glance">
                 <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? 'mt-8' : ''">
@@ -75,6 +74,14 @@
                                                     @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
                                                 />
                                             </div>
+                                        </div>
+                                        <div v-if="isPlanning" class="absolute right-2 bottom-2 hidden group-hover/container:block">
+                                            <ToolTipComponent
+                                                :tooltip-text="$t('Add new planned event')"
+                                                icon="IconCircleDashedPlus"
+                                                classes="cursor-pointer"
+                                                @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -204,6 +211,8 @@
         :requires-axios-requests="true"
         @closed="eventComponentClosed"
         :event-statuses="eventStatuses"
+        :is-planning="isPlanning"
+        :wanted-date="wantedDate"
     />
 
     <!--<CreateOrUpdateEventModal
@@ -277,6 +286,7 @@ import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeade
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 
 
@@ -316,6 +326,11 @@ const props = defineProps({
             type: Object,
             required: false,
             default: null
+        },
+        isPlanning: {
+            type: Boolean,
+            required: false,
+            default: false
         }
     })
 const $t = useTranslation()
@@ -411,6 +426,14 @@ const roomCollisions = ref([]);
 const showMultiDuplicateModal = ref(false);
 const checkIfScrolledToCalendarRef = ref('!-ml-3');
 const newCalendarData = ref(props.calendarData);
+const wantedDate = ref(null);
+const openNewEventModalWithBaseData = (day, roomId) => {
+    console.log(day, roomId);
+    wantedRoom.value = roomId;
+    wantedDate.value = day;
+    showEventComponent.value = true;
+};
+
 const handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId) => {
     if (considerOnMultiEdit) {
         editEvents.value.push(eventId);

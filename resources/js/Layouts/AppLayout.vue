@@ -221,7 +221,7 @@ import {
     IconCurrencyEuro, IconFileText,
     IconGeometry, IconLayoutDashboard,
     IconListCheck, IconTrash,
-    IconUsers
+    IconUsers, IconCalendarCog
 } from "@tabler/icons-vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TextComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -271,7 +271,8 @@ export default {
         ChevronUpIcon,
         Link,
         Switch,
-        TrashIcon, Head
+        TrashIcon, Head,
+        IconCalendarCog
     },
     methods: {
         IconBell,
@@ -581,6 +582,14 @@ export default {
                     has_permission: this.moduleIsVisible('shift_plan') &&
                         this.$can('can view shift plan')  || this.hasAdminRole(),
                     icon: IconCalendarUser,
+                    showToolTipForItem: false
+                },
+                {
+                    name: 'Planning Calendar',
+                    href: route('planning-event-calendar.index'),
+                    route: ['/planning-event-calendar'],
+                    has_permission: this.moduleIsVisible('room_assignment'),
+                    icon: IconCalendarCog,
                     showToolTipForItem: false
                 },
                 {

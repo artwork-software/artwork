@@ -30,6 +30,10 @@
             </div>
         </div>
 
+        <div v-if="event.isPlanning" class="absolute animate-pulse right-0 top-1 bg-artwork-buttons-create px-2 py-1 text-[10px] font-lexend select-none pointer-events-none rounded-bl-lg text-white">
+            {{ $t('Planned Event') }}
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 w-full px-1" v-if="zoom_factor > 0.6">
             <div class="py-2 px-1 col-span-2">
                 <div class="px-2" :class="usePage().props.auth.user.calendar_settings.high_contrast ? '' : 'border-l-4'" :style="{borderColor: getColorBasedOnUserSettings}">
@@ -227,7 +231,7 @@
                         />
                     </div>
                 </div>
-                <div class="invisible group-hover/singleEvent:visible">
+                <div class="invisible group-hover/singleEvent:visible flex items-start justify-end w-full" :class="event.isPlanning ? 'pt-2' : ''">
                     <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''">
                         <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole)" v-slot="{ active }">
                             <div @click="$emit('editEvent', event)"

@@ -4,9 +4,7 @@ namespace Artwork\Modules\Availability\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -17,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class AvailabilitySeries extends Model
 {
     use HasFactory;
-    use Prunable;
 
     protected $fillable = [
         'frequency',
@@ -27,10 +24,5 @@ class AvailabilitySeries extends Model
     public function availabilities(): HasMany
     {
         return $this->hasMany(Availability::class, 'series_id', 'id')->without('series');
-    }
-
-    public function prunable(): Builder
-    {
-        return static::whereDoesntHave('availabilities');
     }
 }

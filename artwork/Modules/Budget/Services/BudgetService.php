@@ -88,7 +88,7 @@ class BudgetService
             );
 
             if ($project->is_group){
-                $columns[] = $columnService->createColumnInTable(
+                $columns[] = $this->columnService->createColumnInTable(
                     table: $table,
                     name: 'Unterprojekte',
                     subName: '-',
@@ -207,7 +207,17 @@ class BudgetService
         Project $project,
         array $loadedProjectInformation,
     ): array {
-        $columns = $project->table()->first()->columns()->get();
+        $table = $project->table()->first();
+
+        //Failsave for projects without table
+        if (!$table) {
+            //Reporting so we know if this happens
+            report(new \RuntimeException('Project has no table'));
+            $this->generateBasicBudgetValues($project);
+            $project->table()->first();
+        }
+
+        $columns = $table->columns()->get();
 
         $calculateNames = [];
         foreach ($columns as $column) {

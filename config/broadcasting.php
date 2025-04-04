@@ -40,7 +40,7 @@ return [
                 'encrypted' => env('PUSHER_ENCRYPT', true),
                 'host' => env('PUSHER_HOST', 'soketi'),
                 'port' => env('PUSHER_PORT', 6001),
-                'scheme' => env('APP_ENV') === 'production' ? 'https' : 'http',
+                'scheme' => env('PUSHER_SCHEME', 'https'),
                 'curl_options' => [
                     CURLOPT_SSL_VERIFYHOST => 0,
                     CURLOPT_SSL_VERIFYPEER => 0,

@@ -157,6 +157,11 @@ sudo mysql -uroot -e "CREATE DATABASE artwork_tools;CREATE USER artwork@\"localh
 sudo sed -i "s/DB_HOST=db/DB_HOST=localhost/g" /var/www/html/.env
 sudo sed -i "s/DB_PASSWORD=artwork/DB_PASSWORD=$MYSQL_PASSWORD/g" /var/www/html/.env
 
+sudo tee -a /etc/mysql/mariadb.conf.d/50-server.cnf > /dev/null <<EOF
+[mysqld]
+default-time-zone = '+00:00'
+EOF
+
 # Setup Meilisearch
 log "Richte Meilisearch ein..."
 sudo useradd -d /var/lib/meilisearch -s /bin/false -m -r meilisearch

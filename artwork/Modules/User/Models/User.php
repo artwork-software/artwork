@@ -13,6 +13,8 @@ use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\EventVerification;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
@@ -615,5 +617,15 @@ class User extends Model implements
     {
         return $this->belongsToMany(Chat::class, 'chat_users')
             ->using(ChatUser::class);
+    }
+
+    public function verifiableEventTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(EventType::class, 'event_type_user');
+    }
+
+    public function eventVerifications(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(EventVerification::class, 'verifier');
     }
 }

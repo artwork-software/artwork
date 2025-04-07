@@ -89,7 +89,7 @@
                                         leave-from-class="transition-leave-from"
                                         leave-to-class="transition-leave-to">
                                 <MenuItems ref="menuItems" :class="fullSidenav ? 'ml-40' : 'ml-14'"
-                                           class="z-100 managementMenu max-h-40 rounded-lg overflow-y-auto opacity-100 absolute origin-top-left w-48 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
+                                           class="z-100 managementMenu max-h-52 rounded-lg overflow-y-auto opacity-100 absolute origin-top-left w-48 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
                                     <div class="z-100" v-for="item in managementNavigation" :key="item.name">
                                         <MenuItem v-if="item.has_permission" v-slot="{ active }">
                                             <Link :href="item.href"

@@ -6,7 +6,9 @@
                 v-model="user_search_query"
                 :label="$t(label)"
                 class="w-full"
-                @focus="user_search_query = ''"/>
+                @focus="user_search_query = ''"
+                :disabled="disabled"
+            />
             <div class="absolute right-2 top-3">
                 <IconX class="h-6 w-6 text-gray-400" v-if="user_search_query.length > 0" @click="closeSearch"/>
             </div>
@@ -85,6 +87,10 @@ export default {
         currentCraft: {
             type: Object,
             required: false
+        },
+        disabled: {
+            type: Boolean,
+            default: false
         }
     },
     computed: {

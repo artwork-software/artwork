@@ -2522,5 +2522,14 @@
     "Planning Calendar": "Planungskalender",
     "Attention! You are in the planning calendar": "Achtung! Du bist im Planungskalender",
     "Planned Event": "Geplanter Termin",
-    "Add new planned event": "Neuen geplanten Termin hinzufügen"
+    "Add new planned event": "Neuen geplanten Termin hinzufügen",
+    "Create planned Event": "Geplanten Termin erstellen",
+    "Planned Event Settings": "Einstellungen für geplante Termine",
+    "No users selected": "Keine Nutzer*innen ausgewählt",
+    "Please select a user who needs to verify this event type. To do this, click on the name of a user": "Bitte wähle einen Nutzer aus, der diesen Termin-Typ bestätigen muss. Klicke dazu auf den Namen eines Nutzers",
+    "all": "Alle",
+    "any": "Beliebig",
+    "none": "Keiner",
+    "specific": "Spezifisch",
+    "Verification mode": "Überprüfungsmodus"
 }

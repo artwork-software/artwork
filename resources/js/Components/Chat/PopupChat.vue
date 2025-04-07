@@ -371,6 +371,7 @@ onMounted(() => {
                         target.last_message = e.message;
                     }
 
+
                     // ⛔️ Eigene Nachricht? → abbrechen
                     if (e.message.sender_id === usePage().props.auth.user.id) return;
 
@@ -442,6 +443,7 @@ onMounted(() => {
 
     window.Echo.channel('users.status')
         .listen('UserStatusUpdated', (data) => {
+
             const userId = data?.userId;
             const newStatus = data?.status;
 

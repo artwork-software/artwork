@@ -2520,5 +2520,14 @@
     "Planning Calendar": "Planning Calendar",
     "Attention! You are in the planning calendar": "Attention! You are in the planning calendar",
     "Planned Event": "Planned Event",
-    "Add new planned event": "Add new planned event"
+    "Add new planned event": "Add new planned event",
+    "Create planned Event": "Create planned Event",
+    "Planned Event Settings": "Planned Event Settings",
+    "No users selected": "No users selected",
+    "Please select a user who needs to verify this event type. To do this, click on the name of a user": "Please select a user who needs to verify this event type. To do this, click on the name of a user",
+    "all": "All",
+    "any": "Any",
+    "none": "None",
+    "specific": "Specific",
+    "Verification mode": "Verification mode"
 }

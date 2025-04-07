@@ -4,7 +4,7 @@
             <!--   Heading   -->
             <div v-if="this.isRoomAdmin || this.hasAdminRole()">
                 <ModalHeader
-                    :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : $t('Event') : $t('New room allocation')"
+                    :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : $t('Event') : isPlanning ? $t('Create planned Event') : $t('New room allocation')"
                     :description="$t('Please make sure that you allow for preparation and follow-up time.')"
                 />
                 <div v-if="event?.id" class="flex items-center">

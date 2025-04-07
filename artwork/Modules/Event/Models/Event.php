@@ -515,4 +515,9 @@ class Event extends Model
     {
         return $builder->where('is_planning', false);
     }
+
+    public function verifications(): HasMany
+    {
+        return $this->hasMany(EventVerification::class);
+    }
 }

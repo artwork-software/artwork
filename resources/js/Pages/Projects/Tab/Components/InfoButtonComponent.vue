@@ -1,5 +1,5 @@
 <template>
-    <Popover v-if="component?.note" v-slot="{ open }" class="relative">
+    <Popover v-if="component?.note" v-slot="{ open }" class="relative print:hidden">
         <PopoverButton class="group inline-flex items-center ring-0 focus:outline-none focus-within:outline-none">
             <component is="IconInfoCircle" class="size-4" />
         </PopoverButton>

@@ -123,7 +123,7 @@
                        @mouseleave="hoverNotificationsMenu = false" :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
                         <div class="relative flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs">
                             <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                            <div v-if="this.$page.props.user.show_notification_indicator === true"
+                            <div v-if="this.$page.props.user?.show_notification_indicator === true"
                                  style="font-size: 7px;"
                                  class="w-3 h-3 block absolute top-0 right-0 rounded-full bg-white text-black text-center">
                             </div>

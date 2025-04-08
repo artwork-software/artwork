@@ -30,6 +30,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventStatusController;
 use App\Http\Controllers\EventTypeController;
+use App\Http\Controllers\EventVerificationController;
 use App\Http\Controllers\ExportPDFController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
@@ -2051,6 +2052,22 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
 
+    Route::group(['prefix' => 'event-verifications'], function(){
+        // POST events.sendToVerification
+        Route::post('/event/{event}/sendToVerification', [EventVerificationController::class, 'store'])
+            ->name('events.sendToVerification');
+
+        // GET event-verifications.index
+        Route::get('/', [EventVerificationController::class, 'index'])
+            ->name('event-verifications.index');
+
+        Route::post('/verification-request/{eventVerification}/approved', [EventVerificationController::class, 'approved'])
+            ->name('event-verifications.approved');
+
+        // event-verifications.rejected
+        Route::post('/verification-request/{eventVerification}/rejected', [EventVerificationController::class, 'rejected'])
+            ->name('event-verifications.rejected');
+    });
 });
 
 Route::get(

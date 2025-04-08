@@ -30,8 +30,11 @@
             </div>
         </div>
 
-        <div v-if="event.isPlanning" class="absolute animate-pulse right-0 top-1 bg-artwork-buttons-create px-2 py-1 text-[10px] font-lexend select-none pointer-events-none rounded-bl-lg text-white">
+        <div v-if="event.isPlanning && !event.hasVerification" class="w-full rounded-t-lg bg-artwork-buttons-create px-2 py-1 text-[10px] font-lexend select-none pointer-events-none text-white">
             {{ $t('Planned Event') }}
+        </div>
+        <div v-else-if="event.hasVerification" class="bg-orange-500 w-full rounded-t-lg px-2 py-1 text-[10px] font-lexend select-none pointer-events-none text-white">
+            {{ $t('Verification requested') }}
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 w-full px-1" v-if="zoom_factor > 0.6">
@@ -39,7 +42,7 @@
                 <div class="px-2" :class="usePage().props.auth.user.calendar_settings.high_contrast ? '' : 'border-l-4'" :style="{borderColor: getColorBasedOnUserSettings}">
                     <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
                         :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']" class="">
-                        <div class="">
+                        <div>
                             <div class="flex items-center gap-x-1">
                                 <div  v-if="usePage().props.auth.user.calendar_settings.project_status && event.project?.status" class="text-center rounded-full border group min-h-4 min-w-4 size-4 cursor-pointer" :style="{backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color}">
                                     <div class="absolute hidden group-hover:block top-5">
@@ -233,6 +236,13 @@
                 </div>
                 <div class="invisible group-hover/singleEvent:visible flex items-start justify-end w-full" :class="event.isPlanning ? 'pt-2' : ''">
                     <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''">
+                        <MenuItem v-if="event?.isPlanning && !event.hasVerification" v-slot="{ active }">
+                            <div @click="SendEventToVerification"
+                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <IconEdit class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                {{ $t('Request verification')}}
+                            </div>
+                        </MenuItem>
                         <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole)" v-slot="{ active }">
                             <div @click="$emit('editEvent', event)"
                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
@@ -472,6 +482,13 @@
                             </div>
                             <div class="invisible group-hover/singleEvent:visible">
                                 <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''">
+                                    <MenuItem v-if="event?.isPlanning && !event.hasVerification" v-slot="{ active }">
+                                        <div @click="SendEventToVerification"
+                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                            <IconEdit class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                            {{ $t('Request verification')}}
+                                        </div>
+                                    </MenuItem>
                                     <MenuItem v-slot="{ active }">
                                         <div @click="$emit('editEvent', event)"
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
@@ -623,7 +640,7 @@
 
 <script setup>
 import {computed, inject, onMounted, ref} from "vue";
-import {Link, usePage} from "@inertiajs/vue3";
+import {Link, router, usePage} from "@inertiajs/vue3";
 import {IconCirclePlus, IconEdit, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import {Menu, MenuButton, MenuItem, MenuItems, Popover, PopoverButton, PopoverPanel} from "@headlessui/vue";
@@ -832,5 +849,15 @@ onMounted(() => {
 const getEditHref = (projectId) => {
     return route('projects.tab', {project: projectId, projectTab: props.first_project_tab_id});
 };
+
+const SendEventToVerification = () => {
+    router.post(route('events.sendToVerification', {event: props.event.id}), {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+
+        }
+    });
+}
 
 </script>

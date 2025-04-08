@@ -2529,7 +2529,16 @@
     "Please select a user who needs to verify this event type. To do this, click on the name of a user": "Bitte wähle einen Nutzer aus, der diesen Termin-Typ bestätigen muss. Klicke dazu auf den Namen eines Nutzers",
     "all": "Alle",
     "any": "Beliebig",
-    "none": "Keiner",
+    "none": "Keine Verifizierung notwendig",
     "specific": "Spezifisch",
-    "Verification mode": "Überprüfungsmodus"
+    "Verification mode": "Überprüfungsmodus",
+    "Verification requested": "Überprüfung angefordert",
+    "Event Verifications": "Terminüberprüfungen",
+    "Manage event verifications. You can add, edit, or delete event verifications here.": "Verwalte die Terminüberprüfungen. Du kannst hier Terminüberprüfungen hinzufügen, bearbeiten oder löschen.",
+    "pending": "Ausstehend",
+    "approved": "Genehmigt",
+    "rejected": "Abgelehnt",
+    "My verification Requests": "Meine Überprüfungsanfragen",
+    "Approve": "Genehmigen",
+    "Manage your event verification requests. You can add, edit, or delete your event verification requests here.": "Verwalte deine Terminüberprüfungsanfragen. Du kannst hier deine Terminüberprüfungsanfragen hinzufügen, bearbeiten oder löschen."
 }

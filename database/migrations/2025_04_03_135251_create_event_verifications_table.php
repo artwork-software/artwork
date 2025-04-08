@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->morphs('verifier'); // z.B. User, Freelancer, etc.
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('request_user_id')->constrained('users')->cascadeOnDelete();
             $table->string('status')->default('pending');
             $table->text('rejection_reason')->nullable();
             $table->timestamps();

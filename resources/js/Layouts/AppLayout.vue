@@ -221,7 +221,7 @@ import {
     IconCurrencyEuro, IconFileText,
     IconGeometry, IconLayoutDashboard,
     IconListCheck, IconTrash,
-    IconUsers, IconCalendarCog
+    IconUsers, IconCalendarCog, IconCalendarCheck
 } from "@tabler/icons-vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TextComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -272,7 +272,8 @@ export default {
         Link,
         Switch,
         TrashIcon, Head,
-        IconCalendarCog
+        IconCalendarCog,
+        IconCalendarCheck
     },
     methods: {
         IconBell,
@@ -588,8 +589,16 @@ export default {
                     name: 'Planning Calendar',
                     href: route('planning-event-calendar.index'),
                     route: ['/planning-event-calendar'],
-                    has_permission: this.moduleIsVisible('room_assignment'),
+                    has_permission: true,
                     icon: IconCalendarCog,
+                    showToolTipForItem: false
+                },
+                {
+                    name: 'Event Verifications',
+                    href: route('event-verifications.index'),
+                    route: ['/event-verifications'],
+                    has_permission: true,
+                    icon: IconCalendarCheck,
                     showToolTipForItem: false
                 },
                 {

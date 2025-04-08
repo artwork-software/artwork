@@ -38,6 +38,7 @@ class EventShiftPlanDTO extends Data
         public ?bool $occupancy_option,
         public ?string $option_string,
         public ?bool $isPlanning,
+        public ?bool $hasVerification = false,
     ) {
     }
 
@@ -67,6 +68,7 @@ class EventShiftPlanDTO extends Data
             occupancy_option: $event->occupancy_option,
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
+            hasVerification: $event->getAttribute('has_verification') ?? false,
         );
     }
 }

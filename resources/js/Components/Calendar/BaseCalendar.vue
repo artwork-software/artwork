@@ -428,7 +428,7 @@ const checkIfScrolledToCalendarRef = ref('!-ml-3');
 const newCalendarData = ref(props.calendarData);
 const wantedDate = ref(null);
 const openNewEventModalWithBaseData = (day, roomId) => {
-    console.log(day, roomId);
+    eventToEdit.value = false
     wantedRoom.value = roomId;
     wantedDate.value = day;
     showEventComponent.value = true;

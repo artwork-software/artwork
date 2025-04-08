@@ -5,9 +5,14 @@
         />
         <form @submit.prevent="addOrUpdateEventType">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div class="col-span-1 flex items-center justify-center">
-                    <div class="pt-5">
-                        <ColorPickerComponent @updateColor="addColor" :color="eventTypeForm.hex_code" />
+                <div class="col-span-1">
+                    <div class="-mt-1">
+                        <div class="xsLight flex items-center justify-start">
+                            {{ $t('Color') }}
+                        </div>
+                       <div class="mt-1 flex items-center justify-center">
+                           <ColorPickerComponent @updateColor="addColor" :color="eventTypeForm.hex_code" />
+                       </div>
                     </div>
                 </div>
                 <div class="col-span-4">
@@ -15,9 +20,10 @@
                 </div>
                 <div class="col-span-full">
                     <TextInputComponent
-                        :label="$t('Abbreviation of the event type')"
+                        :label="$t('Abbreviation of the event type') + '*'"
                         v-model="eventTypeForm.abbreviation"
                         required
+                        :maxlength="4"
                         id="abbreviation"
                     />
                 </div>

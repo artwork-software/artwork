@@ -4,7 +4,7 @@
             <!--   Heading   -->
             <div v-if="this.isRoomAdmin || this.hasAdminRole()">
                 <ModalHeader
-                    :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : $t('Event') : isPlanning ? $t('Create planned Event') : $t('New room allocation')"
+                    :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : this.event?.isPlanning ? $t('Planned Event') : $t('Event') : isPlanning ? $t('Create planned Event') : $t('New room allocation')"
                     :description="$t('Please make sure that you allow for preparation and follow-up time.')"
                 />
                 <div v-if="event?.id" class="flex items-center">
@@ -22,6 +22,7 @@
             <ModalHeader v-else
                 :title="$t('Event')"
             />
+
             <!--    Form    -->
             <!--    Type and Title    -->
             <div class="grid gird-cols-1 md:grid-cols-2 gap-x-4 mb-4">
@@ -1340,7 +1341,7 @@ export default {
                 event_properties: this.event_properties
                     .filter((eventProperty) => eventProperty.checked)
                     .map((eventProperty) => eventProperty.id),
-                isPlanning: this.isPlanning,
+                isPlanning: this.event ? this.event.isPlanning : this.isPlanning,
             };
         },
     },

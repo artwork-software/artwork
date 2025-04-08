@@ -520,4 +520,9 @@ class Event extends Model
     {
         return $this->hasMany(EventVerification::class);
     }
+
+    public function getHasVerificationAttribute(): bool
+    {
+        return $this->verifications()->where('status', 'pending')->exists();
+    }
 }

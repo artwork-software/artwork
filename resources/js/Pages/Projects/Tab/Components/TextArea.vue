@@ -1,7 +1,7 @@
 <template>
     <div class="my-2 flex items-start gap-x-4 w-full">
         <div>
-            <label for="email" class="xsDark" :class="inSidebar ? 'xsLight' : 'xsDark'">
+            <label for="email" class="xsDark font-bold" :class="inSidebar ? 'xsLight' : 'xsDark'">
                 {{ data.data.label }}
             </label>
             <div v-if="descriptionClicked === false"

@@ -1,10 +1,13 @@
 <template>
     <div class="my-4">
 
-        <TinyPageHeadline
-            :title="$t('All Documents')"
-            :description="$t('Here you can upload and download documents for the project.')"
-        />
+        <div class="flex items-center justify-between">
+            <TinyPageHeadline
+                :title="$t('All Documents')"
+                :description="$t('Here you can upload and download documents for the project.')"
+            />
+            <InfoButtonComponent :component="component" />
+        </div>
 
         <div>
             <div class="mb-3 print:hidden" >
@@ -78,6 +81,7 @@ import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 
 import { useProjectDocumentListener } from "@/Composeables/Listener/useProjectDocumentListener.js";
+import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 
 export default defineComponent({
     mixins: [
@@ -85,6 +89,7 @@ export default defineComponent({
         IconLib
     ],
     components: {
+        InfoButtonComponent,
         TinyPageHeadline,
         MultiAlertComponent,
         ConfirmDeleteModal,
@@ -95,7 +100,8 @@ export default defineComponent({
         'projectWriteIds',
         'projectManagerIds',
         'tab_id',
-        'canEditComponent'
+        'canEditComponent',
+        'component'
     ],
     data() {
         return {

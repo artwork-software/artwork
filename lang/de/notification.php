@@ -104,5 +104,12 @@ return [
             'add' => 'Du wurdest zum Raumadmin von :room ernannt',
             'remove' => 'Du wurdest als Raumadmin von :room entfernt'
         ],
-    ]
+    ],
+    'request-verification' => [
+        'new' => 'Neue Anfrage für geplanten Termin',
+        'open-index' => 'Planungsterminanfragen öffnen',
+        'approved-finished' => 'Planungsterminanfrage genehmigt und abgeschlossen',
+        'user-approved' => 'Planungsterminanfrage von :name genehmigt',
+        'event-verification-description' => 'Der geplante Termin ":event" wurde genehmigt',
+    ],
 ];

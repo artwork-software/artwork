@@ -468,6 +468,14 @@ class NotificationService
                     );
                 }
                 break;
+            case NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS:
+                if ($this->getNotificationTo()->id !== Auth::id()) {
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new EventNotification($body, $this->getBroadcastMessage())
+                    );
+                }
+                break;
         }
 
         $this->userService->updateCurrentUserShowNotificationIndicator(

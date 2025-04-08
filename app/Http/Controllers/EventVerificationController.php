@@ -28,11 +28,13 @@ class EventVerificationController extends Controller
      */
     public function index()
     {
+        $requestPaginate = request()?->integer('eventVerificationsPerPage', 5);
+        $myRequestPaginate = request()?->integer('myRequestsPerPage', 5);
         /** @var User $user */
         $user = $this->authManager->user();
         return Inertia::render('EventVerification/Index', [
-            'eventVerifications' => $this->eventVerificationService->getAllByUser($user),
-            'myRequests' => $this->eventVerificationService->getAllByRequester($user),
+            'eventVerifications' => $this->eventVerificationService->getAllByUser($user, $requestPaginate),
+            'myRequests' => $this->eventVerificationService->getAllByRequester($user, $myRequestPaginate),
             'counts' => $this->eventVerificationService->getCountsByUser($user),
         ]);
     }

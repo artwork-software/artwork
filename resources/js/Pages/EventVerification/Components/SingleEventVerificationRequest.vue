@@ -1,7 +1,7 @@
 <template>
     <div class="min-w-0">
         <div class="flex items-start gap-x-3">
-            <p class="text-sm/6 font-semibold text-gray-900">{{ eventVerification.event.eventName }}</p>
+            <p class="text-sm/6 font-semibold text-gray-900">{{ eventVerification?.event?.eventName }}</p>
             <p :class="[statuses[eventVerification.status], 'mt-0.5 rounded-md px-1.5 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ring-inset']" class="first-letter:capitalize">{{ $t(eventVerification.status) }}</p>
         </div>
         <div class="mt-1 flex items-center gap-x-2 text-xs/5 text-gray-500">

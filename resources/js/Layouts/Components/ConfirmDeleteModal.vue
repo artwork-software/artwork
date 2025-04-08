@@ -5,16 +5,9 @@
             <div class="font-black font-lexend text-primary text-3xl my-2 mb-6">
                 {{ title }}
             </div>
-            <div class="rounded-md bg-red-50 p-4">
-                <div class="flex">
-                    <div class="shrink-0">
-                        <component is="IconAlertSquareRoundedFilled" class="size-5 text-red-400" aria-hidden="true" />
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-red-800">{{ description }}</p>
-                    </div>
-                </div>
-            </div>
+
+
+            <BaseAlertComponent :message="description" type="error" />
         </div>
         <div>
             <div class="flex justify-between mt-5 items-center pr-4" v-if="!is_budget && !isSeriesDelete">
@@ -52,11 +45,13 @@ import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 
 export default {
     name: "ConfirmDeleteModal",
     mixins: [Permissions, IconLib],
     components: {
+        BaseAlertComponent,
         BaseModal,
         FormButton,
         Dialog,

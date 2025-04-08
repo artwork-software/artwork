@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('event_verifications', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid');
             $table->morphs('verifier'); // z.B. User, Freelancer, etc.
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->foreignId('request_user_id')->constrained('users')->cascadeOnDelete();

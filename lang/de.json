@@ -2534,11 +2534,16 @@
     "Verification mode": "Überprüfungsmodus",
     "Verification requested": "Überprüfung angefordert",
     "Event Verifications": "Terminüberprüfungen",
-    "Manage event verifications. You can add, edit, or delete event verifications here.": "Verwalte die Terminüberprüfungen. Du kannst hier Terminüberprüfungen hinzufügen, bearbeiten oder löschen.",
+    "Manage the event checks. You can approve or reject event checks here.": "Verwalte die Terminüberprüfungen. Du kannst hier die Terminüberprüfungen genehmigen oder ablehnen.",
     "pending": "Ausstehend",
     "approved": "Genehmigt",
     "rejected": "Abgelehnt",
     "My verification Requests": "Meine Überprüfungsanfragen",
     "Approve": "Genehmigen",
-    "Manage your event verification requests. You can add, edit, or delete your event verification requests here.": "Verwalte deine Terminüberprüfungsanfragen. Du kannst hier deine Terminüberprüfungsanfragen hinzufügen, bearbeiten oder löschen."
+    "Manage your event verification requests. You can add, edit, or delete your event verification requests here.": "Verwalte deine Terminüberprüfungsanfragen. Du kannst hier deine Terminüberprüfungsanfragen hinzufügen, bearbeiten oder löschen.",
+    "Event verification requests": "Terminüberprüfungsanfragen",
+    "Find out if there are any event verification requests.": "Finde heraus, ob es Terminüberprüfungsanfragen gibt.",
+    "more": "Mehr",
+    "Click to show more": "Klicke, um mehr anzuzeigen",
+    "No event verification requests found": "Keine Terminüberprüfungsanfragen gefunden"
 }

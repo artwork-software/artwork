@@ -2538,9 +2538,9 @@
     "pending": "Ausstehend",
     "approved": "Genehmigt",
     "rejected": "Abgelehnt",
-    "My verification Requests": "Meine Überprüfungsanfragen",
+    "My sent verification Requests": "Meine gesendeten Überprüfungsanfragen",
     "Approve": "Genehmigen",
-    "Manage your event verification requests. You can add, edit, or delete your event verification requests here.": "Verwalte deine Terminüberprüfungsanfragen. Du kannst hier deine Terminüberprüfungsanfragen hinzufügen, bearbeiten oder löschen.",
+    "Here is an overview of all your sent event requests.": "Hier ist eine Übersicht aller deiner gesendeten Termin-Anfragen im Planungskalender.",
     "Event verification requests": "Terminüberprüfungsanfragen",
     "Find out if there are any event verification requests.": "Finde heraus, ob es Terminüberprüfungsanfragen gibt.",
     "more": "Mehr",
@@ -2558,5 +2558,9 @@
     "Reject Event Verification Request": "Terminüberprüfungsanfrage ablehnen",
     "Are you sure you want to reject this event verification request?": "Möchtest du diese Terminüberprüfungsanfrage wirklich ablehnen?",
     "New event verification request incoming": "Neue Terminüberprüfungsanfrage eingehend",
-    "Rejections": "Ablehnungen"
+    "Rejections": "Ablehnungen",
+    "No verification needed": "Keine Bestätigung notwendig",
+    "All assigned users must verify": "Alle zugewiesenen Nutzer*innen müssen bestätigen",
+    "At least one assigned user must verify": "Mindestens eine zugewiesene Nutzer*in muss bestätigen",
+    "A specific user must verify": "Eine spezifische Nutzer*in muss bestätigen"
 }

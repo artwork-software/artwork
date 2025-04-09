@@ -71,9 +71,9 @@
                             {{ $t('Wähle den Verifizierungsmodus für den Planungskalender') }}
                         </p>
                         <div class="mt-6 space-y-6 ">
-                            <div v-for="notificationMethod in verificationMods" :key="notificationMethod.id" class="flex items-center">
+                            <div v-for="notificationMethod in verificationModes" :key="notificationMethod.id" class="flex items-center">
                                 <input v-if="eventTypeForm.verification_mode" @change="selectVerificationMode(notificationMethod.id)" :id="notificationMethod.id" name="notification-method" type="radio" :checked="notificationMethod.id === eventTypeForm.verification_mode" class="relative size-4 appearance-none rounded-full input-checklist" />
-                                <label :for="notificationMethod.id" class="ml-3 block text-sm/6 font-medium text-gray-900">{{ notificationMethod.title }}</label>
+                                <label :for="notificationMethod.id" class="ml-3 block text-sm/6 font-medium text-gray-900">{{ $t(notificationMethod.title) }}</label>
                             </div>
                         </div>
                     </div>
@@ -151,11 +151,11 @@ const props = defineProps({
 
 const emits = defineEmits(['close'])
 
-const verificationMods = [
-    { id: 'none', title: 'Keine Verifizierung erforderlich' },
-    { id: 'all', title: 'Alle zugewiesenen Nutzer müssen verifizieren' },
-    { id: 'any', title: 'Mindestens ein zugewiesener Nutzer muss verifizieren' },
-    { id: 'specific', title: 'Ein bestimmter Nutzer muss verifizieren' },
+const verificationModes = [
+    { id: 'none', title: 'No verification needed' },
+    { id: 'all', title: 'All assigned users must verify' },
+    { id: 'any', title: 'At least one assigned user must verify' },
+    { id: 'specific', title: 'A specific user must verify' },
 ]
 
 const eventTypeForm = useForm({

@@ -2536,9 +2536,9 @@
     "pending": "Pending",
     "approved": "Approved",
     "rejected": "Rejected",
-    "My verification Requests": "My verification Requests",
+    "My sent verification Requests": "My sent verification Requests",
     "Approve": "Approve",
-    "Manage your event verification requests. You can add, edit, or delete your event verification requests here.": "Manage your event verification requests. You can add, edit, or delete your event verification requests here.",
+    "Here is an overview of all your sent event requests.": "Here is an overview of all your sent event requests.",
     "Event verification requests": "Event verification requests",
     "Find out if there are any event verification requests.": "Find out if there are any event verification requests.",
     "more": "more",
@@ -2555,5 +2555,10 @@
     "Reject Event Verification Request": "Reject Event Verification Request",
     "Are you sure you want to reject this event verification request?": "Are you sure you want to reject this event verification request?",
     "New event verification request incoming": "New event verification request incoming",
-    "Rejections": "Rejections"
+    "Rejections": "Rejections",
+    "No verification needed": "No verification needed",
+    "All assigned users must verify": "All assigned users must verify",
+    "At least one assigned user must verify": "At least one assigned user must verify",
+    "A specific user must verify": "A specific user must verify"
+
 }

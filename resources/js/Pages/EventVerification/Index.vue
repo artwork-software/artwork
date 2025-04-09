@@ -67,8 +67,8 @@
 
             <div class="border-t border-dashed border-gray-200 pt-10">
                 <TinyPageHeadline
-                    :title="$t('My verification Requests')"
-                    :description="$t('Manage your event verification requests. You can add, edit, or delete your event verification requests here.')"
+                    :title="$t('My sent verification Requests')"
+                    :description="$t('Here is an overview of all your sent event requests.')"
                 />
                 <div v-if="myRequests.data.length > 0">
                     <ul role="list" class="divide-y divide-gray-100">

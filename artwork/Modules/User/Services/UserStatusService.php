@@ -11,6 +11,13 @@ class UserStatusService
     public function markOnline(int $userId): void
     {
         // check if Redis is available
+        if (!config('app.use_chat_module')){
+            //Log::error('Redis is not available');
+            return;
+        }
+
+
+        // check if Redis is available
         if (!Redis::isAvailable()) {
             //Log::error('Redis is not available');
             return;

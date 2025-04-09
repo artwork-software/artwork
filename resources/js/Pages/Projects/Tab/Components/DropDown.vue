@@ -76,7 +76,7 @@ export default {
 <template>
     <div class="flex items-start gap-x-4">
         <Listbox as="div" class="w-96" v-model="selected" :disabled="!this.canEditComponent">
-            <ListboxLabel class="block text-sm font-medium leading-6"  :class="inSidebar ? 'text-white' : 'text-gray-900'">
+            <ListboxLabel class="block text-sm font-bold leading-6"  :class="inSidebar ? 'text-white' : 'text-gray-900'">
                 {{ data.data.label }}
             </ListboxLabel>
             <div class="relative mt-2">

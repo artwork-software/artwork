@@ -78,78 +78,56 @@ class EventVerificationService
     public function approveVerification(EventVerification $verification): void
     {
         $verification->update(['status' => 'approved']);
-        $eventCreator = $verification->event->creator;
-        if ($verification->event->event_type->verification_mode === 'any') {
-            $verification->event->update(['is_planning' => false]);
 
-            $notificationTitle = __(
-                'notification.request-verification.approved-finished',
-                [],
-                $eventCreator->language
-            );
-            // remove all verifications where status is pending
-            $verification->event->verifications()
-                ->where('status', 'pending')
-                ->delete();
-        }
-        if ($verification->event->event_type->verification_mode === 'all') {
-            $allVerifications = $verification->event->verifications()->where('status', 'approved')->count();
-            $totalVerifications = $verification->event->verifications()->count();
+        $event = $verification->event;
+        $eventType = $event->event_type;
+        $eventCreator = $event->creator;
+        $notificationTitle = '';
 
-            $notificationTitle = __(
-                'notification.request-verification.user-approved',
-                [
+        switch ($eventType->verification_mode) {
+            case 'any':
+                $event->update(['is_planning' => false, 'occupancy_option' => false]);
+                $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
+                $event->verifications()->where('status', 'pending')->delete();
+                break;
+
+            case 'all':
+                $approvedCount = $event->verifications()->where('status', 'approved')->where('uuid', $verification->uuid )->count();
+                $totalCount = $event->verifications()->whereIn('status', ['approved', 'rejected'])->where('uuid', $verification->uuid )->count();
+                $notificationTitle = __('notification.request-verification.user-approved', [
                     'name' => $verification->verifier->full_name,
-                ],
-                $eventCreator->language
-            );
+                ], $eventCreator->language);
+                if ($approvedCount === $totalCount) {
+                    $event->update(['is_planning' => false, 'occupancy_option' => false]);
+                    $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
+                }
+                break;
 
-            if ($allVerifications === $totalVerifications) {
-                $verification->event->update(['is_planning' => false]);
-
-                $notificationTitle = __(
-                    'notification.request-verification.approved-finished',
-                    [],
-                    $eventCreator->language
-                );
-            }
-        }
-
-        if ($verification->event->event_type->verification_mode === 'specific') {
-            $specificVerifier = $verification->event->event_type->specificVerifier;
-            if ($verification->verifier_id === $specificVerifier->id) {
-                $verification->event->update(['is_planning' => false]);
-                // set all verifications to approved
-
-                $notificationTitle = __(
-                    'notification.request-verification.approved-finished',
-                    [],
-                    $eventCreator->language
-                );
-            }
+            case 'specific':
+                $specificVerifier = $eventType->specificVerifier;
+                if ($verification->verifier_id === $specificVerifier->id) {
+                    $event->update(['is_planning' => false, 'occupancy_option' => false]);
+                    $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
+                }
+                break;
         }
 
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
-        $this->notificationService
-            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
-
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
 
         $broadcastMessage = [
             'id' => random_int(1, 1000000),
             'type' => 'success',
             'message' => $notificationTitle
         ];
+
         $notificationDescription = [
             2 => [
                 'type' => 'string',
-                'title' =>  __(
-                    'notification.request-verification.event-verification-description',
-                    [
-                        'event' => $verification->event->eventName,
-                    ],
-                    $eventCreator->language
-                ),
+                'title' => __('notification.request-verification.event-verification-description', [
+                    'event' => $event->eventName,
+                ], $eventCreator->language),
                 'href' => null,
             ]
         ];
@@ -161,13 +139,42 @@ class EventVerificationService
         $this->notificationService->createNotification();
     }
 
+
     public function rejectVerification(EventVerification $verification, string $reason): void
     {
+        $event = $verification->event;
+        $eventCreator = $event->creator;
         $verification->update([
             'status' => 'rejected',
             'rejection_reason' => $reason
         ]);
         $verification->event->update(['is_planning' => true]);
+
+        $this->notificationService->setIcon('red');
+        $this->notificationService->setPriority(3);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
+        $notificationTitle = __('notification.request-verification.user-rejected', [
+            'name' => $verification->verifier->full_name,
+        ], $eventCreator->language);
+        $broadcastMessage = [
+            'id' => random_int(1, 1000000),
+            'type' => 'error',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            2 => [
+                'type' => 'string',
+                'title' => __('notification.request-verification.event-verification-description', [
+                    'event' => $event->eventName,
+                ], $eventCreator->language),
+                'href' => null,
+            ]
+        ];
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setNotificationTo($eventCreator);
+        $this->notificationService->createNotification();
     }
 
     public function requestVerification(Event $event, User $user): void
@@ -176,7 +183,7 @@ class EventVerificationService
         $uuid = Str::uuid()->toString();
 
         if ($eventType->verification_mode === 'none') {
-            $event->update(['is_planning' => false]);
+            $event->update(['is_planning' => false, 'occupancy_option' => false]);
             return;
         }
 
@@ -194,7 +201,7 @@ class EventVerificationService
                 'status' => 'approved',
                 'request_user_id' => $user->id,
             ]);
-            $event->update(['is_planning' => false]);
+            $event->update(['is_planning' => false, 'occupancy_option' => false]);
             return;
         }
 
@@ -206,7 +213,7 @@ class EventVerificationService
                 'status' => 'approved',
                 'request_user_id' => $user->id,
             ]);
-            $event->update(['is_planning' => false]);
+            $event->update(['is_planning' => false, 'occupancy_option' => false]);
             return;
         }
 

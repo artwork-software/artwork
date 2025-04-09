@@ -30,7 +30,7 @@
                 </SmallFormButton>
             </div>
             <div>
-                <SmallFormButton @click="rejectRequest" v-if="eventVerification.status === 'pending'" class="!bg-red-500 hover:!bg-red-800 capitalize text-xs font-lexend">
+                <SmallFormButton @click="showRejectEventVerificationRequestModal = true" v-if="eventVerification.status === 'pending'" class="!bg-red-500 hover:!bg-red-800 capitalize text-xs font-lexend">
                     <component is="IconBan" class="size-4" aria-hidden="true" />
                 </SmallFormButton>
             </div>
@@ -38,6 +38,12 @@
 
         <p v-if="eventVerification.status !== 'pending'" :class="[statuses[eventVerification.status], 'mt-0.5 rounded-md px-1.5 py-0.5 text-xs text-center font-medium whitespace-nowrap ring-1 ring-inset']" class="first-letter:capitalize">{{ $t(eventVerification.status) }}</p>
     </td>
+
+    <RejectEventVerificationRequestModal
+        v-if="showRejectEventVerificationRequestModal"
+        :event-verification="eventVerification"
+        @close="showRejectEventVerificationRequestModal = false"
+        />
 </template>
 
 <script setup>
@@ -45,6 +51,7 @@
 import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import {router} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import {defineAsyncComponent, ref} from "vue";
 
 const props = defineProps({
     eventVerification: {
@@ -58,7 +65,12 @@ const statuses = {
     pending: 'text-gray-600 bg-gray-50 ring-gray-500/10',
     rejected: 'text-red-800 bg-red-50 ring-red-600/20',
 }
-
+const showRejectEventVerificationRequestModal = ref(false)
+const RejectEventVerificationRequestModal = defineAsyncComponent({
+    loader: () => import('@/Pages/EventVerification/Components/RejectEventVerificationRequestModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
 const approveRequest = () => {
     router.post(route('event-verifications.approved', props.eventVerification.id), {}, {
         preserveScroll: true,
@@ -66,12 +78,7 @@ const approveRequest = () => {
     })
 }
 
-const rejectRequest = () => {
-    router.post(route('event-verifications.rejected', props.eventVerification.id), {}, {
-        preserveScroll: true,
-        preserveState: false,
-    })
-}
+
 
 </script>
 

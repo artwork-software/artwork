@@ -111,5 +111,6 @@ return [
         'approved-finished' => 'Planungsterminanfrage genehmigt und abgeschlossen',
         'user-approved' => 'Planungsterminanfrage von :name genehmigt',
         'event-verification-description' => 'Der geplante Termin ":event" wurde genehmigt',
+        'user-rejected' => 'Planungsterminanfrage von :name abgelehnt',
     ],
 ];

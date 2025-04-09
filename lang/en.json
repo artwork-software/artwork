@@ -2549,5 +2549,9 @@
     "Requested by": "Requested by",
     "Edit, delete and confirm scheduled events": "Edit and confirm scheduled events",
     "A user with this permission can edit, delete and confirm scheduled events": "A user with this permission can edit, delete and confirm scheduled events",
-    "Click on the status to filter the event verification requests": "Click on the status to filter the event verification requests"
+    "Click on the status to filter the event verification requests": "Click on the status to filter the event verification requests",
+    "Reject Request": "Reject Request",
+    "Rejection Reason": "Rejection Reason",
+    "Reject Event Verification Request": "Reject Event Verification Request",
+    "Are you sure you want to reject this event verification request?": "Are you sure you want to reject this event verification request?"
 }

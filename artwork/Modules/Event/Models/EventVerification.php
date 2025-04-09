@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * Class EventVerification
  *
  * @property int $id
+ * @property string $uuid
  * @property int $event_id
  * @property int|null $verifier_id
  * @property string|null $verifier_type

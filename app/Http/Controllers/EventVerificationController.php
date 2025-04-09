@@ -12,6 +12,7 @@ use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Services\EventVerificationService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class EventVerificationController extends Controller
@@ -101,9 +102,9 @@ class EventVerificationController extends Controller
         broadcast(new EventCreated($event, $event->room_id));
     }
 
-    public function rejected(EventVerification $eventVerification): void
+    public function rejected(EventVerification $eventVerification, Request $request): void
     {
-        $this->eventVerificationService->rejectVerification($eventVerification, 'rejected');
+        $this->eventVerificationService->rejectVerification($eventVerification, $request->get('rejection_reason'));
         $event = $eventVerification->event;
         broadcast(new EventCreated($event, $event->room_id));
     }

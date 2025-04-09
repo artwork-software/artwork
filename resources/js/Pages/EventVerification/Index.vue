@@ -25,7 +25,6 @@
             </div>
 
             <div class="ml-14 pt-5 pb-20 max-w-7xl w-full">
-
                 <div class="" v-if="eventVerifications.data.length > 0">
                     <div class="mt-8 flow-root">
                         <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -91,12 +90,11 @@
 
 import AppLayout from "@/Layouts/AppLayout.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
-import CardStatusEventVerification from "@/Pages/EventVerification/Components/CardStatusEventVerification.vue";
 import SingleEventVerificationRequest from "@/Pages/EventVerification/Components/SingleEventVerificationRequest.vue";
 import SingleMyEventVerificationRequests
     from "@/Pages/EventVerification/Components/SingleMyEventVerificationRequests.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
-import {computed, ref} from "vue";
+import {ref} from "vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import {router, usePage} from "@inertiajs/vue3";
 

@@ -2552,5 +2552,9 @@
     "Edit, delete and confirm scheduled events": "Geplante Termine bearbeiten und bestätigen",
     "View and plan in the planning calendar": "Planungskalender anzeigen und planen",
     "A user with this permission can edit, delete and confirm scheduled events": "Ein Nutzer mit dieser Berechtigung kann geplante Termine bearbeiten, löschen und bestätigen",
-    "Click on the status to filter the event verification requests": "Klicke auf den Status, um die Terminüberprüfungsanfragen zu filtern"
+    "Click on the status to filter the event verification requests": "Klicke auf den Status, um die Terminüberprüfungsanfragen zu filtern",
+    "Reject Request": "Anfrage ablehnen",
+    "Rejection Reason": "Ablehnungsgrund",
+    "Reject Event Verification Request": "Terminüberprüfungsanfrage ablehnen",
+    "Are you sure you want to reject this event verification request?": "Möchtest du diese Terminüberprüfungsanfrage wirklich ablehnen?"
 }

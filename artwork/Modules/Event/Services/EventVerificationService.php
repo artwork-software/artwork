@@ -265,4 +265,15 @@ class EventVerificationService
             broadcast(new BroadcastToReloadEventVerificationRequests($verifier));
         }
     }
+
+
+    public function cancelVerification(Event $event): void
+    {
+        $event->update(['is_planning' => true]);
+        foreach ($event->verifications as $verification) {
+            $verifier = $verification->verifier;
+            $verification->delete();
+            broadcast(new BroadcastToReloadEventVerificationRequests($verifier));
+        }
+    }
 }

@@ -13,6 +13,11 @@
                 <span class="font-lexend">{{ myRequest?.room?.name }}</span>
             </p>
         </div>
+        <div v-if="myRequest?.is_planning">
+            <div class="font-lexend text-red-500 text-xs cursor-pointer underline underline-offset-2" @click="cancelVerification">
+                {{ $t('Cancel verification') }}
+            </div>
+        </div>
     </div>
     <div class="flex flex-none items-center gap-x-4 h-full">
         <div class="flex items-center gap-x-4 h-full">
@@ -41,8 +46,10 @@
                     </div>
                 </div>
             </div>
-
         </div>
+
+        <!-- retake verification -->
+
     </div>
 </template>
 
@@ -50,6 +57,7 @@
 
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {computed, ref} from "vue";
+import {router} from "@inertiajs/vue3";
 
 const props = defineProps({
     myRequest: {
@@ -125,6 +133,13 @@ const getBackgroundColorByEventTypeVerificationModeAndWhoHasVerifyGroup = (verif
 
     return statuses['pending'];
 };
+
+const cancelVerification = () => {
+    router.post(route('event-verifications.cancel-verification', props.myRequest.id), {}, {
+        preserveScroll: true,
+        preserveState: false,
+    })
+}
 
 
 </script>

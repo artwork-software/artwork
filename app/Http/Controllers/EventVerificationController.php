@@ -108,4 +108,10 @@ class EventVerificationController extends Controller
         $event = $eventVerification->event;
         broadcast(new EventCreated($event, $event->room_id));
     }
+
+    public function cancelVerification(Event $event): void
+    {
+        $this->eventVerificationService->cancelVerification($event);
+        broadcast(new EventCreated($event, $event->room_id));
+    }
 }

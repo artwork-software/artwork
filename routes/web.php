@@ -2067,6 +2067,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // event-verifications.rejected
         Route::post('/verification-request/{eventVerification}/rejected', [EventVerificationController::class, 'rejected'])
             ->name('event-verifications.rejected');
+
+        // event-verifications.cancel-verification
+        Route::post('/verification-request/{event}/cancel-verification', [EventVerificationController::class, 'cancelVerification'])
+            ->name('event-verifications.cancel-verification');
     });
 });
 

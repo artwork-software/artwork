@@ -238,9 +238,16 @@
                     <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''">
                         <MenuItem v-if="event?.isPlanning && !event.hasVerification" v-slot="{ active }">
                             <div @click="SendEventToVerification"
-                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <IconEdit class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <component is="IconLock" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
                                 {{ $t('Request verification')}}
+                            </div>
+                        </MenuItem>
+                        <MenuItem v-if="event?.isPlanning && event.hasVerification" v-slot="{ active }">
+                            <div @click="cancelVerification"
+                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <component is="IconLockOpen" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                {{ $t('Cancel verification')}}
                             </div>
                         </MenuItem>
                         <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole)" v-slot="{ active }">
@@ -485,8 +492,15 @@
                                     <MenuItem v-if="event?.isPlanning && !event.hasVerification" v-slot="{ active }">
                                         <div @click="SendEventToVerification"
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconEdit class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                            <component is="IconLock" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
                                             {{ $t('Request verification')}}
+                                        </div>
+                                    </MenuItem>
+                                    <MenuItem v-if="event?.isPlanning && event.hasVerification" v-slot="{ active }">
+                                        <div @click="cancelVerification"
+                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                            <component is="IconLockOpen" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                            {{ $t('Cancel verification')}}
                                         </div>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -859,5 +873,13 @@ const SendEventToVerification = () => {
         }
     });
 }
+
+const cancelVerification = () => {
+    router.post(route('event-verifications.cancel-verification', props.event.id), {}, {
+        preserveScroll: true,
+        preserveState: false,
+    })
+}
+
 
 </script>

@@ -250,7 +250,7 @@ export default {
             }
         },
         resetCalendarFilter() {
-            this.$inertia.delete(route('reset.user.shift.calendar.filter', this.$page.props.user.id), {
+            this.$inertia.delete(route('reset.user.shift.calendar.filter', this.$page.props.auth.user.id), {
                 preserveState: false,
                 preserveScroll: true,
                 onSuccess: () => {
@@ -313,7 +313,7 @@ export default {
             }
         },
         reloadChanges() {
-            router.patch(route('update.user.shift.calendar.filter', this.$page.props.user.id), {
+            router.patch(route('update.user.shift.calendar.filter', this.$page.props.auth.user.id), {
                 rooms: this.arrayToIds(this.filterArray.rooms),
                 event_types: this.arrayToIds(this.filterArray.eventTypes),
             }, {

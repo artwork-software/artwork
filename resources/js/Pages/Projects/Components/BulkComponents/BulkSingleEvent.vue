@@ -355,16 +355,16 @@ const openEventComponent = (eventId) => {
 
 const getColumnSize = (column) => {
     return {
-        minWidth: usePage().props.user.bulk_column_size[column] + 'px',
-        width: usePage().props.user.bulk_column_size[column] + 'px',
-        maxWidth: usePage().props.user.bulk_column_size[column] + 'px'
+        minWidth: usePage().props.auth.user.bulk_column_size[column] + 'px',
+        width: usePage().props.auth.user.bulk_column_size[column] + 'px',
+        maxWidth: usePage().props.auth.user.bulk_column_size[column] + 'px'
     }
 }
 const getColumnTextSize = (column) => {
     return {
-        minWidth: parseInt(usePage().props.user.bulk_column_size[column]) - 50 + 'px',
-        width: parseInt(usePage().props.user.bulk_column_size[column]) - 50 + 'px',
-        maxWidth: parseInt(usePage().props.user.bulk_column_size[column]) - 50 + 'px'
+        minWidth: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px',
+        width: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px',
+        maxWidth: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px'
     }
 }
 

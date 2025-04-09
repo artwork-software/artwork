@@ -138,7 +138,7 @@ export default {
                 return false;
             }
 
-            const userId = usePage().props.user.id;
+            const userId = usePage().props.auth.user.id;
 
             // Prüft, ob der Benutzer in der Gruppen-User-Liste vorhanden ist
             return !group.users.some(user => user.id === userId);
@@ -192,7 +192,7 @@ export default {
         },
         updateTimes() {
             router.patch(
-                route('update.user.worker.shift-plan.filters.update', this.$page.props.user.id),
+                route('update.user.worker.shift-plan.filters.update', this.$page.props.auth.user.id),
                 {
                     start_date: this.dateValue[0],
                     end_date: this.dateValue[1],

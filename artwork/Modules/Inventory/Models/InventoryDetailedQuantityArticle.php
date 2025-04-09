@@ -7,11 +7,13 @@ use Artwork\Modules\Manufacturer\Models\Manufacturer;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InventoryDetailedQuantityArticle extends Model
 {
     use HasFactory;
     use HasInventoryProperties;
+    use SoftDeletes;
 
     protected $fillable = [
         'inventory_article_id',

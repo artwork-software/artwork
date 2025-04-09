@@ -4,7 +4,7 @@
             <!--   Heading   -->
             <div v-if="this.isRoomAdmin || this.hasAdminRole()">
                 <ModalHeader
-                    :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : $t('Event') : $t('New room allocation')"
+                    :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : this.event?.isPlanning ? $t('Planned Event') : $t('Event') : isPlanning ? $t('Create planned Event') : $t('New room allocation')"
                     :description="$t('Please make sure that you allow for preparation and follow-up time.')"
                 />
                 <div v-if="event?.id" class="flex items-center">
@@ -22,6 +22,7 @@
             <ModalHeader v-else
                 :title="$t('Event')"
             />
+
             <!--    Form    -->
             <!--    Type and Title    -->
             <div class="grid gird-cols-1 md:grid-cols-2 gap-x-4 mb-4">
@@ -596,10 +597,36 @@
                         </div>
                     </div>
                 </div>
+
+                <div v-if="event && event?.isPlanning" class="mt-4">
+                    <div class="mb-4 flex items-center justify-between cursor-pointer" @click="showRejections = !showRejections">
+                        <h3 class="font-lexend">{{ $t('Rejections')}}</h3>
+                        <component is="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" :class="showRejections ? 'rotate-180': ''" aria-hidden="true"/>
+                    </div>
+
+                    <div class="space-y-3 group" v-if="showRejections">
+                        <div v-for="(verification, index) in event?.verifications" :key="verification.id">
+                            <div class="flex w-full" v-if="verification.rejection_reason !== null">
+                                <div class="mr-4 shrink-0">
+                                    <UserPopoverTooltip :user="verification?.verifier" />
+                                </div>
+                                <div class="w-full">
+                                    <div class="flex items-center justify-between w-full">
+                                        <h4 class="text-sm font-lexend">{{ verification?.verifier?.full_name }}</h4>
+                                        <p class="text-[9px] text-gray-500">
+                                            {{ verification?.created_at }}
+                                        </p>
+                                    </div>
+                                    <p class="mt-0.5 font-lexend text-xs text-gray-700">{{ verification?.rejection_reason }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div v-if="canEdit">
-                <div class="flex justify-center w-full py-4" v-if="hasAdminRole() || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.user.id) || $can('create events without request')">
+                <div class="flex justify-center w-full py-4" v-if="hasAdminRole() || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.auth.user.id) || $can('create events without request')">
                     <FormButton
                         :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '') || !hasAdminRole()"
                         @click="updateOrCreateEvent()"
@@ -788,7 +815,7 @@ export default {
             eventTypeName: null,
             selectedEventType: this.eventTypes[0],
             selectedEventStatus: this.eventStatuses?.find(status => status.default),
-            showProjectInfo: this.project ? true : this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id ? true :false,
+            showProjectInfo: this.project ? true : this.calendarProjectPeriod && this.$page.props.auth.user.calendar_settings.time_period_project_id ? true :false,
             allDayEvent: false,
             selectedProject: null,
             selectedRoom: null,
@@ -816,6 +843,7 @@ export default {
             }),
             helpTextLengthRoom: '',
             initialRoomId: null,
+            showRejections: false
             //event_properties: event_properties
         }
     },
@@ -833,7 +861,9 @@ export default {
         'usedInBulkComponent',
         'requiresAxiosRequests',
         'calendarProjectPeriod',
-        'eventStatuses'
+        'eventStatuses',
+        'isPlanning',
+        'wantedDate'
     ],
     emits: ['closed'],
     watch: {
@@ -872,15 +902,32 @@ export default {
         },
         isRoomAdmin() {
             return this.rooms.find(room => room.id === this.event?.roomId)?.admins.some(
-                admin => admin.id === this.$page.props.user.id
+                admin => admin.id === this.$page.props.auth.user.id
             ) || false;
         },
         isCreator() {
-            return this.event ? this.event.created_by?.id === this.$page.props.user.id : false
+            return this.event ? this.event.created_by?.id === this.$page.props.auth.user.id : false
         },
         sortedEventTypes() {
             return this.eventTypes.sort((a, b) => a.name.localeCompare(b.name));
         },
+    },
+    mounted() {
+        if (this.wantedDate){
+            // set StartDate to wantedDate with time 00:00
+            this.startDate = this.wantedDate;
+            this.startTime = '09:00';
+
+            // set EndDate to wantedDate with time 23:59
+            this.endDate = this.wantedDate;
+            this.endTime = '10:00';
+        }
+
+        if (this.wantedRoomId) {
+            this.selectedRoom = this.rooms.find(room => room.id === this.wantedRoomId);
+        } else if (this.event) {
+            this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId);
+        }
     },
     methods: {
         usePage,
@@ -908,8 +955,8 @@ export default {
             if (this.event?.project) {
                 //console.log(this.event.project);
                 this.selectedProject = {id: this.event.project.id, name: this.event.project.name};
-            } else if (this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id){
-                this.selectedProject = {id: this.$page.props.user.calendar_settings.time_period_project_id, name: this.$page.props.projectNameOfCalendarProject};
+            } else if (this.calendarProjectPeriod && this.$page.props.auth.user.calendar_settings.time_period_project_id){
+                this.selectedProject = {id: this.$page.props.auth.user.calendar_settings.time_period_project_id, name: this.$page.props.projectNameOfCalendarProject};
             }
 
             const start = dayjs(this.event.start);
@@ -954,6 +1001,17 @@ export default {
             } else if (this.event) {
                 this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId);
             }
+
+            if (this.wantedDate){
+                // set StartDate to wantedDate with time 00:00
+                this.startDate = this.wantedDate;
+                this.startTime = '09:00';
+
+                // set EndDate to wantedDate with time 23:59
+                this.endDate = this.wantedDate;
+                this.endTime = '10:00';
+            }
+
 
             this.initialRoomId = this.selectedRoom?.id;
             this.selectedRoom = this.rooms.find(room => room.id === this.event.roomId);
@@ -1161,7 +1219,7 @@ export default {
                 !this.requiresAxiosRequests && (
                     this.usedInBulkComponent ||
                     (
-                        this.$page.props.user.calendar_settings.time_period_project_id === this.selectedProject?.id &&
+                        this.$page.props.auth.user.calendar_settings.time_period_project_id === this.selectedProject?.id &&
                         this.calendarProjectPeriod
                     )
                 )
@@ -1309,7 +1367,8 @@ export default {
                 showProjectPeriodInCalendar: this.calendarProjectPeriod,
                 event_properties: this.event_properties
                     .filter((eventProperty) => eventProperty.checked)
-                    .map((eventProperty) => eventProperty.id)
+                    .map((eventProperty) => eventProperty.id),
+                isPlanning: this.event ? this.event.isPlanning : this.isPlanning,
             };
         },
     },

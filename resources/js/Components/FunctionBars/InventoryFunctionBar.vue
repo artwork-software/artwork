@@ -8,9 +8,9 @@
             <Menu as="div" class="relative inline-block text-left">
                 <div class="flex items-center">
                     <MenuButton class="">
-                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'month'"/>
-                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'week'"/>
-                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'day'"/>
+                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'month'"/>
+                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'week'"/>
+                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'day'"/>
                     </MenuButton>
                 </div>
 
@@ -63,9 +63,9 @@
             <Menu as="div" class="relative inline-block text-left">
                 <div class="flex items-center">
                     <MenuButton class="has">
-                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'month'"/>
-                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'week'"/>
-                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'day'"/>
+                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'month'"/>
+                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'week'"/>
+                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'day'"/>
                     </MenuButton>
                 </div>
                 <transition enter-active-class="transition-enter-active"
@@ -136,7 +136,7 @@ const emits = defineEmits([
 ])
 
 const changeUserSelectedGoTo = (type) => {
-    router.patch(route('user.calendar.go.to.stepper', {user: usePage().props.user.id}), {
+    router.patch(route('user.calendar.go.to.stepper', {user: usePage().props.auth.user.id}), {
         goto_mode: type,
     }, {
         preserveScroll: true,

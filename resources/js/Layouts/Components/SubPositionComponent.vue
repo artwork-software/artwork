@@ -66,13 +66,13 @@
                                  :sub-position-id="subPosition.id"/>
             <div v-if="subPosition.sub_position_rows?.length > 0"
                  v-for="(row,rowIndex) in subPosition.sub_position_rows">
-                <tr v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
+                <tr v-show="!(row.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
                     :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-artwork-buttons-update' : '']"
                     @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
                     class="bg-secondaryHover flex justify-between items-center border-2 group">
                     <div class="flex items-center">
                         <td v-for="(cell,index) in row.cells"
-                            v-show="!(cell.column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
+                            v-show="!(cell.column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
                             :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
                             <div v-if="(index === 0 || index === 1) && this.$page.props.budgetAccountManagementGlobal">
                                 <div
@@ -274,7 +274,7 @@
                 <td class="w-72 my-2">SUM</td>
                 <td v-if="subPosition.sub_position_rows.length > 0" class="flex items-center w-48"
                     v-for="column in columns.slice(3)"
-                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
+                    v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="my-4 w-48 p-1"
                          :class="subPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
                         <div class="flex group relative justify-end items-center">

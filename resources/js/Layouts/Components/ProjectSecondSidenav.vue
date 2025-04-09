@@ -80,7 +80,7 @@ export default {
                     canWriteArray.push(write.id)
                 }
             )
-            return canWriteArray.includes(this.$page.props.user.id);
+            return canWriteArray.includes(this.$page.props.auth.user.id);
         },
     }
 }

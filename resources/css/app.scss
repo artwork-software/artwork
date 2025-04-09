@@ -1,6 +1,17 @@
+@use "Base/BaseStyles";
+@use "Timeline/Timeline";
+@use "Inventory/Inventory";
+@use "Inventory/InventoryManagement";
+@use "Inventory/InventoryScheduling";
+@use "Checklist/ChecklistListView";
+@use "Checklist/ChecklistGridView";
+@use "Export/Modals/ExportModal";
+@use "Base/BaseUtilities";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 @font-face {
     font-family: 'Inter';
@@ -53,20 +64,7 @@
 
 }
 
-@layer components {
-    @import "Base/BaseStyles";
-    @import "Timeline/Timeline";
-    @import "Inventory/Inventory";
-    @import "Inventory/InventoryManagement";
-    @import "Inventory/InventoryScheduling";
-    @import "Checklist/ChecklistListView";
-    @import "Checklist/ChecklistGridView";
-    @import "Export/Modals/ExportModal";
-}
-
 @layer utilities {
-    @import "Base/BaseUtilities";
-
     .base-menu-link {
         .base-menu-icon {
             @apply text-secondary;

@@ -8,14 +8,14 @@
             <IconChevronDown stroke-width="1.5" v-else
                              class="h-6 w-6 text-white my-auto"></IconChevronDown>
         </button>
-        <div class="mx-2 mt-2 w-full grid grid-cols-1 md:grid-cols-2 gap-4" v-if="(event.opened || this.computedEventsWithoutRoom.length === 1) && event?.user_id === usePage().props.user.id || isAdmin">
+        <div class="mx-2 mt-2 w-full grid grid-cols-1 md:grid-cols-2 gap-4" v-if="(event.opened || this.computedEventsWithoutRoom.length === 1) && event?.user_id === usePage().props.auth.user.id || isAdmin">
             <div class="flex w-full justify-between col-span-full">
                 <div
                     class="flex justify-start my-auto items-center mt-3.5 ml-1 text-error line-through">
                     {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }}
                 </div>
                 <div class="flex justify-end">
-                    <div v-if="event?.user_id === usePage().props.user.id || isAdmin"
+                    <div v-if="event?.user_id === usePage().props.auth.user.id || isAdmin"
                          class="flex  justify-end">
                         <div class="flex mt-1 mr-2 cursor-pointer" @click="openDeleteEventModal(event)">
                             <IconTrash class="text-primary h-6 w-6 hover:text-artwork-messages-error transition-all duration-150 ease-in-out" />
@@ -24,7 +24,7 @@
                 </div>
             </div>
             <div class="">
-                <div class="h-12 flex w-full truncate p-2" v-if="(event?.user_id === usePage().props.user.id) || !isAdmin">
+                <div class="h-12 flex w-full truncate p-2" v-if="(event?.user_id === usePage().props.auth.user.id) || !isAdmin">
                     <div>
                         <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventType.id)?.hex_code }" />
                     </div>
@@ -83,13 +83,13 @@
                     v-model="event.eventName"
                     id="eventTitle"
                     :label="$t('Event name') + '*'"
-                    :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
+                    :disabled="!(event?.user_id !== usePage().props.auth.user.id) || !isAdmin"
                 />
                 <TextInputComponent v-else
                                     v-model="event.eventName"
                                     id="eventTitle"
                                     :label="$t('Event name')"
-                                    :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
+                                    :disabled="!(event?.user_id !== usePage().props.auth.user.id) || !isAdmin"
                 />
                 <p class="text-xs text-red-800">{{ event.error?.eventName?.join('. ') }}</p>
             </div>
@@ -179,7 +179,7 @@
                             v-model="event.startDate"
                             id="startDate"
                             @change="checkChanges(event)"
-                            :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
+                            :disabled="!(event?.user_id !== usePage().props.auth.user.id) || !isAdmin"
                             required
                             :label="$t('Start*')"
                             :classes="!event.allDay ? 'border-r-0 rounded-r-none' : ''"
@@ -189,7 +189,7 @@
                             v-if="!event.allDay"
                             id="changeStartTime"
                             @change="checkChanges(event)"
-                            :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
+                            :disabled="!(event?.user_id !== usePage().props.auth.user.id) || !isAdmin"
                             required
                             label="hh:mm"
                             :classes="event.allDay ? '' : 'rounded-l-none'"
@@ -203,7 +203,7 @@
                             v-model="event.endDate"
                             id="endDate"
                             @change="checkChanges(event)"
-                            :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
+                            :disabled="!(event?.user_id !== usePage().props.auth.user.id) || !isAdmin"
                             required
                             :label="$t('End*')"
                             :classes="!event.allDay ? 'border-r-0 rounded-r-none' : ''"
@@ -213,7 +213,7 @@
                             v-if="!event.allDay"
                             id="changeEndTime"
                             @change="checkChanges(event)"
-                            :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
+                            :disabled="!(event?.user_id !== usePage().props.auth.user.id) || !isAdmin"
                             required
                             label="hh:mm"
                             :classes="event.allDay ? '' : 'rounded-l-none'"
@@ -227,10 +227,10 @@
             <div v-if="event?.is_series" class="xsLight mb-2 col-span-full">{{ $t('Cycle: {0} to {1}', {0: event.selectedFrequencyName, 1: convertDateFormat(event.series.end_date) } )}}</div>
             <!--    Room    -->
             <div class="col-span-full">
-                <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!event?.user_id === usePage().props.user.id || !isAdmin" >
+                <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!event?.user_id === usePage().props.auth.user.id || !isAdmin" >
                     {{ this.rooms.find(room => room.id === event.roomId)?.name }}
                 </div>
-                <Listbox as="div" v-model="event.roomId" id="room" v-if="event?.user_id === usePage().props.user.id || isAdmin">
+                <Listbox as="div" v-model="event.roomId" id="room" v-if="event?.user_id === usePage().props.auth.user.id || isAdmin">
                     <ListboxButton
                         class="menu-button">
                         <div v-if="event.roomId" class="flex-grow text-left">
@@ -285,7 +285,7 @@
                         <div v-else class="xsDark ml-2">
                             {{ event.project?.name ?? 'Keinem Projekt' }}
                         </div>
-                        <div v-if="event.project?.id && (event?.user_id !== usePage().props.user.id) || !isAdmin" class="flex items-center my-auto">
+                        <div v-if="event.project?.id && (event?.user_id !== usePage().props.auth.user.id) || !isAdmin" class="flex items-center my-auto">
                             <button type="button"
                                     @click="this.deleteProject(event)">
                                 <IconCircleX stroke-width="1.5" class="pl-2 h-6 w-6 hover:text-error text-primary"/>
@@ -296,7 +296,7 @@
                         {{$t('The project is created when it is saved.')}}
                     </div>
 
-                    <div class="my-2" v-if="(event?.user_id !== usePage().props.user.id) || !isAdmin">
+                    <div class="my-2" v-if="(event?.user_id !== usePage().props.auth.user.id) || !isAdmin">
                         <div class="flex pb-2">
                             <span class="mr-4 text-sm"
                                   :class="[!event.creatingProject ? 'xsDark' : 'xsLight', '']">
@@ -353,7 +353,7 @@
                     <TextareaComponent
                         :label="$t('What do I need to bear in mind for the event?')"
                         id="description"
-                        :disabled="!(event?.user_id !== usePage().props.user.id) || !isAdmin"
+                        :disabled="!(event?.user_id !== usePage().props.auth.user.id) || !isAdmin"
                         v-model="event.description"
                         rows="4"
                     />
@@ -395,7 +395,7 @@
                     </Menu>
                 </div>
             </div>
-            <div class="flex justify-center w-full col-span-full pb-3" v-if="(event?.user_id === usePage().props.user.id) || isAdmin">
+            <div class="flex justify-center w-full col-span-full pb-3" v-if="(event?.user_id === usePage().props.auth.user.id) || isAdmin">
                 <button
                     :disabled="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent)"
                     :class="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent) ? 'bg-secondary hover:bg-secondary' : ''"

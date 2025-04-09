@@ -51,7 +51,7 @@
             </template>
         </ChecklistFunctionBar>
 
-        <div v-if="usePage().props.user.checklist_style === 'list'">
+        <div v-if="usePage().props.auth.user.checklist_style === 'list'">
             <ChecklistListView
                 :checklists="filteredChecklists"
                 :can-edit-component="canEditComponent"

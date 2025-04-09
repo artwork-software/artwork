@@ -182,7 +182,7 @@ export default {
             return `${year}-${month}-${day}`;
         },
         updateTimes() {
-            router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+            router.patch(route('update.user.calendar.filter.dates', this.$page.props.auth.user.id), {
                 start_date:  this.dateValue[0],
                 end_date: this.dateValue[1],
             },{

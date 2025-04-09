@@ -1,16 +1,16 @@
 <template>
-    <div class="bg-white px-5 py-7 rounded-lg border-l-8 " :class="$page.props.user.opened_checklists.includes(checklist?.id) ? 'border-artwork-buttons-create' : 'border-gray-400'">
+    <div class="bg-white px-5 py-7 rounded-lg border-l-8 " :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'border-artwork-buttons-create' : 'border-gray-400'">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-x-3 cursor-pointer" @click="changeChecklistStatus(checklist)">
                 <div class="font-bold">
                     {{ checklist?.name }}
                 </div>
                 <div>
-                    <component is="IconChevronDown" class="h-6 w-6" :class="$page.props.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
+                    <component is="IconChevronDown" class="h-6 w-6" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
                 </div>
             </div>
 
-            <BaseMenu has-no-offset v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id))) || isInOwnTaskManagement" >
+            <BaseMenu has-no-offset v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement" >
                 <MenuItem as="div" v-slot="{ active }" v-if="!checklist.private">
                     <a @click="openEditChecklistTeamsModal = true"
                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
@@ -55,7 +55,7 @@
                         {{ $t('Duplicate') }}
                     </div>
                 </MenuItem>
-                <MenuItem as="div" v-slot="{ active }" v-if="can('can use checklists') && checklist.user_id === usePage().props.user.id || can('can edit checklist') || isAdmin || checklist.user_id === usePage().props.user.id">
+                <MenuItem as="div" v-slot="{ active }" v-if="can('can use checklists') && checklist.user_id === usePage().props.auth.user.id || can('can edit checklist') || isAdmin || checklist.user_id === usePage().props.auth.user.id">
                     <a @click="showDeleteChecklistModal = true"
                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
                         <IconTrash stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
@@ -64,7 +64,7 @@
                 </MenuItem>
             </BaseMenu>
         </div>
-        <div class="my-4 border-b border-dashed pb-3" v-if="$page.props.user.opened_checklists.includes(checklist?.id)">
+        <div class="my-4 border-b border-dashed pb-3" v-if="$page.props.auth.user.opened_checklists.includes(checklist?.id)">
             <div class="text-xs" v-if="checklist.hasProject">
                 <div class="flex gap-x-1">
                     {{ $t('Project') }}:
@@ -262,29 +262,29 @@ const orderTasksByDeadline = computed(() => {
 const checkIfUserIsInTaskIfInOwnTaskManagement = (task) => {
     // if isInOwnTaskManagement is true, check if the current user ist in the task
     if (props.isInOwnTaskManagement && !props.checklist.private) {
-        return task?.users.map(user => user.id)?.includes(usePage().props.user.id);
+        return task?.users.map(user => user.id)?.includes(usePage().props.auth.user.id);
     } else {
         return true;
     }
 };
 
 const changeChecklistStatus = (checklist) => {
-    if (!usePage().props.user.opened_checklists.includes(checklist.id)) {
-        const openedChecklists = usePage().props.user.opened_checklists;
+    if (!usePage().props.auth.user.opened_checklists.includes(checklist.id)) {
+        const openedChecklists = usePage().props.auth.user.opened_checklists;
 
         openedChecklists.push(checklist.id)
 
-        router.patch(route('user.checklists.update', usePage().props.user.id), {
+        router.patch(route('user.checklists.update', usePage().props.auth.user.id), {
             "opened_checklists": openedChecklists
         }, {
             preserveState: true,
             preserveScroll: true
         });
     } else {
-        const filteredList = usePage().props.user.opened_checklists.filter(function (value) {
+        const filteredList = usePage().props.auth.user.opened_checklists.filter(function (value) {
             return value !== checklist.id;
         })
-        router.patch(route('user.checklists.update', usePage().props.user.id), {
+        router.patch(route('user.checklists.update', usePage().props.auth.user.id), {
             "opened_checklists": filteredList
         }, {
             preserveState: true,

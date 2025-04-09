@@ -6,9 +6,12 @@ use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
+use Artwork\Modules\User\Models\User;
 use Database\Seeders\ProjectManagementBuilderSeed;
 use Illuminate\Console\Command;
 
@@ -63,6 +66,21 @@ class UpdateArtwork extends Command
             'title' => 'Room requests answered',
             'description' => 'Find out if your room requests has been answered.',
         ]);
+
+        // add new Notification type NOTIFICATION_EVENT_VERIFICATION_REQUESTS to NotificationSettings
+        $users = User::all();
+        $users->each(function ($user) {
+            $user->notificationSettings()->updateOrCreate([
+                'type' => NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS->value,
+            ], [
+                'frequency' => NotificationFrequencyEnum::DAILY->value,
+                'group_type' => 'EVENTS',
+                'title' => NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS->title(),
+                'description' => NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS->description(),
+                'enabled_email' => true,
+                'enabled_push' => true,
+            ]);
+        });
 
         $this->info('----------------------------------------------------------');
 

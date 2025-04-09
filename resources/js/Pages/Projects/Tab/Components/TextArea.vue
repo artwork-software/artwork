@@ -1,7 +1,7 @@
 <template>
     <div class="my-2 flex items-start gap-x-4 w-full">
         <div>
-            <label for="email" class="xsDark" :class="inSidebar ? 'xsLight' : 'xsDark'">
+            <label for="email" class="xsDark font-bold" :class="inSidebar ? 'xsLight' : 'xsDark'">
                 {{ data.data.label }}
             </label>
             <div v-if="descriptionClicked === false"
@@ -80,7 +80,7 @@ export default {
                 return;
             }
 
-            if (this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id) || this.project.isMemberOfADepartment){
+            if (this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.auth.user.id) || this.projectManagerIds.includes(this.$page.props.auth.user.id) || this.project.isMemberOfADepartment){
                 this.descriptionClicked = true;
 
                 nextTick(() => {

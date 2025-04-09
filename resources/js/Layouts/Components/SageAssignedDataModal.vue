@@ -111,7 +111,7 @@
                                             />
                                             {{ comment.created_at }}
                                         </div>
-                                        <IconTrash v-if="this.$page.props.user.id === comment.user.id"
+                                        <IconTrash v-if="this.$page.props.auth.user.id === comment.user.id"
                                                    class="w-6 h-6 hover:text-red-600 cursor-pointer"
                                                    @click="this.removeComment(comment.id)"
                                         />
@@ -162,7 +162,7 @@ export default defineComponent({
     data() {
         return {
             bookingDataCommentForm: useForm({
-                userId: this.$page.props.user.id,
+                userId: this.$page.props.auth.user.id,
                 sageAssignedDataId: null,
                 comment: null
             }),

@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Events;
 
 use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Calendar\DTO\BroadcastEventDTO;
+use Artwork\Modules\Calendar\DTO\BroadcastEventDTOWithVerifications;
 use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO;
 use Artwork\Modules\Event\Models\Event;
@@ -52,7 +53,9 @@ class EventCreated implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'event' => BroadcastEventDTO::formModel(
+            'event' => $this->event->is_planning ? BroadcastEventDTOWithVerifications::formModel(
+                $this->event,
+            ) : BroadcastEventDTO::formModel(
                 $this->event,
             ),
         ];

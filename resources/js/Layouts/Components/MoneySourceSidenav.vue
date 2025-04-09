@@ -3,7 +3,7 @@
         <div class="w-full flex-grow items-center mb-4">
             <div class="text-secondary flex justify-between text-md font-semibold">
                 {{ $t('Approved for')}}
-                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
+                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.auth.user.id) || competent.includes($page.props.auth.user.id)"
                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                     @click="openEditUsersModal">
                     <IconEdit stroke-width="1.5" class="text-white h-4 w-4" />
@@ -41,7 +41,7 @@
                                      @click="showMoneySourceCategories = !showMoneySourceCategories"/>
                 </div>
 
-                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
+                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.auth.user.id) || competent.includes($page.props.auth.user.id)"
                      class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                      @click="openMoneySourceCategoriesModal">
                     <IconEdit stroke-width="1.5" class="text-white h-4 w-4" />
@@ -64,7 +64,7 @@
                                      @click="showLinkedProjects = !showLinkedProjects"/>
                 </div>
 
-                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
+                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.auth.user.id) || competent.includes($page.props.auth.user.id)"
                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                     @click="openLinkProjectsModal">
                     <IconEdit stroke-width="1.5" class="text-white h-4 w-4" />
@@ -82,13 +82,13 @@
             </div>
             <IconChevronDown stroke-width="1.5" class="w-4 h-4 ml-4" :class="[ showMoneySourceFiles ? 'rotate-180' : '']"
                              @click="showMoneySourceFiles = !showMoneySourceFiles"/>
-            <IconUpload stroke-width="1.5" v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)" class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <IconUpload stroke-width="1.5" v-if="$role('artwork admin') || writeAccess.includes($page.props.auth.user.id) || competent.includes($page.props.auth.user.id)" class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                         @click="openFileUploadModal"/>
         </div>
         <div v-if="showMoneySourceFiles">
             <div v-if="moneySourceFiles?.data.length > 0">
                 <div v-for="moneySourceFile in moneySourceFiles.data">
-                    <div class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white" v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)">
+                    <div class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white" v-if="$role('artwork admin') || writeAccess.includes($page.props.auth.user.id) || competent.includes($page.props.auth.user.id)">
                         <IconDownload stroke-width="1.5" class="w-4 h-4 mr-2" @click="downloadMoneySourceFile(moneySourceFile)"/>
                         <div @click="openFileEditModal(moneySourceFile)">{{ moneySourceFile.name }}</div>
                         <IconCircleX stroke-width="1.5" class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openFileDeleteModal(moneySourceFile)"/>
@@ -106,7 +106,7 @@
         <div class="w-full flex-grow items-center mb-4">
             <div class="text-secondary text-md font-semibold mb-3 flex justify-between">
                 {{ $t('Tasks')}}
-                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
+                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.auth.user.id) || competent.includes($page.props.auth.user.id)"
                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                     @click="openAddMoneySourceTask">
                     <IconEdit stroke-width="1.5" class="text-white h-4 w-4" />
@@ -114,7 +114,7 @@
             </div>
             <ul>
                 <li v-for="task in tasks" class="mb-4 border-b border-gray-400 pb-3 flex items-start">
-                    <div class="mr-2" v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)">
+                    <div class="mr-2" v-if="$role('artwork admin') || writeAccess.includes($page.props.auth.user.id) || competent.includes($page.props.auth.user.id)">
                         <input @click="updateTask(task)"
                                type="checkbox"
                                :checked="task.done"

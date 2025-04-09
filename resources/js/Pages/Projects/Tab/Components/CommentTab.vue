@@ -1,7 +1,7 @@
 <template>
     <div class="mt-6 p-5 bg-lightBackgroundGray">
         <div class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
-            <div v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id) || isMemberOfADepartment)" class="relative">
+            <div v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.auth.user.id) || projectManagerIds?.includes(this.$page.props.auth.user.id) || isMemberOfADepartment)" class="relative">
                         <TextareaComponent
                             :label="$t('What should the other project members know about the project?')"
                             v-model="commentForm.text"
@@ -45,7 +45,7 @@
                             <p class="mt-2 mr-14 subpixel-antialiased xsDark font-semibold" v-html="comment.text"></p>
                         </div>
                         <div class="invisible group-hover:visible">
-                            <button v-if="$role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.user.id" type="button"
+                            <button v-if="$role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.auth.user.id) || projectManagerIds?.includes(this.$page.props.auth.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.auth.user.id" type="button"
                                     @click="deleteCommentFromProject(comment)">
                                 <span class="sr-only">{{ $t('Remove comment from project') }}</span>
                                 <IconCircleXFilled class="ml-2 h-7 w-7 hover:text-error"/>
@@ -124,7 +124,7 @@ export default {
         return{
             commentForm: useForm({
                 text: "",
-                user_id: this.$page.props.user.id,
+                user_id: this.$page.props.auth.user.id,
                 project_id: this.project.id,
                 tab_id: this.tab_id ? this.tab_id : null,
             }),

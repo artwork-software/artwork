@@ -3,7 +3,7 @@
         <div v-if="$page.props.jetstream.canUpdateProfileInformation">
             <div>
                 <div class="max-w-screen-lg pl-14 mt-5 pr-4">
-                    <div class="headline1 mb-5" v-if="user_to_edit.id === $page.props.user.id">
+                    <div class="headline1 mb-5" v-if="user_to_edit.id === $page.props.auth.user.id">
                         {{ $t('My account')}}
                     </div>
                     <div class="flex">
@@ -75,7 +75,7 @@ export default {
                 {id: 4, name: 'User permissions', href: '#', current: this.currentTab === 'permissions', has_permission: this.hasAdminRole()},
                 {id: 5, name: 'Work profile', href: '#', current: this.currentTab === 'workProfile', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
             ],
-            title: this.user_to_edit.id === this.$page.props.user.id ? 'My account' : 'User account' + ' - ' + this.user_to_edit.first_name + ' ' + this.user_to_edit.last_name
+            title: this.user_to_edit.id === this.$page.props.auth.user.id ? 'My account' : 'User account' + ' - ' + this.user_to_edit.first_name + ' ' + this.user_to_edit.last_name
         }
     },
     methods: {

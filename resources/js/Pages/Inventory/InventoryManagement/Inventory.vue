@@ -3,15 +3,15 @@
         <div class="inventory-container">
             <div class="flex items-center justify-between mr-5 mb-3">
                 <div>
-                    <div v-if="usePage().props.user.inventory_sort_column_id">
+                    <div v-if="usePage().props.auth.user.inventory_sort_column_id">
                         <span class="text-xs">
                             {{ $t('Sorting') }}:
                         </span>
                         <span class="inline-flex items-center rounded-md bg-artwork-buttons-create/20 px-2 py-1 text-xs font-medium text-artwork-buttons-create ring-1 ring-inset ring-artwork-buttons-create/40 space-x-1">
                             <span>
-                                {{ columns.find(column => column.id === usePage().props.user.inventory_sort_column_id).name }}
+                                {{ columns.find(column => column.id === usePage().props.auth.user.inventory_sort_column_id).name }}
                             </span>
-                            <span v-if="usePage().props.user.inventory_sort_direction === 'asc'">
+                            <span v-if="usePage().props.auth.user.inventory_sort_direction === 'asc'">
                                 {{ $t('ascending') }}
                             </span>
                             <span v-else>
@@ -51,9 +51,9 @@
                             </div>
                             <div class="flex items-center space-x-1">
                                 <div @click="updateSort(column)" class="w-fit">
-                                    <component is="IconSortDescending" class="h-4 w-4 cursor-pointer" v-if="usePage().props.user.inventory_sort_column_id === column.id && usePage().props.user.inventory_sort_direction === 'desc'"/>
-                                    <component is="IconSortAscending" class="h-4 w-4 cursor-pointer" v-if="usePage().props.user.inventory_sort_column_id === column.id && usePage().props.user.inventory_sort_direction === 'asc'"/>
-                                    <component is="IconArrowsSort" class="h-4 w-4 invisible group-hover:visible cursor-pointer" v-if="usePage().props.user.inventory_sort_column_id !== column.id"/>
+                                    <component is="IconSortDescending" class="h-4 w-4 cursor-pointer" v-if="usePage().props.auth.user.inventory_sort_column_id === column.id && usePage().props.auth.user.inventory_sort_direction === 'desc'"/>
+                                    <component is="IconSortAscending" class="h-4 w-4 cursor-pointer" v-if="usePage().props.auth.user.inventory_sort_column_id === column.id && usePage().props.auth.user.inventory_sort_direction === 'asc'"/>
+                                    <component is="IconArrowsSort" class="h-4 w-4 invisible group-hover:visible cursor-pointer" v-if="usePage().props.auth.user.inventory_sort_column_id !== column.id"/>
                                 </div>
                                 <div class="inventory-th-menu-container invisible group-hover:visible">
                                     <BaseMenu white-icon v-if="can('can manage inventory stock') || hasAdminRole()">
@@ -406,25 +406,25 @@ const props = defineProps({
     },
     updateSort = (column) => {
         // If the column is already sorted by this column, reverse the sort direction
-        if (usePage().props.user.inventory_sort_direction === 'asc' && usePage().props.user.inventory_sort_column_id === column.id) {
-            usePage().props.user.inventory_sort_direction = 'desc';
+        if (usePage().props.auth.user.inventory_sort_direction === 'asc' && usePage().props.auth.user.inventory_sort_column_id === column.id) {
+            usePage().props.auth.user.inventory_sort_direction = 'desc';
         } else {
-            usePage().props.user.inventory_sort_direction = 'asc';
+            usePage().props.auth.user.inventory_sort_direction = 'asc';
         }
 
-        usePage().props.user.inventory_sort_column_id = column.id;
+        usePage().props.auth.user.inventory_sort_column_id = column.id;
 
         if(column.id === null) {
-            usePage().props.user.inventory_sort_column_id = null;
-            usePage().props.user.inventory_sort_direction = null;
+            usePage().props.auth.user.inventory_sort_column_id = null;
+            usePage().props.auth.user.inventory_sort_direction = null;
         }
 
         // update user data
         router.patch(
-            route('user.update.inventory.sort', usePage().props.user.id),
+            route('user.update.inventory.sort', usePage().props.auth.user.id),
             {
                 inventory_sort_column_id: column.id,
-                inventory_sort_direction: usePage().props.user.inventory_sort_direction
+                inventory_sort_direction: usePage().props.auth.user.inventory_sort_direction
             },
             {
                 preserveScroll: true,

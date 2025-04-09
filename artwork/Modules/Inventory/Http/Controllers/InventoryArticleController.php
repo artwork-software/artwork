@@ -8,6 +8,8 @@ use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Illuminate\Auth\AuthManager;
+use Inertia\Inertia;
+use JetBrains\PhpStorm\NoReturn;
 
 class InventoryArticleController extends Controller
 {
@@ -31,6 +33,13 @@ class InventoryArticleController extends Controller
     public function create()
     {
         //
+    }
+
+    public function indexTrash()
+    {
+        return Inertia::render('Trash/InventoryArticles', [
+            'trashedArticles' => $this->inventoryArticleService->getAllTrashed()
+        ]);
     }
 
     /**
@@ -69,6 +78,20 @@ class InventoryArticleController extends Controller
      */
     public function destroy(InventoryArticle $inventoryArticle)
     {
-        //
+        $this->inventoryArticleService->delete($inventoryArticle);
+    }
+
+    public function forceDelete(int $inventoryArticle): void
+    {
+        /** @var InventoryArticle $article */
+        $article = InventoryArticle::withTrashed()->findOrFail($inventoryArticle);
+        $this->inventoryArticleService->forceDelete($article);
+    }
+
+    public function restore(int $inventoryArticle): void
+    {
+        /** @var InventoryArticle $article */
+        $article = InventoryArticle::onlyTrashed()->findOrFail($inventoryArticle);
+        $this->inventoryArticleService->restore($article);
     }
 }

@@ -388,7 +388,7 @@ export default {
             array.forEach(item => item.checked = false)
         },
         resetCalendarFilter() {
-            this.$inertia.delete(route('reset.user.calendar.filter', this.$page.props.user.id), {
+            this.$inertia.delete(route('reset.user.calendar.filter', this.$page.props.auth.user.id), {
                 preserveState: false,
                 onSuccess: () => {
                     this.filterArray.rooms.forEach(room => room.checked = false);
@@ -559,7 +559,7 @@ export default {
             };
         },
         reloadChanges() {
-            router.patch(route('update.user.calendar.filter', this.$page.props.user.id), {
+            router.patch(route('update.user.calendar.filter', this.$page.props.auth.user.id), {
                 adjoining_no_audience: this.returnNullIfFalse(this.filterArray.adjoining.adjoiningNoAudience.checked),
                 adjoining_not_loud: this.returnNullIfFalse(this.filterArray.adjoining.adjoiningNotLoud.checked),
                 show_adjoining_rooms: this.returnNullIfFalse(this.filterArray.roomFilters.showAdjoiningRooms),

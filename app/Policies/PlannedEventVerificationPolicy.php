@@ -1,11 +1,12 @@
 <?php
 
-namespace Artwork\Modules\Inventory\Policies;
+namespace App\Policies;
 
-use Artwork\Modules\Inventory\Models\InventoryCategory;
+use App\PlannedEventVerification;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Auth\Access\Response;
 
-class InventoryCategoryPolicy
+class PlannedEventVerificationPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -18,7 +19,7 @@ class InventoryCategoryPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, InventoryCategory $inventoryCategory): bool
+    public function view(User $user, PlannedEventVerification $plannedEventVerification): bool
     {
         //
     }
@@ -34,7 +35,7 @@ class InventoryCategoryPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, InventoryCategory $inventoryCategory): bool
+    public function update(User $user, PlannedEventVerification $plannedEventVerification): bool
     {
         //
     }
@@ -42,7 +43,7 @@ class InventoryCategoryPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, InventoryCategory $inventoryCategory): bool
+    public function delete(User $user, PlannedEventVerification $plannedEventVerification): bool
     {
         //
     }
@@ -50,7 +51,7 @@ class InventoryCategoryPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, InventoryCategory $inventoryCategory): bool
+    public function restore(User $user, PlannedEventVerification $plannedEventVerification): bool
     {
         //
     }
@@ -58,7 +59,7 @@ class InventoryCategoryPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, InventoryCategory $inventoryCategory): bool
+    public function forceDelete(User $user, PlannedEventVerification $plannedEventVerification): bool
     {
         //
     }

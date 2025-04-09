@@ -77,7 +77,12 @@ export default {
             type: Boolean,
             required: false,
             default: false
-        }
+        },
+        useCustomUrlParams: {
+            type: Boolean,
+            required: false,
+            default: false
+        },
     },
     data() {
         return {
@@ -99,13 +104,24 @@ export default {
                 return;
             }
 
+            let dataObject = {};
+
+            if (this.useCustomUrlParams) {
+                dataObject = {
+                    page: page,
+                    [this.propertyName + 'PerPage']: entitiesPerPage,
+                }
+            } else {
+                dataObject = {
+                    page: page,
+                    entitiesPerPage: entitiesPerPage,
+                }
+            }
+
             router.reload(
                 {
                     only: [this.propertyName],
-                    data: {
-                        page: page,
-                        entitiesPerPage: entitiesPerPage
-                    }
+                    data: dataObject
                 }
             );
         },
@@ -115,12 +131,23 @@ export default {
                 return;
             }
 
-            router.reload({
-                only: [this.propertyName],
-                data: {
+            let dataObject = {};
+
+            if (this.useCustomUrlParams) {
+                dataObject = {
+                    page: 1,
+                    [this.propertyName + 'PerPage']: entitiesToShow,
+                }
+            } else {
+                dataObject = {
                     page: 1,
                     entitiesPerPage: entitiesToShow,
                 }
+            }
+
+            router.reload({
+                only: [this.propertyName],
+                data: dataObject
             })
         },
     }

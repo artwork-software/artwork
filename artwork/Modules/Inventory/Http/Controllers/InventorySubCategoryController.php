@@ -62,6 +62,14 @@ class InventorySubCategoryController extends Controller
      */
     public function destroy(InventorySubCategory $inventorySubCategory)
     {
-        //
+        $inventorySubCategory->articles()->each(function ($article) {
+            $article->update([
+                'inventory_sub_category_id' => null,
+            ]);
+        });
+
+        $inventorySubCategory->properties()->detach();
+
+        $inventorySubCategory->delete();
     }
 }

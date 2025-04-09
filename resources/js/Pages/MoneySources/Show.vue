@@ -11,9 +11,9 @@
                             :title="moneySource.name"
                         />
                         <!-- Menu -->
-                        <BaseMenu class="ml-4" v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')">
+                        <BaseMenu class="ml-4" v-if="$role('artwork admin') || access_member.includes($page.props.auth.user.id) || competent_member.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')">
                             <MenuItem
-                                v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
+                                v-if="$role('artwork admin') || access_member.includes($page.props.auth.user.id) || competent_member.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                 v-slot="{ active }">
                                 <a @click="openEditMoneySourceModal"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -24,7 +24,7 @@
                                 </a>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <a @click="duplicateMoneySource(this.moneySource) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
+                                <a @click="duplicateMoneySource(this.moneySource) || competent_member.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconCopy stroke-width="1.5"
                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -33,7 +33,7 @@
                                 </a>
                             </MenuItem>
                             <MenuItem
-                                v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
+                                v-if="$role('artwork admin') || access_member.includes($page.props.auth.user.id) || competent_member.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                 v-slot="{ active }">
                                 <a @click="openDeleteSourceModal(this.moneySource)"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">

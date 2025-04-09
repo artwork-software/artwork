@@ -6,7 +6,9 @@
                 v-model="user_search_query"
                 :label="$t(label)"
                 class="w-full"
-                @focus="user_search_query = ''"/>
+                @focus="user_search_query = ''"
+                :disabled="disabled"
+            />
             <div class="absolute right-2 top-3">
                 <IconX class="h-6 w-6 text-gray-400" v-if="user_search_query.length > 0" @click="closeSearch"/>
             </div>
@@ -80,9 +82,15 @@ export default {
         onlyTeam: booleanDefaultFalseCfg,
         searchWorkers: booleanDefaultFalseCfg,
         dontCloseOnSelect: booleanDefaultFalseCfg,
+        onlyUseChatUsers: booleanDefaultFalseCfg,
+        withoutSelf: booleanDefaultFalseCfg,
         currentCraft: {
             type: Object,
             required: false
+        },
+        disabled: {
+            type: Boolean,
+            default: false
         }
     },
     computed: {
@@ -106,6 +114,14 @@ export default {
 
             if (this.onlyTeam) {
                 return this.teamMember.includes(user.id)
+            }
+
+            if (this.onlyUseChatUsers) {
+                return user.use_chat;
+            }
+
+            if (this.withoutSelf) {
+                return user.id !== this.$page.props.auth.user.id;
             }
 
             return true;

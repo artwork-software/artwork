@@ -52,7 +52,6 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import SingleEventInEventsWithoutRoom from "@/Layouts/Components/SingleEventInEventsWithoutRoom.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {provide, inject} from "vue";
-provide('event_properties', inject('event_properties'));
 export default {
     name: 'EventsWithoutRoomComponent',
     mixins: [Permissions, IconLib],
@@ -391,6 +390,15 @@ export default {
                 is_series: event.series ? event.series : false
             };
         },
+    },
+    setup() {
+        const eventProperties = inject('event_properties');
+        provide('event_properties', eventProperties);
+
+        return {
+            // falls du 'eventProperties' im Template brauchst
+            eventProperties
+        }
     },
 }
 </script>

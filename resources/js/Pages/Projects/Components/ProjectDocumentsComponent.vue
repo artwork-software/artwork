@@ -1,17 +1,20 @@
 <template>
     <div class="my-4">
 
-        <TinyPageHeadline
-            :title="$t('Documents')"
-            :description="$t('Here you can upload and download documents for the project.')"
-        />
+        <div class="flex items-center justify-between">
+            <TinyPageHeadline
+                :title="$t('Documents')"
+                :description="$t('Here you can upload and download documents for the project.')"
+            />
+            <InfoButtonComponent :component="component" />
+        </div>
 
         <div>
             <div class="mb-3">
                 <MultiAlertComponent :errors="documentForm.errors" v-show="Object.keys(documentForm.errors).length > 0" :error-count="Object.keys(documentForm.errors).length" />
             </div>
 
-            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.user.id))">
+            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.auth.user.id))">
                 <div
                     @click="selectNewFiles"
                     @dragover.prevent
@@ -43,7 +46,7 @@
                             </div>
                         </div>
                         <div class="ml-4 shrink-0 flex items-center gap-x-4">
-                            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id))"
+                            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.auth.user.id) || projectManagerIds?.includes(this.$page.props.auth.user.id))"
                                  @click="openConfirmDeleteModal(project_file)"
                                  class="invisible group-hover:visible font-medium text-gray-900 hover:text-artwork-messages-error cursor-pointer">
                                 {{ $t('Löschen') }}
@@ -78,6 +81,7 @@ import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {useProjectDocumentListener} from "@/Composeables/Listener/useProjectDocumentListener.js";
+import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 
 export default defineComponent({
     mixins: [
@@ -85,6 +89,7 @@ export default defineComponent({
         IconLib
     ],
     components: {
+        InfoButtonComponent,
         TinyPageHeadline,
         MultiAlertComponent,
         VisualFeedback,
@@ -96,7 +101,8 @@ export default defineComponent({
         'projectWriteIds',
         'projectManagerIds',
         'tab_id',
-        'canEditComponent'
+        'canEditComponent',
+        'component'
     ],
     data() {
         return {

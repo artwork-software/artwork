@@ -4,11 +4,11 @@
             {{ $t(title) }}
         </h2>
         <div class="bg-gray-200 text-sm text-gray-500 leading-none border-2 border-gray-200 rounded-full inline-flex print:hidden">
-            <button @click="updateChecklistStyle('kanban')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-blue-400 focus:text-blue-400 rounded-l-full px-4 py-2" :class="$page.props.user.checklist_style === 'kanban' ? 'bg-white text-blue-400 rounded-full' : ''" id="grid">
+            <button @click="updateChecklistStyle('kanban')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-blue-400 focus:text-blue-400 rounded-l-full px-4 py-2" :class="$page.props.auth.user.checklist_style === 'kanban' ? 'bg-white text-blue-400 rounded-full' : ''" id="grid">
                 <IconLayoutKanban class="w-4 h-4 mr-2" />
                 <span>{{ $t('Grid') }}</span>
             </button>
-            <button @click="updateChecklistStyle('list')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-blue-400 focus:text-blue-400 rounded-r-full px-4 py-2" :class="$page.props.user.checklist_style === 'list' ? 'bg-white text-blue-400 rounded-full' : ''" id="list">
+            <button @click="updateChecklistStyle('list')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-blue-400 focus:text-blue-400 rounded-r-full px-4 py-2" :class="$page.props.auth.user.checklist_style === 'list' ? 'bg-white text-blue-400 rounded-full' : ''" id="list">
                 <IconLayoutList class="w-4 h-4 mr-2" />
                 <span>{{ $t('List') }}</span>
             </button>
@@ -27,7 +27,7 @@
 
             </slot>
             <div class="flex items-center"
-                 v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id)) || can('can use checklists') && isInOwnTaskManagement">
+                 v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id)) || can('can use checklists') && isInOwnTaskManagement">
                 <AddButtonSmall @click="openAddChecklistModal = true" :text="$t('New checklist')" />
             </div>
         </div>
@@ -113,7 +113,7 @@ const openAddChecklistModal = ref(false);
 
 const selectedFilter = ref(props.filters.find(filter => filter.type ===  Number(usePage().props.urlParameters.filter)) || props.filters[0]);
 const updateChecklistStyle = (type) => {
-    router.patch(route('user.checklist.style', {user: usePage().props.user.id}), {
+    router.patch(route('user.checklist.style', {user: usePage().props.auth.user.id}), {
         checklist_style: type,
     }, {
         preserveScroll: true,

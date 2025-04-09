@@ -34,7 +34,7 @@
                                                        :key="page.name"
                                                        :value="page"
                                                        v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between p-3 text-sm subpixel-antialiased']">
+                                            <li @click="redirectToPage(page.href)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between p-3 text-sm subpixel-antialiased']">
                                                 <span
                                                     :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                     {{ page.name }}
@@ -77,16 +77,13 @@ export default {
             selectedTrash: null,
         }
     },
-    watch: {
-        selectedTrash: {
-          handler() {
-              router.get(this.selectedTrash.href)
-          },
-          deep: true
-        }
-    },
     created() {
         this.selectedTrash = this.trashSites[this.$page.component];
+    },
+    methods: {
+        redirectToPage(href) {
+            this.$inertia.get(href, {}, { preserveState: true });
+        }
     },
     computed: {
         trashSites() {
@@ -140,6 +137,11 @@ export default {
                             'can manage all project budgets without docs'
                         ]
                     ),
+                },
+                'Trash/InventoryArticles': {
+                    name: this.$t('Articles'),
+                    href: route('inventory.articles.trash'),
+                    available: true
                 }
             }
         }

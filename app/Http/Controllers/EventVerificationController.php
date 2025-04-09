@@ -30,10 +30,14 @@ class EventVerificationController extends Controller
     {
         $requestPaginate = request()?->integer('eventVerificationsPerPage', 5);
         $myRequestPaginate = request()?->integer('myRequestsPerPage', 5);
+        $filterVerificationRequest = request()?->string('filterVerificationRequest', '');
+        $filterVerificationRequest = in_array($filterVerificationRequest, ['all', 'approved', 'rejected', 'pending']) ? $filterVerificationRequest : '';
         /** @var User $user */
         $user = $this->authManager->user();
+        $eventVerifications = $this->eventVerificationService->getAllByUser($user, $requestPaginate, $filterVerificationRequest);
+
         return Inertia::render('EventVerification/Index', [
-            'eventVerifications' => $this->eventVerificationService->getAllByUser($user, $requestPaginate),
+            'eventVerifications' => $eventVerifications,
             'myRequests' => $this->eventVerificationService->getAllByRequester($user, $myRequestPaginate),
             'counts' => $this->eventVerificationService->getCountsByUser($user),
         ]);

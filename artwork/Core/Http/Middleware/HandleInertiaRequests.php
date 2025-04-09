@@ -87,6 +87,7 @@ class HandleInertiaRequests extends Middleware
             parent::share($request),
             [
                 'name' => config('app.name'),
+                'use_chat_module' => config('app.use_chat_module'),
                 'small_logo' => $smallLogo,
                 'big_logo' => $bigLogo,
                 'banner' => $banner,

@@ -2545,5 +2545,12 @@
     "Find out if there are any event verification requests.": "Finde heraus, ob es Terminüberprüfungsanfragen gibt.",
     "more": "Mehr",
     "Click to show more": "Klicke, um mehr anzuzeigen",
-    "No event verification requests found": "Keine Terminüberprüfungsanfragen gefunden"
+    "No event verification requests found": "Keine Terminüberprüfungsanfragen gefunden",
+    "Event Data": "Termin-Daten",
+    "Requested at": "Angefordert am",
+    "Requested by": "Angefordert von",
+    "Edit, delete and confirm scheduled events": "Geplante Termine bearbeiten und bestätigen",
+    "View and plan in the planning calendar": "Planungskalender anzeigen und planen",
+    "A user with this permission can edit, delete and confirm scheduled events": "Ein Nutzer mit dieser Berechtigung kann geplante Termine bearbeiten, löschen und bestätigen",
+    "Click on the status to filter the event verification requests": "Klicke auf den Status, um die Terminüberprüfungsanfragen zu filtern"
 }

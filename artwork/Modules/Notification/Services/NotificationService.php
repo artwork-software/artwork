@@ -10,6 +10,7 @@ use Artwork\Modules\Event\Notifications\EventNotification;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Events\NewNotificationBroadcast;
 use Artwork\Modules\Project\Notifications\ProjectNotification;
 use Artwork\Modules\Room\Notifications\RoomNotification;
 use Artwork\Modules\Room\Notifications\RoomRequestNotification;
@@ -19,6 +20,7 @@ use Artwork\Modules\Task\Notifications\DeadlineNotification;
 use Artwork\Modules\Task\Notifications\TaskNotification;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -478,10 +480,26 @@ class NotificationService
                 break;
         }
 
+        $this->sendBroadcastMessage($this->getNotificationTo());
+
+
         $this->userService->updateCurrentUserShowNotificationIndicator(
             $this->getNotificationTo(),
             true
         );
+    }
+
+    private function sendBroadcastMessage(User $user): void
+    {
+        $notificationSetting = $user->notificationSettings()
+            ->where('type', $this->getNotificationConstEnum())
+            ->first();
+
+        if ($notificationSetting?->getAttribute('enabled_push')) {
+            if ($this->getBroadcastMessage()) {
+                broadcast(new NewNotificationBroadcast($user, $this->getBroadcastMessage()));
+            }
+        }
     }
 
     public function checkIfUserInMoreThanTenShifts(User $user, Shift $shift): stdClass

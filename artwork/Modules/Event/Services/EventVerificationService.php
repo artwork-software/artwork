@@ -20,10 +20,15 @@ class EventVerificationService
     ){
     }
 
-    public function getAllByUser(User $user, int $paginate = 5) {
-        return EventVerification::where('verifier_id', $user->id)
-            ->orWhere('event_id', $user->id)
-            ->with(['event', 'verifier'])
+    public function getAllByUser(User $user, int $paginate = 5, string $filterVerificationRequest = '') {
+        return EventVerification::where(function ($query) use ($user) {
+            $query->where('verifier_id', $user->id)
+                ->orWhere('event_id', $user->id);
+            })
+            ->with(['event.room', 'verifier', 'requester'])
+            ->when(!empty($filterVerificationRequest), function ($query) use ($filterVerificationRequest) {
+                $query->where('status', $filterVerificationRequest);
+            })
             ->orderBy('created_at', 'desc')
             ->paginate($paginate);
     }
@@ -31,7 +36,7 @@ class EventVerificationService
     public function getAllByRequester(User $user, int $paginate = 5) {
         $events = Event::where('user_id', $user->id)
             ->whereHas('verifications')
-            ->with(['event_type', 'verifications.verifier'])
+            ->with(['event_type', 'verifications.verifier', 'room'])
             ->withCasts([
                 'created_at' => TranslatedDateTimeCast::class,
             ])
@@ -162,19 +167,17 @@ class EventVerificationService
             'status' => 'rejected',
             'rejection_reason' => $reason
         ]);
+        $verification->event->update(['is_planning' => true]);
     }
 
     public function requestVerification(Event $event, User $user): void
     {
         $eventType = $event->event_type;
         $uuid = Str::uuid()->toString();
-        if($eventType->verification_mode === 'none') {
+
+        if ($eventType->verification_mode === 'none') {
             $event->update(['is_planning' => false]);
             return;
-        }
-
-        if($event->user_id === $user->id) {
-            $event->update(['is_planning' => false]);
         }
 
         $verifiers = match ($eventType->verification_mode) {
@@ -183,47 +186,72 @@ class EventVerificationService
             'none' => collect([]),
         };
 
+        if ($eventType->verification_mode === 'specific' && $eventType->specificVerifier->id === $user->id) {
+            $event->verifications()->create([
+                'uuid' => $uuid,
+                'verifier_type' => get_class($user),
+                'verifier_id' => $user->id,
+                'status' => 'approved',
+                'request_user_id' => $user->id,
+            ]);
+            $event->update(['is_planning' => false]);
+            return;
+        }
+
+        if ($eventType->verification_mode === 'any' && $verifiers->contains('id', $user->id)) {
+            $event->verifications()->create([
+                'uuid' => $uuid,
+                'verifier_type' => get_class($user),
+                'verifier_id' => $user->id,
+                'status' => 'approved',
+                'request_user_id' => $user->id,
+            ]);
+            $event->update(['is_planning' => false]);
+            return;
+        }
+
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
-        $this->notificationService
-            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
 
+        /** @var User $verifier */
         foreach ($verifiers as $verifier) {
+            $status = 'pending';
+
+            // Bei ALL direkt genehmigen wenn User beteiligt ist
+            if ($eventType->verification_mode === 'all' && $verifier->id === $user->id) {
+                $status = 'approved';
+            }
+
             $event->verifications()->create([
                 'uuid' => $uuid,
                 'verifier_type' => get_class($verifier),
                 'verifier_id' => $verifier->id,
-                'status' => 'pending',
+                'status' => $status,
                 'request_user_id' => $user->id,
             ]);
 
-            $notificationTitle = __(
-                'notification.request-verification.new',
-                [],
-                $verifier->language
-            );
-            $broadcastMessage = [
-                'id' => random_int(1, 1000000),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
-            $notificationDescription = [
-                2 => [
-                    'type' => 'link',
-                    'title' =>  __(
-                        'notification.request-verification.open-index',
-                        [],
-                        $verifier->language
-                    ),
-                    'href' => route('event-verifications.index'),
-                ]
-            ];
+            if ($status === 'pending') {
+                $notificationTitle = __('notification.request-verification.new', [], $verifier->language);
+                $broadcastMessage = [
+                    'id' => random_int(1, 1000000),
+                    'type' => 'success',
+                    'message' => $notificationTitle,
+                ];
+                $notificationDescription = [
+                    2 => [
+                        'type' => 'link',
+                        'title' => __('notification.request-verification.open-index', [], $verifier->language),
+                        'href' => route('event-verifications.index'),
+                    ],
+                ];
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationTo($verifier);
-            $this->notificationService->createNotification();
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->setNotificationTo($verifier);
+                $this->notificationService->createNotification();
+            }
         }
     }
 }

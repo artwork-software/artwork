@@ -23,8 +23,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $hex_code
  * @property int $specific_verifier_id
  * @property string $verification_mode
- * @property string $created_at
- * @property string $updated_at
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ *
+ * @property \Artwork\Modules\Event\Models\Event $events
+ * @property \Artwork\Modules\User\Models\User $specificVerifier
+ * @property \Artwork\Modules\User\Models\User $verifiers
  */
 class EventType extends Model
 {

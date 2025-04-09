@@ -4,7 +4,14 @@
             <p class="text-sm/6 font-semibold text-gray-900">{{ myRequest?.eventName }}</p>
         </div>
         <div class="mt-1 flex items-center gap-x-2 text-xs/5 text-gray-500">
-            <p class="truncate">{{ $t('created at')}} <span class="font-lexend">{{ myRequest.created_at }}</span></p>
+            <p class="mt-1 flex items-center gap-x-1 text-[10px] text-gray-500">
+                <span class="font-lexend font-bold">{{ $t('Start') }}:</span>
+                <span class="font-lexend">{{ myRequest?.start_time }}</span>
+                <span class="font-lexend font-bold">{{ $t('End') }}:</span>
+                <span class="font-lexend">{{ myRequest?.end_time }}</span>
+                <span class="font-lexend font-bold">{{ $t('Room') }}:</span>
+                <span class="font-lexend">{{ myRequest?.room?.name }}</span>
+            </p>
         </div>
     </div>
     <div class="flex flex-none items-center gap-x-4 h-full">
@@ -20,7 +27,7 @@
                     </div>
                 </dd>
             </div>
-            <div v-if="computedSplicedOrNotSplicedVerifications.length >= 2 && spliceVerification">
+            <div v-if="computedSplicedOrNotSplicedVerifications.length >= 3 && spliceVerification">
                 <div class="flex items-center gap-x-4 px-3 py-2 bg-gray-50 rounded-lg h-full cursor-pointer ring-1 ring-inset ring-gray-500/10" @click="spliceVerification = !spliceVerification">
                     <div>
                         <div class="text-xs font-lexend font-semibold text-gray-900">

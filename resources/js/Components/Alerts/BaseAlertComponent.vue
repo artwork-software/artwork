@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded-md p-4 mb-5 border select-none" :class="bgClass">
+    <div class="rounded-md p-4 mb-5 border cursor-default" :class="bgClass">
         <div class="flex items-center">
             <div class="shrink-0">
                 <component :is="iconClass" class="size-6" :class="iconTextClass" aria-hidden="true" />

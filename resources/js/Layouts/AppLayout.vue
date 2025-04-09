@@ -526,13 +526,22 @@ export default {
         window.document.dispatchEvent(ev);
         this.$i18n.locale = this.$page.props.selected_language;
         document.documentElement.lang = this.$page.props.selected_language;
-        Echo.private('App.Models.User.' + this.$page.props.auth.user.id)
+        /*Echo.private('App.Models.User.' + this.$page.props.auth.user.id)
             .notification((notification) => {
                 this.pushNotifications.push(notification.message);
                 setTimeout(() => {
                     this.closePushNotification(notification.message.id)
                 }, 3000)
+            });*/
+
+        window.Echo.private(`notifications.${this.$page.props.auth.user.id}`)
+            .listen('.incoming-notification', (notification) => {
+                this.pushNotifications.push(notification.message);
+                setTimeout(() => {
+                    this.closePushNotification(notification.message.id)
+                }, 3000)
             });
+
 
         window.addEventListener('resize', () => {
             this.windowInnerHeight = window.innerHeight;
@@ -540,6 +549,7 @@ export default {
     },
   data() {
         return {
+            notifications: [],
             showSystemSettings: false,
             showUserMenu: false,
             pushNotifications: [],
@@ -589,7 +599,7 @@ export default {
                     name: 'Planning Calendar',
                     href: route('planning-event-calendar.index'),
                     route: ['/planning-event-calendar'],
-                    has_permission: true,
+                    has_permission: this.$can('can see planning calendar')  || this.hasAdminRole(),
                     icon: IconCalendarCog,
                     showToolTipForItem: false
                 },
@@ -597,18 +607,18 @@ export default {
                     name: 'Event Verifications',
                     href: route('event-verifications.index'),
                     route: ['/event-verifications'],
-                    has_permission: true,
+                    has_permission: this.$can('can edit planning calendar')  || this.hasAdminRole(),
                     icon: IconCalendarCheck,
                     showToolTipForItem: false
                 },
-                {
+                /*{
                     name: 'Inventory',
                     href: route('inventory-management.inventory'),
                     route: ['/inventory-management', '/inventory-management/scheduling'],
                     has_permission: this.moduleIsVisible('inventory'),
                     icon: IconBuildingWarehouse,
                     showToolTipForItem: false
-                },
+                },*/
                 {
                     name: 'Inventory',
                     href: route('inventory.index'),

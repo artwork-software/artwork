@@ -65,6 +65,7 @@ use Illuminate\Support\Collection;
  * @property \Illuminate\Database\Eloquent\Collection<Shift> $shifts
  * @property \Illuminate\Database\Eloquent\Collection<Timeline> $timelines
  * @property \Illuminate\Database\Eloquent\Collection<EventComment> $comments
+ * @property EventVerification $verifications
  * @property SeriesEvents|null $series
  * @property-read array<string> $days_of_event
  * @property-read array<string> $days_of_shifts

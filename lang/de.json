@@ -2556,5 +2556,7 @@
     "Reject Request": "Anfrage ablehnen",
     "Rejection Reason": "Ablehnungsgrund",
     "Reject Event Verification Request": "Terminüberprüfungsanfrage ablehnen",
-    "Are you sure you want to reject this event verification request?": "Möchtest du diese Terminüberprüfungsanfrage wirklich ablehnen?"
+    "Are you sure you want to reject this event verification request?": "Möchtest du diese Terminüberprüfungsanfrage wirklich ablehnen?",
+    "New event verification request incoming": "Neue Terminüberprüfungsanfrage eingehend",
+    "Rejections": "Ablehnungen"
 }

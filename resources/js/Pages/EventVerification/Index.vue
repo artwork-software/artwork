@@ -26,6 +26,7 @@
 
             <div class="ml-14 pt-5 pb-20 max-w-7xl w-full">
                 <div class="" v-if="eventVerifications.data.length > 0">
+                    <VisualFeedback :text="$t('New event verification request incoming')" v-show="showNewRequestIncoming" class="mb-5" />
                     <div class="mt-8 flow-root">
                         <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -94,9 +95,10 @@ import SingleEventVerificationRequest from "@/Pages/EventVerification/Components
 import SingleMyEventVerificationRequests
     from "@/Pages/EventVerification/Components/SingleMyEventVerificationRequests.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import {router, usePage} from "@inertiajs/vue3";
+import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 
 
 const props = defineProps({
@@ -122,6 +124,8 @@ const statuses = {
     rejected: 'text-red-800 bg-red-50 ring-red-600/20',
 }
 
+const showNewRequestIncoming = ref(false);
+
 const setFilterTo = (status) => {
     if ( filterVerificationRequest.value === status ) {
         filterVerificationRequest.value = '';
@@ -138,6 +142,27 @@ const setFilterTo = (status) => {
         }
     })
 }
+
+onMounted(() => {
+    window.Echo.private(`event-verification-index.${usePage().props.auth.user.id}`)
+        .listen('.reload-event-verification-requests', (e) => {
+            router.reload({
+                preserveScroll: true,
+                preserveState: false,
+                only: ['eventVerifications', 'counts'],
+                data: {
+                    page: 1,
+                    filterVerificationRequest: filterVerificationRequest.value
+                },
+                onSuccess: (e) => {
+                    showNewRequestIncoming.value = true;
+                    setTimeout(() => {
+                        showNewRequestIncoming.value = false;
+                    }, 5000);
+                }
+            })
+        });
+})
 </script>
 
 <style scoped>

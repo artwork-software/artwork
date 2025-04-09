@@ -3,12 +3,14 @@
 namespace Artwork\Modules\Event\Services;
 
 use Artwork\Core\Casts\TranslatedDateTimeCast;
+use Artwork\Modules\Event\Events\BroadcastToReloadEventVerificationRequests;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -140,7 +142,7 @@ class EventVerificationService
     }
 
 
-    public function rejectVerification(EventVerification $verification, string $reason): void
+    public function rejectVerification(EventVerification $verification, ?string $reason = ''): void
     {
         $event = $verification->event;
         $eventCreator = $event->creator;
@@ -259,6 +261,8 @@ class EventVerificationService
                 $this->notificationService->setNotificationTo($verifier);
                 $this->notificationService->createNotification();
             }
+
+            broadcast(new BroadcastToReloadEventVerificationRequests($verifier));
         }
     }
 }

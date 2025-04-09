@@ -104,7 +104,7 @@ class EventVerificationController extends Controller
 
     public function rejected(EventVerification $eventVerification, Request $request): void
     {
-        $this->eventVerificationService->rejectVerification($eventVerification, $request->get('rejection_reason'));
+        $this->eventVerificationService->rejectVerification($eventVerification, $request->get('rejection_reason', ''));
         $event = $eventVerification->event;
         broadcast(new EventCreated($event, $event->room_id));
     }

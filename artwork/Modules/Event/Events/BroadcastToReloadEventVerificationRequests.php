@@ -4,13 +4,13 @@ namespace Artwork\Modules\Event\Events;
 
 use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Calendar\DTO\BroadcastEventDTO;
-use Artwork\Modules\Calendar\DTO\BroadcastEventDTOWithVerifications;
 use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectState;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Carbon\Carbon;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -20,44 +20,28 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 
-class EventCreated implements ShouldBroadcastNow
+class BroadcastToReloadEventVerificationRequests implements ShouldBroadcastNow
 {
     use Dispatchable;
     use InteractsWithSockets;
     use SerializesModels;
 
-    public $event;
-    public $roomId;
+    public User $user;
 
     public function __construct(
-        Event $event,
-        int $roomId
+        User $user
     ) {
-        $this->event = $event;
-        $this->roomId = $roomId;
+        $this->user = $user;
     }
 
     public function broadcastAs()
     {
-        return 'event.created';
+        return 'reload-event-verification-requests';
     }
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('event.room.' . $this->roomId);
+        return new PrivateChannel('event-verification-index.' . $this->user->id);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function broadcastWith(): array
-    {
-        return [
-            'event' => $this->event->is_planning ? BroadcastEventDTOWithVerifications::formModel(
-                $this->event,
-            ) : BroadcastEventDTO::formModel(
-                $this->event,
-            ),
-        ];
-    }
 }

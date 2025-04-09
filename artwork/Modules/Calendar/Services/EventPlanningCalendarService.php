@@ -5,6 +5,7 @@ namespace Artwork\Modules\Calendar\Services;
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
+use Artwork\Modules\Calendar\DTO\EventDTOWithVerifications;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
@@ -42,7 +43,8 @@ class EventPlanningCalendarService
             'event_type:id,name,abbreviation,hex_code',
             'room:id,name',
             'creator:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
-            'shifts'
+            'shifts',
+            'verifications',
         ];
 
 
@@ -101,7 +103,7 @@ class EventPlanningCalendarService
             ->get()
             ->keyBy('id');
 
-        $eventDTOs = $events->map(fn($event) => EventDTO::fromModel(
+        $eventDTOs = $events->map(fn($event) => EventDTOWithVerifications::fromModel(
             $event,
             $userCalendarSettings,
             $projects,

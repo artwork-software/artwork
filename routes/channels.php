@@ -81,3 +81,7 @@ Broadcast::channel('user.{userId}', function ($user, $userId) {
 Broadcast::channel('notifications.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
 });
+
+Broadcast::channel('event-verification-index.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

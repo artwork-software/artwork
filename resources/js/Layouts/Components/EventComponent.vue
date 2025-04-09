@@ -597,6 +597,32 @@
                         </div>
                     </div>
                 </div>
+
+                <div v-if="event && event?.isPlanning" class="mt-4">
+                    <div class="mb-4 flex items-center justify-between cursor-pointer" @click="showRejections = !showRejections">
+                        <h3 class="font-lexend">{{ $t('Rejections')}}</h3>
+                        <component is="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" :class="showRejections ? 'rotate-180': ''" aria-hidden="true"/>
+                    </div>
+
+                    <div class="space-y-3 group" v-if="showRejections">
+                        <div v-for="(verification, index) in event?.verifications" :key="verification.id">
+                            <div class="flex w-full" v-if="verification.rejection_reason !== null">
+                                <div class="mr-4 shrink-0">
+                                    <UserPopoverTooltip :user="verification?.verifier" />
+                                </div>
+                                <div class="w-full">
+                                    <div class="flex items-center justify-between w-full">
+                                        <h4 class="text-sm font-lexend">{{ verification?.verifier?.full_name }}</h4>
+                                        <p class="text-[9px] text-gray-500">
+                                            {{ verification?.created_at }}
+                                        </p>
+                                    </div>
+                                    <p class="mt-0.5 font-lexend text-xs text-gray-700">{{ verification?.rejection_reason }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div v-if="canEdit">
@@ -817,6 +843,7 @@ export default {
             }),
             helpTextLengthRoom: '',
             initialRoomId: null,
+            showRejections: false
             //event_properties: event_properties
         }
     },

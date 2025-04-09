@@ -107,10 +107,16 @@
 
                     <div class="my-4">
                         <div class="w-full">
-                            <Disclosure v-for="subCategory in subCategories" v-slot="{ open }" as="div" class="mt-1">
+                            <Disclosure v-for="(subCategory, index) in subCategories" v-slot="{ open }" as="div" class="mt-1">
                                 <DisclosureButton class="flex w-full justify-between bg-gray-50 px-2 py-3 rounded-lg text-left text-sm font-medium  hover:bg-gray-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500/75">
-                                    <span v-if="subCategory.name">{{ subCategory.name }}</span>
-                                    <span v-else>{{ $t('Sub-Category without name. Please add a name')}}</span>
+                                    <div class="flex items-center gap-x-2 justify-between w-full pr-5">
+                                        <span v-if="subCategory.name">{{ subCategory.name }}</span>
+                                        <span v-else>{{ $t('Sub-Category without name. Please add a name')}}</span>
+
+                                        <div>
+                                            <component is="IconTrash" class="h-5 w-5 text-red-600 hover:text-red-900 cursor-pointer" @click="removeSubCategoryFromCategory(subCategory)" />
+                                        </div>
+                                    </div>
                                     <component is="IconChevronUp"
                                         :class="open ? 'rotate-180 transform' : ''"
                                         class="h-5 w-5 text-artwork-buttons-context"
@@ -216,7 +222,7 @@
 
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import PropertiesMenu from "@/Components/Menu/PropertiesMenu.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -343,6 +349,19 @@ const createOrUpdateCategory = () => {
                 emit('close');
             }
         });
+    }
+}
+
+const removeSubCategoryFromCategory = (subCategory) => {
+    if ( subCategory.id) {
+        router.delete(route('inventory-management.settings.categories.subcategories.delete', {inventorySubCategory: subCategory.id}), {
+            preserveScroll: true,
+            onSuccess: () => {
+                subCategories.value = subCategories.value.filter(sub => sub.id !== subCategory.id);
+            }
+        });
+    } else {
+        subCategories.value = subCategories.value.filter(sub => sub.id !== subCategory.id);
     }
 }
 </script>

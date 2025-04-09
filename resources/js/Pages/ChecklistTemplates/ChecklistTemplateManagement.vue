@@ -13,7 +13,7 @@
             </div>
 
             <div class="my-10">
-                <div v-if="$page.props.user.checklist_style === 'list'">
+                <div v-if="$page.props.auth.user.checklist_style === 'list'">
                     <div class="bg-gray-100 px-5 py-2 rounded-lg xxsLight mb-5">
                         <div class="grid grid-cols-12 grid-rows-1 gap-4">
                             <div class="col-span-8">{{ $t('Name') }}</div>
@@ -113,7 +113,7 @@ export default {
                 _method: 'POST',
                 name: "",
                 //user who created the template
-                user_id: this.$page.props.user.id,
+                user_id: this.$page.props.auth.user.id,
                 task_templates: [],
                 users: []
             }),

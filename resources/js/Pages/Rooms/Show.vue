@@ -632,7 +632,7 @@ export default {
                 room_id: null,
                 project_id: null,
                 event_type_id: null,
-                user_id: this.$page.props.user.id,
+                user_id: this.$page.props.auth.user.id,
             }),
             declineRequestForm: useForm({
                 name: '',
@@ -645,7 +645,7 @@ export default {
                 room_id: null,
                 project_id: null,
                 event_type_id: null,
-                user_id: this.$page.props.user.id,
+                user_id: this.$page.props.auth.user.id,
             }),
         }
     },

@@ -1,11 +1,11 @@
 <?php
 
-namespace Artwork\Modules\Inventory\Policies;
+namespace App\Policies;
 
-use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Chat\Models\ChatUser;
 use Artwork\Modules\User\Models\User;
 
-class InventoryArticlePolicy
+class ChatUserPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -18,7 +18,7 @@ class InventoryArticlePolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, InventoryArticle $inventoryArticle): bool
+    public function view(User $user, ChatUser $chatUser): bool
     {
         //
     }
@@ -34,7 +34,7 @@ class InventoryArticlePolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, InventoryArticle $inventoryArticle): bool
+    public function update(User $user, ChatUser $chatUser): bool
     {
         //
     }
@@ -42,7 +42,7 @@ class InventoryArticlePolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, InventoryArticle $inventoryArticle): bool
+    public function delete(User $user, ChatUser $chatUser): bool
     {
         //
     }
@@ -50,7 +50,7 @@ class InventoryArticlePolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, InventoryArticle $inventoryArticle): bool
+    public function restore(User $user, ChatUser $chatUser): bool
     {
         //
     }
@@ -58,7 +58,7 @@ class InventoryArticlePolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, InventoryArticle $inventoryArticle): bool
+    public function forceDelete(User $user, ChatUser $chatUser): bool
     {
         //
     }

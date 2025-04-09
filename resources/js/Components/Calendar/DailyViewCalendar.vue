@@ -38,7 +38,7 @@
                     </HolidayToolTip>
                 </div>
                 <div class="ml-10 flex items-center h-full truncate">
-                    <div class="flex items-center h-full gap-x-2" v-if="usePage().props.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInAllRoomsAndEventsByDay(day)" :key="group.id">
+                    <div class="flex items-center h-full gap-x-2" v-if="usePage().props.auth.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInAllRoomsAndEventsByDay(day)" :key="group.id">
                         <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: firstProjectTabId })" class=" text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1 border" :style="{ backgroundColor: group.color + '22' ?? '#ccc', color: group.color, borderColor: group.color }">
                             <component :is="group.icon" class="size-4" aria-hidden="true"/>
                             <span>{{ group.name }}</span>
@@ -113,7 +113,7 @@ import {usePermission} from "@/Composeables/Permission.js";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props)
 
 
-const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
+const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const props = defineProps({
     rooms: {
         type: Object,
@@ -230,7 +230,7 @@ const checkIfUserIsAdminOrInGroup = (group) => {
         return false;
     }
 
-    return !group.userIds.includes(usePage().props.user.id);
+    return !group.userIds.includes(usePage().props.auth.user.id);
 }
 
 

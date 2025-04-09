@@ -268,7 +268,7 @@ const returnNullIfFalse = (variable) => {
 }
 
 const applyFilter = () => {
-    router.patch(route('update.user.calendar.filter', usePage().props.user.id), {
+    router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), {
         rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
         areas: arrayToIds(filteredOptionsByCategories.value.roomFilters.areas),
         event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
@@ -317,7 +317,7 @@ const removeFilter = (filter) => {
 }
 
 const activateFilter = (filter) => {
-    router.post(route('filter.activate', {filter: filter.id, user: usePage().props.user.id}),{}, {
+    router.post(route('filter.activate', {filter: filter.id, user: usePage().props.auth.user.id}),{}, {
         preserveScroll: true,
         preserveState: false,
     })

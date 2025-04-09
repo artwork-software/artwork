@@ -47,7 +47,7 @@
                 </span>
             </div>
             <div class="col-span-1">
-                <div v-if="project.pinned_by_users && project.pinned_by_users?.includes($page.props.user.id)"
+                <div v-if="project.pinned_by_users && project.pinned_by_users?.includes($page.props.auth.user.id)"
                      class="flex items-center xxsLight subpixel-antialiased">
                     <IconPinned class="h-5 w-5 text-primary"/>
                 </div>
@@ -66,7 +66,7 @@
                             {{ $t('Edit basic data') }}
                         </a>
                     </MenuItem>
-                    <MenuItem class="cursor-pointer" v-slot="{ active }" v-if="project.pinned_by_users && project.pinned_by_users.includes($page.props.user.id)">
+                    <MenuItem class="cursor-pointer" v-slot="{ active }" v-if="project.pinned_by_users && project.pinned_by_users.includes($page.props.auth.user.id)">
                         <a @click="pinProject()"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconPinnedOff stroke-width="1.5"
@@ -283,14 +283,14 @@ export default {
                 deleteAuth.push(user.id);
             });
 
-            if(viewAuth.includes(this.$page.props.user.id) && type === 'view') {
+            if(viewAuth.includes(this.$page.props.auth.user.id) && type === 'view') {
                 return true;
             }
 
-            if (writeAuth.includes(this.$page.props.user.id) && type === 'edit') {
+            if (writeAuth.includes(this.$page.props.auth.user.id) && type === 'edit') {
                 return true;
             }
-            if (managerAuth.includes(this.$page.props.user.id) || deleteAuth.includes(this.$page.props.user.id) && type === 'delete') {
+            if (managerAuth.includes(this.$page.props.auth.user.id) || deleteAuth.includes(this.$page.props.auth.user.id) && type === 'delete') {
                 return true;
             }
             return false;

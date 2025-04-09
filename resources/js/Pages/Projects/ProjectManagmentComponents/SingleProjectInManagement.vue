@@ -5,7 +5,7 @@
         class="grid bg-gray-50/50 px-3 py-3 rounded-lg border border-gray-100 hover:bg-gray-100 duration-300 ease-in-out group/project w-fit relative cursor-pointer"
         :style="`grid-template-columns: ${gridTemplateColumns}`"
         @contextmenu.prevent="openMenu(project.id, $event)">
-        <div class="absolute -top-3" v-if="fullProject?.pinned_by_users && fullProject?.pinned_by_users.includes($page.props.user.id)">
+        <div class="absolute -top-3" v-if="fullProject?.pinned_by_users && fullProject?.pinned_by_users.includes($page.props.auth.user.id)">
             <div class="rounded-full p-0.5 bg-white border border-gray-100">
                 <component is="IconPinned" class="h-6 w-6" />
             </div>
@@ -29,7 +29,7 @@
             <BaseMenu has-no-offset v-show="showActionComponent && component.type === 'ActionsComponent'"  v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')">
                 <BaseMenuItem as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" icon="IconFolderOpen"/>
                 <BaseMenuItem title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')"/>
-                <BaseMenuItem title="Undo pinning" icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.user.id)" @click="pinProject()"/>
+                <BaseMenuItem title="Undo pinning" icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()"/>
                 <BaseMenuItem title="Pin" icon="IconPin" v-else @click="pinProject()"/>
                 <BaseMenuItem title="Duplicate" icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
                 <BaseMenuItem title="Put in the trash" icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')"/>
@@ -43,7 +43,7 @@
             <BaseMenu has-no-offset :button-id="'project-invisible-menu-' + project.id" :show-icon="false" v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')">
                 <BaseMenuItem as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" icon="IconFolderOpen"/>
                 <BaseMenuItem title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')"/>
-                <BaseMenuItem title="Undo pinning" icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.user.id)" @click="pinProject()"/>
+                <BaseMenuItem title="Undo pinning" icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()"/>
                 <BaseMenuItem title="Pin" icon="IconPin" v-else @click="pinProject()"/>
                 <BaseMenuItem title="Duplicate" icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
                 <BaseMenuItem title="Put in the trash" icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')"/>
@@ -275,14 +275,14 @@ const checkPermission = (project, type) => {
         deleteAuth.push(user.id);
     });
 
-    if(viewAuth.includes(usePage().props.user.id) && type === 'view') {
+    if(viewAuth.includes(usePage().props.auth.user.id) && type === 'view') {
         return true;
     }
 
-    if (writeAuth.includes(usePage().props.user.id) && type === 'edit') {
+    if (writeAuth.includes(usePage().props.auth.user.id) && type === 'edit') {
         return true;
     }
-    if (managerAuth.includes(usePage().props.user.id) || deleteAuth.includes(usePage().props.user.id) && type === 'delete') {
+    if (managerAuth.includes(usePage().props.auth.user.id) || deleteAuth.includes(usePage().props.auth.user.id) && type === 'delete') {
         return true;
     }
     return false;

@@ -76,6 +76,7 @@ readonly class EventCalendarService
                     $q->whereIn('event_property_id', $filter->event_properties);
                 });
             })
+            ->isNotPlanning()
             ->orderBy('start_time')
             ->get();
 

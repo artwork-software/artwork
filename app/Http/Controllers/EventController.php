@@ -18,6 +18,7 @@ use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
+use Artwork\Modules\Calendar\Services\EventPlanningCalendarService;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
@@ -131,6 +132,7 @@ class EventController extends Controller
         private readonly UserService $userService,
         private readonly ShiftTimePresetService $shiftTimePresetService,
         private readonly ProjectService $projectService,
+        private readonly EventPlanningCalendarService $eventPlanningCalendarService,
     ) {
     }
 
@@ -268,6 +270,117 @@ class EventController extends Controller
         //dd($this->filterService->getCalendarFilterDefinitions());
 
         return Inertia::render('Calendar/Index', [
+            'period' => $period,
+            'rooms' => $rooms,
+            'calendar' => Inertia::always(fn() => $calendarData->rooms),
+            'personalFilters' => Inertia::always(fn() => $this->filterService->getPersonalFilter()),
+            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(true),
+            'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
+                EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)
+            ),
+            'areas' => $this->areaService->getAll(),
+            'dateValue' => $dateValue,
+            'user_filters' => $userCalendarFilter,
+            'eventTypes' => EventType::all(),
+            'eventStatuses' => EventStatus::orderBy('order')->get(),
+            'event_properties' => EventProperty::all(),
+            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTabId(),
+            'first_project_calendar_tab_id' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
+            'first_project_shift_tab_id' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'projectNameUsedForProjectTimePeriod' => $userCalendarSettings->getAttribute('time_period_project_id') ?
+                $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'))->name : null,
+            'calendarWarningText' => $calendarWarningText,
+            'months' => $months,
+        ]);
+    }
+
+    public function viewPlanningCalendar(?Project $project = null): Response {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+
+
+        [$startDate, $endDate] = $this->calendarDataService
+            ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter);
+
+        $calendarWarningText = '';
+
+        if($user->daily_view && $startDate->diffInDays($endDate) > 7) {
+            $endDate = $startDate->copy()->addDays(7);
+            $calendarWarningText = __('calendar.daily_view_info');
+            $user->calendar_filter->update([
+                'end_date' => $endDate->format('Y-m-d')
+            ]);
+        }
+
+        if ($startDate->diffInDays($endDate) > (365 * 2)) {
+            $endDate = $startDate->copy()->addYears(2);
+            $calendarWarningText = __('calendar.calendar_limit_two_years');
+            $user->calendar_filter->update([
+                'end_date' => $endDate->format('Y-m-d')
+            ]);
+        }
+
+        $period = $this->calendarDataService->createCalendarPeriodDto(
+            $startDate,
+            $endDate,
+            $user,
+            false
+        );
+
+        $months = [];
+        foreach ($period as $periodObject) {
+            $date = Carbon::parse($periodObject->withoutFormat);
+            $month = $date->format('m.Y');
+            if (!array_key_exists($month, $months)) {
+                $months[$month] = [
+                    'first_day_in_period' => $date->format('Y-m-d'),
+                    'month' => $date->monthName,
+                    'year' => $date->format('y'),
+                ];
+            }
+        }
+
+
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+        );
+
+        $this->eventPlanningCalendarService->filterRoomsEvents(
+            $rooms,
+            $userCalendarFilter,
+            $startDate,
+            $endDate,
+            $userCalendarSettings
+        );
+
+
+        $calendarData = $this->eventPlanningCalendarService->mapRoomsToContentForCalendar(
+            $rooms,
+            $startDate,
+            $endDate,
+        );
+
+
+        $dateValue = [
+            $startDate ? $startDate->format('Y-m-d') : null,
+            $endDate ? $endDate->format('Y-m-d') : null
+        ];
+
+        $eventTypes = EventType::select(['id', 'name', 'abbreviation', 'hex_code'])
+            ->get()
+            ->keyBy('id');
+
+
+        //dd($this->filterService->getCalendarFilterDefinitions());
+
+        return Inertia::render('PlanningCalendar/Index', [
             'period' => $period,
             'rooms' => $rooms,
             'calendar' => Inertia::always(fn() => $calendarData->rooms),

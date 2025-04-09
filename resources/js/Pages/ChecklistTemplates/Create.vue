@@ -228,7 +228,7 @@ export default {
             templateForm: useForm({
                 name: "",
                 //user who created the template
-                user_id: this.$page.props.user.id,
+                user_id: this.$page.props.auth.user.id,
                 task_templates: [],
                 users: [],
             }),

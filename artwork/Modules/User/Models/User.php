@@ -5,12 +5,16 @@ namespace Artwork\Modules\User\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
+use Artwork\Modules\Chat\Models\Chat;
+use Artwork\Modules\Chat\Models\ChatUser;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\EventVerification;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
@@ -221,7 +225,9 @@ class User extends Model implements
         'daily_view',
         'entities_per_page',
         'last_project_id',
-        'bulk_column_size'
+        'bulk_column_size',
+        'chat_public_key',
+        'use_chat'
     ];
 
     protected $casts = [
@@ -251,6 +257,7 @@ class User extends Model implements
         'phone_private' => 'boolean',
         'daily_view' => 'boolean',
         'bulk_column_size' => 'array',
+        'use_chat' => 'boolean',
     ];
 
     protected $hidden = [
@@ -527,6 +534,8 @@ class User extends Model implements
             'business' => $this->business,
             'phone_number' => $this->phone_number,
             'email' => $this->email,
+            'chat_public_key' => $this->chat_public_key,
+            'use_chat' => $this->use_chat,
         ];
     }
 
@@ -602,5 +611,21 @@ class User extends Model implements
     public function lastProject(): HasOne
     {
         return $this->hasOne(Project::class, 'id', 'last_project_id');
+    }
+
+    public function chats(): BelongsToMany
+    {
+        return $this->belongsToMany(Chat::class, 'chat_users')
+            ->using(ChatUser::class);
+    }
+
+    public function verifiableEventTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(EventType::class, 'event_type_user');
+    }
+
+    public function eventVerifications(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(EventVerification::class, 'verifier');
     }
 }

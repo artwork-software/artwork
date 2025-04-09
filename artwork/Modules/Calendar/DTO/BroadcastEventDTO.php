@@ -43,6 +43,8 @@ class BroadcastEventDTO extends Data
         public Collection $subEvents,
         public ?SeriesEvents $series,
         public ?string $option_string,
+        public ?bool $isPlanning = false,
+        public ?bool $hasVerification = false,
     ) {
     }
 
@@ -77,6 +79,8 @@ class BroadcastEventDTO extends Data
             subEvents: $event->subEvents,
             series: $event->is_series ? $event->series : null,
             option_string: $event->option_string,
+            isPlanning: $event->is_planning ?? false,
+            hasVerification: $event->getAttribute('has_verification') ?? false,
         );
     }
 }

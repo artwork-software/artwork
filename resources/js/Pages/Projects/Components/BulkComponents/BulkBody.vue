@@ -28,21 +28,21 @@
                     <div @click="updateUserSortId(1)"
                          :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                         {{ $t('Sort by room') }}
-                        <IconCheck class="w-5 h-5" v-if="usePage().props.user.bulk_sort_id === 1"/>
+                        <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 1"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
                     <div @click="updateUserSortId(2)"
                          :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                         {{ $t('Sort by appointment type') }}
-                        <IconCheck class="w-5 h-5" v-if="usePage().props.user.bulk_sort_id === 2"/>
+                        <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 2"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
                     <div @click="updateUserSortId(3)"
                          :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                         {{ $t('Sort by day') }}
-                        <IconCheck class="w-5 h-5" v-if="usePage().props.user.bulk_sort_id === 3"/>
+                        <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 3"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
@@ -59,7 +59,7 @@
             <BulkHeader v-model="timeArray" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
             <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
                 <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
-                    <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
+                    <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.auth.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
                         <BulkSingleEvent
                             :can-edit-component="canEditComponent"
                             :rooms="rooms"
@@ -504,7 +504,7 @@ const {hasAdminRole} = usePermission(usePage().props),
     updateUserSortId = (id) => {
         isLoading.value = true;
         router.patch(
-            route('user.update_bulk_sort_id', {user: usePage().props.user.id}),
+            route('user.update_bulk_sort_id', {user: usePage().props.auth.user.id}),
             {
                 bulk_sort_id: id
             },
@@ -556,8 +556,8 @@ onMounted(() => {
         isLoading.value = false;
     }
 
-    // if usePage().props.user.bulk_sort_id === 3 order events by day and start_time and room.position
-    if (usePage().props.user.bulk_sort_id === 3) {
+    // if usePage().props.auth.user.bulk_sort_id === 3 order events by day and start_time and room.position
+    if (usePage().props.auth.user.bulk_sort_id === 3) {
         events.sort((a, b) => {
             if (a.day === b.day) {
                 if (a.start_time === b.start_time) {

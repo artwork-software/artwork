@@ -28,7 +28,7 @@
     <ConfirmDeleteModal
         v-if="showDeleteConfirmation"
         :title="$t('Delete category')"
-        :description="$t('Are you sure you want to delete this category?')"
+        :description="$t('Are you sure you want to delete this category? Articles and Sub-Categories in this category will be deleted as well.')"
         @delete="deleteCategory"
         @closed="showDeleteConfirmation = false"
     />
@@ -39,6 +39,7 @@
 import AddEditCategoryModal from "@/Pages/InventorySetting/Components/AddEditCategoryModal.vue";
 import {ref} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {router} from "@inertiajs/vue3";
 
 const props = defineProps({
     category: {
@@ -55,7 +56,16 @@ const showAddEditCategoryModal = ref(false);
 const showDeleteConfirmation = ref(false)
 
 const deleteCategory = () => {
-    console.log('delete property')
+    router.delete(route('inventory-management.settings.categories.delete', props.category.id), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            showDeleteConfirmation.value = false
+        },
+        onError: () => {
+            showDeleteConfirmation.value = false
+        }
+    })
 }
 </script>
 

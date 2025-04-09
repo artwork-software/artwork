@@ -52,15 +52,20 @@ use Illuminate\Support\Collection;
  * @property string $updated_at
  * @property string $deleted_at
  * @property bool $accepted
+ * @property bool $is_planning
  * @property string $option_string
  * @property Project|null $project
  * @property Room|null $room
+ * @property EventStatus $eventStatus
+ * @property EventProperty $eventProperties
+ * @property User $user
  * @property EventType $event_type
  * @property User $creator
  * @property \Illuminate\Database\Eloquent\Collection<SubEvent> $subEvents
  * @property \Illuminate\Database\Eloquent\Collection<Shift> $shifts
  * @property \Illuminate\Database\Eloquent\Collection<Timeline> $timelines
  * @property \Illuminate\Database\Eloquent\Collection<EventComment> $comments
+ * @property EventVerification $verifications
  * @property SeriesEvents|null $series
  * @property-read array<string> $days_of_event
  * @property-read array<string> $days_of_shifts
@@ -99,7 +104,8 @@ class Event extends Model
         'allDay',
         'latest_end_datetime',
         'earliest_start_datetime',
-        'event_status_id'
+        'event_status_id',
+        'is_planning'
     ];
 
     protected $guarded = [
@@ -117,6 +123,7 @@ class Event extends Model
         'allDay' => 'boolean',
         'earliest_start_datetime' => 'datetime',
         'latest_end_datetime' => 'datetime',
+        'is_planning' => 'boolean',
     ];
 
     protected $appends = [
@@ -498,5 +505,25 @@ class Event extends Model
     public function getMinutesFormStartHourToStartAttribute(): int
     {
         return Carbon::parse($this->start_time)->diffInMinutes(Carbon::parse($this->start_time)->startOfHour());
+    }
+
+    public function scopeIsPlanning(Builder $builder): Builder
+    {
+        return $builder->where('is_planning', true);
+    }
+
+    public function scopeIsNotPlanning(Builder $builder): Builder
+    {
+        return $builder->where('is_planning', false);
+    }
+
+    public function verifications(): HasMany
+    {
+        return $this->hasMany(EventVerification::class);
+    }
+
+    public function getHasVerificationAttribute(): bool
+    {
+        return $this->verifications()->where('status', 'pending')->exists();
     }
 }

@@ -43,7 +43,7 @@
                                             {{ formatDate(comment.created_at) }}
                                         </div>
                                     </div>
-                                    <button v-show="commentHovered === comment.id && comment.user_id === $page.props.user.id" type="button"
+                                    <button v-show="commentHovered === comment.id && comment.user_id === $page.props.auth.user.id" type="button"
                                             @click="deleteCommentFromCell(comment)">
                                         <span class="sr-only">{{ $t('Remove comment from project') }}</span>
                                         <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>

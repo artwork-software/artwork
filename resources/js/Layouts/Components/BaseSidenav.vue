@@ -39,14 +39,14 @@ export default {
     },
     data() {
         return {
-            show: this.$page.props.user ? this.$page.props.user.is_sidebar_opened : false
+            show: this.$page.props.auth.user ? this.$page.props.auth.user.is_sidebar_opened : false
         }
     },
     emits: ['toggle'],
     methods: {
         updateShow() {
             this.show = !this.show
-            this.$inertia.patch(route('user.sidebar.update', {user: this.$page.props.user.id}), {
+            this.$inertia.patch(route('user.sidebar.update', {user: this.$page.props.auth.user.id}), {
                 is_sidebar_opened: this.show
             }, {
                 preserveScroll: true,

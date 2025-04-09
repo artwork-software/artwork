@@ -2,11 +2,13 @@
 
 namespace Artwork\Modules\Inventory\Models;
 
+use Artwork\Core\Casts\TranslatedDateTimeCast;
 use Artwork\Modules\Inventory\Models\Traits\HasInventoryProperties;
 use Artwork\Modules\Manufacturer\Models\Manufacturer;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
 /**
@@ -32,6 +34,7 @@ class InventoryArticle extends Model
     use HasFactory;
     use HasInventoryProperties;
     use Searchable;
+    use SoftDeletes;
 
 
     protected $fillable = [
@@ -45,6 +48,12 @@ class InventoryArticle extends Model
 
     protected $casts = [
         'is_detailed_quantity' => 'boolean',
+        'quantity' => 'integer',
+        'inventory_category_id' => 'integer',
+        'inventory_sub_category_id' => 'integer',
+        'created_at' => TranslatedDateTimeCast::class,
+        'updated_at' => TranslatedDateTimeCast::class,
+        'deleted_at' => TranslatedDateTimeCast::class,
     ];
 
     //protected $with = ['category', 'subCategory', 'properties', 'images'];

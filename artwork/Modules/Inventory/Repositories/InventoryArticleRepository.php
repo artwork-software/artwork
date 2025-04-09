@@ -5,6 +5,7 @@ namespace Artwork\Modules\Inventory\Repositories;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 class InventoryArticleRepository
 {
@@ -158,4 +159,72 @@ class InventoryArticleRepository
         $article->detailedArticleQuantities()->delete();
     }
 
+
+    public function delete(InventoryArticle $article): void
+    {
+        $article->images()->delete();
+        $article->detailedArticleQuantities()->delete();
+
+        $article->delete();
+    }
+
+    public function getAllTrashed(): \Illuminate\Database\Eloquent\Collection
+    {
+        return InventoryArticle::onlyTrashed()
+            ->with([
+                'properties',
+                'category',
+                'subCategory',
+                'images' => function ($query) {
+                    $query->withTrashed();
+                },
+                'detailedArticleQuantities' => function ($query) {
+                    $query->withTrashed();
+                },
+            ])
+            ->get();
+    }
+
+    public function forceDelete(InventoryArticle $article): void
+    {
+        $images = $article->images()->withTrashed()->get();
+        // delete images on Storage in public inventory_articles
+        foreach ($images as $image) {
+            if ($image->image && Storage::disk('public')->exists($image->image)) {
+                Storage::disk('public')->delete($image->image);
+            }
+        }
+
+        // delete images
+        $images->forceDelete();
+
+        // delete detailed articles
+        $detailedArticles = $article->detailedArticleQuantities()->withTrashed()->get();
+        foreach ($detailedArticles as $detailedArticle) {
+            $detailedArticle->properties()->detach();
+        }
+
+        // delete detailed articles
+        $detailedArticles->forceDelete();
+
+        // delete article
+        $article->properties()->detach();
+        $article->forceDelete();
+    }
+
+    public function restore(InventoryArticle $article): void
+    {
+        $images = $article->images()->withTrashed()->get();
+        foreach ($images as $image) {
+            $image->restore();
+        }
+
+        $detailedArticles = $article->detailedArticleQuantities()->withTrashed()->get();
+
+        foreach ($detailedArticles as $detailedArticle) {
+            $detailedArticle->restore();
+        }
+
+        $article->restore();
+    }
 }

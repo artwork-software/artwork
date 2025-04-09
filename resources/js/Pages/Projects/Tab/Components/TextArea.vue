@@ -80,7 +80,7 @@ export default {
                 return;
             }
 
-            if (this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id) || this.project.isMemberOfADepartment){
+            if (this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.auth.user.id) || this.projectManagerIds.includes(this.$page.props.auth.user.id) || this.project.isMemberOfADepartment){
                 this.descriptionClicked = true;
 
                 nextTick(() => {

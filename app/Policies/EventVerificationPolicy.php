@@ -1,11 +1,11 @@
 <?php
 
-namespace Artwork\Modules\Inventory\Policies;
+namespace App\Policies;
 
-use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
+use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\User\Models\User;
 
-class InventoryDetailedQuantityArticlePolicy
+class EventVerificationPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -18,7 +18,7 @@ class InventoryDetailedQuantityArticlePolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle): bool
+    public function view(User $user, EventVerification $eventVerification): bool
     {
         //
     }
@@ -34,7 +34,7 @@ class InventoryDetailedQuantityArticlePolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle): bool
+    public function update(User $user, EventVerification $eventVerification): bool
     {
         //
     }
@@ -42,7 +42,7 @@ class InventoryDetailedQuantityArticlePolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle): bool
+    public function delete(User $user, EventVerification $eventVerification): bool
     {
         //
     }
@@ -50,7 +50,7 @@ class InventoryDetailedQuantityArticlePolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle): bool
+    public function restore(User $user, EventVerification $eventVerification): bool
     {
         //
     }
@@ -58,7 +58,7 @@ class InventoryDetailedQuantityArticlePolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle): bool
+    public function forceDelete(User $user, EventVerification $eventVerification): bool
     {
         //
     }

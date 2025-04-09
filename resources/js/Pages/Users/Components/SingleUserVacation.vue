@@ -1,6 +1,6 @@
 <template>
     <div class="bg-secondary rounded flex text-sm group relative mb-2" v-if="!vacation.has_conflicts">
-        <div class="hidden group-hover:block" v-if="$can('can manage workers') || hasAdminRole() || user.id === usePage().props.user.id || $can('can manage availability')">
+        <div class="hidden group-hover:block" v-if="$can('can manage workers') || hasAdminRole() || user.id === usePage().props.auth.user.id || $can('can manage availability')">
             <div class="absolute w-full h-full rounded-lg flex justify-center align-middle items-center gap-2">
                 <button type="button" @click="openShowEditVacationModal"
                         class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
@@ -45,7 +45,7 @@
 
     <div  v-else>
         <div class="rounded flex text-sm group relative mb-2">
-            <div class="hidden group-hover:block" v-if="$can('can manage workers') || hasAdminRole() || user.id === usePage().props.user.id || $can('can manage availability')">
+            <div class="hidden group-hover:block" v-if="$can('can manage workers') || hasAdminRole() || user.id === usePage().props.auth.user.id || $can('can manage availability')">
                 <div class="absolute w-full h-full rounded-lg flex justify-center align-middle items-center gap-2">
                     <button type="button" @click="openShowEditVacationModal"
                             class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">

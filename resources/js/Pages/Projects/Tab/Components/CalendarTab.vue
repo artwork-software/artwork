@@ -76,7 +76,7 @@ const props = defineProps([
     'first_project_calendar_tab_id',
     'eventStatuses'
 ]),
-atAGlance = ref(usePage().props.user.at_a_glance ?? false);
+atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
 
 provide('eventTypes', props.eventTypes ?? props.loadedProjectInformation['CalendarTab'].eventTypes);
 provide('dateValue', props.dateValue ?? props.loadedProjectInformation['CalendarTab'].dateValue);

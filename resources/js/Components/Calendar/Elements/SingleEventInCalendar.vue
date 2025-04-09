@@ -1,7 +1,7 @@
 <template>
     <div :style="{ minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
         class="rounded-lg group/singleEvent"
-        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event?.project?.id ? 'border-[3px] border-dashed border-pink-500' : '', isHeightFull ? 'h-full' : '', usePage().props.user.daily_view ? 'overflow-y-scroll' : '', multiEdit ? 'relative' : '']">
+        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id ? 'border-[3px] border-dashed border-pink-500' : '', isHeightFull ? 'h-full' : '', usePage().props.auth.user.daily_view ? 'overflow-y-scroll' : '', multiEdit ? 'relative' : '']">
         <div v-if="zoom_factor > 0.4 && multiEdit" @click="clickOnCheckBox"
              class="absolute w-full h-full z-10 rounded-lg group-hover/singleEvent:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
@@ -30,14 +30,21 @@
             </div>
         </div>
 
+        <div v-if="event.isPlanning && !event.hasVerification" class="w-full rounded-t-lg bg-artwork-buttons-create px-2 py-1 text-[10px] font-lexend select-none pointer-events-none text-white">
+            {{ $t('Planned Event') }}
+        </div>
+        <div v-else-if="event.hasVerification" class="bg-orange-500 w-full rounded-t-lg px-2 py-1 text-[10px] font-lexend select-none pointer-events-none text-white">
+            {{ $t('Verification requested') }}
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 w-full px-1" v-if="zoom_factor > 0.6">
             <div class="py-2 px-1 col-span-2">
-                <div class="px-2" :class="usePage().props.user.calendar_settings.high_contrast ? '' : 'border-l-4'" :style="{borderColor: getColorBasedOnUserSettings}">
+                <div class="px-2" :class="usePage().props.auth.user.calendar_settings.high_contrast ? '' : 'border-l-4'" :style="{borderColor: getColorBasedOnUserSettings}">
                     <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
                         :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']" class="">
-                        <div class="">
+                        <div>
                             <div class="flex items-center gap-x-1">
-                                <div  v-if="usePage().props.user.calendar_settings.project_status && event.project?.status" class="text-center rounded-full border group min-h-4 min-w-4 size-4 cursor-pointer" :style="{backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color}">
+                                <div  v-if="usePage().props.auth.user.calendar_settings.project_status && event.project?.status" class="text-center rounded-full border group min-h-4 min-w-4 size-4 cursor-pointer" :style="{backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color}">
                                     <div class="absolute hidden group-hover:block top-5">
                                         <div class="bg-artwork-navigation-background text-white text-xs rounded-full px-3 py-0.5">
                                             {{ event?.project?.status?.name }}
@@ -50,13 +57,13 @@
                                     </a>
                                 </div>
                             </div>
-                            <div v-if="usePage().props.user.calendar_settings.project_artists" class="flex items-center w-28">
+                            <div v-if="usePage().props.auth.user.calendar_settings.project_artists" class="flex items-center w-28">
                                 <div v-if="event.project && event.project?.artistNames"
                                      class=" truncate">
                                     {{ event.project?.artistNames }}
                                 </div>
                             </div>
-                            <div v-if="usePage().props.user.calendar_settings.event_name"
+                            <div v-if="usePage().props.auth.user.calendar_settings.event_name"
                                  class="flex items-center w-28">
                                 <div v-if="event.eventName"
                                      class="truncate">
@@ -68,7 +75,7 @@
                                     {{ event?.eventType?.name }}
                                 </div>
                             </div>
-                            <div v-if="usePage().props.user.calendar_settings.project_status" class="absolute right-5">
+                            <div v-if="usePage().props.auth.user.calendar_settings.project_status" class="absolute right-5">
                                 <div v-if="event.projectStateColor"
                                      :class="[event.projectStateColor,zoom_factor <= 0.8 ? 'border-2' : 'border-4']"
                                      class="rounded-full">
@@ -130,7 +137,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div v-if="event.option_string && usePage().props.user.calendar_settings.options"
+                            <div v-if="event.option_string && usePage().props.auth.user.calendar_settings.options"
                                  class="flex items-center">
                                 <div
                                     v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
@@ -146,13 +153,13 @@
                         <!-- repeating Event -->
                         <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
                              :class="[zoom_factor === 1 ? 'eventText' : '', 'font-semibold']"
-                             v-if="usePage().props.user.calendar_settings.repeating_events && event.is_series"
+                             v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
                              class="uppercase flex items-center">
                             <IconRepeat class="mx-1 h-3 w-3" stroke-width="1.5"/>
                             {{ $t('Repeat event') }}
                         </div>
                         <!-- User-Icons -->
-                        <div class="-ml-3 mb-0.5 w-full" v-if="usePage().props.user.calendar_settings.project_management && event?.project?.leaders?.length > 0">
+                        <div class="-ml-3 mb-0.5 w-full" v-if="usePage().props.auth.user.calendar_settings.project_management && event?.project?.leaders?.length > 0">
                             <div v-if="event?.project?.leaders && !project && zoom_factor >= 0.8"
                                  class="mt-1 ml-5 flex flex-wrap">
                                 <div class="flex flex-wrap flex-row -ml-1.5"
@@ -200,7 +207,7 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="usePage().props.user.calendar_settings.work_shifts" class="grid grid-cols-1 md:grid-cols-2 text-xs my-2">
+                    <div v-if="usePage().props.auth.user.calendar_settings.work_shifts" class="grid grid-cols-1 md:grid-cols-2 text-xs my-2">
                         <a v-if="firstProjectShiftTabId" :href="route('projects.tab', {project: event?.project?.id, projectTab: firstProjectShiftTabId})" v-for="(shift) in event.shifts" :key="shift.id">
                             <span>{{ shift.craft.abbreviation }}</span>
                             <span>
@@ -208,7 +215,7 @@
                             </span>
                         </a>
                     </div>
-                    <div v-if="usePage().props.user.calendar_settings.description" :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}" class="">
+                    <div v-if="usePage().props.auth.user.calendar_settings.description" :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}" class="">
                         <EventNoteComponent :event="event"/>
                     </div>
                 </div>
@@ -227,8 +234,22 @@
                         />
                     </div>
                 </div>
-                <div class="invisible group-hover/singleEvent:visible">
-                    <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.user.calendar_settings.high_contrast ? 'text-white' : ''">
+                <div class="invisible group-hover/singleEvent:visible flex items-start justify-end w-full" :class="event.isPlanning ? 'pt-2' : ''">
+                    <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''">
+                        <MenuItem v-if="event?.isPlanning && !event.hasVerification" v-slot="{ active }">
+                            <div @click="SendEventToVerification"
+                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <component is="IconLock" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                {{ $t('Request verification')}}
+                            </div>
+                        </MenuItem>
+                        <MenuItem v-if="event?.isPlanning && event.hasVerification" v-slot="{ active }">
+                            <div @click="cancelVerification"
+                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <component is="IconLockOpen" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                {{ $t('Cancel verification')}}
+                            </div>
+                        </MenuItem>
                         <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole)" v-slot="{ active }">
                             <div @click="$emit('editEvent', event)"
                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
@@ -270,7 +291,7 @@
                     <PopoverButton class="flex items-center justify-start gap-1 ring-0 focus:ring-0">
                         <component is="IconInfoCircle" class="size-6 " stroke-width="1.5"/>
                         <div class="w-16 max-w-16 xsDark text-left" v-if="zoom_factor > 0.4">
-                            <div v-if="usePage().props.user.calendar_settings.event_name && event.eventName" class="truncate">
+                            <div v-if="usePage().props.auth.user.calendar_settings.event_name && event.eventName" class="truncate">
                                 {{ event.eventName }}
                             </div>
                             <a v-if="event.project && event.project?.id" :href="getEditHref(event.project?.id)" class="truncate block">
@@ -284,7 +305,7 @@
                             <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
                                  :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']" class="">
                                 <div class="flex items-center gap-x-1">
-                                    <div  v-if="usePage().props.user.calendar_settings.project_status && event.project?.status" class="text-center rounded-full border group size-4 cursor-pointer" :style="{backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color}">
+                                    <div  v-if="usePage().props.auth.user.calendar_settings.project_status && event.project?.status" class="text-center rounded-full border group size-4 cursor-pointer" :style="{backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color}">
                                         <div class="absolute hidden group-hover:block top-5">
                                             <div class="bg-artwork-navigation-background text-white text-xs rounded-full px-3 py-0.5">
                                                 {{ event?.project?.status?.name }}
@@ -297,14 +318,14 @@
                                         </a>
                                     </div>
                                 </div>
-                                <div v-if="usePage().props.user.calendar_settings.project_artists"
+                                <div v-if="usePage().props.auth.user.calendar_settings.project_artists"
                                      class="flex items-center">
                                     <div v-if="event.projectArtists"
                                          class=" truncate">
                                         {{ event.projectArtists }}
                                     </div>
                                 </div>
-                                <div v-if="usePage().props.user.calendar_settings.event_name"
+                                <div v-if="usePage().props.auth.user.calendar_settings.event_name"
                                      class="flex items-center">
                                     <div v-if="event.eventName"
                                          class="truncate">
@@ -316,7 +337,7 @@
                                         {{ event.eventTypeName }}
                                     </div>
                                 </div>
-                                <div v-if="usePage().props.user.calendar_settings.project_status" class="absolute right-5">
+                                <div v-if="usePage().props.auth.user.calendar_settings.project_status" class="absolute right-5">
                                     <div v-if="event.projectStateColor"
                                          :class="[event.projectStateColor,zoom_factor <= 0.8 ? 'border-2' : 'border-4']"
                                          class="rounded-full">
@@ -384,7 +405,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div v-if="event.option_string && usePage().props.user.calendar_settings.options"
+                                <div v-if="event.option_string && usePage().props.auth.user.calendar_settings.options"
                                      class="flex items-center">
                                     <div
                                         v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
@@ -400,14 +421,14 @@
                             <!-- repeating Event -->
                             <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
                                  :class="[zoom_factor === 1 ? 'eventText' : '', 'font-semibold']"
-                                 v-if="usePage().props.user.calendar_settings.repeating_events && event.is_series"
+                                 v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
                                  class="uppercase flex items-center">
                                 <IconRepeat class="mx-1 h-3 w-3" stroke-width="1.5"/>
                                 {{ $t('Repeat event') }}
                             </div>
                             <!-- User-Icons -->
                             <div class="-ml-3 mb-0.5 w-full"
-                                 v-if="usePage().props.user.calendar_settings.project_management && event.projectLeaders?.length > 0">
+                                 v-if="usePage().props.auth.user.calendar_settings.project_management && event.projectLeaders?.length > 0">
                                 <div v-if="event.projectLeaders && !project && zoom_factor >= 0.8"
                                      class="mt-1 ml-5 flex flex-wrap">
                                     <div class="flex flex-wrap flex-row -ml-1.5"
@@ -467,7 +488,21 @@
                                 </div>
                             </div>
                             <div class="invisible group-hover/singleEvent:visible">
-                                <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.user.calendar_settings.high_contrast ? 'text-white' : ''">
+                                <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''">
+                                    <MenuItem v-if="event?.isPlanning && !event.hasVerification" v-slot="{ active }">
+                                        <div @click="SendEventToVerification"
+                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                            <component is="IconLock" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                            {{ $t('Request verification')}}
+                                        </div>
+                                    </MenuItem>
+                                    <MenuItem v-if="event?.isPlanning && event.hasVerification" v-slot="{ active }">
+                                        <div @click="cancelVerification"
+                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                            <component is="IconLockOpen" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                            {{ $t('Cancel verification')}}
+                                        </div>
+                                    </MenuItem>
                                     <MenuItem v-slot="{ active }">
                                         <div @click="$emit('editEvent', event)"
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
@@ -501,7 +536,7 @@
                                 </BaseMenu>
                             </div>
                         </div>
-                        <div v-if="usePage().props.user.calendar_settings.work_shifts" class="ml-1 pb-1 text-xs">
+                        <div v-if="usePage().props.auth.user.calendar_settings.work_shifts" class="ml-1 pb-1 text-xs">
                             <a v-if="firstProjectShiftTabId" :href="route('projects.tab', {project: event.projectId, projectTab: firstProjectShiftTabId})" v-for="shift in event.shifts">
                                 <span>{{ shift.craft.abbreviation }}</span>
                                 <span>
@@ -509,7 +544,7 @@
                                 </span>
                             </a>
                         </div>
-                        <div v-if="usePage().props.user.calendar_settings.description"
+                        <div v-if="usePage().props.auth.user.calendar_settings.description"
                              :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}"
                              class="p-0.5 ml-0.5">
                             <EventNoteComponent :event="event"/>
@@ -597,7 +632,7 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="usePage().props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs"
+                    <div v-if="usePage().props.auth.user.calendar_settings.work_shifts" class="ml-0.5 text-xs"
                          :style="{color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}">
                         <div v-for="shift in subEvent.shifts">
                             <span>{{ shift.craft.abbreviation }}</span>
@@ -619,7 +654,7 @@
 
 <script setup>
 import {computed, inject, onMounted, ref} from "vue";
-import {Link, usePage} from "@inertiajs/vue3";
+import {Link, router, usePage} from "@inertiajs/vue3";
 import {IconCirclePlus, IconEdit, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import {Menu, MenuButton, MenuItem, MenuItems, Popover, PopoverButton, PopoverPanel} from "@headlessui/vue";
@@ -632,8 +667,8 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {Float} from "@headlessui-float/vue";
 
 const {t} = useI18n(), $t = t;
-const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
-const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
+const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
+const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
 
 
 const emits = defineEmits([
@@ -711,11 +746,11 @@ const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, even
 };
 
 const isRoomAdmin = computed(() => {
-    return props.rooms?.find(room => room.id === props.event.roomId)?.admins.some(admin => admin.id === usePage().props.user.id) || false;
+    return props.rooms?.find(room => room.id === props.event.roomId)?.admins.some(admin => admin.id === usePage().props.auth.user.id) || false;
 });
 
 const isCreator = computed(() => {
-    return props.event.created_by.id === usePage().props.user.id
+    return props.event.created_by.id === usePage().props.auth.user.id
 });
 
 const roomCanBeBookedByEveryone = computed(() => {
@@ -737,30 +772,30 @@ const textColorWithDarken = computed(() => {
 });
 
 const getColorBasedOnUserSettings = computed(() => {
-    return usePage().props.user.calendar_settings.use_event_status_color ? props.event?.eventStatus?.color : props.event.eventType.hex_code;
+    return usePage().props.auth.user.calendar_settings.use_event_status_color ? props.event?.eventStatus?.color : props.event.eventType.hex_code;
 });
 
 const totalHeight = computed(() => {
     let height = 42;
     // ProjectStatus is in same row as name -> no extra height needed
-    if (usePage().props.user.calendar_settings.project_status) height += 0;
+    if (usePage().props.auth.user.calendar_settings.project_status) height += 0;
     //Options are in same row as time -> no extra height needed
-    if (usePage().props.user.calendar_settings.options) height += 0;
-    if (usePage().props.user.calendar_settings.project_management) height += 17;
-    if (usePage().props.user.calendar_settings.repeating_events) height += 20;
-    if (usePage().props.user.calendar_settings.work_shifts) height += 18;
+    if (usePage().props.auth.user.calendar_settings.options) height += 0;
+    if (usePage().props.auth.user.calendar_settings.project_management) height += 17;
+    if (usePage().props.auth.user.calendar_settings.repeating_events) height += 20;
+    if (usePage().props.auth.user.calendar_settings.work_shifts) height += 18;
     return height;
 });
 
 const heightSubtraction = (event) => {
     let heightSubtraction = 0;
-    if (usePage().props.user.calendar_settings.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)) {
+    if (usePage().props.auth.user.calendar_settings.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)) {
         heightSubtraction += 17;
     }
-    if (usePage().props.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)) {
+    if (usePage().props.auth.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)) {
         heightSubtraction += 20;
     }
-    if (usePage().props.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
+    if (usePage().props.auth.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
         heightSubtraction += 18;
     }
     return heightSubtraction;
@@ -828,5 +863,23 @@ onMounted(() => {
 const getEditHref = (projectId) => {
     return route('projects.tab', {project: projectId, projectTab: props.first_project_tab_id});
 };
+
+const SendEventToVerification = () => {
+    router.post(route('events.sendToVerification', {event: props.event.id}), {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+
+        }
+    });
+}
+
+const cancelVerification = () => {
+    router.post(route('event-verifications.cancel-verification', props.event.id), {}, {
+        preserveScroll: true,
+        preserveState: false,
+    })
+}
+
 
 </script>

@@ -14,7 +14,7 @@
                 <MultiAlertComponent :errors="documentForm.errors" v-show="Object.keys(documentForm.errors).length > 0" :error-count="Object.keys(documentForm.errors).length" />
             </div>
 
-            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.user.id))">
+            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.auth.user.id))">
                 <div
                     @click="selectNewFiles"
                     @dragover.prevent
@@ -46,7 +46,7 @@
                             </div>
                         </div>
                         <div class="ml-4 shrink-0 flex items-center gap-x-4">
-                            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id))"
+                            <div v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds?.includes(this.$page.props.auth.user.id) || projectManagerIds?.includes(this.$page.props.auth.user.id))"
                                  @click="openConfirmDeleteModal(project_file)"
                                  class="invisible group-hover:visible font-medium text-gray-900 hover:text-artwork-messages-error cursor-pointer">
                                 {{ $t('Löschen') }}

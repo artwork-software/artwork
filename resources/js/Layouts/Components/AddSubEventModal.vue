@@ -302,7 +302,7 @@ export default {
                 start_time: this.subEventToEdit?.start ? this.subEventToEdit?.start : dayjs(this.event.start).format('YYYY-MM-DD HH:mm'),
                 end_time: this.subEventToEdit?.end ? this.subEventToEdit?.end : dayjs(this.event.end).format('YYYY-MM-DD HH:mm'),
                 description: this.subEventToEdit?.description ? this.subEventToEdit?.description : '',
-                user_id: this.$page.props.user.id,
+                user_id: this.$page.props.auth.user.id,
                 event_type_id: this.subEventToEdit?.eventTypeId ? this.subEventToEdit?.eventTypeId : '',
                 allDay: this.subEventToEdit?.allDay ? this.subEventToEdit?.allDay : false,
                 eventProperties: this.subEventToEdit?.event_properties ? this.subEventToEdit?.event_properties : [],

@@ -63,7 +63,7 @@ const props = defineProps(
             required: true
         }
     }),
-    atAGlance = ref(usePage().props.user.at_a_glance ?? false);
+    atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
 
 provide('eventTypes', props.eventTypes);
 provide('dateValue', props.dateValue);

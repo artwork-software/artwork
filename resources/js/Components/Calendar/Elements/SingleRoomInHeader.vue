@@ -9,7 +9,7 @@
 import {Link, usePage} from "@inertiajs/vue3";
 import {computed, ref} from "vue";
 
-const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
+const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 
 const props = defineProps({
     room: {

@@ -126,7 +126,7 @@ export default defineComponent({
                     canWriteArray.push(write.id)
                 }
             )
-            return canWriteArray.includes(this.$page.props.user.id);
+            return canWriteArray.includes(this.$page.props.auth.user.id);
         },
         userIsProjectManager() {
             let managerIdArray = [];
@@ -134,7 +134,7 @@ export default defineComponent({
                     managerIdArray.push(manager.id)
                 }
             )
-            return managerIdArray.includes(this.$page.props.user.id);
+            return managerIdArray.includes(this.$page.props.auth.user.id);
         },
         checkRoleHasUser(role) {
             return this.project.usersArray.some(user => user.pivot_roles.includes(role.id));

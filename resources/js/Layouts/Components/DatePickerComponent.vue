@@ -263,7 +263,7 @@ export default {
                 this.hasError = false;
 
                 if (this.is_shift_plan) {
-                    router.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
+                    router.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.auth.user.id), {
                         start_date: startDate,
                         end_date: endDate,
                     }, {
@@ -271,7 +271,7 @@ export default {
                         preserveScroll: true,
                     });
                 } else if (this.is_user_shift_plan) {
-                    router.patch(route('update.user.worker.shift-plan.filters.update', this.$page.props.user.id), {
+                    router.patch(route('update.user.worker.shift-plan.filters.update', this.$page.props.auth.user.id), {
                         start_date: startDate,
                         end_date: endDate,
                     }, {
@@ -279,7 +279,7 @@ export default {
                         preserveScroll: true,
                     });
                 } else {
-                    router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+                    router.patch(route('update.user.calendar.filter.dates', this.$page.props.auth.user.id), {
                         start_date: startDate,
                         end_date: endDate,
                     }, {

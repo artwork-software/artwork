@@ -8,7 +8,7 @@
                     <!-- Image Selector -->
                     <div class="mx-auto w-full flex">
                         <TabList v-if="article.images?.length > 1"
-                                 class="grid grid-cols-2 sm:grid-cols-3 gap-2 items-center overflow-y-scroll overflow-x-hidden max-h-[30vh]">
+                                 class="grid grid-cols-2 sm:grid-cols-3 gap-2 items-center overflow-y-scroll overflow-x-hidden max-h-[30vh] p-2">
                             <Tab v-for="image in article.images"
                                  :key="image.id"
                                  v-slot="{ selected }"
@@ -58,12 +58,11 @@
                                     </span>
                             </div>
                         </div>
-                        <div class="flex px-2">
-                            <IconEdit class="w-5 h-5 rounded-full cursor-pointer"
-                                      @click="openArticleEditModal">
-                                {{ $t('Article edit') }}
-                            </IconEdit>
-                            <!-- TODO: HIER NOCH LÖSCHEN BUTTON -->
+                        <div class="flex gap-x-2 px-2">
+                            <component is="IconEdit" class="w-5 h-5 rounded-full cursor-pointer hover:text-artwork-buttons-create duration-200 ease-in-out"
+                                      @click="openArticleEditModal" />
+                            <component is="IconTrash" class="w-5 h-5 rounded-full cursor-pointer hover:text-red-500 duration-200 ease-in-out"
+                                      @click="showConfirmDelete = true" />
                         </div>
                     </div>
                     <div class="flex w-full">
@@ -129,11 +128,11 @@
                 </section>
                 <div class="bg-backgroundGray -mx-6">
                 <section aria-labelledby="details-heading" class="mt-8 mb-2 border-t-2 border-gray-100 pt-4 mx-6" v-if="article.is_detailed_quantity">
-                    <div class="flex justify-between mb-4 px-4 p-4 border-b-2 border-dashed">
+                    <div class="flex justify-between mb-4 py-3 border-b-2 border-dashed">
                         <div class="font-lexend font-semibold text-primary">
                             {{ $t('Detailed Articles') }}
                         </div>
-                        <div class="flex pr-11" v-if="article.is_detailed_quantity">
+                        <div class="flex" v-if="article.is_detailed_quantity">
                             <div>
                                 <h3 class="text-sm font-bold text-primary font-lexend">
                                     {{ $t('Full Quantity') }}
@@ -141,36 +140,30 @@
                             </div>
                             <p class="font-lexend text-sm pl-2"
                                :class="article.quantity === 0 ? 'text-error' : 'text-artwork-buttons-create'">
-                                {{ formatQuantity(article.quantity) }}</p>
+                                {{ formatQuantity(article.quantity) }}
+                            </p>
                         </div>
                     </div>
 
-                    <div class="">
-                        <Disclosure as="div" v-slot="{ open }"
-                                    v-for="detailedArticle in article.detailed_article_quantities">
+                    <div class="pb-10">
+                        <Disclosure as="div" class="mb-2" v-slot="{ open }" v-for="detailedArticle in article.detailed_article_quantities" :class="[open ? 'shadow-sm rounded-lg' : 'rounded-xl shadow-lg ', '']">
                             <h3>
-                                <DisclosureButton :class="[open ? 'rounded-b-none border-2 border-gray-100 shadow-sm rounded-lg bg-backgroundBlue' : 'rounded-xl shadow-lg -mt-4', 'group w-full p-4 relative flex items-center justify-between py-6 text-left']">
-                                    <span
-                                        :class="[open ? 'text-md font-bold' : ' text-md font-bold', ' font-lexend text-primary group-hover:scale-105']">
+                                <DisclosureButton class="flex items-center group justify-between w-full px-4 py-3 bg-white hover:bg-artwork-buttons-create/10" :class="open ? 'rounded-t-lg' : 'rounded-lg'">
+                                    <span :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-primary']">
                                         {{ detailedArticle.name }}
                                     </span>
-                                    <span class="ml-6 flex items-center gap-x-3 group-hover:scale-105">
-                                        <span
-                                            class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-lexend font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset">
-                                            {{ formatQuantity(detailedArticle.quantity) }}
+                                    <span class="ml-6 flex items-center gap-x-3">
+                                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-lexend font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset">
+                                            {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
                                         </span>
-                                        <component is="IconPlus" v-if="!open"
-                                                   class="block size-6 text-gray-400 group-hover:text-gray-500"
-                                                   aria-hidden="true"/>
-                                        <component is="IconMinus" v-else
-                                                   class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover"
-                                                   aria-hidden="true"/>
+                                        <component is="IconPlus" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
+                                        <component is="IconMinus" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>
                                     </span>
                                 </DisclosureButton>
                             </h3>
-                            <DisclosurePanel as="div" class="shadow-lg rounded-b-xl p-4 bg-white -mt-1">
+                            <DisclosurePanel as="div" class="shadow-lg rounded-b-xl p-4 bg-white">
                                 <div class="border-b pb-2 border-gray-100">
-                                    <div class="space-y-6 text-md italic text-gray-500 font-lexend font-extralight"
+                                    <div class="space-y-6 text-sm italic text-gray-500 font-lexend font-extralight"
                                          v-html="detailedArticle.description"/>
                                 </div>
 
@@ -212,7 +205,16 @@
                 </div>
             </div>
         </div>
+        <ConfirmDeleteModal
+            :title="$t('Delete article')"
+            :description="$t('Are you sure you want to delete this article?')"
+            @closed="showConfirmDelete = false"
+            v-if="showConfirmDelete"
+            @delete="confirmDelete"
+        />
     </BaseModal>
+
+
 </template>
 
 <script setup>
@@ -227,11 +229,12 @@ import {
     TabPanel,
     TabPanels
 } from "@headlessui/vue";
-import {usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
 import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
 import {nextTick, ref} from "vue";
 import {IconEdit} from "@tabler/icons-vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 const $t = useTranslation()
 
@@ -247,10 +250,23 @@ const emit = defineEmits([
     'openArticleEditModal'
 ])
 
-const openArticleEditModal = () => {
-    emit('openArticleEditModal')
+const showConfirmDelete = ref(false);
+
+
+const confirmDelete = () => {
+    router.delete(route('articles.destroy', props.article.id), {
+        onSuccess: () => {
+            emit('close')
+        },
+        onError: () => {
+            showConfirmDelete.value = false
+        }
+    })
 }
 
+const openArticleEditModal = () => {
+    emit('openArticleEditModal', props.article)
+}
 
 const formatProperty = (article, property) => {
     if (property.type === 'room') {

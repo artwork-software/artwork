@@ -30,6 +30,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventStatusController;
 use App\Http\Controllers\EventTypeController;
+use App\Http\Controllers\EventVerificationController;
 use App\Http\Controllers\ExportPDFController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
@@ -92,6 +93,7 @@ use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
+use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
@@ -99,6 +101,7 @@ use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
+use Artwork\Modules\Inventory\Http\Controllers\InventorySubCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
@@ -1700,7 +1703,25 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // patch inventory-management.articles.update
         Route::patch('/articles/{inventoryArticle}/update', [InventoryArticleController::class, 'update'])
             ->name('inventory-management.articles.update');
+
+        // delete articles.destroy
+        Route::delete('/articles/{inventoryArticle}/destroy', [InventoryArticleController::class, 'destroy'])
+            ->name('articles.destroy');
+
+        // get inventory.articles.trash
+        Route::get('/articles/trash', [InventoryArticleController::class, 'indexTrash'])
+            ->name('inventory.articles.trash');
+
+        // delete articles.forceDelete
+        Route::delete('/articles/{inventoryArticle}/forceDelete', [InventoryArticleController::class, 'forceDelete'])
+            ->name('articles.forceDelete');
+
+        // patch articles.restore
+        Route::patch('/articles/{inventoryArticle}/restore', [InventoryArticleController::class, 'restore'])
+            ->name('articles.restore');
     });
+
+
 
 
     Route::resource('manufacturers', ManufacturerController::class)->only(
@@ -1711,6 +1732,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             'destroy'
         ]
     );
+
+    Route::group(['prefix' => 'planning-event-calendar'], function (): void {
+        Route::get('/', [EventController::class, 'viewPlanningCalendar'])->name('planning-event-calendar.index');
+    });
 
 
     //remove.day.service.from.user
@@ -1753,6 +1778,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             // update inventory-management.settings.categories.update
             Route::patch('/categories/{inventoryCategory}/update', [InventoryCategoryController::class, 'update'])
                 ->name('inventory-management.settings.categories.update');
+
+            // delete inventory-management.settings.categories.subcategories.delete
+            Route::delete('/sub-categories/{inventorySubCategory}/destroy', [InventorySubCategoryController::class, 'destroy'])
+                ->name('inventory-management.settings.categories.subcategories.delete');
+
+            // delete categories.destroy
+            Route::delete('/categories/{inventoryCategory}/destroy', [InventoryCategoryController::class, 'destroy'])
+                ->name('inventory-management.settings.categories.delete');
         });
 
         Route::group(['prefix' => 'inventory'], function (): void {
@@ -1939,6 +1972,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/search/projects', [ProjectController::class, 'scoutSearch'])->name('project.scoutSearch');
     });
 
+    Route::group(['prefix' => 'chat'], function (): void {
+        // get chat-system.get-chats
+        Route::get('/get-chats', [ChatController::class, 'getChats'])->name('chat-system.get-chats');
+
+        // chat-system.get-chat-messages
+        Route::get('/get-chat-messages/{chat}', [ChatController::class, 'getChatMessages'])
+            ->name('chat-system.get-chat-messages');
+
+        // post chat-system.send-message
+        Route::post('/send-message/{chat}', [ChatController::class, 'sendMessage'])->name('chat-system.send-message');
+    });
+
     Route::resource('holidays', HolidayController::class)
         ->only(['index', 'store', 'update', 'destroy', 'show']);
 
@@ -2007,6 +2052,26 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
 
+    Route::group(['prefix' => 'event-verifications'], function(){
+        // POST events.sendToVerification
+        Route::post('/event/{event}/sendToVerification', [EventVerificationController::class, 'store'])
+            ->name('events.sendToVerification');
+
+        // GET event-verifications.index
+        Route::get('/', [EventVerificationController::class, 'index'])
+            ->name('event-verifications.index');
+
+        Route::post('/verification-request/{eventVerification}/approved', [EventVerificationController::class, 'approved'])
+            ->name('event-verifications.approved');
+
+        // event-verifications.rejected
+        Route::post('/verification-request/{eventVerification}/rejected', [EventVerificationController::class, 'rejected'])
+            ->name('event-verifications.rejected');
+
+        // event-verifications.cancel-verification
+        Route::post('/verification-request/{event}/cancel-verification', [EventVerificationController::class, 'cancelVerification'])
+            ->name('event-verifications.cancel-verification');
+    });
 });
 
 Route::get(

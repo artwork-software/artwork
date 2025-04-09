@@ -90,7 +90,7 @@ const emits = defineEmits(['close'])
 
 
 const columnSizeForm = useForm({
-    bulk_column_size: usePage().props.user.bulk_column_size
+    bulk_column_size: usePage().props.auth.user.bulk_column_size
 })
 
 const columnSizeMinMax = {
@@ -143,7 +143,7 @@ const setColumnSizeToDefault = () => {
 }
 
 const submit = () => {
-    columnSizeForm.patch(route('user.bulk-column-size.update', usePage().props.user.id), {
+    columnSizeForm.patch(route('user.bulk-column-size.update', usePage().props.auth.user.id), {
         preserveScroll: true,
         onSuccess: () => {
             emits('close')

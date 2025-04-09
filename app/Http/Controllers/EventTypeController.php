@@ -35,7 +35,11 @@ class EventTypeController extends Controller
 
     public function update(Request $request, EventType $eventType, EventTypeService $eventTypeService): RedirectResponse
     {
-        $eventTypeService->save($this->setProperties($eventType, $request));
+        //dd($request->all());
+        $eventType = $eventTypeService->save($this->setProperties($eventType, $request));
+
+        $eventType->verifiers()->detach();
+        $eventType->verifiers()->attach($request->collect('users', [])->pluck('id'));
 
         return Redirect::route('event_types.management');
     }
@@ -78,7 +82,8 @@ class EventTypeController extends Controller
         $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
         $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
         $eventType->relevant_for_project_period = $request->get('relevant_for_project_period', $eventType->relevant_for_project_period);
-
+        $eventType->verification_mode = $request->get('verification_mode', $eventType->verification_mode);
+        $eventType->specific_verifier_id = $request->get('specific_verifier_id', $eventType->specific_verifier_id);
         return $eventType;
     }
 }

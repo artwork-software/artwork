@@ -71,9 +71,9 @@ const props = defineProps({
 
 const getColumnSize = (column) => {
     return {
-        minWidth: usePage().props.user.bulk_column_size[column] + 'px',
-        width: usePage().props.user.bulk_column_size[column] + 'px',
-        maxWidth: usePage().props.user.bulk_column_size[column] + 'px'
+        minWidth: usePage().props.auth.user.bulk_column_size[column] + 'px',
+        width: usePage().props.auth.user.bulk_column_size[column] + 'px',
+        maxWidth: usePage().props.auth.user.bulk_column_size[column] + 'px'
     }
 }
 

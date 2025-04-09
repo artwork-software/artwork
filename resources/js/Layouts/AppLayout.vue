@@ -89,7 +89,7 @@
                                         leave-from-class="transition-leave-from"
                                         leave-to-class="transition-leave-to">
                                 <MenuItems ref="menuItems" :class="fullSidenav ? 'ml-40' : 'ml-14'"
-                                           class="z-100 managementMenu max-h-40 rounded-lg overflow-y-auto opacity-100 absolute origin-top-left w-48 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
+                                           class="z-100 managementMenu max-h-52 rounded-lg overflow-y-auto opacity-100 absolute origin-top-left w-48 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
                                     <div class="z-100" v-for="item in managementNavigation" :key="item.name">
                                         <MenuItem v-if="item.has_permission" v-slot="{ active }">
                                             <Link :href="item.href"
@@ -123,7 +123,7 @@
                        @mouseleave="hoverNotificationsMenu = false" :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
                         <div class="relative flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs">
                             <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                            <div v-if="this.$page.props.user.show_notification_indicator === true"
+                            <div v-if="this.$page.props.auth.user.show_notification_indicator === true"
                                  style="font-size: 7px;"
                                  class="w-3 h-3 block absolute top-0 right-0 rounded-full bg-white text-black text-center">
                             </div>
@@ -140,10 +140,10 @@
                     <Menu as="div" class="flex flex-col items-center">
                         <MenuButton @mouseover="!fullSidenav ? hoverUserMenu = true : null"
                                     @mouseleave="hoverUserMenu = false" ref="menuButton" @click="setHeightOfMenuItems" class="text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs hover:bg-artwork-navigation-color/10">
-                            <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.user.profile_photo_url" alt=""/>
+                            <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url" alt=""/>
                             <div class="ml-4 w-32 text-left" v-if="fullSidenav">
                                 Hallo
-                                {{ $page.props.user.first_name }}
+                                {{ $page.props.auth.user.first_name }}
                             </div>
                             <div :style="[{ display: hoverUserMenu ? 'block' : 'none' }]" class="absolute left-14">
                                 <div class="p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit">
@@ -160,7 +160,7 @@
                             <MenuItems ref="menuItems" :class="[fullSidenav ? 'ml-40' : 'ml-14', '']" class="z-50 managementMenu rounded-lg max-h-40 overflow-y-auto opacity-100 absolute origin-top-left w-44 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
                                 <div class="z-50">
                                     <MenuItem v-slot="{ active }">
-                                        <Link :href="route('user.edit.info', {user: this.$page.props.user.id})"
+                                        <Link :href="route('user.edit.info', {user: this.$page.props.auth.user.id})"
                                               :class="[active ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
                                             {{ $t('Your account')}}
                                         </Link>
@@ -198,6 +198,7 @@
             </div>
 
             <main class="main mx-5">
+                <PopupChat v-if="$page.props.auth.user.use_chat"/>
                 <slot></slot>
             </main>
         </div>
@@ -220,7 +221,7 @@ import {
     IconCurrencyEuro, IconFileText,
     IconGeometry, IconLayoutDashboard,
     IconListCheck, IconTrash,
-    IconUsers
+    IconUsers, IconCalendarCog, IconCalendarCheck
 } from "@tabler/icons-vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TextComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -228,6 +229,7 @@ import NumberComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateComponent from "@/Components/Inputs/DateInputComponent.vue";
 import Linkifyit from 'linkify-it';
+import PopupChat from "@/Components/Chat/PopupChat.vue";
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
@@ -249,6 +251,7 @@ const managementRoutes = [
 export default {
     mixins: [Permissions, IconLib],
     components: {
+        PopupChat,
         DateComponent,
         TextareaComponent,
         NumberComponent,
@@ -268,7 +271,9 @@ export default {
         ChevronUpIcon,
         Link,
         Switch,
-        TrashIcon, Head
+        TrashIcon, Head,
+        IconCalendarCog,
+        IconCalendarCheck
     },
     methods: {
         IconBell,
@@ -521,13 +526,22 @@ export default {
         window.document.dispatchEvent(ev);
         this.$i18n.locale = this.$page.props.selected_language;
         document.documentElement.lang = this.$page.props.selected_language;
-        Echo.private('App.Models.User.' + this.$page.props.user.id)
+        /*Echo.private('App.Models.User.' + this.$page.props.auth.user.id)
             .notification((notification) => {
                 this.pushNotifications.push(notification.message);
                 setTimeout(() => {
                     this.closePushNotification(notification.message.id)
                 }, 3000)
+            });*/
+
+        window.Echo.private(`notifications.${this.$page.props.auth.user.id}`)
+            .listen('.incoming-notification', (notification) => {
+                this.pushNotifications.push(notification.message);
+                setTimeout(() => {
+                    this.closePushNotification(notification.message.id)
+                }, 3000)
             });
+
 
         window.addEventListener('resize', () => {
             this.windowInnerHeight = window.innerHeight;
@@ -535,6 +549,7 @@ export default {
     },
   data() {
         return {
+            notifications: [],
             showSystemSettings: false,
             showUserMenu: false,
             pushNotifications: [],
@@ -581,13 +596,29 @@ export default {
                     showToolTipForItem: false
                 },
                 {
+                    name: 'Planning Calendar',
+                    href: route('planning-event-calendar.index'),
+                    route: ['/planning-event-calendar'],
+                    has_permission: this.$can('can see planning calendar')  || this.hasAdminRole(),
+                    icon: IconCalendarCog,
+                    showToolTipForItem: false
+                },
+                {
+                    name: 'Event Verifications',
+                    href: route('event-verifications.index'),
+                    route: ['/event-verifications'],
+                    has_permission: this.$can('can edit planning calendar')  || this.hasAdminRole(),
+                    icon: IconCalendarCheck,
+                    showToolTipForItem: false
+                },
+                /*{
                     name: 'Inventory',
                     href: route('inventory-management.inventory'),
                     route: ['/inventory-management', '/inventory-management/scheduling'],
                     has_permission: this.moduleIsVisible('inventory'),
                     icon: IconBuildingWarehouse,
                     showToolTipForItem: false
-                },
+                },*/
                 {
                     name: 'Inventory',
                     href: route('inventory.index'),

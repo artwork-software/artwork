@@ -8,14 +8,14 @@ export default {
     },
     methods: {
         isCurrentUserInComponentUsers(users) {
-            return users.findIndex((user) => this.$page.props.user.id === user.id) >= 0;
+            return users.findIndex((user) => this.$page.props.auth.user.id === user.id) >= 0;
         },
         isCurrentUserInComponentDepartments(departments) {
             let foundUserInDepartment = false;
 
             departments.forEach((department) => {
                 department.users.forEach((user) => {
-                    if (user.id === this.$page.props.user.id) {
+                    if (user.id === this.$page.props.auth.user.id) {
                         foundUserInDepartment = true;
                     }
                 });
@@ -55,7 +55,7 @@ export default {
             if (component.permission_type === 'someSeeSomeEdit') {
                 //find user in component users
                 let foundUserIndex = component.users.findIndex(
-                      (user) => this.$page.props.user.id === user.id
+                      (user) => this.$page.props.auth.user.id === user.id
                     ),
                     foundUserCanWrite = false;
 
@@ -69,7 +69,7 @@ export default {
                     department.users.forEach((user) => {
                         //only updated if it is not true already, because there is no opportunity to break the
                         //forEach loop
-                        if (!foundUserInDepartmentAndCanWrite && user.id === this.$page.props.user.id) {
+                        if (!foundUserInDepartmentAndCanWrite && user.id === this.$page.props.auth.user.id) {
                             foundUserInDepartmentAndCanWrite = department.pivot.can_write;
                         }
                     });

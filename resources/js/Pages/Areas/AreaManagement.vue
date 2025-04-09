@@ -936,7 +936,7 @@ export default defineComponent({
                 start_date: null,
                 end_date: null,
                 area_id: null,
-                user_id: this.$page.props.user.id,
+                user_id: this.$page.props.auth.user.id,
                 everyone_can_book: false,
                 room_categories: [],
                 room_attributes: [],
@@ -1085,7 +1085,7 @@ export default defineComponent({
                 const openedAreas = this.opened_areas;
 
                 openedAreas.push(area.id)
-                router.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": openedAreas}, {
+                router.patch(`/users/${this.$page.props.auth.user.id}/areas`, {"opened_areas": openedAreas}, {
                     preserveScroll: true,
                     preserveState: true
                 });
@@ -1093,7 +1093,7 @@ export default defineComponent({
                 const filteredList = this.opened_areas.filter(function (value) {
                     return value !== area.id;
                 })
-                router.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": filteredList},{
+                router.patch(`/users/${this.$page.props.auth.user.id}/areas`, {"opened_areas": filteredList},{
                     preserveScroll: true,
                     preserveState: true
                 });

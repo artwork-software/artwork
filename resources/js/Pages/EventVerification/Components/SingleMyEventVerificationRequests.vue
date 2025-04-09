@@ -15,7 +15,7 @@
         </div>
         <div v-if="myRequest?.is_planning">
             <div class="font-lexend text-red-500 text-xs cursor-pointer underline underline-offset-2" @click="cancelVerification">
-                {{ $t('Cancel verification') }}
+                {{ $t('Withdraw verification request') }}
             </div>
         </div>
     </div>

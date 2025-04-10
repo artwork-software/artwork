@@ -15,14 +15,7 @@ class UserStatusService
             //Log::error('Redis is not available');
             return;
         }
-
-
-        // check if Redis is available
-        if (!Redis::isAvailable()) {
-            //Log::error('Redis is not available');
-            return;
-        }
-
+        
 
         if (Redis::exists("user_status:{$userId}")) {
             Redis::expire("user_status:{$userId}", 600); // TTL reset

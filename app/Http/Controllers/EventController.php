@@ -191,6 +191,8 @@ class EventController extends Controller
         $userCalendarFilter = $user->getAttribute('calendar_filter');
         $userCalendarSettings = $user->getAttribute('calendar_settings');
 
+        $this->userService->shareCalendarAbo('calendar');
+
 
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
@@ -302,6 +304,7 @@ class EventController extends Controller
         $userCalendarFilter = $user->getAttribute('calendar_filter');
         $userCalendarSettings = $user->getAttribute('calendar_settings');
 
+        $this->userService->shareCalendarAbo('calendar');
 
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter);
@@ -412,6 +415,8 @@ class EventController extends Controller
         $user = $this->authManager->user();
         $userCalendarFilter = $user->getAttribute('shift_calendar_filter');
         $userCalendarSettings = $user->getAttribute('calendar_settings');
+
+        $this->userService->shareCalendarAbo('shiftCalendar');
 
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter);

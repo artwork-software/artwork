@@ -17,13 +17,6 @@ class UserStatusService
         }
 
 
-        // check if Redis is available
-        if (!Redis::isAvailable()) {
-            //Log::error('Redis is not available');
-            return;
-        }
-
-
         if (Redis::exists("user_status:{$userId}")) {
             Redis::expire("user_status:{$userId}", 600); // TTL reset
         } else {
@@ -37,6 +30,14 @@ class UserStatusService
 
     public function getStatus(int $userId): string
     {
+        // check if Redis is available
+        if (!config('app.use_chat_module')){
+            //Log::error('Redis is not available');
+            return 'offline';
+        }
+
+
+
         if (!Redis::exists("user_status:{$userId}")) {
             return 'offline';
         }
@@ -61,6 +62,19 @@ class UserStatusService
 
     public function markOffline(int $userId): void
     {
+        // check if Redis is available
+        if (!config('app.use_chat_module')){
+            //Log::error('Redis is not available');
+            return;
+        }
+
+
+        // check if Redis is available
+        if (!Redis::isAvailable()) {
+            //Log::error('Redis is not available');
+            return;
+        }
+
         Redis::del("user_status:{$userId}");
     }
 }

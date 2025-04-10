@@ -32,36 +32,39 @@ class EventPlanningCalendarService
         ?UserCalendarSettings $userCalendarSettings = null,
     ): Collection {
         $roomIds = $rooms->pluck('id');
-
-        //dd($roomIds);
-
-        $eventWith = [
-            'project:id,name,state,artists',
-            'project.status:id,name,color',
-            'project.managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
-            'eventStatus:id,color',
-            'event_type:id,name,abbreviation,hex_code',
-            'room:id,name',
-            'creator:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
-            'shifts',
-            'verifications',
-        ];
-
-
         $events = Event::select([
-            'id', 'start_time', 'end_time', 'eventName', 'description', 'project_id',
-            'event_type_id', 'event_status_id', 'allDay', 'room_id', 'user_id', 'occupancy_option', 'declined_room_id', 'is_planning'
-        ])
-            ->with($eventWith)
+                'id',
+                'start_time',
+                'end_time',
+                'eventName',
+                'description',
+                'project_id',
+                'event_type_id',
+                'event_status_id',
+                'allDay',
+                'room_id',
+                'user_id',
+                'occupancy_option',
+                'declined_room_id'
+            ])
+            ->with([
+                'project:id,name,state,artists',
+                'project.status:id,name,color',
+                'project.managerUsers:id,first_name,last_name,position,email',
+                'eventStatus:id,color',
+                'event_type:id,name,abbreviation,hex_code',
+                'room:id,name',
+                'creator:id,first_name,last_name,position,email',
+                'shifts:id,event_id,start_date,end_date'
+            ])
             ->whereIn('room_id', $roomIds)
             ->where(function ($q) use ($startDate, $endDate) {
-                $q->where(function ($q) use ($startDate, $endDate) {
-                    $q->whereBetween('start_time', [$startDate, $endDate])
-                        ->orWhereBetween('end_time', [$startDate, $endDate]);
-                })->orWhere(function ($q) use ($startDate, $endDate) {
-                    $q->where('start_time', '<=', $startDate)
-                        ->where('end_time', '>=', $endDate);
-                });
+                $q->whereBetween('start_time', [$startDate, $endDate])
+                    ->orWhereBetween('end_time', [$startDate, $endDate])
+                    ->orWhere(function ($q) use ($startDate, $endDate) {
+                        $q->where('start_time', '<=', $startDate)
+                            ->where('end_time', '>=', $endDate);
+                    });
             })
             ->unless(empty($filter->event_types), function ($q) use ($filter) {
                 $q->whereIn('event_type_id', $filter->event_types);
@@ -80,25 +83,20 @@ class EventPlanningCalendarService
         $eventStatusIds = $events->pluck('event_status_id')->unique();
 
         $users = User::whereIn('id', $userIds)
-            ->select(['id', 'first_name', 'last_name', 'pronouns', 'position', 'email_private', 'email', 'phone_number', 'phone_private', 'description', 'profile_photo_path'])
-            ->get()
-            ->keyBy('id');
+            ->select(['id', 'first_name', 'last_name', 'position', 'email'])
+            ->get()->keyBy('id');
 
         $projects = Project::whereIn('id', $projectIds)
             ->select(['id', 'name', 'state', 'artists', 'is_group', 'color', 'icon'])
-            ->with([
-                'status:id,name,color',
-                'managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
-            ])
-            ->get()
-            ->keyBy('id');
+            ->with(['status:id,name,color', 'managerUsers:id,first_name,last_name,position,email'])
+            ->get()->keyBy('id');
 
         $eventTypes = EventType::whereIn('id', $eventTypeIds)
             ->select(['id', 'name', 'abbreviation', 'hex_code'])
             ->get()
             ->keyBy('id');
 
-        $eventStatues = EventStatus::whereIn('id', $eventStatusIds)
+        $eventStatuses = EventStatus::whereIn('id', $eventStatusIds)
             ->select(['id', 'color'])
             ->get()
             ->keyBy('id');
@@ -109,7 +107,7 @@ class EventPlanningCalendarService
             $projects,
             $eventTypes,
             $users,
-            $eventStatues
+            $eventStatuses
         ))->groupBy('roomId');
 
         foreach ($rooms as $room) {
@@ -129,8 +127,10 @@ class EventPlanningCalendarService
         $roomsData = $rooms->map(function ($room) use ($period) {
             $content = $period;
 
-            $groupedEvents = $room->events->flatMap(fn($eventDTO) =>
-            collect($eventDTO->daysOfEvent)->map(fn($date) => ['date' => $date, 'event' => $eventDTO])
+            $groupedEvents = $room->events->flatMap(
+                fn($eventDTO) => collect($eventDTO->daysOfEvent)->map(
+                    fn($date) => ['date' => $date, 'event' => $eventDTO]
+                )
             )->groupBy('date');
 
             foreach ($groupedEvents as $date => $eventsOnDate) {

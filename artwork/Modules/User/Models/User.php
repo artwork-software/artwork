@@ -124,6 +124,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<ShiftQualification> $shiftQualifications
  * @property Collection<Craft> $assignedCrafts
  * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
+ * @property Collection<UserCalendarAbo> $calendarAbo
+ * @property Collection<UserShiftCalendarAbo> $shiftCalendarAbo
  * @property Collection<string> $allPermissions
  * @property array $notification_enums_last_sent_dates
  * @property int $bulk_sort_id
@@ -146,6 +148,14 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $phone_private
  * @property boolean $daily_view
  * @property int $last_project_id
+ * @property array $bulk_column_size
+ * @property string $chat_public_key
+ * @property boolean $use_chat
+ * @property string $work_name
+ * @property string $work_description
+ * @property int $weekly_working_hours
+ * @property float $salary_per_hour
+ * @property string $salary_description
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -271,10 +281,10 @@ class User extends Model implements
         'profile_photo_url',
         'full_name',
         'type',
-        'assigned_craft_ids',
+        //'assigned_craft_ids',
     ];
 
-    protected $with = ['calendarAbo', 'shiftCalendarAbo'];
+    //protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
     public function getTypeAttribute(): string
     {

@@ -207,6 +207,9 @@
                     </div>
                 </div>
             </div>
+
+
+
         </div>
     </app-layout>
 </template>
@@ -223,7 +226,7 @@ import {
 } from '@heroicons/vue/solid'
 import {Menu, MenuButton, MenuItem, MenuItems} from '@headlessui/vue'
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Link, router, useForm} from "@inertiajs/vue3";
+import {Link, router, useForm, usePage} from "@inertiajs/vue3";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
@@ -290,6 +293,7 @@ export default defineComponent({
             });
     },
     methods: {
+        usePage,
         backgroundColorWithOpacity(event){
             const color = event.event_type?.hex_code;
             return `rgb(${parseInt(color?.slice(-6, -4), 16)}, ${parseInt(color?.slice(-4, -2), 16)}, ${parseInt(color?.slice(-2), 16)}, 15%)`;

@@ -20,7 +20,8 @@ class EventVerificationController extends Controller
 
     public function __construct(
         private readonly EventVerificationService $eventVerificationService,
-        private readonly AuthManager $authManager
+        private readonly AuthManager $authManager,
+        private readonly EventService $eventService,
     ) {
     }
 
@@ -113,5 +114,51 @@ class EventVerificationController extends Controller
     {
         $this->eventVerificationService->cancelVerification($event);
         broadcast(new EventCreated($event, $event->room_id));
+    }
+
+    public function approvedByEvent(Event $event): void
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $this->eventVerificationService->approveVerificationByEvent($event, $user);
+        broadcast(new EventCreated($event->fresh(), $event->room_id));
+    }
+
+    public function rejectByEvent(Event $event): void
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $this->eventVerificationService->rejectVerificationByEvent($event, $user);
+        broadcast(new EventCreated($event->fresh(), $event->room_id));
+    }
+
+    public function rejectByEvents(Request $request): void
+    {
+        $events = $request->collect('events', []);
+        foreach ($events as $eventId) {
+            /** @var Event $event */
+            $event = $this->eventService->findEventById($eventId);
+            $this->rejectByEvent($event);
+        }
+    }
+
+    public function approvedByEvents(Request $request): void
+    {
+        $events = $request->collect('events', []);
+        foreach ($events as $eventId) {
+            /** @var Event $event */
+            $event = $this->eventService->findEventById($eventId);
+            $this->approvedByEvent($event);
+        }
+    }
+
+    public function requestVerification(Request $request): void
+    {
+        $events = $request->collect('events', []);
+        foreach ($events as $eventId) {
+            /** @var Event $event */
+            $event = $this->eventService->findEventById($eventId);
+            $this->store($event);
+        }
     }
 }

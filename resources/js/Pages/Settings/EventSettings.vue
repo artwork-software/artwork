@@ -16,8 +16,7 @@
                    </div>
                </div>
                <ul role="list" class="mt-4 mb-20 w-full max-w-3xl">
-                   <li v-for="(eventType,index) in event_types" :key="eventType.id"
-                       class="flex justify-between">
+                   <li v-for="(eventType,index) in event_types" :key="eventType.id" class="flex justify-between">
                        <div class="flex my-4">
                            <div>
                                <div class="block w-16 h-16 rounded-full" :style="{'backgroundColor' : eventType.hex_code }" />

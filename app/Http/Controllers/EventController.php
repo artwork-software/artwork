@@ -407,6 +407,7 @@ class EventController extends Controller
                 $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'))->name : null,
             'calendarWarningText' => $calendarWarningText,
             'months' => $months,
+            'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id'),
         ]);
     }
 
@@ -505,7 +506,7 @@ class EventController extends Controller
             'currentUserCrafts' => $this->userService->getAuthUserCrafts()->merge(
                 $this->craftService->getAssignableByAllCrafts()
             ),
-            'shiftTimePresets' => $this->shiftTimePresetService->getAll()
+            'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
         ]);
 
 
@@ -818,11 +819,6 @@ class EventController extends Controller
         }
 
         broadcast(new OccupancyUpdated())->toOthers();
-        broadcast(new EventUpdated(
-            $firstEvent->room_id,
-            $firstEvent->start_time,
-            $firstEvent->is_series ? $firstEvent->series->end_date : $firstEvent->end_time
-        ))->toOthers();
 
         if ($request->boolean('showProjectPeriodInCalendar')) {
             return $this->redirector->back();

@@ -47,9 +47,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- retake verification -->
-
     </div>
 </template>
 

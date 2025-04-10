@@ -12,7 +12,8 @@
                 @update-multi-edit="toggleMultiEdit"
                 @jump-to-day-of-month="jumpToDayOfMonth"
                 :is-planning="isPlanning"
-            />
+            >
+            </FunctionBarCalendar>
             <div class="w-full h-8 px-4 py-2 bg-red-500 cursor-pointer" v-if="eventsWithoutRoom.length > 0" @click="showEventsWithoutRoomComponent = true">
                 <div class="flex items-center justify-center w-full h-full gap-x-1">
                     <component is="IconAlertTriangle" class="size-4 text-white" aria-hidden="true" />
@@ -72,6 +73,8 @@
                                                     @open-confirm-modal="openDeleteEventModal"
                                                     @show-decline-event-modal="openDeclineEventModal"
                                                     @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                                    :verifierForEventTypIds="verifierForEventTypIds"
+                                                    :is-planning="isPlanning"
                                                 />
                                             </div>
                                         </div>
@@ -109,6 +112,8 @@
                     @open-confirm-modal="openDeleteEventModal"
                     @show-decline-event-modal="openDeclineEventModal"
                     @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                    :verifierForEventTypIds="verifierForEventTypIds"
+                    :is-planning="isPlanning"
                 />
             </div>
             <div class="mt-[4.5rem] w-max" v-else>
@@ -140,6 +145,8 @@
                                         @open-confirm-modal="openDeleteEventModal"
                                         @show-decline-event-modal="openDeclineEventModal"
                                         @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                        :verifierForEventTypIds="verifierForEventTypIds"
+                                        :is-planning="isPlanning"
                                     />
                                 </div>
                             </div>
@@ -166,7 +173,7 @@
         </div>
     </div>
     <div class="fixed bottom-0 w-full h-32 bg-artwork-navigation-background/30 z-40 pointer-events-none" v-if="multiEdit">
-        <div class="flex items-center justify-center h-full gap-4">
+        <div class="flex items-center justify-center h-full gap-4" v-if="!isPlanning">
             <div>
                 <FormButton :disabled="computedCheckedEventsForMultiEditCount === 0"
                             @click="showMultiEditModal = true"
@@ -195,7 +202,29 @@
                     :text="$t('Cancel selection')"/>
             </div>
         </div>
+        <div class="flex items-center justify-center h-full gap-4" v-else>
+            <div v-if="can('can see planning calendar') || hasAdminRole()">
+                <FormButton :disabled="computedCheckedEventsForMultiEditCount === 0"
+                            @click="requestVerification"
+                            :text="computedCheckedEventsForMultiEditCount + ' ' + $t('request verification')"
+                            class="transition-all duration-300 ease-in-out pointer-events-auto"/>
+            </div>
+            <div v-if="can('can edit planning calendar') || hasAdminRole()">
+                <FormButton :disabled="computedCheckedEventsForMultiEditCount === 0"
+                            @click="approveRequests"
+                            :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Approve events')"
+                            class="transition-all duration-300 ease-in-out pointer-events-auto"/>
+            </div>
+            <div v-if="can('can edit planning calendar') || hasAdminRole()">
+                <FormButton
+                    class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="rejectRequests"
+                    :disabled="computedCheckedEventsForMultiEditCount === 0"
+                    :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Reject events')"/>
+            </div>
+        </div>
     </div>
+
     <AsyncEventComponent
         v-if="showEventComponent"
         :showHints="usePage().props.show_hints"
@@ -213,6 +242,7 @@
         :event-statuses="eventStatuses"
         :is-planning="isPlanning"
         :wanted-date="wantedDate"
+
     />
 
     <!--<CreateOrUpdateEventModal
@@ -287,6 +317,7 @@ import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlacehol
 import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {can} from "laravel-permission-to-vuejs";
 
 
 
@@ -331,6 +362,11 @@ const props = defineProps({
             type: Boolean,
             required: false,
             default: false
+        },
+        verifierForEventTypIds: {
+            type: Array,
+            required: false,
+            default: []
         }
     })
 const $t = useTranslation()
@@ -396,7 +432,8 @@ const scrollToNextEventInDay = (day, length,room) => {
     });*/
 const computedCheckedEventsForMultiEditCount = computed(() => {
         return editEvents.value.length;
-    });
+});
+
 const eventsWithoutRoomRef = ref(props.eventsWithoutRoom );
 const first_project_calendar_tab_id = inject('first_project_calendar_tab_id');
 const first_project_tab_id = inject('first_project_tab_id');
@@ -427,12 +464,14 @@ const showMultiDuplicateModal = ref(false);
 const checkIfScrolledToCalendarRef = ref('!-ml-3');
 const newCalendarData = ref(props.calendarData);
 const wantedDate = ref(null);
+const verificationMode = ref(false);
 const openNewEventModalWithBaseData = (day, roomId) => {
     eventToEdit.value = false
     wantedRoom.value = roomId;
     wantedDate.value = day;
     showEventComponent.value = true;
 };
+
 
 const handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId) => {
     if (considerOnMultiEdit) {
@@ -522,7 +561,7 @@ const checkIfAnyRoomHasAnEventOrShift = computed(() => {
     });
 };
 */
-const toggleMultiEdit = (value) => {
+const toggleMultiEdit = (value, isPlanning = false) => {
     multiEdit.value = value;
 
     if (!value) {
@@ -716,6 +755,42 @@ const jumpToDayOfMonth = (day) => {
             behavior: 'smooth',
         });
     }
+}
+
+const approveRequests = () => {
+    router.post(route('event-verifications.approved-by-events'), {
+        events: editEvents.value
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            cancelMultiEditDuplicateSelection(false);
+        }
+    })
+}
+
+const rejectRequests = () => {
+    router.post(route('event-verifications.reject-by-events'), {
+        events: editEvents.value
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            cancelMultiEditDuplicateSelection(false);
+        }
+    })
+}
+
+const requestVerification = () => {
+    router.post(route('events-verifications.request-verification'), {
+        events: editEvents.value
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            cancelMultiEditDuplicateSelection(false);
+        }
+    })
 }
 
 onMounted(() => {

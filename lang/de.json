@@ -2558,5 +2558,11 @@
     "Reject Event Verification Request": "Terminüberprüfungsanfrage ablehnen",
     "Are you sure you want to reject this event verification request?": "Möchtest du diese Terminüberprüfungsanfrage wirklich ablehnen?",
     "New event verification request incoming": "Neue Terminüberprüfungsanfrage eingehend",
-    "Rejections": "Ablehnungen"
+    "Rejections": "Ablehnungen",
+    "Approve verification": "Überprüfung genehmigen",
+    "Reject verification": "Überprüfung ablehnen",
+    "Multiple verification": "Mehrere Überprüfungen",
+    "Approve events": "Termine genehmigen",
+    "Reject events": "Termine ablehnen",
+    "request verification": "Termine überprüfung anfordern"
 }

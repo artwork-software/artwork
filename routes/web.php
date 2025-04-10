@@ -2071,6 +2071,26 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // event-verifications.cancel-verification
         Route::post('/verification-request/{event}/cancel-verification', [EventVerificationController::class, 'cancelVerification'])
             ->name('event-verifications.cancel-verification');
+
+        // event-verifications.approved-by-event
+        Route::post('/verification-request/{event}/approved-by-event', [EventVerificationController::class, 'approvedByEvent'])
+            ->name('event-verifications.approved-by-event');
+
+        // event-verifications.reject-by-event
+        Route::post('/verification-request/{event}/reject-by-event', [EventVerificationController::class, 'rejectByEvent'])
+            ->name('event-verifications.reject-by-event');
+
+        // event-verifications.reject-by-events
+        Route::post('/verification-request/reject-by-events', [EventVerificationController::class, 'rejectByEvents'])
+            ->name('event-verifications.reject-by-events');
+
+        // event-verifications.approved-by-events
+        Route::post('/verification-request/approved-by-events', [EventVerificationController::class, 'approvedByEvents'])
+            ->name('event-verifications.approved-by-events');
+
+        // event-verifications.request-verification
+        Route::post('/verification-request/request-verification', [EventVerificationController::class, 'requestVerification'])
+            ->name('events-verifications.request-verification');
     });
 });
 

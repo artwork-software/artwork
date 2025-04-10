@@ -91,6 +91,7 @@
             <div class="flex items-center gap-x-2">
                 <div class="flex items-center">
                     <div class="flex items-center gap-x-2">
+                        <slot name="buttonsRight"></slot>
                         <MultiEditSwitch :multi-edit="multiEdit"
                                          :room-mode="roomMode"
                                          @update:multi-edit="UpdateMultiEditEmits"/>
@@ -423,7 +424,7 @@ const emits = defineEmits([
     'previousDay',
     'nextDay',
     'searchingForProject',
-    'jumpToDayOfMonth'
+    'jumpToDayOfMonth',
 ]);
 const showCalendarAboSettingModal = ref(false);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
@@ -538,7 +539,7 @@ const props = defineProps({
 })
 
 const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
-
+const enableVerification = ref(false);
 const isCalendarUsingProjectTimePeriod = computed(() => {
     return usePage().props.auth.user.calendar_settings.use_project_time_period;
 });
@@ -570,8 +571,8 @@ const changeDailyViewMode = () => {
     })
 }
 
-const UpdateMultiEditEmits = (value) => {
-    emits('updateMultiEdit', value)
+const UpdateMultiEditEmits = (value, isPlanning = false) => {
+    emits('updateMultiEdit', value, isPlanning)
 }
 
 const changeAtAGlance = () => {

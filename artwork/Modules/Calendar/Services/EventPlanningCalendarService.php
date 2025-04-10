@@ -45,7 +45,8 @@ class EventPlanningCalendarService
                 'room_id',
                 'user_id',
                 'occupancy_option',
-                'declined_room_id'
+                'declined_room_id',
+                'is_planning'
             ])
             ->with([
                 'project:id,name,state,artists',
@@ -55,7 +56,7 @@ class EventPlanningCalendarService
                 'event_type:id,name,abbreviation,hex_code',
                 'room:id,name',
                 'creator:id,first_name,last_name,position,email',
-                'shifts:id,event_id,start_date,end_date'
+                'shifts:id,event_id,start_date,end_date',
             ])
             ->whereIn('room_id', $roomIds)
             ->where(function ($q) use ($startDate, $endDate) {

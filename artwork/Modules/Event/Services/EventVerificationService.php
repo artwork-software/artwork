@@ -141,6 +141,37 @@ class EventVerificationService
         $this->notificationService->createNotification();
     }
 
+    public function approveVerificationByEvent(Event $event, User $user): void
+    {
+        /** @var EventVerification $verification */
+        $verification = $event->verifications()
+            ->where('verifier_id', $user->id)
+            ->where('status', 'pending')
+            ->first();
+
+        if (!$verification) {
+            return;
+        }
+
+        $this->approveVerification($verification);
+    }
+
+    public function rejectVerificationByEvent(Event $event, User $user): void
+    {
+        /** @var EventVerification $verification */
+        $verification = $event->verifications()
+            ->where('verifier_id', $user->id)
+            ->where('status', 'pending')
+            ->first();
+
+        if (!$verification) {
+            return;
+        }
+
+        $this->rejectVerification($verification);
+    }
+
+
 
     public function rejectVerification(EventVerification $verification, ?string $reason = ''): void
     {

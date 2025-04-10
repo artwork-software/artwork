@@ -43,7 +43,7 @@
         v-if="showRejectEventVerificationRequestModal"
         :event-verification="eventVerification"
         @close="showRejectEventVerificationRequestModal = false"
-        />
+    />
 </template>
 
 <script setup>
@@ -65,12 +65,15 @@ const statuses = {
     pending: 'text-gray-600 bg-gray-50 ring-gray-500/10',
     rejected: 'text-red-800 bg-red-50 ring-red-600/20',
 }
+
 const showRejectEventVerificationRequestModal = ref(false)
+
 const RejectEventVerificationRequestModal = defineAsyncComponent({
     loader: () => import('@/Pages/EventVerification/Components/RejectEventVerificationRequestModal.vue'),
     delay: 200,
     timeout: 3000,
 })
+
 const approveRequest = () => {
     router.post(route('event-verifications.approved', props.eventVerification.id), {}, {
         preserveScroll: true,

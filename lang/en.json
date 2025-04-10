@@ -2555,5 +2555,11 @@
     "Reject Event Verification Request": "Reject Event Verification Request",
     "Are you sure you want to reject this event verification request?": "Are you sure you want to reject this event verification request?",
     "New event verification request incoming": "New event verification request incoming",
-    "Rejections": "Rejections"
+    "Rejections": "Rejections",
+    "Approve verification": "Approve verification",
+    "Reject verification": "Reject verification",
+    "Multiple verification": "Multiple verification",
+    "Approve events": "Approve events",
+    "Reject events": "Reject events",
+    "request verification": "request verification"
 }

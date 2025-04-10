@@ -2,7 +2,10 @@
 
     <td class="py-4 pr-3 pl-4 text-sm font-medium whitespace-nowrap text-gray-900  sm:pl-3">
         <div>
-            <p class="text-sm/6 font-semibold text-gray-900">{{ eventVerification?.event?.eventName }}</p>
+            <div class="flex items-start gap-x-1">
+                <component is="IconCalendar" class="size-6 text-gray-400 hover:text-artwork-buttons-create duration-200 ease-in-out cursor-pointer" @click="openPlanningCalendarWithEventId" aria-hidden="true" />
+                <p class="text-sm/6 font-semibold text-gray-900">{{ eventVerification?.event?.eventName }}</p>
+            </div>
             <p class="mt-1 flex items-center gap-x-1 text-[10px] text-gray-500">
                 <span class="font-lexend font-bold">{{ $t('Start') }}:</span>
                 <span class="font-lexend">{{ eventVerification?.event?.start_time }}</span>
@@ -81,6 +84,12 @@ const approveRequest = () => {
     })
 }
 
+const openPlanningCalendarWithEventId = () => {
+    router.visit(route('planning-event-calendar.index', {highlightEventId: props.eventVerification.event.id}), {
+        preserveScroll: true,
+        preserveState: false,
+    })
+}
 
 
 </script>

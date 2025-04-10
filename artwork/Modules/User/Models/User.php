@@ -237,7 +237,7 @@ class User extends Model implements
         'last_project_id',
         'bulk_column_size',
         'chat_public_key',
-        'use_chat'
+        'use_chat',
     ];
 
     protected $casts = [

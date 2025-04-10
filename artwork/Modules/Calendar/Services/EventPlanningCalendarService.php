@@ -15,6 +15,7 @@ use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
+use function PHPUnit\Framework\isFalse;
 
 class EventPlanningCalendarService
 {
@@ -74,6 +75,9 @@ class EventPlanningCalendarService
                 $q->whereHas('eventProperties', function ($q) use ($filter) {
                     $q->whereIn('event_property_id', $filter->event_properties);
                 });
+            })
+            ->when(!$userCalendarSettings?->show_unplanned_events, function ($q) {
+                $q->where('is_planning', true);
             })
             ->orderBy('start_time')
             ->get();

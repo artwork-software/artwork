@@ -329,6 +329,17 @@
                                             {{ $t('Show project group') }}
                                         </label>
                                     </div>
+                                    <div class="flex items-center py-1" v-if="isPlanning">
+                                        <input id="cb-use-event-status-color"
+                                               v-model="userCalendarSettings.show_unplanned_events"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-use-event-status-color"
+                                               :class="userCalendarSettings.show_unplanned_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Show fixed events') }}
+                                        </label>
+                                    </div>
                                 </div>
                                 <div class="flex justify-end">
                                     <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">
@@ -450,6 +461,7 @@ const userCalendarSettings = useForm({
     use_event_status_color: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.use_event_status_color : false,
     hide_unoccupied_rooms: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.hide_unoccupied_rooms : false,
     display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
+    show_unplanned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_unplanned_events : false,
 });
 
 

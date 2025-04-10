@@ -1,7 +1,7 @@
 <template>
     <div :style="{ minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
         class="rounded-lg group/singleEvent"
-        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id ? 'border-[3px] border-dashed border-pink-500' : '', isHeightFull ? 'h-full' : '', usePage().props.auth.user.daily_view ? 'overflow-y-scroll' : '', multiEdit ? 'relative' : '']">
+        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id || isHighlighted ? 'border-[3px] border-dashed border-pink-500' : '', isHeightFull ? 'h-full' : '', usePage().props.auth.user.daily_view ? 'overflow-y-scroll' : '', multiEdit ? 'relative' : '']">
         <div v-if="checkIfMultiEditIsEnabled" @click="clickOnCheckBox"
              class="absolute w-full h-full z-10 rounded-lg group-hover/singleEvent:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
@@ -259,7 +259,7 @@
                             </div>
                         </MenuItem>
                         <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">
-                            <div @click="rejectRequest"
+                            <div @click="showRejectEventVerificationModal = true"
                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                 <component is="IconCircleX" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
                                 {{ $t('Reject verification') }}
@@ -526,7 +526,7 @@
                                         </div>
                                     </MenuItem>
                                     <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">
-                                        <div @click="rejectRequest"
+                                        <div @click="showRejectEventVerificationModal = true"
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                             <component is="IconCircleX" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
                                             {{ $t('Reject verification') }}
@@ -675,6 +675,12 @@
             </div>
         </div>
     </div>
+
+    <RejectEventVerificationRequestModal
+        v-if="showRejectEventVerificationModal"
+        @close="showRejectEventVerificationModal = false"
+        :event="event"
+    />
 </template>
 
 <script setup>
@@ -690,11 +696,10 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import EventNoteComponent from "@/Layouts/Components/EventNoteComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {Float} from "@headlessui-float/vue";
-
 const {t} = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
-
+const showRejectEventVerificationModal = ref(false);
 
 const emits = defineEmits([
     'editEvent',
@@ -704,6 +709,12 @@ const emits = defineEmits([
     'showDeclineEventModal',
     'changedMultiEditCheckbox'
 ]);
+
+const RejectEventVerificationRequestModal = defineAsyncComponent({
+    loader: () => import('@/Pages/EventVerification/Components/RejectEventVerificationRequestModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
 
 const props = defineProps({
     event: {
@@ -775,6 +786,10 @@ const props = defineProps({
     }
 });
 
+const isHighlighted = computed(() => {
+    const highlightEventId = usePage().props.urlParameters.highlightEventId
+    return highlightEventId && parseInt(highlightEventId) === parseInt(props.event.id);
+})
 
 const element = ref(null);
 const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
@@ -935,12 +950,7 @@ const approveRequest = () => {
     })
 }
 
-const rejectRequest = () => {
-    router.post(route('event-verifications.reject-by-event', props.event.id), {}, {
-        preserveScroll: true,
-        preserveState: true,
-    })
-}
+
 
 
 </script>

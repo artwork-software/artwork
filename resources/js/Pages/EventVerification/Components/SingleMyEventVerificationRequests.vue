@@ -27,6 +27,9 @@
                         <UserPopoverTooltip :user="commenter" height="8" width="8" />
                         <div>
                             <p class="text-xs font-lexend font-semibold text-gray-900">{{ commenter.full_name }}</p>
+                            <p class="text-xs font-extralight text-gray-400">
+                                {{ commenter.rejection_reason }}
+                            </p>
                             <p :class="[statuses[commenter.status], 'mt-1 w-full rounded-md text-center px-1.5 py-0.5 text-[9px] font-medium whitespace-nowrap ring-1 ring-inset']" class="first-letter:capitalize">{{ $t(commenter.status) }}</p>
                         </div>
                     </div>
@@ -101,7 +104,8 @@ const getAllVerifierInSingleRequest = (verifications) => {
         if (!verifiers.some(v => v.id === verification.verifier.id)) {
             verifiers.push({
                 ...verification.verifier,
-                status: verification.status
+                status: verification.status,
+                rejection_reason : verification.rejection_reason,
             });
         }
     });
@@ -125,7 +129,7 @@ const getBackgroundColorByEventTypeVerificationModeAndWhoHasVerifyGroup = (verif
     if (mode === 'all') {
         if (allApproved) return statuses['approved'];
         if (allRejected) return statuses['rejected'];
-        return statuses['pending'];
+        return statuses['rejected'];
     }
 
     return statuses['pending'];

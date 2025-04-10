@@ -218,7 +218,7 @@
             <div v-if="can('can edit planning calendar') || hasAdminRole()">
                 <FormButton
                     class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
-                    @click="rejectRequests"
+                    @click="showRejectEventVerificationModal = true"
                     :disabled="computedCheckedEventsForMultiEditCount === 0"
                     :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Reject events')"/>
             </div>
@@ -294,6 +294,12 @@
         :isAdmin="hasAdminRole()"
         :event-statuses="eventStatuses"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
+    />
+
+    <RejectEventVerificationRequestModal
+        v-if="showRejectEventVerificationModal"
+        @close="closeShowRejectEventVerificationModal"
+        :event-ids="editEvents"
     />
 
 </template>
@@ -389,6 +395,12 @@ const AsyncDailyViewCalendar = defineAsyncComponent({
     loader: () => import('@/Components/Calendar/DailyViewCalendar.vue'),
 })
 
+const RejectEventVerificationRequestModal = defineAsyncComponent({
+    loader: () => import('@/Pages/EventVerification/Components/RejectEventVerificationRequestModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
 const textStyle = computed(() => {
         const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
         const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
@@ -464,6 +476,7 @@ const showMultiDuplicateModal = ref(false);
 const checkIfScrolledToCalendarRef = ref('!-ml-3');
 const newCalendarData = ref(props.calendarData);
 const wantedDate = ref(null);
+const showRejectEventVerificationModal = ref(false)
 const verificationMode = ref(false);
 const openNewEventModalWithBaseData = (day, roomId) => {
     eventToEdit.value = false
@@ -764,19 +777,7 @@ const approveRequests = () => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
-            cancelMultiEditDuplicateSelection(false);
-        }
-    })
-}
-
-const rejectRequests = () => {
-    router.post(route('event-verifications.reject-by-events'), {
-        events: editEvents.value
-    }, {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: () => {
-            cancelMultiEditDuplicateSelection(false);
+            resetMultiEdit();
         }
     })
 }
@@ -788,9 +789,14 @@ const requestVerification = () => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
-            cancelMultiEditDuplicateSelection(false);
+            resetMultiEdit();
         }
     })
+}
+
+const closeShowRejectEventVerificationModal = () => {
+    showRejectEventVerificationModal.value = false;
+    resetMultiEdit();
 }
 
 onMounted(() => {

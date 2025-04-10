@@ -124,11 +124,12 @@ class EventVerificationController extends Controller
         broadcast(new EventCreated($event->fresh(), $event->room_id));
     }
 
-    public function rejectByEvent(Event $event): void
+    public function rejectByEvent(Event $event, Request $request): void
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $this->eventVerificationService->rejectVerificationByEvent($event, $user);
+        $rejectionReason = $request->get('rejection_reason', '');
+        $this->eventVerificationService->rejectVerificationByEvent($event, $user, $rejectionReason);
         broadcast(new EventCreated($event->fresh(), $event->room_id));
     }
 
@@ -138,7 +139,7 @@ class EventVerificationController extends Controller
         foreach ($events as $eventId) {
             /** @var Event $event */
             $event = $this->eventService->findEventById($eventId);
-            $this->rejectByEvent($event);
+            $this->rejectByEvent($event, $request);
         }
     }
 

@@ -156,7 +156,7 @@ class EventVerificationService
         $this->approveVerification($verification);
     }
 
-    public function rejectVerificationByEvent(Event $event, User $user): void
+    public function rejectVerificationByEvent(Event $event, User $user, string $rejectionReason = ''): void
     {
         /** @var EventVerification $verification */
         $verification = $event->verifications()
@@ -168,7 +168,7 @@ class EventVerificationService
             return;
         }
 
-        $this->rejectVerification($verification);
+        $this->rejectVerification($verification, $rejectionReason);
     }
 
 

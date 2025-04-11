@@ -599,7 +599,7 @@ export default {
                     name: 'Planning Calendar',
                     href: route('planning-event-calendar.index'),
                     route: ['/planning-event-calendar'],
-                    has_permission: this.$can('can see planning calendar')  || this.hasAdminRole(),
+                    has_permission: this.$canAny(['can see planning calendar']) || this.hasAdminRole(),
                     icon: IconCalendarCog,
                     showToolTipForItem: false
                 },
@@ -607,7 +607,7 @@ export default {
                     name: 'Event Verifications',
                     href: route('event-verifications.index'),
                     route: ['/event-verifications'],
-                    has_permission: this.$can('can edit planning calendar')  || this.hasAdminRole(),
+                    has_permission: this.$canAny(['can see planning calendar', 'can edit planning calendar'])  || this.hasAdminRole(),
                     icon: IconCalendarCheck,
                     showToolTipForItem: false
                 },

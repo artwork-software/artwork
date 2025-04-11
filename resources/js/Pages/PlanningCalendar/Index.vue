@@ -17,17 +17,21 @@
         </transition>
 
         <div class="w-full ml-11 mt-1">
-            <BaseCalendar :rooms="rooms"
-                          :days="period"
-                          :calendar-data="calendar"
-                          :events-without-room="[]"
-                          :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                          :first-project-shift-tab-id="1"
-                          :event-statuses="eventStatuses"
-                          :eventsWithoutRoom="eventsWithoutRoom"
-                          is-planning
+            <BaseCalendar
+                :rooms="rooms"
+                :days="period"
+                :calendar-data="calendar"
+                :events-without-room="[]"
+                :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                :first-project-shift-tab-id="1"
+                :event-statuses="eventStatuses"
+                :eventsWithoutRoom="eventsWithoutRoom"
+                is-planning
+                :verifierForEventTypIds="verifierForEventTypIds"
             />
         </div>
+
+
     </AppLayout>
 </template>
 
@@ -110,6 +114,11 @@ const props = defineProps({
         type: String,
         required: false,
         default: ''
+    },
+    verifierForEventTypIds: {
+        type: Array,
+        required: false,
+        default: []
     }
 })
 

@@ -91,6 +91,7 @@
             <div class="flex items-center gap-x-2">
                 <div class="flex items-center">
                     <div class="flex items-center gap-x-2">
+                        <slot name="buttonsRight"></slot>
                         <MultiEditSwitch :multi-edit="multiEdit"
                                          :room-mode="roomMode"
                                          @update:multi-edit="UpdateMultiEditEmits"/>
@@ -328,6 +329,17 @@
                                             {{ $t('Show project group') }}
                                         </label>
                                     </div>
+                                    <div class="flex items-center py-1" v-if="isPlanning">
+                                        <input id="cb-use-event-status-color"
+                                               v-model="userCalendarSettings.show_unplanned_events"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-use-event-status-color"
+                                               :class="userCalendarSettings.show_unplanned_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Show fixed events') }}
+                                        </label>
+                                    </div>
                                 </div>
                                 <div class="flex justify-end">
                                     <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">
@@ -423,7 +435,7 @@ const emits = defineEmits([
     'previousDay',
     'nextDay',
     'searchingForProject',
-    'jumpToDayOfMonth'
+    'jumpToDayOfMonth',
 ]);
 const showCalendarAboSettingModal = ref(false);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
@@ -449,6 +461,7 @@ const userCalendarSettings = useForm({
     use_event_status_color: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.use_event_status_color : false,
     hide_unoccupied_rooms: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.hide_unoccupied_rooms : false,
     display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
+    show_unplanned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_unplanned_events : false,
 });
 
 
@@ -538,7 +551,7 @@ const props = defineProps({
 })
 
 const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
-
+const enableVerification = ref(false);
 const isCalendarUsingProjectTimePeriod = computed(() => {
     return usePage().props.auth.user.calendar_settings.use_project_time_period;
 });
@@ -570,8 +583,8 @@ const changeDailyViewMode = () => {
     })
 }
 
-const UpdateMultiEditEmits = (value) => {
-    emits('updateMultiEdit', value)
+const UpdateMultiEditEmits = (value, isPlanning = false) => {
+    emits('updateMultiEdit', value, isPlanning)
 }
 
 const changeAtAGlance = () => {

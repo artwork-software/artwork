@@ -31,31 +31,62 @@
 
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 const props = defineProps({
     eventVerification: {
         type: Object,
-        required: true
+        required: false
+    },
+    event: {
+        type: Object,
+        required: false,
+        default: []
+    },
+    eventIds: {
+        type: Array,
+        required: false,
+        default: []
     }
 })
 
 const rejectForm = useForm({
     rejection_reason: '',
+    events: props.eventIds ? props.eventIds : [],
+    event: props.event ? props.event.id : null,
 })
+
 
 const emits = defineEmits(['close'])
 
 const rejectRequest = () => {
-    rejectForm.post(route('event-verifications.rejected', props.eventVerification.id), {
-        preserveScroll: true,
-        preserveState: false,
-        onSuccess: () => {
-            emits('close')
-        },
-    })
+    if (props.event && props.event.id) {
+        rejectForm.post(route('event-verifications.reject-by-event', props.event.id),{
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                emits('close')
+            },
+        })
+    } else if(props.eventIds.length > 0){
+        rejectForm.post(route('event-verifications.reject-by-events'), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                emits('close')
+            },
+        })
+    } else {
+        rejectForm.post(route('event-verifications.rejected', props.eventVerification.id), {
+            preserveScroll: true,
+            preserveState: false,
+            onSuccess: () => {
+                emits('close')
+            },
+        })
+    }
 }
 </script>
 

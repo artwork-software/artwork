@@ -1,8 +1,8 @@
 <template>
     <div :style="{ minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
         class="rounded-lg group/singleEvent"
-        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id ? 'border-[3px] border-dashed border-pink-500' : '', isHeightFull ? 'h-full' : '', usePage().props.auth.user.daily_view ? 'overflow-y-scroll' : '', multiEdit ? 'relative' : '']">
-        <div v-if="zoom_factor > 0.4 && multiEdit" @click="clickOnCheckBox"
+        :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id || isHighlighted ? 'border-[3px] border-dashed border-pink-500' : '', isHeightFull ? 'h-full' : '', usePage().props.auth.user.daily_view ? 'overflow-y-scroll' : '', multiEdit ? 'relative' : '']">
+        <div v-if="checkIfMultiEditIsEnabled" @click="clickOnCheckBox"
              class="absolute w-full h-full z-10 rounded-lg group-hover/singleEvent:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
             <div v-if="event.considerOnMultiEdit" class="flex items-center h-full justify-center align-middle">
@@ -234,13 +234,14 @@
                         />
                     </div>
                 </div>
+
                 <div class="invisible group-hover/singleEvent:visible flex items-start justify-end w-full" :class="event.isPlanning ? 'pt-2' : ''">
                     <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''">
                         <MenuItem v-if="event?.isPlanning && !event.hasVerification" v-slot="{ active }">
                             <div @click="SendEventToVerification"
                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                 <component is="IconLock" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                {{ $t('Request verification')}}
+                                {{ $t('Request verification') }}
                             </div>
                         </MenuItem>
                         <MenuItem v-if="event?.isPlanning && event.hasVerification" v-slot="{ active }">
@@ -248,6 +249,20 @@
                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                 <component is="IconLockOpen" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
                                 {{ $t('Withdraw verification request')}}
+                            </div>
+                        </MenuItem>
+                        <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">
+                            <div @click="approveRequest"
+                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <component is="IconChecks" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                {{ $t('Approve verification') }}
+                            </div>
+                        </MenuItem>
+                        <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">
+                            <div @click="showRejectEventVerificationModal = true"
+                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <component is="IconCircleX" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                {{ $t('Reject verification') }}
                             </div>
                         </MenuItem>
                         <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole)" v-slot="{ active }">
@@ -493,7 +508,7 @@
                                         <div @click="SendEventToVerification"
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                             <component is="IconLock" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                            {{ $t('Request verification')}}
+                                            {{ $t('Request verification') }}
                                         </div>
                                     </MenuItem>
                                     <MenuItem v-if="event?.isPlanning && event.hasVerification" v-slot="{ active }">
@@ -501,6 +516,20 @@
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                             <component is="IconLockOpen" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
                                             {{ $t('Withdraw verification request')}}
+                                        </div>
+                                    </MenuItem>
+                                    <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">
+                                        <div @click="approveRequest"
+                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                            <component is="IconChecks" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                            {{ $t('Approve verification') }}
+                                        </div>
+                                    </MenuItem>
+                                    <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">
+                                        <div @click="showRejectEventVerificationModal = true"
+                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                            <component is="IconCircleX" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
+                                            {{ $t('Reject verification') }}
                                         </div>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -637,12 +666,9 @@
                         <div v-for="shift in subEvent.shifts">
                             <span>{{ shift.craft.abbreviation }}</span>
                             (
-                            <VueMathjax
-                                :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>
-                            /{{ shift.number_employees }}
-                            <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{
-                                    shift.number_masters
-                                }}</span>)
+                                <VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>/{{ shift.number_employees }}
+                                <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>
+                            )
                         </div>
                     </div>
                 </div>
@@ -650,10 +676,15 @@
         </div>
     </div>
 
+    <RejectEventVerificationRequestModal
+        v-if="showRejectEventVerificationModal"
+        @close="showRejectEventVerificationModal = false"
+        :event="event"
+    />
 </template>
 
 <script setup>
-import {computed, inject, onMounted, ref} from "vue";
+import {computed, defineAsyncComponent, inject, onMounted, ref} from "vue";
 import {Link, router, usePage} from "@inertiajs/vue3";
 import {IconCirclePlus, IconEdit, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
@@ -665,11 +696,10 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import EventNoteComponent from "@/Layouts/Components/EventNoteComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {Float} from "@headlessui-float/vue";
-
 const {t} = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
-
+const showRejectEventVerificationModal = ref(false);
 
 const emits = defineEmits([
     'editEvent',
@@ -679,6 +709,12 @@ const emits = defineEmits([
     'showDeclineEventModal',
     'changedMultiEditCheckbox'
 ]);
+
+const RejectEventVerificationRequestModal = defineAsyncComponent({
+    loader: () => import('@/Pages/EventVerification/Components/RejectEventVerificationRequestModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
 
 const props = defineProps({
     event: {
@@ -737,8 +773,23 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: false
+    },
+    verifierForEventTypIds: {
+        type: Array,
+        required: false,
+        default: []
+    },
+    isPlanning: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 });
+
+const isHighlighted = computed(() => {
+    const highlightEventId = usePage().props.urlParameters.highlightEventId
+    return highlightEventId && parseInt(highlightEventId) === parseInt(props.event.id);
+})
 
 const element = ref(null);
 const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
@@ -748,6 +799,17 @@ const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, even
 const isRoomAdmin = computed(() => {
     return props.rooms?.find(room => room.id === props.event.roomId)?.admins.some(admin => admin.id === usePage().props.auth.user.id) || false;
 });
+
+const checkIfMultiEditIsEnabled = computed(() => {
+    // if isPlanning == true && MultiEdit == true -> show checkbox only on event if has verifications
+    if (props.isPlanning && props.multiEdit) {
+        return props.event.hasVerification || props.event.isPlanning;
+    }
+
+    if(props.zoom_factor > 0.4 && props.multiEdit) {
+        return true
+    }
+})
 
 const isCreator = computed(() => {
     return props.event.created_by.id === usePage().props.auth.user.id
@@ -880,6 +942,15 @@ const cancelVerification = () => {
         preserveState: false,
     })
 }
+
+const approveRequest = () => {
+    router.post(route('event-verifications.approved-by-event', props.event.id), {}, {
+        preserveScroll: true,
+        preserveState: true,
+    })
+}
+
+
 
 
 </script>

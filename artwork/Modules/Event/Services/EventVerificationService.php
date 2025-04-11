@@ -87,6 +87,25 @@ class EventVerificationService
                 ];
             });
 
+            // Setze Farbe basierend auf Verifizierungsmodus und Status
+            $eventType = $event->event_type;
+            $verificationMode = $eventType->verification_mode;
+            $statusColor = 'gray';
+
+            if ($statusCounts['rejected'] > 0) {
+                $statusColor = 'red'; // Sofort rot bei Ablehnung
+            } elseif ($verificationMode === 'all') {
+                $statusColor = $statusCounts['pending'] === 0 ? 'green' : 'yellow';
+            } elseif ($verificationMode === 'any') {
+                $statusColor = $statusCounts['approved'] > 0 ? 'green' : 'yellow';
+            } elseif ($verificationMode === 'specific') {
+                $statusColor = $statusCounts['approved'] > 0 ? 'green' : 'yellow';
+            } elseif ($verificationMode === 'none') {
+                $statusColor = 'green';
+            }
+
+            $event->status_color = $statusColor;
+
             $statusPercentages = $statusCounts->map(function ($count) use ($totalCount) {
                 return round(($count / $totalCount) * 100, 2);
             });

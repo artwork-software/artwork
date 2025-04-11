@@ -2574,5 +2574,6 @@
     "No verification needed": "No verification needed",
     "All assigned users must verify": "All assigned users must verify",
     "At least one assigned user must verify": "At least one assigned user must verify",
-    "A specific user must verify": "A specific user must verify"
+    "A specific user must verify": "A specific user must verify",
+    "Manage your event verification requests. You can add, edit, or delete your event verification requests here.": "Manage your event verification requests. You can add, edit, or delete your event verification requests here."
 }

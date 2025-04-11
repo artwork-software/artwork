@@ -2577,5 +2577,6 @@
     "No verification needed": "Keine Bestätigung notwendig",
     "All assigned users must verify": "Alle zugewiesenen Nutzer*innen müssen bestätigen",
     "At least one assigned user must verify": "Mindestens eine zugewiesene Nutzer*in muss bestätigen",
-    "A specific user must verify": "Eine spezifische Nutzer*in muss bestätigen"
+    "A specific user must verify": "Eine spezifische Nutzer*in muss bestätigen",
+    "Manage your event verification requests. You can add, edit, or delete your event verification requests here.": "Verwalte deine Terminüberprüfungsanfragen. Du kannst hier deine Terminüberprüfungsanfragen hinzufügen, bearbeiten oder löschen."
 }

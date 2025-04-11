@@ -1,7 +1,14 @@
 <template>
     <WhiteInnerCard>
         <div class="flex items-stretch gap-x-3 min-w-full w-full h-full">
-            <div class="p-1 rounded-lg w-1" :style="{backgroundColor: myRequest.event_type.hex_code}"></div>
+            <div class="p-1 rounded-lg w-1"
+                 :class="{
+         'bg-green-500': myRequest.status_color === 'green',
+         'bg-yellow-400': myRequest.status_color === 'yellow',
+         'bg-red-500': myRequest.status_color === 'red',
+         'bg-gray-300': myRequest.status_color === 'gray'
+     }"
+            ></div>
             <div class="w-full">
                 <p class="text-sm font-lexend font-semibold text-gray-900" :style="{color: myRequest.event_type.hex_code}">
                     {{ myRequest.event_type.abbreviation }}: {{ myRequest.eventName ?? myRequest?.project?.name }}

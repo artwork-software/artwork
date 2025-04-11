@@ -2,7 +2,7 @@
     <BaseEventVerificationLayout>
         <template #header>
             <PageTitle
-                :title="$t('My verification Requests')"
+                :title="$t('My Verification Requests')"
                 :description="$t('Manage your event verification requests. You can add, edit, or delete your event verification requests here.')"
             />
         </template>

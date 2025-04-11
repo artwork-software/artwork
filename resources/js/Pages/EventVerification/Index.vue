@@ -22,7 +22,7 @@
                        </div>
                    </div>
                     <div v-else class="mt-3">
-                        <BaseAlertComponent message="No event verification requests found" type="info" use-translation />
+                        <BaseAlertComponent message="No event verification requests found" type="error" use-translation />
                     </div>
                 </div>
                 <div class="col-start-5 col-span-2">
@@ -35,7 +35,7 @@
                                 </div>
                             </div>
                             <div v-else class="px-5">
-                                <BaseAlertComponent message="No planned events found" type="info" use-translation />
+                                <BaseAlertComponent message="No planned events found" type="error" use-translation />
                             </div>
                         </div>
                     </BaseCard>

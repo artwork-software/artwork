@@ -1,7 +1,7 @@
 <template>
-    <div class="mb-5 px-5 py-3 px-1">
+    <div class="mb-5 px-5 py-3">
         <h3 class="font-lexend font-bold">{{ $t(props.title) }}</h3>
-        <p class="text-sm text-gray-700 font-medium mt-0.5">
+        <p class="text-sm xsLight mt-0.5">
             {{ $t(props.description) }}
         </p>
     </div>

@@ -20,7 +20,8 @@ class EventVerificationController extends Controller
 
     public function __construct(
         private readonly EventVerificationService $eventVerificationService,
-        private readonly AuthManager $authManager
+        private readonly AuthManager $authManager,
+        private readonly EventService $eventService,
     ) {
     }
 
@@ -29,18 +30,26 @@ class EventVerificationController extends Controller
      */
     public function index()
     {
-        $requestPaginate = request()?->integer('eventVerificationsPerPage', 5);
         $myRequestPaginate = request()?->integer('myRequestsPerPage', 5);
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        return Inertia::render('EventVerification/Index', [
+            'myRequests' => $this->eventVerificationService->getAllRequestedByUser($user, $myRequestPaginate),
+            'plannedEvents' => $this->eventVerificationService->getPlannedEvents($user),
+        ]);
+    }
+
+    public function requests() {
+        $requestPaginate = request()?->integer('eventVerificationsPerPage', 5);
         $filterVerificationRequest = request()?->string('filterVerificationRequest', '');
         $filterVerificationRequest = in_array($filterVerificationRequest, ['all', 'approved', 'rejected', 'pending']) ? $filterVerificationRequest : '';
         /** @var User $user */
         $user = $this->authManager->user();
         $eventVerifications = $this->eventVerificationService->getAllByUser($user, $requestPaginate, $filterVerificationRequest);
 
-        return Inertia::render('EventVerification/Index', [
+        return Inertia::render('EventVerification/Requests', [
             'eventVerifications' => $eventVerifications,
-            'myRequests' => $this->eventVerificationService->getAllByRequester($user, $myRequestPaginate),
-            'counts' => $this->eventVerificationService->getCountsByUser($user),
         ]);
     }
 
@@ -113,5 +122,52 @@ class EventVerificationController extends Controller
     {
         $this->eventVerificationService->cancelVerification($event);
         broadcast(new EventCreated($event, $event->room_id));
+    }
+
+    public function approvedByEvent(Event $event): void
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $this->eventVerificationService->approveVerificationByEvent($event, $user);
+        broadcast(new EventCreated($event->fresh(), $event->room_id));
+    }
+
+    public function rejectByEvent(Event $event, Request $request): void
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $rejectionReason = $request->get('rejection_reason', '');
+        $this->eventVerificationService->rejectVerificationByEvent($event, $user, $rejectionReason);
+        broadcast(new EventCreated($event->fresh(), $event->room_id));
+    }
+
+    public function rejectByEvents(Request $request): void
+    {
+        $events = $request->collect('events', []);
+        foreach ($events as $eventId) {
+            /** @var Event $event */
+            $event = $this->eventService->findEventById($eventId);
+            $this->rejectByEvent($event, $request);
+        }
+    }
+
+    public function approvedByEvents(Request $request): void
+    {
+        $events = $request->collect('events', []);
+        foreach ($events as $eventId) {
+            /** @var Event $event */
+            $event = $this->eventService->findEventById($eventId);
+            $this->approvedByEvent($event);
+        }
+    }
+
+    public function requestVerification(Request $request): void
+    {
+        $events = $request->collect('events', []);
+        foreach ($events as $eventId) {
+            /** @var Event $event */
+            $event = $this->eventService->findEventById($eventId);
+            $this->store($event);
+        }
     }
 }

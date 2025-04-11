@@ -12,6 +12,7 @@ use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class EventVerificationService
@@ -27,7 +28,7 @@ class EventVerificationService
             $query->where('verifier_id', $user->id)
                 ->orWhere('event_id', $user->id);
             })
-            ->with(['event.room', 'verifier', 'requester'])
+            ->with(['event.room', 'event.event_type', 'event.project', 'verifier', 'requester'])
             ->when(!empty($filterVerificationRequest), function ($query) use ($filterVerificationRequest) {
                 $query->where('status', $filterVerificationRequest);
             })
@@ -35,26 +36,101 @@ class EventVerificationService
             ->paginate($paginate);
     }
 
-    public function getAllByRequester(User $user, int $paginate = 5) {
+    public function getAllRequestedByUser(User $user, int $paginate = 5)
+    {
         $events = Event::where('user_id', $user->id)
             ->whereHas('verifications')
-            ->with(['event_type', 'verifications.verifier', 'room'])
+            ->with(['event_type', 'project', 'room', 'verifications.verifier'])
             ->withCasts([
                 'created_at' => TranslatedDateTimeCast::class,
             ])
             ->orderBy('created_at', 'desc')
             ->paginate($paginate);
 
-        // Gruppiere verifications innerhalb jedes Events nach UUID
         $events->each(function ($event) {
-            $event->grouped_verifications = $event->verifications
+            $groupedByUuid = $event->verifications
                 ->sortByDesc('created_at')
-                ->groupBy('uuid')
-                ->values();
-            unset($event->verifications); // optional
+                ->groupBy('uuid');
+
+            $latestGroup = $groupedByUuid->first();
+            $totalCount = $latestGroup->count() ?: 1; // Vermeidet Division durch 0
+
+            $groupedByStatus = collect(['approved', 'rejected', 'pending'])->mapWithKeys(function ($status) use ($latestGroup) {
+                $verifiers = $latestGroup->where('status', $status)->map(function ($verification) use ($status) {
+                    $verifier = $verification->verifier;
+
+                    // Erstelle ein sauberes Objekt mit nur den nötigen Daten + rejection_reason
+                    return (object) array_merge(
+                        $verifier->only([
+                            'first_name',
+                            'last_name',
+                            'email',
+                            'phone_number',
+                            'position',
+                            'pronouns',
+                            'description',
+                            'email_private',
+                            'phone_private',
+                            'profile_photo_url',
+                            'full_name',
+                        ]), // erweitere hier bei Bedarf
+                        ['rejection_reason' => $status === 'rejected' ? $verification->rejection_reason : null]
+                    );
+                });
+
+                return [$status => $verifiers->values()];
+            });
+
+            $statusCounts = collect(['pending', 'approved', 'rejected'])->mapWithKeys(function ($status) use ($latestGroup) {
+                return [
+                    $status => $latestGroup->where('status', $status)->count()
+                ];
+            });
+
+            // Setze Farbe basierend auf Verifizierungsmodus und Status
+            $eventType = $event->event_type;
+            $verificationMode = $eventType->verification_mode;
+            $statusColor = 'gray';
+
+            if ($statusCounts['rejected'] > 0) {
+                $statusColor = 'red'; // Sofort rot bei Ablehnung
+            } elseif ($verificationMode === 'all') {
+                $statusColor = $statusCounts['pending'] === 0 ? 'green' : 'yellow';
+            } elseif ($verificationMode === 'any') {
+                $statusColor = $statusCounts['approved'] > 0 ? 'green' : 'yellow';
+            } elseif ($verificationMode === 'specific') {
+                $statusColor = $statusCounts['approved'] > 0 ? 'green' : 'yellow';
+            } elseif ($verificationMode === 'none') {
+                $statusColor = 'green';
+            }
+
+            $event->status_color = $statusColor;
+
+            $statusPercentages = $statusCounts->map(function ($count) use ($totalCount) {
+                return round(($count / $totalCount) * 100, 2);
+            });
+
+            $event->verifier_grouped_by_status = $groupedByStatus;
+            $event->verification_status_counts = $statusCounts->merge([
+                'total' => $latestGroup->count(),
+            ]);
+            $event->verification_status_percentages = $statusPercentages;
+
+            unset($event->verifications);
         });
 
         return $events;
+    }
+
+
+    public function getPlannedEvents(User $user): Collection
+    {
+        return Event::where('user_id', $user->id)
+            ->where('is_planning', true)
+            ->with(['room', 'event_type', 'project'])
+            ->orderBy('created_at', 'desc')
+            ->whereDoesntHave('verifications')
+            ->get();
     }
 
     public function getCountsByUser(User $user): array
@@ -140,6 +216,37 @@ class EventVerificationService
         $this->notificationService->setNotificationTo($eventCreator);
         $this->notificationService->createNotification();
     }
+
+    public function approveVerificationByEvent(Event $event, User $user): void
+    {
+        /** @var EventVerification $verification */
+        $verification = $event->verifications()
+            ->where('verifier_id', $user->id)
+            ->where('status', 'pending')
+            ->first();
+
+        if (!$verification) {
+            return;
+        }
+
+        $this->approveVerification($verification);
+    }
+
+    public function rejectVerificationByEvent(Event $event, User $user, string $rejectionReason = ''): void
+    {
+        /** @var EventVerification $verification */
+        $verification = $event->verifications()
+            ->where('verifier_id', $user->id)
+            ->where('status', 'pending')
+            ->first();
+
+        if (!$verification) {
+            return;
+        }
+
+        $this->rejectVerification($verification, $rejectionReason);
+    }
+
 
 
     public function rejectVerification(EventVerification $verification, ?string $reason = ''): void

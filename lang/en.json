@@ -2556,9 +2556,24 @@
     "Are you sure you want to reject this event verification request?": "Are you sure you want to reject this event verification request?",
     "New event verification request incoming": "New event verification request incoming",
     "Rejections": "Rejections",
+    "Approve verification": "Approve verification",
+    "Reject verification": "Reject verification",
+    "Multiple verification": "Multiple verification",
+    "Approve events": "Approve events",
+    "Reject events": "Reject events",
+    "request verification": "request verification",
+    "Show fixed events": "Show fixed events",
+    "Planned Events": "Planned Events",
+    "You can see all planned events here. You can also request a verification directly here.": "You can see all planned events here. You can also request a verification directly here.",
+    "Request Verification": "Request Verification",
+    "My Verification Requests": "My Verification Requests",
+    "Verification Requests": "Verification Requests",
+    "No planned events found": "No planned events found",
+    "Filter your request according to your review decision.": "Filter your request according to your review decision.",
+    "Open in Calendar": "Open in Calendar",
     "No verification needed": "No verification needed",
     "All assigned users must verify": "All assigned users must verify",
     "At least one assigned user must verify": "At least one assigned user must verify",
-    "A specific user must verify": "A specific user must verify"
-
+    "A specific user must verify": "A specific user must verify",
+    "Manage your event verification requests. You can add, edit, or delete your event verification requests here.": "Manage your event verification requests. You can add, edit, or delete your event verification requests here."
 }

@@ -1,10 +1,10 @@
 <template>
     <app-layout title="Startseite">
-        <div class="max-w-screen-2xl mb-40 mt-5 ml-14 mr-40">
+        <div class="mx-auto max-w-7xl mt-10">
             <div class="headline1 mb-10">
                 Dashboard
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-5 gap-x-20">
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-x-10">
                 <div class="col-span-2">
                     <div class="mb-10">
                         <!-- Termin Widget -->
@@ -207,6 +207,9 @@
                     </div>
                 </div>
             </div>
+
+
+
         </div>
     </app-layout>
 </template>
@@ -223,7 +226,7 @@ import {
 } from '@heroicons/vue/solid'
 import {Menu, MenuButton, MenuItem, MenuItems} from '@headlessui/vue'
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Link, router, useForm} from "@inertiajs/vue3";
+import {Link, router, useForm, usePage} from "@inertiajs/vue3";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
@@ -290,6 +293,7 @@ export default defineComponent({
             });
     },
     methods: {
+        usePage,
         backgroundColorWithOpacity(event){
             const color = event.event_type?.hex_code;
             return `rgb(${parseInt(color?.slice(-6, -4), 16)}, ${parseInt(color?.slice(-4, -2), 16)}, ${parseInt(color?.slice(-2), 16)}, 15%)`;

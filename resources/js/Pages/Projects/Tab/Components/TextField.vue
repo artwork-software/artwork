@@ -53,7 +53,7 @@ export default {
 <template>
     <div class="mb-3 flex items-start gap-x-4">
         <div>
-            <label for="email" class="block text-sm font-medium leading-6" :class="inSidebar ? 'text-white' : ' text-gray-900' ">
+            <label for="email" class="block text-sm font-bold leading-6" :class="inSidebar ? 'text-white' : ' text-gray-900' ">
                 {{ projectData.data.label }}
             </label>
             <div class="mt-2 w-96">

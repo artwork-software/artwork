@@ -48,12 +48,7 @@ class ImportProject
                 false
             );
             $budgetService->generateBasicBudgetValues(
-                $project,
-                $tableService,
-                $columnService,
-                $mainPositionService,
-                $columnSettingService,
-                $sageApiSettingsService
+                $project
             );
         }
 

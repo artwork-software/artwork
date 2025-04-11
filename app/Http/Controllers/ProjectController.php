@@ -482,12 +482,7 @@ class ProjectController extends Controller
         $project->departments()->sync($departments->pluck('id'));
 
         $this->budgetService->generateBasicBudgetValues(
-            $project,
-            $tableService,
-            $columnService,
-            $mainPositionService,
-            $columnSettingService,
-            $sageApiSettingsService
+            $project
         );
 
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id');

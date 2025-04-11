@@ -16,7 +16,6 @@ class UserStatusService
             return;
         }
 
-
         if (Redis::exists("user_status:{$userId}")) {
             Redis::expire("user_status:{$userId}", 600); // TTL reset
         } else {

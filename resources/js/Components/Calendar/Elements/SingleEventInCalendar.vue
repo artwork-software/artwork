@@ -248,7 +248,7 @@
                             <div @click="cancelVerification"
                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                 <component is="IconLockOpen" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                {{ $t('Cancel verification') }}
+                                {{ $t('Withdraw verification request')}}
                             </div>
                         </MenuItem>
                         <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">
@@ -515,7 +515,7 @@
                                         <div @click="cancelVerification"
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                             <component is="IconLockOpen" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                            {{ $t('Cancel verification') }}
+                                            {{ $t('Withdraw verification request')}}
                                         </div>
                                     </MenuItem>
                                     <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">

@@ -2061,6 +2061,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/', [EventVerificationController::class, 'index'])
             ->name('event-verifications.index');
 
+        Route::get('/requests', [EventVerificationController::class, 'requests'])
+            ->name('event-verifications.requests');
+
         Route::post('/verification-request/{eventVerification}/approved', [EventVerificationController::class, 'approved'])
             ->name('event-verifications.approved');
 

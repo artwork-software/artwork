@@ -11,32 +11,35 @@
         </PopoverButton>
         <Teleport to="body">
             <transition enter-active-class="transition-enter-active" enter-from-class="transition-enter-from" enter-to-class="transition-enter-to" leave-active-class="transition-leave-active" leave-from-class="transition-leave-from" leave-to-class="transition-leave-to">
-                <PopoverPanel :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '']" class="absolute left-1/2 z-[10000] transform  bg-artwork-navigation-background rounded-lg shadow-xl px-4 py-4" :style="popoverStyle">
+                <PopoverPanel :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '', isWhite ? 'bg-white border border-gray-100' : 'bg-artwork-navigation-background']" class="absolute left-1/2 z-[10000] transform   rounded-lg shadow-xl px-4 py-4" :style="popoverStyle">
                     <div v-if="user" class="">
                         <div class="flex items-center gap-4">
                             <img class="min-h-14 min-w-14 h-14 w-14 object-cover rounded-full" :src="user.profile_photo_url" alt=""/>
                             <div class="">
-                                <div class="font-black font-lexend text-white text-lg flex items-start gap-x-4 mb-2 border-b border-dashed border-gray-600">
+                                <div class="font-black font-lexend  text-lg flex items-start gap-x-4 mb-2 border-b border-dashed border-gray-600" :class="isWhite ? 'text-gray-900' : 'text-white'">
                                     {{ user.first_name }} {{ user.last_name }}
                                     <div class="text-gray-300 text-xs my-1">
                                         {{ user.pronouns }}
                                     </div>
                                 </div>
 
-                                <div class="text-gray-300 text-sm font-bold flex items-center gap-x-2" v-if="user.position">
+                                <div class="text-sm font-bold flex items-center gap-x-2" v-if="user.position" :class="isWhite ? 'text-gray-500' : 'text-gray-300'">
                                     <component is="IconMapPin" class="h-4 w-4" v-if="user.position"/>
                                     {{ user.position }}
                                 </div>
-                                <div class="text-gray-300 text-sm font-bold flex items-center gap-x-2" v-if="user.email && !user.email_private || $can('can view private user info') || hasAdminRole()">
+                                <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.email && !user.email_private || $can('can view private user info') || hasAdminRole()">
                                     <component is="IconMail" class="h-4 w-4" v-if="user.email"/>
                                     {{ user.email }}
                                 </div>
-                                <div class="text-gray-300 text-sm font-bold flex items-center gap-x-2" v-if="user.phone_number && !user.phone_private || $can('can view private user info') || hasAdminRole()">
+                                <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.phone_number && !user.phone_private || $can('can view private user info') || hasAdminRole()">
                                     <component is="IconDeviceMobile" class="h-4 w-4" v-if="user.phone_number"/>
                                     {{ user.phone_number }}
                                 </div>
-                                <div class="col-span-4 mt-2 text-white break-all text-xs italic" v-if="user.description">
+                                <div class="col-span-4 mt-2 break-all text-xs italic" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.description">
                                     &bdquo;{{ user.description }}&rdquo;
+                                </div>
+                                <div class="col-span-4 mt-2 text-red-600 break-all text-xs italic " v-if="user.rejection_reason">
+                                    &bdquo;{{ user.rejection_reason }}&rdquo;
                                 </div>
                             </div>
 
@@ -90,6 +93,10 @@ export default {
             default: false
         },
         dontTranslatePopoverPosition: {
+            type: Boolean,
+            default: false
+        },
+        isWhite: {
             type: Boolean,
             default: false
         }

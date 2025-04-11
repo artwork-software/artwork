@@ -2565,5 +2565,13 @@
     "Approve events": "Termine genehmigen",
     "Reject events": "Termine ablehnen",
     "request verification": "Termine überprüfung anfordern",
-    "Show fixed events": "Feste Termine anzeigen"
+    "Show fixed events": "Feste Termine anzeigen",
+    "Planned Events": "Geplante Termine",
+    "You can see all planned events here. You can also request a verification directly here.": "Hier siehst du alle geplanten Termine. Du kannst hier auch direkt eine Überprüfung anfordern.",
+    "Request Verification": "Überprüfung anfordern",
+    "My Verification Requests": "Meine Überprüfungsanfragen",
+    "Verification Requests": "Überprüfungsanfragen",
+    "No planned events found": "Keine geplanten Termine gefunden",
+    "Filter your request according to your review decision.": "Filtere deine Anfrage nach deiner Überprüfungsentscheidung.",
+    "Open in Calendar": "Im Kalender öffnen"
 }

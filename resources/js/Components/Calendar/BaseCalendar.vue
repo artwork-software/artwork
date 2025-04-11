@@ -325,56 +325,55 @@ import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.v
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {can} from "laravel-permission-to-vuejs";
 
-
-
 const props = defineProps({
-        rooms: {
-            type: Object,
-            required: true,
-        },
-        days: {
-            type: Object,
-            required: true,
-        },
-        calendarData: {
-            type: Object,
-            required: true,
-        },
-        project: {
-            type: Object,
-            default: null,
-            required: false,
-        },
-        eventsWithoutRoom: {
-            type: Object,
-            required: false,
-        },
-        projectNameUsedForProjectTimePeriod: {
-            type: String,
-            required: false,
-            default: ''
-        },
-        firstProjectShiftTabId: {
-            type: [String, Number],
-            required: false,
-            default: null
-        },
-        eventStatuses: {
-            type: Object,
-            required: false,
-            default: null
-        },
-        isPlanning: {
-            type: Boolean,
-            required: false,
-            default: false
-        },
-        verifierForEventTypIds: {
-            type: Array,
-            required: false,
-            default: []
-        }
-    })
+    rooms: {
+        type: Object,
+        required: true,
+    },
+    days: {
+        type: Object,
+        required: true,
+    },
+    calendarData: {
+        type: Object,
+        required: true,
+    },
+    project: {
+        type: Object,
+        default: null,
+        required: false,
+    },
+    eventsWithoutRoom: {
+        type: Object,
+        required: false,
+    },
+    projectNameUsedForProjectTimePeriod: {
+        type: String,
+        required: false,
+        default: ''
+    },
+    firstProjectShiftTabId: {
+        type: [String, Number],
+        required: false,
+        default: null
+    },
+    eventStatuses: {
+        type: Object,
+        required: false,
+        default: null
+    },
+    isPlanning: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    verifierForEventTypIds: {
+        type: Array,
+        required: false,
+        default: []
+    }
+})
+
 const $t = useTranslation()
 const { composedCurrentDaysInViewRef, composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
 const {hasAdminRole} = usePermission(usePage().props)
@@ -402,48 +401,26 @@ const RejectEventVerificationRequestModal = defineAsyncComponent({
 })
 
 const textStyle = computed(() => {
-        const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
-        const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
-        return {
-            fontSize,
-            lineHeight,
-        };
-    })
-const scrollToNextEventInDay = (day, length,room) => {
-        let eventScroll = document.getElementById('event_scroll-' + (length - 1) + '-day-' + day + '-room-' + room);
-        if (eventScroll) {
-            eventScroll.scrollIntoView({
-                behavior: 'smooth', // Optionale Animation für weiches Scrollen
-                block: 'nearest',  // Scrolle nur so weit wie nötig
-                inline: 'nearest' // Stelle sicher, dass es nicht die ganze Seite beeinflusst
-            });
-        }
+    const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
+    const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
+    return {
+        fontSize,
+        lineHeight,
     };
-/*const computedFilteredEvents = computed(() => {
-        let getComputedEventsWithoutRoom = () => {
-            return eventsWithoutRoomRef.value.filter((event) => {
-                let createdBy = event.created_by;
-                let projectLeaders = event.project?.leaders;
+})
+const scrollToNextEventInDay = (day, length,room) => {
+    let eventScroll = document.getElementById('event_scroll-' + (length - 1) + '-day-' + day + '-room-' + room);
+    if (eventScroll) {
+        eventScroll.scrollIntoView({
+            behavior: 'smooth', // Optionale Animation für weiches Scrollen
+            block: 'nearest',  // Scrolle nur so weit wie nötig
+            inline: 'nearest' // Stelle sicher, dass es nicht die ganze Seite beeinflusst
+        })
+    }
+};
 
-                if (projectLeaders && projectLeaders.length > 0) {
-                    if (
-                        createdBy.id === usePage().props.auth.user.id ||
-                        projectLeaders.some((leader) => leader.id === usePage().props.auth.user.id)
-                    ) {
-                        return true;
-                    }
-                } else if (createdBy.id === usePage().props.auth.user.id) {
-                    return true;
-                }
-
-                return false;
-            });
-        }
-
-        return getComputedEventsWithoutRoom();
-    });*/
 const computedCheckedEventsForMultiEditCount = computed(() => {
-        return editEvents.value.length;
+    return editEvents.value.length;
 });
 
 const eventsWithoutRoomRef = ref(props.eventsWithoutRoom );
@@ -476,8 +453,8 @@ const showMultiDuplicateModal = ref(false);
 const checkIfScrolledToCalendarRef = ref('!-ml-3');
 const newCalendarData = ref(props.calendarData);
 const wantedDate = ref(null);
-const showRejectEventVerificationModal = ref(false)
-const verificationMode = ref(false);
+const showRejectEventVerificationModal = ref(false);
+
 const openNewEventModalWithBaseData = (day, roomId) => {
     eventToEdit.value = false
     wantedRoom.value = roomId;
@@ -568,12 +545,6 @@ const checkIfAnyRoomHasAnEventOrShift = computed(() => {
     });
 });
 
-/*const checkIfRoomHasEvents = (room) => {
-    return room.content && Object.entries(room.content).some(([date, { events }]) => {
-        return events && events.length > 0;
-    });
-};
-*/
 const toggleMultiEdit = (value, isPlanning = false) => {
     multiEdit.value = value;
 
@@ -601,137 +572,121 @@ const cancelMultiEditDuplicateSelection = () => {
     });
 };
 const openDeclineEventModal = (event) => {
-        declineEvent.value = event;
-        showDeclineEventModal.value = true;
-    }
+    declineEvent.value = event;
+    showDeclineEventModal.value = true;
+}
+
 const openDeleteEventModal = (event, type) => {
-        if (type === 'main') {
-            deleteType.value = type;
-            deleteTitle.value = $t('Delete event?');
-            deleteDescription.value = $t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.');
-        } else {
-            deleteType.value = type;
-            deleteTitle.value = $t('Delete sub-event?');
-            deleteDescription.value = $t('Are you sure you want to delete the selected assignments?');
-        }
-        eventToDelete.value = event;
-        deleteComponentVisible.value = true;
+    if (type === 'main') {
+        deleteType.value = type;
+        deleteTitle.value = $t('Delete event?');
+        deleteDescription.value = $t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.');
+    } else {
+        deleteType.value = type;
+        deleteTitle.value = $t('Delete sub-event?');
+        deleteDescription.value = $t('Are you sure you want to delete the selected assignments?');
     }
+    eventToDelete.value = event;
+    deleteComponentVisible.value = true;
+}
+
 const openAddSubEventModal = (desiredEvent, mode, mainEvent) => {
-        if (mode === 'create') {
-            //only set eventToEdit as base for new sub event
-            eventToEdit.value = desiredEvent;
-        } else if (mode === 'edit') {
-            //only set eventToEdit as base for new sub event
-            eventToEdit.value = mainEvent;
-            subEventToEdit.value = desiredEvent;
-        }
-
-        showAddSubEventModal.value = true;
+    if (mode === 'create') {
+        //only set eventToEdit as base for new sub event
+        eventToEdit.value = desiredEvent;
+    } else if (mode === 'edit') {
+        //only set eventToEdit as base for new sub event
+        eventToEdit.value = mainEvent;
+        subEventToEdit.value = desiredEvent;
     }
+
+    showAddSubEventModal.value = true;
+}
+
 const closeAddSubEventModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
-        if (closedOnPurpose) {
-        }
+    if (closedOnPurpose) {}
 
-        showAddSubEventModal.value = false;
-        eventToEdit.value = null;
-        subEventToEdit.value = null;
-    }
+    showAddSubEventModal.value = false;
+    eventToEdit.value = null;
+    subEventToEdit.value = null;
+}
+
 const showEditEventModel = (event) => {
-        eventToEdit.value = event;
-        showEventComponent.value = true;
-    }
+    eventToEdit.value = event;
+    showEventComponent.value = true;
+}
+
 const openFullscreen = () => {
-        let elem = document.getElementById('myCalendar');
-
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) { /* Safari */
-            elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) { /* IE11 */
-            elem.msRequestFullscreen();
-        }
-
-        isFullscreen.value = true;
+    let elem = document.getElementById('myCalendar');
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
     }
+    isFullscreen.value = true;
+}
+
 const closeMultiEditModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
-        showMultiEditModal.value = false;
-        if (closedOnPurpose) {
-            resetMultiEdit();
-        }
+    showMultiEditModal.value = false;
+    if (closedOnPurpose) {
+        resetMultiEdit();
     }
+}
 const closeMultiDuplicateModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
-        showMultiDuplicateModal.value = false;
-        if (closedOnPurpose) {
-            resetMultiEdit();
-        }
+    showMultiDuplicateModal.value = false;
+    if (closedOnPurpose) {
+        resetMultiEdit();
     }
+}
+
 const eventComponentClosed = (closedOnPurpose) => {
-        if (closedOnPurpose) {
-            let calendar_settings = usePage().props.auth.user.calendar_settings;
-
-            //@todo: temporary see ARTWORK-300
-            if (calendar_settings.use_project_time_period) {
-                router.patch(
-                    route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
-                    {
-                        use_project_time_period: true,
-                        project_id: calendar_settings.time_period_project_id,
-                    },
-                    {
-                        preserveState: false,
-                        preserveScroll: true
-                    }
-                );
-                return;
-            }
+    if (closedOnPurpose) {
+        let calendar_settings = usePage().props.auth.user.calendar_settings;
+        //@todo: temporary see ARTWORK-300
+        if (calendar_settings.use_project_time_period) {
+            router.patch(route('user.calendar_settings.toggle_calendar_settings_use_project_period'), {
+                use_project_time_period: true,
+                project_id: calendar_settings.time_period_project_id,
+            }, {
+                preserveState: false,
+                preserveScroll: true
+                }
+            );
+            return;
         }
-
-        showEventComponent.value = false;
     }
+
+    showEventComponent.value = false;
+}
 const deleteEvent = () => {
-        if (deleteType.value === 'main') {
-            axios.delete(route('events.delete', eventToDelete.value));
-        }
-        if (deleteType.value === 'sub') {
-            axios.delete(route('subEvent.delete', eventToDelete.value));
-        }
-        deleteComponentVisible.value = false;
+    if (deleteType.value === 'main') {
+        axios.delete(route('events.delete', eventToDelete.value));
     }
-const closeDeleteSelectedEventsModal = (closedOnPurpose) => {
-        openDeleteSelectedEventsModal.value = false;
+    if (deleteType.value === 'sub') {
+        axios.delete(route('subEvent.delete', eventToDelete.value));
+    }
+    deleteComponentVisible.value = false;
+}
 
-        if (closedOnPurpose) {
+const closeDeleteSelectedEventsModal = (closedOnPurpose) => {
+    openDeleteSelectedEventsModal.value = false;
+    if (closedOnPurpose) {
+        resetMultiEdit();
+    }
+}
+
+const deleteSelectedEvents = () => {
+    axios.post(route('multi-edit.delete'), {
+            events: editEvents.value
+        }
+    ).finally(() => {
+            openDeleteSelectedEventsModal.value = false;
             resetMultiEdit();
         }
-    }
-const deleteSelectedEvents = () => {
-        axios.post(
-            route('multi-edit.delete'),
-            {
-                events: editEvents.value
-            }
-        ).finally(
-            () => {
-
-                openDeleteSelectedEventsModal.value = false;
-                resetMultiEdit();
-            }
-        );
-    };
-
-const dateValue = inject('dateValue');
-
-
-/*const updateFilterValue = (key, value) => {
-    router.patch(route('user.calendar.filter.single.value.update', {user: usePage().props.auth.user.id}), {
-        key: key,
-        value: value
-    }, {
-        preserveScroll: true,
-        preserveState: false
-    });
-}*/
+    );
+};
 
 onMounted(() => {
     window.addEventListener(
@@ -757,7 +712,6 @@ onMounted(() => {
         }
     });
 });
-
 
 const jumpToDayOfMonth = (day) => {
     const dayElement = document.querySelector(`.day-container[data-day-to-jump="${day}"]`);

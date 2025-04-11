@@ -2562,5 +2562,13 @@
     "Approve events": "Approve events",
     "Reject events": "Reject events",
     "request verification": "request verification",
-    "Show fixed events": "Show fixed events"
+    "Show fixed events": "Show fixed events",
+    "Planned Events": "Planned Events",
+    "You can see all planned events here. You can also request a verification directly here.": "You can see all planned events here. You can also request a verification directly here.",
+    "Request Verification": "Request Verification",
+    "My Verification Requests": "My Verification Requests",
+    "Verification Requests": "Verification Requests",
+    "No planned events found": "No planned events found",
+    "Filter your request according to your review decision.": "Filter your request according to your review decision.",
+    "Open in Calendar": "Open in Calendar"
 }

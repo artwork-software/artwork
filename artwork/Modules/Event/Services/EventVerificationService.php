@@ -28,7 +28,7 @@ class EventVerificationService
             $query->where('verifier_id', $user->id)
                 ->orWhere('event_id', $user->id);
             })
-            ->with(['event.room', 'event.event_type', 'verifier', 'requester'])
+            ->with(['event.room', 'event.event_type', 'event.project', 'verifier', 'requester'])
             ->when(!empty($filterVerificationRequest), function ($query) use ($filterVerificationRequest) {
                 $query->where('status', $filterVerificationRequest);
             })
@@ -40,7 +40,7 @@ class EventVerificationService
     {
         $events = Event::where('user_id', $user->id)
             ->whereHas('verifications')
-            ->with(['event_type', 'room', 'verifications.verifier'])
+            ->with(['event_type', 'project', 'room', 'verifications.verifier'])
             ->withCasts([
                 'created_at' => TranslatedDateTimeCast::class,
             ])
@@ -108,7 +108,7 @@ class EventVerificationService
     {
         return Event::where('user_id', $user->id)
             ->where('is_planning', true)
-            ->with(['room', 'event_type'])
+            ->with(['room', 'event_type', 'project'])
             ->orderBy('created_at', 'desc')
             ->whereDoesntHave('verifications')
             ->get();

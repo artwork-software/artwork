@@ -4,7 +4,7 @@
             <div class="p-1 rounded-lg w-1" :style="{backgroundColor: myRequest.event_type.hex_code}"></div>
             <div class="w-full">
                 <p class="text-sm font-lexend font-semibold text-gray-900" :style="{color: myRequest.event_type.hex_code}">
-                    {{ myRequest.event_type.abbreviation }}: {{ myRequest.eventName }}
+                    {{ myRequest.event_type.abbreviation }}: {{ myRequest.eventName ?? myRequest?.project?.name }}
                 </p>
                 <p class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
                     <span class="font-lexend font-bold">{{ $t('Start') }}:</span>
@@ -16,7 +16,13 @@
                     <span class="font-lexend font-bold">{{ $t('Room') }}:</span>
                     <span class="font-lexend">{{ myRequest?.room?.name }}</span>
                 </p>
-
+                <!-- PROGRESSBAR -->
+                <div class="mt-3 pb-3 hidden">
+                    <div class="relative w-full bg-gray-200 rounded-lg h-2.5 overflow-hidden flex">
+                        <div class="h-full bg-gradient-to-r from-green-400 to-emerald-500" :style="{width: myRequest.verification_status_percentages.approved + '%'}"></div>
+                        <div class="h-full bg-gradient-to-r from-orange-500 to-red-600" :style="{width: myRequest.verification_status_percentages.rejected + '%'}"></div>
+                    </div>
+                </div>
                 <!-- VERIFIER ANZEIGE -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <div v-for="(verification, key) in myRequest.verifier_grouped_by_status" :key="key">
@@ -37,13 +43,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- PROGRESSBAR -->
-                <div class="mt-3 pb-3 hidden">
-                    <div class="relative w-full bg-gray-200 rounded-lg h-3 overflow-hidden flex">
-                        <div class="h-full bg-gradient-to-r from-green-400 to-emerald-500" :style="{width: myRequest.verification_status_percentages.approved + '%'}"></div>
-                        <div class="h-full bg-gradient-to-r from-orange-500 to-red-600" :style="{width: myRequest.verification_status_percentages.rejected + '%'}"></div>
-                    </div>
-                </div>
+
             </div>
         </div>
     </WhiteInnerCard>

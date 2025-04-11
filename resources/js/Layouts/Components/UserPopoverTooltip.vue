@@ -11,7 +11,7 @@
         </PopoverButton>
         <Teleport to="body">
             <transition enter-active-class="transition-enter-active" enter-from-class="transition-enter-from" enter-to-class="transition-enter-to" leave-active-class="transition-leave-active" leave-from-class="transition-leave-from" leave-to-class="transition-leave-to">
-                <PopoverPanel :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '', isWhite ? 'bg-white border border-gray-100' : 'bg-artwork-navigation-background']" class="absolute left-1/2 z-[10000] transform   rounded-lg shadow-xl px-4 py-4" :style="popoverStyle">
+                <PopoverPanel :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '', isWhite ? 'bg-white border border-gray-200' : 'bg-artwork-navigation-background']" class="absolute left-1/2 z-[10000] transform   rounded-lg shadow-xl px-4 py-4" :style="popoverStyle">
                     <div v-if="user" class="">
                         <div class="flex items-center gap-4">
                             <img class="min-h-14 min-w-14 h-14 w-14 object-cover rounded-full" :src="user.profile_photo_url" alt=""/>

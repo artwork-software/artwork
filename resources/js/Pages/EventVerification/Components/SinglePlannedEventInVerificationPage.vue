@@ -4,7 +4,7 @@
             <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event.event_type.hex_code}"></div>
             <div class="w-full">
                 <p class="text-sm font-lexend font-semibold text-gray-900" :style="{color: event.event_type.hex_code}">
-                    {{ event.event_type.abbreviation }}: {{ event.eventName }}
+                    {{ event.event_type.abbreviation }}: {{ event.eventName ?? event?.project?.name }}
                 </p>
                 <p class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
                     <span class="font-lexend font-bold">{{ $t('Start') }}:</span>

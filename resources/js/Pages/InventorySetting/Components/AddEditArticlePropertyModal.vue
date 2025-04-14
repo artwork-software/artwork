@@ -52,6 +52,27 @@
                         </Listbox>
                     </div>
 
+                    <div v-if="selectedType.type === 'selection'" class="col-span-full">
+                        <div v-for="(value, index) in propertyForm.select_values" :key="index" class="flex gap-3 items-center mb-2">
+                            <TextInputComponent
+                                id="select_value"
+                                v-model="propertyForm.select_values[index]"
+                                :label="$t('Selection value {index}', {index: index + 1})"
+                            />
+                            <button type="button" @click="propertyForm.select_values.splice(index, 1)" class="text-red-500 mt-5 hover:text-red-700">
+                                <component is="IconX" class="size-5" aria-hidden="true" />
+                            </button>
+
+                        </div>
+
+                        <div class="flex items-center justify-end">
+                            <button type="button" @click="propertyForm.select_values.push('')" class="text-gray-500 text-xs hover:text-gray-700 flex items-center font-lexend">
+                                <component is="IconPlus" class="size-4" aria-hidden="true" />
+                                {{ $t('Selection Add value') }}
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="col-span-2">
                         <div class="flex gap-3">
                             <div class="flex h-6 shrink-0 items-center">
@@ -134,6 +155,7 @@ const types = [
     { name: 'Time', type: 'time' },
     { name: 'Datetime', type: 'datetime' },
     { name: 'Checkbox', type: 'checkbox' },
+    { name: 'Selection', type: 'selection' },
     //{ name: 'Upload', type: 'file' },
 ]
 
@@ -147,6 +169,7 @@ const propertyForm = useForm({
     is_filterable: props.property ? props.property.is_filterable : false,
     show_in_list: props.property ? props.property.show_in_list : false,
     is_required: props.property ? props.property.is_required : false,
+    select_values: props.property ? props.property.select_values : [],
 })
 
 const addEditProperty = () => {

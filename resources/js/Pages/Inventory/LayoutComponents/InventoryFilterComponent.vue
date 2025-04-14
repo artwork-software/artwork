@@ -13,18 +13,24 @@
                     <div>
                         <label class="font-lexend text-xs mb-1">{{ filterProperty.name }}</label>
                     </div>
-                    <div class="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500">
-                        <select v-model="filterProperty.operator" class="text-gray-700 min-w-28 text-sm px-2 py-2 border-none rounded-l-lg focus:outline-none focus:ring-0">
+                    <div class="flex items-center border border-gray-200 rounded-lg focus-within:ring-2 focus-within:ring-blue-500">
+                        <select v-model="filterProperty.operator" v-if="getAllowedFilters(filterProperty.type).length > 0" class="text-gray-700 min-w-28 text-sm px-2 py-2 border-none rounded-l-lg focus:outline-none focus:ring-0">
                             <option v-for="filter in getAllowedFilters(filterProperty.type)" :key="filter.type" :value="filter.type">
                                 {{ filter.name }}
                             </option>
                         </select>
                         <input
+                            v-if="filterProperty.type !== 'selection'"
                             v-model="filterProperty.value"
                             :type="filterProperty.type"
-                            class="w-full px-3 py-2 xsDark placeholder:xsLight rounded-r-lg border-none focus:outline-none focus:ring-0"
+                            class="w-full px-3 py-2 xsDark placeholder:xsLight h-10 rounded-lg border-none focus:outline-none focus:ring-0 checked:text-green-500"
                             :placeholder="filterProperty.name"
                         />
+                        <div v-else class="w-full h-full">
+                            <select id="location" name="location" v-model="filterProperty.value" class="block w-full h-10 rounded-md bg-white border-none text-xs text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                <option v-for="value in filterProperty.select_values" :value="value" :key="value">{{ value }}</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -35,16 +41,14 @@
                 </SmallFormButton>
             </div>
         </div>
-        <div>
+        <div class="my-3">
             <!-- filter Tags -->
-            <div v-if="newFilterObject.length > 0" class="mt-4 flex flex-wrap gap-2">
-                <div v-for="(filter, index) in newFilterObject" :key="index">
-                    <div v-if="filter.value" class="flex items-center bg-blue-50 rounded-full px-3 py-1 text-sm font-medium text-blue-700 border border-blue-100">
-                        <span>{{ filter.name }}: {{ filter.value }}</span>
-                        <button type="button" @click="removeFilter(filter)" class="ml-2 text-blue-500 hover:text-blue-700">
-                            <component is="IconX" class="size-4" />
-                        </button>
-                    </div>
+            <div v-if="newFilterObject.length > 0" v-for="(filter, index) in newFilterObject" :key="index" class="flex flex-wrap gap-2">
+                <div v-if="filter.value" class="flex items-center bg-blue-50 rounded-full px-3 py-1 text-sm font-medium text-blue-700 border border-blue-100">
+                    <span>{{ filter.name }}: {{ filter.value }}</span>
+                    <button type="button" @click="removeFilter(filter)" class="ml-2 text-blue-500 hover:text-blue-700">
+                        <component is="IconX" class="size-4" />
+                    </button>
                 </div>
             </div>
         </div>
@@ -54,7 +58,6 @@
 <script setup>
 
 import {onMounted, ref} from "vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {router, usePage} from "@inertiajs/vue3";
@@ -111,7 +114,8 @@ onMounted(() => {
                 name: property.name,
                 operator: existingFilter?.operator ?? 'like',
                 value: existingFilter?.value ?? '',
-                type: property.type
+                type: property.type,
+                select_values: property.select_values,
             });
         }
     });

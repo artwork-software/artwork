@@ -16,7 +16,7 @@
             </div>
         </transition>
 
-        <div class="w-full ml-11 mt-1">
+        <div class="w-full mt-1">
             <BaseCalendar
                 :rooms="rooms"
                 :days="period"

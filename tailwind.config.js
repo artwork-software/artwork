@@ -98,7 +98,14 @@ module.exports = {
             boxShadow: {
                 buttonBlue: '0 35px 60px -15px #2D1FDE',
                 cardShadow: '0px 4px 25px #27233c47',
-                artworkCard: '0 3px 10px rgb(0,0,0,0.2)'
+                artworkCard: '0 3px 10px rgb(0,0,0,0.2)',
+                glass: 'inset 0px 0.5px 0px 0px hsla(0, 0%, 100%, 0.2), inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12), 0px 0.5px 2px 0px rgba(0, 0, 0, 0.08), 0px 2px 16px -4px rgba(0, 0, 0, 0.1)',
+                elevationTwo: 'inset 0px 0.5px 0px 0px hsla(0, 0%, 100%, 0.2), inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12), 0px 0.5px 2px 0px rgba(0, 0, 0, 0.08), 0px 2px 16px -4px rgba(0, 0, 0, 0.1)', // optional gleiche wie glass
+                buttonGlowLight: '0 0 6px 2px rgba(255, 255, 255, 0.6)', // optional
+            },
+            backdropBlur: {
+                27: '27px',
+                '2xl': '40px',
             },
             flex: {
                 'tags': '1 1 30%'

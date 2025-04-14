@@ -26,8 +26,10 @@
                            :direction="tooltipDirection"
                            :tooltip-text="$t(translationKey)"
                            :icon="icon"
+                           :no-relative="noRelative"
                            :icon-size="dotsSize"
                            :stroke="strokeWidth"
+                           :white-icon="whiteIcon"
                            :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
                        />
                    </div>

@@ -24,13 +24,9 @@ class RoomIndexResource extends JsonResource
         $startTime = Carbon::parse($request->get('start_time'));
         $endTime = Carbon::parse($request->get('start_time'));
 
-        //$startTimeEvents = $this->events->filter(fn (Event $event) => $event->occursAtTime($startTime));
-        //$endTimeEvents = $this->events->filter(fn (Event $event) => $event->occursAtTime($endTime));
 
         return [
             'resource' => class_basename($this),
-            //'conflicts_start_time' => EventShowResource::collection($startTimeEvents)->resolve(),
-            //'conflicts_end_time' => EventShowResource::collection($endTimeEvents)->resolve(),
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
@@ -38,6 +34,7 @@ class RoomIndexResource extends JsonResource
             'created_by' => $this->creator,
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
             'everyone_can_book' => $this->everyone_can_book,
+            'relevant_for_disposition' => $this->relevant_for_disposition,
             'start_date' => Carbon::parse($this->start_date)->format('d.m.Y'),
             'start_date_dt_local' => Carbon::parse($this->start_date)->toDateString(),
             'end_date' => Carbon::parse($this->end_date)->format('d.m.Y'),

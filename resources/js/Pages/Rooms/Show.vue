@@ -172,6 +172,16 @@
                                     class="ml-1 my-auto hind">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
                             </div>
                         </div>
+                        <div class="flex items-start gap-x-4">
+                            <input v-model="editRoomForm.relevant_for_disposition"
+                                   type="checkbox"
+                                   class="input-checklist"/>
+                            <div>
+                                <p :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']"
+                                   class="my-auto text-sm">{{ $t('Relevant for disposition')}}</p>
+                                <span class="text-xs" :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']">{{ $t('Activate this field if the room is to be included in the calendars.')}}</span>
+                            </div>
+                        </div>
 
                         <div class="flex justify-center pt-8">
                             <FormButton
@@ -616,7 +626,8 @@ export default {
                 end_date_dt_local: null,
                 area_id: null,
                 user_id: null,
-                everyone_can_book: this.room.everyone_can_book
+                everyone_can_book: this.room.everyone_can_book,
+                relevant_for_disposition: this.room.relevant_for_disposition
             }),
             documentForm: useForm({
                 file: null

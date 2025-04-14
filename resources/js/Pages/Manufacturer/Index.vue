@@ -1,7 +1,6 @@
 <template>
-    <AppLayout>
-
-        <div class="ml-16 mt-5 mb-20">
+    <UserHeader>
+        <div class="mt-5 mb-20">
             <div class="container max-w-7xl">
                 <div class="mb-10">
                     <div class="sm:flex sm:items-center">
@@ -64,7 +63,7 @@
             @close="showAddEditManufacturerModal = false"
         />
 
-    </AppLayout>
+    </UserHeader>
 </template>
 
 <script setup>
@@ -80,6 +79,7 @@ import {router, usePage} from "@inertiajs/vue3";
 import SingleManufacturerInList from "@/Pages/Manufacturer/Components/General/SingleManufacturerInList.vue";
 import CreateOrUpdateManufacturerModal
     from "@/Pages/Manufacturer/Components/Modals/CreateOrUpdateManufacturerModal.vue";
+import UserHeader from "@/Pages/Users/UserHeader.vue";
 
 const props = defineProps({
     manufacturers: {

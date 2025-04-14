@@ -41,6 +41,12 @@ export default defineComponent({
                     hasPermission: true
                 },
                 {
+                    name: 'Manufacturers',
+                    href: route('manufacturers.index'),
+                    current: route().current('manufacturers.index'),
+                    hasPermission: true
+                },
+                {
                     name: 'Teams',
                     href: route('departments'),
                     current: route().current('departments'),

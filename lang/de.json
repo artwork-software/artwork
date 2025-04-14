@@ -2581,5 +2581,7 @@
     "Manage your event verification requests. You can add, edit, or delete your event verification requests here.": "Verwalte deine Terminüberprüfungsanfragen. Du kannst hier deine Terminüberprüfungsanfragen hinzufügen, bearbeiten oder löschen.",
     "Selection value {index}": "Auswahl Wert {index}",
     "Selection Add value": "Auswahl Wert hinzufügen",
-    "Selection": "Auswahlbox"
+    "Selection": "Auswahlbox",
+    "Relevant for disposition": "Relevant für Disposition",
+    "Activate this field if the room is to be included in the calendars.": "Aktiviere dieses Feld, wenn der Raum in den Kalendern angezeigt werden soll."
 }

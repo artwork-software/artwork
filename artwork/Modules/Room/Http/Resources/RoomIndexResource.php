@@ -39,8 +39,7 @@ class RoomIndexResource extends JsonResource
             'start_date_dt_local' => Carbon::parse($this->start_date)->toDateString(),
             'end_date' => Carbon::parse($this->end_date)->format('d.m.Y'),
             'end_date_dt_local' => Carbon::parse($this->end_date)->toDateString(),
-            'room_admins' => UserIconResource::collection($this->users()->wherePivot('is_admin', true)->get())
-                ->resolve(),
+            'room_admins' => UserIconResource::collection($this->users()->wherePivot('is_admin', true)->get())->resolve(),
             'room_categories' => $this->categories()->get(),
             'room_attributes' => $this->attributes,
             'adjoining_rooms' => $this->adjoining_rooms()->get()

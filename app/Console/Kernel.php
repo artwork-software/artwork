@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use Artwork\Modules\Event\Commands\BuildUserCalendarCacheCommand;
 use Artwork\Core\Console\Commands\CreateMoneySourceExpirationReminderNotificationsCommand;
 use Artwork\Core\Console\Commands\DeleteExpiredNotificationsForAllCommand;
 use Artwork\Core\Console\Commands\DeleteOldNotificationsCommand;

@@ -5,11 +5,14 @@ namespace Artwork\Modules\Calendar\Services;
 use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Availability\Models\Available;
+use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Project\Models\Project;
@@ -17,6 +20,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -24,6 +28,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Throwable;
@@ -157,12 +163,13 @@ class CalendarService
     public function getEventsAtAGlance($startDate, $endDate, ?Project $project = null): array
     {
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
-        $actualEvents = $eventsForRoom = [];
+        $cacheKey = 'calendar::at-a-glance::' . md5($startDate . $endDate . optional($project)->id);
 
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($calendarPeriod, $startDate, $endDate, $project) {
+            $actualEvents = $eventsForRoom = [];
 
-        $eventsQuery = $this->filterEvents(Event::query(), $startDate, $endDate, null, $project)
-            ->with(
-                [
+            $eventsQuery = $this->filterEvents(Event::query(), $startDate, $endDate, null, $project)
+                ->with([
                     'room',
                     'creator',
                     'project',
@@ -176,29 +183,31 @@ class CalendarService
                     'shifts.shiftsQualifications',
                     'subEvents.event',
                     'subEvents.event.room'
-                ]
-            )->orderBy('start_time');
-        foreach ($eventsQuery->get()->all() as $event) {
-            $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
-                $calendarPeriod->start :
-                $event->start_time;
-            $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
-            $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
+                ])
+                ->orderBy('start_time');
 
-            foreach ($eventPeriod as $date) {
-                $dateKey = $date->format('d.m.Y');
-                $actualEvents[$dateKey][] = $event;
+            foreach ($eventsQuery->get()->all() as $event) {
+                $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
+                    $calendarPeriod->start :
+                    $event->start_time;
+                $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
+                $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
+
+                foreach ($eventPeriod as $date) {
+                    $dateKey = $date->format('d.m.Y');
+                    $actualEvents[$dateKey][] = $event;
+                }
             }
-        }
 
-        foreach ($actualEvents as $key => $value) {
-            $eventsForRoom[$key] = [
-                //immediately resolve resource to free used memory
-                'events' => MinimalCalendarEventResource::collection($value)->resolve()
-            ];
-        }
+            foreach ($actualEvents as $key => $value) {
+                $eventsForRoom[$key] = [
+                    // immediately resolve resource to free used memory
+                    'events' => MinimalCalendarEventResource::collection($value)->resolve()
+                ];
+            }
 
-        return $eventsForRoom;
+            return $eventsForRoom;
+        });
     }
 
     public function getEventsOfInterval($startDate, $endDate, ?Project $project = null): Collection
@@ -287,5 +296,71 @@ class CalendarService
             ->unless(!$isLoud, fn(Builder $builder) => $builder->where('is_loud', true))
             ->unless(!$isNotLoud, fn(Builder $builder) => $builder->where('is_loud', false))
             ->when($startDate, fn(Builder $builder) => $builder->startAndEndTimeOverlap($startDate, $endDate));
+    }
+
+    public function updateCalendarCacheForEvent(Event $event, User|null $user = null): void
+    {
+        if (!$event->start_time || !$event->end_time) {
+            return;
+        }
+
+        $startDate = Carbon::parse($event->start_time)->startOfDay()->toDateString();
+        $endDate = Carbon::parse($event->end_time)->endOfDay()->toDateString();
+        $project = $event->project;
+        $projectId = optional($project)->id;
+
+        $atGlanceKey = 'calendar::at-a-glance::' . md5($startDate . $endDate . $projectId);
+        $updatedGlance = $this->getEventsAtAGlance($startDate, $endDate, $project);
+        Cache::put($atGlanceKey, $updatedGlance, now()->addMinutes(10));
+
+        $this->updateFilteredRoomCacheForEvent($event, $user);
+    }
+
+    public function updateFilteredRoomCacheForEvent(Event $event, User|null $user): void
+    {
+        if (!$event->room_id || !$event->start_time || !$event->end_time) {
+            return;
+        }
+
+        $pattern = 'calendar_room_' . $event->room_id . '_*';
+        $keys = Cache::getRedis()->keys($pattern);
+
+        foreach ($keys as $rawKey) {
+            $key = Str::after($rawKey, config('cache.prefix') . ':');
+            $cached = Cache::get($key);
+
+            if (!is_iterable($cached)) {
+                continue;
+            }
+
+            $project = $event->project;
+            $eventType = $event->event_type;
+            $eventStatus = $event->eventStatus;
+            /** @var User $user */
+
+            if (!$project || !$eventType || !$eventStatus) {
+                continue;
+            }
+
+            $userCollection = collect([$user])->keyBy('id');
+            $projectCollection = collect([$project])->keyBy('id');
+            $typeCollection = collect([$eventType])->keyBy('id');
+            $statusCollection = collect([$eventStatus])->keyBy('id');
+
+            $newDTO = EventDTO::fromModel(
+                $event,
+                $user?->calendar_settings,
+                $projectCollection,
+                $typeCollection,
+                $userCollection,
+                $statusCollection
+            );
+
+            $filtered = collect($cached)
+                ->reject(fn($dto) => $dto['id'] === $event->id)
+                ->push($newDTO);
+
+            Cache::put($key, $filtered, now()->addMinutes(10));
+        }
     }
 }

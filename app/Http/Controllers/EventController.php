@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\MinimalShiftPlanShiftResource;
+use App\ProfilerService;
 use App\Settings\ShiftSettings;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Casts\TimeAgoCast;
@@ -214,14 +215,12 @@ class EventController extends Controller
                 'end_date' => $endDate->format('Y-m-d')
             ]);
         }
-
         $period = $this->calendarDataService->createCalendarPeriodDto(
             $startDate,
             $endDate,
             $user,
             false
         );
-
         $months = [];
         foreach ($period as $periodObject) {
             $date = Carbon::parse($periodObject->withoutFormat);
@@ -235,14 +234,12 @@ class EventController extends Controller
             }
         }
 
-
         $rooms = $this->calendarDataService->getFilteredRooms(
             $userCalendarFilter,
             $userCalendarSettings,
             $startDate,
             $endDate,
         );
-
         $this->eventCalendarService->filterRoomsEvents(
             $rooms,
             $userCalendarFilter,
@@ -268,8 +265,6 @@ class EventController extends Controller
             ->get()
             ->keyBy('id');
 
-
-        //dd($this->filterService->getCalendarFilterDefinitions());
 
         return Inertia::render('Calendar/Index', [
             'period' => $period,

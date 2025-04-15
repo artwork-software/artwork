@@ -4,6 +4,8 @@ namespace Artwork\Modules\Event\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Event\Events\EventSavedForCalendarCache;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventProperty\Models\EventProperty;
@@ -149,6 +151,10 @@ class Event extends Model
             $eventService = app()->get(EventService::class);
             $event->earliest_start_datetime = $eventService->getEarliestStartTime($event);
             $event->latest_end_datetime = $eventService->getLatestEndTime($event);
+        });
+
+        static::saved(function (Event $event): void {
+            EventSavedForCalendarCache::dispatch($event, auth()->user());
         });
     }
 

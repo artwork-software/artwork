@@ -271,7 +271,6 @@ readonly class CalendarDataService
 
     public function getFilteredRooms($filter, $userCalendarSettings, $startDate, $endDate) {
         $userCalendarFilter = $filter;
-        //dd($filter);
         $rooms = Room::select(['id', 'name'])
             ->unlessRoomIds($userCalendarFilter?->rooms)
             ->unlessRoomAttributeIds($userCalendarFilter?->room_attributes)

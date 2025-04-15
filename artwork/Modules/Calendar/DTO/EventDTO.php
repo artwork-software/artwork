@@ -38,11 +38,11 @@ class EventDTO extends Data
         public ?bool $is_series,
         public Collection $eventProperties,
         public ?bool $occupancy_option,
-        public ?int $declinedRoomId = null,
         public Lazy|EventStatus|null $eventStatus,
         public Collection $subEvents,
         public SeriesEvents|null $series,
         public ?string $option_string,
+        public ?int $declinedRoomId = null,
         public ?bool $isPlanning = false,
         public ?bool $hasVerification = false,
     ) {

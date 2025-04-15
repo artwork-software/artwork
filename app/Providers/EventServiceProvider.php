@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Http\Middleware\UpdateUserStatus;
+use App\Listeners\CacheCalendarForEvent;
 use App\Listeners\UpdateUserOnLogout;
+use Artwork\Modules\Event\Events\EventSavedForCalendarCache;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -17,6 +19,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         Logout::class => [
             UpdateUserOnLogout::class,
+        ],
+        EventSavedForCalendarCache::class => [
+            CacheCalendarForEvent::class
         ]
     ];
 

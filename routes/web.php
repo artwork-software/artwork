@@ -92,6 +92,7 @@ use App\Http\Controllers\UserShiftCalendarAboController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
+use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
 use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
@@ -2094,6 +2095,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // event-verifications.request-verification
         Route::post('/verification-request/request-verification', [EventVerificationController::class, 'requestVerification'])
             ->name('events-verifications.request-verification');
+    });
+
+    Route::group(['prefix' => 'accommodation'], function (){
+        Route::get('/', [AccommodationController::class, 'index'])->name('accommodation.index');
     });
 });
 

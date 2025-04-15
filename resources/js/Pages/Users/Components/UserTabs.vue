@@ -1,28 +1,18 @@
 <template>
-    <div>
-        <div>
-            <div class="border-gray-200">
-                <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
-                    <Link v-for="tab in tabs" v-show="tab.hasPermission" :href="tab.href" :key="tab?.name"
-                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
-                       :aria-current="tab.current ? 'page' : undefined">
-                        {{ $t(tab?.name) }}
-                    </Link>
-                </nav>
-            </div>
-        </div>
-    </div>
+    <BaseTabs :tabs="tabs" />
 </template>
 
 <script>
 import {defineComponent} from 'vue';
 import {Link} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
+import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 
 export default defineComponent({
     name: "UserTabs",
     mixins: [Permissions],
     components: {
+        BaseTabs,
         Link
     },
     data(){
@@ -32,31 +22,37 @@ export default defineComponent({
                     name: 'Users',
                     href: route('users'),
                     current: route().current('users'),
-                    hasPermission: true
+                    permission: true
                 },
                 {
-                    name: 'Addresses',
+                    name: 'Freelancers & Service Providers',
                     href: route('users.addresses'),
                     current: route().current('users.addresses'),
-                    hasPermission: true
+                    permission: true
                 },
                 {
                     name: 'Manufacturers',
                     href: route('manufacturers.index'),
                     current: route().current('manufacturers.index'),
-                    hasPermission: true
+                    permission: true
+                },
+                {
+                    name: 'Accommodations',
+                    href: route('accommodation.index'),
+                    current: route().current('accommodation.index'),
+                    permission: true
                 },
                 {
                     name: 'Teams',
                     href: route('departments'),
                     current: route().current('departments'),
-                    hasPermission: this.$can('teammanagement') || this.hasAdminRole()
+                    permission: this.$can('teammanagement') || this.hasAdminRole()
                 },
                 {
                     name: 'Permission presets',
                     href: route('permission-presets.index'),
                     current: route().current('permission-presets.index'),
-                    hasPermission: this.hasAdminRole()
+                    permission: this.hasAdminRole()
                 }
             ]
         }

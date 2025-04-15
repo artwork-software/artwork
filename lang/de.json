@@ -2583,5 +2583,13 @@
     "Selection Add value": "Auswahl Wert hinzufügen",
     "Selection": "Auswahlbox",
     "Relevant for disposition": "Relevant für Disposition",
-    "Activate this field if the room is to be included in the calendars.": "Aktiviere dieses Feld, wenn der Raum in den Kalendern angezeigt werden soll."
+    "Activate this field if the room is to be included in the calendars.": "Aktiviere dieses Feld, wenn der Raum in den Kalendern angezeigt werden soll.",
+    "Accommodations": "Unterkünfte",
+    "Invite new users or edit an existing user": "Neue Nutzer*innen einladen oder bestehenden Nutzer*innen bearbeiten",
+    "Freelancers & Service Providers": "Freelancer & Dienstleister",
+    "Manage your freelancers and service providers": "Verwalte deine Freelancer und Dienstleister",
+    "Manage your manufacturers": "Verwalte deine Hersteller",
+    "Departments": "Abteilungen",
+    "Manage your departments": "Verwalte deine Abteilungen",
+    "Edit and create permission presets": "Berechtigungspresets bearbeiten und erstellen"
 }

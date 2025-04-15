@@ -46,5 +46,5 @@ class RoomIndexResource extends JsonResource
             'adjoining_rooms' => $this->adjoining_rooms()->get()
         ];
     }
-    
+
 }

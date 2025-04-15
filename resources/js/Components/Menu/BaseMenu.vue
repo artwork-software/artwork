@@ -1,7 +1,7 @@
 <template>
     <Menu as="div" class="inline-block print:hidden" :class="!noRelative ? 'relative' : ''">
         <Float auto-placement portal :offset="{ mainAxis: hasNoOffset ? 5 : -10, crossAxis: hasNoOffset ? 25 : 75}">
-            <div class="font-semibold  flex items-center justify-center" ref="menuButtonRef" :class="whiteIcon ? 'text-white' : 'text-artwork-buttons-context'">
+            <div class="font-semibold  flex items-center justify-center" ref="menuButtonRef" :class="[whiteIcon ? 'text-white' : 'text-artwork-buttons-context', dotsColor]">
                 <MenuButton :id="buttonId">
                    <div v-if="showIcon">
                        <IconDotsVertical

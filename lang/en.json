@@ -2580,5 +2580,13 @@
     "Selection Add value": "Selection Add value",
     "Selection": "Selection",
     "Relevant for disposition": "Relevant for disposition",
-    "Activate this field if the room is to be included in the calendars.": "Activate this field if the room is to be included in the calendars."
+    "Activate this field if the room is to be included in the calendars.": "Activate this field if the room is to be included in the calendars.",
+    "Accommodations": "Accommodations",
+    "Invite new users or edit an existing user": "Invite new users or edit an existing user",
+    "Freelancers & Service Providers": "Freelancers & Service Providers",
+    "Manage your freelancers and service providers":"Manage your freelancers and service providers",
+    "Manage your manufacturers": "Manage your manufacturers",
+    "Departments": "Departments",
+    "Manage your departments": "Manage your departments",
+    "Edit and create permission presets": "Edit and create permission presets"
 }

@@ -30,12 +30,12 @@
             </div>
 
             <div class="flex items-center justify-between mt-5">
-                <ArtworkBaseButton size="md" variant="primary" type="submit">
+                <ArtworkBaseModalButton size="md" variant="primary" type="submit">
                     {{ $t('Create') }}
-                </ArtworkBaseButton>
-                <ArtworkBaseButton size="md" variant="danger" type="button" @click="$emit('close')">
+                </ArtworkBaseModalButton>
+                <ArtworkBaseModalButton size="md" variant="danger" type="button" @click="$emit('close')">
                     {{ $t('Cancel') }}
-                </ArtworkBaseButton>
+                </ArtworkBaseModalButton>
             </div>
         </form>
     </ArtworkBaseModal>
@@ -49,6 +49,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 
 const props = defineProps({
     accommodation: {

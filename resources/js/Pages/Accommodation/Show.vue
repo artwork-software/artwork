@@ -7,41 +7,27 @@
             </div>
 
             <div>
-                <div class="rounded-lg w-full h-96">
-                    <div>
-                        <img src="/storage/images/placeholder_accommodation.png" alt="Accommodation Image" class="rounded-lg w-full h-96 object-cover object-bottom shadow-sm" />
+                <div class="grid gird-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div class="col-span-full">
+                        <BaseInput id="name" v-model="accommodationForm.name" label="Accommodation Name" @focusout="updateAccommodation" />
                     </div>
-                </div>
-
-                <div class="mt-10">
-                    <div>
-                        <div>
-                            <PageTitle :title="$t('Accommodation Information')" :description="$t('Information about Accommodation')" />
-
-                        </div>
-                        <div class="grid gird-cols-1 md:grid-cols-2 gap-4 mt-4">
-                            <div class="col-span-full">
-                                <BaseInput id="name" v-model="accommodationForm.name" label="Accommodation Name" @focusout="updateAccommodation" />
-                            </div>
-                            <div class="col-span-full">
-                                <BaseInput id="email" type="email" v-model="accommodationForm.email" label="Email" @focusout="updateAccommodation" />
-                            </div>
-                            <div class="col-span-full">
-                                <BaseInput id="phone_number" v-model="accommodationForm.phone_number" label="Phone number" @focusout="updateAccommodation" />
-                            </div>
-                            <div class="col-span-full">
-                                <BaseInput id="street" v-model="accommodationForm.street" label="Street" @focusout="updateAccommodation" />
-                            </div>
-                            <div class="col-span-1">
-                                <BaseInput id="zip_code" v-model="accommodationForm.zip_code" label="Zip code" @focusout="updateAccommodation" />
-                            </div>
-                            <div class="col-span-1">
-                                <BaseInput id="location" v-model="accommodationForm.location" label="Location" @focusout="updateAccommodation" />
-                            </div>
-                            <div class="col-span-full">
-                                <BaseTextarea id="note" v-model="accommodationForm.note" label="Note" @focusout="updateAccommodation" />
-                            </div>
-                        </div>
+                    <div class="col-span-full">
+                        <BaseInput id="email" type="email" v-model="accommodationForm.email" label="Email" @focusout="updateAccommodation" />
+                    </div>
+                    <div class="col-span-full">
+                        <BaseInput id="phone_number" v-model="accommodationForm.phone_number" label="Phone number" @focusout="updateAccommodation" />
+                    </div>
+                    <div class="col-span-full">
+                        <BaseInput id="street" v-model="accommodationForm.street" label="Street" @focusout="updateAccommodation" />
+                    </div>
+                    <div class="col-span-1">
+                        <BaseInput id="zip_code" v-model="accommodationForm.zip_code" label="Zip code" @focusout="updateAccommodation" />
+                    </div>
+                    <div class="col-span-1">
+                        <BaseInput id="location" v-model="accommodationForm.location" label="Location" @focusout="updateAccommodation" />
+                    </div>
+                    <div class="col-span-full">
+                        <BaseTextarea id="note" v-model="accommodationForm.note" label="Note" @focusout="updateAccommodation" />
                     </div>
                 </div>
 

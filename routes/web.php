@@ -92,8 +92,10 @@ use App\Http\Controllers\UserShiftCalendarAboController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
+use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
 use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
+use Artwork\Modules\Contacts\Http\Controllers\ContactController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
@@ -2094,6 +2096,20 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // event-verifications.request-verification
         Route::post('/verification-request/request-verification', [EventVerificationController::class, 'requestVerification'])
             ->name('events-verifications.request-verification');
+    });
+
+    Route::group(['prefix' => 'accommodation'], function (){
+        Route::get('/', [AccommodationController::class, 'index'])->name('accommodation.index');
+        Route::get('/show/{accommodation}', [AccommodationController::class, 'show'])->name('accommodation.show');
+        Route::post('/store', [AccommodationController::class, 'store'])->name('accommodation.store');
+        Route::patch('/update/{accommodation}', [AccommodationController::class, 'update'])->name('accommodation.update');
+        Route::delete('/destroy/{accommodation}', [AccommodationController::class, 'destroy'])->name('accommodation.destroy');
+    });
+
+    Route::group(['prefix' => 'contact'], function(){
+        Route::post('/store/{model}/{modelId}', [ContactController::class, 'store'])->name('contact.store');
+        Route::patch('/update/{contact}', [ContactController::class, 'update'])->name('contact.update');
+        Route::delete('/destroy/{contact}', [ContactController::class, 'destroy'])->name('contact.destroy');
     });
 });
 

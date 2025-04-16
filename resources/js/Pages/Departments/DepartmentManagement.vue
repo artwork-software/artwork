@@ -1,29 +1,25 @@
 <template>
-    <UserHeader :title="$t('All Departments')">
-        <div class="">
-            <div class="max-w-screen-xl mb-40 my-12 flex flex-row">
-                <div class="flex flex-1 flex-wrap">
-                    <div class="w-full flex my-auto gap-x-4 justify-between">
-                        <div class="flex w-full justify-between items-center">
-                            <h2 class="headline1 flex">{{ $t('All Departments')}}</h2>
-                            <AddButtonBig class="mt-0" @click="openAddTeamModal" :text="$t('Create Team')"/>
-                            <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                <span
-                                    class="ml-1 my-auto hind">{{  $t('Create new teams') }}</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center">
-                            <div v-if="!showSearchbar" @click="openSearchbar"
-                                 class="cursor-pointer inset-y-0 mr-3">
-                                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
-                            </div>
-                            <div v-else class="flex items-center w-64 mr-2">
-                                <input ref="searchBarInput" v-model="department_query" :placeholder="$t('Search for teams')" type="text" class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
-                                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
-                            </div>
-                        </div>
+    <UserHeader title="Departments" description="Manage your departments">
+
+        <template #tabBar>
+            <div class="flex items-center gap-x-4">
+                <div class="flex items-center">
+                    <div v-if="!showSearchbar" @click="openSearchbar"
+                         class="cursor-pointer inset-y-0">
+                        <SearchIcon class="size-7" aria-hidden="true"/>
                     </div>
+                    <div v-else class="flex items-center w-64">
+                        <input ref="searchBarInput" v-model="department_query" :placeholder="$t('Search for teams')" type="text" class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
+                        <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+                    </div>
+                </div>
+                <BaseCardButton  @click="openAddTeamModal" text="Create Team" />
+            </div>
+        </template>
+
+        <template #default>
+            <div>
+                <div class="flex flex-1 flex-wrap">
                     <ul role="list" class="mt-5 w-full">
                         <li v-if="department_query.length < 1" v-for="(department,index) in departments"
                             :key="department.id"
@@ -189,101 +185,105 @@
 
 
             </div>
-        </div>
-        <!-- Team erstellen Modal-->
-        <BaseModal @closed="closeAddTeamModal" v-if="addingTeam" modal-image="/Svgs/Overlays/illu_team_new.svg" >
-                <div class="mx-4">
-                    <div class="headline1 my-2">
-                        {{ $t('Create New Team')}}
-                    </div>
-                    <div class="xsLight subpixel-antialiased mt-4">
-                        {{ $t('Create a fixed team/department.')}}
-                    </div>
-                    <div class="mt-12">
-                        <div class="flex">
-                            <Menu as="div" class=" relative">
-                                <div>
-                                    <MenuButton :class="[form.svg_name === '' ? 'border border-gray-400' : '']"
-                                                class="items-center rounded-full focus:outline-none h-12 w-12">
-                                        <label v-if="form.svg_name === ''" class="text-gray-400 text-xs">Icon*</label>
-                                        <ChevronDownIcon v-if="form.svg_name === ''"
-                                                         class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"></ChevronDownIcon>
-                                        <TeamIconCollection class="h-12 w-12" v-if="form.svg_name !== ''"
-                                                            :iconName=form.svg_name alt="TeamIcon"/>
-                                    </MenuButton>
-                                </div>
-                                <transition enter-active-class="transition-enter-active"
-                                            enter-from-class="transition-enter-from"
-                                            enter-to-class="transition-enter-to"
-                                            leave-active-class="transition-leave-active"
-                                            leave-from-class="transition-leave-from"
-                                            leave-to-class="transition-leave-to">
-                                    <MenuItems
-                                        class="z-40 origin-top-right absolute rounded-lg h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                        <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
-                                            <div @click="form.svg_name = item.iconName"
-                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary',
-                                                  'group px-3 py-2 text-sm subpixel-antialiased']">
-                                                <TeamIconCollection class="h-14 w-14" :iconName=item.iconName
-                                                                    alt="TeamIcon"/>
-                                            </div>
-                                        </MenuItem>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
-                            <div class="relative my-auto w-full ml-8 mr-12">
-                                <input id="name" v-model="form.name" type="text"
-                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"/>
-                                <label for="name"
-                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
-                                    {{ $t('Name of the team*')}}</label>
-                            </div>
+        </template>
+
+    </UserHeader>
+
+
+    <!-- Team erstellen Modal-->
+    <BaseModal @closed="closeAddTeamModal" v-if="addingTeam" modal-image="/Svgs/Overlays/illu_team_new.svg" >
+        <div class="mx-4">
+            <div class="headline1 my-2">
+                {{ $t('Create New Team')}}
+            </div>
+            <div class="xsLight subpixel-antialiased mt-4">
+                {{ $t('Create a fixed team/department.')}}
+            </div>
+            <div class="mt-12">
+                <div class="flex">
+                    <Menu as="div" class=" relative">
+                        <div>
+                            <MenuButton :class="[form.svg_name === '' ? 'border border-gray-400' : '']"
+                                        class="items-center rounded-full focus:outline-none h-12 w-12">
+                                <label v-if="form.svg_name === ''" class="text-gray-400 text-xs">Icon*</label>
+                                <ChevronDownIcon v-if="form.svg_name === ''"
+                                                 class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"></ChevronDownIcon>
+                                <TeamIconCollection class="h-12 w-12" v-if="form.svg_name !== ''"
+                                                    :iconName=form.svg_name alt="TeamIcon"/>
+                            </MenuButton>
                         </div>
-                        <span class="text-red-500 text-xs mt-2" v-if="form.svg_name === ''">
+                        <transition enter-active-class="transition-enter-active"
+                                    enter-from-class="transition-enter-from"
+                                    enter-to-class="transition-enter-to"
+                                    leave-active-class="transition-leave-active"
+                                    leave-from-class="transition-leave-from"
+                                    leave-to-class="transition-leave-to">
+                            <MenuItems
+                                class="z-40 origin-top-right absolute rounded-lg h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
+                                    <div @click="form.svg_name = item.iconName"
+                                         :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary',
+                                                  'group px-3 py-2 text-sm subpixel-antialiased']">
+                                        <TeamIconCollection class="h-14 w-14" :iconName=item.iconName
+                                                            alt="TeamIcon"/>
+                                    </div>
+                                </MenuItem>
+                            </MenuItems>
+                        </transition>
+                    </Menu>
+                    <div class="relative my-auto w-full ml-8 mr-12">
+                        <input id="name" v-model="form.name" type="text"
+                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                               placeholder="placeholder"/>
+                        <label for="name"
+                               class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                            {{ $t('Name of the team*')}}</label>
+                    </div>
+                </div>
+                <span class="text-red-500 text-xs mt-2" v-if="form.svg_name === ''">
                             Icon auswählen notwendig*
                         </span>
-                        <div class="mt-12">
-                            <div class="headline2 my-2">
-                                {{ $t('Add users')}}
-                            </div>
-                            <div class="xsLight subpixel-antialiased">
-                                {{ $t('Enter the name of the user you want to add to the team.')}}
-                            </div>
+                <div class="mt-12">
+                    <div class="headline2 my-2">
+                        {{ $t('Add users')}}
+                    </div>
+                    <div class="xsLight subpixel-antialiased">
+                        {{ $t('Enter the name of the user you want to add to the team.')}}
+                    </div>
 
-                            <div class="mt-6 relative">
-                                <div class="my-auto w-full">
-                                    <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                           class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                           placeholder="placeholder"/>
-                                    <label for="userSearch"
-                                           class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
-                                </div>
-
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100"
-                                            leave-to-class="opacity-0">
-                                    <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                         class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
-                                         text-base ring-1 ring-black ring-opacity-5
-                                         overflow-auto focus:outline-none sm:text-sm">
-                                        <div class="border-gray-200">
-                                            <div v-for="(user, index) in user_search_results" :key="index"
-                                                 class="flex items-center cursor-pointer">
-                                                <div class="flex-1 text-sm py-4">
-                                                    <p @click="addUserToAssignedUsersArray(user)"
-                                                       class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                        {{ user.first_name }} {{ user.last_name }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </transition>
-                            </div>
+                    <div class="mt-6 relative">
+                        <div class="my-auto w-full">
+                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
+                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                   placeholder="placeholder"/>
+                            <label for="userSearch"
+                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
                         </div>
 
-                        <div class="mt-4">
+                        <transition leave-active-class="transition ease-in duration-100"
+                                    leave-from-class="opacity-100"
+                                    leave-to-class="opacity-0">
+                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
+                                 class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
+                                         text-base ring-1 ring-black ring-opacity-5
+                                         overflow-auto focus:outline-none sm:text-sm">
+                                <div class="border-gray-200">
+                                    <div v-for="(user, index) in user_search_results" :key="index"
+                                         class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4">
+                                            <p @click="addUserToAssignedUsersArray(user)"
+                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
+                </div>
+
+                <div class="mt-4">
                             <span v-for="(user,index) in form.assigned_users"
                                   class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
@@ -299,70 +299,69 @@
                                 <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error"/>
                             </button>
                             </span>
-                        </div>
-                        <div class="w-full items-center text-center">
-                            <FormButton
-                                @click="addTeam"
-                                :disabled="this.form.name === '' || this.form.svg_name === ''"
-                                :text="$t('Create Team')"/>
-                        </div>
-                    </div>
-
                 </div>
-        </BaseModal>
-        <!-- Alle Mitglieder aus Team löschen Modal -->
-        <BaseModal @closed="closeDeleteAllTeamMembersModal" v-if="deletingAllTeamMembers" modal-image="/Svgs/Overlays/illu_warning.svg" >
-                <div class="mx-4">
-                    <div class="headline1 my-2">
-                        {{$t('Delete all team members')}}
-                    </div>
-                    <div class="errorText mt-4">
-                        {{ $t('Are you sure you want to remove all members of the team { teamName }?', { teamName: teamToDeleteAllMembers.name })}}
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                <div class="w-full items-center text-center">
+                    <FormButton
+                        @click="addTeam"
+                        :disabled="this.form.name === '' || this.form.svg_name === ''"
+                        :text="$t('Create Team')"/>
+                </div>
+            </div>
+
+        </div>
+    </BaseModal>
+    <!-- Alle Mitglieder aus Team löschen Modal -->
+    <BaseModal @closed="closeDeleteAllTeamMembersModal" v-if="deletingAllTeamMembers" modal-image="/Svgs/Overlays/illu_warning.svg" >
+        <div class="mx-4">
+            <div class="headline1 my-2">
+                {{$t('Delete all team members')}}
+            </div>
+            <div class="errorText mt-4">
+                {{ $t('Are you sure you want to remove all members of the team { teamName }?', { teamName: teamToDeleteAllMembers.name })}}
+            </div>
+            <div class="flex justify-between mt-6">
+                <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteAllTeamMembers">
-                            {{ $t('Delete')}}
-                        </button>
-                        <div class="flex my-auto">
+                        @click="deleteAllTeamMembers">
+                    {{ $t('Delete')}}
+                </button>
+                <div class="flex my-auto">
                             <span @click="closeDeleteAllTeamMembersModal"
                                   class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
-                        </div>
-                    </div>
                 </div>
-        </BaseModal>
-        <!-- Team löschen Modal -->
-        <BaseModal @closed="closeDeleteTeamModal" v-if="deletingTeam" modal-image="/Svgs/Overlays/illu_warning.svg" >
-                <div class="mx-4 bg-secondaryHover">
-                    <div class="headline1 mt-6 my-2">
-                        {{ $t('Delete Team')}}
-                    </div>
-                    <div class="errorText">
-                        {{ $t('Are you sure you want to delete the team { teamName } from the system?', { teamName: teamToDelete.name })}}
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+            </div>
+        </div>
+    </BaseModal>
+    <!-- Team löschen Modal -->
+    <BaseModal @closed="closeDeleteTeamModal" v-if="deletingTeam" modal-image="/Svgs/Overlays/illu_warning.svg" >
+        <div class="mx-4 bg-secondaryHover">
+            <div class="headline1 mt-6 my-2">
+                {{ $t('Delete Team')}}
+            </div>
+            <div class="errorText">
+                {{ $t('Are you sure you want to delete the team { teamName } from the system?', { teamName: teamToDelete.name })}}
+            </div>
+            <div class="flex justify-between mt-6">
+                <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteTeam">
-                            {{ $t('Delete all team members')}}
-                        </button>
-                        <div class="flex my-auto">
+                        @click="deleteTeam">
+                    {{ $t('Delete all team members')}}
+                </button>
+                <div class="flex my-auto">
                             <span @click="closeDeleteTeamModal"
                                   class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
-                        </div>
-                    </div>
                 </div>
-        </BaseModal>
-        <!-- Success Modal -->
-        <SuccessModal
-            :show="showSuccess"
-            @closed="closeSuccessModal"
-            :title="this.successHeading"
-            :description="$t('The changes have been saved successfully.')"
-            :button="$t('Close')"
-        />
-    </UserHeader>
+            </div>
+        </div>
+    </BaseModal>
+    <!-- Success Modal -->
+    <SuccessModal
+        :show="showSuccess"
+        @closed="closeSuccessModal"
+        :title="this.successHeading"
+        :description="$t('The changes have been saved successfully.')"
+        :button="$t('Close')"
+    />
 </template>
 
 <script>
@@ -412,6 +411,7 @@ import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue"
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -447,6 +447,7 @@ const iconMenuItems = [
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        BaseCardButton,
         BaseModal,
         BaseMenu,
         FormButton,

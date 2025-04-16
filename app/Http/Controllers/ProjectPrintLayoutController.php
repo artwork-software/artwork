@@ -192,7 +192,7 @@ class ProjectPrintLayoutController extends Controller
                                 ::where('type_of_provider', ServiceProviderTypes::HOUSING->value)
                                 ->without(['contacts'])->get(),
                             'artist_residencies' => $project->artistResidencies()
-                                ->with(['serviceProvider'])->get(),
+                                ->with(['accommodation'])->get(),
                         ]);
                         break;
                     case ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS->value:

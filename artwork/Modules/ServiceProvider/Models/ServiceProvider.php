@@ -3,6 +3,7 @@
 namespace Artwork\Modules\ServiceProvider\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Contacts\Models\Traits\HasContacts;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
@@ -47,6 +48,7 @@ class ServiceProvider extends Model implements DayServiceable
     use HasIndividualTimes;
     use HasShiftPlanComments;
     use Searchable;
+    use HasContacts;
 
     protected $fillable = [
         'profile_image',
@@ -65,8 +67,6 @@ class ServiceProvider extends Model implements DayServiceable
         'type_of_provider'
     ];
 
-    protected $with = ['contacts'];
-
     protected $appends = [
         'name',
         'type',
@@ -78,7 +78,7 @@ class ServiceProvider extends Model implements DayServiceable
         'can_work_shifts' => 'boolean'
     ];
 
-    public function contacts(): HasMany
+    public function oldContacts(): HasMany
     {
         return $this->hasMany(ServiceProviderContacts::class);
     }

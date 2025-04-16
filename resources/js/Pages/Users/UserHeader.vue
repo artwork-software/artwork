@@ -1,11 +1,22 @@
 <template>
-    <app-layout :title="title ?? $t('Users & teams')">
-        <div class="mt-5 ml-14 mr-10">
-            <h2 class="headline1">{{ $t('Users & teams')}}</h2>
+    <app-layout :title="$t(title)">
+        <div class="mt-5 mx-auto container">
+            <div>
+                <PageTitle :title="$t(title) ?? $t('Users & teams')" :description="$t(description)" />
 
-            <UserTabs />
+            </div>
 
-            <slot></slot>
+            <div class="flex items-center justify-between">
+                <UserTabs />
+
+                <slot name="tabBar">
+
+                </slot>
+            </div>
+
+            <div class="mt-10">
+                <slot name="default"></slot>
+            </div>
         </div>
     </app-layout>
 </template>
@@ -14,11 +25,12 @@
 import {defineComponent} from 'vue'
 import UserTabs from "@/Pages/Users/Components/UserTabs.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import PageTitle from "@/Artwork/Titles/PageTitle.vue";
 
 export default defineComponent({
     name: "UserHeader",
-    props: ['title'],
-    components: {UserTabs, AppLayout}
+    props: ['title', 'description'],
+    components: {PageTitle, UserTabs, AppLayout}
 })
 </script>
 

@@ -9,10 +9,10 @@
         <hr class="mb-2">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
             <div class="mb-2 col-span-full">
-                <TextInputComponent id="workName" v-model="workProfileForm.workName" :label="$t('Job title')"  @focusout="this.updateWorkProfile()"/>
+                <BaseInput id="workName" v-model="workProfileForm.workName" :label="$t('Job title')"  @focusout="this.updateWorkProfile()"/>
             </div>
             <div class="col-span-full mb-2">
-                <TextareaComponent
+                <BaseTextarea
                     id="jobDescription"
                     v-model="workProfileForm.workDescription" @focusout="updateWorkProfile"
                     :label="$t('Job description')"
@@ -167,9 +167,13 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import Button from "@/Jetstream/Button.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     components: {
+        BaseTextarea,
+        BaseInput,
         Button, XIcon,
         TextInputComponent,
         TextareaComponent,

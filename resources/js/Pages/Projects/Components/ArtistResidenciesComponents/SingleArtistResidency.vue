@@ -5,7 +5,7 @@
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.phone_number }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.arrival_date }} {{ artist_residency.formatted_dates.arrival_time }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.departure_date }} {{ artist_residency.formatted_dates.departure_time }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.service_provider.name }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.accommodation?.name ?? $t('Deleted') }}</td>
         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
             <BaseMenu dots-size="h-5 w-5" has-no-offset>
                 <MenuItem v-slot="{ active }" @click="$emit('editResidency', artist_residency)">

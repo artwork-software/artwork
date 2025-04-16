@@ -50,6 +50,7 @@ class RoomCalendarResource extends JsonResource
             'room_files' => $this->room_files,
             'area_id' => $this->area_id,
             'everyone_can_book' => $this->everyone_can_book,
+            'relevant_for_disposition' => $this->relevant_for_disposition,
             'room_admins' => UserWithoutApartmentIndexResource::collection(
                 $this->users()->wherePivot('is_admin', true)->get()
             )->resolve(),

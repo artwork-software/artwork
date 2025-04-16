@@ -7,7 +7,7 @@
            />
        </div>
 
-        <form @submit.prevent="createOrUpdateArtistResidency" v-if="usePage().props.serviceProviders.length > 0">
+        <form @submit.prevent="createOrUpdateArtistResidency" v-if="usePage().props.accommodations.length > 0">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-6">
                 <div class="col-span-2">
                     <!-- Name -->
@@ -45,11 +45,11 @@
                     />
                 </div>
                 <div class="col-span-2">
-                    <Listbox as="div" v-model="selectedServiceProvider">
+                    <Listbox as="div" v-model="selectedAccommodation">
                         <ListboxLabel class="xsLight">{{ $t('Accommodation') }}</ListboxLabel>
                         <div class="relative mt-0.5">
                             <ListboxButton class="relative h-12 w-full cursor-default rounded-lg bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-gray-900 ring-2 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
-                                <span class="block truncate">{{ selectedServiceProvider?.name }}</span>
+                                <span class="block truncate">{{ selectedAccommodation?.name }}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                               <component is="IconCaretUpDown" stroke-width="1.5" class="size-5 text-gray-400" aria-hidden="true" />
                             </span>
@@ -57,9 +57,9 @@
 
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                                    <ListboxOption as="template" v-for="serviceProvider in usePage().props.serviceProviders" :key="serviceProvider.id" :value="serviceProvider" v-slot="{ active, selected }">
+                                    <ListboxOption as="template" v-for="accommodation in usePage().props.accommodations" :key="accommodation.id" :value="accommodation" v-slot="{ active, selected }">
                                         <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ serviceProvider.name }}</span>
+                                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ accommodation.name }}</span>
 
                                             <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                         <component is="IconCheck" class="size-5" aria-hidden="true" />
@@ -278,7 +278,7 @@ const formatDate = (date) => {
 }
 
 const emit = defineEmits(['close'])
-const selectedServiceProvider = ref(usePage().props.serviceProviders.find(serviceProvider => serviceProvider.id === props.artist_residency?.service_provider_id) || usePage().props.serviceProviders[0])
+const selectedAccommodation = ref(usePage().props.accommodations.find(accommodation => accommodation.id === props.artist_residency?.accommodation_id) || usePage().props.accommodations[0])
 const selectedRoomType = ref(props.artist_residency?.type_of_room || usePage().props.roomTypes[0])
 
 const artistResidency = useForm({
@@ -287,7 +287,7 @@ const artistResidency = useForm({
     civil_name: props.artist_residency ? props.artist_residency.civil_name : '',
     phone_number: props.artist_residency ? props.artist_residency.phone_number : '',
     position: props.artist_residency ? props.artist_residency.position : '',
-    service_provider_id: null,
+    accommodation_id: null,
     project_id: props.project.id,
     arrival_date: props.artist_residency ? formatDate(props.artist_residency.arrival_date) : '',
     arrival_time: props.artist_residency ? props.artist_residency.arrival_time : '',
@@ -337,13 +337,13 @@ const formattedDepartureDate = computed(() => {
 
 const createOrUpdateArtistResidency = () => {
 
-    if(!selectedServiceProvider.value || !selectedRoomType.value){
+    if(!selectedAccommodation.value || !selectedRoomType.value){
         return
     }
 
     artistResidency.days = calculateTotalNights();
     artistResidency.type_of_room = selectedRoomType.value;
-    artistResidency.service_provider_id = selectedServiceProvider.value.id;
+    artistResidency.accommodation_id = selectedAccommodation.value.id;
 
     if(artistResidency.id){
         artistResidency.patch(route('artist-residencies.update', {artistResidency: artistResidency.id}), {

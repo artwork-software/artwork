@@ -550,6 +550,17 @@
                         <span class="ml-1 my-auto hind">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
                     </div>
                 </div>
+
+                <div class="flex items-start gap-x-4">
+                    <input v-model="newRoomForm.relevant_for_disposition"
+                           type="checkbox"
+                           class="input-checklist"/>
+                    <div>
+                        <p :class="[newRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']"
+                           class="my-auto text-sm">{{ $t('Relevant for disposition')}}</p>
+                        <span class="text-xs" :class="[newRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']">{{ $t('Activate this field if the room is to be included in the calendars.')}}</span>
+                    </div>
+                </div>
                 <div class="w-full items-center text-center">
                     <FormButton
                         type="submit"
@@ -764,6 +775,16 @@
                             class="ml-1 my-auto hind">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
                     </div>
                 </div>
+                <div class="flex items-start gap-x-4">
+                    <input v-model="editRoomForm.relevant_for_disposition"
+                           type="checkbox"
+                           class="input-checklist"/>
+                    <div>
+                        <p :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']"
+                           class="my-auto text-sm">{{ $t('Relevant for disposition')}}</p>
+                        <span class="text-xs" :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']">{{ $t('Activate this field if the room is to be included in the calendars.')}}</span>
+                    </div>
+                </div>
 
                 <div class="w-full items-center text-center">
                     <FormButton
@@ -937,6 +958,7 @@ export default defineComponent({
                 end_date: null,
                 area_id: null,
                 user_id: this.$page.props.auth.user.id,
+                relevant_for_disposition: false,
                 everyone_can_book: false,
                 room_categories: [],
                 room_attributes: [],
@@ -957,6 +979,7 @@ export default defineComponent({
                 area_id: null,
                 user_id: null,
                 everyone_can_book: false,
+                relevant_for_disposition: false,
                 room_categories: [],
                 room_attributes: [],
                 adjoining_rooms: [],
@@ -1234,6 +1257,7 @@ export default defineComponent({
             }
             this.showEditRoomModal = true;
             this.editRoomForm.everyone_can_book = room.everyone_can_book
+            this.editRoomForm.relevant_for_disposition = room.relevant_for_disposition
         },
         closeEditRoomModal() {
             this.showEditRoomModal = false;

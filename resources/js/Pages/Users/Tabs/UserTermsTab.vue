@@ -6,16 +6,16 @@
             </div>
            <div class="grid grid-cols-1 gap-4 max-w-md">
                <div v-if="user_type !== 'service_provider' && user_type !== 'freelancer'" class="flex">
-                   <NumberInputComponent v-model="userForm.weekly_working_hours" :label="$t('h/week as per contract')" @focusout="updateUserTerms" id="weekly_working_hours"/>
+                   <BaseInput type="number" v-model="userForm.weekly_working_hours" :label="$t('h/week as per contract')" @focusout="updateUserTerms" id="weekly_working_hours"/>
                </div>
                <div class="flex col-span-full items-center">
-                   <NumberInputComponent v-model="userForm.salary_per_hour" label="€" @focusout="updateUserTerms" id="salary_per_hour"/>
+                   <BaseInput type="number" v-model="userForm.salary_per_hour" label="€" @focusout="updateUserTerms" id="salary_per_hour"/>
                    <div class="ml-4 h-10 flex items-center">
                        €/h
                    </div>
                </div>
                <div class="mb-3">
-                   <TextareaComponent
+                   <BaseTextarea
                        :label="$t('Further information (variable remuneration, bonuses, etc.)')"
                        id="salary_description"
                        v-model="userForm.salary_description"
@@ -37,9 +37,13 @@ import {Menu, MenuButton, MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel}
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     components: {
+        BaseTextarea,
+        BaseInput,
         NumberInputComponent,
         TextareaComponent,
         CheckIcon,

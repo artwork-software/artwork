@@ -443,12 +443,12 @@ export default {
                     href: route('shift.settings'),
                     isCurrent: route().current('shift.settings')
                 },
-                {
+                /*{
                     has_permission: this.hasAdminRole(),
                     name: 'Manufacturers',
                     href: route('manufacturers.index'),
                     isCurrent: route().current('manufacturers.index')
-                },
+                },*/
                 {
                     has_permission: this.hasAdminRole(),
                     name: 'Inventory',

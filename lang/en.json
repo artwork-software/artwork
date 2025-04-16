@@ -2617,5 +2617,7 @@
     "Add Service Provider contact": "Add Service Provider contact",
     "Add a new contact to the Service Provider": "Add a new contact to the Service Provider",
     "No contacts found for this Service Provider.": "No contacts found for this Service Provider.",
-    "You can view and edit all Service Provider contacts here": "You can view and edit all Service Provider contacts here"
+    "You can view and edit all Service Provider contacts here": "You can view and edit all Service Provider contacts here",
+    "Update accommodation": "Update accommodation",
+    "Fill in the details below to edit the accommodation.": "Fill in the details below to edit the accommodation."
 }

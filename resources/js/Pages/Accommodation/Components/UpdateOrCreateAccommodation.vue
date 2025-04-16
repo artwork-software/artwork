@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal title="Add new accommodation" description="Fill in the details below to add a new accommodation." @close="$emit('close')">
+    <ArtworkBaseModal :title="accommodation.id ? 'Update accommodation' : 'Add new accommodation'" :description="accommodation.id ? 'Fill in the details below to edit the accommodation.' : 'Fill in the details below to add a new accommodation.'" @close="$emit('close')">
         <form @submit.prevent="updateOrCreateAccommodation">
             <div class="grid gird-cols-1 md:grid-cols-2 gap-4">
                 <div class="col-span-full">
@@ -31,7 +31,7 @@
 
             <div class="flex items-center justify-between mt-5">
                 <ArtworkBaseModalButton size="md" variant="primary" type="submit">
-                    {{ $t('Create') }}
+                    {{ accommodation.id ? $t('Update') : $t('Create') }}
                 </ArtworkBaseModalButton>
                 <ArtworkBaseModalButton size="md" variant="danger" type="button" @click="$emit('close')">
                     {{ $t('Cancel') }}

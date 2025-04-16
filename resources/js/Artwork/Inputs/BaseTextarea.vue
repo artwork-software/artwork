@@ -37,7 +37,7 @@ const props = defineProps({
         default: false
     },
     rows: {
-        type: Number,
+        type: [Number, String],
         default: 4
     }
 })

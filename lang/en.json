@@ -2619,5 +2619,10 @@
     "No contacts found for this Service Provider.": "No contacts found for this Service Provider.",
     "You can view and edit all Service Provider contacts here": "You can view and edit all Service Provider contacts here",
     "Update accommodation": "Update accommodation",
-    "Fill in the details below to edit the accommodation.": "Fill in the details below to edit the accommodation."
+    "Fill in the details below to edit the accommodation.": "Fill in the details below to edit the accommodation.",
+    "Enter the name of the timeline preset": "Enter the name of the timeline preset",
+    "Start-Time*": "Start-Time*",
+    "First Name": "First Name",
+    "Last Name": "Last Name",
+    "Frequency": "Frequency"
 }

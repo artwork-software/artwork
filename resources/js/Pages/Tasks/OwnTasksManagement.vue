@@ -13,18 +13,15 @@
                             <IconSearch class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" />
                         </div>
                         <div v-if="showSearch">
-                            <div class="relative w-72 -mt-5">
-                                <TextInputComponent
+                            <div class="relative w-72">
+                                <BaseInput
                                     id="userSearch"
                                     v-model="search"
-                                    :label="$t('Search for to-do lists and to-dos')"
+                                    label="Search for to-do lists and to-dos"
                                     class="w-full"
                                     @focus="search = ''"
                                     is-small
                                 />
-                                <div class="absolute right-2 top-2 cursor-pointer" @click="removeSearch">
-                                    <IconX class="h-6 w-6 text-gray-400" />
-                                </div>
                             </div>
                         </div>
                     </template>
@@ -202,6 +199,7 @@ import {MenuItem} from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import { IconCheck } from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const $t = useTranslation();
 

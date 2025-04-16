@@ -9,7 +9,7 @@
                 <form @submit.prevent="createTask" class="my-1">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="mb-2 col-span-full">
-                            <TextInputComponent
+                            <BaseInput
                                    v-model="this.task.name"
                                    id="sourceName"
                                    :label="$t('Title*')"
@@ -17,7 +17,8 @@
                             />
                         </div>
                         <div class="mb-2">
-                            <DateInputComponent
+                            <BaseInput
+                                type="date"
                                    v-model="this.task.end_date"
                                    id="sourceStartDate"
                                    :label="$t('To be completed by?*')"
@@ -25,7 +26,8 @@
                             />
                         </div>
                         <div class="mb-2">
-                            <TimeInputComponent
+                            <BaseInput
+                                type="time"
                                    v-model="this.task.end_time"
                                    id="sourceEndDate"
                                    label="hh:mm*"
@@ -33,7 +35,7 @@
                             />
                         </div>
                         <div class="col-span-full">
-                            <TextareaComponent
+                            <BaseTextarea
                                 :label="$t('Comment')"
                                 id="description"
                                 v-model="this.task.description"
@@ -81,11 +83,15 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseTextarea,
+        BaseInput,
         TimeInputComponent,
         TextareaComponent,
         DateInputComponent,

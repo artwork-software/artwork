@@ -20,8 +20,8 @@
             </SwitchLabel>
         </SwitchGroup>
         <div class="flex flex-row gap-x-2">
-            <DateInputComponent id="startDate" :label="$t('Start date')" v-model="startBudgetDeadline"/>
-            <DateInputComponent id="startDate" :label="$t('End date')" v-model="endBudgetDeadline"/>
+            <BaseInput type="date" id="startDate" :label="$t('Start date')" v-model="startBudgetDeadline"/>
+            <BaseInput type="date" id="startDate" :label="$t('End date')" v-model="endBudgetDeadline"/>
         </div>
         <span v-if="showMandatoryFieldsErrorText" class="mt-3 text-red-600 text-xs text-center">
             {{ $t('You must specify both the start and end date. Then start the export again.') }}
@@ -40,6 +40,7 @@ import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import {ref} from "vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const emits = defineEmits(['close']),
     startBudgetDeadline = ref(null),

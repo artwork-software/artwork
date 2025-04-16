@@ -44,7 +44,7 @@
                         </a>
                     </div>
                     <div class="col-span-full relative" v-if="!this.projectId">
-                        <TextInputComponent
+                        <BaseInput
                             :label="$t('Save in which project?*')"
                             v-model="project_query"
                             id="project_query"
@@ -58,7 +58,7 @@
                         </div>
                     </div>
                     <div class="">
-                        <TextInputComponent
+                        <BaseInput
                             v-model="contractForm.contract_partner"
                             id="eventTitle"
                             :label="$t('Contract partner*')"
@@ -66,23 +66,13 @@
                     </div>
                     <div class="">
                         <Listbox as="div" class="flex relative" v-model="selectedLegalForm" id="eventType">
-                            <ListboxButton v-if="selectedLegalForm !== null" class="menu-button mt-5">
-                                <div class="flex items-center justify-between w-full">
-                                    <div class="truncate items-center flex">
-                                        <div>{{ selectedLegalForm.name }}</div>
-                                    </div>
-                                    <span class="pointer-events-none">
-                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                    </span>
-                                </div>
+                            <ListboxButton v-if="selectedLegalForm !== null" class="menu-button">
+                                <div>{{ selectedLegalForm.name }}</div>
+                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </ListboxButton>
-                            <ListboxButton v-else class="menu-button mt-5">
-                                <div class="flex flex-grow xsLight text-left subpixel-antialiased">
-                                    {{ $t('Legal form')}}
-                                </div>
-                                <span class="pointer-events-none">
-                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                </span>
+                            <ListboxButton v-else class="menu-button">
+                                <span>{{ $t('Legal form')}}</span>
+                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
@@ -104,7 +94,7 @@
                     </div>
                     <div class="col-span-full">
                         <Listbox as="div" class="flex relative" v-model="selectedContractType" id="eventType">
-                            <ListboxButton v-if="selectedContractType !== null" class="menu-button mt-5">
+                            <ListboxButton v-if="selectedContractType !== null" class="menu-button">
                                 <div class="flex items-center justify-between w-full">
                                     <span class="truncate items-center flex">
                                         <span>{{ selectedContractType.name }}</span>
@@ -114,7 +104,7 @@
                                     </span>
                                 </div>
                             </ListboxButton>
-                            <ListboxButton v-else class="menu-button mt-5">
+                            <ListboxButton v-else class="menu-button">
                                 <div class="flex flex-grow xsLight text-left subpixel-antialiased">
                                     {{ $t('Contract type')}}
                                 </div>
@@ -142,21 +132,16 @@
                     </div>
                     <div class="col-span-full">
                         <div class="flex">
-                            <NumberInputComponent
+                            <BaseInput
+                                type="number"
                                 id="amount"
                                 v-model="contractForm.amount"
                                 :label="$t('Amount* (fee, co-production contribution, etc.)')"
                             />
-                            <Listbox as="div" class="flex h-12 w-24 relative" v-model="selectedCurrency" id="eventType">
-                                <ListboxButton class="menu-button mt-5">
-                                    <div class="flex items-center">
-                                    <span class="w-12 truncate items-center ml-3 flex">
-                                        <span>{{ selectedCurrency.name }}</span>
-                                    </span>
-                                        <span class="pointer-events-none">
-                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                    </span>
-                                    </div>
+                            <Listbox as="div" class="flex w-28 relative" v-model="selectedCurrency" id="eventType">
+                                <ListboxButton class="menu-button">
+                                    <span>{{ selectedCurrency.name }}</span>
+                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
@@ -224,7 +209,7 @@
                         </div>
                     </div>
                     <div class="col-span-full">
-                        <TextareaComponent
+                        <BaseTextarea
                             :label="$t('Comment / Note')"
                             id="description"
                             v-model="description"
@@ -325,6 +310,8 @@ import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     name: "ContractUploadModal",
@@ -340,6 +327,8 @@ export default {
         'first_project_calendar_tab_id'
     ],
     components: {
+        BaseTextarea,
+        BaseInput,
         MultiAlertComponent,
         UserSearch,
         TextareaComponent,

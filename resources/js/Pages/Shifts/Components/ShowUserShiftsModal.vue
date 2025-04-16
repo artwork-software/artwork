@@ -97,10 +97,10 @@
                 </div>
                 <div v-for="(individual_time, index) in getIndividualTimesByDate" class="mb-2">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 group" v-if="individual_time?.days_of_individual_time?.includes(day.withoutFormat)">
-                        <TextInputComponent id="title" v-model="individual_time.title" label="Title" :show-label="false" no-margin-top />
+                        <BaseInput id="title" v-model="individual_time.title" label="Title" :show-label="false" no-margin-top />
                         <div class="flex items-center justify-center col-span-2">
-                            <TimeInputComponent id="start_time" classes="rounded-r-none" v-model="individual_time.start_time" label="Startzeit" :show-label="false" no-margin-top />
-                            <TimeInputComponent id="end_time" v-model="individual_time.end_time" classes="border-l-0 rounded-l-none" label="Endzeit" :show-label="false" no-margin-top />
+                            <BaseInput type="time" id="start_time" classes="rounded-r-none" v-model="individual_time.start_time" label="Startzeit" :show-label="false" no-margin-top />
+                            <BaseInput type="time" id="end_time" v-model="individual_time.end_time" classes="border-l-0 rounded-l-none" label="Endzeit" :show-label="false" no-margin-top />
                         </div>
                         <div class="invisible group-hover:visible flex items-center justify-center" v-if="individual_time.id">
                             <component is="IconTrash" class="h-6 w-6 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5" @click="deleteIndividualTimeById(individual_time)" />
@@ -131,7 +131,7 @@
                 <h4 class="font-semibold">{{ $t('Comment')}}</h4>
             </div>
             <div>
-                <TextInputComponent id="shift_comment" v-model="shiftPlanComment.comment" label="" :show-label="false" no-margin-top />
+                <BaseTextarea id="shift_comment" v-model="shiftPlanComment.comment" label="Comment" :show-label="false" no-margin-top />
             </div>
         </div>
 
@@ -189,10 +189,14 @@ import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import {router} from "@inertiajs/vue3";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default defineComponent({
     name: "showUserShiftsModal",
     components: {
+        BaseTextarea,
+        BaseInput,
         AlertComponent,
         TimeInputComponent,
         DateInputComponent,

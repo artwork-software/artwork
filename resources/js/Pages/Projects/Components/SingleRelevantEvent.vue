@@ -21,10 +21,10 @@
                 </div>
             </div>
             <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="mt-1">
-                <BaseMenu dots-size="h-4 w-4" dots-color="text-white">
-                    <BaseMenuItem title="Delete shift planning" icon="IconTrash" @click="openDeleteConfirmModal" />
-                    <BaseMenuItem title="Save shift planning as a template" icon="IconFilePlus" @click="saveShiftAsPreset" />
-                    <BaseMenuItem title="Import shift planning from template" icon="IconFileImport" @click="showImportShiftTemplateModal = true" />
+                <BaseMenu white-menu-background has-no-offset dots-size="h-4 w-4" menu-width="w-fit" dots-color="text-white">
+                    <BaseMenuItem white-menu-background title="Delete shift planning" icon="IconTrash" @click="openDeleteConfirmModal" />
+                    <BaseMenuItem white-menu-background title="Save shift planning as a template" icon="IconFilePlus" @click="saveShiftAsPreset" />
+                    <BaseMenuItem white-menu-background title="Import shift planning from template" icon="IconFileImport" @click="showImportShiftTemplateModal = true" />
                 </BaseMenu>
             </div>
         </div>

@@ -26,13 +26,13 @@
                 :menu-position="menuPosition"
             />
 
-            <BaseMenu has-no-offset v-show="showActionComponent && component.type === 'ActionsComponent'"  v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')">
-                <BaseMenuItem as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" icon="IconFolderOpen"/>
-                <BaseMenuItem title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')"/>
-                <BaseMenuItem title="Undo pinning" icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()"/>
-                <BaseMenuItem title="Pin" icon="IconPin" v-else @click="pinProject()"/>
-                <BaseMenuItem title="Duplicate" icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
-                <BaseMenuItem title="Put in the trash" icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')"/>
+            <BaseMenu has-no-offset white-menu-background v-show="showActionComponent && component.type === 'ActionsComponent'"  v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')">
+                <BaseMenuItem white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" icon="IconFolderOpen"/>
+                <BaseMenuItem white-menu-background title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')"/>
+                <BaseMenuItem white-menu-background title="Undo pinning" icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()"/>
+                <BaseMenuItem white-menu-background title="Pin" icon="IconPin" v-else @click="pinProject()"/>
+                <BaseMenuItem white-menu-background title="Duplicate" icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
+                <BaseMenuItem white-menu-background title="Put in the trash" icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')"/>
             </BaseMenu>
         </div>
         <div
@@ -40,13 +40,13 @@
             :style="{ top: `${menuPosition.y}px`, left: `${menuPosition.x}px` }"
             class="absolute z-50"
         >
-            <BaseMenu has-no-offset :button-id="'project-invisible-menu-' + project.id" :show-icon="false" v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')">
-                <BaseMenuItem as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" icon="IconFolderOpen"/>
-                <BaseMenuItem title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')"/>
-                <BaseMenuItem title="Undo pinning" icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()"/>
-                <BaseMenuItem title="Pin" icon="IconPin" v-else @click="pinProject()"/>
-                <BaseMenuItem title="Duplicate" icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
-                <BaseMenuItem title="Put in the trash" icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')"/>
+            <BaseMenu white-menu-background has-no-offset :button-id="'project-invisible-menu-' + project.id" :show-icon="false" v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')">
+                <BaseMenuItem white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" icon="IconFolderOpen"/>
+                <BaseMenuItem white-menu-background title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')"/>
+                <BaseMenuItem white-menu-background title="Undo pinning" icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()"/>
+                <BaseMenuItem white-menu-background title="Pin" icon="IconPin" v-else @click="pinProject()"/>
+                <BaseMenuItem white-menu-background title="Duplicate" icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
+                <BaseMenuItem white-menu-background title="Put in the trash" icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')"/>
             </BaseMenu>
         </div>
     </div>

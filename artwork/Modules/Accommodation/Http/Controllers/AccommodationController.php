@@ -7,10 +7,16 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Accommodation\Http\Requests\StoreAccommodationRequest;
 use Artwork\Modules\Accommodation\Http\Requests\UpdateAccommodationRequest;
 use Artwork\Modules\Accommodation\Models\Accommodation;
+use Artwork\Modules\Accommodation\Services\AccommodationService;
 use Inertia\Inertia;
 
 class AccommodationController extends Controller
 {
+
+    public function __construct(
+        protected AccommodationService $accommodationService
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -34,7 +40,9 @@ class AccommodationController extends Controller
      */
     public function store(StoreAccommodationRequest $request)
     {
-        //
+        $accommodation = $this->accommodationService->store($request->validated());
+
+        return redirect()->route('accommodation.show', $accommodation);
     }
 
     /**
@@ -42,7 +50,9 @@ class AccommodationController extends Controller
      */
     public function show(Accommodation $accommodation)
     {
-        //
+        return Inertia::render('Accommodation/Show', [
+            'accommodation' => $accommodation->load(['contacts']),
+        ]);
     }
 
     /**
@@ -58,7 +68,7 @@ class AccommodationController extends Controller
      */
     public function update(UpdateAccommodationRequest $request, Accommodation $accommodation)
     {
-        //
+        $accommodation = $this->accommodationService->update($accommodation, $request->validated());
     }
 
     /**
@@ -66,6 +76,8 @@ class AccommodationController extends Controller
      */
     public function destroy(Accommodation $accommodation)
     {
-        //
+        $this->accommodationService->destroy($accommodation);
+
+        return redirect()->route('accommodation.index');
     }
 }

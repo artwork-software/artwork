@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('accommodations', function (Blueprint $table) {
             $table->id();
+            $table->string('profile_image')->nullable();
+            $table->string('name')->default('Neue Unterkunft');
+            $table->string('email')->nullable();
+            $table->string('phone_number')->nullable();
+            $table->string('street')->nullable();
+            $table->string('zip_code')->nullable();
+            $table->string('location')->nullable();
+            $table->string('note', 500)->nullable();
             $table->timestamps();
         });
     }

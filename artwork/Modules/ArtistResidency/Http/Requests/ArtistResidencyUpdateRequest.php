@@ -19,7 +19,7 @@ class ArtistResidencyUpdateRequest extends FormRequest
             'civil_name' => 'nullable|string|max:255',
             'phone_number' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:255',
-            'service_provider_id' => 'required|integer|exists:service_providers,id',
+            'accommodation_id' => 'required|integer|exists:accommodations,id',
             'project_id' => 'required|integer|exists:projects,id',
             'arrival_date' => 'nullable|date',
             'arrival_time' => 'nullable|date_format:H:i',

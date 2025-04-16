@@ -8,7 +8,7 @@
             @focus="focused = true"
             @blur="focused = !!modelValue"
             :disabled="disabled"
-            rows="4"
+            :rows="rows"
             class="peer block w-full shadow-sm border-gray-200 rounded-md px-4 pt-6 pb-2 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create resize-none"
             :class="disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'"
         />
@@ -35,6 +35,10 @@ const props = defineProps({
     disabled: {
         type: Boolean,
         default: false
+    },
+    rows: {
+        type: Number,
+        default: 4
     }
 })
 

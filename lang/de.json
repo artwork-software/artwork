@@ -2616,5 +2616,9 @@
     "No contacts found for this accommodation.": "Keine Kontakte für diese Unterkunft gefunden.",
     "Delete accommodation": "Unterkunft löschen",
     "Are you sure you want to delete this accommodation?": "Möchtest du diese Unterkunft wirklich löschen?",
-    "Deleted": "Gelöscht"
+    "Deleted": "Gelöscht",
+    "Add Service Provider contact": "Dienstleister-Kontakt hinzufügen",
+    "Add a new contact to the Service Provider": "Füge einen neuen Kontakt zum Dienstleister hinzu",
+    "No contacts found for this Service Provider.": "Keine Kontakte für diesen Dienstleister gefunden.",
+    "You can view and edit all Service Provider contacts here": "Hier können Sie alle Kontakte des Dienstanbieters anzeigen und bearbeiten"
 }

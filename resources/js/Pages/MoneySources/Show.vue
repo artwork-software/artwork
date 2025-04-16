@@ -128,18 +128,14 @@
                         <TinyPageHeadline :title="$t('Linked positions')" description="" />
                         <div class="w-full flex items-center justify-end">
                             <Listbox as="div" class="flex h-12 w-64" v-model="wantedProject" id="wantedProject">
-                                <ListboxButton class="menu-button">
-                                    <div class="flex items-center justify-between my-auto w-full">
-                                        <div class="truncate items-center ml-3 flex" v-if="wantedProject">
-                                            <div class="truncate mr-6">{{ wantedProject?.name }}</div>
-                                        </div>
-                                        <div class="truncate items-center ml-3 flex" v-else>
-                                            <span>{{$t('All projects')}}</span>
-                                        </div>
-                                        <span class="ml-2 flex items-center pr-2 pointer-events-none">
-                                        <IconChevronDown  stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
-                                    </span>
+                                <ListboxButton class="menu-button bg-white">
+                                    <div class="truncate items-center flex" v-if="wantedProject">
+                                        <div class="truncate">{{ wantedProject?.name }}</div>
                                     </div>
+                                    <div class="truncate items-center flex" v-else>
+                                        <span>{{$t('All projects')}}</span>
+                                    </div>
+                                    <IconChevronDown  stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">

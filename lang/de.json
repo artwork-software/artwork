@@ -2626,5 +2626,6 @@
     "Enter the name of the timeline preset": "Gib den Namen des Zeitstrahl-Presets ein",
     "Start-Time*": "Startzeit*",
     "First Name": "Vorname",
-    "Last Name": "Nachname"
+    "Last Name": "Nachname",
+    "Frequency": "Häufigkeit"
 }

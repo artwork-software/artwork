@@ -26,53 +26,58 @@
                     <div v-if="isSingleSourceTab">
                         <div class="pb-2">
                             <div class="mb-2">
-                                <TextInputComponent
+                                <BaseInput
                                        v-model="this.createSingleSourceForm.name"
                                        id="sourceName"
-                                       :label="$t('Title*')"
+                                       label="Title*"
                                 />
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
-                                    <NumberInputComponent
+                                    <BaseInput
+                                        type="number"
                                         v-model="this.createSingleSourceForm.amount"
                                         id="sourceAmount"
-                                        :label="$t('Sum*')"
+                                        label="Sum*"
                                     />
                                 </div>
                                 <div>
-                                    <TextInputComponent
+                                    <BaseInput
                                         v-model="this.createSingleSourceForm.source_name"
                                         id="nameOfSource"
-                                        :label="$t('Source')"
+                                        label="Source"
                                     />
                                 </div>
                                 <div>
-                                    <DateInputComponent
+                                    <BaseInput
+                                        type="date"
                                         v-model="this.createSingleSourceForm.start_date"
                                         id="sourceStartDate"
-                                        :label="$t('Runtime Start')"
+                                        label="Runtime Start"
                                     />
                                 </div>
                                 <div>
-                                    <DateInputComponent
+                                    <BaseInput
+                                        type="date"
                                         v-model="this.createSingleSourceForm.end_date"
                                         id="sourceEndDate"
-                                        :label="$t('Runtime End')"
+                                        label="Runtime End"
                                     />
                                 </div>
                                 <div>
-                                    <DateInputComponent
+                                    <BaseInput
+                                        type="date"
                                         v-model="this.createSingleSourceForm.funding_start_date"
                                         id="sourceStartDate"
-                                        :label="$t('Funding period Start')"
+                                        label="Funding period Start"
                                     />
                                 </div>
                                 <div>
-                                    <DateInputComponent
+                                    <BaseInput
+                                        type="date"
                                         v-model="this.createSingleSourceForm.funding_end_date"
                                         id="sourceEndDate"
-                                        :label="$t('Funding period End')"
+                                        label="Funding period End"
                                     />
                                 </div>
 
@@ -135,9 +140,9 @@
                                     </ListboxOptions>
                                 </Listbox>
                             </div>
-                            <div class="flex">
-                                <TextareaComponent
-                                    :label="$t('Comment / Note')"
+                            <div>
+                                <BaseTextarea
+                                    label="Comment / Note"
                                     id="description"
                                     v-model="createSingleSourceForm.description"
                                     rows="4"
@@ -254,10 +259,10 @@
                     <div v-else>
                         <div class="grid grid-cols-1 gap-3">
                             <div>
-                                <TextInputComponent
+                                <BaseInput
                                     v-model="this.createSourceGroupForm.name"
                                     id="sourceName"
-                                    :label="$t('Title*')"
+                                    label="Title*"
                                 />
                             </div>
                             <div class="bg-lightBackgroundGray -mx-10 px-10 py-6">
@@ -287,10 +292,10 @@
                             <div>
                                 <div class="relative w-full">
                                     <div class="w-full">
-                                        <TextInputComponent
+                                        <BaseInput
                                             id="moneySourceSearch"
                                             v-model="moneySource_query"
-                                            :label="$t('Which sources of funding belong to this group?')"
+                                            label="Which sources of funding belong to this group?"
                                         />
                                     </div>
                                     <transition leave-active-class="transition ease-in duration-100"
@@ -329,8 +334,8 @@
                             </div>
 
                             <div>
-                                 <TextareaComponent
-                                     :label="$t('Comment / Note')"
+                                 <BaseTextarea
+                                     label="Comment / Note"
                                      id="description"
                                      v-model="this.createSourceGroupForm.description"
                                      rows="4"
@@ -381,11 +386,15 @@ import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseTextarea,
+        BaseInput,
         TextareaComponent,
         UserSearch,
         DateInputComponent,

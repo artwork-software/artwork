@@ -30,50 +30,56 @@
                     <!-- Form when Single Source -->
                     <div v-if="!moneySource.is_group">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
-                            <div class="mb-2 col-span-full">
-                                <TextInputComponent
+                            <div class=" col-span-full">
+                                <BaseInput
                                        v-model="this.editSingleSourceForm.name"
                                        id="sourceName"
                                        :label="$t('Title*')"
                                 />
                             </div>
-                            <div class="mb-2">
-                                <NumberInputComponent
+                            <div class="">
+                                <BaseInput
+                                    type="number"
                                        v-model="this.editSingleSourceForm.amount"
                                        id="sourceAmount"
                                        :label="$t('Sum*')"
                                 />
                             </div>
-                            <div class="mb-2">
-                                <NumberInputComponent
-                                       v-model="this.editSingleSourceForm.source_name"
-                                       id="nameOfSource"
-                                       :label="$t('Source')"
+                            <div class="">
+                                <BaseInput
+                                    type="number"
+                                    v-model="this.editSingleSourceForm.source_name"
+                                    id="nameOfSource"
+                                    :label="$t('Source')"
                                 />
                             </div>
-                            <div class="mb-2">
-                                <DateInputComponent
+                            <div class="">
+                                <BaseInput
+                                    type="date"
                                        v-model="this.editSingleSourceForm.start_date"
                                        id="sourceStartDate"
                                        :label="$t('Runtime Start')"
                                 />
                             </div>
                             <div class="mb-2">
-                                <DateInputComponent
+                                <BaseInput
+                                    type="date"
                                        v-model="this.editSingleSourceForm.end_date"
                                        id="sourceEndDate"
                                        :label="$t('Runtime End')"
                                 />
                             </div>
                             <div class="mb-2">
-                                <DateInputComponent
+                                <BaseInput
+                                    type="date"
                                        v-model="this.editSingleSourceForm.funding_start_date"
                                        id="sourceStartDate"
                                        :label="$t('Funding period Start')"
                                 />
                             </div>
                             <div class="mb-2">
-                                <DateInputComponent
+                                <BaseInput
+                                    type="date"
                                        v-model="this.editSingleSourceForm.funding_end_date"
                                        id="sourceEndDate"
                                        :label="$t('Funding period End')"
@@ -106,7 +112,7 @@
                                         </span>
                                 </div>
                             </div>
-                            <div class=" mb-2 col-span-full">
+                            <div class="mb-2 col-span-full">
                                 <div class="flex items-cente mb-3">
                                     <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
                                            class="input-checklist"/>
@@ -142,8 +148,8 @@
                                 </div>
                             </div>
 
-                            <div class="flex col-span-full">
-                                    <TextareaComponent :label="$t('Comment / Note')"
+                            <div class="col-span-full">
+                                    <BaseTextarea label="Comment / Note"
                                               id="description"
                                               v-model="this.editSingleSourceForm.description"
                                               rows="4"
@@ -159,7 +165,7 @@
                     <!-- Form when Source Group -->
                     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="col-span-full">
-                            <TextInputComponent
+                            <BaseInput
                                    v-model="this.editSourceGroupForm.name"
                                    id="sourceName"
                                    :label="$t('Title*')"
@@ -195,7 +201,7 @@
                         <div class="col-span-full">
                             <div class="relative w-full">
                                 <div class="w-full">
-                                    <TextInputComponent
+                                    <BaseInput
                                         id="userSearch"
                                         v-model="moneySource_query"
                                         :label="$t('Which sources of funding belong to this group?')"
@@ -237,7 +243,7 @@
                             </div>
                         </div>
                         <div class="flex col-span-full">
-                            <TextareaComponent :label="$t('Comment / Note')" id="description" v-model="this.editSourceGroupForm.description" rows="4"/>
+                            <BaseTextarea :label="$t('Comment / Note')" id="description" v-model="this.editSourceGroupForm.description" rows="4"/>
                         </div>
                         <div class="col-span-full">
                             <div class="flex items-center justify-center">
@@ -283,11 +289,15 @@ import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseTextarea,
+        BaseInput,
         TextareaComponent,
         UserSearch,
         DateInputComponent,

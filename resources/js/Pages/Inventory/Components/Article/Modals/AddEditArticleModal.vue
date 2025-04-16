@@ -52,7 +52,7 @@
             <div class="px-6 pb-4">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="col-span-full">
-                        <TextInputComponent
+                        <BaseInput
                             id="name" v-model="articleForm.name"
                             :label="$t('Name*')"
                             required
@@ -60,7 +60,7 @@
                     </div>
 
                     <div class="col-span-full">
-                        <TextareaComponent
+                        <BaseTextarea
                             id="description"
                             v-model="articleForm.description"
                             :label="$t('Description')"
@@ -68,7 +68,8 @@
                     </div>
 
                     <div class="col-span-full">
-                        <NumberInputComponent
+                        <BaseInput
+                            type="number"
                             id="quantity" v-model="articleForm.quantity"
                             :label="$t('Quantity*')"
                             :max="10000000"
@@ -81,13 +82,6 @@
 
             </div>
 
-
-            <!-- Tabs -->
-            <div class="px-6 pb-4 hidden">
-                <ArticleModalTabs :is-detailed-quantity="articleForm.is_detailed_quantity"
-                                  @update:current-tab="updateTabId"/>
-            </div>
-
             <!-- Category selector -->
             <div class="bg-gray-50 px-6 py-6 mb-5">
                 <div class="mb-5">
@@ -96,7 +90,7 @@
                             {{ $t('Select Category') }}
                         </ListboxLabel>
                         <div class="relative mt-2">
-                            <ListboxButton class="menu-button">
+                            <ListboxButton class="menu-button bg-white">
                                 <div class="col-start-1 row-start-1 truncate pr-6">
                                     {{ selectedCategory?.name ?? $t('Please select a Category') }}
                                 </div>
@@ -674,6 +668,8 @@ import ArticleModalTabs from "@/Pages/Inventory/Components/Article/Modals/Compon
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
 import cloneDeep from 'lodash/cloneDeep';
 import {XCircleIcon} from "@heroicons/vue/solid";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 const props = defineProps({
     article: {

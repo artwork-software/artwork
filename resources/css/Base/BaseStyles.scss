@@ -21,7 +21,7 @@
     }
 
     .input {
-        @apply rounded-lg px-2.5 w-full text-sm border-2 border-gray-300 focus:ring-0 text-primary placeholder-gray-500 placeholder-transparent ring-artwork-buttons-create/20 focus:border-artwork-buttons-create transition-all duration-150 ease-in-out;
+        @apply rounded-md px-2.5 w-full text-sm border border-gray-300 focus:ring-0 text-primary placeholder-gray-500 placeholder-transparent ring-artwork-buttons-create/20 focus:border-artwork-buttons-create transition-all duration-150 ease-in-out;
 
         &:disabled {
             @apply bg-gray-100 text-gray-600;

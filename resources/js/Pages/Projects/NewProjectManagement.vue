@@ -17,12 +17,10 @@
                                         <ToolTipComponent icon="IconSearch" icon-size="h-7 w-7" :tooltip-text="$t('Search')"
                                                           direction="bottom"/>
                                     </div>
-                                    <div v-else class="flex items-center w-60">
-                                        <div>
-                                            <BaseInput type="text" ref="searchBarInput" id="searchBarInput" label="Search for projects" v-model="project_search"/>
-                                        </div>
-                                        <IconX class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
+                                    <div v-else class="w-96">
+                                        <BaseInput type="text" is-small ref="searchBarInput" id="searchBarInput" label="Search for projects" v-model="project_search"/>
                                     </div>
+                                    <IconX v-if="showSearchbar" class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
                                 </div>
                                 <BaseFilter only-icon="true" :left="false">
                                     <div class="w-full">

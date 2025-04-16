@@ -2620,5 +2620,7 @@
     "Add Service Provider contact": "Dienstleister-Kontakt hinzufügen",
     "Add a new contact to the Service Provider": "Füge einen neuen Kontakt zum Dienstleister hinzu",
     "No contacts found for this Service Provider.": "Keine Kontakte für diesen Dienstleister gefunden.",
-    "You can view and edit all Service Provider contacts here": "Hier können Sie alle Kontakte des Dienstanbieters anzeigen und bearbeiten"
+    "You can view and edit all Service Provider contacts here": "Hier können Sie alle Kontakte des Dienstanbieters anzeigen und bearbeiten",
+    "Update accommodation": "Unterkunft aktualisieren",
+    "Fill in the details below to edit the accommodation.": "Füllen Sie die nachstehenden Angaben aus, um die Unterkunft zu bearbeiten."
 }

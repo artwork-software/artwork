@@ -1,5 +1,5 @@
 <template>
-    <div class="flex w-full">
+    <div class="flex w-full items-center">
         <img class="h-14 w-14 rounded-full object-cover flex-shrink-0 flex justify-start"
              :src="accommodation.profile_photo_url ?? accommodation.profile_image"
              alt=""/>
@@ -7,10 +7,12 @@
             <div class="flex my-auto">
                 <Link :href="route('accommodation.show', accommodation.id)"
                       class="mr-3 sDark">
-                    <div class="w-full">
+                    <div class="w-full space-y-1">
                         <div class="font-lexend font-medium text-gray-900">{{ accommodation.name }}</div>
                         <div class="text-xs font-medium text-gray-900">{{ accommodation.street }}</div>
                         <div class="text-xs font-medium text-gray-900" v-if="accommodation.zip_code && accommodation.location">{{ accommodation.zip_code }}, {{ accommodation.location }}</div>
+                        <div class="text-xs font-medium text-gray-900" v-if="accommodation.phone_number">{{ $t('Phone number')}}: {{ accommodation.phone_number }}</div>
+                        <div class="text-xs font-medium text-gray-900" v-if="accommodation.email">{{ $t('Email')}}: {{ accommodation.email }}</div>
                     </div>
                 </Link>
             </div>

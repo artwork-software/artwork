@@ -1,8 +1,8 @@
 <template>
     <app-layout :title="$t(title)">
-        <div v-if="$page.props.jetstream.canUpdateProfileInformation">
+        <div v-if="$page.props.jetstream.canUpdateProfileInformation" class="mx-auto container">
             <div>
-                <div class="max-w-screen-lg pl-14 mt-5 pr-4">
+                <div class="mt-5 pr-4">
                     <div class="headline1 mb-5" v-if="user_to_edit.id === $page.props.auth.user.id">
                         {{ $t('My account')}}
                     </div>
@@ -33,7 +33,7 @@
                     </div>
                 </div>
                 <div class="">
-                    <div class="w-full pl-14 pr-4">
+                    <div class="w-full">
                         <slot></slot>
                     </div>
                 </div>

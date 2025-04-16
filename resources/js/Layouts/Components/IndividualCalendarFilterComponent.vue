@@ -22,7 +22,7 @@
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                     <div v-if="saving">
                         <div class="flex items-center">
-                            <TextInputComponent
+                            <BaseInput
                                 id="saveFilter"
                                 v-model="filterName"
                                 label="Name des Filters"

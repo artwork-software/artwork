@@ -34,7 +34,7 @@
     }
 
     .input-checklist {
-        @apply border-2 border-gray-300 rounded-lg p-2 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0;
+        @apply border border-gray-300 rounded-lg p-2.5 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0 shadow-sm;
     }
 
     .input-checklist-small {
@@ -46,10 +46,26 @@
     }
 
     .menu-button {
-        @apply w-full h-12 rounded-lg flex justify-between items-center text-left border-2 border-gray-300 bg-white px-2.5 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white text-sm;
+        @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create;
 
         span {
-            @apply text-xs text-secondary font-bold;
+            @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+        }
+    }
+
+    .menu-button-no-padding {
+        @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create;
+
+        span {
+            @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+        }
+    }
+
+    .menu-button-no-flex {
+        @apply w-full block shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create;
+
+        span {
+            @apply text-left float-left text-sm placeholder-transparent text-gray-500;
         }
     }
 

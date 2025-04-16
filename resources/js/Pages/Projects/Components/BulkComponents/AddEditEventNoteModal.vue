@@ -7,8 +7,8 @@
 
 
         <form @submit.prevent class="mt-10">
-           <TextareaComponent
-               id="description" v-model="eventNoteForm.description" :label="$t('Description')"/>
+           <BaseTextarea
+               id="description" v-model="eventNoteForm.description" label="Description"/>
 
             <div class="my-5 flex items-center justify-center">
                 <FormButton @click="addEditNote" type="submit" :text="event.description ? $t('Update') : $t('Save')" />
@@ -25,6 +25,7 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 const props = defineProps({
     event: {

@@ -25,13 +25,14 @@
                 </div>
 
                 <div v-else-if="!project" class="relative">
-                    <TextInputComponent
+                    <BaseInput
                         id="calendarProjectSearch"
                         v-model="projectSearch"
                         :no-margin-top="true"
                         :is-small="true"
                         ref="projectSearchInput"
-                        :label="$t('Search project')"
+                        is-small
+                        label="Search project"
                     />
                     <div v-if="projectSearchResults.length > 0"
                          class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg z-50">
@@ -419,6 +420,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');

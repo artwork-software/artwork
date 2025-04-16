@@ -2622,5 +2622,9 @@
     "No contacts found for this Service Provider.": "Keine Kontakte für diesen Dienstleister gefunden.",
     "You can view and edit all Service Provider contacts here": "Hier können Sie alle Kontakte des Dienstanbieters anzeigen und bearbeiten",
     "Update accommodation": "Unterkunft aktualisieren",
-    "Fill in the details below to edit the accommodation.": "Füllen Sie die nachstehenden Angaben aus, um die Unterkunft zu bearbeiten."
+    "Fill in the details below to edit the accommodation.": "Füllen Sie die nachstehenden Angaben aus, um die Unterkunft zu bearbeiten.",
+    "Enter the name of the timeline preset": "Gib den Namen des Zeitstrahl-Presets ein",
+    "Start-Time*": "Startzeit*",
+    "First Name": "Vorname",
+    "Last Name": "Nachname"
 }

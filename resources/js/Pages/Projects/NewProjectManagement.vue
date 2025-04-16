@@ -19,7 +19,7 @@
                                     </div>
                                     <div v-else class="flex items-center w-60">
                                         <div>
-                                            <input type="text" ref="searchBarInput" id="searchBarInput" :placeholder="$t('Search for projects')" v-model="project_search" class="h-10 inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-artwork-buttons-create"/>
+                                            <BaseInput type="text" ref="searchBarInput" id="searchBarInput" label="Search for projects" v-model="project_search"/>
                                         </div>
                                         <IconX class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
                                     </div>
@@ -287,6 +287,7 @@ import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import debounce from "lodash.debounce";
 import SingleProjectInManagement from "@/Pages/Projects/ProjectManagmentComponents/SingleProjectInManagement.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const {can, hasAdminRole, role, canSeeComponent, canEditComponent} = usePermission(usePage().props);
 const {getSortEnumTranslation} = useSortEnumTranslation();

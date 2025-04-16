@@ -24,10 +24,10 @@
                     </div>
                 </div>
                 <div class="col-span-full">
-                    <TextareaComponent
+                    <BaseTextarea
                         v-model="rawText"
                         id="rawText"
-                        :label="$t('Enter your times here. Each line is interpreted as a separate entry.')"
+                        label="Enter your times here. Each line is interpreted as a separate entry."
                         rows="15"
                         :max-length="100000"
                     />
@@ -76,6 +76,7 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {useForm} from "@inertiajs/vue3";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 const props = defineProps({
     timelineToEdit: {

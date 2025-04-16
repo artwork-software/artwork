@@ -18,7 +18,7 @@
                                     <!-- Finanzierungsquellenkategorien -->
                                     <div class="mt-8 mr-10 flex items-center gap-4">
                                         <div class="relative w-72">
-                                            <TextInputComponent
+                                            <BaseInput
                                                 v-on:keyup.enter=addMoneySourceCategory
                                                 id="moneySourceCategory"
                                                    v-model="moneySourceCategoryInput"
@@ -29,14 +29,14 @@
 
                                         <div class="">
                                             <button
-                                                :class="[moneySourceCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
+                                                :class="[moneySourceCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
                                                 @click="addMoneySourceCategory" :disabled="!moneySourceCategoryInput">
                                                 <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                                             </button>
                                         </div>
                                     </div>
 
-                                    <div class="mt-2 mr-10 flex flex-wrap">
+                                    <div class="mr-10 mt-5 flex flex-wrap">
                                         <span v-for="(category,index) in moneySourceCategories"
                                               class="rounded-full items-center font-medium text-tagText
                                             border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
@@ -77,10 +77,12 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
+        BaseInput,
         TextInputComponent,
         ConfirmationComponent,
         JetDialogModal,

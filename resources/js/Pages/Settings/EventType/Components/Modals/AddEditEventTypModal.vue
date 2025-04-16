@@ -16,10 +16,10 @@
                     </div>
                 </div>
                 <div class="col-span-4">
-                    <TextInputComponent id="name" v-model="eventTypeForm.name" type="text" :label="$t('Event type name*')" required/>
+                    <BaseInput id="name" v-model="eventTypeForm.name" type="text" :label="$t('Event type name*')" required/>
                 </div>
                 <div class="col-span-full">
-                    <TextInputComponent
+                    <BaseInput
                         :label="$t('Abbreviation of the event type') + '*'"
                         v-model="eventTypeForm.abbreviation"
                         required
@@ -140,6 +140,7 @@ import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import {computed} from "vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     eventType: {

@@ -22,7 +22,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mt-5">
                         <div>
-                            <TimeInputComponent
+                            <BaseInput type="time"
                                 id="start"
                                 v-model="tinyTimePeriod.start"
                                 :label="$t('Start-Time')"
@@ -31,7 +31,7 @@
                             />
                         </div>
                         <div>
-                            <TimeInputComponent
+                            <BaseInput type="time"
                                 id="end"
                                 v-model="tinyTimePeriod.end"
                                 :label="$t('End-Time')"
@@ -53,6 +53,7 @@ import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import {useForm, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     calendarSettings: {

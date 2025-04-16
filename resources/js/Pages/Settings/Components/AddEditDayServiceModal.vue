@@ -17,7 +17,7 @@
                 <div class="flex items-center gap-x-3">
                     <IconSelector @update:modelValue="addIconToForm" :current-icon="dayServiceForm ? dayServiceForm.icon : null" />
                     <div class="w-full">
-                        <TextInputComponent
+                        <BaseInput
                             id="name"
                             no-margin-top
                             v-model="this.dayServiceForm.name"
@@ -66,11 +66,13 @@ import IconSelector from "@/Components/Icon/IconSelector.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default {
     name: "AddEditDayServiceModal",
     mixins: [Permissions, IconLib],
     components: {
+        BaseInput,
         TextInputComponent,
         ModalHeader,
         BaseModal,

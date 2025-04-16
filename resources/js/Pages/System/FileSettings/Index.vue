@@ -16,7 +16,7 @@
         <Listbox as="div">
           <div class="relative mt-2 w-1/2">
             <ListboxButton class="menu-button">
-              <span class="block truncate text-left pl-3">{{$t('Select file types')}}</span>
+              <span class="block truncate text-left">{{$t('Select file types')}}</span>
               <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                     <IconChevronDown  stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>

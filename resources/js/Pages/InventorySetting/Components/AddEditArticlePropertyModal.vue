@@ -10,14 +10,14 @@
             <form @submit.prevent="addEditProperty">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="col-span-full">
-                        <TextInputComponent
+                        <BaseInput
                             id="name" v-model="propertyForm.name"
                             :label="$t('Name')"
                         />
                     </div>
 
                     <div class="col-span-full">
-                        <TextareaComponent
+                        <BaseTextarea
                             id="description"
                             v-model="propertyForm.tooltip_text"
                             :label="$t('Tooltip text')"
@@ -54,8 +54,8 @@
 
                     <div v-if="selectedType.type === 'selection'" class="col-span-full">
                         <div v-for="(value, index) in propertyForm.select_values" :key="index" class="flex gap-3 items-center mb-2">
-                            <TextInputComponent
-                                id="select_value"
+                            <BaseInput
+                                :id="'select_value' + index"
                                 v-model="propertyForm.select_values[index]"
                                 :label="$t('Selection value {index}', {index: index + 1})"
                             />
@@ -138,6 +138,8 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import {ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 const props = defineProps({
     property: {

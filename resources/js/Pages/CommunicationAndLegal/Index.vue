@@ -11,56 +11,56 @@
         <div class="grid grid-cols-1 gap-4 mt-10 max-w-lg">
             <div class="">
                 <div class="sm:col-span-3">
-                    <TextInputComponent @focusout="updateCommunicationAndLegal" v-model="mailForm.page_title" id="page_title" :label="$t('Page Title')"/>
+                    <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.page_title" id="page_title" :label="$t('Page Title')"/>
                 </div>
             </div>
             <div class="">
                 <div class="sm:col-span-3">
-                    <TextInputComponent @focusout="updateCommunicationAndLegal" v-model="mailForm.businessName" id="businessName" :label="$t('Our Organization')"/>
+                    <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.businessName" id="businessName" :label="$t('Our Organization')"/>
                 </div>
             </div>
             <div class="">
                 <div class="sm:col-span-3">
-                    <TextInputComponent @focusout="updateCommunicationAndLegal" v-model="mailForm.impressumLink" id="impressumLink" :label="$t('Link to Legal Notice')"/>
+                    <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.impressumLink" id="impressumLink" :label="$t('Link to Legal Notice')"/>
                     <span v-if="showInvalidImpressumLinkErrorText"
-                          class="errorText">
+                          class="text-red-500 text-xs mt-1">
                         {{ $t('Invalid URL (Example: https://google.com)') }}
                     </span>
                 </div>
             </div>
             <div class="">
                 <div class="sm:col-span-3">
-                    <TextInputComponent @focusout="updateCommunicationAndLegal" v-model="mailForm.privacyLink" id="privacyLink" :label="$t('Link to Privacy Policy')"/>
+                    <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.privacyLink" id="privacyLink" :label="$t('Link to Privacy Policy')"/>
                     <span v-if="showInvalidPrivacyLinkErrorText"
-                          class="errorText">
+                          class="text-red-500 text-xs mt-1">
                         {{ $t('Invalid URL (Example: https://google.com)') }}
                     </span>
                 </div>
             </div>
             <div>
                 <div class="sm:col-span-3">
-                    <TextInputComponent id="invitationEmail"
+                    <BaseInput id="invitationEmail"
                                         v-model="mailForm.invitationEmail"
                                         :label="$t('Invitation Email')"
                                         @focusout="updateCommunicationAndLegal"/>
                     <span v-if="showInvalidInvitationEmailAdressErrorText"
-                          class="errorText">
+                          class="text-red-500 text-xs mt-1">
                         {{ $t('Invalid Email Address') }}
                     </span>
                 </div>
             </div>
             <div>
                 <div class="sm:col-span-3">
-                    <TextInputComponent @focusout="updateCommunicationAndLegal" v-model="mailForm.businessEmail" id="businessEmail" :label="$t('Business Email')"/>
+                    <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.businessEmail" id="businessEmail" :label="$t('Business Email')"/>
                     <span v-if="showInvalidBusinessEmailAddressErrorText"
-                          class="errorText">
+                          class="text-red-500 text-xs mt-1">
                         {{ $t('Invalid Email Address') }}
                     </span>
                 </div>
             </div>
             <div>
                 <div class="sm:col-span-8">
-                    <TextareaComponent
+                    <BaseInput
                         :label="$t('Email-Footer')"
                         v-model="mailForm.emailFooter"
                         @focusout="updateCommunicationAndLegal"
@@ -80,9 +80,11 @@ import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default defineComponent({
     components: {
+        BaseInput,
         TextareaComponent,
         TextInputComponent,
         FormButton,

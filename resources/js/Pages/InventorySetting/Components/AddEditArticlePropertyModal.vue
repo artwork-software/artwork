@@ -59,7 +59,7 @@
                                 v-model="propertyForm.select_values[index]"
                                 :label="$t('Selection value {index}', {index: index + 1})"
                             />
-                            <button type="button" @click="propertyForm.select_values.splice(index, 1)" class="text-red-500 mt-5 hover:text-red-700">
+                            <button type="button" @click="propertyForm.select_values.splice(index, 1)" class="text-red-500 hover:text-red-700">
                                 <component is="IconX" class="size-5" aria-hidden="true" />
                             </button>
 
@@ -121,7 +121,7 @@
                 </div>
 
                 <div class="flex items-center justify-center my-10">
-                    <FormButton type="submit" :text="property ? $t('Update') : $t('Create')" :disabled="propertyForm.processing" :class="propertyForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''" />
+                    <FormButton type="submit" :text="property ? $t('Update') : $t('Create')" :disabled="propertyForm.processing || checkIfPropertyHasValues" :class="propertyForm.processing || checkIfPropertyHasValues ? 'bg-gray-200 hover:bg-gray-300' : ''" />
                 </div>
             </form>
         </div>
@@ -133,10 +133,8 @@
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {useForm} from "@inertiajs/vue3";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
@@ -193,6 +191,18 @@ const addEditProperty = () => {
         })
     }
 }
+
+const checkIfPropertyHasValues = computed(() => {
+    // if type is selection and select_values is empty return true
+    if (selectedType.value.type === 'selection' && propertyForm.select_values.length === 0 || propertyForm.select_values[0] === '') {
+        return true
+    }
+
+    // check if name is set
+    if (propertyForm.name === '') {
+        return true
+    }
+})
 </script>
 
 <style scoped>

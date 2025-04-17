@@ -14,28 +14,30 @@
                                      leave-from="opacity-100 translate-y-0 sm:scale-100"
                                      leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                                      @after-enter="makeContainerDraggable">
-                        <DialogPanel class="modal" :class="[modalSize, fullModal ? '' : 'sm:p-6 px-4 pt-5 pb-4', showBackdrop ? '' : 'border border-gray-300']"  ref="containerRef">
-                            <div class="absolute top-3 right-3 hidden sm:block z-50">
+                        <DialogPanel class="flex h-fit w-full grow flex-col rounded-lg bg-gradient-to-br  text-left shadow-glass backdrop-blur-2xl p-gap-3xl border draggableModal" :class="[modalSize, showBackdrop ? 'border-gray-300 from-slate-50/80 to-sky-100/50' : 'border-gray-100 from-slate-50/70 to-sky-100/20']"  ref="containerRef">
+                            <div class="flex items-center justify-end px-5 pt-5 pb-2">
                                 <div class="flex items-center gap-x-3">
-                                    <div class="text-gray-400 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
+                                    <div class="text-gray-700 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
                                         <div @click="showBackdrop = !showBackdrop">
                                             <ToolTipDefault top show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
                                         </div>
                                     </div>
-                                    <div ref="dragHandle" class=" hover:text-artwork-messages-waring transition-all duration-150 ease-in-out cursor-grab" :class="isDragging ? 'text-artwork-messages-waring' : 'text-gray-400' ">
+                                    <div ref="dragHandleRef" class=" hover:text-yellow-600 transition-all duration-150 ease-in-out cursor-grab dragHandle">
                                         <div>
                                             <ToolTipDefault top show-draggable :tooltip-text="$t('Hold here to move')"/>
                                         </div>
                                     </div>
-                                    <div class="text-gray-400 hover:text-artwork-messages-error transition-all duration-150 ease-in-out cursor-pointer">
-                                        <div @click="closeModal(false)">
+                                    <div class="text-gray-700 hover:text-artwork-messages-error transition-all duration-150 ease-in-out cursor-pointer">
+                                        <div @click="closeModal">
                                             <ToolTipDefault top show-x-icon :tooltip-text="$t('Close Window')"/>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="">
-                                <slot/>
+                            <div class="p-5">
+                                <div class="shadow-[0_2px_5px_rgb(0,0,0,0.12)] p-4 bg-white rounded-lg border border-gray-100 w-full relative">
+                                    <slot/>
+                                </div>
                             </div>
                         </DialogPanel>
                     </TransitionChild>

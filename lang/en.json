@@ -2625,5 +2625,6 @@
     "Start-Time*": "Start-Time*",
     "First Name": "First Name",
     "Last Name": "Last Name",
-    "Frequency": "Frequency"
+    "Frequency": "Frequency",
+    "No events found": "No events found"
 }

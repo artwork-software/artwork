@@ -2628,5 +2628,6 @@
     "Start-Time*": "Startzeit*",
     "First Name": "Vorname",
     "Last Name": "Nachname",
-    "Frequency": "Häufigkeit"
+    "Frequency": "Häufigkeit",
+    "No events found": "Keine Termine gefunden"
 }

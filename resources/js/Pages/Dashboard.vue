@@ -45,7 +45,7 @@
                             </div>
                             
                             <div v-else class="px-5">
-                                <BaseAlertComponent message="No appointments found" type="info" use-translation />
+                                <BaseAlertComponent message="No events found" type="info" use-translation />
                             </div>
 
                             <div class="flex item-center justify-end px-5 pb-5">

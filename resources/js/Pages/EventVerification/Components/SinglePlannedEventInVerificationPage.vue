@@ -1,6 +1,6 @@
 <template>
     <WhiteInnerCard>
-        <div class="flex items-stretch gap-x-3 min-w-full w-full h-full">
+        <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
             <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event.event_type.hex_code}"></div>
             <div class="w-full">
                 <p class="text-sm font-lexend font-semibold text-gray-900" :style="{color: event.event_type.hex_code}">

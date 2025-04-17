@@ -596,7 +596,7 @@ class EventController extends Controller
             ->whereDate(
                 'start_date',
                 $now->format('Y-m-d')
-            )->with(['event','event.project','event.room'])->get();
+            )->with(['event','event.project','event.room', 'event.event_type'])->get();
 
         // get user events from Projects in which the user is currently working
         $userEvents = Event::where('start_time', '>=', Carbon::now()->startOfDay())

@@ -216,13 +216,13 @@
                 </div>
 
             </div>
-            <div class="mt-8 flex items-center justify-between">
+            <div class="mt-8 flex items-center justify-between w-full">
                 <div class="flex items-center">
                     <div v-if="userForm.departments.length === 0" class="text-secondary subpixel-antialiased my-auto mr-4">{{ $t('Not in any team') }}</div>
-                    <div class="flex -space-x-4 overflow-hidden" v-else>
-                        <img v-for="( team, index ) in userForm.departments" class="inline-block size-10 rounded-full ring-2 ring-white" :src="'/Svgs/TeamIconSvgs/' + team.svg_name + '.svg'" alt="" />
+                    <div class="flex -space-x-4" v-else>
+                        <img v-for="( team, index ) in userForm.departments" class="inline-block size-10 min-w-10 min-h-10 rounded-full ring-2 ring-white" :src="'/Svgs/TeamIconSvgs/' + team.svg_name + '.svg'" alt="" />
                     </div>
-                    <BaseMenu v-show="this.$can('teammanagement')" class="ml-5 mt-2" :right="true" menu-width="w-88">
+                    <BaseMenu has-no-offset v-show="this.$can('teammanagement')" class="ml-5 mt-2" :right="true" menu-width="w-88">
                         <BaseMenuItem icon="IconEdit" @click="openChangeTeamsModal" title="Edit team membership" />
                         <BaseMenuItem icon="IconTrash" @click="deleteFromAllDepartments" title="Remove user from all teams" />
                     </BaseMenu>

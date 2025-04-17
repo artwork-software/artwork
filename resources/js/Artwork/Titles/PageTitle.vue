@@ -1,7 +1,7 @@
 <template>
     <div class="py-4">
-        <h3 class="font-lexend text-xl font-bold">{{ title }}</h3>
-        <p class="text-sm font-light xsLight mt-0.5">
+        <h3 class="headline h2 text-color ">{{ title }}</h3>
+        <p class="text-color light sub-line light">
             {{ description }}
         </p>
     </div>

@@ -16,7 +16,7 @@
             </div>
         </transition>
 
-        <div class="w-full ml-11 mt-1">
+        <div class="w-full mt-1">
             <BaseCalendar
                 :rooms="rooms"
                 :days="period"
@@ -40,7 +40,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {usePage} from "@inertiajs/vue3";
 import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
-import {computed, onMounted, provide, ref} from "vue";
+import {computed, onBeforeMount, onMounted, provide, ref} from "vue";
 import { IconAlertSquareRounded } from "@tabler/icons-vue";
 
 const props = defineProps({
@@ -136,6 +136,7 @@ provide('event_properties', props.event_properties);
 provide('areas', props.areas);
 
 const showCalendarWarning = ref(props.calendarWarningText)
+
 
 onMounted(() => {
     setTimeout(() => {

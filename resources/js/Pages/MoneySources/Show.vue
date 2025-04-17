@@ -1,8 +1,6 @@
 <template>
     <app-layout :title="moneySource.name">
-
-
-        <div class="-mx-5 pb-10">
+        <div class="artwork-container">
             <div class="pl-20">
                 <!-- Money Source Header -->
                 <div class="max-w-7xl">

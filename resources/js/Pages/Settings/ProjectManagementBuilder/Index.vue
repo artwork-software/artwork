@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="$t('Project overview builder')">
-        <div class="max-w-screen-7xl my-8 ml-14 mr-40">
+        <div class="artwork-container">
             <div class="">
                 <h2 class="headline1 my-6">{{$t('Project overview builder')}}</h2>
                 <div class="xsLight">

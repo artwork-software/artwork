@@ -16,7 +16,7 @@
             </div>
             <div class="flex items-center justify-end gap-x-3 print:hidden">
                 <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-5 w-5 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" @click="openAddTaskModal = true"/>
-                <BaseMenu v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement">
+                <BaseMenu has-no-offset v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement">
                     <MenuItem v-slot="{ active }" v-if="!checklist.private">
                         <div @click="openEditChecklistTeamsModal = true"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">

@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="$t('Project Role Settings')">
-        <div class="max-w-screen-lg my-8 ml-14 mr-40">
+        <div class="artwork-container">
             <div class="">
                 <h2 class="headline1 my-6">{{$t('Project Role Settings')}}</h2>
                 <div class="xsLight">

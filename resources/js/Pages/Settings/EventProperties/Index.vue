@@ -2,14 +2,14 @@
     <app-layout :title="$t('Event Properties')">
         <EventSettingHeader>
             <div class="my-10">
-                <div class="mb-4 flex items-center justify-between gap-x-10 max-w-3xl">
+                <div class="mb-4 flex items-center justify-between gap-x-10">
                     <TinyPageHeadline title="Event Eigenschaften"
                                       description="Hier kannst du die Event Eigenschaften verwalten."/>
                     <div>
                         <AddButtonSmall @click="showEventPropertyModal = true;" text="Event Eigenschaft hinzufügen"/>
                     </div>
                 </div>
-                <ul role="list" class="flex flex-col gap-y-3 max-w-3xl">
+                <ul role="list" class="flex flex-col gap-y-3">
                     <li v-for="(eventProperty) in event_properties"
                         :key="eventProperty.id"
                         class="flex flex-row justify-between">

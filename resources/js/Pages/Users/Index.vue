@@ -13,7 +13,7 @@
                         <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                     </div>
                 </div>
-                <BaseMenu show-sort-icon dots-size="h-7 w-7" dots-color="!text-gray-900" menu-width="w-72">
+                <BaseMenu show-sort-icon dots-size="h-7 w-7" has-no-offset dots-color="!text-gray-900" menu-width="w-72">
                     <div class="flex items-center justify-end py-1">
                         <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full"
                               @click="this.resetSort()">
@@ -27,15 +27,15 @@
                         </div>
                     </MenuItem>
                 </BaseMenu>
-                <div class="">
-                    <BaseCardButton text="Invite new users" @click="addingUser = true" />
+                <div class="w-full">
+                    <BaseCardButton text="Invite new users" class="w-max" @click="addingUser = true" />
                 </div>
             </div>
         </template>
         <template #default>
             <div class="">
-                <div class="flex flex-row">
-                    <div class="flex flex-1 flex-wrap justify-end">
+                <div class="flex flex-row w-full">
+                    <div class="flex flex-1 flex-wrap justify-end w-full">
 
                         <ul role="list" class="mt-6 w-full">
                             <li v-if="user_search_results.length < 1" v-for="(user,index) in users"
@@ -61,7 +61,7 @@
                                     <div class="flex mr-8 items-center">
                                         <div class="-mr-3" v-for="department in user.departments?.slice(0,2)">
                                             <TeamIconCollection :data-tooltip-target="department.id"
-                                                                class="h-10 w-10 rounded-full ring-2 ring-white"
+                                                                class="h-10 w-10 min-w-10 min-h-10 rounded-full ring-2 ring-white"
                                                                 :iconName="department.svg_name"/>
                                             <div :id="department.id" role="tooltip"
                                                  class="inline-block absolute invisible py-2 px-3 bg-artwork-navigation-background rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
@@ -75,7 +75,7 @@
                                                 <div>
                                                     <MenuButton class="flex items-center rounded-full focus:outline-none">
                                                         <ChevronDownIcon
-                                                            class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                            class="ml-1 flex-shrink-0 min-w-10 min-h-10 h-10 w-10 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
                                                     </MenuButton>
                                                 </div>
                                                 <transition enter-active-class="transition-enter-active"

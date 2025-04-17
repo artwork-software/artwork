@@ -1,35 +1,45 @@
 <template>
-    <Menu as="div" class="inline-block print:hidden" :class="!noRelative ? 'relative' : ''">
+    <Menu as="div" class="inline-block print:hidden w-full float-left" :class="!noRelative ? 'relative' : ''">
         <Float auto-placement portal :offset="{ mainAxis: hasNoOffset ? 5 : -10, crossAxis: hasNoOffset ? 25 : 75}">
-            <div class="font-semibold  flex items-center justify-center" ref="menuButtonRef" :class="[whiteIcon ? 'text-white' : 'text-artwork-buttons-context', dotsColor]">
-                <MenuButton :id="buttonId">
-                   <div v-if="showIcon">
-                       <IconDotsVertical
-                           v-if="!showSortIcon && !showCustomIcon"
-                           stroke-width="1.5"
-                           class="flex-shrink-0"
-                           aria-hidden="true"
-                           :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
-                       />
-                       <ToolTipComponent
-                           v-else-if="!showCustomIcon"
-                           direction="bottom"
-                           :tooltip-text="$t('Sorting')"
-                           icon="IconSortDescending"
-                           icon-size="h-8 w-8"
-                           :white-icon="whiteIcon"
-                           :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
-                       />
+            <div class="font-semibold  flex items-center justify-center w-full" ref="menuButtonRef" :class="[whiteIcon ? 'text-white' : 'text-artwork-buttons-context', dotsColor]">
+                <MenuButton :id="buttonId" class="w-full">
+                   <div class="flex items-center gap-x-3 w-full">
+                       <div v-if="showIcon">
+                           <IconDotsVertical
+                               v-if="!showSortIcon && !showCustomIcon"
+                               stroke-width="1.5"
+                               class="flex-shrink-0"
+                               aria-hidden="true"
+                               :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
+                           />
+                           <ToolTipComponent
+                               v-else-if="!showCustomIcon"
+                               direction="bottom"
+                               :tooltip-text="$t('Sorting')"
+                               icon="IconSortDescending"
+                               icon-size="h-8 w-8"
+                               :white-icon="whiteIcon"
+                               :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
+                               :no-tooltip="!noTooltip"
+                           />
 
-                       <ToolTipComponent
-                           v-if="showCustomIcon"
-                           :direction="tooltipDirection"
-                           :tooltip-text="$t(translationKey)"
-                           :icon="icon"
-                           :icon-size="dotsSize"
-                           :stroke="strokeWidth"
-                           :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
-                       />
+                           <ToolTipComponent
+                               v-if="showCustomIcon"
+                               :direction="tooltipDirection"
+                               :tooltip-text="$t(translationKey)"
+                               :icon="icon"
+                               :no-relative="noRelative"
+                               :icon-size="dotsSize"
+                               :stroke="strokeWidth"
+                               :white-icon="whiteIcon"
+                               :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
+                               :no-tooltip="!noTooltip"
+                           />
+                       </div>
+
+                       <div v-if="menuButtonText && showMenuButtonText">
+                            {{ $t(menuButtonText) }}
+                       </div>
                    </div>
                 </MenuButton>
             </div>
@@ -138,6 +148,21 @@ export default defineComponent({
             type: String,
             required: false,
             default: 'top',
+        },
+        menuButtonText: {
+            type: String,
+            required: false,
+            default: '',
+        },
+        showMenuButtonText: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        noTooltip: {
+            type: Boolean,
+            required: false,
+            default: false,
         },
     },
 

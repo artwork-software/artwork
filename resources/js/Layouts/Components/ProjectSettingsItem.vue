@@ -1,25 +1,28 @@
 <template>
-    <div class="mt-16 max-w-2xl">
-        <h2 class="headline2 my-2">{{ title }}</h2>
-        <div class="xsLight">
-            {{ description }}
-        </div>
-    </div>
-    <div class="mt-8 flex w-full flex-wrap gap-x-1">
-        <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none">
-            <ColorPickerComponent @update-color="UpdateColor"  />
-        </div>
-
-        <div class="relative flex max-w-lg w-full">
-            <BaseInput :id="inputLabel" v-model="input" :label="inputLabel" @keyup.enter="add" />
-
-        </div>
+    <div>
         <div class="">
-            <button
-                :class="[input === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
-                @click="add" :disabled="!input">
-                <CheckIcon class="h-5 w-5"></CheckIcon>
-            </button>
+            <h2 class="headline2 my-2">{{ title }}</h2>
+            <div class="xsLight">
+                {{ description }}
+            </div>
+        </div>
+        <div class="mt-8 flex w-full flex-wrap gap-x-1">
+            <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none">
+                <ColorPickerComponent @update-color="UpdateColor"  />
+            </div>
+
+            <div class="relative flex max-w-lg w-full">
+                <BaseInput :id="inputLabel" v-model="input" :label="inputLabel" @keyup.enter="add" />
+
+            </div>
+            <div class="">
+                <button
+                    :class="[input === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
+                    @click="add" :disabled="!input">
+                    <CheckIcon class="h-5 w-5"></CheckIcon>
+                </button>
+            </div>
+
         </div>
         <div class="flex flex-wrap w-full max-w-xl mt-2">
             <div v-if="itemStyle === 'tag'">

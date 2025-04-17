@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Rooms & areas')">
-        <div class="max-w-screen-2xl flex flex-wrap-row mt-5 ml-14 mr-40">
+        <div class="artwork-container">
             <div class="w-full flex my-auto justify-between">
                 <div class="flex flex-wrap w-full">
                     <div class="flex flex-wrap w-full">
@@ -161,7 +161,7 @@
                                             class="hind text-secondary tracking-tight ml-1 text-xl">{{ $t('Create new rooms')}}</span>
                                     </div>
                                 </div>
-                                <div class="mt-6 mb-12" v-if="this.opened_areas.includes(area.id)">
+                                <div class="mt-6 mb-12 w-full" v-if="this.opened_areas.includes(area.id)">
                                     <draggable ghost-class="opacity-50"
                                                key="draggableKey"
                                                item-key="id" :list="area.rooms"
@@ -174,13 +174,13 @@
                                                  @mouseout="showMenu = null" >
                                                 <div class="flex mt-6 flex-wrap w-full" :key="element.id"
                                                      :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                                    <div class="flex w-full items-center">
-                                                        <div class="flex items-center">
+                                                    <div class="flex w-full items-center justify-between">
+                                                        <div class="flex items-center w-full">
                                                             <Link :href="route('rooms.show',{room: element.id})"
-                                                                  class="ml-4 my-auto xsDark">
+                                                                  class="ml-4 my-auto xsDark w-full">
                                                                 {{ element.name }}
                                                             </Link>
-                                                            <div class="ml-6 mt-1 flex items-center xsLight my-auto relative">
+                                                            <div class="ml-6 w-full flex items-center xsLight my-auto relative">
                                                                 {{ $t('created on { created_at } by', {'created_at': element.created_at }) }}
                                                                 <UserPopoverTooltip :user="element.created_by"
                                                                                     :id="element.created_by.id + '-room-' + element.id"

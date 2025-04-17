@@ -1,216 +1,199 @@
 <template>
     <app-layout title="Startseite">
-        <div class="mx-auto max-w-7xl mt-10">
-            <div class="headline1 mb-10">
-                Dashboard
+
+        <div class="artwork-container">
+            <div>
+                <PageTitle
+                    :title="$t('Dashboard')"
+                    :description="$t('Here you can find all important information at a glance')"
+                />
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-5 gap-x-10">
-                <div class="col-span-2">
-                    <div class="mb-10">
-                        <!-- Termin Widget -->
-                        <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
-                            <div>
-                                <h3 class=" tracking-widest uppercase font-semibold text-base">{{ $t("Today's appointments")}}</h3>
-                            </div>
-                            <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                                {{ eventsOfDay?.length ?? 0 }}
-                            </div>
-                        </div>
-                        <DashboardCard>
-                            <div class="font-semibold flex items-center gap-x-3 mb-3">
-                                <svg id="Gruppe_1806" data-name="Gruppe 1806" xmlns="http://www.w3.org/2000/svg" width="22.065" height="18.527" viewBox="0 0 22.065 18.527">
-                                    <path id="Pfad_1003" data-name="Pfad 1003" d="M685.02,351.271h-2.832a.7.7,0,1,0,0,1.4h2.832a.7.7,0,1,0,0-1.4Z" transform="translate(-676.376 -341.693)" fill="#27233c"/>
-                                    <path id="Pfad_1004" data-name="Pfad 1004" d="M695.9,351.271h-2.832a.7.7,0,1,0,0,1.4H695.9a.7.7,0,1,0,0-1.4Z" transform="translate(-679.643 -341.693)" fill="#27233c"/>
-                                    <path id="Pfad_1005" data-name="Pfad 1005" d="M685.02,356.806h-2.832a.7.7,0,1,0,0,1.4h2.832a.7.7,0,1,0,0-1.4Z" transform="translate(-676.376 -343.355)" fill="#27233c"/>
-                                    <path id="Pfad_1006" data-name="Pfad 1006" d="M695.9,356.806h-2.832a.7.7,0,1,0,0,1.4H695.9a.7.7,0,1,0,0-1.4Z" transform="translate(-679.643 -343.355)" fill="#27233c"/>
-                                    <path id="Pfad_1007" data-name="Pfad 1007" d="M695.546,338.995h-4.721v-.716a.7.7,0,1,0-1.4,0v.716h-3.514v-.716a.7.7,0,1,0-1.4,0v.716h-3.971v-.716a.7.7,0,0,0-1.4,0v.716H674.88a.7.7,0,0,0-.7.7v15.712a.7.7,0,0,0,.7.7h20.666a.7.7,0,0,0,.7-.7V339.694A.7.7,0,0,0,695.546,338.995Zm-16.4,1.4v.716a.7.7,0,0,0,1.4,0v-.716h3.971v.716a.7.7,0,1,0,1.4,0v-.716h3.514v.716a.7.7,0,1,0,1.4,0v-.716h4.021v3.068H675.579v-3.068Zm-3.564,14.313v-9.846h19.267v9.846Z" transform="translate(-674.18 -337.579)" fill="#27233c"/>
-                                </svg>
-                                {{todayDate}}
-                            </div>
-                            <div v-if="eventsOfDay?.length > 0" class=" max-h-64 overflow-scroll">
+
+            <div class="grid grid-cols-6 gap-10">
+                <div class="col-span-2 space-y-6">
+                    <div>
+                        <BaseCard>
+                            <CardHeadline title="Today's appointments" description="Hier siehst du alle Termine, die für heute geplant sind."/>
+                            <div v-if="eventsOfDay?.length > 0" class="px-5 pb-5">
                                 <div v-for="event of eventsOfDay" :key="event.id" class="py-1 w-full">
-                                    <div :style="{backgroundColor: backgroundColorWithOpacity(event), color: TextColorWithDarken(event)}"  class="py-1 px-2 rounded">
-                                        <a :href="getHref(event.project)" class="font-semibold" :class="event.project? 'underline cursor-pointer' : ''" >
-                                            {{ event.event_type?.abbreviation }}: {{ event.project?.name }}
-                                        </a>
-                                        <div class="text-sm">
-                                            <div v-if="event.allDay">
-                                                {{ $t('All day') }}
-                                            </div>
-                                            <div v-else>
-                                                {{ event.start_time }} - {{ event.end_time }}
-                                            </div>
-                                            <div>
-                                                {{ event.room?.name }}
+                                    <WhiteInnerCard>
+                                        <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
+                                            <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event?.event_type.hex_code}"></div>
+                                            <div class="w-full">
+                                                <p class="text-sm font-lexend font-semibold text-gray-900" :style="{color: event?.event_type.hex_code}">
+                                                    {{ event?.event_type.abbreviation }}: {{ event?.eventName ?? event?.project?.name }}
+                                                </p>
+                                                <div class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                                                    <p v-if="!event.allDay" class="flex items-center gap-x-1">
+                                                        <span class="font-lexend font-bold">{{ $t('Start') }}:</span>
+                                                        <span class="font-lexend">{{ event?.start_time }}</span>
+                                                        <span class="font-lexend font-bold">{{ $t('End') }}:</span>
+                                                        <span class="font-lexend">{{ event?.end_time }}</span>
+                                                    </p>
+                                                    <p v-else>
+                                                        <span class="font-lexend font-bold">{{ $t('All day') }}</span>
+                                                    </p>
+                                                </div>
+                                                <p class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                                                    <span class="font-lexend font-bold">{{ $t('Room') }}:</span>
+                                                    <span class="font-lexend">{{ event?.room?.name }}</span>
+                                                </p>
                                             </div>
                                         </div>
-                                    </div>
+                                    </WhiteInnerCard>
                                 </div>
                             </div>
-                            <div v-else class="mt-3">
-                                <div class="bg-gray-50 p-2 rounded-lg">
-                                    <AlertComponent :text="$t('You have no appointments today.')" type="dashboard" classes="!items-center" text-size="text-sm"/>
-                                </div>
+                            
+                            <div v-else class="px-5">
+                                <BaseAlertComponent message="No events found" type="info" use-translation />
                             </div>
-                        </DashboardCard>
-                        <div class="flex justify-end mt-3">
-                            <a :href="route('events')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("to calendar")}}</a>
-                        </div>
+
+                            <div class="flex item-center justify-end px-5 pb-5">
+                                <a :href="route('events')" class="text-artwork-buttons-create font-lexend text-xs flex items-center gap-x-1">
+                                    <component is="IconCalendarMonth" class="size-4" />
+                                    {{ $t("to calendar") }}
+                                </a>
+                            </div>
+                        </BaseCard>
                     </div>
                     <div>
-                        <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
-                            <div>
-                                <h3 class=" tracking-widest uppercase font-semibold text-base">{{ $t("Shifts today")}}</h3>
-                            </div>
-                            <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                                {{ shiftsOfDay?.length ?? 0 }}
-                            </div>
-                        </div>
-                        <DashboardCard class="flex flex-col gap-y-2">
-                            <div class="font-semibold flex items-center gap-x-3">
-                                {{todayDate}}
-                            </div>
-                            <div v-if="shiftsOfDay.length > 0" class="flex flex-col gap-y-2">
-                                <div v-for="shift of shiftsOfDay" :key="shift.event.id" class="w-full">
-                                    <SingleUserEventShift type='user'
-                                                          :event="shift.event"
-                                                          :shift="shift"
-                                                          :project="this.findProjectById(shift.event.project_id)"
-                                                          :event-type="this.findEventTypeById(shift.event.event_type_id)"
-                                                          :user-to-edit-id="this.$page.props.auth.user.id"
-                                                          :first-project-shift-tab-id="this.first_project_shift_tab_id"/>
+                        <BaseCard>
+                            <CardHeadline title="Shifts today" description=""/>
+                            <div v-if="shiftsOfDay?.length > 0" class="px-5 pb-5">
+                                <div v-for="shift of shiftsOfDay" :key="shift.id" class="py-1 w-full">
+                                    <WhiteInnerCard>
+                                        <div class="p-4">
+                                            <SingleUserEventShift type='user'
+                                                                  :event="shift.event"
+                                                                  :shift="shift"
+                                                                  :project="this.findProjectById(shift.event.project_id)"
+                                                                  :event-type="this.findEventTypeById(shift.event.event_type_id)"
+                                                                  :user-to-edit-id="this.$page.props.auth.user.id"
+                                                                  :first-project-shift-tab-id="this.first_project_shift_tab_id"/>
+                                        </div>
+                                    </WhiteInnerCard>
                                 </div>
                             </div>
-                            <div v-else class="mt-3">
-                                <div class="bg-gray-50 p-2 rounded-lg">
-                                    <AlertComponent :text="$t('You don\'t have any shifts today.')" type="dashboard" classes="!items-center" text-size="text-sm"/>
-                                </div>
+
+
+                            <div v-else class="px-5">
+                                <BaseAlertComponent message="You don't have any shifts today." type="info" use-translation />
                             </div>
-                            <div class="flex flex-col gap-y-2">
-                                <template v-for="dayService in users_day_services_of_day">
-                                    <DayServiceComponent :day-service="dayService"/>
-                                </template>
+
+                            <div class="flex item-center justify-end px-5 pb-5" v-if="this.$can('can view shift plan') || this.hasAdminRole()">
+                                <a :href="route('shifts.plan')" class="text-artwork-buttons-create font-lexend text-xs flex items-center gap-x-1">
+                                    <component is="IconCalendarUser" class="size-4" />
+                                    {{ $t("to the shift plan") }}
+                                </a>
                             </div>
-                        </DashboardCard>
-                        <div class="flex justify-end mt-3" v-if="this.$can('can view shift plan') || this.hasAdminRole()">
-                            <a :href="route('shifts.plan')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("to the shift plan")}}</a>
-                        </div>
+                        </BaseCard>
                     </div>
                 </div>
-                <div class="col-span-3">
-                    <div class="mb-10">
-                        <!-- Notification Widget -->
-                        <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
-                            <div>
-                                <h3 class=" tracking-widest uppercase font-semibold text-base">{{ $t("Notifications today")}}</h3>
-                            </div>
-                            <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                                {{ notificationCount }}
-                            </div>
-                        </div>
-                        <div>
-                            <DashboardCard>
-                                <div v-if="globalNotification.image_url || globalNotification.title" class="pb-4">
-                                    <div class="bg-backgroundGray">
-                                        <img v-if="globalNotification.image_url" alt="Benachrichtigungs Bild" class="max-h-96"
-                                             :src="globalNotification.image_url"/>
-                                        <div class="px-4 py-4">
-                                            <div class="headline2 mt-2 mb-2">
-                                                {{ globalNotification.title }}
-                                            </div>
-                                            <div class="xsLight">
-                                                {{ globalNotification.description }}
+                <div class="col-start-3 col-span-4 space-y-6">
+                    <div>
+                        <BaseCard>
+                            <CardHeadline title="Notifications today" description=""/>
+                            <div class="px-5 pb-4" v-if="globalNotification.image_url || globalNotification.title">
+                                <WhiteInnerCard>
+                                    <div class="p-4">
+                                        <div class="flex items-center gap-x-4 text-xs text-gray-500">
+                                            <img v-if="globalNotification.image_url" alt="Benachrichtigungs Bild" class="w-20 h-20 object-cover rounded-full"
+                                                 :src="globalNotification.image_url"/>
+                                            <div class="">
+                                                <div class="headline2 mb-1">
+                                                    {{ globalNotification.title }}
+                                                </div>
+                                                <div class="xsLight">
+                                                    {{ globalNotification.description }}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+                                </WhiteInnerCard>
+                            </div>
+
+                            <div v-if="notificationOfToday.length > 0" class="space-y-4 px-5 pb-5">
+                                <div v-for="notification in notificationOfToday">
+                                    <WhiteInnerCard>
+                                        <div class="p-4">
+                                            <NotificationBlock :history-objects="historyObjects"
+                                                               :notification="notification"
+                                                               :event="event"
+                                                               :event-types="eventTypes"
+                                                               :rooms="rooms"
+                                                               :event-statuses="this.eventStatuses"
+                                                               :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                               :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                               :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                               :is-dashboard="true"
+                                            />
+                                        </div>
+                                    </WhiteInnerCard>
                                 </div>
-                                <div v-if="notificationOfToday.length > 0">
-                                    <div v-for="notification in notificationOfToday">
-                                        <NotificationBlock :history-objects="historyObjects"
-                                                           :notification="notification"
-                                                           :event="event"
-                                                           :event-types="eventTypes"
-                                                           :rooms="rooms"
-                                                           :event-statuses="this.eventStatuses"
-                                                           :first_project_shift_tab_id="first_project_shift_tab_id"
-                                                           :first_project_budget_tab_id="first_project_budget_tab_id"
-                                                           :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                                        />
-                                    </div>
-                                </div>
-                                <div v-else>
-                                    <div class="flex items-center gap-x-4">
-                                        <img :src="'/Svgs/IconSvgs/icon_notification_gray.svg'" alt="notification-icon">
-                                        <AlertComponent :text="$t('There are no new announcements for today.')" type="dashboard" classes="!items-center" text-size="text-sm"/>
-                                    </div>
-                                </div>
-                            </DashboardCard>
-                        </div>
-                        <div class="flex justify-end mt-3">
-                            <a :href="route('notifications.index')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("Go to the notifications")}}</a>
-                        </div>
+                            </div>
+                            <div v-else class="px-5">
+                                <BaseAlertComponent message="There are no new announcements for today." type="info" use-translation />
+                            </div>
+                            <div class="flex item-center justify-end px-5 py-5">
+                                <a :href="route('notifications.index')" class="text-artwork-buttons-create font-lexend text-xs flex items-center gap-x-1">
+                                    <component is="IconBell" class="size-4" />
+                                    {{ $t("Go to the notifications")}}
+                                </a>
+                            </div>
+                        </BaseCard>
                     </div>
                     <div>
-                        <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
-                            <div>
-                                <h3 class=" tracking-widest uppercase font-semibold text-base">{{ $t("Next tasks")}}</h3>
-                            </div>
-                            <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                                {{ tasks?.length ?? 0 }}
-                            </div>
-                        </div>
-                        <DashboardCard :has-padding="false">
-                            <div v-if="tasks.length > 0" class="p-4">
-                                <div v-for="task in tasks" :key="task.id" class="py-2 w-full">
-                                    <div class="flex w-full items-center justify-between">
-                                        <div class="flex items-center w-full">
-                                            <input @change="updateTaskStatus(task)"
-                                                   v-model="task.done"
-                                                   type="checkbox"
-                                                   class="input-checklist mt-0.5"/>
-                                            <div class="ml-2 mDark truncate w-96"
-                                                 :class="task.done ? 'text-secondary line-through' : 'text-primary'">
-                                                {{ task.name }}
+                        <BaseCard>
+                            <CardHeadline title="Next tasks" description=""/>
+                            <div  v-if="tasks.length > 0">
+                                <div class="space-y-4 px-5 pb-5">
+                                    <WhiteInnerCard v-for="task in tasks" :key="task.id">
+                                        <div class="p-4">
+                                            <div class="flex w-full items-center justify-between pt-2">
+                                                <div class="flex items-center w-full">
+                                                    <input @change="updateTaskStatus(task)"
+                                                           v-model="task.done"
+                                                           type="checkbox"
+                                                           class="input-checklist mt-0.5"/>
+                                                    <div class="ml-2 mDark truncate w-96"
+                                                         :class="task.done ? 'text-secondary line-through' : 'text-primary'">
+                                                        {{ task.name }}
+                                                    </div>
+                                                </div>
+                                                <div v-if="!task.done && task.deadline"
+                                                     class=" my-auto pt-1 xsLight w-52"
+                                                     :class="task.isDeadlineInFuture ? '' : 'text-error'">
+                                                    bis {{ task.deadline }}
+                                                </div>
+                                            </div>
+                                            <Link v-if="task.projectId" :href="route('projects.tab', {project: task.projectId, projectTab: this.first_project_tasks_tab_id})"
+                                                  class="my-1 flex ml-8 text-xs">
+                                                {{ task.projectName }}
+                                                <ChevronRightIcon class="h-3 w-3 my-auto mx-2" aria-hidden="true"/>
+                                                {{ task.checklistName }}
+                                            </Link>
+                                            <div class="ml-8 my-3 xsLight">
+                                                {{ task.description }}
                                             </div>
                                         </div>
-                                        <div v-if="!task.done && task.deadline"
-                                             class=" my-auto pt-1 xsLight w-52"
-                                             :class="task.isDeadlineInFuture ? '' : 'text-error'">
-                                            bis {{ task.deadline }}
-                                        </div>
-                                    </div>
-                                    <Link v-if="task.projectId" :href="route('projects.tab', {project: task.projectId, projectTab: this.first_project_tasks_tab_id})"
-                                          class="my-1 flex ml-8 text-xs">
-                                        {{ task.projectName }}
-                                        <ChevronRightIcon class="h-3 w-3 my-auto mx-2" aria-hidden="true"/>
-                                        {{ task.checklistName }}
-                                    </Link>
-                                    <div class="ml-8 my-3 xsLight">
-                                        {{ task.description }}
-                                    </div>
+                                    </WhiteInnerCard>
                                 </div>
                             </div>
-                            <div v-else class="relative">
-                                <div class="p-6 flex justify-start">
-                                    <div class="bg-gray-50 p-2 rounded-lg">
-                                        <AlertComponent :text="$t('You have no open tasks.')" type="dashboard" classes="!items-center" text-size="text-sm"/>
-                                    </div>
-                                </div>
-                                <div class="absolute bottom-0 right-0 rounded-br-lg">
-                                    <img src="/Svgs/IconSvgs/empty_state.svg" class=" rounded-br-lg" alt="">
-                                </div>
+                            <div v-else class="px-5">
+                                <BaseAlertComponent message="You have no open tasks." type="info" use-translation />
                             </div>
-                        </DashboardCard>
-                        <div class="flex justify-end mt-3">
-                            <a :href="route('tasks.own')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("To the task overview")}}</a>
-                        </div>
+                            <div class="flex item-center justify-end px-5 py-5">
+                                <a :href="route('tasks.own')" class="text-artwork-buttons-create font-lexend text-xs flex items-center gap-x-1">
+                                    <component is="IconListCheck" class="size-4" />
+                                    {{ $t("To the task overview")}}
+                                </a>
+                            </div>
+                        </BaseCard>
                     </div>
                 </div>
             </div>
-
-
-
         </div>
+
     </app-layout>
 </template>
 
@@ -239,6 +222,17 @@ import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import SingleUserEventShift from "@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue";
 import DayServiceComponent from "@/Layouts/Components/DayService/DayServiceComponent.vue";
 import { reloadRolesAndPermissions } from 'laravel-permission-to-vuejs'
+import PageTitle from "@/Artwork/Titles/PageTitle.vue";
+import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
+import BaseCard from "@/Artwork/Cards/BaseCard.vue";
+import CardHeadline from "@/Artwork/Cards/CardHeadline.vue";
+import SingleMyEventVerificationRequests
+    from "@/Pages/EventVerification/Components/SingleMyEventVerificationRequests.vue";
+import SinglePlannedEventInVerificationPage
+    from "@/Pages/EventVerification/Components/SinglePlannedEventInVerificationPage.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
+import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
 export default defineComponent({
     mixins: [Permissions],
     props: [
@@ -263,6 +257,15 @@ export default defineComponent({
         'first_project_calendar_tab_id'
     ],
     components: {
+        BaseCardButton,
+        WhiteInnerCard,
+        BaseAlertComponent,
+        SinglePlannedEventInVerificationPage,
+        SingleMyEventVerificationRequests,
+        CardHeadline,
+        BaseCard,
+        BasePaginator,
+        PageTitle,
         DayServiceComponent,
         SingleUserEventShift,
         AlertComponent,

@@ -16,7 +16,7 @@
                                          @after-enter="initDraggable"
                                          leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                         >
-                            <DialogPanel class="flex h-fit w-full grow flex-col rounded-lg bg-gradient-to-br from-slate-50/70 to-sky-100/20 text-left shadow-glass backdrop-blur-2xl p-gap-3xl border draggableModal" :class="[modalSize, showBackdrop ? 'border-gray-300' : 'border-gray-100']"  ref="containerRef">
+                            <DialogPanel class="flex h-fit w-full grow flex-col rounded-lg bg-gradient-to-br  text-left shadow-glass backdrop-blur-2xl p-gap-3xl border draggableModal" :class="[modalSize, showBackdrop ? 'border-gray-300 from-slate-50/80 to-sky-100/50' : 'border-gray-100 from-slate-50/70 to-sky-100/20']"  ref="containerRef">
                                 <div class="flex items-center justify-between px-5 pt-5 pb-2">
                                     <div class="text-left">
                                         <h3 class="font-lexend font-bold">{{ $t(props.title) }}</h3>
@@ -30,7 +30,7 @@
                                                 <ToolTipDefault top show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
                                             </div>
                                         </div>
-                                        <div ref="dragHandle" class=" hover:text-yellow-600 transition-all duration-150 ease-in-out cursor-grab dragHandle">
+                                        <div ref="dragHandleRef" class=" hover:text-yellow-600 transition-all duration-150 ease-in-out cursor-grab dragHandle">
                                             <div>
                                                 <ToolTipDefault top show-draggable :tooltip-text="$t('Hold here to move')"/>
                                             </div>
@@ -94,18 +94,48 @@ const open = ref(true)
 const showBackdrop = ref(true)
 
 const emits = defineEmits(['close'])
-
+const containerRef = ref(null)
+const dragHandleRef = ref(null)
 function initDraggable() {
     nextTick(() => {
-        createDraggable('.draggableModal', {
-            containerPadding: 10,
-            releaseStiffness: 40,
-            container: window.document.body,
-            trigger: '.dragHandle',
-            onDrag: () => {
+        const container = containerRef.value?.$el || containerRef.value
+        const dragHandle = dragHandleRef.value;
 
+        let isDragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
+        let animationFrameId = null;
+
+        dragHandle.addEventListener('mousedown', (event) => {
+            isDragging = true;
+            offsetX = event.clientX - container.offsetLeft;
+            offsetY = event.clientY - container.offsetTop;
+        });
+
+        document.addEventListener('mousemove', (event) => {
+            if (isDragging) {
+                if (animationFrameId !== null) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+
+                animationFrameId = requestAnimationFrame(() => {
+                    container.style.position = 'absolute';
+                    container.style.left = `${event.clientX - offsetX}px`;
+                    container.style.top = `${event.clientY - offsetY}px`;
+                    // Prevent text selection while dragging
+                    document.body.classList.add('select-none');
+                });
             }
-        })
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            if (animationFrameId !== null) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            // Remove no-select class when dragging stops
+            document.body.classList.remove('select-none');
+        });
     })
 }
 </script>

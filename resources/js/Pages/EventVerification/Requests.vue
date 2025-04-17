@@ -30,7 +30,7 @@
                         <div class="px-5 pb-5 space-y-4">
                             <div v-for="(status, key) in statuses">
                                 <WhiteInnerCard @click="setFilterTo(key)"  classes="cursor-pointer">
-                                    <div class="flex items-stretch gap-x-3 min-w-full w-full h-full">
+                                    <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
                                         <div class="p-1 rounded-lg w-1" :class="status"></div>
                                         <div class="w-full">
                                             <p class="text-sm font-lexend font-semibold" :class="filterVerificationRequest === key ? '!text-artwork-buttons-create' : 'text-gray-900'">
@@ -42,7 +42,7 @@
                                 </WhiteInnerCard>
                             </div>
                             <WhiteInnerCard @click="setFilterTo('')"  classes="cursor-pointer" v-if="filterVerificationRequest !== ''">
-                                <div class="flex items-stretch gap-x-3 min-w-full w-full h-full">
+                                <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
                                     <div class="p-1 rounded-lg w-1 bg-gray-500"></div>
                                     <div class="w-full">
                                         <p class="text-sm font-lexend font-semibold">

@@ -1,5 +1,5 @@
 <template>
-    <div class="min-w-0">
+    <div class="min-w-0 w-full">
         <div class="flex items-start justify-between gap-x-10">
             <p class="text-sm/6 font-semibold text-gray-900">{{ manufacturer.name }}</p>
 

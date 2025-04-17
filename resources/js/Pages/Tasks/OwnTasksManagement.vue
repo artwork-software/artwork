@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('My tasks')">
-        <div class="ml-14 mt-5">
+        <div class="artwork-container">
             <div>
                 <ChecklistFunctionBar
                     title="My ToDo-Lists"
@@ -141,19 +141,21 @@
                 </ChecklistFunctionBar>
             </div>
 
-            <div v-if="$page.props.auth.user.checklist_style === 'list'">
-                <ChecklistListView
-                    :checklists="checklistsComputed"
-                    is-in-own-task-management
-                />
-            </div>
+           <div class="mt-10">
+               <div v-if="$page.props.auth.user.checklist_style === 'list'">
+                   <ChecklistListView
+                       :checklists="checklistsComputed"
+                       is-in-own-task-management
+                   />
+               </div>
 
-            <div v-else class="-mx-10 bg-artwork-project-background px-10 py-10">
-                <ChecklistKanbanView
-                    :checklists="checklistsComputed"
-                    is-in-own-task-management
-                />
-            </div>
+               <div v-else class="">
+                   <ChecklistKanbanView
+                       :checklists="checklistsComputed"
+                       is-in-own-task-management
+                   />
+               </div>
+           </div>
 
             <div class="my-20">
                 <div class="headline2 mb-5">

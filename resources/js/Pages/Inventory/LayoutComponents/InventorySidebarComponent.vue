@@ -6,7 +6,7 @@
                 <div class="">
                     <div class="space-y-4">
                         <WhiteInnerCard>
-                            <div class="flex items-stretch gap-x-3 min-w-full w-full h-full">
+                            <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
                                 <div class="p-1 rounded-lg w-1 bg-gray-500"></div>
                                 <Link preserve-scroll :href="route('inventory.index')" class="group flex items-center justify-between w-full">
                                     <span class=" text-sm font-bold tracking-tight" :class="route().current('inventory.index') ? 'text-artwork-buttons-create' : ''">{{ $t('All Products') }}</span>
@@ -17,7 +17,7 @@
                         </WhiteInnerCard>
                         <div v-for="category in props.categories" :key="category.id" class="first:pt-0 last:pb-0">
                             <WhiteInnerCard>
-                                <div class="flex items-stretch gap-x-3 min-w-full w-full h-full">
+                                <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
                                     <div class="p-1 rounded-lg w-1 bg-artwork-buttons-create"></div>
                                     <div class="w-full">
                                         <Link preserve-scroll class="flex items-center w-full justify-between" :href="route('inventory.category.show', category.id)" :class="[route().current('inventory.category.show', category.id) ? 'text-artwork-buttons-create font-semibold' : '']">

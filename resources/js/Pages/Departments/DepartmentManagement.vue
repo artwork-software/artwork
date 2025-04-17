@@ -36,14 +36,14 @@
                             <div class="flex items-center">
                                 <div class="flex items-center mr-8">
                                     <div class="my-auto flex items-center -mr-3" v-for="user in department.users.slice(0,9)">
-                                        <UserPopoverTooltip :id="user.id" :user="user" :height="9" :width="9"/>
+                                        <UserPopoverTooltip :id="user.id" :user="user" :height="10" :width="10"/>
                                     </div>
                                     <div v-if="department.users.length >= 9" class="my-auto">
                                         <Menu as="div" class="relative">
                                             <div>
                                                 <MenuButton class="flex items-center rounded-full focus:outline-none">
                                                     <ChevronDownIcon
-                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                        class="ml-1 flex-shrink-0 h-10 w-10 min-h-10 min-w-10 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
                                                 </MenuButton>
                                             </div>
                                             <transition enter-active-class="transition-enter-active"
@@ -57,7 +57,7 @@
                                                     <MenuItem v-for="user in department.users" v-slot="{ active }">
                                                         <Link href="#"
                                                               :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <img class="h-9 w-9 rounded-full object-cover"
+                                                            <img class="h-10 w-10 min-h-10 min-w-10 rounded-full object-cover"
                                                                  :src="user.profile_photo_url"
                                                                  alt=""/>
                                                             <span class="ml-4">

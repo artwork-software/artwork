@@ -2579,6 +2579,7 @@
     "At least one assigned user must verify": "Mindestens eine zugewiesene Nutzer*in muss bestätigen",
     "A specific user must verify": "Eine spezifische Nutzer*in muss bestätigen",
     "Manage your event verification requests. You can add, edit, or delete your event verification requests here.": "Verwalte deine Terminüberprüfungsanfragen. Du kannst hier deine Terminüberprüfungsanfragen hinzufügen, bearbeiten oder löschen.",
+    "Here you can find all important information at a glance": "Hier findest du alle wichtigen Informationen auf einen Blick",
     "Selection value {index}": "Auswahl Wert {index}",
     "Selection Add value": "Auswahl Wert hinzufügen",
     "Selection": "Auswahlbox",
@@ -2627,5 +2628,6 @@
     "Start-Time*": "Startzeit*",
     "First Name": "Vorname",
     "Last Name": "Nachname",
-    "Frequency": "Häufigkeit"
+    "Frequency": "Häufigkeit",
+    "No events found": "Keine Termine gefunden"
 }

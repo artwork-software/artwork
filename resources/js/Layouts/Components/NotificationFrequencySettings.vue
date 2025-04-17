@@ -1,5 +1,5 @@
 <template>
-    <div class="max-w-4xl">
+    <div class="">
 
         <div class="my-10">
             <h2 class="headline2 my-2">{{$t('Notification by e-mail')}}</h2>

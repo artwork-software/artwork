@@ -12,7 +12,8 @@
                                      enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                                      enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200"
                                      leave-from="opacity-100 translate-y-0 sm:scale-100"
-                                     leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                                     leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                     @after-enter="makeContainerDraggable">
                         <DialogPanel class="modal" :class="[modalSize, fullModal ? '' : 'sm:p-6 px-4 pt-5 pb-4', showBackdrop ? '' : 'border border-gray-300']"  ref="containerRef">
                             <div class="absolute top-3 right-3 hidden sm:block z-50">
                                 <div class="flex items-center gap-x-3">
@@ -90,14 +91,7 @@ export default {
         }
     },
     mounted() {
-        this.$nextTick(() => {
-            const container = this.$refs.containerRef?.$el || this.$refs.containerRef || null;
-            if (container instanceof HTMLElement) {
-                this.makeContainerDraggable();
-            } else {
-                console.error('containerRef is not a valid DOM element');
-            }
-        });
+
     },
     emits: ['closed'],
     methods: {

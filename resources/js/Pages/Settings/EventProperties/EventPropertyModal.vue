@@ -9,7 +9,7 @@
                     <IconSelector @update:modelValue="addIconToForm" :current-icon="eventPropertyToEdit ? eventPropertyToEdit.icon : null" />
                 </div>
                 <div class="w-full">
-                    <TextInputComponent
+                    <BaseInput
                         id="name"
                         v-model="eventPropertyForm.name"
                         label="Name"
@@ -39,6 +39,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {useForm} from "@inertiajs/vue3";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
         eventPropertyToEdit: {

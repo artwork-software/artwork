@@ -41,7 +41,7 @@
                         </transition>
                     </Menu>-->
                     <div class="w-full">
-                        <TextInputComponent
+                        <BaseInput
                             no-margin-top
                             id="name"
                             v-model="this.shiftQualificationForm.name"
@@ -86,6 +86,7 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 const shiftQualificationIcons = [
     {iconName: 'user-icon'},
     {iconName: 'academic-cap-icon'},
@@ -102,6 +103,7 @@ const shiftQualificationIcons = [
 export default defineComponent({
     name: 'ShiftQualificationModal',
     components: {
+        BaseInput,
         IconSelector,
         ModalHeader,
         TextInputComponent,

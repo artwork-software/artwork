@@ -4,6 +4,35 @@
         @apply mx-auto container px-4 sm:px-6 lg:px-8 mt-5 min-h-screen pb-20;
     }
 
+    .background-color {
+        @apply bg-white;
+
+        &.soft-green {
+            @apply bg-gradient-to-br from-[#f7fcf8] to-[#eefaf0]
+        }
+
+        &.red-soft {
+            @apply bg-gradient-to-br from-[#fef7f7] to-[#fceeee]
+        }
+
+        &.yellow-soft {
+            @apply bg-gradient-to-br from-[#fefcf4] to-[#fcfae8]
+        }
+    }
+
+    .border-color {
+        &.soft-green {
+            @apply border-[#d3eedd];
+        }
+
+        &.red-soft {
+            @apply border-[#eac8c8];
+        }
+
+        &.yellow-soft {
+            @apply border-[#ece4bc];
+        }
+    }
 
     .text-color {
         color: #27233C;

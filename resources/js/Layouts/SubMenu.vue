@@ -28,18 +28,7 @@
                                             <li v-for="item in navigation" :key="item.name">
                                                 <a :href="item.href" :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
                                                     <component :is="item.icon" :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-6 shrink-0']" aria-hidden="true" />
-                                                    {{ item.name }}
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                    <li>
-                                        <div class="text-xs/6 font-semibold text-gray-400">Your teams</div>
-                                        <ul role="list" class="-mx-2 mt-2 space-y-1">
-                                            <li v-for="team in teams" :key="team.name">
-                                                <a :href="team.href" :class="[team.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
-                                                    <span :class="[team.current ? 'border-indigo-600 text-indigo-600' : 'border-gray-200 text-gray-400 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex size-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium']">{{ team.initial }}</span>
-                                                    <span class="truncate">{{ team.name }}</span>
+                                                    {{ $t(item.name) }}
                                                 </a>
                                             </li>
                                         </ul>
@@ -82,7 +71,7 @@
                             <li v-for="item in navigation" :key="item.name">
                                 <a v-if="!item.isMenu" :href="item.href" :class="[item.current ? 'bg-gray-50/10 text-white' : 'text-white hover:bg-gray-50/10 hover:text-artwork-buttons-hover', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
                                     <component :stroke-width="item.current ? '1.5' : '1'" :is="item.icon" :class="[item.current ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover', 'size-6 shrink-0']" aria-hidden="true" />
-                                    <span v-if="isFullSideBar">{{ item.name }}</span>
+                                    <span v-if="isFullSideBar">{{ $t(item.name) }}</span>
                                 </a>
                                 <div v-else class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 font-semibold p-2 relative">
                                     <BaseMenu no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
@@ -136,7 +125,7 @@ const navigation = [
     {
         name: 'Dashboard',
         href: route('dashboard'),
-        icon: IconHome,
+        icon: 'IconHome',
         current: route().current('dashboard'),
         isMenu: false,
         showToolTipForItem: false,
@@ -145,7 +134,7 @@ const navigation = [
     {
         name: 'Projects',
         href: route('projects'),
-        icon: IconGeometry,
+        icon: 'IconGeometry',
         current: route().current('projects'),
         isMenu: false,
         showToolTipForItem: false,
@@ -154,7 +143,7 @@ const navigation = [
     {
         name: 'Calendar',
         href: route('events'),
-        icon: IconCalendarMonth,
+        icon: 'IconCalendarMonth',
         current: route().current('events'),
         isMenu: false,
         showToolTipForItem: false,
@@ -163,7 +152,7 @@ const navigation = [
     {
         name: 'Shift plan',
         href: route('shifts.plan'),
-        icon: IconCalendarUser,
+        icon: 'IconCalendarUser',
         current: route().current('shifts.plan'),
         isMenu: false,
         showToolTipForItem: false,
@@ -172,7 +161,7 @@ const navigation = [
     {
         name: 'Planning Calendar',
         href: route('planning-event-calendar.index'),
-        icon: IconCalendarCog,
+        icon: 'IconCalendarCog',
         current: route().current('planning-event-calendar.index'),
         isMenu: false,
         showToolTipForItem: false,
@@ -181,7 +170,7 @@ const navigation = [
     {
         name: 'Event Verifications',
         href: route('event-verifications.index'),
-        icon: IconCalendarCheck,
+        icon: 'IconCalendarCheck',
         current: route().current('event-verifications.index'),
         isMenu: false,
         showToolTipForItem: false,
@@ -190,7 +179,7 @@ const navigation = [
     {
         name: 'Inventory',
         href: route('inventory-management.inventory'),
-        icon: IconBuildingWarehouse,
+        icon: 'IconBuildingWarehouse',
         current: route().current('inventory-management.inventory'),
         isMenu: false,
         showToolTipForItem: false,
@@ -199,7 +188,7 @@ const navigation = [
     {
         name: 'To-dos',
         href: route('tasks.own'),
-        icon: IconListCheck,
+        icon: 'IconListCheck',
         current: route().current('tasks.own'),
         isMenu: false,
         showToolTipForItem: false,
@@ -208,7 +197,7 @@ const navigation = [
     {
         name: 'Sources of funding',
         href: route('money_sources.index'),
-        icon: IconCurrencyEuro,
+        icon: 'IconCurrencyEuro',
         current: route().current('money_sources.index'),
         isMenu: false,
         showToolTipForItem: false,
@@ -217,7 +206,7 @@ const navigation = [
     {
         name: 'Users',
         href: route('users'),
-        icon: IconUsers,
+        icon: 'IconUsers',
         current: route().current('users'),
         isMenu: false,
         showToolTipForItem: false,
@@ -226,7 +215,7 @@ const navigation = [
     {
         name: 'Contracts',
         href: route('contracts.index'),
-        icon: IconFileText,
+        icon: 'IconFileText',
         current: route().current('contracts.index'),
         isMenu: false,
         showToolTipForItem: false,
@@ -235,29 +224,29 @@ const navigation = [
     {
         name: 'Dashboard',
         href: '#',
-        icon: IconSettings,
+        icon: 'IconSettings',
         current: true,
         isMenu: true,
         showToolTipForItem: false,
         has_permission: true,
         subMenus: [
-            { name: 'Tool Settings', href: '#', icon: IconHome, current: false },
-            { name: 'Shift settings', href: '#', icon: IconHome, current: false },
-            { name: 'Manufacturers', href: '#', icon: IconHome, current: false },
-            { name: 'Inventory', href: '#', icon: IconHome, current: false },
-            { name: 'Rooms', href: '#', icon: IconHome, current: false },
-            { name: 'Projects', href: '#', icon: IconHome, current: false },
-            { name: 'Calendar', href: '#', icon: IconHome, current: false },
-            { name: 'Events', href: '#', icon: IconHome, current: false },
-            { name: 'Checklists', href: '#', icon: IconHome, current: false },
-            { name: 'Sources of funding', href: '#', icon: IconHome, current: false },
-            { name: 'Budget', href: '#', icon: IconHome, current: false },
+            { name: 'Tool Settings', href: '#', icon: 'IconHome', current: false },
+            { name: 'Shift settings', href: '#', icon: 'IconHome', current: false },
+            { name: 'Manufacturers', href: '#', icon: 'IconHome', current: false },
+            { name: 'Inventory', href: '#', icon: 'IconHome', current: false },
+            { name: 'Rooms', href: '#', icon: 'IconHome', current: false },
+            { name: 'Projects', href: '#', icon: 'IconHome', current: false },
+            { name: 'Calendar', href: '#', icon: 'IconHome', current: false },
+            { name: 'Events', href: '#', icon: 'IconHome', current: false },
+            { name: 'Checklists', href: '#', icon: 'IconHome', current: false },
+            { name: 'Sources of funding', href: '#', icon: 'IconHome', current: false },
+            { name: 'Budget', href: '#', icon: 'IconHome', current: false },
         ]
     },
     {
         name: 'Notifications',
         href: route('notifications.index'),
-        icon: IconBell,
+        icon: 'IconBell',
         current: route().current('notifications.*'),
         isMenu: false,
         showToolTipForItem: false,

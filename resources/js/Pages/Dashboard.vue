@@ -17,7 +17,7 @@
                             <div v-if="eventsOfDay?.length > 0" class="px-5 pb-5">
                                 <div v-for="event of eventsOfDay" :key="event.id" class="py-1 w-full">
                                     <WhiteInnerCard>
-                                        <div class="flex items-stretch gap-x-3 min-w-full w-full h-full">
+                                        <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
                                             <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event?.event_type.hex_code}"></div>
                                             <div class="w-full">
                                                 <p class="text-sm font-lexend font-semibold text-gray-900" :style="{color: event?.event_type.hex_code}">
@@ -62,13 +62,15 @@
                             <div v-if="shiftsOfDay?.length > 0" class="px-5 pb-5">
                                 <div v-for="shift of shiftsOfDay" :key="shift.id" class="py-1 w-full">
                                     <WhiteInnerCard>
-                                        <SingleUserEventShift type='user'
-                                                              :event="shift.event"
-                                                              :shift="shift"
-                                                              :project="this.findProjectById(shift.event.project_id)"
-                                                              :event-type="this.findEventTypeById(shift.event.event_type_id)"
-                                                              :user-to-edit-id="this.$page.props.auth.user.id"
-                                                              :first-project-shift-tab-id="this.first_project_shift_tab_id"/>
+                                        <div class="p-4">
+                                            <SingleUserEventShift type='user'
+                                                                  :event="shift.event"
+                                                                  :shift="shift"
+                                                                  :project="this.findProjectById(shift.event.project_id)"
+                                                                  :event-type="this.findEventTypeById(shift.event.event_type_id)"
+                                                                  :user-to-edit-id="this.$page.props.auth.user.id"
+                                                                  :first-project-shift-tab-id="this.first_project_shift_tab_id"/>
+                                        </div>
                                     </WhiteInnerCard>
                                 </div>
                             </div>
@@ -93,7 +95,7 @@
                             <CardHeadline title="Notifications today" description=""/>
                             <div class="px-5 pb-4" v-if="globalNotification.image_url || globalNotification.title">
                                 <WhiteInnerCard>
-                                    <div class="">
+                                    <div class="p-4">
                                         <div class="flex items-center gap-x-4 text-xs text-gray-500">
                                             <img v-if="globalNotification.image_url" alt="Benachrichtigungs Bild" class="w-20 h-20 object-cover rounded-full"
                                                  :src="globalNotification.image_url"/>
@@ -113,17 +115,19 @@
                             <div v-if="notificationOfToday.length > 0" class="space-y-4 px-5 pb-5">
                                 <div v-for="notification in notificationOfToday">
                                     <WhiteInnerCard>
-                                        <NotificationBlock :history-objects="historyObjects"
-                                                           :notification="notification"
-                                                           :event="event"
-                                                           :event-types="eventTypes"
-                                                           :rooms="rooms"
-                                                           :event-statuses="this.eventStatuses"
-                                                           :first_project_shift_tab_id="first_project_shift_tab_id"
-                                                           :first_project_budget_tab_id="first_project_budget_tab_id"
-                                                           :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                                                           :is-dashboard="true"
-                                        />
+                                        <div class="p-4">
+                                            <NotificationBlock :history-objects="historyObjects"
+                                                               :notification="notification"
+                                                               :event="event"
+                                                               :event-types="eventTypes"
+                                                               :rooms="rooms"
+                                                               :event-statuses="this.eventStatuses"
+                                                               :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                               :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                               :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                               :is-dashboard="true"
+                                            />
+                                        </div>
                                     </WhiteInnerCard>
                                 </div>
                             </div>
@@ -144,31 +148,33 @@
                             <div  v-if="tasks.length > 0">
                                 <div class="space-y-4 px-5 pb-5">
                                     <WhiteInnerCard v-for="task in tasks" :key="task.id">
-                                        <div class="flex w-full items-center justify-between pt-2">
-                                            <div class="flex items-center w-full">
-                                                <input @change="updateTaskStatus(task)"
-                                                       v-model="task.done"
-                                                       type="checkbox"
-                                                       class="input-checklist mt-0.5"/>
-                                                <div class="ml-2 mDark truncate w-96"
-                                                     :class="task.done ? 'text-secondary line-through' : 'text-primary'">
-                                                    {{ task.name }}
+                                        <div class="p-4">
+                                            <div class="flex w-full items-center justify-between pt-2">
+                                                <div class="flex items-center w-full">
+                                                    <input @change="updateTaskStatus(task)"
+                                                           v-model="task.done"
+                                                           type="checkbox"
+                                                           class="input-checklist mt-0.5"/>
+                                                    <div class="ml-2 mDark truncate w-96"
+                                                         :class="task.done ? 'text-secondary line-through' : 'text-primary'">
+                                                        {{ task.name }}
+                                                    </div>
+                                                </div>
+                                                <div v-if="!task.done && task.deadline"
+                                                     class=" my-auto pt-1 xsLight w-52"
+                                                     :class="task.isDeadlineInFuture ? '' : 'text-error'">
+                                                    bis {{ task.deadline }}
                                                 </div>
                                             </div>
-                                            <div v-if="!task.done && task.deadline"
-                                                 class=" my-auto pt-1 xsLight w-52"
-                                                 :class="task.isDeadlineInFuture ? '' : 'text-error'">
-                                                bis {{ task.deadline }}
+                                            <Link v-if="task.projectId" :href="route('projects.tab', {project: task.projectId, projectTab: this.first_project_tasks_tab_id})"
+                                                  class="my-1 flex ml-8 text-xs">
+                                                {{ task.projectName }}
+                                                <ChevronRightIcon class="h-3 w-3 my-auto mx-2" aria-hidden="true"/>
+                                                {{ task.checklistName }}
+                                            </Link>
+                                            <div class="ml-8 my-3 xsLight">
+                                                {{ task.description }}
                                             </div>
-                                        </div>
-                                        <Link v-if="task.projectId" :href="route('projects.tab', {project: task.projectId, projectTab: this.first_project_tasks_tab_id})"
-                                              class="my-1 flex ml-8 text-xs">
-                                            {{ task.projectName }}
-                                            <ChevronRightIcon class="h-3 w-3 my-auto mx-2" aria-hidden="true"/>
-                                            {{ task.checklistName }}
-                                        </Link>
-                                        <div class="ml-8 my-3 xsLight">
-                                            {{ task.description }}
                                         </div>
                                     </WhiteInnerCard>
                                 </div>

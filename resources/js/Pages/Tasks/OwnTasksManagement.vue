@@ -141,19 +141,21 @@
                 </ChecklistFunctionBar>
             </div>
 
-            <div v-if="$page.props.auth.user.checklist_style === 'list'">
-                <ChecklistListView
-                    :checklists="checklistsComputed"
-                    is-in-own-task-management
-                />
-            </div>
+           <div class="mt-10">
+               <div v-if="$page.props.auth.user.checklist_style === 'list'">
+                   <ChecklistListView
+                       :checklists="checklistsComputed"
+                       is-in-own-task-management
+                   />
+               </div>
 
-            <div v-else class="">
-                <ChecklistKanbanView
-                    :checklists="checklistsComputed"
-                    is-in-own-task-management
-                />
-            </div>
+               <div v-else class="">
+                   <ChecklistKanbanView
+                       :checklists="checklistsComputed"
+                       is-in-own-task-management
+                   />
+               </div>
+           </div>
 
             <div class="my-20">
                 <div class="headline2 mb-5">

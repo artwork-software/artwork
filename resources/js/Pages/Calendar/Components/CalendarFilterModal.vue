@@ -43,8 +43,8 @@
                         </div>
                     </div>
                     <div v-if="saveFilterOption">
-                        <div class="flex items-end gap-x-4">
-                            <TextInputComponent
+                        <div class="flex items-center gap-x-4 mt-3">
+                            <BaseInput
                                 id="filterName"
                                 v-model="saveFilterForm.name"
                                 label="Filter name"
@@ -162,6 +162,7 @@ import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     filterOptions: {

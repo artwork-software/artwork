@@ -120,15 +120,15 @@
                     <ModalHeader :title="$t('Edit room')"/>
                     <form @submit.prevent="editRoom" class="grid grid-cols-1 gap-4">
                         <div>
-                            <TextInputComponent
+                            <BaseInput
                                 id="roomNameEdit"
                                 v-model="editRoomForm.name"
-                                :label="$t('Room name')"/>
+                                label="Room name"/>
                             <jet-input-error :message="editRoomForm.error" class="mt-2"/>
                         </div>
                         <div>
-                            <TextareaComponent
-                                :label="$t('Short description')"
+                            <BaseTextarea
+                                label="Short description"
                                 v-model="editRoomForm.description"
                                 :rows="4"
                                 id="descriptionEdit"
@@ -148,14 +148,14 @@
                         </div>
                         <div v-if="editRoomForm.temporary">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <DateInputComponent
+                                <BaseInput type="date"
                                     v-model="editRoomForm.start_date_dt_local"
                                     id="startDate"
-                                    :label="$t('Start date')"/>
-                                <DateInputComponent
+                                    label="Start date"/>
+                                <BaseInput type="date"
                                     v-model="editRoomForm.end_date_dt_local"
                                     id="endDate"
-                                    :label="$t('End date')"
+                                    label="End date"
                                 />
                             </div>
                         </div>
@@ -170,6 +170,16 @@
                                 <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span
                                     class="ml-1 my-auto hind">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-x-4">
+                            <input v-model="editRoomForm.relevant_for_disposition"
+                                   type="checkbox"
+                                   class="input-checklist"/>
+                            <div>
+                                <p :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']"
+                                   class="my-auto text-sm">{{ $t('Relevant for disposition')}}</p>
+                                <span class="text-xs" :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']">{{ $t('Activate this field if the room is to be included in the calendars.')}}</span>
                             </div>
                         </div>
 
@@ -463,6 +473,8 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import {provide} from "vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     mixins: [Permissions, IconLib],
@@ -497,6 +509,7 @@ export default {
         'event_properties'
     ],
     components: {
+        BaseTextarea,
         DateInputComponent,
         TextareaComponent,
         TextInputComponent,
@@ -546,7 +559,8 @@ export default {
         CalendarComponent,
         ChevronRightIcon,
         RoomHistoryComponent,
-        SingleRoomCalendarComponent
+        SingleRoomCalendarComponent,
+        BaseInput
     },
     computed: {
         eventTypeFilters: function () {
@@ -616,7 +630,8 @@ export default {
                 end_date_dt_local: null,
                 area_id: null,
                 user_id: null,
-                everyone_can_book: this.room.everyone_can_book
+                everyone_can_book: this.room.everyone_can_book,
+                relevant_for_disposition: this.room.relevant_for_disposition
             }),
             documentForm: useForm({
                 file: null

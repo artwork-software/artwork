@@ -182,7 +182,6 @@ class MoneySourceController extends Controller
                     ->setTranslationKey('Money source created')
             );
         } catch (\Throwable $t) {
-            $logger->error('Could not create history entry for reason: ' . $t->getMessage());
         }
 
         return back()->with(['recentlyCreatedMoneySourceId' => $moneySource->id]);

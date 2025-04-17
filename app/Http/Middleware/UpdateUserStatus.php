@@ -19,7 +19,6 @@ class UpdateUserStatus
     public function handle($request, Closure $next)
     {
         if (Auth::check()) {
-            Log::info('Marking user as online', ['user_id' => Auth::id()]);
             app(UserStatusService::class)->markOnline(Auth::id());
         }
 

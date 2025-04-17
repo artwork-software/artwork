@@ -12,6 +12,7 @@ class InventoryArticleProperties extends Model
     protected $fillable = [
         'name',
         'type',
+        'select_values',
         'is_filterable',
         'show_in_list',
         'tooltip_text',
@@ -27,6 +28,7 @@ class InventoryArticleProperties extends Model
         'show_in_list' => 'boolean',
         'is_required' => 'boolean',
         'is_deletable' => 'boolean',
+        'select_values' => 'array',
     ];
 
 

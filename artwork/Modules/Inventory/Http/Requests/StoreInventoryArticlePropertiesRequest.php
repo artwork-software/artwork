@@ -28,6 +28,7 @@ class StoreInventoryArticlePropertiesRequest extends FormRequest
             'is_filterable' => ['boolean', 'required'],
             'show_in_list' => ['boolean', 'required'],
             'is_required' => ['boolean', 'required'],
+            'select_values' => ['array', 'nullable'],
         ];
     }
 }

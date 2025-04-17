@@ -29,18 +29,18 @@
                        </div>
                         <div>
                             <div class="px-6 py-2">
-                                <div class="relative flex w-full">
-                                    <TextInputComponent
+                                <div class="relative flex w-full mb-4">
+                                    <BaseInput
                                         id="projectName"
                                         v-model="createProjectForm.name"
-                                        :label="$t('Project name*')"
+                                        label="Project name*"
                                         />
                                 </div>
                                 <div class="pt-1" v-if="createSettings.show_artists">
-                                    <TextInputComponent
+                                    <BaseInput
                                         id="create-settings.show-artists"
                                         v-model="createProjectForm.artists"
-                                        :label="$t('Artists')"
+                                        label="Artists"
                                     />
                                 </div>
                                 <div v-if="showInvalidProjectNameHelpText" class="text-error text-xs mt-1">
@@ -216,10 +216,10 @@
                             </div>
 
                             <div class="px-6 pb-2 pt-4" v-if="createSettings.cost_center">
-                                <TextInputComponent
+                                <BaseInput
                                     id="costCenter"
                                     v-model="createProjectForm.cost_center"
-                                    :label="$t('Name of the cost unit')"
+                                    label="Name of the cost unit"
                                 />
                             </div>
 
@@ -249,10 +249,11 @@
                             </div>
 
                             <div v-if="createSettings.budget_deadline" class="px-6 py-2">
-                                <DateInputComponent
+                                <BaseInput
+                                    type="date"
                                     id="budgetDeadline"
                                     v-model="createProjectForm.budget_deadline"
-                                    :label="$t('Budget deadline')" />
+                                    label="Budget deadline" />
                             </div>
                         </div>
                         <div class="w-full flex items-center justify-end gap-x-4 pb-6 px-6">
@@ -298,25 +299,23 @@
 
                             </div>
                         </div>
-                        <div class="w-full col-span-4">
-                            <TextInputComponent
+                        <div class="w-full col-span-4 mt-4">
+                            <BaseInput
                                 id="sourceName"
                                 v-model="createProjectForm.name"
-                                :label="$t('Title*')"
+                                label="Title*"
                             />
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-6 gap-x-4">
                             <div class="flex flex-col items-center justify-center w-full h-full">
 
                             </div>
-
-
                         </div>
                         <div class="mb-2 mt-5" v-if="createSettings.attributes">
-                            <Menu as="div" class="inline-block text-left w-full">
+                            <Menu as="div" class="inline-block text-left w-full relative">
                                 <div>
                                     <MenuButton class="menu-button">
-                                            <span class="float-left subpixel-antialiased xsLight">
+                                            <span>
                                                 {{ $t('Select properties') }}
                                             </span>
                                         <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"/>
@@ -329,8 +328,8 @@
                                     leave-active-class="transition duration-75 ease-in"
                                     leave-from-class="transform scale-100 opacity-100"
                                     leave-to-class="transform scale-95 opacity-0">
-                                    <MenuItems class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                        <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                    <MenuItems class="absolute overflow-y-auto h-48 mt-2 w-full origin-top-left divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                        <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
                                             <Disclosure v-slot="{ open }">
                                                 <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
                                                     <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Category') }}</span>
@@ -534,11 +533,13 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default {
     name: 'ProjectCreateModal',
     mixins: [IconLib, ColorHelper, Permissions],
     components: {
+        BaseInput,
         TinyPageHeadline,
         ColorPickerComponent,
         IconSelector,

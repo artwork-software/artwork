@@ -40,7 +40,6 @@ class Sage100Client implements SageClient
 
         if (!$client instanceof PendingRequest) {
             $msg = 'SageAPI-Client requested without necessary parameters. Return empty results.';
-            Log::info($msg);
             report(new \Exception($msg));
             return [];
         }
@@ -50,7 +49,6 @@ class Sage100Client implements SageClient
                 ->get($this->endpoint, $query)
                 ->json('$resources');
         } catch (\Throwable $t) {
-            Log::error('SageAPI-Call erroneous for reason: ' . $t->getMessage());
             report($t);
             return [];
         }
@@ -67,7 +65,6 @@ class Sage100Client implements SageClient
                 ]
             )->status() === 200;
         } catch (\Throwable $t) {
-            Log::error('SageAPI-Call connection test failed for reason: ' . $t->getMessage());
             report($t);
             return false;
         }

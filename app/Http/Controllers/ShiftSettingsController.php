@@ -50,7 +50,6 @@ class ShiftSettingsController extends Controller
             $shiftSettings->use_first_name_for_sort = $request->boolean('use_first_name_for_sort');
             $shiftSettings->save();
         } catch (Throwable $t) {
-            $logger->error('Could not update shift settings for reason: ' . $t->getMessage());
         }
 
         return $this->redirector->back();

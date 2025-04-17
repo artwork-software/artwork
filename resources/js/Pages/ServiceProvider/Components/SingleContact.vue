@@ -21,7 +21,6 @@
                <div class="rounded-full border-4 border-red-500 hover:bg-red-200 p-1 cursor-pointer">
                    <XIcon class="h-5 w-5 cursor-pointer text-red-500" @click="deleteContact"/>
                </div>
-
            </div>
         </div>
     </div>

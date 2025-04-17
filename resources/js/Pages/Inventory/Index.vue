@@ -12,7 +12,7 @@
 
                     <div class="max-w-xs pt-5">
                         <!-- name filter and search -->
-                        <TextInputComponent
+                        <BaseInput
                             id="productSearch"
                             v-model="searchArticleInput"
                             :label="$t('Search Articles')"
@@ -128,6 +128,7 @@ import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {IconIdBadge} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 const props = defineProps({
     categories: {
         type: Object,

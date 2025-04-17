@@ -1,7 +1,7 @@
 <template>
     <div id="createTask" v-if="show" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="col-span-full">
-            <TextInputComponent
+            <BaseInput
                 v-model="this.newTaskName"
                 id="newTaskName"
                 :label="$t('Task')"
@@ -10,14 +10,16 @@
         </div>
         <div class="col-span-full" id="deadline">
             <div class="w-full flex">
-                <DateInputComponent
+                <BaseInput
+                    type="date"
                     v-model="deadlineDate"
                     id="startDate"
                     :label="$t('To be completed by?')"
                     classes="border-r-0 rounded-l-lg rounded-r-none"
                     required
                 />
-                <TimeInputComponent
+                <BaseInput
+                    type="time"
                     label="hh:mm"
                     v-model="deadlineTime"
                     id="changeStartTime"
@@ -29,7 +31,7 @@
         <div class="col-span-full">
             <UserSearch v-model="task_user_query" :label="$t('Who is responsible for this task?')" @userSelected="addUserToTaskUserArray"/>
         </div>
-        <div class="flex mt-1 -mb-2 justify-center text-sm text-error col-span-full">
+        <div class="flex mt-1 justify-center text-sm text-error col-span-full">
             {{this.errorText}}
         </div>
         <div v-if="taskUsers.length > 0" class="col-span-full">
@@ -48,7 +50,7 @@
         </div>
 
         <div class="col-span-full">
-            <TextareaComponent
+            <BaseTextarea
                 :label="$t('Comment / Note')"
                 id="description"
                 v-model="taskDescription"
@@ -68,11 +70,15 @@ import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     name: "ContractTaskForm",
     mixins: [Permissions, IconLib],
     components: {
+        BaseTextarea,
+        BaseInput,
         TextareaComponent,
         UserSearch,
         TimeInputComponent,

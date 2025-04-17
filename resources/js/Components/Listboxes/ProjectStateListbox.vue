@@ -37,10 +37,10 @@ const emit = defineEmits(['update:selectedProjectState'])
     <Listbox as="div" class="w-full relative" v-model="currentState" :on-update:model-value="$emit('update:selectedProjectState', currentState)">
         <ListboxButton class="w-full text-left">
             <button class="menu-button">
-                <span class="w-full text-secondary" v-if="!selectedProjectState">
+                <span v-if="!selectedProjectState">
                     {{ $t('Select project status') }}
                 </span>
-                <span v-else  class="items-center font-medium px-2 py-1.5 inline-flex border rounded-full"
+                <span v-else class="items-center inline-flex border px-3 py-0.5 rounded-full"
                       :style="{backgroundColor: backgroundColorWithOpacity(projectStates?.find(state => state.id === currentState)?.color),
                                color: textColorWithDarken(projectStates?.find(state => state.id === currentState)?.color),
                                borderColor: textColorWithDarken(projectStates?.find(state => state.id === currentState)?.color)

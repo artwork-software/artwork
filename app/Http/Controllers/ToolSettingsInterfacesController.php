@@ -51,7 +51,6 @@ class ToolSettingsInterfacesController extends Controller
         try {
             $this->sageApiSettingsService->createOrUpdateFromRequest($createOrUpdateSageApiSettingsRequest);
         } catch (Throwable $t) {
-            Log::error($t->getMessage());
 
             return Redirect::back()->with(
                 'error',

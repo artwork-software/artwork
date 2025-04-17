@@ -8,11 +8,11 @@
         </div>
 
         <div>
-            <TextInputComponent
+            <BaseInput
                 v-model="timelineForm.name"
-                label="Name"
-                placeholder="Enter the name of the timeline preset"
-                 id="name"/>
+                label="Enter the name of the timeline preset"
+                id="name"
+            />
         </div>
 
         <div class="flex items-center justify-center mt-5">
@@ -30,6 +30,7 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {useForm} from "@inertiajs/vue3";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     event: {

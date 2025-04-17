@@ -1,7 +1,7 @@
 <template>
     <BaseModal @closed="close()">
         <div class="export-modal-container">
-            <ul class="tab-container">
+            <ul class="tab-container mb-4">
                 <li v-if="props.enums.length > 1"
                     v-for="(tab) in props.enums"
                     @click="activeTab = tab"

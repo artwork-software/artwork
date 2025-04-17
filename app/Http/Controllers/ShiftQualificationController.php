@@ -34,7 +34,6 @@ class ShiftQualificationController extends Controller
         try {
             $this->shiftQualificationService->createFromRequest($storeShiftQualificationRequest);
         } catch (Throwable $t) {
-            $this->logger->error($t->getMessage());
 
             return $this->redirector->back()->with(
                 'error',
@@ -55,7 +54,6 @@ class ShiftQualificationController extends Controller
         try {
             $this->shiftQualificationService->updateFromRequest($updateShiftQualificationRequest, $shiftQualification);
         } catch (Throwable $t) {
-            $this->logger->error($t->getMessage());
 
             return $this->redirector->back()->with(
                 'error',
@@ -124,7 +122,6 @@ class ShiftQualificationController extends Controller
 
             $this->shiftQualificationService->delete($shiftQualification);
         } catch (Throwable $t) {
-            $this->logger->error($t->getMessage());
 
             return $this->redirector->back()->with(
                 'error',

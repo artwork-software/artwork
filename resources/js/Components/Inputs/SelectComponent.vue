@@ -1,19 +1,28 @@
 <template>
-    <div class="w-full flex flex-col relative mt-5">
-        <PlaceholderLabel :label="this.label"/>
+    <div class="w-full flex flex-col relative">
         <Listbox as="div"
                  v-model="this.value"
                  @update:model-value="this.$emit('update:modelValue', this.value);"
                  by="id">
             <div class="relative">
                 <ListboxButton
-                    class="menu-button">
+                    class="menu-button-no-padding relative">
                     <div v-if="this.modelValue" class="truncate">
-                        {{ this.modelValue[this.selectedPropertyToDisplay] }}
+                        <div class="top-2 left-4 absolute text-gray-500 text-xs">
+                            {{ label }}
+                        </div>
+                        <div class="pt-6 pb-2">
+                            {{ this.modelValue[this.selectedPropertyToDisplay] }}
+                        </div>
                     </div>
-                    <span v-else class="truncate text-secondary">
-                        {{ this.default ?? $t('Please select...') + '*' }}
-                    </span>
+                    <div v-else class="truncate text-secondary">
+                        <div class="top-2 left-4 absolute text-gray-500 text-xs">
+                            {{ label }}
+                        </div>
+                        <div class="pt-6 pb-2">
+                            {{ this.default ?? $t('Please select...') + '*' }}
+                        </div>
+                    </div>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                         <IconChevronDown class="h-5 w-5 text-primary"
                                          aria-hidden="true"/>

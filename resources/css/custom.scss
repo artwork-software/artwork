@@ -8,29 +8,29 @@
         @apply bg-white;
 
         &.soft-green {
-            @apply bg-gradient-to-br from-[#f7fcf8] to-[#eefaf0]
+            @apply bg-gradient-to-br from-[#fcfefd] to-[#f6fbf8];
         }
 
         &.soft-red {
-            @apply bg-gradient-to-br from-[#fef7f7] to-[#fceeee]
+            @apply bg-gradient-to-br from-[#fefcfc] to-[#fbf3f3];
         }
 
         &.soft-yellow {
-            @apply bg-gradient-to-br from-[#fefcf4] to-[#fcfae8]
+            @apply bg-gradient-to-br from-[#fffef9] to-[#fefcf2];
         }
     }
 
     .border-color {
         &.soft-green {
-            @apply border-[#d3eedd];
+            @apply border-[#edf5ef];
         }
 
-        &.red-soft {
-            @apply border-[#eac8c8];
+        &.soft-red {
+            @apply border-[#f6eaea];
         }
 
-        &.yellow-soft {
-            @apply border-[#ece4bc];
+        &.soft-yellow {
+            @apply border-[#f8f3dd];
         }
     }
 

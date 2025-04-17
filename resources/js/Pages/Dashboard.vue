@@ -1,7 +1,7 @@
 <template>
     <app-layout title="Startseite">
 
-        <div class="mx-auto container px-4 sm:px-6 lg:px-8 mt-5 min-h-screen pb-20">
+        <div class="artwork-container">
             <div>
                 <PageTitle
                     :title="$t('Dashboard')"

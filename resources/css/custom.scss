@@ -1,0 +1,78 @@
+.artwork {
+
+    .artwork-container {
+        @apply mx-auto container px-4 sm:px-6 lg:px-8 mt-5 min-h-screen pb-20;
+    }
+
+
+    .text-color {
+        color: #27233C;
+
+        &.light {
+                color: #A7A6B1;
+        }
+
+        &.success {
+            @apply text-green-500;
+        }
+
+        &.danger {
+            @apply text-red-500;
+        }
+
+        &.warning {
+            @apply text-yellow-500;
+        }
+    }
+
+    .headline {
+        &.h1 {
+            font: normal normal 900 30px/34px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h2 {
+            font: normal normal 900 24px/28px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h3 {
+            font: normal normal 900 20px/24px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h4 {
+            font: normal normal 900 16px/20px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h5 {
+            font: normal normal 900 14px/18px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+    }
+
+    .sub-line {
+        &.light {
+            font: normal normal bold 14px/20px Inter;
+            letter-spacing: -0.07px;
+            opacity: 1;
+            @apply mt-1;
+        }
+    }
+
+    .card {
+        &.glassy {
+            @apply flex h-fit grow flex-col rounded-lg bg-gradient-to-br from-slate-50/70 to-sky-100/20 text-left shadow-glass backdrop-blur-2xl border border-gray-100;
+        }
+
+        &.white {
+            @apply shadow-glass bg-white rounded-lg border border-gray-100 w-full;
+        }
+    }
+}

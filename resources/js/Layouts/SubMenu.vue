@@ -12,7 +12,7 @@
                             <div class="absolute top-0 left-full flex w-16 justify-center pt-5">
                                 <button type="button" class="-m-2.5 p-2.5" @click="sidebarOpen = false">
                                     <span class="sr-only">Close sidebar</span>
-                                    <XMarkIcon class="size-6 text-white" aria-hidden="true" />
+                                    <component is="IconX" class="size-6 text-white" aria-hidden="true" />
                                 </button>
                             </div>
                         </TransitionChild>
@@ -111,7 +111,7 @@
     <div class="sticky top-0 z-40 flex items-center gap-x-6 bg-white px-4 py-4 shadow-xs sm:px-6 lg:hidden">
         <button type="button" class="-m-2.5 p-2.5 text-gray-700 lg:hidden" @click="sidebarOpen = true">
             <span class="sr-only">Open sidebar</span>
-            <Bars3Icon class="size-6" aria-hidden="true" />
+            <component is="IconMenu2" class="size-6" aria-hidden="true" />
         </button>
         <div class="flex-1 text-sm/6 font-semibold text-gray-900">Dashboard</div>
         <a href="#">

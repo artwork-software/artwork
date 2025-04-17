@@ -7,7 +7,7 @@
         <SubMenu />
 
         <main class="lg:pl-16">
-            <div class="">
+            <div class="artwork">
                 <slot></slot>
             </div>
         </main>

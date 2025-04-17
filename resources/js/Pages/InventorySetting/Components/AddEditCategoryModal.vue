@@ -12,7 +12,7 @@
                 <div class="grid grid-cols-1 gap-4 mb-8">
                     <div>
                         <div>
-                            <TextInputComponent
+                            <BaseInput
                                 id="name" v-model="categoryForm.name"
                                 :label="$t('Category Name')"
                                 required
@@ -126,8 +126,8 @@
                                     <div class="grid grid-cols-1 gap-4 mb-8">
                                         <div>
                                             <div>
-                                                <TextInputComponent
-                                                    id="name" v-model="subCategory.name"
+                                                <BaseInput
+                                                    :id="'subName' + index" v-model="subCategory.name"
                                                     :label="$t('Sub-Category Name')"
                                                     required
                                                 />
@@ -229,6 +229,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {computed, onMounted, ref} from "vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     category: {

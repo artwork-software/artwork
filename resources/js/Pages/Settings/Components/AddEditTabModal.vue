@@ -6,11 +6,13 @@ import {XIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/vue3";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default {
     name: "AddEditTabModal",
     mixins: [IconLib],
     components: {
+        BaseInput,
         TextInputComponent,
         ModalHeader,
         FormButton,
@@ -80,7 +82,7 @@ export default {
                                     :description="tabToEdit ? $t('Edit tab name') : $t('Create a new tab')"
                                 />
                                 <div>
-                                    <TextInputComponent type="text" v-model="tabForm.name" label="Name" id="email" />
+                                    <BaseInput type="text" v-model="tabForm.name" label="Name" id="email" />
                                 </div>
                                 <div class="flex justify-between mt-5 items-center pr-4">
                                     <FormButton

@@ -10,7 +10,7 @@
                     <ColorPickerComponent :color="eventStatus?.color" @updateColor="setColor" />
                 </div>
                 <div class="w-full">
-                    <TextInputComponent
+                    <BaseInput
                         id="name"
                         v-model="eventStatus.name"
                         label="Name"
@@ -57,6 +57,7 @@ import {useForm} from "@inertiajs/vue3";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {Switch} from "@headlessui/vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     eventStatusToEdit: {

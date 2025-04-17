@@ -8,6 +8,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const emit = defineEmits(['closed'])
 
@@ -50,7 +51,7 @@ const saveTimePreset = () => {
             />
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="col-span-2">
-                    <TextInputComponent
+                    <BaseInput
                            :label="$t('Name')"
                            v-model="newTimePreset.name"
                            id="name"
@@ -58,7 +59,7 @@ const saveTimePreset = () => {
                     />
                 </div>
                 <div>
-                    <TimeInputComponent
+                    <BaseInput type="time"
                            :label="$t('Start-Time')"
                            v-model="newTimePreset.start_time"
                            id="start_time"
@@ -66,7 +67,7 @@ const saveTimePreset = () => {
                     />
                 </div>
                 <div>
-                    <TimeInputComponent
+                    <BaseInput type="time"
                         :label="$t('End-Time')"
                         v-model="newTimePreset.end_time"
                         id="end_time"
@@ -74,7 +75,7 @@ const saveTimePreset = () => {
                     />
                 </div>
                 <div class="col-span-2">
-                    <NumberInputComponent
+                    <BaseInput type="number"
                         :label="$t('Length of break in minutes*')"
                         v-model="newTimePreset.break_time"
                         required

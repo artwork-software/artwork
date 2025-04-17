@@ -27,7 +27,7 @@
                     </div>
                 </Listbox>
                 <div>
-                    <TextInputComponent
+                    <BaseInput
                         :label="$t('Name of the component')"
                         v-model="componentName"
                         id="componentName"
@@ -42,28 +42,28 @@
                     </div>
                     <div v-for="(text, index) in textData">
                         <div class="" v-if="index === 'title'">
-                            <TextInputComponent
+                            <BaseInput
                                 :label="$t('Title')"
                                 v-model="textData.title"
                                 :id="index"
                             />
                         </div>
                         <div class="" v-if="index === 'label'">
-                            <TextInputComponent
+                            <BaseInput
                                 :label="$t('label')"
                                 v-model="textData.label"
                                 :id="index"
                             />
                         </div>
                         <div class="" v-if="index === 'text'">
-                            <TextInputComponent
+                            <BaseInput
                                 :label="$t('Text')"
                                 v-model="textData.text"
                                 :id="index"
                             />
                         </div>
                         <div class="" v-if="index === 'placeholder'">
-                            <TextInputComponent
+                            <BaseInput
                                 :label="$t('Placeholder')"
                                 v-model="textData.placeholder"
                                 :id="index"
@@ -101,7 +101,7 @@
                     <div v-if="textData.options?.length > 0" class="grid grid-cols-1 gap-4">
                         <div class="" v-for="(field, optionIndex) in textData.options">
                             <div>
-                                <TextInputComponent v-model="textData.options[optionIndex].value" :label="'Option (' + (optionIndex + 1) + ')'" :id="'option-' + optionIndex" />
+                                <BaseInput v-model="textData.options[optionIndex].value" :label="'Option (' + (optionIndex + 1) + ')'" :id="'option-' + optionIndex" />
                                 <span v-if="optionIndex !== 0" class="text-xs text-end underline underline-offset-2 text-artwork-buttons-create cursor-pointer" @click="removeOption(optionIndex)">
                                     Option ({{ optionIndex + 1 }}) {{ $t('Remove') }}
                                 </span>
@@ -112,13 +112,19 @@
                         </div>
                         <div v-if="textData.options[0].value">
                             <Listbox as="div" v-model="textData.selected">
-                                <ListboxLabel class="xsLight">{{ $t('Standard Option') }}</ListboxLabel>
                                 <div class="relative mt-2">
-                                    <ListboxButton class="relative w-full cursor-default rounded-md bg-white h-10 py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
-                                        <span class="block truncate">{{ textData.selected }}</span>
-                                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                  <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
-                                                </span>
+                                    <ListboxButton class="menu-button-no-padding relative">
+                                        <div class="truncate">
+                                            <div class="top-2 left-4 absolute text-gray-500 text-xs">
+                                                {{ $t('Standard Option') }}
+                                            </div>
+                                            <div class="pt-6 pb-2 flex items-center gap-x-2">
+                                                <div class="truncate">
+                                                    {{ $t('Standard Option') }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <IconChevronDown class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
                                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                         <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
@@ -166,7 +172,7 @@
                         </div>
                         <div  v-if="this.modulePermissions.permission_type === 'allSeeSomeEdit'">
                             <div class="mt-4">
-                                <TextInputComponent
+                                <BaseInput
                                     :label="$t('Search for teams and/or users')"
                                     @input="this.searchUsersAndTeams()"
                                     v-model="this.userAndTeamsQuery"
@@ -244,7 +250,7 @@
                             <label for="someSeeSomeEdit" class="xsLight">Sehen darf nur:</label>
                         </div>
                         <div class="mt-4 relative" v-if="this.modulePermissions.permission_type === 'someSeeSomeEdit'">
-                            <TextInputComponent
+                            <BaseInput
                                 id="searchUsersAndTeams"
                                 :label="$t('Search for teams and/or users')"
                                 @input="this.searchUsersAndTeams()"
@@ -370,11 +376,13 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default defineComponent({
     name: "ComponentModal",
     mixins: [IconLib],
     components: {
+        BaseInput,
         BaseModal,
         TextInputComponent,
         ModalHeader,

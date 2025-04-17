@@ -10,7 +10,7 @@
                 </div>
                 <div class="flex mt-8">
                     <div class="max-w-2xl w-full">
-                        <TextInputComponent
+                        <BaseInput
                             id="teamName"
                             v-model="templateForm.name"
                             :label="$t('Name of the checklist template')"/>
@@ -101,13 +101,13 @@
                         :title="$t('New task')"
                     />
                     <form @submit.prevent="addTaskToTemplate" class="grid grid-cols-1 gap-4">
-                        <TextInputComponent
+                        <BaseInput
                             id="task_name"
                             v-model="newTaskName"
                             :label="$t('Task')"
                             required
                         />
-                        <TextareaComponent
+                        <BaseTextarea
                             :label="$t('Comment')"
                             v-model="newTaskDescription"
                             id="newTaskDescription"
@@ -180,12 +180,16 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     mixins: [Permissions],
     name: "Template Create",
     props: [],
     components: {
+        BaseTextarea,
+        BaseInput,
         TextareaComponent,
         ModalHeader,
         UserSearch,

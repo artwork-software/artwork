@@ -40,7 +40,6 @@ class BudgetManagementCostUnitController extends Controller
         try {
             $this->budgetManagementCostUnitService->createFromRequest($storeBudgetManagementCostUnitRequest);
         } catch (\Throwable $t) {
-            Log::error('Can not create budget management cost unit for reason: ' . $t->getMessage());
 
             return Redirect::back()->with(
                 'error',
@@ -61,7 +60,6 @@ class BudgetManagementCostUnitController extends Controller
         try {
             $this->budgetManagementCostUnitService->updateFromRequest($budgetManagementCostUnit, $request);
         } catch (\Throwable $t) {
-            Log::error('Can not create budget management cost unit for reason: ' . $t->getMessage());
 
             return Redirect::back()->with(
                 'error',
@@ -80,7 +78,6 @@ class BudgetManagementCostUnitController extends Controller
         try {
             $this->budgetManagementCostUnitService->delete($budgetManagementCostUnit);
         } catch (Throwable $t) {
-            Log::error('Can not delete budget management cost_unit for reason: ' . $t->getMessage());
 
             return Redirect::back()->with(
                 'error',

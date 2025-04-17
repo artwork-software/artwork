@@ -1,7 +1,7 @@
 <template>
     <app-layout :title="$t('Sources of funding')">
         <div class="">
-            <div class="max-w-screen-xl mb-40 flex flex-row ml-14 mt-5 mr-40">
+            <div class="artwork-container">
                 <div class="flex flex-1 flex-wrap">
                     <div>
                         <p class="items-center flex mr-2 headline1 mb-11">{{ $t('Sources of funding')}}</p>

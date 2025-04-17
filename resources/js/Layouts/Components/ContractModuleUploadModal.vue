@@ -30,7 +30,7 @@
                         <jet-input-error :message="uploadDocumentFeedback"/>
                     </div>
                     <div>
-                        <TextareaComponent
+                        <BaseTextarea
                             :label="$t('Comment / Note')"
                             id="description"
                             v-model="contractModuleForm.description"
@@ -72,6 +72,7 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 import {useForm} from "@inertiajs/vue3";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     name: "ContractModuleUploadModal",
@@ -81,6 +82,7 @@ export default {
         closeModal: Function
     },
     components: {
+        BaseTextarea,
         MultiAlertComponent,
         TextareaComponent,
         BaseModal,

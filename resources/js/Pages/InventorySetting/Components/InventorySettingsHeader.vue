@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="$t('Inventory')">
-        <div class="ml-14 mt-5 mb-20">
+        <div class="artwork-container">
             <div class="container max-w-7xl">
                 <div class="">
                     <h2 class="headline1">{{$t('Inventory')}}</h2>

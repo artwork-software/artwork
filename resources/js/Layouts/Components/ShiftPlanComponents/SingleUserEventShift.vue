@@ -134,7 +134,7 @@ const toggleProjectTimePeriodAndRedirect = () => {
 
 const hasColleaguesOnShift = (shift) => {
     // The user where the shift is to be displayed is always automatically in the users array, which is why users is always greater than 0
-    return shift.users.length > 1 || shift.freelancer.length > 0 || shift.serviceProvider.length > 0;
+    return shift.users?.length > 1 || shift.freelancer?.length > 0 || shift.serviceProvider?.length > 0;
 };
 
 </script>

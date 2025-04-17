@@ -16,7 +16,7 @@
             </div>
         </transition>
 
-        <div class="w-full ml-11 mt-1">
+        <div class="w-full mt-1">
             <BaseCalendar :rooms="rooms"
                           :days="period"
                           :calendar-data="calendar"
@@ -35,7 +35,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {usePage} from "@inertiajs/vue3";
 import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
-import {computed, onMounted, provide, ref} from "vue";
+import {computed, onMounted, onUnmounted, provide, ref} from "vue";
 import { IconAlertSquareRounded } from "@tabler/icons-vue";
 
 const props = defineProps({
@@ -131,6 +131,19 @@ onMounted(() => {
     setTimeout(() => {
         showCalendarWarning.value = ''
     }, 5000)
+})
+
+onUnmounted(() => {
+    if ( route().current('events') !== true ){
+        let desiredRoute = route('user.calendar_settings.toggle_calendar_settings_use_project_period');
+        let payload = {
+            use_project_time_period: false,
+            project_id: 0,
+            is_axios: true
+        };
+
+        axios.patch(desiredRoute, payload);
+    }
 })
 </script>
 

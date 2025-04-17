@@ -4,12 +4,12 @@
         :title="$t('Craft')"
         :description="$t('Define the specifications of your trade.')"
     />
-    <div class="grid grid-cols-1 sm:grid-cols-7 gap-2 mb-10">
-        <div class="col-span-1 mt-5">
+    <div class="grid grid-cols-1 sm:grid-cols-7 gap-4 mb-4">
+        <div class="col-span-1">
             <ColorPickerComponent :color="craft.color" @updateColor="addColor"/>
         </div>
         <div class="col-span-3">
-            <TextInputComponent
+            <BaseInput
                 :label="$t('Name of the craft') + '*'"
                 v-model="craft.name"
                 id="name"
@@ -17,7 +17,7 @@
             />
         </div>
         <div class="col-span-3">
-            <TextInputComponent
+            <BaseInput
                 :label="$t('Abbreviation') + '*'"
                 v-model="craft.abbreviation"
                 :maxlength="3"
@@ -27,7 +27,7 @@
         </div>
     </div>
     <div class="">
-        <NumberInputComponent
+        <BaseInput type="number"
                v-model="craft.notify_days"
                :maxlength="3"
                required
@@ -63,7 +63,7 @@
         <Listbox as="div">
             <div class="relative mt-2">
                 <ListboxButton class="menu-button">
-                    <span class="block truncate text-left pl-3">
+                    <span class="block truncate text-left">
                         {{ $t('Select users')}}
                     </span>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -123,7 +123,7 @@
         <Listbox as="div">
             <div class="relative mt-2">
                 <ListboxButton class="menu-button">
-                    <span class="block truncate text-left pl-3">
+                    <span class="block truncate text-left">
                         {{ $t('Select users')}}
                     </span>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -238,11 +238,13 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default defineComponent({
     name: "AddCraftsModal",
     mixins: [IconLib],
     components: {
+        BaseInput,
         UserSearch,
         TinyPageHeadline,
         NumberInputComponent,

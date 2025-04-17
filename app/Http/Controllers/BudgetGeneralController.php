@@ -48,7 +48,6 @@ class BudgetGeneralController extends Controller
                 $updateBudgetColumnSettingRequest
             );
         } catch (Throwable $t) {
-            Log::error('Not able to save budget general setting for reason: ' . $t->getMessage());
 
             return Redirect::back()->with('error', __('flash-messages.budget-general-setting.error.update'));
         }

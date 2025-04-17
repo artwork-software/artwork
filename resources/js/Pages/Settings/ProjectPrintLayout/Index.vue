@@ -1,6 +1,6 @@
 <template>
     <AppLayout >
-        <div class="my-8 ml-14">
+        <div class="artwork-container">
             <div class="">
                 <h2 class="headline1 my-6">{{ $t('Print Layout Settings') }}</h2>
                 <div class="xsLight">

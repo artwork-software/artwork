@@ -65,17 +65,15 @@
                          class="relative w-full"
                          :disabled="canEditComponent === false">
                     <Float auto-placement :offset="4" class="relative w-fit" floating-as="div">
-                        <ListboxButton :id="'type-'+ index + 'button'" @click="storeFocus('type-' + index + 'button', 'listbox')" :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']"
-                                       class="print:border-0 active:ring-primary active:ring-1">
-                            <div class="flex items-center gap-x-2">
-                                <div class="">
-                                    <div class="block w-5 h-5 rounded-full"
-                                         :style="{'backgroundColor' : event.type?.hex_code }"/>
-                                </div>
-                                <div class="truncate print:w-full" :style="getColumnTextSize(2)">
+                        <ListboxButton :id="'type-'+ index + 'button'" @click="storeFocus('type-' + index + 'button', 'listbox')" :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']" class="print:border-0 active:ring-primary active:ring-1">
+                            <span class="flex items-center gap-x-2">
+                                <span class="">
+                                    <span class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : event.type?.hex_code }"/>
+                                </span>
+                                <span class="truncate print:w-full" :style="getColumnTextSize(2)">
                                     {{ event.type?.name }}
-                                </div>
-                            </div>
+                                </span>
+                            </span>
                             <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden"
                                              aria-hidden="true"/>
                         </ListboxButton>
@@ -103,12 +101,11 @@
                 </Listbox>
             </div>
             <div :style="getColumnSize(3)">
-                <input v-model="event.name"
+                <BaseInput v-model="event.name"
                        type="text"
                        :id="'name-' + index"
-                       class="input h-12 print:border-0 print:bg-white"
                        :class="event.type?.individual_name && !event.name ? 'border-red-500' : ''"
-                       placeholder="Name"
+                       label="Name"
                        @mousedown="storeFocus('name-' + index)"
                        @focusout="updateEventInDatabase"
                        :disabled="canEditComponent === false"
@@ -124,9 +121,9 @@
                     <Float auto-placement :offset="4" class="relative w-fit" floating-as="div">
                         <ListboxButton :id="'room-'+ index + 'button'" @click="storeFocus('room-' + index + 'button', 'listbox')" :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']"
                                        class=" print:border-0">
-                            <div class="truncate xsDark" :style="getColumnTextSize(4)">
+                            <span class="" :style="getColumnTextSize(4)">
                                 {{ event.room?.name }}
-                            </div>
+                            </span>
                             <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden"
                                              aria-hidden="true"/>
                         </ListboxButton>
@@ -148,16 +145,11 @@
             </div>
             <div class="print:col-span-2" :style="getColumnSize(5)">
                 <div class="relative">
-                    <div
-                        class="absolute inset-y-0 left-1 text-xs pointer-events-none text-primary flex items-center pl-3 z-40 h-12">
-                        {{ dayString }},
-                    </div>
-                    <input
+                    <BaseInput
                         v-model="event.day"
                         type="date"
                         :id="'day-' + index"
-                        placeholder="Tag"
-                        class="input h-12 pl-9 text-xs print:border-0 print:pr-5"
+                        :label="'Tag ' + dayString"
                         :disabled="canEditComponent === false"
                         @mousedown="storeFocus('day-' + index)"
                         @focusout="updateEventInDatabase"
@@ -167,22 +159,22 @@
             </div>
             <div class="col-span-2" :style="getColumnSize(6)">
                 <div class="flex items-center" v-if="timeArray">
-                    <input
+                    <BaseInput
                         v-model="event.start_time"
                         type="time"
                         :id="'start-time-' + index"
-                        placeholder="Tag"
-                        class="input h-12 !rounded-r-none print:border-0"
+                        label="Start"
+                        class="rounded-r-none print:border-0"
                         :disabled="canEditComponent === false"
                         @mousedown="storeFocus('start-time-' + index)"
                         @focusout="updateEventInDatabase"
                     />
-                    <input
+                    <BaseInput
                         v-model="event.end_time"
                         type="time"
                         :id="'end_time-' + index"
-                        placeholder="Tag"
-                        class="input h-12 !rounded-l-none border-l-0 print:border-0"
+                        label="End"
+                        class="!rounded-l-none border-l-0 print:border-0"
                         :disabled="canEditComponent === false"
                         @focusout="updateEventInDatabase"
                         @mousedown="storeFocus('end_time-' + index)"
@@ -200,16 +192,15 @@
                     <BaseMenu show-custom-icon dots-color="!text-artwork-buttons-context" stroke-width="2"
                               icon="IconCopy" translation-key="Copy" menu-width="w-fit" white-menu-background>
                         <div class="flex items-center gap-x-2 p-3">
-                            <IconPlus class="w-6 h-6 text-artwork-buttons-context" stroke-width="2"/>
-                            <input
+                            <IconPlus class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context" stroke-width="2"/>
+                            <BaseInput
                                 type="number"
-                                class="input h-12 w-14"
-                                placeholder="Anzahl"
+                                label="Anzahl"
                                 v-model="event.copyCount"
                                 min="1"
                                 minlength="1"
                                 max="1000"
-                            />
+                                id="amount"/>
                             <Listbox as="div" class="relative" v-model="event.copyType" id="room">
                                 <ListboxButton class="menu-button">
                                     <div class="flex-grow flex text-left xsDark !w-12 truncate">
@@ -234,16 +225,16 @@
                                 </ListboxOptions>
                             </Listbox>
                             <IconCircleCheckFilled @click="createCopyByEventWithData(event)"
-                                                   class="w-8 h-8 text-artwork-buttons-create cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                                   class="w-8 h-8 min-w-6 min-h-6 text-artwork-buttons-create cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
                                                    stroke-width="2"/>
                             <IconX @click="event.copy = false"
-                                   class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                   class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
                                    stroke-width="2"/>
                         </div>
                     </BaseMenu>
-                    <BaseMenu has-no-offset v-if="!isInModal">
-                        <BaseMenuItem icon="IconEdit" title="Edit" @click="openEventComponent(event.id)"/>
-                        <BaseMenuItem v-if="index > 0 && !event.copy || !isInModal" icon="IconTrash"
+                    <BaseMenu has-no-offset white-menu-background v-if="!isInModal">
+                        <BaseMenuItem white-menu-background icon="IconEdit" title="Edit" @click="openEventComponent(event.id)"/>
+                        <BaseMenuItem white-menu-background v-if="index > 0 && !event.copy || !isInModal" icon="IconTrash"
                                       title="Put in the trash" @click="openDeleteEventConfirmModal"/>
                     </BaseMenu>
                 </div>
@@ -297,6 +288,7 @@ import {inject} from "vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Float} from "@headlessui-float/vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     event: {

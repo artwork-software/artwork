@@ -30,13 +30,13 @@
             </div>
         </div>
         <div class="w-1/2 mt-4 grid grid-cols-1 gap-4">
-            <TextInputComponent v-model="this.sageForm.host" :label="$t('Host')" id="host" />
-            <div class="errorText" v-if="showHostErrorText">{{ $t('The host must be specified.') }}</div>
-            <TextInputComponent v-model="this.sageForm.endpoint" id="endpoint" :label="$t('Endpoint')"/>
-            <div class="errorText" v-if="showEndpointErrorText">{{ $t('The end point must be specified.') }}</div>
-            <TextInputComponent v-model="this.sageForm.user" id="user" :label="$t('User')"/>
-            <div class="errorText" v-if="showUserErrorText">{{ $t('The user must be specified.') }}</div>
-            <TextInputComponent type="password"
+            <BaseInput v-model="this.sageForm.host" :label="$t('Host')" id="host" />
+            <div class="text-red-500 text-xs mt-1" v-if="showHostErrorText">{{ $t('The host must be specified.') }}</div>
+            <BaseInput v-model="this.sageForm.endpoint" id="endpoint" :label="$t('Endpoint')"/>
+            <div class="text-red-500 text-xs mt-1" v-if="showEndpointErrorText">{{ $t('The end point must be specified.') }}</div>
+            <BaseInput v-model="this.sageForm.user" id="user" :label="$t('User')"/>
+            <div class="text-red-500 text-xs mt-1" v-if="showUserErrorText">{{ $t('The user must be specified.') }}</div>
+            <BaseInput type="password"
                    v-model="this.sageForm.password"
                    :label="$t('Password')"
                    id="password"
@@ -52,23 +52,24 @@
                     </div>
                     <span>{{ $t('Query data from this booking date') }}&nbsp;</span>
                     <div class="w-72 ml-2">
-                        <DateInputComponent
+                        <BaseInput type="date"
                             v-model="this.sageForm.bookingDate"
                             label="tt.mm.yyyy"
                             id="bookingDate"
                         />
                     </div>
                 </div>
-                <div class="flex items-center justify-end">
+                <div class="flex items-center justify-end gap-x-3">
                     <span>{{ $t('Query daily at') }}&nbsp;</span>
-                    <TimeInputComponent
-                        v-model="this.sageForm.fetchTime"
-                        style="width:82px;"
-                        label="hh:mm"
-                        id=""
-                    />
+                    <div class="w-28">
+                        <BaseInput type="time"
+                                   v-model="this.sageForm.fetchTime"
+                                   label="hh:mm"
+                                   id=""
+                        />
+                    </div>
                 </div>
-                <div class="flex items-center justify-end">
+                <div class="flex items-center justify-end gap-x-3">
                     <label for="sageEnabled">{{ $t('Interface enabled') }}&nbsp;</label>
                     <input type="checkbox"
                            id="sageEnabled"
@@ -88,7 +89,7 @@
             <div v-if="!this.sageInterfaceIsConfigured()" class="errorText">{{ $t('Please configure the Sage interface first.') }}</div>
             <div class="flex flex-row items-center space-x-4">
                 <div class="w-96">
-                    <DateInputComponent
+                    <BaseInput type="date"
                         label="tt.mm.yyyy"
                         id="specificDayImportDate"
                         v-model="this.specificDayImportDate"
@@ -175,9 +176,11 @@ import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import {IconDragDrop} from "@tabler/icons-vue";
 import draggable from "vuedraggable";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default defineComponent({
     components: {
+        BaseInput,
         IconDragDrop,
         TimeInputComponent,
         DateInputComponent,

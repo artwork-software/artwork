@@ -1,6 +1,6 @@
 <template>
     <app-layout full :title="$t('Checklist template') + ' (' +  templateForm.name + ') ' + $t('edit')">
-        <div class="my-5 -mx-5">
+        <div class="artwork-container">
             <div class="">
                 <div class="max-w-screen-lg">
                     <div class="px-24">

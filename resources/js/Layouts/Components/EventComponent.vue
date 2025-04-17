@@ -7,7 +7,7 @@
                     :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : this.event?.isPlanning ? $t('Planned Event') : $t('Event') : isPlanning ? $t('Create planned Event') : $t('New room allocation')"
                     :description="$t('Please make sure that you allow for preparation and follow-up time.')"
                 />
-                <div v-if="event?.id" class="flex items-center">
+                <div v-if="event?.id" class="flex items-center mb-4">
                     {{ $t('Created by') }}
                     <div>
                         <UserPopoverTooltip :user="this.event?.created_by"
@@ -35,20 +35,23 @@
                             {{ selectedEventType?.name }}
                         </p>
                     </div>
-                    <Listbox as="div" class="-mt-1" v-model="selectedEventType" v-if="canEdit" id="eventType">
-                        <ListboxLabel class="xsLight mb-0">{{ $t('Event type') }}</ListboxLabel>
-                        <ListboxButton class="menu-button">
-                            <div class="flex w-full justify-between">
-                                <div class="flex items-center gap-x-2">
+                    <Listbox as="div" class="" v-model="selectedEventType" v-if="canEdit" id="eventType">
+                        <!--<ListboxLabel class="xsLight mb-0">{{ $t('Event type') }}</ListboxLabel>-->
+                        <ListboxButton class="menu-button-no-padding relative">
+                            <div class="truncate">
+                                <div class="top-2 left-4 absolute text-gray-500 text-xs">
+                                    {{ $t('Event type') }}
+                                </div>
+                                <div class="pt-6 pb-2 flex items-center gap-x-2">
                                     <div>
-                                        <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventType?.hex_code }"/>
+                                        <div class="block w-4 h-4 rounded-full" :style="{'backgroundColor' : selectedEventType?.hex_code }"/>
                                     </div>
-                                    <div class="truncate w-56">
+                                    <div class="truncate">
                                         {{ selectedEventType?.name }}
                                     </div>
                                 </div>
-                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </div>
+                            <IconChevronDown class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
 
                         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -86,7 +89,7 @@
                 </div>
                 <div>
                     <div v-if="canEdit">
-                        <TextInputComponent
+                        <BaseInput
                             v-model="this.eventName"
                             id="eventTitle"
                             :label="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
@@ -106,21 +109,22 @@
             <div class="grid gird-cols-1 md:grid-cols-2 gap-x-4 mb-4" v-if="usePage().props.event_status_module">
                 <div class="h-full">
                     <Listbox as="div" class="" v-model="selectedEventStatus" id="eventType">
-                        <ListboxLabel class="xsLight mb-0">{{ $t('Event Status') }}</ListboxLabel>
-                        <ListboxButton class="menu-button">
-                            <div class="flex w-full justify-between">
-                                <div class="flex items-center gap-x-2">
+                        <ListboxButton class="menu-button-no-padding relative">
+                            <div class="truncate">
+                                <div class="top-2 left-4 absolute text-gray-500 text-xs">
+                                    {{ $t('Event Status') }}
+                                </div>
+                                <div class="pt-6 pb-2 flex items-center gap-x-2">
                                     <div>
-                                        <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventStatus?.color }"/>
+                                        <div class="block w-4 h-4 rounded-full" :style="{'backgroundColor' : selectedEventStatus?.color }"/>
                                     </div>
-                                    <div class="truncate w-56">
+                                    <div class="truncate">
                                         {{ selectedEventStatus?.name }}
                                     </div>
                                 </div>
-                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </div>
+                            <IconChevronDown class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
-
                         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                             <ListboxOptions class="absolute w-72 z-10 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" class="max-h-8"
@@ -216,22 +220,22 @@
             <div v-if="canEdit" class="grid grid-cols-1 md:grid-cols-2 gap-x-4 pt-3">
                 <div>
                     <div class="w-full flex">
-                        <DateInputComponent
+                        <BaseInput
+                            type="date"
                             id="startDate"
                             @change="checkChanges()"
                             v-model="startDate"
                             label="Start"
-                            :classes="!allDayEvent ? '!rounded-l-lg !rounded-r-none' : '!rounded-lg'"
                         />
 
-                        <TimeInputComponent
+                        <BaseInput
+                            type="time"
                             v-model="startTime"
                             id="changeStartTime"
                             v-if="!allDayEvent"
                             @change="checkChanges()"
                             label="Startzeit"
                             :disabled="!canEdit"
-                            classes="!rounded-r-lg !rounded-l-none border-l-0"
                             required
                         />
                     </div>
@@ -240,21 +244,21 @@
                 </div>
                 <div>
                     <div class="w-full flex">
-                        <DateInputComponent
+                        <BaseInput
+                            type="date"
                             v-model="endDate"
                             id="endDate"
                             @change="checkChanges()"
                             label="End"
-                            :classes="!allDayEvent ? '!rounded-l-lg !rounded-r-none' : '!rounded-lg'"
                         />
-                        <TimeInputComponent
+                        <BaseInput
+                            type="time"
                             v-model="endTime"
                             v-if="!allDayEvent"
                             id="changeEndTime"
                             @change="checkChanges()"
                             label="Endzeit"
                             :disabled="!canEdit"
-                            classes="!rounded-r-lg !rounded-l-none border-l-0"
                             required
                         />
                     </div>
@@ -283,46 +287,48 @@
                     </SwitchLabel>
                 </SwitchGroup>
                 <div v-show="series">
-                    <div class="grid grid-cols-2 gap-2">
-                        <Listbox :disabled="event?.is_series" as="div" v-model="selectedFrequency">
-                            <div class="relative mt-5">
-                                <ListboxButton
-                                    class="menu-button">
-                                    <div class="block truncate">{{ selectedFrequency.name }}</div>
-                                    <span
-                                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                             <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary"
-                                                              aria-hidden="true"/>
-                                        </span>
-                                </ListboxButton>
-
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions
-                                        class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                        <ListboxOption as="template" v-for="frequency in frequencies"
-                                                       :key="frequency.id" :value="frequency"
-                                                       v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                    <div class="grid grid-cols-2 gap-2 mt-4">
+                        <Listbox :disabled="event?.is_series" as="div" class="relative" v-model="selectedFrequency">
+                            <ListboxButton class="menu-button-no-padding relative">
+                                <div class="truncate">
+                                    <div class="top-2 left-4 absolute text-gray-500 text-xs">
+                                        {{ $t('Frequency') }}
+                                    </div>
+                                    <div class="pt-6 pb-2 flex items-center gap-x-2">
+                                        <div class="truncate">
+                                            {{ selectedFrequency.name }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <IconChevronDown class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            </ListboxButton>
+                            <transition leave-active-class="transition ease-in duration-100"
+                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions
+                                    class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" v-for="frequency in frequencies"
+                                                   :key="frequency.id" :value="frequency"
+                                                   v-slot="{ active, selected }">
+                                        <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                     <span
                                                         :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{
                                                             frequency.name
                                                         }}</span>
 
-                                                <span v-if="selected"
-                                                      :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                            <span v-if="selected"
+                                                  :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                         <IconCheck stroke-width="1.5" class="h-5 w-5"
                                                                    aria-hidden="true"/>
                                                     </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </div>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
                         </Listbox>
                         <div>
                             <div class="w-full flex">
-                                <DateInputComponent
+                                <BaseInput
+                                    type="date"
                                     :disabled="event?.is_series"
                                     v-model="seriesEndDate"
                                     id="endDate"
@@ -340,14 +346,21 @@
             <!--    Room    -->
             <div class="pt-3 mb-4" v-if="canEdit">
                 <Listbox as="div" class="relative" v-model="selectedRoom" id="room" v-if="canEdit">
-                    <ListboxButton class="menu-button">
-                        <span v-if="!selectedRoom">
-                            {{ $t('Select room') }}*
-                        </span>
-                        <div class="flex-grow flex text-left xsDark" v-else>
-                            {{ selectedRoom?.name }}
+                    <ListboxButton class="menu-button-no-padding relative">
+                        <div class="truncate">
+                            <div class="top-2 left-4 absolute text-gray-500 text-xs">
+                                {{ $t('Room') }}*
+                            </div>
+                            <div class="pt-6 pb-2 flex items-center gap-x-2">
+                                <div v-if="selectedRoom" class="truncate">
+                                    {{ selectedRoom?.name }}
+                                </div>
+                                <div v-else>
+                                    {{ $t('Select room') }}
+                                </div>
+                            </div>
                         </div>
-                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                        <IconChevronDown class="h-5 w-5 text-primary" aria-hidden="true"/>
                     </ListboxButton>
                     <ListboxOptions class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
                         <ListboxOption v-for="room in this.rooms"
@@ -370,7 +383,7 @@
             </div>
 
             <!--Gray Background Area -->
-            <div class="bg-lightBackgroundGray my-4 -mx-10 pt-1 pb-4">
+            <div class="bg-lightBackgroundGray my-4 -mx-8 pt-1 pb-4">
                 <div class="px-10">
                     <!--    Project    -->
                     <div v-if="canEdit">
@@ -422,7 +435,7 @@
                                     </SwitchGroup>
                                 </div>
                                 <div class="relative w-full">
-                                    <TextInputComponent
+                                    <BaseInput
                                         id="projectName"
                                         :label="creatingProject ? $t('New project name') : $t('Search project')"
                                         v-model="projectName"
@@ -451,7 +464,7 @@
             <div>
                 <!--    Description    -->
                 <div class="py-2">
-                    <TextareaComponent
+                    <BaseTextarea
                         v-if="canEdit"
                         :label="$t('What do I need to bear in mind for the event?')"
                         id="description"
@@ -463,7 +476,7 @@
                         {{ this.description }}
                     </div>
                     <div v-if="this.event?.occupancy_option && canEdit">
-                        <TextareaComponent
+                        <BaseTextarea
                             :label="$t('Comment on the booking (inquirer will be notified)')"
                             id="adminComment"
                             :disabled="!canEdit"
@@ -699,6 +712,8 @@ import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {inject} from "vue";
 import Button from "@/Jetstream/Button.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 const {getDaysOfEvent} = useEvent();
 
@@ -724,6 +739,8 @@ export default {
         Permissions, IconLib
     ],
     components: {
+        BaseTextarea,
+        BaseInput,
         Button,
         TextareaComponent,
         TimeInputComponent,

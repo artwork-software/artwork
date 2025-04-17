@@ -52,7 +52,7 @@
             <div class="px-6 pb-4">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="col-span-full">
-                        <TextInputComponent
+                        <BaseInput
                             id="name" v-model="articleForm.name"
                             :label="$t('Name*')"
                             required
@@ -60,7 +60,7 @@
                     </div>
 
                     <div class="col-span-full">
-                        <TextareaComponent
+                        <BaseTextarea
                             id="description"
                             v-model="articleForm.description"
                             :label="$t('Description')"
@@ -68,7 +68,8 @@
                     </div>
 
                     <div class="col-span-full">
-                        <NumberInputComponent
+                        <BaseInput
+                            type="number"
                             id="quantity" v-model="articleForm.quantity"
                             :label="$t('Quantity*')"
                             :max="10000000"
@@ -81,13 +82,6 @@
 
             </div>
 
-
-            <!-- Tabs -->
-            <div class="px-6 pb-4 hidden">
-                <ArticleModalTabs :is-detailed-quantity="articleForm.is_detailed_quantity"
-                                  @update:current-tab="updateTabId"/>
-            </div>
-
             <!-- Category selector -->
             <div class="bg-gray-50 px-6 py-6 mb-5">
                 <div class="mb-5">
@@ -96,7 +90,7 @@
                             {{ $t('Select Category') }}
                         </ListboxLabel>
                         <div class="relative mt-2">
-                            <ListboxButton class="menu-button">
+                            <ListboxButton class="menu-button bg-white">
                                 <div class="col-start-1 row-start-1 truncate pr-6">
                                     {{ selectedCategory?.name ?? $t('Please select a Category') }}
                                 </div>
@@ -238,9 +232,9 @@
                                                     direction="top"
                                                     tooltip-width="break-all !text-xs"
                                                 />
-                                                <component is="IconTrash" class="h-5 w-5 text-red-600 cursor-pointer"
+                                                <!--<component is="IconTrash" class="h-5 w-5 text-red-600 cursor-pointer"
                                                            v-if="property.categoryProperty"
-                                                           @click="articleForm.properties = articleForm.properties.filter(prop => prop.id !== property.id)"/>
+                                                           @click="articleForm.properties = articleForm.properties.filter(prop => prop.id !== property.id)"/>-->
                                             </div>
                                         </div>
                                     </td>
@@ -287,7 +281,7 @@
                                                   v-model="property.value" @update:modelValue="queryManufacturer = ''">
                                             <div class="relative">
                                                 <ComboboxInput
-                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6"
+                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900  placeholder:text-gray-400"
                                                     @change="queryManufacturer = $event.target.value"
                                                     @blur="queryManufacturer = ''"
                                                     :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.value) ).name : ''"/>
@@ -298,7 +292,7 @@
                                                 </ComboboxButton>
 
                                                 <ComboboxOptions v-if="filteredManufacturers.length > 0"
-                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
                                                     <ComboboxOption v-for="person in filteredManufacturers"
                                                                     :key="person.id" :value="person.id" as="template"
                                                                     v-slot="{ active, selected }">
@@ -319,7 +313,7 @@
                                         </Combobox>
 
                                         <input
-                                            v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer'"
+                                            v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
                                             :type="property.type" v-model="property.value"
                                             :required="property.is_required"
                                             class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
@@ -352,6 +346,15 @@
                                             <input type="checkbox" :checked="booleanValue(property.value)"
                                                    @change="property.value = $event.target.checked"
                                                    class="input-checklist"/>
+                                        </div>
+
+
+                                        <div v-if="property.type === 'selection'" class="">
+                                            <div class="mt-2 grid grid-cols-1">
+                                                <select id="location" name="location" v-model="property.value" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                    <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
+                                                </select>
+                                            </div>
                                         </div>
 
 
@@ -665,6 +668,8 @@ import ArticleModalTabs from "@/Pages/Inventory/Components/Article/Modals/Compon
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
 import cloneDeep from 'lodash/cloneDeep';
 import {XCircleIcon} from "@heroicons/vue/solid";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 const props = defineProps({
     article: {
@@ -734,7 +739,8 @@ const articleForm = useForm({
             type: prop.type,
             value: getValue(prop),
             is_required: prop.is_required,
-            categoryProperty: getIsDeletable(prop.id)
+            categoryProperty: getIsDeletable(prop.id),
+            select_values: prop.select_values
         }
     }) : [],
     detailed_article_quantities: props.article ? props.article.detailed_article_quantities.map((detailedArticle) => {
@@ -750,7 +756,8 @@ const articleForm = useForm({
                     type: prop.type,
                     value: getValue(prop),
                     is_required: prop.is_required,
-                    categoryProperty: getIsDeletable(prop.id)
+                    categoryProperty: getIsDeletable(prop.id),
+                    select_values: prop.select_values
                 }
             }) ?? []
         }
@@ -834,7 +841,8 @@ const addNewDetailedArticle = () => {
             type: prop.type,
             value: '',
             is_required: prop.is_required,
-            categoryProperty: getIsDeletable(prop.id)
+            categoryProperty: getIsDeletable(prop.id),
+            select_values: prop.select_values
         })) ?? []
     });
 }
@@ -931,7 +939,8 @@ watch(selectedCategory, (value) => {
                 type: prop.type,
                 value: '',
                 is_required: prop.is_required,
-                categoryProperty: getIsDeletable(prop.id)
+                categoryProperty: getIsDeletable(prop.id),
+                select_values: prop.select_values
             });
         }
     });
@@ -1011,7 +1020,8 @@ watch(selectedSubCategory, (value) => {
                 type: prop.type,
                 value: '',
                 is_required: prop.is_required,
-                categoryProperty: getIsDeletable(prop.id)
+                categoryProperty: getIsDeletable(prop.id),
+                select_values: prop.select_values
             });
         }
     });
@@ -1033,7 +1043,8 @@ watch(() => articleForm.is_detailed_quantity, (value) => {
                     type: prop.type,
                     value: '',
                     is_required: prop.is_required,
-                    categoryProperty: getIsDeletable(prop.id)
+                    categoryProperty: getIsDeletable(prop.id),
+                    select_values: prop.select_values
                 })
             })
         }];
@@ -1047,7 +1058,8 @@ watch(() => articleForm.is_detailed_quantity, (value) => {
                 type: prop.type,
                 value: '',
                 is_required: prop.is_required,
-                categoryProperty: getIsDeletable(prop.id)
+                categoryProperty: getIsDeletable(prop.id),
+                select_values: prop.select_values
             })
         });
         articleForm.detailed_article_quantities = [];
@@ -1105,7 +1117,8 @@ onMounted(() => {
             type: prop.type,
             value: '',
             is_required: prop.is_required,
-            categoryProperty: getIsDeletable(prop.id)
+            categoryProperty: getIsDeletable(prop.id),
+            select_values: prop.select_values
         }));
 
         if (props.article.is_detailed_quantity) {
@@ -1128,7 +1141,8 @@ onMounted(() => {
                         type: prop.type,
                         value: prop.value ?? prop.pivot?.value ?? '',
                         is_required: prop.is_required,
-                        categoryProperty: getIsDeletable(prop.id)
+                        categoryProperty: getIsDeletable(prop.id),
+                        select_values: prop.select_values
                     }))
                 }));
             }
@@ -1144,7 +1158,8 @@ onMounted(() => {
                     type: prop.type,
                     value: prop.value ?? prop.pivot?.value ?? '',
                     is_required: prop.is_required,
-                    categoryProperty: getIsDeletable(prop.id)
+                    categoryProperty: getIsDeletable(prop.id),
+                    select_values: prop.select_values
                 }));
             }
             articleForm.detailed_article_quantities = [];

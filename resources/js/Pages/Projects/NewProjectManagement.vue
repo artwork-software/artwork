@@ -1,7 +1,7 @@
 <template>
     <AppLayout title="Projektübersicht">
-        <div class="">
-            <div class="max-w-screen my-10 flex flex-col ml-14 mr-14">
+        <div class="mx-auto container pt-10">
+            <div class="">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex items-center justify-end">
                         <div class="w-full flex items-center">
@@ -17,12 +17,10 @@
                                         <ToolTipComponent icon="IconSearch" icon-size="h-7 w-7" :tooltip-text="$t('Search')"
                                                           direction="bottom"/>
                                     </div>
-                                    <div v-else class="flex items-center w-60">
-                                        <div>
-                                            <input type="text" ref="searchBarInput" id="searchBarInput" :placeholder="$t('Search for projects')" v-model="project_search" class="h-10 inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-artwork-buttons-create"/>
-                                        </div>
-                                        <IconX class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
+                                    <div v-else class="w-96">
+                                        <BaseInput type="text" is-small ref="searchBarInput" id="searchBarInput" label="Search for projects" v-model="project_search"/>
                                     </div>
+                                    <IconX v-if="showSearchbar" class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
                                 </div>
                                 <BaseFilter only-icon="true" :left="false">
                                     <div class="w-full">
@@ -137,70 +135,77 @@
 
 
                     </div>
-                    <div class="mt-4 gap-x-1 flex items-center" v-if="lastProject?.id">
-                        <div class="xsDark">
+                    <div class="mt-4 gap-x-1 flex items-center pb-4" v-if="lastProject?.id">
+                        <div class="xsLight">
                             {{ $t('Last visited project') }}:
                         </div>
-                        <a class="text-artwork-buttons-create text-sm underline underline-offset-2 font-bold" :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })">{{ lastProject.name }}</a>
+                        <a class="text-artwork-buttons-create text-sm font-bold flex items-center gap-x-1" :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })">
+                            <component is="IconGeometry" class="size-4 text-artwork-buttons-create" />
+                            <span>{{ lastProject.name }}</span>
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <div class="relative mx-14">
-                <!-- Scrollbarer Container -->
-                <div class="overflow-x-auto w-full mb-10">
-                    <!-- Fixierte Topbar -->
-                    <div class="sticky top-0 z-10 bg-gray-100 w-fit mb-4 rounded-lg">
-                        <div class="grid px-3 py-3 " :style="`grid-template-columns: ${gridTemplateColumns}`">
-                            <div v-for="component in components" :key="component.name"  :class="component.type === 'ActionsComponent' ? 'flex justify-end' : ''" class="px-3 text-left flex items-center" >
-                                <h3 v-if="checkIfComponentIsVisible(component)" class="xsDark">{{ $t(component.name) }}</h3>
+                <div class="relative">
+                    <BaseCard>
+                        <div class="p-5">
+                            <div class="overflow-x-auto w-full pb-5">
+                                <div class="sticky top-0 z-10 w-fit mb-4 rounded-lg">
+                                    <div class="grid px-3 py-3 " :style="`grid-template-columns: ${gridTemplateColumns}`">
+                                        <div v-for="component in components" :key="component.name"  :class="component.type === 'ActionsComponent' ? 'flex justify-end' : ''" class="px-3 text-left flex items-center" >
+                                            <h3 v-if="checkIfComponentIsVisible(component)" class="xsDark">{{ $t(component.name) }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-y-3 mb-3 w-fit">
+                                    <SingleProjectInManagement
+                                        v-for="project in pinnedProjects"
+                                        :key="project.id"
+                                        :project="project"
+                                        :components="components"
+                                        :categories="categories"
+                                        :genres="genres"
+                                        :sectors="sectors"
+                                        :states="states"
+                                        :projectGroups="projectGroups"
+                                        :createSettings="createSettings"
+                                        :fullProject="pinnedProjectsAll.find((p) => p.id === project.id)"
+                                    />
+
+
+                                </div>
+                                <!-- Tabelle -->
+                                <div class="space-y-3 w-fit">
+                                    <SingleProjectInManagement
+                                        v-for="project in projectComponents"
+                                        :key="project.id"
+                                        :project="project"
+                                        :components="components"
+                                        :categories="categories"
+                                        :genres="genres"
+                                        :sectors="sectors"
+                                        :states="states"
+                                        :projectGroups="projectGroups"
+                                        :createSettings="createSettings"
+                                        :fullProject="projects.data.find((p) => p.id === project.id)"
+                                    />
+
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="space-y-3 mb-3 w-fit">
-                        <SingleProjectInManagement
-                            v-for="project in pinnedProjects"
-                            :key="project.id"
-                            :project="project"
-                            :components="components"
-                            :categories="categories"
-                            :genres="genres"
-                            :sectors="sectors"
-                            :states="states"
-                            :projectGroups="projectGroups"
-                            :createSettings="createSettings"
-                            :fullProject="pinnedProjectsAll.find((p) => p.id === project.id)"
-                        />
 
+                        <div class="px-5 pb-5">
+                            <BasePaginator
+                                :entities="projects"
+                                property-name="projects"
+                                :emit-update-entities-per-page="true"
+                                @update-page="updatePage"
+                                @update-entities-per-page="changeEntitiesPerPage"/>
+                        </div>
+                    </BaseCard>
 
-                    </div>
-                    <!-- Tabelle -->
-                    <div class="space-y-3 w-fit">
-                        <SingleProjectInManagement
-                            v-for="project in projectComponents"
-                            :key="project.id"
-                            :project="project"
-                            :components="components"
-                            :categories="categories"
-                            :genres="genres"
-                            :sectors="sectors"
-                            :states="states"
-                            :projectGroups="projectGroups"
-                            :createSettings="createSettings"
-                            :fullProject="projects.data.find((p) => p.id === project.id)"
-                        />
-
-
-                    </div>
                 </div>
-
-                <BasePaginator
-                    :entities="projects"
-                    property-name="projects"
-                    :emit-update-entities-per-page="true"
-                    @update-page="updatePage"
-                    @update-entities-per-page="changeEntitiesPerPage"/>
-            </div>
         </div>
 
         <SideNotification v-if="dropFeedbackShown" type="project_create_success"/>
@@ -267,7 +272,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import {Link, router, usePage} from "@inertiajs/vue3";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {IconCheck, IconChevronDown, IconChevronUp, IconX} from "@tabler/icons-vue";
+import {IconCheck, IconChevronDown, IconChevronUp, IconGeometry, IconX} from "@tabler/icons-vue";
 import Input from "@/Jetstream/Input.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
@@ -287,6 +292,11 @@ import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import debounce from "lodash.debounce";
 import SingleProjectInManagement from "@/Pages/Projects/ProjectManagmentComponents/SingleProjectInManagement.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
+import BaseCard from "@/Artwork/Cards/BaseCard.vue";
+import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
+import CardHeadline from "@/Artwork/Cards/CardHeadline.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+
 
 const {can, hasAdminRole, role, canSeeComponent, canEditComponent} = usePermission(usePage().props);
 const {getSortEnumTranslation} = useSortEnumTranslation();

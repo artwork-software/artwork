@@ -29,14 +29,14 @@
             <div class="headline3 mb-5">{{ $t('Selectable accounts') }}</div>
             <div class="flex flex-row space-x-5 items-center">
                 <div class="w-96">
-                    <TextInputComponent
+                    <BaseInput
                         :label="$t('Account number')"
                         v-model="this.accountForm.account_number"
                         id="account_number"
                     />
                 </div>
                 <div class="w-96">
-                    <TextInputComponent
+                    <BaseInput
                         :label="$t('Description')"
                         v-model="this.accountForm.title"
                         id="title"
@@ -64,14 +64,14 @@
             <div class="headline3 mb-5">{{ $t('Selectable cost units') }}</div>
             <div class="flex flex-row space-x-5 items-center">
                 <div class="w-96">
-                    <TextInputComponent
+                    <BaseInput
                         :label="$t('Cost unit number')"
                         v-model="this.costUnitForm.cost_unit_number"
                         id="cost_unit_number"
                     />
                 </div>
                 <div class="w-96">
-                    <TextInputComponent
+                    <BaseInput
                         :label="$t('Description')"
                         v-model="this.costUnitForm.title"
                         id="costUnitFormTitle"
@@ -98,7 +98,7 @@
                             />
                         </div>
                         <div v-else class="flex items-center w-64">
-                            <TextInputComponent
+                            <BaseInput
                                 v-model="this.accountSearchQuery"
                                 :label="$t('Search account')"
                                 id="accountSearchQuery"
@@ -128,14 +128,14 @@
                         <!-- if account is edited -->
                         <div v-if="this.accountIdToEdit === account.id" class="flex flex-row items-center mt-5">
                             <span class="w-56 mr-2">
-                                <TextInputComponent
+                                <BaseInput
                                     v-model="this.editAccountForm.account_number"
                                     :label="this.editAccountForm.account_number"
                                     id="account_number"
                                 />
                             </span>
                             <span class="w-96 mr-2">
-                                <TextInputComponent
+                                <BaseInput
                                     v-model="this.editAccountForm.title"
                                     :label="this.editAccountForm.title"
                                     id="title"
@@ -192,7 +192,7 @@
                             />
                         </div>
                         <div v-else class="flex items-center w-64">
-                            <TextInputComponent
+                            <BaseInput
                                 v-model="this.costUnitSearchQuery"
                                 :label="$t('Search cost center')"
                                 id="costUnitSearchQuery"
@@ -218,14 +218,14 @@
                         <!-- if cost_unit is edited -->
                         <div v-if="this.costUnitIdToEdit === cost_unit.id" class="flex flex-row items-center mt-5">
                             <span class="w-56 mr-2">
-                                <TextInputComponent
+                                <BaseInput
                                     v-model="this.editCostUnitForm.cost_unit_number"
                                     :label="this.editCostUnitForm.cost_unit_number"
                                     id="cost_unit_number"
                                 />
                             </span>
                             <span class="w-96">
-                                <TextInputComponent
+                                <BaseInput
                                     v-model="this.editCostUnitForm.title"
                                     :label="this.editCostUnitForm.title"
                                     id="editCostUnitFormTitle"
@@ -290,10 +290,12 @@ import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default defineComponent({
     mixins: [IconLib],
     components: {
+        BaseInput,
         TextInputComponent,
         SuccessModal,
         ErrorComponent,

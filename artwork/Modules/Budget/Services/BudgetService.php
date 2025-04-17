@@ -418,8 +418,10 @@ class BudgetService
                                 ])
                                 // sage cells should be at the end
                                 ->join('columns', 'column_sub_position_row.column_id', '=', 'columns.id')
-                                ->orderBy('position')
+                                // Order of sorts is important!
                                 ->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END')
+                                ->orderBy('position')
+                                ->orderBy('id')
                                 ->select('column_sub_position_row.*')
                                 ->withCount('comments')
                                 ->withCount(['calculations' => function ($query) {

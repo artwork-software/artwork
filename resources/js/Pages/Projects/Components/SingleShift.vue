@@ -23,10 +23,10 @@
                     <IconExclamationCircle class="h-5 w-5" stroke-width="1.5" />
                 </div>
                 <div>
-                    <BaseMenu v-if="this.$can('can plan shifts') || this.hasAdminRole()" dots-size="h-5 w-5 text-white">
-                        <BaseMenuItem title="Edit" icon="IconEdit" @click="editShift"/>
-                        <BaseMenuItem title="Clear" icon="IconCircleX" @click="clearShiftUsers(shift)"/>
-                        <BaseMenuItem title="Delete" icon="IconTrash" @click="deleteShift(shift.id)"/>
+                    <BaseMenu white-menu-background v-if="this.$can('can plan shifts') || this.hasAdminRole()" dots-size="h-5 w-5 text-white">
+                        <BaseMenuItem white-menu-background title="Edit" icon="IconEdit" @click="editShift"/>
+                        <BaseMenuItem white-menu-background title="Clear" icon="IconCircleX" @click="clearShiftUsers(shift)"/>
+                        <BaseMenuItem white-menu-background title="Delete" icon="IconTrash" @click="deleteShift(shift.id)"/>
                     </BaseMenu>
                 </div>
             </div>
@@ -42,7 +42,8 @@
                     <component is="IconX" @click="resetForm" class="h-4 w-4" />
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2" :id="'container-' + this.shift.id">
-                    <TimeInputComponent
+                    <BaseInput
+                        type="time"
                         v-model="updateTimeForm.start"
                         :label="$t('Start-Time')"
                         :id="'shift-start' + this.shift.id"
@@ -52,11 +53,13 @@
                         @change="validateShiftDates"
                         classes="h-8 peer-placeholder-shown:top-[8px] text-xs -top-5"
                     />
-                    <TimeInputComponent
+                    <BaseInput
+                        type="time"
                         v-model="updateTimeForm.end"
                         :label="$t('End-Time')"
                         :id="'shift-end' + this.shift.id"
                         required
+                        is-small
                         @focusout="checkFocus"
                         @change="validateShiftDates"
                         classes="h-8 peer-placeholder-shown:top-[8px] text-xs -top-5"
@@ -108,11 +111,13 @@
                 <div class="absolute right-4 cursor-pointer hover:text-red-600 duration-300 ease-in-out">
                     <component is="IconX" @click="resetForm" class="h-4 w-4" />
                 </div>
-                <NumberInputComponent
+                <BaseInput
+                    type="number"
                     v-model="updateTimeForm.break_minutes"
                     :label="$t('Length of break in minutes*')"
                     id="break"
                     required
+                    is-small
                     @focusout="saveTimeChanges"
                     @change="validateShiftBreak"
                     classes="h-8 peer-placeholder-shown:top-[8px] text-xs -top-5"
@@ -272,10 +277,12 @@ import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default defineComponent({
     name: "SingleShift",
     components: {
+        BaseInput,
         ToolTipComponent,
         NumberInputComponent,
         TimeInputComponent,

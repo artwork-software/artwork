@@ -12,7 +12,7 @@
                 <div class="grid grid-cols-1 gap-4 mb-8">
                     <div>
                         <div>
-                            <TextInputComponent
+                            <BaseInput
                                 id="name" v-model="categoryForm.name"
                                 :label="$t('Category Name')"
                                 required
@@ -51,14 +51,19 @@
                                             {{ $t(capitalizeFirstLetter(property?.type)) }}
                                         </td>
                                         <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
-                                            <input v-if="property.type !== 'file'"
+                                            <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
                                                    :type="property.type" v-model="property.defaultValue"
                                                    class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                                    :placeholder="$t('Default Value')"
                                             />
-                                            <span v-else class=" text-xs px-3 py-1.5 text-red-400 cursor-default">
-                                                {{ $t('No default value possible') }}
-                                            </span>
+
+                                            <div v-if="property.type === 'selection'" class="">
+                                                <div class="mt-2 grid grid-cols-1">
+                                                    <select id="location" name="location" v-model="property.defaultValue" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                        <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr class="divide-x divide-gray-200">
@@ -126,8 +131,8 @@
                                     <div class="grid grid-cols-1 gap-4 mb-8">
                                         <div>
                                             <div>
-                                                <TextInputComponent
-                                                    id="name" v-model="subCategory.name"
+                                                <BaseInput
+                                                    :id="'subName' + index" v-model="subCategory.name"
                                                     :label="$t('Sub-Category Name')"
                                                     required
                                                 />
@@ -165,14 +170,19 @@
                                                                 {{ $t(capitalizeFirstLetter(property?.type)) }}
                                                             </td>
                                                             <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
-                                                                <input v-if="property.type !== 'file'"
+                                                                <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
                                                                        :type="property.type" v-model="property.defaultValue"
                                                                        class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                                                        :placeholder="$t('Default Value')"
                                                                 />
-                                                                <span v-else class=" text-xs px-3 py-1.5 text-red-400 cursor-default">
-                                                                    {{ $t('No default value possible') }}
-                                                                </span>
+
+                                                                <div v-if="property.type === 'selection'" class="">
+                                                                    <div class="mt-2 grid grid-cols-1">
+                                                                        <select id="location" name="location" v-model="property.defaultValue" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                                            <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                         <tr class="divide-x divide-gray-200">
@@ -229,6 +239,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {computed, onMounted, ref} from "vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     category: {
@@ -293,6 +304,7 @@ onMounted(() => {
                 id: property.id,
                 name: property.name,
                 type: property.type,
+                select_values: property.select_values,
                 defaultValue: property.pivot.value ?? ''
             }
         });
@@ -307,6 +319,7 @@ onMounted(() => {
                         id: property.id,
                         name: property.name,
                         type: property.type,
+                        select_values: property.select_values,
                         defaultValue: property.pivot.value ?? ''
                     }
                 })

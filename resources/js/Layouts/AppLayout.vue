@@ -1,9 +1,100 @@
 <template>
     <Head>
+        <link rel="icon" type="image/png" :href="usePage().props.small_logo" />
+        <title>{{ title }} - {{ usePage().props.page_title }}</title>
+    </Head>
+    <div class="artwork relative">
+        <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
+            <div v-for="pushNotification in pushNotifications" :id="pushNotification.id"
+                 class="my-2 z-50 flex relative w-full max-w-xs rounded-lg shadow bg-lightBackgroundGray"
+                 role="alert">
+                <div class="flex p-4">
+                    <div class="inline-flex flex-shrink-0 justify-center items-center rounded-lg">
+                        <img alt="Notification" v-if="pushNotification.type === 'success'"
+                             class="h-9 w-9" src="/Svgs/IconSvgs/icon_push_notification_green.svg"/>
+                        <img alt="Notification" v-if="pushNotification.type === 'error'" class="h-9 w-9"
+                             src="/Svgs/IconSvgs/icon_push_notification_red.svg"/>
+                    </div>
+                    <div class="ml-4 xsDark">{{ pushNotification.message }}</div>
+                </div>
+                <button type="button" class="-mt-4 mr-2">
+                    <component is="IconX" class="-mt-4 h-5 w-5 text-secondary hover:text-error relative"
+                           @click="closePushNotification(pushNotification.id)"/>
+                </button>
+            </div>
+        </div>
+
+
+        <SubMenu />
+
+        <main class="lg:pl-16">
+            <div class="">
+                <div class="artwork-container pt-30 hidden">
+                    <pre>
+                        {{ usePage() }}
+                    </pre>
+                </div>
+                <slot></slot>
+            </div>
+        </main>
+    </div>
+</template>
+
+<script setup>
+import {Head, router, usePage} from "@inertiajs/vue3"
+import SubMenu from "@/Layouts/SubMenu.vue";
+import {onBeforeMount, onMounted, onUnmounted, ref} from "vue";
+
+const props = defineProps({
+    title: {
+        type: String,
+        default: 'Dashboard'
+    },
+})
+
+const pushNotifications = ref([])
+
+const closePushNotification = (id) => {
+    const pushNotification = document.getElementById(id);
+    pushNotification?.remove();
+}
+
+onBeforeMount(() => {
+    if ( route().current('events') !== true && usePage().props.auth.user.calendar_settings.use_project_time_period){
+        let desiredRoute = route('user.calendar_settings.toggle_calendar_settings_use_project_period');
+        let payload = {
+            use_project_time_period: false,
+            project_id: 0,
+            is_axios: true
+        };
+
+        axios.patch(desiredRoute, payload);
+    }
+
+    if(route().current('planning-event-calendar.index') === true && usePage().props.auth.user.calendar_settings.use_project_time_period) {
+        router.reload()
+    }
+})
+
+onMounted(() => {
+    window.Echo.private(`notifications.${usePage().props.auth.user.id}`)
+        .listen('.incoming-notification', (notification) => {
+            pushNotifications.value.push(notification.message);
+            setTimeout(() => {
+                closePushNotification(notification.message.id)
+            }, 3000)
+        });
+})
+
+</script>
+
+
+<!--<template>
+    <Head>
         <link rel="icon" type="image/png" :href="$page.props.small_logo" />
         <title>{{ title }} - {{ $page.props.page_title }}</title>
     </Head>
-    <!-- Static sidebar for desktop -->
+x
     <div class="my-auto w-full relative">
         <div :class="this.fullSidenav ? 'sm:w-64' : 'sm:w-16'" id="sidebar"
              class="fixed sidebar z-50 top-0 bottom-0 p-2 w-full bg-artwork-navigation-background hidden sm:block">
@@ -52,7 +143,7 @@
                                :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']"
                             >
                                 <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                                <!--<ToolTipNavigationComponent v-else :tooltip-text="item.name" :icon="item.icon" :icon-size="'h-7 w-7'" :stroke="isCurrent(item.route) ? 2 : 1" direction="right" :classes="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']"/>-->
+
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{ $t(item.name) }}
                                 </div>
@@ -443,12 +534,12 @@ export default {
                     href: route('shift.settings'),
                     isCurrent: route().current('shift.settings')
                 },
-                {
+                /*{
                     has_permission: this.hasAdminRole(),
                     name: 'Manufacturers',
                     href: route('manufacturers.index'),
                     isCurrent: route().current('manufacturers.index')
-                },
+                },*/
                 {
                     has_permission: this.hasAdminRole(),
                     name: 'Inventory',
@@ -689,4 +780,4 @@ export default {
 
 <style>
 
-</style>
+</style>-->

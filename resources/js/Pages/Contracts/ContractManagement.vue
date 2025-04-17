@@ -1,7 +1,7 @@
 <template>
     <app-layout :title="$t('Contracts')">
         <div class="">
-            <div class="max-w-screen-2xl mt-5 mb-40 flex flex-row ml-14 mr-40">
+            <div class="artwork-container">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto">
                         <div class="flex flex-wrap w-full">

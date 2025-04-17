@@ -4,6 +4,7 @@ namespace Artwork\Modules\ArtistResidency\Models;
 
 use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,7 +36,7 @@ class ArtistResidency extends Model
         'civil_name',
         'phone_number',
         'position',
-        'service_provider_id',
+        'accommodation_id',
         'project_id',
         'arrival_date',
         'arrival_time',
@@ -58,14 +59,14 @@ class ArtistResidency extends Model
 
     protected $appends = ['formatted_dates'];
 
-    public function serviceProvider(): BelongsTo
+    public function accommodation(): BelongsTo
     {
         return $this->belongsTo(
-            ServiceProvider::class,
-            'service_provider_id',
+            Accommodation::class,
+            'accommodation_id',
             'id',
-            'service_provider'
-        )->without(['contacts']);
+            'accommodation'
+        );
     }
 
     /**

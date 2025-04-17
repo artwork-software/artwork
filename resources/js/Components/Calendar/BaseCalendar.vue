@@ -305,7 +305,7 @@
 </template>
 
 <script setup>
-import {computed, defineAsyncComponent, inject, onMounted, ref} from "vue";
+import {computed, defineAsyncComponent, inject, onMounted, onUnmounted, ref} from "vue";
 import {router, usePage, Link} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
@@ -757,6 +757,8 @@ onMounted(() => {
     const ShiftCalendarListener = useShiftCalendarListener(newCalendarData.value);
     ShiftCalendarListener.init();
 })
+
+
 
 
 </script>

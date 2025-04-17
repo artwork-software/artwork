@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Rooms & areas')">
-        <div class="max-w-screen-2xl flex flex-wrap-row mt-5 ml-14 mr-40">
+        <div class="artwork-container">
             <div class="w-full flex my-auto justify-between">
                 <div class="flex flex-wrap w-full">
                     <div class="flex flex-wrap w-full">
@@ -19,16 +19,16 @@
                         <div class=" w-full grid grid-cols-1 md:grid-cols-2 gap-4 my-10">
                             <!-- Raumkategorien -->
                             <div>
-                                <div class="flex">
+                                <div class="flex items-center">
                                     <div class="relative w-72">
-                                        <TextInputComponent
+                                        <BaseInput
                                             v-on:keyup.enter=addRoomCategory
                                             id="roomCategory"
                                             v-model="roomCategoryInput"
-                                            :label="$t('Enter room category')"/>
+                                            label="Enter room category"/>
                                     </div>
-                                    <div class="flex items-center h-full ml-2 mt-5">
-                                        <button :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']" @click="addRoomCategory" :disabled="!roomCategoryInput">
+                                    <div class="flex items-center h-full ml-2">
+                                        <button :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']" @click="addRoomCategory" :disabled="!roomCategoryInput">
                                             <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                                         </button>
                                     </div>
@@ -47,18 +47,18 @@
                             </div>
                             <!-- Raumattribute -->
                             <div>
-                                <div class="flex">
+                                <div class="flex items-center">
                                     <div class="relative w-72">
-                                        <TextInputComponent
+                                        <BaseInput
                                             v-on:keyup.enter=addRoomAttribute
                                             id="roomAttribute"
                                             v-model="roomAttributeInput"
-                                            :label="$t('Enter room property')"
+                                            label="Enter room property"
                                         />
                                     </div>
-                                    <div class="flex items-center ml-2 mt-5 h-full">
+                                    <div class="flex items-center ml-2 h-full">
                                         <button
-                                            :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
+                                            :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
                                             @click="addRoomAttribute" :disabled="!roomAttributeInput">
                                             <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                                         </button>
@@ -161,7 +161,7 @@
                                             class="hind text-secondary tracking-tight ml-1 text-xl">{{ $t('Create new rooms')}}</span>
                                     </div>
                                 </div>
-                                <div class="mt-6 mb-12" v-if="this.opened_areas.includes(area.id)">
+                                <div class="mt-6 mb-12 w-full" v-if="this.opened_areas.includes(area.id)">
                                     <draggable ghost-class="opacity-50"
                                                key="draggableKey"
                                                item-key="id" :list="area.rooms"
@@ -174,13 +174,13 @@
                                                  @mouseout="showMenu = null" >
                                                 <div class="flex mt-6 flex-wrap w-full" :key="element.id"
                                                      :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                                    <div class="flex w-full items-center">
-                                                        <div class="flex items-center">
+                                                    <div class="flex w-full items-center justify-between">
+                                                        <div class="flex items-center w-full">
                                                             <Link :href="route('rooms.show',{room: element.id})"
-                                                                  class="ml-4 my-auto xsDark">
+                                                                  class="ml-4 my-auto xsDark w-full">
                                                                 {{ element.name }}
                                                             </Link>
-                                                            <div class="ml-6 mt-1 flex items-center xsLight my-auto relative">
+                                                            <div class="ml-6 w-full flex items-center xsLight my-auto relative">
                                                                 {{ $t('created on { created_at } by', {'created_at': element.created_at }) }}
                                                                 <UserPopoverTooltip :user="element.created_by"
                                                                                     :id="element.created_by.id + '-room-' + element.id"
@@ -316,10 +316,10 @@
             />
             <form @submit.prevent="addArea" class="">
                 <div>
-                    <TextInputComponent
+                    <BaseInput
                         id="roomNameEdit"
                         v-model="newAreaForm.name"
-                        :label="$t('Name of the area')"
+                        label="Name of the area"
                         required
                     />
                     <jet-input-error :message="newAreaForm.error" class="mt-2"/>
@@ -344,10 +344,10 @@
             />
             <form @submit.prevent="editArea" class="">
                 <div>
-                    <TextInputComponent
+                    <BaseInput
                         id="areaEditName"
                         v-model="editAreaForm.name"
-                        :label="$t('Name of the area')"
+                        label="Name of the area"
                     />
                     <jet-input-error :message="editAreaForm.error" class="mt-2"/>
                 </div>
@@ -372,17 +372,17 @@
             />
             <form @submit.prevent="addRoom" class="grid grid-cols-1 gap-4">
                 <div class="">
-                    <TextInputComponent
+                    <BaseInput
                         id="roomName"
                         v-model="newRoomForm.name"
-                        :label="$t('Room name') + ' *'"
+                        label="Room name*"
                         required
                     />
                     <jet-input-error :message="newRoomForm.error" class="mt-2"/>
                 </div>
                 <div class="">
-                    <TextareaComponent
-                        :label="$t('Short description')"
+                    <BaseTextarea
+                        label="Short description"
                         v-model="newRoomForm.description"
                         :rows="4"
                         id="description"
@@ -391,7 +391,7 @@
                 <Menu as="span" class="relative inline-block w-full text-left">
                     <div>
                         <MenuButton class="menu-button">
-                            <span class="font-semibold float-left text-secondary">{{$t('Select room properties')}}</span>
+                            <span>{{$t('Select room properties')}}</span>
                             <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"/>
                         </MenuButton>
                     </div>
@@ -531,14 +531,16 @@
                 </div>
                 <div class="" v-if="newRoomForm.temporary">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <DateInputComponent
+                        <BaseInput
+                            type="date"
                             v-model="newRoomForm.start_date"
                             id="startDate"
-                            :label="$t('Start date')"/>
-                        <DateInputComponent
+                            label="Start date"/>
+                        <BaseInput
+                            type="date"
                             v-model="newRoomForm.end_date"
                             id="endDate"
-                            :label="$t('End date')"
+                            label="End date"
                         />
                     </div>
                 </div>
@@ -548,6 +550,17 @@
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                         <span class="ml-1 my-auto hind">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-x-4">
+                    <input v-model="newRoomForm.relevant_for_disposition"
+                           type="checkbox"
+                           class="input-checklist"/>
+                    <div>
+                        <p :class="[newRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']"
+                           class="my-auto text-sm">{{ $t('Relevant for disposition')}}</p>
+                        <span class="text-xs" :class="[newRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']">{{ $t('Activate this field if the room is to be included in the calendars.')}}</span>
                     </div>
                 </div>
                 <div class="w-full items-center text-center">
@@ -568,25 +581,25 @@
             <ModalHeader :title="$t('Edit room')"/>
             <form @submit.prevent="editRoom" class="grid grid-cols-1 gap-4">
                 <div class="">
-                    <TextInputComponent
+                    <BaseInput
                         id="roomNameEdit"
                         v-model="editRoomForm.name"
-                        :label="$t('Room name') + ' *'"
+                        label="Room name*"
                     />
                     <jet-input-error :message="editRoomForm.error" class="mt-2"/>
                 </div>
                 <div class="">
-                    <TextareaComponent
+                    <BaseTextarea
                         v-model="editRoomForm.description"
                         id="description"
-                        :label="$t('Short description')"
+                        label="Short description"
                         :rows="4"
                     />
                 </div>
                 <Menu as="span" class="relative inline-block w-full text-left">
                     <div>
                         <MenuButton class="menu-button">
-                            <span class="font-semibold float-left text-secondary">{{ $t('Select room properties')}}</span>
+                            <span>{{ $t('Select room properties')}}</span>
                             <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"/>
                         </MenuButton>
                     </div>
@@ -740,14 +753,16 @@
                 </div>
                 <div v-if="editRoomForm.temporary">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <DateInputComponent
+                        <BaseInput
+                            type="date"
                             v-model="editRoomForm.start_date_dt_local"
                             id="startDate"
-                            :label="$t('Start date')"/>
-                        <DateInputComponent
+                            label="Start date"/>
+                        <BaseInput
+                            type="date"
                             v-model="editRoomForm.end_date_dt_local"
                             id="endDate"
-                            :label="$t('End date')"
+                            label="End date"
                         />
                     </div>
                 </div>
@@ -762,6 +777,16 @@
                         <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                         <span
                             class="ml-1 my-auto hind">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
+                    </div>
+                </div>
+                <div class="flex items-start gap-x-4">
+                    <input v-model="editRoomForm.relevant_for_disposition"
+                           type="checkbox"
+                           class="input-checklist"/>
+                    <div>
+                        <p :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']"
+                           class="my-auto text-sm">{{ $t('Relevant for disposition')}}</p>
+                        <span class="text-xs" :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']">{{ $t('Activate this field if the room is to be included in the calendars.')}}</span>
                     </div>
                 </div>
 
@@ -856,10 +881,14 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
+        BaseTextarea,
+        BaseInput,
         DateInputComponent,
         TextareaComponent,
         ModalHeader,
@@ -937,6 +966,7 @@ export default defineComponent({
                 end_date: null,
                 area_id: null,
                 user_id: this.$page.props.auth.user.id,
+                relevant_for_disposition: false,
                 everyone_can_book: false,
                 room_categories: [],
                 room_attributes: [],
@@ -957,6 +987,7 @@ export default defineComponent({
                 area_id: null,
                 user_id: null,
                 everyone_can_book: false,
+                relevant_for_disposition: false,
                 room_categories: [],
                 room_attributes: [],
                 adjoining_rooms: [],
@@ -1234,6 +1265,7 @@ export default defineComponent({
             }
             this.showEditRoomModal = true;
             this.editRoomForm.everyone_can_book = room.everyone_can_book
+            this.editRoomForm.relevant_for_disposition = room.relevant_for_disposition
         },
         closeEditRoomModal() {
             this.showEditRoomModal = false;

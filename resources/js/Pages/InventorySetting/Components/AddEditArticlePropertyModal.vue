@@ -10,14 +10,14 @@
             <form @submit.prevent="addEditProperty">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="col-span-full">
-                        <TextInputComponent
+                        <BaseInput
                             id="name" v-model="propertyForm.name"
                             :label="$t('Name')"
                         />
                     </div>
 
                     <div class="col-span-full">
-                        <TextareaComponent
+                        <BaseTextarea
                             id="description"
                             v-model="propertyForm.tooltip_text"
                             :label="$t('Tooltip text')"
@@ -50,6 +50,27 @@
                                 </transition>
                             </div>
                         </Listbox>
+                    </div>
+
+                    <div v-if="selectedType.type === 'selection'" class="col-span-full">
+                        <div v-for="(value, index) in propertyForm.select_values" :key="index" class="flex gap-3 items-center mb-2">
+                            <BaseInput
+                                :id="'select_value' + index"
+                                v-model="propertyForm.select_values[index]"
+                                :label="$t('Selection value {index}', {index: index + 1})"
+                            />
+                            <button type="button" @click="propertyForm.select_values.splice(index, 1)" class="text-red-500 hover:text-red-700">
+                                <component is="IconX" class="size-5" aria-hidden="true" />
+                            </button>
+
+                        </div>
+
+                        <div class="flex items-center justify-end">
+                            <button type="button" @click="propertyForm.select_values.push('')" class="text-gray-500 text-xs hover:text-gray-700 flex items-center font-lexend">
+                                <component is="IconPlus" class="size-4" aria-hidden="true" />
+                                {{ $t('Selection Add value') }}
+                            </button>
+                        </div>
                     </div>
 
                     <div class="col-span-2">
@@ -100,7 +121,7 @@
                 </div>
 
                 <div class="flex items-center justify-center my-10">
-                    <FormButton type="submit" :text="property ? $t('Update') : $t('Create')" :disabled="propertyForm.processing" :class="propertyForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''" />
+                    <FormButton type="submit" :text="property ? $t('Update') : $t('Create')" :disabled="propertyForm.processing || checkIfPropertyHasValues" :class="propertyForm.processing || checkIfPropertyHasValues ? 'bg-gray-200 hover:bg-gray-300' : ''" />
                 </div>
             </form>
         </div>
@@ -112,11 +133,11 @@
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {useForm} from "@inertiajs/vue3";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 const props = defineProps({
     property: {
@@ -134,6 +155,7 @@ const types = [
     { name: 'Time', type: 'time' },
     { name: 'Datetime', type: 'datetime' },
     { name: 'Checkbox', type: 'checkbox' },
+    { name: 'Selection', type: 'selection' },
     //{ name: 'Upload', type: 'file' },
 ]
 
@@ -147,6 +169,7 @@ const propertyForm = useForm({
     is_filterable: props.property ? props.property.is_filterable : false,
     show_in_list: props.property ? props.property.show_in_list : false,
     is_required: props.property ? props.property.is_required : false,
+    select_values: props.property ? props.property.select_values : [],
 })
 
 const addEditProperty = () => {
@@ -168,6 +191,18 @@ const addEditProperty = () => {
         })
     }
 }
+
+const checkIfPropertyHasValues = computed(() => {
+    // if type is selection and select_values is empty return true
+    if (selectedType.value.type === 'selection' && propertyForm.select_values.length === 0 || propertyForm.select_values[0] === '') {
+        return true
+    }
+
+    // check if name is set
+    if (propertyForm.name === '') {
+        return true
+    }
+})
 </script>
 
 <style scoped>

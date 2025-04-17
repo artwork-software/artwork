@@ -35,7 +35,6 @@ class PermissionPresetController extends Controller
         try {
             $this->permissionPresetService->createFromRequest($request);
         } catch (Throwable $t) {
-            Log::error($t->getMessage());
             return Redirect::back()
                 ->with(
                     'error',
@@ -51,7 +50,6 @@ class PermissionPresetController extends Controller
         try {
             $this->permissionPresetService->updateFromRequest($request, $permissionPreset);
         } catch (Throwable $t) {
-            Log::error($t->getMessage());
             return Redirect::back()->with(
                 'error',
                 __('flash-messages.permission-preset.error.updated')
@@ -66,7 +64,6 @@ class PermissionPresetController extends Controller
         try {
             $this->permissionPresetService->destroy($permissionPreset);
         } catch (Throwable $t) {
-            Log::error($t->getMessage());
             return Redirect::back()->with(
                 'error',
                 __('flash-messages.permission-preset.error.deleted')

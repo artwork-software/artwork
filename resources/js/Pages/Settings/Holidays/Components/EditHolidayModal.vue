@@ -15,7 +15,7 @@
                 </p>
                 <div class="flex items-center gap-4 w-full">
                     <Listbox as="div" class="relative w-full" v-model="customHolidayForm.selectedSubdivisions" multiple>
-                        <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 px-4 text-left text-gray-900 ring-2 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
+                        <ListboxButton class="menu-button">
                             <div class="flex items-center justify-between w-full">
                                 <div class="xsLight">
                                     {{ $t('Select federal states') }}
@@ -55,17 +55,17 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="col-span-2">
-                    <TextInputComponent id="title" v-model="customHolidayForm.name" :label="$t('Name')" />
+                    <BaseInput id="title" v-model="customHolidayForm.name" label="Name" />
 
                 </div>
                 <div>
-                    <DateInputComponent id="start" v-model="customHolidayForm.date" :label="$t('Start-Time') + '*'" />
+                    <BaseInput type="date" id="start" v-model="customHolidayForm.date" label="Start-Time*" />
                     <div class="text-red-500 text-xs mt-1" v-show="showErrorMessageDate">
                         {{ $t('Please select a date') }}
                     </div>
                 </div>
                 <div>
-                    <DateInputComponent id="end" v-model="customHolidayForm.end_date" :label="$t('End-Time')" />
+                    <BaseInput type="date" id="end" v-model="customHolidayForm.end_date" label="End-Time" />
                 </div>
                 <div class="col-span-2">
                     <SwitchGroup as="div" class="flex items-center cursor-pointer">
@@ -98,6 +98,7 @@ import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import {useForm} from "@inertiajs/vue3";
 import {computed, ref} from "vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     holidayToEdit: {

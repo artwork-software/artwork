@@ -36,16 +36,16 @@
 
                     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div v-if="!automaticMode">
-                            <DateInputComponent :id="'start_date_' + timeLineForm.id" v-model="timeLineForm.start_date" :label="$t('Start date')" is-dark is-small />
+                            <BaseInput type="date" :id="'start_date_' + timeLineForm.id" v-model="timeLineForm.start_date" label="Start date" is-dark is-small />
                         </div>
                         <div v-if="!automaticMode">
-                            <DateInputComponent :id="'end_date_' + timeLineForm.id" v-model="timeLineForm.end_date" :label="$t('End date')" is-dark is-small />
+                            <BaseInput type="date" :id="'end_date_' + timeLineForm.id" v-model="timeLineForm.end_date" label="End date" is-dark is-small />
                         </div>
                         <div>
-                            <TimeInputComponent :id="'start_' + timeLineForm.id" v-model="timeLineForm.start" :label="$t('Start-Time')" is-dark is-small />
+                            <BaseInput type="time" :id="'start_' + timeLineForm.id" v-model="timeLineForm.start" label="Start-Time" is-dark is-small />
                         </div>
                         <div>
-                            <TimeInputComponent :id="'start_' + timeLineForm.id" v-model="timeLineForm.end" :label="$t('End-Time')" is-dark is-small />
+                            <BaseInput type="time" :id="'start_' + timeLineForm.id" v-model="timeLineForm.end" label="End-Time" is-dark is-small />
                         </div>
                     </div>
                 </div>
@@ -59,7 +59,7 @@
                         </div>
                     </div>
                     <div v-else class="py-3">
-                        <TextareaComponent is-dark :id="'editTimeLineDescription_' + timeLineForm.id" v-model="timeLineForm.description" :label="$t('Comment')" />
+                        <BaseTextarea is-dark :id="'editTimeLineDescription_' + timeLineForm.id" v-model="timeLineForm.description" label="Comment" />
                     </div>
                 </div>
                 <div class="text-xs text-artwork-messages-error mt-2" v-if="helpText">
@@ -74,9 +74,9 @@
 
             </div>
             <div class="invisible group-hover:visible" v-if="!time.clicked || editDescription">
-                <BaseMenu has-no-offset>
-                    <BaseMenuItem title="Edit" @click="openCloseTimeEditor(true)" />
-                    <BaseMenuItem title="Delete" icon="IconTrash" @click="deleteTime" />
+                <BaseMenu white-menu-background has-no-offset>
+                    <BaseMenuItem white-menu-background title="Edit" @click="openCloseTimeEditor(true)" />
+                    <BaseMenuItem white-menu-background title="Delete" icon="IconTrash" @click="deleteTime" />
                 </BaseMenu>
             </div>
         </div>
@@ -100,6 +100,8 @@ import {MenuItem, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 const props = defineProps({
     time: {

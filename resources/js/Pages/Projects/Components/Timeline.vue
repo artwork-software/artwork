@@ -21,10 +21,10 @@
                     @click="openTimelineModal(false)"
                     direction="bottom"
                 />
-                <BaseMenu has-no-offset white-icon>
-                    <BaseMenuItem title="Read from template" icon="IconFileImport" @click="showSearchTimelinePresetModal = true" />
-                    <BaseMenuItem title="Save as template" icon="IconFileExport" @click="showCreateTimelinePresetModal = true" />
-                    <BaseMenuItem title="Edit" @click="openTimelineModal(true)" />
+                <BaseMenu white-menu-background has-no-offset white-icon>
+                    <BaseMenuItem white-menu-background title="Read from template" icon="IconFileImport" @click="showSearchTimelinePresetModal = true" />
+                    <BaseMenuItem white-menu-background title="Save as template" icon="IconFileExport" @click="showCreateTimelinePresetModal = true" />
+                    <BaseMenuItem white-menu-background title="Edit" @click="openTimelineModal(true)" />
                 </BaseMenu>
             </div>
         </div>

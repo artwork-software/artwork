@@ -26,9 +26,9 @@
             <slot name="sort">
 
             </slot>
-            <div class="flex items-center"
+            <div class="flex items-center w-max"
                  v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id)) || can('can use checklists') && isInOwnTaskManagement">
-                <AddButtonSmall @click="openAddChecklistModal = true" :text="$t('New checklist')" />
+                <AddButtonSmall @click="openAddChecklistModal = true" :text="$t('New checklist')" class="w-max" />
             </div>
         </div>
     </div>

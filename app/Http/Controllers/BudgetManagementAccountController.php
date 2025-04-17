@@ -40,7 +40,6 @@ class BudgetManagementAccountController extends Controller
         try {
             $this->budgetManagementAccountService->createFromRequest($storeBudgetManagementAccountRequest);
         } catch (Throwable $t) {
-            Log::error('Can not create budget management account for reason: ' . $t->getMessage());
 
             return Redirect::back()->with(
                 'error',
@@ -64,7 +63,6 @@ class BudgetManagementAccountController extends Controller
                 $request
             );
         } catch (Throwable $t) {
-            Log::error('Can not update budget management account for reason: ' . $t->getMessage());
 
             return Redirect::back()->with(
                 'error',
@@ -83,7 +81,6 @@ class BudgetManagementAccountController extends Controller
         try {
             $this->budgetManagementAccountService->delete($budgetManagementAccount);
         } catch (Throwable $t) {
-            Log::error('Can not delete budget management account for reason: ' . $t->getMessage());
 
             return Redirect::back()->with(
                 'error',

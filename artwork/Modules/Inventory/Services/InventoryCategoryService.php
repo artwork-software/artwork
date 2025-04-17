@@ -56,19 +56,19 @@ class InventoryCategoryService
         return $this->repository->paginateWithRelations($perPage);
     }
 
-    protected function syncPropertiesWithArticles($model, $newProperties): void
+    protected function syncPropertiesWithArticles($categoryOrSubCategoryModel, $newProperties): void
     {
         $newPropertyIdsWithValues = collect($newProperties)->keyBy('id');
         $newPropertyIds = $newPropertyIdsWithValues->keys()->toArray();
-        $currentPropertyIds = $model->properties()->pluck('inventory_article_property_id')->toArray();
+        $currentPropertyIds = $categoryOrSubCategoryModel->properties()->pluck('inventory_article_property_id')->toArray();
 
         $toAdd = array_diff($newPropertyIds, $currentPropertyIds);
         $toRemove = array_diff($currentPropertyIds, $newPropertyIds);
 
         if (!empty($toRemove)) {
-            $model->properties()->detach($toRemove);
+            $categoryOrSubCategoryModel->properties()->detach($toRemove);
 
-            foreach ($model->articles as $article) {
+            foreach ($categoryOrSubCategoryModel->articles as $article) {
                 $article->properties()->detach($toRemove);
             }
         }
@@ -76,9 +76,9 @@ class InventoryCategoryService
         foreach ($toAdd as $propertyId) {
             $defaultValue = $newPropertyIdsWithValues[$propertyId]['defaultValue'] ?? '';
 
-            $model->properties()->attach($propertyId, ['value' => $defaultValue]);
+            $categoryOrSubCategoryModel->properties()->attach($propertyId, ['value' => $defaultValue]);
 
-            foreach ($model->articles as $article) {
+            foreach ($categoryOrSubCategoryModel->articles as $article) {
                 $article->properties()->syncWithoutDetaching([
                     $propertyId => ['value' => $defaultValue]
                 ]);

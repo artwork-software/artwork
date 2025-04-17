@@ -16,7 +16,7 @@
                                          @after-enter="initDraggable"
                                          leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                         >
-                            <DialogPanel class="flex h-fit w-full grow flex-col rounded-lg bg-gradient-to-br from-slate-50/70 to-sky-100/20 text-left shadow-glass backdrop-blur-2xl p-gap-3xl border draggableModal" :class="[modalSize, showBackdrop ? 'border-gray-300' : 'border-gray-100']"  ref="containerRef">
+                            <DialogPanel class="flex h-fit w-full grow flex-col rounded-lg bg-gradient-to-br  text-left shadow-glass backdrop-blur-2xl p-gap-3xl border draggableModal" :class="[modalSize, showBackdrop ? 'border-gray-300 from-slate-50/80 to-sky-100/50' : 'border-gray-100 from-slate-50/70 to-sky-100/20']"  ref="containerRef">
                                 <div class="flex items-center justify-between px-5 pt-5 pb-2">
                                     <div class="text-left">
                                         <h3 class="font-lexend font-bold">{{ $t(props.title) }}</h3>

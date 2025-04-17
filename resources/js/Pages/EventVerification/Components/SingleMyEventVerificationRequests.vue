@@ -1,6 +1,6 @@
 <template>
     <WhiteInnerCard>
-        <div class="flex items-stretch gap-x-3 min-w-full w-full h-full px-2 pt-2">
+        <div class="flex items-stretch gap-x-3 min-w-full w-full h-full px-4 pt-4 pb-2">
             <!-- STATUS ANZEIGE -->
             <div class="p-1 rounded-lg w-1"
                  :class="{'bg-green-500': myRequest.status_color === 'green',
@@ -29,7 +29,7 @@
         </div>
         <DashedDivider class="mt-2"></DashedDivider>
         <!-- VERIFIER ANZEIGE -->
-        <div class="grid grid-cols-1 md:grid-cols-3 -mx-0.5">
+        <div class="grid grid-cols-1 md:grid-cols-3 -mx-0.5 -mb-0.5">
             <div :class="{'background-color soft-green border-color soft-green border-b-2 border-l-2  rounded-bl-lg': key === 'approved',
                           'background-color soft-yellow border-color border-b-2  rounded-br-lg border-r-2': key === 'pending',
                           'background-color soft-red border-color border-x-2 border-borderRedSoft border-b-2': key === 'rejected',

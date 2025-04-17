@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Checklist template') + ' ' + $t('Create')">
-        <div class="max-w-screen-lg my-12 ml-20 mr-40">
+        <div class="artwork-container">
             <div class="flex-wrap">
                 <div class="flex">
                     <h2 class="mb-4 headline1">{{$t('Checklist template')}}</h2>

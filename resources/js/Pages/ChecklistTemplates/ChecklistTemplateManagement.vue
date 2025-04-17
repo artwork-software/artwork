@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Checklist templates')">
-        <div class="ml-14 mt-5">
+        <div class="artwork-container">
 
             <div>
                 <ChecklistFunctionBar :title="$t('Checklist templates')">

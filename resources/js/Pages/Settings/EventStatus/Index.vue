@@ -25,7 +25,7 @@
 
 
             <div class="my-10" v-if="enable_status">
-                <div class="mb-4 flex items-center justify-between gap-x-10 max-w-3xl">
+                <div class="mb-4 flex items-center justify-between gap-x-10">
                     <TinyPageHeadline
                         title="Event Status"
                         description="Hier kannst du die Event Status verwalten."
@@ -35,7 +35,7 @@
                     </div>
                 </div>
 
-                <div class="max-w-3xl">
+                <div class="">
                     <div>
                         <VisualFeedback :show-save-success="showVisualFeedback" />
                     </div>

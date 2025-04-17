@@ -1,8 +1,8 @@
 <template>
     <AppLayout>
-        <div class="w-full ml-5 px-10 bg-gray-50 min-h-screen">
+        <div class="w-full px-10 bg-gray-50 min-h-screen">
             <div class="border-b border-gray-200 pt-8 pb-5 flex items-center justify-between">
-                <div class="max-w-3xl">
+                <div class="">
                     <div>
                         <TinyPageHeadline
                             :title="$t('Inventory')"

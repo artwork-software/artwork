@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('My tasks')">
-        <div class="ml-14 mt-5">
+        <div class="artwork-container">
             <div>
                 <ChecklistFunctionBar
                     title="My ToDo-Lists"
@@ -148,7 +148,7 @@
                 />
             </div>
 
-            <div v-else class="-mx-10 bg-artwork-project-background px-10 py-10">
+            <div v-else class="">
                 <ChecklistKanbanView
                     :checklists="checklistsComputed"
                     is-in-own-task-management

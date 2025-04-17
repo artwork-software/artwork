@@ -3,8 +3,7 @@
         <button class="focus:outline-none" type="button" :class="classes" :disabled="disabled">
             <component :is="icon" class=" cursor-pointer" :class="[iconSize, classes, whiteIcon ? 'text-white' : grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context']" :stroke-width="stroke"/>
         </button>
-
-        <div class="hidden group-hover/tooltip:block">
+        <div class="hidden group-hover/tooltip:block" v-if="!noTooltip">
             <div v-if="direction === 'top'" :class="tooltipWidth" class="absolute z-50 -top-3 text-center  p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-x-1/2 -translate-y-full left-1/2">
                 {{ tooltipText }}
                 <div class="absolute bg-black h-3 w-3 transform rounded-sm rotate-45 left-1/2 -translate-x-1/2 -bottom-1.5"></div>
@@ -23,13 +22,13 @@
                 <div class="absolute bg-black h-3 w-3 transform rounded-sm rotate-45 right-full translate-x-1/2 top-1/2 -mt-1.5"></div>
             </div>
         </div>
-
     </div>
 </template>
 
 <script setup>
 import {ref} from "vue";
 const show = ref(false)
+import {Float} from "@headlessui-float/vue";
 
 const props = defineProps({
     direction: {
@@ -77,6 +76,10 @@ const props = defineProps({
     tooltipWidth: {
         type: String,
         default: 'w-fit'
+    },
+    noTooltip: {
+        type: Boolean,
+        default: false
     }
 })
 

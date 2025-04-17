@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Rooms & areas')">
-        <div class="max-w-screen-2xl flex flex-wrap-row mt-5 ml-14 mr-40">
+        <div class="artwork-container">
             <div class="w-full flex my-auto justify-between">
                 <div class="flex flex-wrap w-full">
                     <div class="flex flex-wrap w-full">

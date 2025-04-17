@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="room.name">
-        <div class="max-w-screen-xl my-12 ml-14">
+        <div class="max-w-screen-xl my-12 ml-10">
             <div class="flex-wrap">
                 <div class="flex items-center pt-5">
                     <h2 class="headline1">{{ room.name }}</h2>
@@ -72,7 +72,7 @@
                 </div>
             </div>
         </div>
-        <div class="my-12 ml-14" v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
+        <div class="my-12" v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
             <div class="flex mt-6 items-center mb-2 ml-14">
                 <h3 class="headline2"> {{$t('Room assignment')}} </h3>
             </div>

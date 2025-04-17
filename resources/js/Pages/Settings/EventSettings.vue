@@ -2,7 +2,7 @@
     <app-layout :title="$t('Event Settings')">
 
            <EventSettingHeader>
-               <div class="mt-4 max-w-3xl">
+               <div class="">
                    <div class="flex items-center justify-between mb-5">
                        <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
                        <AddButtonBig @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
@@ -15,7 +15,7 @@
                        {{ $t('Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name.')}}
                    </div>
                </div>
-               <ul role="list" class="mt-4 mb-20 w-full max-w-3xl">
+               <ul role="list" class="mt-5">
                    <li v-for="(eventType,index) in event_types" :key="eventType.id" class="flex justify-between">
                        <div class="flex my-4">
                            <div>

@@ -383,7 +383,7 @@
             </div>
 
             <!--Gray Background Area -->
-            <div class="bg-lightBackgroundGray my-4 -mx-10 pt-1 pb-4">
+            <div class="bg-lightBackgroundGray my-4 -mx-8 pt-1 pb-4">
                 <div class="px-10">
                     <!--    Project    -->
                     <div v-if="canEdit">

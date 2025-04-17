@@ -148,59 +148,63 @@
             </div>
 
                 <div class="relative">
-                        <div class="overflow-x-auto w-full">
-                            <!-- Fixierte Topbar -->
-                            <div class="sticky top-0 z-10 bg-gray-100 w-fit mb-4 rounded-lg">
-                                <div class="grid px-3 py-3 " :style="`grid-template-columns: ${gridTemplateColumns}`">
-                                    <div v-for="component in components" :key="component.name"  :class="component.type === 'ActionsComponent' ? 'flex justify-end' : ''" class="px-3 text-left flex items-center" >
-                                        <h3 v-if="checkIfComponentIsVisible(component)" class="xsDark">{{ $t(component.name) }}</h3>
+                    <BaseCard>
+                        <div class="p-5">
+                            <div class="overflow-x-auto w-full">
+                                <div class="sticky top-0 z-10 w-fit mb-4 rounded-lg">
+                                    <div class="grid px-3 py-3 " :style="`grid-template-columns: ${gridTemplateColumns}`">
+                                        <div v-for="component in components" :key="component.name"  :class="component.type === 'ActionsComponent' ? 'flex justify-end' : ''" class="px-3 text-left flex items-center" >
+                                            <h3 v-if="checkIfComponentIsVisible(component)" class="xsDark">{{ $t(component.name) }}</h3>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="space-y-3 mb-3 w-fit">
-                                <SingleProjectInManagement
-                                    v-for="project in pinnedProjects"
-                                    :key="project.id"
-                                    :project="project"
-                                    :components="components"
-                                    :categories="categories"
-                                    :genres="genres"
-                                    :sectors="sectors"
-                                    :states="states"
-                                    :projectGroups="projectGroups"
-                                    :createSettings="createSettings"
-                                    :fullProject="pinnedProjectsAll.find((p) => p.id === project.id)"
-                                />
+                                <div class="space-y-3 mb-3 w-fit">
+                                    <SingleProjectInManagement
+                                        v-for="project in pinnedProjects"
+                                        :key="project.id"
+                                        :project="project"
+                                        :components="components"
+                                        :categories="categories"
+                                        :genres="genres"
+                                        :sectors="sectors"
+                                        :states="states"
+                                        :projectGroups="projectGroups"
+                                        :createSettings="createSettings"
+                                        :fullProject="pinnedProjectsAll.find((p) => p.id === project.id)"
+                                    />
 
 
-                            </div>
-                            <!-- Tabelle -->
-                            <div class="space-y-3 w-fit">
-                                <SingleProjectInManagement
-                                    v-for="project in projectComponents"
-                                    :key="project.id"
-                                    :project="project"
-                                    :components="components"
-                                    :categories="categories"
-                                    :genres="genres"
-                                    :sectors="sectors"
-                                    :states="states"
-                                    :projectGroups="projectGroups"
-                                    :createSettings="createSettings"
-                                    :fullProject="projects.data.find((p) => p.id === project.id)"
-                                />
+                                </div>
+                                <!-- Tabelle -->
+                                <div class="space-y-3 w-fit">
+                                    <SingleProjectInManagement
+                                        v-for="project in projectComponents"
+                                        :key="project.id"
+                                        :project="project"
+                                        :components="components"
+                                        :categories="categories"
+                                        :genres="genres"
+                                        :sectors="sectors"
+                                        :states="states"
+                                        :projectGroups="projectGroups"
+                                        :createSettings="createSettings"
+                                        :fullProject="projects.data.find((p) => p.id === project.id)"
+                                    />
 
-
+                                </div>
                             </div>
                         </div>
-                    <div class="pt-5">
-                        <BasePaginator
-                            :entities="projects"
-                            property-name="projects"
-                            :emit-update-entities-per-page="true"
-                            @update-page="updatePage"
-                            @update-entities-per-page="changeEntitiesPerPage"/>
-                    </div>
+
+                        <div class="px-5 pb-5">
+                            <BasePaginator
+                                :entities="projects"
+                                property-name="projects"
+                                :emit-update-entities-per-page="true"
+                                @update-page="updatePage"
+                                @update-entities-per-page="changeEntitiesPerPage"/>
+                        </div>
+                    </BaseCard>
+
                 </div>
         </div>
 

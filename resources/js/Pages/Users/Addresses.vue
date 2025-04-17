@@ -1,7 +1,7 @@
 <template>
     <UserHeader title="Freelancers & Service Providers" description="Manage your freelancers and service providers">
         <div class="">
-            <div class="max-w-screen-xl my-12 flex flex-row">
+            <div class="my-12 flex flex-row">
                 <div class="flex flex-1 flex-wrap justify-between">
                     <div class="flex">
                         <div class="w-full flex my-auto items-center">

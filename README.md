@@ -17,6 +17,10 @@ Command to add new components to the project-tab-library:
 
 ``artwork:add-new-components``
 
+Command to add new feature-related data to the databases:
+
+``php artisan artwork:update``
+
 Try these after major updates to be sure, that you are not missing new features.
 
 # Frequent Setup Bugs

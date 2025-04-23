@@ -1,5 +1,5 @@
 <template>
-    <aside class="h-full font-lexend">
+    <aside class="h-full font-lexend min-w-80 max-w-124">
         <h2 class="sr-only">Filters</h2>
         <BaseCard>
             <div class="p-5">
@@ -21,7 +21,7 @@
                                     <div class="p-1 rounded-lg w-1 bg-artwork-buttons-create"></div>
                                     <div class="w-full">
                                         <Link preserve-scroll class="flex items-center w-full justify-between" :href="route('inventory.category.show', category.id)" :class="[route().current('inventory.category.show', category.id) ? 'text-artwork-buttons-create font-semibold' : '']">
-                                            <div class="first-letter:capitalize text-sm font-bold tracking-tight">
+                                            <div class="first-letter:capitalize text-sm font-bold tracking-tight max-w-64">
                                                 <div>
                                                     {{ category.name }}
                                                 </div>

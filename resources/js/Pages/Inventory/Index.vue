@@ -32,15 +32,16 @@
 
             </div>
 
-            <div class="pt-12 pb-24 lg:grid lg:grid-cols-3 lg:gap-x-8 xl:grid-cols-8">
+            <div class="pt-12 pb-24 lg:grid lg:grid-cols-3 lg:gap-x-6 xl:grid-cols-7">
 
+                <div class="mb-8 md:col-span-3 lg:col-span-3 xl:col-span-2 col-span-6">
                 <InventorySidebarComponent
                     :current-category="props.currentCategory"
                     :articles-count="props.articlesCount"
                     :categories="props.categories"
                 />
-
-                <section aria-labelledby="product-heading" class="col-span-3 md:col-span-7">
+                </div>
+                <section aria-labelledby="product-heading" class="col-span-3 md:col-span-6 lg:col-span-6 xl:col-span-5">
                     <div class="flex items-center justify-between mb-3">
                         <div>
                             <InventoryBreadcrumbComponent :current-category="props.currentCategory" :current-sub-category="props.currentSubCategory"/>
@@ -54,7 +55,7 @@
                         <InventoryFilterComponent :filterableProperties="filterableProperties" />
                     </div>
                     <div v-if="props.articles.data.length > 0">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-7 3xl:grid-cols-8 gap-4" v-if="gridLayout">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-8 gap-4" v-if="gridLayout">
                             <div v-for="item in props.articles.data">
                                 <InventorySingleArticleInGrid :item="item" />
                             </div>

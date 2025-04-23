@@ -309,33 +309,33 @@
                                         </label>
                                     </div>
                                     <div class="flex items-center py-1">
-                                        <input id="cb-use-event-status-color"
+                                        <input id="cb-hide-occupied-rooms"
                                                v-model="userCalendarSettings.hide_unoccupied_rooms"
                                                type="checkbox"
                                                class="input-checklist"/>
-                                        <label for="cb-use-event-status-color"
+                                        <label for="cb-hide-occupied-rooms"
                                                :class="userCalendarSettings.hide_unoccupied_rooms ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                                class="ml-4 my-auto text-secondary cursor-pointer">
                                             {{ $t('Hide unoccupied rooms') }}
                                         </label>
                                     </div>
                                     <div class="flex items-center py-1">
-                                        <input id="cb-use-event-status-color"
+                                        <input id="cb-display-project-groups"
                                                v-model="userCalendarSettings.display_project_groups"
                                                type="checkbox"
                                                class="input-checklist"/>
-                                        <label for="cb-use-event-status-color"
+                                        <label for="cb-display-project-groups"
                                                :class="userCalendarSettings.display_project_groups ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                                class="ml-4 my-auto text-secondary cursor-pointer">
                                             {{ $t('Show project group') }}
                                         </label>
                                     </div>
                                     <div class="flex items-center py-1" v-if="isPlanning">
-                                        <input id="cb-use-event-status-color"
+                                        <input id="cb-show-unplanned-events"
                                                v-model="userCalendarSettings.show_unplanned_events"
                                                type="checkbox"
                                                class="input-checklist"/>
-                                        <label for="cb-use-event-status-color"
+                                        <label for="cb-show-unplanned-events"
                                                :class="userCalendarSettings.show_unplanned_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                                class="ml-4 my-auto text-secondary cursor-pointer">
                                             {{ $t('Show fixed events') }}

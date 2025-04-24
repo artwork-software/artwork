@@ -199,6 +199,8 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import { is, can } from 'laravel-permission-to-vuejs'
 import {Float} from "@headlessui-float/vue";
+import {useI18n} from "vue-i18n";
+const { locale } = useI18n();
 
 const props = defineProps({})
 const computedBudgetRoute = computed(() => {
@@ -418,11 +420,14 @@ const sidebarOpen = ref(false)
 const isFullSideBar = ref(false)
 
 const logout = () => {
+    document.documentElement.lang = usePage().props.default_language
+    locale.value = usePage().props.default_language
+    document.documentElement.setAttribute('lang', usePage().props.default_language)
     router.post(route('logout'), {}, {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
-            document.documentElement.lang = usePage().props.default_language
+
         }
     })
 }

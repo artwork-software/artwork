@@ -43,13 +43,23 @@
 <script setup>
 import {Head, router, usePage} from "@inertiajs/vue3"
 import SubMenu from "@/Layouts/SubMenu.vue";
-import {onBeforeMount, onMounted, onUnmounted, ref} from "vue";
+import {onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
+import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
+import {useI18n} from "vue-i18n";
+const { locale } = useI18n();
 
 const props = defineProps({
     title: {
         type: String,
         default: 'Dashboard'
     },
+})
+
+watchEffect(() => {
+    window.Laravel = window.Laravel || {}
+    if (usePage().props.permissions) {
+        window.Laravel.jsPermissions = usePage().props.permissions;
+    }
 })
 
 const pushNotifications = ref([])
@@ -71,12 +81,12 @@ onBeforeMount(() => {
         axios.patch(desiredRoute, payload);
     }
 
-    if(route().current('planning-event-calendar.index') === true && usePage().props.auth.user.calendar_settings.use_project_time_period) {
-        router.reload()
-    }
+    reloadRolesAndPermissions()
 })
 
 onMounted(() => {
+    document.documentElement.lang = usePage().props.auth.user.language
+    locale.value = usePage().props.auth.user.language
     window.Echo.private(`notifications.${usePage().props.auth.user.id}`)
         .listen('.incoming-notification', (notification) => {
             pushNotifications.value.push(notification.message);
@@ -84,6 +94,8 @@ onMounted(() => {
                 closePushNotification(notification.message.id)
             }, 3000)
         });
+
+
 })
 
 </script>

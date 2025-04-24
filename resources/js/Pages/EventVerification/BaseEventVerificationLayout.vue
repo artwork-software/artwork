@@ -1,5 +1,5 @@
 <template>
-    <AppLayout>
+    <AppLayout :title="$t('Event Verifications')">
         <div class="mx-auto container px-4 sm:px-6 lg:px-8 mt-5 max-h-screen">
 
             <slot name="header"></slot>

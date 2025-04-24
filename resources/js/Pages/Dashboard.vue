@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Startseite">
+    <app-layout title="Dashboard">
 
         <div class="artwork-container">
             <div>

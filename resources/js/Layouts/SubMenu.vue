@@ -56,11 +56,11 @@
                             </div>
                         </div>
                         <div class="font-bold text-secondaryHover block">
-                            <img :src="usePage().props.small_logo" :class="isFullSideBar ? 'h-12 w-12' : 'h-12 w-12'" class="object-cover" alt="artwork-logo"/>
+                            <img :src="usePage().props.small_logo" :class="isFullSideBar ? 'h-12 w-12 min-w-12 min-h-12' : 'h-12 w-12 min-w-12 min-h-12'" class="object-cover" alt="artwork-logo"/>
                         </div>
                     </div>
                     <div v-if="isFullSideBar" class="ml-4">
-                        <img :src="usePage().props.big_logo" :class="isFullSideBar ? 'h-12 w-12' : 'h-16 w-16'" alt="artwork-logo"/>
+                        <img :src="usePage().props.big_logo" :class="isFullSideBar ? 'h-12 w-auto' : 'h-16 w-16'" alt="artwork-logo"/>
                     </div>
                 </div>
             </div>

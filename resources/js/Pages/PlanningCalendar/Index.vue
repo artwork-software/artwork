@@ -1,5 +1,5 @@
 <template>
-    <AppLayout>
+    <AppLayout :title="$t('Planning Calendar')">
 
         <transition name="fade" appear>
             <div class="pointer-events-none fixed z-50 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">

@@ -1,5 +1,5 @@
 <template>
-    <AppLayout>
+    <AppLayout :title="$t('Accommodation') + ': ' + accommodation.name">
         <div class="mt-5 mx-auto container pb-20">
             <div>
                 <PageTitle :title="$t('Accommodation') + ': ' + accommodation.name" description="Bearbeite deine Unterkunft" />

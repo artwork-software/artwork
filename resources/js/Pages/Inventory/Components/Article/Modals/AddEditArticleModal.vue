@@ -13,7 +13,7 @@
                     <div @click="addImage"
                          class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
                         <component is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true"/>
-                        <span class="mt-2 block text-sm font-semibold text-gray-900">Upload Images</span>
+                        <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t('Upload Images')}}</span>
                         <input type="file" accept="image/*" class="sr-only" ref="articleImageInput" multiple
                                @input="handleImageInput"/>
                     </div>

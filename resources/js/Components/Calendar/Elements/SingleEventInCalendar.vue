@@ -164,9 +164,11 @@
                                  class="mt-1 ml-5 flex flex-wrap">
                                 <div class="flex flex-wrap flex-row -ml-1.5"
                                      v-for="user in event?.project?.leaders?.slice(0,3)">
-                                    <img :src="user.profile_photo_url" alt=""
+
+                                    <UserPopoverTooltip :user="user" width="5" height="5" />
+                                    <!--<img :src="user.profile_photo_url" alt=""
                                          class="mx-auto shrink-0 flex object-cover rounded-full"
-                                         :class="['h-' + 5 * zoom_factor, 'w-' + 5 * zoom_factor]">
+                                         :class="['h-' + 5 * zoom_factor, 'w-' + 5 * zoom_factor]">-->
                                 </div>
                                 <div v-if="event?.project?.leaders.length >= 4" class="my-auto">
                                     <Menu as="div" class="relative">
@@ -696,6 +698,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import EventNoteComponent from "@/Layouts/Components/EventNoteComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {Float} from "@headlessui-float/vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 const {t} = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);

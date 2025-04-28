@@ -62,7 +62,7 @@ trait HasProfilePhotoCustom
     {
         return Attribute::get(function (): string {
             return $this->profile_photo_path
-                ? Storage::disk($this->profilePhotoDisk())->url($this->profile_photo_path)
+                ? asset('storage/' . $this->profile_photo_path)
                 : $this->defaultProfilePhotoUrl();
         });
     }
@@ -78,7 +78,8 @@ trait HasProfilePhotoCustom
             return mb_substr($segment, 0, 1);
         })->join(' '));
 
-        return route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
+
+        return  route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
     }
 
     /**

@@ -91,7 +91,7 @@ readonly class EventCalendarService
         )->keyBy('id');
         $projects = Project::whereIn('id', $projectIds)
             ->select(['id', 'name', 'state', 'artists', 'is_group', 'color', 'icon'])
-            ->with(['status:id,name,color', 'managerUsers:id,first_name,last_name,position,email'])
+            ->with(['status:id,name,color', 'managerUsers:id,first_name,last_name,position,email,profile_photo_path'])
             ->get()->keyBy('id');
         $eventTypes = EventType::whereIn('id', $eventTypeIds)->select(['id', 'name', 'abbreviation', 'hex_code'])->get(
         )->keyBy('id');

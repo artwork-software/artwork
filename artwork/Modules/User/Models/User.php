@@ -35,6 +35,7 @@ use Artwork\Modules\ShiftPlanComment\Models\Traits\HasShiftPlanComments;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
@@ -173,7 +174,7 @@ class User extends Model implements
     use HasFactory;
     use HasRoles;
     use HasPermissions;
-    use HasProfilePhoto;
+    //use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
     use Searchable;
@@ -183,6 +184,7 @@ class User extends Model implements
     use HasIndividualTimes;
     use HasShiftPlanComments;
     use LaravelPermissionToVueJS;
+    use HasProfilePhotoCustom;
 
     protected $fillable = [
         'first_name',
@@ -279,6 +281,7 @@ class User extends Model implements
 
     protected $appends = [
         'profile_photo_url',
+        'profile_photo_url_new',
         'full_name',
         'type',
         //'assigned_craft_ids',
@@ -308,6 +311,12 @@ class User extends Model implements
             : route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
     }
 
+    public function getProfilePhotoUrlNewAttribute(): string
+    {
+        return $this->profile_photo_path
+            ? asset('storage/' . $this->profile_photo_path)
+            : route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
+    }
 
     public function shifts(): BelongsToMany
     {

@@ -14,38 +14,38 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <TextInputComponent id="first_name"
+                    <BaseInput id="first_name"
                                         v-model="form.first_name"
                                         :label="getRequiredFieldLabel($t('First name'))"/>
                     <jet-input-error :message="form.errors.first_name" class="mt-2"/>
                 </div>
                 <div>
-                    <TextInputComponent id="last_name"
+                    <BaseInput id="last_name"
                                         v-model="form.last_name"
                                         :label="getRequiredFieldLabel($t('Last name'))" />
                     <jet-input-error :message="form.errors.last_name" class="mt-2"/>
                 </div>
                 <div>
-                    <TextInputComponent id="email"
+                    <BaseInput id="email"
                                         disabled
                                         v-model="form.email"
                                         :label="getRequiredFieldLabel($t('E-mail address'))" />
                     <jet-input-error :message="form.errors.email" class="mt-2"/>
                 </div>
                 <div>
-                    <TextInputComponent id="phone_number"
+                    <BaseInput id="phone_number"
                                         v-model="form.phone_number"
                                         :label="$t('Phone number')" />
                     <jet-input-error :message="form.errors.phone_number" class="mt-2"/>
                 </div>
                 <div>
-                    <TextInputComponent id="business"
+                    <BaseInput id="business"
                                         v-model="form.business"
                                         :label="getRequiredFieldLabel($t('Company'))" />
                     <jet-input-error :message="form.errors.business" class="mt-2"/>
                 </div>
                 <div>
-                    <TextInputComponent id="position"
+                    <BaseInput id="position"
                                         type="text"
                                         v-model="form.position"
                                         :label="$t('Position')" />
@@ -53,11 +53,11 @@
                 </div>
                 <div>
                     <div class="relative">
-                        <TextInputComponent id="password"
+                        <BaseInput id="password"
                                             :type="passwordType"
                                             v-model="form.password"
                                             :label="getRequiredFieldLabel($t('Password'))"/>
-                        <div class="absolute top-3 right-4 z-10 group">
+                        <div class="absolute top-3.5 right-8   z-10 group">
                             <IconEye class="w-6 h-6 text-gray-800 cursor-pointer" v-if="passwordType === 'password'" @click="showPassword"/>
                             <IconEyeClosed class="w-6 h-6 text-gray-800 cursor-pointer" v-else @click="showPassword"/>
                         </div>
@@ -72,11 +72,11 @@
                 </div>
                 <div>
                     <div class="relative">
-                        <TextInputComponent id="password_confirmation"
+                        <BaseInput id="password_confirmation"
                                             :type="passwordType"
                                             v-model="form.password_confirmation"
                                             :label="getRequiredFieldLabel($t('Confirm Password'))"/>
-                        <div class="absolute top-3 right-4 z-10 group">
+                        <div class="absolute top-3.5 right-8  z-10 group">
                             <IconEye class="w-6 h-6 text-gray-800 cursor-pointer" v-if="passwordType === 'password'" @click="showPassword"/>
                             <IconEyeClosed class="w-6 h-6 text-gray-800 cursor-pointer" v-else @click="showPassword"/>
                         </div>
@@ -117,10 +117,12 @@ import Permissions from "@/Mixins/Permissions.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
+        BaseInput,
         BaseButton,
         TextInputComponent,
         Head,

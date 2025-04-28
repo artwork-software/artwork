@@ -50,7 +50,9 @@ readonly class EventCalendarService
             'room_id',
             'user_id',
             'occupancy_option',
-            'declined_room_id'
+            'declined_room_id',
+            'is_series',
+            'series_id',
         ])
             ->with([
                 'project:id,name,state,artists',

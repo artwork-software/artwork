@@ -151,11 +151,11 @@
                             </div>
                         </div>
                         <!-- repeating Event -->
-                        <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
+                        <div :style="{lineHeight: lineHeight,fontSize: fontSize * 0.5}"
                              :class="[zoom_factor === 1 ? 'eventText' : '', 'font-semibold']"
                              v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
                              class="uppercase flex items-center">
-                            <IconRepeat class="mx-1 h-3 w-3" stroke-width="1.5"/>
+                            <component is="IconRepeat" class="mr-1 min-h-3 min-w-3" stroke-width="2"/>
                             {{ $t('Repeat event') }}
                         </div>
                         <!-- User-Icons -->

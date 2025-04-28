@@ -281,7 +281,6 @@ class User extends Model implements
 
     protected $appends = [
         'profile_photo_url',
-        'profile_photo_url_new',
         'full_name',
         'type',
         //'assigned_craft_ids',
@@ -311,12 +310,6 @@ class User extends Model implements
             : route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
     }
 
-    public function getProfilePhotoUrlNewAttribute(): string
-    {
-        return $this->profile_photo_path
-            ? asset('storage/' . $this->profile_photo_path)
-            : route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
-    }
 
     public function shifts(): BelongsToMany
     {

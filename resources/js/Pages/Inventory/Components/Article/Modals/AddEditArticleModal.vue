@@ -1,12 +1,6 @@
 <template>
-    <BaseModal @closed="$emit('close')" :modal-size="articleForm.is_detailed_quantity ? 'max-w-7xl' : 'max-w-4xl'"
-               full-modal>
-        <div class="px-6 pt-4">
-            <ModalHeader
-                :title="article ? $t('Edit article') : $t('Add Article')"
-                :description="article ? $t('Edit the article details') : $t('Add a new article')"
-            />
-        </div>
+    <ArtworkBaseModal @close="$emit('close')" :modal-size="articleForm.is_detailed_quantity ? 'max-w-7xl' : 'max-w-4xl'"
+               full-modal :title="article ? $t('Edit article') : $t('Add Article')" :description="article ? $t('Edit the article details') : $t('Add a new article')">
         <form @submit.prevent="submit">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-6 pb-4">
                 <div class="col-span-1">
@@ -67,7 +61,7 @@
                         />
                     </div>
 
-                    <div class="col-span-full">
+                    <!--<div class="col-span-full">
                         <BaseInput
                             type="number"
                             id="quantity" v-model="articleForm.quantity"
@@ -76,14 +70,12 @@
                             :maxlength="1000000"
                             required
                         />
-                    </div>
+                    </div>-->
                 </div>
-
-
             </div>
 
             <!-- Category selector -->
-            <div class="bg-gray-50 px-6 py-6 mb-5">
+            <div class="bg-gray-50 px-10 -mx-4 py-6 mb-5">
                 <div class="mb-5">
                     <Listbox as="div" v-model="selectedCategory">
                         <ListboxLabel class="xsDark">
@@ -167,24 +159,59 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="flex gap-3" v-if="selectedCategory">
-                    <div class="flex h-6 shrink-0 items-center">
-                        <div class="group grid size-4 grid-cols-1">
-                            <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description"
-                                   v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity"
-                                   type="checkbox" class="input-checklist"/>
+            <div class="px-6 pb-5" v-if="selectedCategory">
+                <div class="grid grid-cols-6 gap-x-4">
+                    <div class="col-span-3">
+                        <BaseInput
+                            type="number"
+                            id="quantity" v-model="articleForm.quantity"
+                            :label="$t('Quantity*')"
+                            :max="10000000"
+                            :maxlength="1000000"
+                            required
+                        />
+                    </div>
+                    <div class="col-span-3">
+                        <div class="flex gap-3 w-full" v-if="selectedCategory">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description"
+                                           v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity"
+                                           type="checkbox" class="input-checklist"/>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="is_detailed_quantity" class="font-medium text-gray-900">
+                                    {{ $t('Single inventory capable') }}
+                                </label>
+                                <p id="is_required-description" class="text-gray-500">
+                                    {{
+                                        $t('If activated, each individual piece of this article can be provided with its own properties')
+                                    }}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    <div class="text-sm/6">
-                        <label for="is_detailed_quantity" class="font-medium text-gray-900">
-                            {{ $t('Single inventory capable') }}
-                        </label>
-                        <p id="is_required-description" class="text-gray-500">
-                            {{
-                                $t('If activated, each individual piece of this article can be provided with its own properties')
-                            }}
-                        </p>
+                </div>
+
+
+                <div v-if="!articleForm.is_detailed_quantity && selectedCategory" class="mt-5">
+                    <div v-for="(statusValue, index) in articleForm.statusValues" class="grid grid-cols-2 gap-x-4 mb-3">
+                        <div class="flex items-center">
+                            <span class="font-lexend text-sm">{{ statusValue.name }}</span>
+                        </div>
+                        <div>
+                            <BaseInput
+                                type="number"
+                                :id="'quantity-' + statusValue.id" v-model="statusValue.value"
+                                :label="$t('Quantity')"
+                                :max="10000000"
+                                :maxlength="1000000"
+                                required
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -641,7 +668,11 @@
                             :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''"/>
             </div>
         </form>
-    </BaseModal>
+
+        <pre>
+            {{ articleForm.statusValues }}
+        </pre>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -670,6 +701,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import {XCircleIcon} from "@heroicons/vue/solid";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const props = defineProps({
     article: {
@@ -683,6 +715,7 @@ const properties = inject('properties');
 const categories = inject('categories');
 const rooms = inject('rooms');
 const manufacturers = inject('manufacturers');
+const statuses = inject('statuses');
 
 const emits = defineEmits(["close"]);
 const articleImageInput = ref(null);
@@ -727,6 +760,13 @@ const articleForm = useForm({
     inventory_category_id: props.article ? props.article.inventory_category_id : null,
     inventory_sub_category_id: props.article ? props.article.inventory_sub_category_id : null,
     quantity: props.article ? props.article.quantity : 0,
+    statusValues: statuses.map(status => {
+        return {
+            id: status.id,
+            name: status.name,
+            value: 0
+        }
+    }),
     is_detailed_quantity: props.article ? props.article.is_detailed_quantity : false,
     oldImages: [],
     newImages: [],

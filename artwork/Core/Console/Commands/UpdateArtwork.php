@@ -95,6 +95,12 @@ class UpdateArtwork extends Command
 
         $this->info('Change service provider contacts to the new contact model structure');
         $this->call('artwork:update-service-provider-contacts');
+
+        $this->info('----------------------------------------------------------');
+        // add to all project Groups the new column with type project_relevant_column
+        $this->info('add basic inventory article status');
+        $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder']);
+
         $this->info('----------------------------------------------------------');
         $this->info('Artwork Update Command has finished');
     }

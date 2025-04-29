@@ -26,7 +26,7 @@ class InventoryArticleRepository
 
     public function withRelations($query, int $perPage = 50)
     {
-        return $query->with(['properties', 'category', 'subCategory', 'images', 'detailedArticleQuantities'])->paginate($perPage);
+        return $query->with(['properties', 'category', 'subCategory', 'images', 'detailedArticleQuantities', 'statusValues'])->paginate($perPage);
     }
 
     public function applyFilters($query, array $filters)

@@ -1,5 +1,5 @@
 <template>
-    <aside class="h-full font-lexend min-w-80 max-w-124">
+    <aside class="h-full font-lexend">
         <h2 class="sr-only">Filters</h2>
         <BaseCard>
             <div class="p-5">

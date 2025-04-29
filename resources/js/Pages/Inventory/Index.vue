@@ -32,16 +32,16 @@
 
             </div>
 
-            <div class="pt-12 pb-24 lg:grid lg:grid-cols-3 lg:gap-x-6 xl:grid-cols-7">
+            <div class="pt-12 pb-24 grid grid-cols-1 sm:grid-cols-4 md:grid-cols-6 lg:gap-x-8 lg:grid-cols-8 2xl:flex 2xl:w-full">
 
-                <div class="mb-8 md:col-span-3 lg:col-span-3 xl:col-span-2 col-span-6">
-                <InventorySidebarComponent
-                    :current-category="props.currentCategory"
-                    :articles-count="props.articlesCount"
-                    :categories="props.categories"
-                />
+                <div class="col-span-full md:col-span-full lg:col-span-2 xl:col-span-2 2xl:max-w-96 2xl:w-96">
+                    <InventorySidebarComponent
+                        :current-category="props.currentCategory"
+                        :articles-count="props.articlesCount"
+                        :categories="props.categories"
+                    />
                 </div>
-                <section aria-labelledby="product-heading" class="col-span-3 md:col-span-6 lg:col-span-6 xl:col-span-5">
+                <section aria-labelledby="product-heading" class="col-span-full lg:col-span-6 2xl:w-full">
                     <div class="flex items-center justify-between mb-3">
                         <div>
                             <InventoryBreadcrumbComponent :current-category="props.currentCategory" :current-sub-category="props.currentSubCategory"/>
@@ -168,6 +168,10 @@ const props = defineProps({
     manufacturers: {
         type: Object,
         required: true
+    },
+    statuses: {
+        type: Object,
+        required: true
     }
 })
 
@@ -175,6 +179,7 @@ provide('properties', props.properties)
 provide('rooms', props.rooms)
 provide('manufacturers', props.manufacturers)
 provide('categories', props.categories)
+provide('statuses', props.statuses)
 
 
 

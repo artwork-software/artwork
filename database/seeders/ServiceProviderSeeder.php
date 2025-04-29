@@ -49,31 +49,6 @@ class ServiceProviderSeeder extends Seeder
                     ])
                 );
             }
-
-            $serviceProvider->contacts()->create([
-                'first_name' => $faker->firstName,
-                'last_name' => $faker->lastName,
-                'email' => $faker->companyEmail,
-                'phone_number' => $faker->phoneNumber,
-            ]);
-            $serviceProvider->contacts()->create([
-                'first_name' => $faker->firstName,
-                'last_name' => $faker->lastName,
-                'email' => $faker->companyEmail,
-                'phone_number' => $faker->phoneNumber,
-            ]);
-            $serviceProvider->contacts()->create([
-                'first_name' => $faker->firstName,
-                'last_name' => $faker->lastName,
-                'email' => $faker->companyEmail,
-                'phone_number' => $faker->phoneNumber,
-            ]);
-            $serviceProvider->contacts()->create([
-                'first_name' => $faker->firstName,
-                'last_name' => $faker->lastName,
-                'email' => $faker->companyEmail,
-                'phone_number' => $faker->phoneNumber,
-            ]);
         }
     }
 }

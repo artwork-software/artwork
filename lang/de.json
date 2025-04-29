@@ -396,7 +396,7 @@
     "Specify which teams the user is in. Note: He/she has authorization to view all projects assigned to the teams. Projects assigned to the teams.": "Gib' an in welchen Teams die/der Nutzer*in ist.\n                    Beachte: Sie/Er hat die Berechtigung alle den Teams zugeordneten \n                    Projekte einzusehen.",
     "No teams have been created in the tool yet.": "Bisher sind keine Teams im Tool angelegt.",
     "Change profile picture": "Profilbild ändern",
-    "Select your profile picture here. It should not exceed the size of 1024 KB.": "Wähle hier dein Profilbild aus. Es sollte die Größe von 1024 KB nicht überschreiten.",
+    "Select your profile picture here. It should not exceed the size of 3072 KB.": "Wähle hier dein Profilbild aus. Es sollte die Größe von 3072 KB nicht überschreiten.",
     "Preview new profile picture:": "Vorschau neues Profilbild:",
     "Select file": "Datei auswählen",
     "Delete current profile picture": "Aktuelles Profilbild löschen",

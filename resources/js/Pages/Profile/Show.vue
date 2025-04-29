@@ -219,7 +219,7 @@
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         {{ $t('Change profile picture') }}
                     </div>
-                    <span class="text-secondary my-auto">{{ $t('Select your profile picture here. It should not exceed the size of 1024 KB.')}} </span>
+                    <span class="text-secondary my-auto">{{ $t('Select your profile picture here. It should not exceed the size of 3072 KB.')}} </span>
                     <!-- New Profile Photo Preview -->
                     <h2 class="" v-show="photoPreview">{{$t('Preview new profile picture:')}}</h2>
                     <div class="flex">

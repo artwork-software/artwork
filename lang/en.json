@@ -397,7 +397,7 @@
     "Specify which teams the user is in. Note: He/she has authorization to view all projects assigned to the teams. Projects assigned to the teams." : "Specify which teams the user is in. Note: He/she has authorization to view all projects assigned to the teams. Projects assigned to the teams.",
     "No teams have been created in the tool yet." : "No teams have been created in the tool yet.",
     "Change profile picture" : "Change profile picture",
-    "Select your profile picture here. It should not exceed the size of 1024 KB." : "Select your profile picture here. It should not exceed the size of 1024 KB.",
+    "Select your profile picture here. It should not exceed the size of 3072 KB." : "Select your profile picture here. It should not exceed the size of 3072 KB.",
     "Preview new profile picture:" : "Preview new profile picture:",
     "Select file" : "Select file",
     "Delete current profile picture" : "Delete current profile picture",

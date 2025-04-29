@@ -26,7 +26,7 @@ class InventoryArticleRepository
 
     public function withRelations($query, int $perPage = 50)
     {
-        return $query->with(['properties', 'category', 'subCategory', 'images', 'detailedArticleQuantities', 'statusValues'])->paginate($perPage);
+        return $query->with(['properties', 'category', 'subCategory', 'images', 'detailedArticleQuantities.status', 'statusValues'])->paginate($perPage);
     }
 
     public function applyFilters($query, array $filters)
@@ -120,6 +120,20 @@ class InventoryArticleRepository
         }
     }
 
+    public function attachStatusValues(InventoryArticle $article, array $statusValues): void
+    {
+        foreach ($statusValues as $statusValue) {
+            $article->statusValues()->attach((int)$statusValue['id'], [
+                'value' => (string)$statusValue['value']
+            ]);
+        }
+    }
+
+    public function detachAllStatusValues(InventoryArticle $article): void
+    {
+        $article->statusValues()->detach();
+    }
+
     public function addDetailedArticles(InventoryArticle $article, Collection $detailedArticles): void
     {
         foreach ($detailedArticles as $detailedArticleData) {
@@ -127,6 +141,7 @@ class InventoryArticleRepository
                 'name' => $detailedArticleData['name'],
                 'quantity' => $detailedArticleData['quantity'],
                 'description' => $detailedArticleData['description'],
+                'inventory_article_status_id' => $detailedArticleData['status']['id'] ?? null,
             ]);
 
             foreach ($detailedArticleData['properties'] as $property) {

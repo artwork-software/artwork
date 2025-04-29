@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('inventory_article_statuses', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->string('name');
             $table->boolean('default')->default(false);
             $table->boolean('deletable')->default(true);
             $table->timestamps();

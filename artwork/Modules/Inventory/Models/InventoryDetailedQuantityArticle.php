@@ -20,6 +20,7 @@ class InventoryDetailedQuantityArticle extends Model
         'name',
         'description',
         'quantity',
+        'inventory_article_status_id'
     ];
 
     protected $appends = ['room', 'manufacturer'];
@@ -94,6 +95,11 @@ class InventoryDetailedQuantityArticle extends Model
             'name' => $manufacturer->name,
             'property_id' => $manufacturerProperty->id,
         ];
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(InventoryArticleStatus::class, 'inventory_article_status_id');
     }
 
 }

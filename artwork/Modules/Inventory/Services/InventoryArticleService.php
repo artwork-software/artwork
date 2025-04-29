@@ -72,6 +72,12 @@ class InventoryArticleService
         $this->articleRepository->attachProperties($article, $request->collect('properties'));
         $this->articleRepository->addDetailedArticles($article, $request->collect('detailed_article_quantities'));
 
+        // Statuswerte anhängen
+        $statusValues = $request->get('statusValues');
+        if (is_array($statusValues) && count($statusValues) > 0) {
+            $this->articleRepository->attachStatusValues($article, $statusValues);
+        }
+
         return $article;
     }
 
@@ -114,6 +120,13 @@ class InventoryArticleService
         $this->articleRepository->attachProperties($article, $request->collect('properties'));
         $this->articleRepository->addDetailedArticles($article, $request->collect('detailed_article_quantities'));
 
+        // Statuswerte anhängen
+        $statusValues = $request->get('statusValues');
+        if (is_array($statusValues) && count($statusValues) > 0) {
+            $this->articleRepository->detachAllStatusValues($article);
+            $this->articleRepository->attachStatusValues($article, $statusValues);
+        }
+
         return $article;
     }
 
@@ -135,5 +148,10 @@ class InventoryArticleService
     public function restore(InventoryArticle $article): void
     {
         $this->articleRepository->restore($article);
+    }
+
+    public function attachStatusValues(InventoryArticle $article, array $statusValues): void
+    {
+        $this->articleRepository->attachStatusValues($article, $statusValues);
     }
 }

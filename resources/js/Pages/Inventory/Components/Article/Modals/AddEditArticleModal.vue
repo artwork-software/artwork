@@ -213,6 +213,12 @@
                             />
                         </div>
                     </div>
+
+                    <div v-if="calculateStatusQuantityInArticle > articleForm.quantity">
+                        <p class="text-red-500 font-lexend text-sm mt-2">
+                            {{ $t('The sum of the quantities of the status values exceeds the total quantity of the article') }}
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -268,6 +274,7 @@
                                     <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
                                         {{ $t(capitalizeFirstLetter(property?.type)) }}
                                     </td>
+
                                     <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
 
                                         <Combobox v-if="property.type === 'room'" as="div" v-model="property.value"
@@ -471,6 +478,9 @@
                                     <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
                                         {{ $t('Description') }}
                                     </th>
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                        {{ $t('Status') }}
+                                    </th>
                                     <th scope="col"
                                         class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
                                         {{ $t('Quantity') }}
@@ -496,6 +506,15 @@
                                                class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                                :placeholder="$t('Description')"
                                         />
+                                    </td>
+                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                        <div class="">
+                                            <div class="mt-2 grid grid-cols-1">
+                                                <select id="location" name="location" v-model="detailedArticle.status" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                    <option v-for="status in statuses" :value="status" :key="status">{{ status.name }}</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
                                         <input type="text" v-model="detailedArticle.quantity"
@@ -664,26 +683,18 @@
             </div>
             <div class="flex items-center justify-center my-10">
                 <FormButton type="submit" :text="article ? $t('Update') : $t('Create')"
-                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory || calculateTotalQuantity > articleForm.quantity"
+                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory || calculateTotalQuantity > articleForm.quantity || calculateStatusQuantityInArticle > articleForm.quantity"
                             :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''"/>
             </div>
         </form>
-
-        <pre>
-            {{ articleForm.statusValues }}
-        </pre>
     </ArtworkBaseModal>
 </template>
 
 <script setup>
 
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {useForm} from "@inertiajs/vue3";
 import {computed, inject, onMounted, ref, watch, nextTick} from "vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
+
 import {
     Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions,
     Listbox,
@@ -695,9 +706,7 @@ import {
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
-import ArticleModalTabs from "@/Pages/Inventory/Components/Article/Modals/Components/ArticleModalTabs.vue";
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
-import cloneDeep from 'lodash/cloneDeep';
 import {XCircleIcon} from "@heroicons/vue/solid";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
@@ -764,7 +773,7 @@ const articleForm = useForm({
         return {
             id: status.id,
             name: status.name,
-            value: 0
+            value: props.article ? props.article.status_values.find((statusValue) => statusValue.id === status.id)?.pivot?.value : 0
         }
     }),
     is_detailed_quantity: props.article ? props.article.is_detailed_quantity : false,
@@ -799,18 +808,16 @@ const articleForm = useForm({
                     categoryProperty: getIsDeletable(prop.id),
                     select_values: prop.select_values
                 }
-            }) ?? []
+            }) ?? [],
+            // add status form statuses where are default
+            status: detailedArticle.status ?? statuses.filter(status => {
+                return status.default
+            })[0]
         }
     }) : [],
     main_image_index: 0
 })
 
-const updateTabId = (id) => {
-    currentTabId.value = id;
-    if (id === 1) {
-        showArticleHeader.value = false
-    }
-}
 
 const checkIfEveryPropertyWhereAreRequiredIsFilled = computed(() => {
     if (articleForm.is_detailed_quantity) {
@@ -883,7 +890,10 @@ const addNewDetailedArticle = () => {
             is_required: prop.is_required,
             categoryProperty: getIsDeletable(prop.id),
             select_values: prop.select_values
-        })) ?? []
+        })) ?? [],
+        status: statuses.filter(status => {
+            return status.default
+        })[0] ?? null
     });
 }
 
@@ -1086,7 +1096,10 @@ watch(() => articleForm.is_detailed_quantity, (value) => {
                     categoryProperty: getIsDeletable(prop.id),
                     select_values: prop.select_values
                 })
-            })
+            }),
+            status: statuses.filter(status => {
+                return status.default
+            })[0] ?? null
         }];
         articleForm.properties = [];
     } else {
@@ -1167,7 +1180,10 @@ onMounted(() => {
                     name: props.article.name,
                     description: props.article.description,
                     quantity: '',
-                    properties: [...categoryProps]
+                    properties: [...categoryProps],
+                    status: statuses.filter(status => {
+                        return status.default
+                    })[0] ?? null
                 }];
             } else {
                 articleForm.detailed_article_quantities = props.article.detailed_article_quantities.map(da => ({
@@ -1183,7 +1199,10 @@ onMounted(() => {
                         is_required: prop.is_required,
                         categoryProperty: getIsDeletable(prop.id),
                         select_values: prop.select_values
-                    }))
+                    })),
+                    status: da.status ?? statuses.filter(status => {
+                        return status.default
+                    })[0]
                 }));
             }
             articleForm.properties = [];
@@ -1209,6 +1228,14 @@ onMounted(() => {
         }
     }
 
+})
+
+const calculateStatusQuantityInArticle = computed(() => {
+
+    return articleForm.statusValues.reduce((total, status) => {
+        const quantity = parseInt(status.value, 10)
+        return total + (isNaN(quantity) ? 0 : quantity);
+    }, 0);
 })
 
 </script>

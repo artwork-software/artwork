@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('inventory_article_status_values', function (Blueprint $table) {
-            $table->id();
+        Schema::table('inventory_detailed_quantity_articles', function (Blueprint $table) {
             $table->foreignId('inventory_article_status_id')
+                ->nullable()
                 ->constrained('inventory_article_statuses')
-                ->name('inv_art_stat_val_fk')
-                ->cascadeOnDelete();
-            $table->foreignId('inventory_article_id')->constrained('inventory_articles')->cascadeOnDelete();
-            $table->string('value');
-            $table->timestamps();
+                ->name('inv_det_art_stat_fk')
+                ->cascadeOnDelete()
+                ->after('inventory_article_id');
         });
     }
 
@@ -28,6 +26,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('inventory_article_status_values');
+        Schema::table('inventory_detailed_quantity_articles', function (Blueprint $table) {
+            $table->dropForeign('inv_det_art_stat_fk');
+            $table->dropColumn('inventory_article_status_id');
+        });
     }
 };

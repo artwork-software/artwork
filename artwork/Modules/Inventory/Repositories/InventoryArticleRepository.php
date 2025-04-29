@@ -179,7 +179,7 @@ class InventoryArticleRepository
     {
         $article->images()->delete();
         $article->detailedArticleQuantities()->delete();
-
+        $article->statusValues()->detach();
         $article->delete();
     }
 
@@ -218,6 +218,7 @@ class InventoryArticleRepository
         foreach ($detailedArticles as $detailedArticle) {
             $detailedArticle->properties()->detach();
         }
+
 
         // delete detailed articles
         $detailedArticles->forceDelete();

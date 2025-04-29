@@ -91,6 +91,14 @@
                                 {{ formatQuantity(article.quantity) }}</p>
                             </div>
                         </div>
+                        <div class="border-b border-gray-100" v-for="status in article.status_values" :key="status.id">
+                            <div class="pr-2 py-4 flex items-center justify-between">
+                                <dt class="text-sm font-bold text-primary font-lexend">{{ status.name }}</dt>
+                                <p class="font-lexend text-sm pl-2"
+                                   :class="status.pivot.value === 0 ? 'text-error' : 'text-artwork-buttons-create'">
+                                    {{ formatQuantity(status.pivot.value) }}</p>
+                            </div>
+                        </div>
                         <div>
                             <dl class="divide-y divide-gray-100" v-if="article.properties.length > 0">
                                 <div
@@ -126,7 +134,7 @@
                         </div>
                     </div>
                 </section>
-                <div class="bg-backgroundGray -mx-6">
+                <div class="bg-backgroundGray -mx-4">
                 <section aria-labelledby="details-heading" class="mt-8 mb-2 border-t-2 border-gray-100 pt-4 mx-6" v-if="article.is_detailed_quantity">
                     <div class="flex justify-between mb-4 py-3 border-b-2 border-dashed">
                         <div class="font-lexend font-semibold text-primary">
@@ -154,7 +162,7 @@
                                     </span>
                                     <span class="ml-6 flex items-center gap-x-3">
                                         <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-lexend font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset">
-                                            {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
+                                            {{ detailedArticle.status.name }} - {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
                                         </span>
                                         <component is="IconPlus" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
                                         <component is="IconMinus" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>

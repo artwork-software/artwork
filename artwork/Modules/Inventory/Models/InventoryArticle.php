@@ -80,6 +80,16 @@ class InventoryArticle extends Model
         return $this->hasMany(InventoryDetailedQuantityArticle::class, 'inventory_article_id', 'id');
     }
 
+    public function statusValues(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            InventoryArticleStatus::class,
+            'inventory_article_status_values',
+            'inventory_article_id',
+            'inventory_article_status_id'
+        )->withPivot('value');
+    }
+
     public function searchableAs(): string
     {
         return 'inventory_articles';

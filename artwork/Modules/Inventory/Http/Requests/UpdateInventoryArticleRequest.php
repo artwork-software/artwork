@@ -36,6 +36,9 @@ class UpdateInventoryArticleRequest extends FormRequest
             'detailed_article_quantities.*.properties' => ['nullable', 'array'],
             'detailed_article_quantities.*.properties.*.id' => ['required', 'integer', 'exists:inventory_article_properties,id'],
             'detailed_article_quantities.*.properties.*.value' => ['nullable', 'max:255'],
+
+            'statusValues' => ['nullable', 'array'],
+            'statusValues.*.id' => ['required', 'integer', 'exists:inventory_article_statuses,id'],
         ];
     }
 }

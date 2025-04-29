@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             ProjectManagementBuilderSeed::class,
             InventoryArticlePropertiesSeeder::class,
             ManufacturerSeeder::class,
+            InventoryArticleStatusSeeder::class,
         ]);
     }
 }

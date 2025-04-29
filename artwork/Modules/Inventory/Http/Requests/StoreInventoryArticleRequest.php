@@ -32,6 +32,9 @@ class StoreInventoryArticleRequest extends FormRequest
             'properties.*.id' => ['required', 'integer', 'exists:inventory_article_properties,id'],
             'properties.*.value' => ['nullable', 'max:255'],
             'main_image_index' => ['required', 'integer'],
+            'statusValues' => ['nullable', 'array'],
+            'statusValues.*.id' => ['required', 'integer', 'exists:inventory_article_statuses,id'],
+
         ];
     }
 }

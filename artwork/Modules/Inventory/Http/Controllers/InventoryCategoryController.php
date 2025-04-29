@@ -7,6 +7,7 @@ use Artwork\Modules\Inventory\Http\Requests\StoreInventoryCategoryRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryCategoryRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
+use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Repositories\InventoryPropertyRepository;
@@ -61,6 +62,7 @@ class InventoryCategoryController extends Controller
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::all(),
             'manufacturers' => Manufacturer::all(),
+            'statuses' => InventoryArticleStatus::all(),
         ]);
     }
 

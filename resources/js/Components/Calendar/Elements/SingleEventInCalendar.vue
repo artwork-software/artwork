@@ -804,15 +804,22 @@ const isRoomAdmin = computed(() => {
 });
 
 const checkIfMultiEditIsEnabled = computed(() => {
-    // if isPlanning == true && MultiEdit == true -> show checkbox only on event if has verifications
-    if (props.isPlanning && props.multiEdit) {
-        return props.event.hasVerification || props.event.isPlanning;
+    const { isPlanning, multiEdit, zoom_factor, event } = props;
+
+    if (multiEdit) {
+        if (isPlanning) {
+            return event.hasVerification || event.isPlanning;
+        }
+        if (zoom_factor > 0.4) {
+            return true;
+        }
+
+        return true;
     }
 
-    if(props.zoom_factor > 0.4 && props.multiEdit) {
-        return true
-    }
-})
+    return false;
+});
+
 
 const isCreator = computed(() => {
     return props.event.created_by.id === usePage().props.auth.user.id

@@ -83,7 +83,36 @@
                             </div>
                         </h3>
                         -->
-                        <div class="border-b border-gray-100">
+                        <Disclosure v-slot="{ open }">
+                            <DisclosureButton class="w-full">
+                                <div class="border-b border-gray-100">
+                                    <div class="pr-2 py-4 flex items-center justify-between">
+                                        <dt class="text-sm font-bold text-primary font-lexend flex items-center gap-x-2">
+                                            {{ $t('Total quantity') }}
+                                            <component is="IconChevronDown" :class="[open ? 'rotate-180' : '']"
+                                                       class="size-5 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
+                                        </dt>
+                                        <p class="font-lexend text-sm pl-2"
+                                           :class="article.quantity === 0 ? 'text-error' : 'text-artwork-buttons-create'">
+                                            {{ formatQuantity(article.quantity) }}</p>
+                                    </div>
+                                </div>
+                            </DisclosureButton>
+                            <DisclosurePanel class="px-4 pb-2 pt-2 text-sm text-gray-500">
+                                <div  v-for="status in article.status_values" :key="status.id">
+                                    <div class="border-b border-gray-100" v-if="status.id !== 5">
+                                        <div class="pr-2 py-4 flex items-center justify-between">
+                                            <dt class="text-sm font-bold text-primary font-lexend">{{ status.name }}</dt>
+                                            <p class="font-lexend text-sm pl-2"
+                                               :class="status.pivot.value === 0 ? 'text-error' : 'text-artwork-buttons-create'">
+                                                {{ formatQuantity(status.pivot.value) }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </DisclosurePanel>
+                        </Disclosure>
+                        <!--<div class="border-b border-gray-100">
                             <div class="pr-2 py-4 flex items-center justify-between">
                             <dt class="text-sm font-bold text-primary font-lexend">{{ $t('Quantity') }}</dt>
                             <p class="font-lexend text-sm pl-2"
@@ -93,12 +122,12 @@
                         </div>
                         <div class="border-b border-gray-100" v-for="status in article.status_values" :key="status.id">
                             <div class="pr-2 py-4 flex items-center justify-between">
-                                <dt class="text-sm font-bold text-primary font-lexend">{{ status.name }}</dt>
+                                <dt class="text-sm font-bold text-primary font-lexend">{{ $t('Quantity') }} - {{ status.name }}</dt>
                                 <p class="font-lexend text-sm pl-2"
                                    :class="status.pivot.value === 0 ? 'text-error' : 'text-artwork-buttons-create'">
                                     {{ formatQuantity(status.pivot.value) }}</p>
                             </div>
-                        </div>
+                        </div>-->
                         <div>
                             <dl class="divide-y divide-gray-100" v-if="article.properties.length > 0">
                                 <div

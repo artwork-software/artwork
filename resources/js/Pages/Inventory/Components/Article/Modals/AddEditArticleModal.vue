@@ -1,19 +1,13 @@
 <template>
-    <BaseModal @closed="$emit('close')" :modal-size="articleForm.is_detailed_quantity ? 'max-w-7xl' : 'max-w-4xl'"
-               full-modal>
-        <div class="px-6 pt-4">
-            <ModalHeader
-                :title="article ? $t('Edit article') : $t('Add Article')"
-                :description="article ? $t('Edit the article details') : $t('Add a new article')"
-            />
-        </div>
+    <ArtworkBaseModal @close="$emit('close')" :modal-size="articleForm.is_detailed_quantity ? 'max-w-7xl' : 'max-w-4xl'"
+               full-modal :title="article ? $t('Edit article') : $t('Add Article')" :description="article ? $t('Edit the article details') : $t('Add a new article')">
         <form @submit.prevent="submit">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-6 pb-4">
                 <div class="col-span-1">
                     <div @click="addImage"
                          class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
                         <component is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true"/>
-                        <span class="mt-2 block text-sm font-semibold text-gray-900">Upload Images</span>
+                        <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t('Upload Images')}}</span>
                         <input type="file" accept="image/*" class="sr-only" ref="articleImageInput" multiple
                                @input="handleImageInput"/>
                     </div>
@@ -67,7 +61,7 @@
                         />
                     </div>
 
-                    <div class="col-span-full">
+                    <!--<div class="col-span-full">
                         <BaseInput
                             type="number"
                             id="quantity" v-model="articleForm.quantity"
@@ -76,14 +70,12 @@
                             :maxlength="1000000"
                             required
                         />
-                    </div>
+                    </div>-->
                 </div>
-
-
             </div>
 
             <!-- Category selector -->
-            <div class="bg-gray-50 px-6 py-6 mb-5">
+            <div class="bg-gray-50 px-10 -mx-4 py-6 mb-5">
                 <div class="mb-5">
                     <Listbox as="div" v-model="selectedCategory">
                         <ListboxLabel class="xsDark">
@@ -167,24 +159,84 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="flex gap-3" v-if="selectedCategory">
-                    <div class="flex h-6 shrink-0 items-center">
-                        <div class="group grid size-4 grid-cols-1">
-                            <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description"
-                                   v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity"
-                                   type="checkbox" class="input-checklist"/>
+            <div class="px-6 pb-5" v-if="selectedCategory">
+                <div class="grid grid-cols-6 gap-x-4">
+                    <div class="col-span-3">
+                        <BaseInput
+                            type="number"
+                            id="quantity" v-model="articleForm.quantity"
+                            :label="$t('Total quantity*')"
+                            :max="10000000"
+                            :maxlength="1000000"
+                            required
+                        />
+                    </div>
+                    <div class="col-span-3">
+                        <div class="flex gap-3 w-full" v-if="selectedCategory">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description"
+                                           v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity"
+                                           type="checkbox" class="input-checklist"/>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="is_detailed_quantity" class="font-medium text-gray-900">
+                                    {{ $t('Single inventory capable') }}
+                                </label>
+                                <p id="is_required-description" class="text-gray-500">
+                                    {{
+                                        $t('If activated, each individual piece of this article can be provided with its own properties')
+                                    }}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    <div class="text-sm/6">
-                        <label for="is_detailed_quantity" class="font-medium text-gray-900">
-                            {{ $t('Single inventory capable') }}
-                        </label>
-                        <p id="is_required-description" class="text-gray-500">
-                            {{
-                                $t('If activated, each individual piece of this article can be provided with its own properties')
-                            }}
+                </div>
+
+                <div v-if="!articleForm.is_detailed_quantity && selectedCategory" class="ml-4 relative">
+                    <div v-for="(statusValue, index) in articleForm.statusValues">
+                        <div v-if="statusValue.id !== 5" class="grid grid-cols-2 gap-x-4 mb-3">
+                            <div class="flex items-center">
+                                <div class="absolute top-0 left-0 w-px h-[90%] bg-gray-300"></div>
+                                <div class="font-lexend text-sm flex items-center text-secondary"><div class="w-5 h-px bg-gray-300"></div><div class="ml-4 text-primary">{{ statusValue.name }}</div></div>
+                            </div>
+                            <div>
+                                <BaseInput
+                                    type="number"
+                                    :id="'quantity-' + statusValue.id" v-model="statusValue.value"
+                                    :label="$t('Quantity')"
+                                    :max="10000000"
+                                    :maxlength="1000000"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="calculateStatusQuantityInArticle > articleForm.quantity">
+                        <p class="text-red-500 font-lexend text-sm mt-2">
+                            {{ $t('The sum of the quantities of the status values exceeds the total quantity of the article') }}
                         </p>
+                        <div class="flex items-center justify-between font-lexend text-sm mt-1">
+                            <span>{{ $t('Total quantity') }}:</span>
+                            <span v-if="calculateStatusQuantityInArticle > articleForm.quantity"
+                                  @click="articleForm.quantity = calculateStatusQuantityInArticle"
+                                  class="flex items-center gap-x-0.5  cursor-pointer">
+                                                    <ToolTipWithTextComponent
+                                                        :text="formatQuantity(calculateStatusQuantityInArticle)"
+                                                        classes="text-artwork-buttons-create"
+                                                        icon-right
+                                                        stroke="2"
+                                                        icon="IconClick"
+                                                        icon-size="size-4"
+                                                        :tooltip-text="$t('Click to set the article quantity to the detailed article quantity')"/>
+                                                </span>
+                            <span class="font-bold"
+                                  v-else>{{ formatQuantity(calculateStatusQuantityInArticle) ?? 0 }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -203,19 +255,19 @@
                         <div class="inline-block min-w-full py-2 align-middle">
                             <table class="min-w-full divide-y divide-gray-300">
                                 <thead>
-                                <tr class="divide-x divide-gray-200">
-                                    <th scope="col"
-                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                                        Name
-                                    </th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                        {{ $t('Type') }}
-                                    </th>
-                                    <th scope="col"
-                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
-                                        {{ $t('Value') }}
-                                    </th>
-                                </tr>
+                                    <tr class="divide-x divide-gray-200">
+                                        <th scope="col"
+                                            class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                                            Name
+                                        </th>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                            {{ $t('Type') }}
+                                        </th>
+                                        <th scope="col"
+                                            class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
+                                            {{ $t('Value') }}
+                                        </th>
+                                    </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
                                 <tr v-for="property in articleForm.properties" :key="property?.id"
@@ -241,6 +293,7 @@
                                     <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
                                         {{ $t(capitalizeFirstLetter(property?.type)) }}
                                     </td>
+
                                     <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
 
                                         <Combobox v-if="property.type === 'room'" as="div" v-model="property.value"
@@ -444,6 +497,9 @@
                                     <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
                                         {{ $t('Description') }}
                                     </th>
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                        {{ $t('Status') }}
+                                    </th>
                                     <th scope="col"
                                         class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
                                         {{ $t('Quantity') }}
@@ -469,6 +525,15 @@
                                                class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                                :placeholder="$t('Description')"
                                         />
+                                    </td>
+                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                        <div class="">
+                                            <div class="mt-2 grid grid-cols-1">
+                                                <select id="location" name="location" v-model="detailedArticle.status" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                    <option v-for="status in statuses" :value="status" :key="status">{{ status.name }}</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
                                         <input type="text" v-model="detailedArticle.quantity"
@@ -637,22 +702,18 @@
             </div>
             <div class="flex items-center justify-center my-10">
                 <FormButton type="submit" :text="article ? $t('Update') : $t('Create')"
-                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory || calculateTotalQuantity > articleForm.quantity"
+                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory || calculateTotalQuantity > articleForm.quantity || calculateStatusQuantityInArticle > articleForm.quantity"
                             :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''"/>
             </div>
         </form>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
 
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {useForm} from "@inertiajs/vue3";
 import {computed, inject, onMounted, ref, watch, nextTick} from "vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
+
 import {
     Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions,
     Listbox,
@@ -664,12 +725,11 @@ import {
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
-import ArticleModalTabs from "@/Pages/Inventory/Components/Article/Modals/Components/ArticleModalTabs.vue";
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
-import cloneDeep from 'lodash/cloneDeep';
 import {XCircleIcon} from "@heroicons/vue/solid";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const props = defineProps({
     article: {
@@ -683,6 +743,7 @@ const properties = inject('properties');
 const categories = inject('categories');
 const rooms = inject('rooms');
 const manufacturers = inject('manufacturers');
+const statuses = inject('statuses');
 
 const emits = defineEmits(["close"]);
 const articleImageInput = ref(null);
@@ -727,6 +788,13 @@ const articleForm = useForm({
     inventory_category_id: props.article ? props.article.inventory_category_id : null,
     inventory_sub_category_id: props.article ? props.article.inventory_sub_category_id : null,
     quantity: props.article ? props.article.quantity : 0,
+    statusValues: statuses.map(status => {
+        return {
+            id: status.id,
+            name: status.name,
+            value: props.article ? props.article.status_values.find((statusValue) => statusValue.id === status.id)?.pivot?.value : 0
+        }
+    }),
     is_detailed_quantity: props.article ? props.article.is_detailed_quantity : false,
     oldImages: [],
     newImages: [],
@@ -759,18 +827,16 @@ const articleForm = useForm({
                     categoryProperty: getIsDeletable(prop.id),
                     select_values: prop.select_values
                 }
-            }) ?? []
+            }) ?? [],
+            // add status form statuses where are default
+            status: detailedArticle.status ?? statuses.filter(status => {
+                return status.default
+            })[0]
         }
     }) : [],
     main_image_index: 0
 })
 
-const updateTabId = (id) => {
-    currentTabId.value = id;
-    if (id === 1) {
-        showArticleHeader.value = false
-    }
-}
 
 const checkIfEveryPropertyWhereAreRequiredIsFilled = computed(() => {
     if (articleForm.is_detailed_quantity) {
@@ -843,7 +909,10 @@ const addNewDetailedArticle = () => {
             is_required: prop.is_required,
             categoryProperty: getIsDeletable(prop.id),
             select_values: prop.select_values
-        })) ?? []
+        })) ?? [],
+        status: statuses.filter(status => {
+            return status.default
+        })[0] ?? null
     });
 }
 
@@ -1046,7 +1115,10 @@ watch(() => articleForm.is_detailed_quantity, (value) => {
                     categoryProperty: getIsDeletable(prop.id),
                     select_values: prop.select_values
                 })
-            })
+            }),
+            status: statuses.filter(status => {
+                return status.default
+            })[0] ?? null
         }];
         articleForm.properties = [];
     } else {
@@ -1127,7 +1199,10 @@ onMounted(() => {
                     name: props.article.name,
                     description: props.article.description,
                     quantity: '',
-                    properties: [...categoryProps]
+                    properties: [...categoryProps],
+                    status: statuses.filter(status => {
+                        return status.default
+                    })[0] ?? null
                 }];
             } else {
                 articleForm.detailed_article_quantities = props.article.detailed_article_quantities.map(da => ({
@@ -1143,7 +1218,10 @@ onMounted(() => {
                         is_required: prop.is_required,
                         categoryProperty: getIsDeletable(prop.id),
                         select_values: prop.select_values
-                    }))
+                    })),
+                    status: da.status ?? statuses.filter(status => {
+                        return status.default
+                    })[0]
                 }));
             }
             articleForm.properties = [];
@@ -1169,6 +1247,14 @@ onMounted(() => {
         }
     }
 
+})
+
+const calculateStatusQuantityInArticle = computed(() => {
+
+    return articleForm.statusValues.reduce((total, status) => {
+        const quantity = parseInt(status.value, 10)
+        return total + (isNaN(quantity) ? 0 : quantity);
+    }, 0);
 })
 
 </script>

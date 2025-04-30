@@ -15,7 +15,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
+            'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:3072'],
             'phone_number' => ['nullable','string', 'max:15'],
             'position' => ['nullable', 'string', 'max:255'],
             'business' => ['nullable', 'string', 'max:255'],

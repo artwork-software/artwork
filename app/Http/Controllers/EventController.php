@@ -834,7 +834,7 @@ class EventController extends Controller
 
     private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId): void
     {
-        Event::create([
+        $event = Event::create([
             'name' => $request->title,
             'eventName' => $request->eventName,
             'description' => $request->description,
@@ -852,6 +852,10 @@ class EventController extends Controller
             'series_id' => $series->id,
             'allDay' => $request->allDay
         ]);
+        $event->eventProperties()
+            ->sync($request->get('event_properties', []));
+
+        broadcast(new EventCreated($event, $event->room_id));
     }
 
     public function commitShifts(Request $request): void

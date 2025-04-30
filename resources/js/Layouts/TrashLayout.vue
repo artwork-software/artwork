@@ -1,4 +1,8 @@
 <template>
+    <Head>
+        <link rel="icon" type="image/png" :href="usePage().props.small_logo" />
+        <title>{{ $t('Recycle bin') }} - {{ usePage().props.page_title }}</title>
+    </Head>
     <div class="artwork-container">
         <div class="flex-wrap">
             <div class="flex flex-wrap mx-10 ml-14 mt-5">
@@ -64,7 +68,7 @@
 <script>
 import {Listbox, ListboxButton, ListboxOptions, ListboxOption} from "@headlessui/vue";
 import {SearchIcon, ChevronDownIcon, CheckIcon} from "@heroicons/vue/solid";
-import {router} from "@inertiajs/vue3";
+import {Head, router, usePage} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import Input from "@/Layouts/Components/InputComponent.vue";
@@ -81,6 +85,7 @@ export default {
         this.selectedTrash = this.trashSites[this.$page.component];
     },
     methods: {
+        usePage,
         redirectToPage(href) {
             this.$inertia.get(href, {}, { preserveState: true });
         }
@@ -147,6 +152,7 @@ export default {
         }
     },
     components: {
+        Head,
         Input, XIcon,
         Listbox,
         SearchIcon,

@@ -151,11 +151,11 @@
                             </div>
                         </div>
                         <!-- repeating Event -->
-                        <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
+                        <div :style="{lineHeight: lineHeight,fontSize: fontSize * 0.5}"
                              :class="[zoom_factor === 1 ? 'eventText' : '', 'font-semibold']"
                              v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
                              class="uppercase flex items-center">
-                            <IconRepeat class="mx-1 h-3 w-3" stroke-width="1.5"/>
+                            <component is="IconRepeat" class="mr-1 min-h-3 min-w-3" stroke-width="2"/>
                             {{ $t('Repeat event') }}
                         </div>
                         <!-- User-Icons -->
@@ -164,9 +164,11 @@
                                  class="mt-1 ml-5 flex flex-wrap">
                                 <div class="flex flex-wrap flex-row -ml-1.5"
                                      v-for="user in event?.project?.leaders?.slice(0,3)">
-                                    <img :src="user.profile_photo_url" alt=""
+
+                                    <UserPopoverTooltip :user="user" width="5" height="5" />
+                                    <!--<img :src="user.profile_photo_url" alt=""
                                          class="mx-auto shrink-0 flex object-cover rounded-full"
-                                         :class="['h-' + 5 * zoom_factor, 'w-' + 5 * zoom_factor]">
+                                         :class="['h-' + 5 * zoom_factor, 'w-' + 5 * zoom_factor]">-->
                                 </div>
                                 <div v-if="event?.project?.leaders.length >= 4" class="my-auto">
                                     <Menu as="div" class="relative">
@@ -696,6 +698,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import EventNoteComponent from "@/Layouts/Components/EventNoteComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {Float} from "@headlessui-float/vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 const {t} = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
@@ -801,15 +804,22 @@ const isRoomAdmin = computed(() => {
 });
 
 const checkIfMultiEditIsEnabled = computed(() => {
-    // if isPlanning == true && MultiEdit == true -> show checkbox only on event if has verifications
-    if (props.isPlanning && props.multiEdit) {
-        return props.event.hasVerification || props.event.isPlanning;
+    const { isPlanning, multiEdit, zoom_factor, event } = props;
+
+    if (multiEdit) {
+        if (isPlanning) {
+            return event.hasVerification || event.isPlanning;
+        }
+        if (zoom_factor > 0.4) {
+            return true;
+        }
+
+        return true;
     }
 
-    if(props.zoom_factor > 0.4 && props.multiEdit) {
-        return true
-    }
-})
+    return false;
+});
+
 
 const isCreator = computed(() => {
     return props.event.created_by.id === usePage().props.auth.user.id

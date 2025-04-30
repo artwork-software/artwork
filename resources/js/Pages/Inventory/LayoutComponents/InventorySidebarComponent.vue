@@ -21,7 +21,7 @@
                                     <div class="p-1 rounded-lg w-1 bg-artwork-buttons-create"></div>
                                     <div class="w-full">
                                         <Link preserve-scroll class="flex items-center w-full justify-between" :href="route('inventory.category.show', category.id)" :class="[route().current('inventory.category.show', category.id) ? 'text-artwork-buttons-create font-semibold' : '']">
-                                            <div class="first-letter:capitalize text-sm font-bold tracking-tight">
+                                            <div class="first-letter:capitalize text-sm font-bold tracking-tight max-w-64">
                                                 <div>
                                                     {{ category.name }}
                                                 </div>

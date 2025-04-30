@@ -1,5 +1,5 @@
 <template>
-    <AppLayout>
+    <AppLayout :title="$t('Inventory')">
         <div class="w-full px-10 bg-gray-50 min-h-screen">
             <div class="border-b border-gray-200 pt-8 pb-5 flex items-center justify-between">
                 <div class="">
@@ -32,15 +32,16 @@
 
             </div>
 
-            <div class="pt-12 pb-24 lg:grid lg:grid-cols-3 lg:gap-x-8 xl:grid-cols-8">
+            <div class="pt-12 pb-24 grid grid-cols-1 sm:grid-cols-4 md:grid-cols-6 lg:gap-x-8 lg:grid-cols-8 2xl:flex 2xl:w-full">
 
-                <InventorySidebarComponent
-                    :current-category="props.currentCategory"
-                    :articles-count="props.articlesCount"
-                    :categories="props.categories"
-                />
-
-                <section aria-labelledby="product-heading" class="col-span-3 md:col-span-7">
+                <div class="col-span-full md:col-span-full lg:col-span-2 xl:col-span-2 2xl:max-w-96 2xl:w-96">
+                    <InventorySidebarComponent
+                        :current-category="props.currentCategory"
+                        :articles-count="props.articlesCount"
+                        :categories="props.categories"
+                    />
+                </div>
+                <section aria-labelledby="product-heading" class="col-span-full lg:col-span-6 2xl:w-full">
                     <div class="flex items-center justify-between mb-3">
                         <div>
                             <InventoryBreadcrumbComponent :current-category="props.currentCategory" :current-sub-category="props.currentSubCategory"/>
@@ -54,7 +55,7 @@
                         <InventoryFilterComponent :filterableProperties="filterableProperties" />
                     </div>
                     <div v-if="props.articles.data.length > 0">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-7 3xl:grid-cols-8 gap-4" v-if="gridLayout">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-8 gap-4" v-if="gridLayout">
                             <div v-for="item in props.articles.data">
                                 <InventorySingleArticleInGrid :item="item" />
                             </div>
@@ -167,6 +168,10 @@ const props = defineProps({
     manufacturers: {
         type: Object,
         required: true
+    },
+    statuses: {
+        type: Object,
+        required: true
     }
 })
 
@@ -174,6 +179,7 @@ provide('properties', props.properties)
 provide('rooms', props.rooms)
 provide('manufacturers', props.manufacturers)
 provide('categories', props.categories)
+provide('statuses', props.statuses)
 
 
 

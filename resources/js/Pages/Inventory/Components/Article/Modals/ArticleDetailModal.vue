@@ -98,14 +98,18 @@
                                     </div>
                                 </div>
                             </DisclosureButton>
-                            <DisclosurePanel class="px-4 pb-2 pt-2 text-sm text-gray-500">
-                                <div  v-for="status in article.status_values" :key="status.id">
-                                    <div class="border-b border-gray-100" v-if="status.id !== 5">
+                            <DisclosurePanel class="relative pl-4 pb-2 pt-2 text-sm text-gray-500">
+                                <div class=""  v-for="status in article.status_values" :key="status.id">
+                                    <div class="border-b  border-gray-100" v-if="status.id !== 5">
                                         <div class="pr-2 py-4 flex items-center justify-between">
-                                            <dt class="text-sm font-bold text-primary font-lexend">{{ status.name }}</dt>
+                                            <div class="absolute top-0 left-0 w-px h-[85%] bg-gray-300"></div>
+                                            <div class="flex items-center">
+                                            <div class="w-5 -ml-4 h-px bg-gray-300"/>
+                                            <dt class="text-sm font-bold ml-2 text-primary font-lexend">{{ status.name }}</dt>
+                                            </div>
                                             <p class="font-lexend text-sm pl-2"
                                                :class="status.pivot.value === 0 ? 'text-error' : 'text-artwork-buttons-create'">
-                                                {{ formatQuantity(status.pivot.value) }}</p>
+                                                 {{ formatQuantity(status.pivot.value) }}</p>
                                         </div>
                                     </div>
                                 </div>

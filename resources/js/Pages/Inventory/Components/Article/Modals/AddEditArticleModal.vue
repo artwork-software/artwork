@@ -167,7 +167,7 @@
                         <BaseInput
                             type="number"
                             id="quantity" v-model="articleForm.quantity"
-                            :label="$t('Quantity*')"
+                            :label="$t('Total quantity*')"
                             :max="10000000"
                             :maxlength="1000000"
                             required
@@ -196,12 +196,12 @@
                     </div>
                 </div>
 
-
-                <div v-if="!articleForm.is_detailed_quantity && selectedCategory" class="mt-5">
+                <div v-if="!articleForm.is_detailed_quantity && selectedCategory" class="ml-4 relative">
                     <div v-for="(statusValue, index) in articleForm.statusValues">
                         <div v-if="statusValue.id !== 5" class="grid grid-cols-2 gap-x-4 mb-3">
                             <div class="flex items-center">
-                                <span class="font-lexend text-sm">{{ statusValue.name }}</span>
+                                <div class="absolute top-0 left-0 w-px h-[90%] bg-gray-300"></div>
+                                <div class="font-lexend text-sm flex items-center text-secondary"><div class="w-5 h-px bg-gray-300"></div><div class="ml-4 text-primary">{{ statusValue.name }}</div></div>
                             </div>
                             <div>
                                 <BaseInput

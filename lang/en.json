@@ -2627,5 +2627,7 @@
     "Last Name": "Last Name",
     "Frequency": "Frequency",
     "No events found": "No events found",
-    "The sum of the quantities of the status values exceeds the total quantity of the article": "The sum of the quantities of the status values exceeds the total quantity of the article"
+    "The sum of the quantities of the status values exceeds the total quantity of the article": "The sum of the quantities of the status values exceeds the total quantity of the article",
+    "Total quantity*": "Total quantity*",
+    "Quantity per Status": "Quantity per Status"
 }

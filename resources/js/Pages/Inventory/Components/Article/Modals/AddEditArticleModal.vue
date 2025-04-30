@@ -198,19 +198,21 @@
 
 
                 <div v-if="!articleForm.is_detailed_quantity && selectedCategory" class="mt-5">
-                    <div v-for="(statusValue, index) in articleForm.statusValues" class="grid grid-cols-2 gap-x-4 mb-3">
-                        <div class="flex items-center">
-                            <span class="font-lexend text-sm">{{ statusValue.name }}</span>
-                        </div>
-                        <div>
-                            <BaseInput
-                                type="number"
-                                :id="'quantity-' + statusValue.id" v-model="statusValue.value"
-                                :label="$t('Quantity')"
-                                :max="10000000"
-                                :maxlength="1000000"
-                                required
-                            />
+                    <div v-for="(statusValue, index) in articleForm.statusValues">
+                        <div v-if="statusValue.id !== 5" class="grid grid-cols-2 gap-x-4 mb-3">
+                            <div class="flex items-center">
+                                <span class="font-lexend text-sm">{{ statusValue.name }}</span>
+                            </div>
+                            <div>
+                                <BaseInput
+                                    type="number"
+                                    :id="'quantity-' + statusValue.id" v-model="statusValue.value"
+                                    :label="$t('Quantity')"
+                                    :max="10000000"
+                                    :maxlength="1000000"
+                                    required
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -218,6 +220,23 @@
                         <p class="text-red-500 font-lexend text-sm mt-2">
                             {{ $t('The sum of the quantities of the status values exceeds the total quantity of the article') }}
                         </p>
+                        <div class="flex items-center justify-between font-lexend text-sm mt-1">
+                            <span>{{ $t('Total quantity') }}:</span>
+                            <span v-if="calculateStatusQuantityInArticle > articleForm.quantity"
+                                  @click="articleForm.quantity = calculateStatusQuantityInArticle"
+                                  class="flex items-center gap-x-0.5  cursor-pointer">
+                                                    <ToolTipWithTextComponent
+                                                        :text="formatQuantity(calculateStatusQuantityInArticle)"
+                                                        classes="text-artwork-buttons-create"
+                                                        icon-right
+                                                        stroke="2"
+                                                        icon="IconClick"
+                                                        icon-size="size-4"
+                                                        :tooltip-text="$t('Click to set the article quantity to the detailed article quantity')"/>
+                                                </span>
+                            <span class="font-bold"
+                                  v-else>{{ formatQuantity(calculateStatusQuantityInArticle) ?? 0 }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -236,19 +255,19 @@
                         <div class="inline-block min-w-full py-2 align-middle">
                             <table class="min-w-full divide-y divide-gray-300">
                                 <thead>
-                                <tr class="divide-x divide-gray-200">
-                                    <th scope="col"
-                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                                        Name
-                                    </th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                        {{ $t('Type') }}
-                                    </th>
-                                    <th scope="col"
-                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
-                                        {{ $t('Value') }}
-                                    </th>
-                                </tr>
+                                    <tr class="divide-x divide-gray-200">
+                                        <th scope="col"
+                                            class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                                            Name
+                                        </th>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                            {{ $t('Type') }}
+                                        </th>
+                                        <th scope="col"
+                                            class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
+                                            {{ $t('Value') }}
+                                        </th>
+                                    </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
                                 <tr v-for="property in articleForm.properties" :key="property?.id"

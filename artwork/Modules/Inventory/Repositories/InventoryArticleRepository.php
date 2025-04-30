@@ -144,10 +144,12 @@ class InventoryArticleRepository
                 'inventory_article_status_id' => $detailedArticleData['status']['id'] ?? null,
             ]);
 
-            foreach ($detailedArticleData['properties'] as $property) {
-                $detailedArticle->properties()->attach((int)$property['id'], [
-                    'value' => (string)$property['value']
-                ]);
+            if(array_key_exists('properties', $detailedArticleData)) {
+                foreach ($detailedArticleData['properties'] as $property) {
+                    $detailedArticle->properties()->attach((int)$property['id'], [
+                        'value' => (string)$property['value']
+                    ]);
+                }
             }
         }
     }

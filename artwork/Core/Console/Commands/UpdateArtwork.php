@@ -59,7 +59,7 @@ class UpdateArtwork extends Command
         $this->info('----------------------------------------------------------');
 
         $this->info('Update Shift-Qualification-Icons');
-        $this->call('db:seed', ['--class' => 'ShiftQualificationIconsSeeder']);
+        $this->call('db:seed', ['--class' => 'ShiftQualificationIconsSeeder', '--force' => true]);
         $this->info('----------------------------------------------------------');
 
 
@@ -90,7 +90,7 @@ class UpdateArtwork extends Command
 
         // add to all project Groups the new column with type project_relevant_column
         $this->info('Add new column to all project groups');
-        $this->call('db:seed', ['--class' => 'UpdateOrCreateProjectRelevantColumn']);
+        $this->call('db:seed', ['--class' => 'UpdateOrCreateProjectRelevantColumn', '--force' => true]);
         $this->info('----------------------------------------------------------');
 
         $this->info('Change service provider contacts to the new contact model structure');
@@ -99,7 +99,7 @@ class UpdateArtwork extends Command
         $this->info('----------------------------------------------------------');
         // add to all project Groups the new column with type project_relevant_column
         $this->info('add basic inventory article status');
-        $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder']);
+        $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder', '--force' => true]);
 
         $this->info('----------------------------------------------------------');
         $this->info('Artwork Update Command has finished');

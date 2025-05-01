@@ -6,6 +6,7 @@ use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
 use Artwork\Modules\Calendar\DTO\EventCalendarDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
+use Artwork\Modules\Calendar\DTO\MinimalEventDTO;
 use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
@@ -18,16 +19,12 @@ use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Psy\Util\Str;
 
 readonly class EventCalendarService
 {
-    public function __construct(
-    )
-    {
-    }
-
     public function filterRoomsEvents(
         Collection $rooms,
         UserCalendarFilter $filter,
@@ -35,9 +32,75 @@ readonly class EventCalendarService
         $endDate,
         ?UserCalendarSettings $userCalendarSettings = null,
     ): Collection {
-        $roomIds = $rooms->pluck('id');
+        $events = $this->filter(
+            $this->getEventQueryWithData(),
+            $rooms,
+            $filter,
+            $startDate,
+            $endDate,
+        );
+        $eventTypeIds = $events->pluck('event_type_id')->unique();
+        $projectIds = $events->pluck('project_id')->unique();
+        $userIds = $events->pluck('user_id')->unique();
+        $eventStatusIds = $events->pluck('event_status_id')->unique();
 
-        $events = Event::select([
+        $users = User::whereIn('id', $userIds)->select(['id', 'first_name', 'last_name', 'position', 'email'])->get(
+        )->keyBy('id');
+        $projects = Project::whereIn('id', $projectIds)
+            ->select(['id', 'name', 'state', 'artists', 'is_group', 'color', 'icon'])
+            ->with(['status:id,name,color', 'managerUsers:id,first_name,last_name,position,email,profile_photo_path'])
+            ->get()->keyBy('id');
+        $eventTypes = EventType::whereIn('id', $eventTypeIds)->select(['id', 'name', 'abbreviation', 'hex_code'])->get(
+        )->keyBy('id');
+        $eventStatuses = EventStatus::whereIn('id', $eventStatusIds)->select(['id', 'color'])->get()->keyBy('id');
+        $eventDTOs = $events->map(fn($event) => EventDTO::fromModel(
+            $event,
+            $userCalendarSettings,
+            $projects,
+            $eventTypes,
+            $users,
+            $eventStatuses
+        ))->groupBy('roomId');
+        foreach ($rooms as $room) {
+            $room->events = $eventDTOs[$room->id] ?? collect();
+        }
+
+        return $rooms;
+    }
+
+    public function filterRoomsEventsWithMinimalData(
+        Collection $rooms,
+        UserCalendarFilter $filter,
+        $startDate,
+        $endDate,
+    ): Collection {
+        $events = $this->filter(
+            $this->getEventQueryWithMinimalData(),
+            $rooms,
+            $filter,
+            $startDate,
+            $endDate,
+        );
+        $eventDTOs = collect();
+        foreach($events as $event) {
+            $eventDTOs->push(new MinimalEventDTO(
+                id: $event->id,
+                start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
+                end: Carbon::parse($event->end_time)->format('Y-m-d H:i'),
+                roomId: $event->room_id,
+                daysOfEvent: $event->getAttribute('days_of_event') ?? [],
+            ));
+        }
+        $eventDTOs = $eventDTOs->groupBy('roomId');
+        foreach ($rooms as $room) {
+            $room->events = $eventDTOs[$room->id] ?? collect();
+        }
+        return $rooms;
+    }
+
+    private function getEventQueryWithData(): Builder
+    {
+        return Event::select([
             'id',
             'start_time',
             'end_time',
@@ -63,8 +126,29 @@ readonly class EventCalendarService
                 'room:id,name',
                 'creator:id,first_name,last_name,position,email',
                 'shifts:id,event_id,start_date,end_date'
-            ])
-            ->whereIn('room_id', $roomIds)
+            ]);
+    }
+
+    private function getEventQueryWithMinimalData(): Builder
+    {
+        return Event::select([
+            'id',
+            'start_time',
+            'end_time',
+            'room_id',
+            'user_id',
+        ]);
+    }
+
+    private function filter(
+        Builder $eventsQuery,
+        Collection $rooms,
+        UserCalendarFilter $filter,
+        $startDate,
+        $endDate,
+    ): Collection {
+        return $eventsQuery
+            ->whereIn('room_id', $rooms->pluck('id'))
             ->where(function ($q) use ($startDate, $endDate) {
                 $q->whereBetween('start_time', [$startDate, $endDate])
                     ->orWhereBetween('end_time', [$startDate, $endDate])
@@ -82,44 +166,14 @@ readonly class EventCalendarService
             ->isNotPlanning()
             ->orderBy('start_time')
             ->get();
-        $eventTypeIds = $events->pluck('event_type_id')->unique();
-        $projectIds = $events->pluck('project_id')->unique();
-        $userIds = $events->pluck('user_id')->unique();
-        $eventStatusIds = $events->pluck('event_status_id')->unique();
 
-        $users = User::whereIn('id', $userIds)->select(['id', 'first_name', 'last_name', 'position', 'email'])->get(
-        )->keyBy('id');
-        $projects = Project::whereIn('id', $projectIds)
-            ->select(['id', 'name', 'state', 'artists', 'is_group', 'color', 'icon'])
-            ->with(['status:id,name,color', 'managerUsers:id,first_name,last_name,position,email,profile_photo_path'])
-            ->get()->keyBy('id');
-        $eventTypes = EventType::whereIn('id', $eventTypeIds)->select(['id', 'name', 'abbreviation', 'hex_code'])->get(
-        )->keyBy('id');
-        $eventStatuses = EventStatus::whereIn('id', $eventStatusIds)->select(['id', 'color'])->get()->keyBy('id');
-
-        $eventDTOs = $events->map(fn($event) => EventDTO::fromModel(
-            $event,
-            $userCalendarSettings,
-            $projects,
-            $eventTypes,
-            $users,
-            $eventStatuses
-        ))->groupBy('roomId');
-
-        foreach ($rooms as $room) {
-            $room->events = $eventDTOs[$room->id] ?? collect();
-        }
-
-        return $rooms;
     }
-
 
     public function mapRoomsToContentForCalendar(Collection $rooms, $startDate, $endDate): CalendarFrontendDataDTO
     {
         $period = collect(CarbonPeriod::create($startDate, '1 day', $endDate))
             ->mapWithKeys(fn($date) => [$date->format('d.m.Y') => ['events' => []]])
             ->toArray();
-
         $roomsData = $rooms->map(function ($room) use ($period) {
             $content = $period;
 

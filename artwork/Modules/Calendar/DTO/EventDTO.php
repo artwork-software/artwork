@@ -17,6 +17,8 @@ use Spatie\LaravelData\Optional;
 
 class EventDTO extends Data
 {
+    public bool $isMinimal = false; // this is used by frontend, dont remove it
+
     public function __construct(
         public int $id,
         public string $start,

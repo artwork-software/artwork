@@ -11,7 +11,7 @@
                         </div>
                     </a>
                     <div v-else class="truncate">
-                        {{ event.eventType.abbreviation }}: {{ event.eventName ?? event.project.name }}
+                        {{ event?.eventType?.abbreviation }}: {{ event?.eventName ?? event?.project?.name }}
                     </div>
                     <div class="text-xs">
                         <div v-if="event.allDay">
@@ -55,8 +55,6 @@ defineProps({
         required: true
     }
 });
-
-
 
 const
     textColorWithDarken = (color, percent = 75) => {

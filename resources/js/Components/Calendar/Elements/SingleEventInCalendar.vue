@@ -22,7 +22,7 @@
             @changed-multi-edit-checkbox="(...args) => emit('changed-multi-edit-checkbox', ...args)"
             :verifierForEventTypIds="verifierForEventTypIds"
             :is-planning="isPlanning"
-        >
+        />
     </div>
 </template>
 <script setup>

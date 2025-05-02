@@ -735,27 +735,30 @@ onMounted(() => {
 
 onMounted(async () => {
     const dateRanges = splitByMonth();
-
-    const promises = dateRanges.map(([start_date, end_date]) =>
-        axios.get(route('events'), { params: { start_date, end_date } })
-    );
-
-    const results = await Promise.all(promises);
-
     const updated = JSON.parse(JSON.stringify(newCalendarData.value));
-    results.forEach(res => {
-        res.data.calendar.forEach(fullRoom => {
-            const target = updated.find(r => r.roomId === fullRoom.roomId);
-            if (!target) return;
-            Object.entries(fullRoom.content).forEach(([day, { events }]) => {
-                if (target.content[day]) {
-                    target.content[day].events = events;
-                }
+
+    for (let i = 0; i < dateRanges.length; i++) {
+        const batch = dateRanges.slice(i, i + 1);
+        const responses = await Promise.all(
+            batch.map(([start_date, end_date]) =>
+                axios.get(route('events'), { params: { start_date, end_date } })
+            )
+        );
+
+        responses.forEach(res => {
+            res.data.calendar.forEach(fullRoom => {
+                const target = updated.find(r => r.roomId === fullRoom.roomId);
+                if (!target) return;
+                Object.entries(fullRoom.content).forEach(([day, { events }]) => {
+                    if (target.content[day]) {
+                        target.content[day].events = events;
+                    }
+                });
             });
         });
-    });
 
-    newCalendarData.value = updated;
+        newCalendarData.value = JSON.parse(JSON.stringify(updated));
+    }
 });
 
 const splitByMonth = () => {

@@ -17,6 +17,7 @@
             @edit-event="e       => emit('edit-event', e)"
             @edit-sub-event="e    => emit('edit-sub-event', e)"
             @open-add-sub-event-modal="e => emit('open-add-sub-event-modal', e)"
+            <!-- 2 arguments! -->
             @open-confirm-modal="(e,type) => emit('open-confirm-modal', e,type)"
             @show-decline-event-modal="e => emit('show-decline-event-modal', e)"
             @changed-multi-edit-checkbox="(...args) => emit('changed-multi-edit-checkbox', ...args)"

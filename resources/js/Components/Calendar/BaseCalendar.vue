@@ -729,7 +729,7 @@ const closeShowRejectEventVerificationModal = () => {
 }
 
 onMounted(() => {
-    const ShiftCalendarListener = useShiftCalendarListener(newCalendarData.value);
+    const ShiftCalendarListener = useShiftCalendarListener(newCalendarData);
     ShiftCalendarListener.init();
 })
 

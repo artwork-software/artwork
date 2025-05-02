@@ -17,7 +17,7 @@
             @editEvent="e => emit('editEvent', e)"
             @editSubEvent="e => emit('edit-sub-event', e)"
             @openAddSubEventModal="e => emit('open-add-sub-event-modal', e)"
-            @openConfirmModal="e => emit('open-confirm-modal', e)"
+            @openConfirmModal="(e, type) => emit('open-confirm-modal', e, type)"
             @showDeclineEventModal="e => emit('show-decline-event-modal', e)"
             @changedMultiEditCheckbox="(...args) => emit('changed-multi-edit-checkbox', ...args)"
             :verifierForEventTypIds="verifierForEventTypIds"

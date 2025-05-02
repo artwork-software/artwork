@@ -59,7 +59,7 @@
                             </div>
                         </div>
                         <div class="text-sm/6">
-                            <label for="relevant_for_project_period" class="font-medium font-lexend" :class="eventTypeForm.relevant_for_project_period ? 'text-gray-900' : 'text-gray-400'">{{$t('project assignment mandatory')}}</label>
+                            <label for="relevant_for_project_period" class="font-medium font-lexend" :class="eventTypeForm.relevant_for_project_period ? 'text-gray-900' : 'text-gray-400'">{{$t('Relevant for project period')}}</label>
                         </div>
                     </div>
                 </div>

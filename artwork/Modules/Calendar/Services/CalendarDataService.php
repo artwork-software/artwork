@@ -339,7 +339,7 @@ readonly class CalendarDataService
         }
 
         $firstEvent = $this->projectService->getFirstEventInProject($project);
-        $latestEvent = $this->projectService->getLatestEndingEventInProject($project);
+        $latestEvent = $this->projectService->getLastEventInProject($project);
 
         return [
             $firstEvent ? $firstEvent->getAttribute('start_time')->startOfDay() : $today->startOfDay(),

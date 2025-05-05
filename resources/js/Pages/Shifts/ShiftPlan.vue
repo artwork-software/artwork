@@ -111,7 +111,8 @@
                         </template>
                         <template #body>
                             <TableBody class="eventByDaysContainer">
-                                <tr v-for="(room,index) in newShiftPlanData" class="w-full table-row" :class="$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
+                                <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId" class="w-full table-row"
+                                    :class="$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
                                     <th :id="'roomNameContainer_' + index"
                                         class="xsDark w-48 table-cell align-middle"
                                         :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
@@ -871,8 +872,8 @@ export default {
         }
     },
     mounted() {
-
-        const ShiftCalendarListener = useShiftCalendarListener(this.newShiftPlanData);
+        const shiftPlanData = ref(this.shiftPlan);
+        const ShiftCalendarListener = useShiftCalendarListener(shiftPlanData);
         ShiftCalendarListener.init();
 
         // Listen for scroll events on both sections

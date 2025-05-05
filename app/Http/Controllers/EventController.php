@@ -185,17 +185,23 @@ class EventController extends Controller
     /**
      * @throws Throwable
      */
-    public function viewEventIndex(?Project $project = null): Response {
+    public function viewEventIndex(Request $request, ?Project $project = null): Response|JsonResponse {
         /** @var User $user */
         $user = $this->authManager->user();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
         $userCalendarSettings = $user->getAttribute('calendar_settings');
 
         $this->userService->shareCalendarAbo('calendar');
+        $dateRangeRequested = false;
 
-
-        [$startDate, $endDate] = $this->calendarDataService
-            ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
+        if ($request->input('start_date') && $request->input('end_date')) {
+            $startDate = Carbon::parse($request->input('start_date'));
+            $endDate = Carbon::parse($request->input('end_date'));
+            $dateRangeRequested = true;
+        } else {
+            [$startDate, $endDate] = $this->calendarDataService
+                ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
+        }
 
         $calendarWarningText = '';
 
@@ -235,7 +241,6 @@ class EventController extends Controller
             }
         }
 
-
         $rooms = $this->calendarDataService->getFilteredRooms(
             $userCalendarFilter,
             $userCalendarSettings,
@@ -243,21 +248,28 @@ class EventController extends Controller
             $endDate,
         );
 
-        $this->eventCalendarService->filterRoomsEvents(
-            $rooms,
-            $userCalendarFilter,
-            $startDate,
-            $endDate,
-            $userCalendarSettings
-        );
-
+        if ($dateRangeRequested) {
+            $this->eventCalendarService->filterRoomsEvents(
+                $rooms,
+                $userCalendarFilter,
+                $startDate,
+                $endDate,
+                $userCalendarSettings
+            );
+        } else {
+            $this->eventCalendarService->filterRoomsEventsWithMinimalData(
+                $rooms,
+                $userCalendarFilter,
+                $startDate,
+                $endDate
+            );
+        }
 
         $calendarData = $this->eventCalendarService->mapRoomsToContentForCalendar(
             $rooms,
             $startDate,
             $endDate,
         );
-
 
         $dateValue = [
             $startDate ? $startDate->format('Y-m-d') : null,
@@ -268,8 +280,9 @@ class EventController extends Controller
             ->get()
             ->keyBy('id');
 
-
-        //dd($this->filterService->getCalendarFilterDefinitions());
+        if ($dateRangeRequested) {
+            return response()->json(['calendar' => $calendarData->rooms]);
+        }
 
         return Inertia::render('Calendar/Index', [
             'period' => $period,
@@ -456,9 +469,6 @@ class EventController extends Controller
             $endDate ? $endDate->format('Y-m-d') : null
         ];
 
-
-        //dd($calendarData->rooms);
-
         return Inertia::render('Shifts/ShiftPlan', [
             'history' => $this->shiftCalendarService->getEventShiftsHistoryChanges(),
             'crafts' => $this->craftService->getAll([
@@ -508,24 +518,6 @@ class EventController extends Controller
             ),
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
         ]);
-
-
-        /*return Inertia::render(
-            'Shifts/ShiftPlan',
-            $eventService->getShiftPlanDto(
-                $userService,
-                $freelancerService,
-                $serviceProviderService,
-                $roomService,
-                $craftService,
-                $filterService,
-                $shiftFilterController,
-                $shiftQualificationService,
-                $dayServicesService,
-                $userService->getAuthUser(),
-                $projectTabService
-            )
-        );*/
     }
 
     /**

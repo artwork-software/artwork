@@ -2629,5 +2629,9 @@
     "No events found": "No events found",
     "The sum of the quantities of the status values exceeds the total quantity of the article": "The sum of the quantities of the status values exceeds the total quantity of the article",
     "Total quantity*": "Total quantity*",
-    "Quantity per Status": "Quantity per Status"
+    "Quantity per Status": "Quantity per Status",
+    "Files": "Files",
+    "Time range": "Time range",
+    "Notes": "Notes",
+    "Material issue book": "Material issue book"
 }

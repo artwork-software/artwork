@@ -2636,5 +2636,7 @@
     "Time range": "Zeitraum",
     "Files": "Dateien",
     "Notes": "Notizen",
-    "Material issue book": "Materialausgabe-Buch"
+    "Material issue book": "Materialausgabe-Buch",
+    "New issue of material": "Neue Materialausgabe",
+    "Edit issue of material": "Materialausgabe bearbeiten"
 }

@@ -9,7 +9,8 @@
             </div>
 
             <div>
-                PLUS BUTTON
+                <PlusButton :button-text="$t('New issue of material')"
+                            @click="openIssueOfMaterialModal"/>
             </div>
 
 
@@ -100,6 +101,14 @@
                 </div>
             </BaseCard>
         </div>
+
+        <issue-of-material-modal
+            :show="showIssueOfMaterialModal"
+            @closed="showIssueOfMaterialModal = false"
+            :issue-of-material="null"
+            :assigned-articles="issueOfMaterialArray[0].assignedArticles"
+        />
+
     </AppLayout>
 </template>
 
@@ -111,11 +120,17 @@ import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
+import IssueOfMaterialModal from "@/Pages/Inventory/IssueOfMaterial/IssueOfMaterialModal.vue";
+import {ref} from "vue";
 const props = defineProps({
 
 })
+const showIssueOfMaterialModal = ref(false);
 
-
+const openIssueOfMaterialModal = () => {
+    showIssueOfMaterialModal.value = true;
+};
 
 const issueOfMaterialArray = [
     {

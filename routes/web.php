@@ -30,6 +30,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventStatusController;
 use App\Http\Controllers\EventTypeController;
+use App\Http\Controllers\EventVerificationController;
 use App\Http\Controllers\ExportPDFController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
@@ -91,11 +92,18 @@ use App\Http\Controllers\UserShiftCalendarAboController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
+use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
 use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
+use Artwork\Modules\Chat\Http\Controllers\ChatController;
+use Artwork\Modules\Contacts\Http\Controllers\ContactController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
+use Artwork\Modules\Inventory\Http\Controllers\InventorySubCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
@@ -106,13 +114,12 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnCo
 use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
+use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
-
-use FiveamCode\LaravelNotionApi\Notion;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -1680,6 +1687,59 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )
         ->name('day-service.attach');
 
+
+    Route::group(['prefix' => 'inventory'], function (): void {
+        Route::get('/', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
+            ->name('inventory.index');
+
+        Route::get('/category/{inventoryCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
+            ->name('inventory.category.show');
+
+        Route::get('/category/{inventoryCategory}/sub/{inventorySubCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
+            ->name('inventory.sub.category.show');
+
+        // post inventory-management.articles.store
+        Route::post('/articles/store', [InventoryArticleController::class, 'store'])
+            ->name('inventory-management.articles.store');
+
+        // patch inventory-management.articles.update
+        Route::patch('/articles/{inventoryArticle}/update', [InventoryArticleController::class, 'update'])
+            ->name('inventory-management.articles.update');
+
+        // delete articles.destroy
+        Route::delete('/articles/{inventoryArticle}/destroy', [InventoryArticleController::class, 'destroy'])
+            ->name('articles.destroy');
+
+        // get inventory.articles.trash
+        Route::get('/articles/trash', [InventoryArticleController::class, 'indexTrash'])
+            ->name('inventory.articles.trash');
+
+        // delete articles.forceDelete
+        Route::delete('/articles/{inventoryArticle}/forceDelete', [InventoryArticleController::class, 'forceDelete'])
+            ->name('articles.forceDelete');
+
+        // patch articles.restore
+        Route::patch('/articles/{inventoryArticle}/restore', [InventoryArticleController::class, 'restore'])
+            ->name('articles.restore');
+    });
+
+
+
+
+    Route::resource('manufacturers', ManufacturerController::class)->only(
+        [
+            'index',
+            'store',
+            'update',
+            'destroy'
+        ]
+    );
+
+    Route::group(['prefix' => 'planning-event-calendar'], function (): void {
+        Route::get('/', [EventController::class, 'viewPlanningCalendar'])->name('planning-event-calendar.index');
+    });
+
+
     //remove.day.service.from.user
     Route::patch(
         '/day-service/remove/{dayServiceable}',
@@ -1693,7 +1753,41 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::group(['prefix' => 'settings'], function (): void {
             Route::get('/index', [InventorySettingsController::class, 'index'])
-                ->name('inventory-management.settings');
+                ->name('inventory-management.settings.index');
+
+            Route::get('/categories', [InventoryCategoryController::class, 'settings'])
+                ->name('inventory-management.settings.category');
+
+            Route::get('/properties', [InventoryArticlePropertiesController::class, 'index'])
+                ->name('inventory-management.settings.properties');
+
+            // post create Article Property
+            Route::post('/properties/create', [InventoryArticlePropertiesController::class, 'store'])
+                ->name('inventory-management.settings.properties.create');
+
+            // delete Article Property
+            Route::delete('/properties/{inventoryArticleProperty}', [InventoryArticlePropertiesController::class, 'destroy'])
+                ->name('inventory-management.settings.properties.delete');
+
+            // patch inventory-management.settings.properties.update
+            Route::patch('/properties/{inventoryArticleProperty}/update', [InventoryArticlePropertiesController::class, 'update'])
+                ->name('inventory-management.settings.properties.update');
+
+            // inventory-management.settings.categories.create
+            Route::post('/categories/create', [InventoryCategoryController::class, 'store'])
+                ->name('inventory-management.settings.categories.create');
+
+            // update inventory-management.settings.categories.update
+            Route::patch('/categories/{inventoryCategory}/update', [InventoryCategoryController::class, 'update'])
+                ->name('inventory-management.settings.categories.update');
+
+            // delete inventory-management.settings.categories.subcategories.delete
+            Route::delete('/sub-categories/{inventorySubCategory}/destroy', [InventorySubCategoryController::class, 'destroy'])
+                ->name('inventory-management.settings.categories.subcategories.delete');
+
+            // delete categories.destroy
+            Route::delete('/categories/{inventoryCategory}/destroy', [InventoryCategoryController::class, 'destroy'])
+                ->name('inventory-management.settings.categories.delete');
         });
 
         Route::group(['prefix' => 'inventory'], function (): void {
@@ -1880,6 +1974,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/search/projects', [ProjectController::class, 'scoutSearch'])->name('project.scoutSearch');
     });
 
+    Route::group(['prefix' => 'chat'], function (): void {
+        // get chat-system.get-chats
+        Route::get('/get-chats', [ChatController::class, 'getChats'])->name('chat-system.get-chats');
+
+        // chat-system.get-chat-messages
+        Route::get('/get-chat-messages/{chat}', [ChatController::class, 'getChatMessages'])
+            ->name('chat-system.get-chat-messages');
+
+        // post chat-system.send-message
+        Route::post('/send-message/{chat}', [ChatController::class, 'sendMessage'])->name('chat-system.send-message');
+    });
+
     Route::resource('holidays', HolidayController::class)
         ->only(['index', 'store', 'update', 'destroy', 'show']);
 
@@ -1948,6 +2054,63 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
 
+    Route::group(['prefix' => 'event-verifications'], function(){
+        // POST events.sendToVerification
+        Route::post('/event/{event}/sendToVerification', [EventVerificationController::class, 'store'])
+            ->name('events.sendToVerification');
+
+        // GET event-verifications.index
+        Route::get('/', [EventVerificationController::class, 'index'])
+            ->name('event-verifications.index');
+
+        Route::get('/requests', [EventVerificationController::class, 'requests'])
+            ->name('event-verifications.requests');
+
+        Route::post('/verification-request/{eventVerification}/approved', [EventVerificationController::class, 'approved'])
+            ->name('event-verifications.approved');
+
+        // event-verifications.rejected
+        Route::post('/verification-request/{eventVerification}/rejected', [EventVerificationController::class, 'rejected'])
+            ->name('event-verifications.rejected');
+
+        // event-verifications.cancel-verification
+        Route::post('/verification-request/{event}/cancel-verification', [EventVerificationController::class, 'cancelVerification'])
+            ->name('event-verifications.cancel-verification');
+
+        // event-verifications.approved-by-event
+        Route::post('/verification-request/{event}/approved-by-event', [EventVerificationController::class, 'approvedByEvent'])
+            ->name('event-verifications.approved-by-event');
+
+        // event-verifications.reject-by-event
+        Route::post('/verification-request/{event}/reject-by-event', [EventVerificationController::class, 'rejectByEvent'])
+            ->name('event-verifications.reject-by-event');
+
+        // event-verifications.reject-by-events
+        Route::post('/verification-request/reject-by-events', [EventVerificationController::class, 'rejectByEvents'])
+            ->name('event-verifications.reject-by-events');
+
+        // event-verifications.approved-by-events
+        Route::post('/verification-request/approved-by-events', [EventVerificationController::class, 'approvedByEvents'])
+            ->name('event-verifications.approved-by-events');
+
+        // event-verifications.request-verification
+        Route::post('/verification-request/request-verification', [EventVerificationController::class, 'requestVerification'])
+            ->name('events-verifications.request-verification');
+    });
+
+    Route::group(['prefix' => 'accommodation'], function (){
+        Route::get('/', [AccommodationController::class, 'index'])->name('accommodation.index');
+        Route::get('/show/{accommodation}', [AccommodationController::class, 'show'])->name('accommodation.show');
+        Route::post('/store', [AccommodationController::class, 'store'])->name('accommodation.store');
+        Route::patch('/update/{accommodation}', [AccommodationController::class, 'update'])->name('accommodation.update');
+        Route::delete('/destroy/{accommodation}', [AccommodationController::class, 'destroy'])->name('accommodation.destroy');
+    });
+
+    Route::group(['prefix' => 'contact'], function(){
+        Route::post('/store/{model}/{modelId}', [ContactController::class, 'store'])->name('contact.store');
+        Route::patch('/update/{contact}', [ContactController::class, 'update'])->name('contact.update');
+        Route::delete('/destroy/{contact}', [ContactController::class, 'destroy'])->name('contact.destroy');
+    });
 });
 
 Route::get(

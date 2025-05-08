@@ -25,13 +25,14 @@
                 </div>
 
                 <div v-else-if="!project" class="relative">
-                    <TextInputComponent
+                    <BaseInput
                         id="calendarProjectSearch"
                         v-model="projectSearch"
                         :no-margin-top="true"
                         :is-small="true"
                         ref="projectSearchInput"
-                        :label="$t('Search project')"
+                        is-small
+                        label="Search project"
                     />
                     <div v-if="projectSearchResults.length > 0"
                          class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg z-50">
@@ -54,7 +55,7 @@
                     </template>
                 </div>
                 <Switch v-if="!project"
-                        v-model="usePage().props.user.calendar_settings.use_project_time_period"
+                        v-model="usePage().props.auth.user.calendar_settings.use_project_time_period"
                         @update:model-value="handleUseTimePeriodChange"
                         :class="[isCalendarUsingProjectTimePeriod ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                     <span class="sr-only">Use project time period toggle</span>
@@ -82,11 +83,16 @@
                 </Switch>
             </div>
 
-
+            <div v-if="isPlanning">
+                <div class="font-lexend text-sm font-bold text-red-500 select-none pointer-events-none">
+                    {{ $t('Attention! You are in the planning calendar')}}
+                </div>
+            </div>
 
             <div class="flex items-center gap-x-2">
                 <div class="flex items-center">
                     <div class="flex items-center gap-x-2">
+                        <slot name="buttonsRight"></slot>
                         <MultiEditSwitch :multi-edit="multiEdit"
                                          :room-mode="roomMode"
                                          @update:multi-edit="UpdateMultiEditEmits"/>
@@ -303,25 +309,36 @@
                                         </label>
                                     </div>
                                     <div class="flex items-center py-1">
-                                        <input id="cb-use-event-status-color"
+                                        <input id="cb-hide-occupied-rooms"
                                                v-model="userCalendarSettings.hide_unoccupied_rooms"
                                                type="checkbox"
                                                class="input-checklist"/>
-                                        <label for="cb-use-event-status-color"
+                                        <label for="cb-hide-occupied-rooms"
                                                :class="userCalendarSettings.hide_unoccupied_rooms ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                                class="ml-4 my-auto text-secondary cursor-pointer">
                                             {{ $t('Hide unoccupied rooms') }}
                                         </label>
                                     </div>
                                     <div class="flex items-center py-1">
-                                        <input id="cb-use-event-status-color"
+                                        <input id="cb-display-project-groups"
                                                v-model="userCalendarSettings.display_project_groups"
                                                type="checkbox"
                                                class="input-checklist"/>
-                                        <label for="cb-use-event-status-color"
+                                        <label for="cb-display-project-groups"
                                                :class="userCalendarSettings.display_project_groups ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                                class="ml-4 my-auto text-secondary cursor-pointer">
                                             {{ $t('Show project group') }}
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center py-1" v-if="isPlanning">
+                                        <input id="cb-show-unplanned-events"
+                                               v-model="userCalendarSettings.show_unplanned_events"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-show-unplanned-events"
+                                               :class="userCalendarSettings.show_unplanned_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Show fixed events') }}
                                         </label>
                                     </div>
                                 </div>
@@ -403,6 +420,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');
@@ -419,11 +437,11 @@ const emits = defineEmits([
     'previousDay',
     'nextDay',
     'searchingForProject',
-    'jumpToDayOfMonth'
+    'jumpToDayOfMonth',
 ]);
 const showCalendarAboSettingModal = ref(false);
-const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
-const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
+const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
+const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const dateValueCopy = ref(dateValue ?? []);
 const showExportModal = ref(false);
 const roomCollisions = ref([]);
@@ -432,19 +450,20 @@ const showCalendarAboInfoModal = ref(false);
 const showCalendarFilterModal = ref(false);
 const projectSearchInput = ref(null);
 const userCalendarSettings = useForm({
-    project_status: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_status : false,
-    project_artists: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_artists : false,
-    options: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.options : false,
-    project_management: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_management : false,
-    repeating_events: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.repeating_events : false,
-    work_shifts: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.work_shifts : false,
-    description: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.description : false,
-    event_name: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.event_name : false,
-    high_contrast: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.high_contrast : false,
-    expand_days: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.expand_days : false,
-    use_event_status_color: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.use_event_status_color : false,
-    hide_unoccupied_rooms: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.hide_unoccupied_rooms : false,
-    display_project_groups: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.display_project_groups : false,
+    project_status: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_status : false,
+    project_artists: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_artists : false,
+    options: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.options : false,
+    project_management: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_management : false,
+    repeating_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.repeating_events : false,
+    work_shifts: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.work_shifts : false,
+    description: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.description : false,
+    event_name: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.event_name : false,
+    high_contrast: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.high_contrast : false,
+    expand_days: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.expand_days : false,
+    use_event_status_color: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.use_event_status_color : false,
+    hide_unoccupied_rooms: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.hide_unoccupied_rooms : false,
+    display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
+    show_unplanned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_unplanned_events : false,
 });
 
 
@@ -525,17 +544,22 @@ const props = defineProps({
         type: String,
         required: false,
         default: ''
+    },
+    isPlanning: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 
-const dailyViewMode = ref(usePage().props.user.daily_view ?? false);
-
+const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
+const enableVerification = ref(false);
 const isCalendarUsingProjectTimePeriod = computed(() => {
-    return usePage().props.user.calendar_settings.use_project_time_period;
+    return usePage().props.auth.user.calendar_settings.use_project_time_period;
 });
 
 const getTimePeriodProjectId = () => {
-    return usePage().props.user.calendar_settings.time_period_project_id;
+    return usePage().props.auth.user.calendar_settings.time_period_project_id;
 }
 
 const formatDateStringToGermanFormat = (dateString) => {
@@ -553,7 +577,7 @@ const closeCalendarAboSettingModal = (bool) => {
 
 const changeDailyViewMode = () => {
     dailyViewMode.value = !dailyViewMode.value;
-    router.patch(route('user.update.daily_view', usePage().props.user.id), {
+    router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
         daily_view: dailyViewMode.value
     }, {
         preserveScroll: false,
@@ -561,12 +585,12 @@ const changeDailyViewMode = () => {
     })
 }
 
-const UpdateMultiEditEmits = (value) => {
-    emits('updateMultiEdit', value)
+const UpdateMultiEditEmits = (value, isPlanning = false) => {
+    emits('updateMultiEdit', value, isPlanning)
 }
 
 const changeAtAGlance = () => {
-    router.patch(route('user.update.at_a_glance', usePage().props.user.id), {
+    router.patch(route('user.update.at_a_glance', usePage().props.auth.user.id), {
         at_a_glance: !atAGlance.value
     }, {
         preserveState: false,
@@ -586,7 +610,7 @@ const decrementZoomFactor = () => {
     }
 }
 const updateZoomFactorInUser = () => {
-    router.patch(route('user.update.zoom_factor', {user: usePage().props.user.id}), {
+    router.patch(route('user.update.zoom_factor', {user: usePage().props.auth.user.id}), {
         zoom_factor: zoom_factor.value
     }, {
         preserveScroll: true,
@@ -641,7 +665,7 @@ const getPreviousDay = (dateString) => {
     return `${year}-${month}-${day}`;
 }
 const updateTimes = () => {
-    router.patch(route('update.user.calendar.filter.dates', usePage().props.user.id), {
+    router.patch(route('update.user.calendar.filter.dates', usePage().props.auth.user.id), {
         start_date: dateValueCopy.value[0],
         end_date: dateValueCopy.value[1],
     }, {
@@ -669,7 +693,7 @@ const saveUserCalendarSettings = () => {
         preserveState = false;
     }
 
-    userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}), {
+    userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.auth.user.id}), {
         preserveScroll: true,
         preserveState: preserveState,
         onSuccess: () => {
@@ -707,8 +731,8 @@ watch(() => projectSearch.value, (searchValue) => {
     );
 });
 
-// watch on usePage().props.user.calendar_settings.use_project_time_period
-watch(() => usePage().props.user.calendar_settings.use_project_time_period, (newValue) => {
+// watch on usePage().props.auth.user.calendar_settings.use_project_time_period
+watch(() => usePage().props.auth.user.calendar_settings.use_project_time_period, (newValue) => {
     // if to focus on input field
     if (newValue) {
         nextTick(() => {

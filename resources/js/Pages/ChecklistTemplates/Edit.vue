@@ -1,6 +1,6 @@
 <template>
     <app-layout full :title="$t('Checklist template') + ' (' +  templateForm.name + ') ' + $t('edit')">
-        <div class="my-5 -mx-5">
+        <div class="artwork-container">
             <div class="">
                 <div class="max-w-screen-lg">
                     <div class="px-24">
@@ -258,7 +258,7 @@ export default {
             user_search_results: [],
             templateForm: useForm({
                 name: this.checklist_template.name,
-                user_id: this.$page.props.user.id,
+                user_id: this.$page.props.auth.user.id,
                 task_templates: this.checklist_template.task_templates? this.checklist_template.task_templates : [],
                 users: this.checklist_template.users? this.checklist_template.users : [],
             }),

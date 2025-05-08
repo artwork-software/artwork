@@ -1,5 +1,7 @@
 <?php
 
+use Artwork\Modules\Chat\Http\Controllers\ChatController;
+use Artwork\Modules\User\Services\UserStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,3 +30,13 @@ Route::get('/timeline-preset/search', [
 
 Route::get('/generate-avatar-image/{letters}', [\App\Http\Controllers\UserController::class, 'createAvatarImage'])
     ->name('generate-avatar-image');
+
+
+Route::middleware('auth:sanctum')->post('/user/set-public-key', [ChatController::class, 'setPublicKey'])->name('keypair.store');
+Route::middleware('auth:sanctum')->post('/chat/store', [ChatController::class, 'storeChat'])->name('chat.store');
+Route::middleware('auth:sanctum')->post('/chat/message/{message}/read', [ChatController::class, 'markAsRead'])->name('chat-system.mark-as-read');
+Route::middleware('auth:sanctum')->post('/chat/messages/read', [ChatController::class, 'markMultipleAsRead'])->name('chat-system.mark-multiple-as-read');
+
+Route::get('/user-status/{id}', function ($id, UserStatusService $service) {
+    return response()->json(['status' => $service->getStatus($id)]);
+});

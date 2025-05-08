@@ -43,8 +43,8 @@
                         </div>
                     </div>
                     <div v-if="saveFilterOption">
-                        <div class="flex items-end gap-x-4">
-                            <TextInputComponent
+                        <div class="flex items-center gap-x-4 mt-3">
+                            <BaseInput
                                 id="filterName"
                                 v-model="saveFilterForm.name"
                                 label="Filter name"
@@ -162,6 +162,7 @@ import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     filterOptions: {
@@ -268,7 +269,7 @@ const returnNullIfFalse = (variable) => {
 }
 
 const applyFilter = () => {
-    router.patch(route('update.user.calendar.filter', usePage().props.user.id), {
+    router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), {
         rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
         areas: arrayToIds(filteredOptionsByCategories.value.roomFilters.areas),
         event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
@@ -317,7 +318,7 @@ const removeFilter = (filter) => {
 }
 
 const activateFilter = (filter) => {
-    router.post(route('filter.activate', {filter: filter.id, user: usePage().props.user.id}),{}, {
+    router.post(route('filter.activate', {filter: filter.id, user: usePage().props.auth.user.id}),{}, {
         preserveScroll: true,
         preserveState: false,
     })

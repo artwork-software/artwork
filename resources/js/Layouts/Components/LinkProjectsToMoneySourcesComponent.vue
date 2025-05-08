@@ -10,7 +10,7 @@
                     <div class="flex w-full mt-6">
                         <div class="flex w-full relative">
                             <div class="w-full">
-                                <TextInputComponent id="projectSearch" v-model="project_query" label="Suche nach Projekten"/>
+                                <BaseInput id="projectSearch" v-model="project_query" label="Suche nach Projekten"/>
                             </div>
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100"
@@ -70,12 +70,14 @@ import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 
 export default {
     name: 'LinkProjectsToMoneySourcesComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseInput,
         TextInputComponent,
         ModalHeader,
         BaseModal,

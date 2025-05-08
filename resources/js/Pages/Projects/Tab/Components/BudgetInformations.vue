@@ -18,7 +18,7 @@
         </div>
         <div class="text-secondary text-sm"  v-if="project.own_copyright">{{ project.cost_center_description }}</div>
         <hr class="my-10 border-darkGray">
-        <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.loadedProjectInformation['BudgetInformation'].project_manager_ids.includes(this.$page.props.user.id)">
+        <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.loadedProjectInformation['BudgetInformation'].project_manager_ids.includes(this.$page.props.auth.user.id)">
             <div class="text-secondary text-md">{{$t('Documents')}}</div>
             <IconChevronDown class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
                              @click="showProjectFiles = !showProjectFiles"/>
@@ -34,7 +34,7 @@
             <div v-if="loadedProjectInformation['BudgetInformation'].project_files.length > 0">
                 <div v-for="projectFile in loadedProjectInformation['BudgetInformation'].project_files">
                     <div
-                        v-if="projectFile.accessibleUsers?.filter(user => user.id === $page.props.user.id).length > 0 || this.hasAdminRole()"
+                        v-if="projectFile.accessibleUsers?.filter(user => user.id === $page.props.auth.user.id).length > 0 || this.hasAdminRole()"
                         class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
                     >
                         <IconDownload class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
@@ -82,7 +82,7 @@
                 <div v-if="this.loadedProjectInformation['BudgetInformation'].contracts.length > 0">
                     <div v-for="contract in this.loadedProjectInformation['BudgetInformation'].contracts">
                         <div
-                            v-if="contract.accessibleUsers?.filter(user => user.id === $page.props.user.id).length > 0 || hasAdminRole()"
+                            v-if="contract.accessibleUsers?.filter(user => user.id === $page.props.auth.user.id).length > 0 || hasAdminRole()"
                             class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white">
                             <IconDownload class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>
                             <div @click="openContractEditModal(contract)">{{ contract.name }}</div>
@@ -192,7 +192,7 @@ export default {
     methods: {
         hasBudgetAccess() {
             return this.loadedProjectInformation['BudgetInformation'].access_budget.filter(
-                (user) => user.id === this.$page.props.user.id
+                (user) => user.id === this.$page.props.auth.user.id
             ).length > 0;
         },
         downloadContract(contract) {

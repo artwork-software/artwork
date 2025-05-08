@@ -3,10 +3,11 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
 import {reactive, ref} from "vue";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default {
     name: "TextField",
-    components: {InfoButtonComponent, TextInputComponent},
+    components: {BaseInput, InfoButtonComponent, TextInputComponent},
     props: [
         'data',
         'projectId',
@@ -53,19 +54,18 @@ export default {
 <template>
     <div class="mb-3 flex items-start gap-x-4">
         <div>
-            <label for="email" class="block text-sm font-medium leading-6" :class="inSidebar ? 'text-white' : ' text-gray-900' ">
+            <label for="email" class="block text-sm font-bold leading-6" :class="inSidebar ? 'text-white' : ' text-gray-900' ">
                 {{ projectData.data.label }}
             </label>
             <div class="mt-2 w-96">
-                <TextInputComponent
+                <BaseInput
                     type="text"
                     :disabled="!this.canEditComponent"
                     @focusout="updateTextData"
                     v-model="text"
                     :label="text"
+                    without-translation
                     name="email" id="email"
-                    :show-label="false"
-                    no-margin-top
                     :class="inSidebar ? 'bg-primary text-white' : ''"
                 />
             </div>

@@ -117,7 +117,8 @@ import {
     IconEyeClosed,
     IconCalendarShare,
     IconChevronRightPipe,
-    IconChevronLeftPipe
+    IconChevronLeftPipe,
+    IconCalendarCog
 } from "@tabler/icons-vue";
 
 export default {
@@ -239,7 +240,8 @@ export default {
         IconEyeClosed,
         IconCalendarShare,
         IconChevronRightPipe,
-        IconChevronLeftPipe
+        IconChevronLeftPipe,
+        IconCalendarCog
     }
 }
 </script>

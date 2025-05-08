@@ -27,6 +27,7 @@ use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
+use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventComment\Services\EventCommentService;
@@ -208,6 +209,10 @@ readonly class EventService
         if ($event->room_id){
             broadcast(new RemoveEvent($event, $event->room_id));
         }
+
+        $event->verifications()->each(function (EventVerification $eventVerification) use ($event) {
+            $eventVerification->delete();
+        });
 
         $this->eventRepository->delete($event);
 

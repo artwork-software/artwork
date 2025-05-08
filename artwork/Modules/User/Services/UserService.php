@@ -33,6 +33,7 @@ use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Throwable;
@@ -390,4 +391,31 @@ class UserService
 
         return $user;
     }
+
+    public function shareCalendarAbo(string $type = 'calendar'): void
+    {
+        /** @var User $user */
+        $user = $this->getAuthUser();
+
+        $calendarAbo = null;
+        $shiftCalendarAbo = null;
+
+        if ($type === 'calendar') {
+            $calendarAbo = $user->relationLoaded('calendarAbo')
+                ? $user->calendarAbo
+                : $user->load('calendarAbo')->calendarAbo;
+        }
+
+        if ($type === 'shiftCalendar') {
+            $shiftCalendarAbo = $user->relationLoaded('shiftCalendarAbo')
+                ? $user->shiftCalendarAbo
+                : $user->load('shiftCalendarAbo')->shiftCalendarAbo;
+        }
+
+        Inertia::share([
+            'calendarAbo' => $calendarAbo,
+            'calendarAboShift' => $shiftCalendarAbo,
+        ]);
+    }
+
 }

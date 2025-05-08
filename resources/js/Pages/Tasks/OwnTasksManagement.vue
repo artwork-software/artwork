@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('My tasks')">
-        <div class="ml-14 mt-5">
+        <div class="artwork-container">
             <div>
                 <ChecklistFunctionBar
                     title="My ToDo-Lists"
@@ -13,18 +13,15 @@
                             <IconSearch class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" />
                         </div>
                         <div v-if="showSearch">
-                            <div class="relative w-72 -mt-5">
-                                <TextInputComponent
+                            <div class="relative w-72">
+                                <BaseInput
                                     id="userSearch"
                                     v-model="search"
-                                    :label="$t('Search for to-do lists and to-dos')"
+                                    label="Search for to-do lists and to-dos"
                                     class="w-full"
                                     @focus="search = ''"
                                     is-small
                                 />
-                                <div class="absolute right-2 top-2 cursor-pointer" @click="removeSearch">
-                                    <IconX class="h-6 w-6 text-gray-400" />
-                                </div>
                             </div>
                         </div>
                     </template>
@@ -37,7 +34,7 @@
                                     </span>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_has_projects"
+                                    <input @change="updateUserFilter" v-model="usePage().props.auth.user.checklist_has_projects"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
@@ -45,7 +42,7 @@
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_no_projects"
+                                    <input @change="updateUserFilter" v-model="usePage().props.auth.user.checklist_no_projects"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
@@ -53,7 +50,7 @@
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_private_checklists"
+                                    <input @change="updateUserFilter" v-model="usePage().props.auth.user.checklist_private_checklists"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
@@ -61,7 +58,7 @@
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_no_private_checklists"
+                                    <input @change="updateUserFilter" v-model="usePage().props.auth.user.checklist_no_private_checklists"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
@@ -69,7 +66,7 @@
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_completed_tasks"
+                                    <input @change="updateUserFilter" v-model="usePage().props.auth.user.checklist_completed_tasks"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
@@ -77,7 +74,7 @@
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_show_without_tasks"
+                                    <input @change="updateUserFilter" v-model="usePage().props.auth.user.checklist_show_without_tasks"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
@@ -144,19 +141,21 @@
                 </ChecklistFunctionBar>
             </div>
 
-            <div v-if="$page.props.user.checklist_style === 'list'">
-                <ChecklistListView
-                    :checklists="checklistsComputed"
-                    is-in-own-task-management
-                />
-            </div>
+           <div class="mt-10">
+               <div v-if="$page.props.auth.user.checklist_style === 'list'">
+                   <ChecklistListView
+                       :checklists="checklistsComputed"
+                       is-in-own-task-management
+                   />
+               </div>
 
-            <div v-else class="-mx-10 bg-artwork-project-background px-10 py-10">
-                <ChecklistKanbanView
-                    :checklists="checklistsComputed"
-                    is-in-own-task-management
-                />
-            </div>
+               <div v-else class="">
+                   <ChecklistKanbanView
+                       :checklists="checklistsComputed"
+                       is-in-own-task-management
+                   />
+               </div>
+           </div>
 
             <div class="my-20">
                 <div class="headline2 mb-5">
@@ -202,6 +201,7 @@ import {MenuItem} from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import { IconCheck } from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const $t = useTranslation();
 
@@ -235,13 +235,13 @@ const filteredChecklists = computed(() => {
         if (search.value) {
             include = checklist.name.toLowerCase().includes(search.value.toLowerCase()) || checklist.tasks.some(task => task.name.toLowerCase().includes(search.value.toLowerCase()));
         }
-        if (usePage().props.user.checklist_has_projects) include = include && checklist.hasProject === true;
-        if (usePage().props.user.checklist_no_projects) include = include && checklist.hasProject === false;
-        if (usePage().props.user.checklist_private_checklists) include = include && checklist.private === true;
-        if (usePage().props.user.checklist_no_private_checklists) include = include && checklist.private === false;
+        if (usePage().props.auth.user.checklist_has_projects) include = include && checklist.hasProject === true;
+        if (usePage().props.auth.user.checklist_no_projects) include = include && checklist.hasProject === false;
+        if (usePage().props.auth.user.checklist_private_checklists) include = include && checklist.private === true;
+        if (usePage().props.auth.user.checklist_no_private_checklists) include = include && checklist.private === false;
 
         // entferne checklisten die nur erledigt aufgaben haben oder keine aufgaben
-        if (usePage().props.user.checklist_show_without_tasks) {
+        if (usePage().props.auth.user.checklist_show_without_tasks) {
             include = include && checklist.tasks.length >= 0;
         } else {
             include = include && checklist.tasks.length > 0 && checklist.tasks.some(task => !task.done);
@@ -257,7 +257,7 @@ const filteredChecklists = computed(() => {
 const checklistsComputed = computed(() => {
     const checklists = filteredChecklists.value.map(checklist => {
         let tasks = checklist.tasks;
-        if (!usePage().props.user.checklist_completed_tasks) {
+        if (!usePage().props.auth.user.checklist_completed_tasks) {
             tasks = tasks.filter(task => !task.done);
         }
 
@@ -295,12 +295,12 @@ const removeSearch = () => {
 }
 
 const removeFilter = () => {
-    usePage().props.user.checklist_has_projects = false;
-    usePage().props.user.checklist_no_projects = false;
-    usePage().props.user.checklist_private_checklists = false;
-    usePage().props.user.checklist_no_private_checklists = false;
-    usePage().props.user.checklist_completed_tasks = false;
-    usePage().props.user.checklist_show_without_tasks = true;
+    usePage().props.auth.user.checklist_has_projects = false;
+    usePage().props.auth.user.checklist_no_projects = false;
+    usePage().props.auth.user.checklist_private_checklists = false;
+    usePage().props.auth.user.checklist_no_private_checklists = false;
+    usePage().props.auth.user.checklist_completed_tasks = false;
+    usePage().props.auth.user.checklist_show_without_tasks = true;
 
     updateUserFilter();
 }
@@ -315,13 +315,13 @@ const openSearchbar = () => {
 const updateUserFilter = () => {
     willSaved.value = true;
     debounce(() => {
-        router.patch(route('user.update.checklist.filter', usePage().props.user.id), {
-            checklist_has_projects: usePage().props.user.checklist_has_projects,
-            checklist_no_projects: usePage().props.user.checklist_no_projects,
-            checklist_private_checklists: usePage().props.user.checklist_private_checklists,
-            checklist_no_private_checklists: usePage().props.user.checklist_no_private_checklists,
-            checklist_completed_tasks: usePage().props.user.checklist_completed_tasks,
-            checklist_show_without_tasks: usePage().props.user.checklist_show_without_tasks,
+        router.patch(route('user.update.checklist.filter', usePage().props.auth.user.id), {
+            checklist_has_projects: usePage().props.auth.user.checklist_has_projects,
+            checklist_no_projects: usePage().props.auth.user.checklist_no_projects,
+            checklist_private_checklists: usePage().props.auth.user.checklist_private_checklists,
+            checklist_no_private_checklists: usePage().props.auth.user.checklist_no_private_checklists,
+            checklist_completed_tasks: usePage().props.auth.user.checklist_completed_tasks,
+            checklist_show_without_tasks: usePage().props.auth.user.checklist_show_without_tasks,
         }, {
             preserveScroll: true,
             preserveState: true,

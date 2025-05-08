@@ -1,5 +1,5 @@
 <template>
-    <div class=" ml-14 mt-5 mr-40">
+    <div class="artwork-container">
         <div class="">
             <h2 class="headline1">{{$t('Event Settings')}}</h2>
             <div class="xsLight mt-2">
@@ -14,7 +14,7 @@
                         <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                             <Link v-for="tab in tabs" :key="tab?.name"
                                   :href="tab.href"
-                                  :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                                  :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold font-lexend']"
                                   :aria-current="tab.current ? 'page' : undefined" v-show="tab.show">
                                 {{ $t(tab.name) }}
                             </Link>

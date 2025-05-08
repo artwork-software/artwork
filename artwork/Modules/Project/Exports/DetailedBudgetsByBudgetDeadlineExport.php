@@ -52,13 +52,7 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                 ->orderBy('budget_deadline')
                 ->get() as $project
         ) {
-            Log::debug(
-                sprintf(
-                    'Handle project "%s", ID: %d',
-                    $project->getAttribute('name'),
-                    $project->getAttribute('id')
-                )
-            );
+
 
             /** @var Table $projectBudgetTable */
             $projectBudgetTable = $project->getRelation('table');
@@ -101,8 +95,6 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                 }
 
                 $rows['source'] = $noDataAvailable;
-
-                Log::debug('No data available.');
                 continue;
             }
 
@@ -192,7 +184,6 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                 $rows[] = $row;
 
                 if (!$sageColumn) {
-                    Log::debug('No sage column, continue.');
                     continue;
                 }
 
@@ -204,7 +195,6 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                                 $columnCell->getAttribute('column_id') === $sageColumn->getAttribute('id')
                         )->getAttribute('sageAssignedData') as $sageAssignedData
                 ) {
-                    Log::debug('Handle sage dataset with id: ' . $sageAssignedData->getAttribute('id'));
                     $sageValue = (float) $sageAssignedData->getAttribute('buchungsbetrag');
 
                     //sage row
@@ -239,7 +229,6 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
             }
         }
 
-        Log::debug('Return rows: ' . count($rows) . '.');
 
         return $rows;
     }

@@ -44,12 +44,12 @@
             </Listbox>
             -->
             <div class="w-full mb-3 mt-3">
-                <TextInputComponent
+                <BaseInput
                     v-model="presetForm.name"
                     id="changeEndTime"
                     type="text"
                     required
-                    :label="$t('Name of the template*')"/>
+                    label="Name of the template*"/>
             </div>
         </div>
         <div class="flex justify-center">
@@ -82,10 +82,12 @@ import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default defineComponent({
     name: "AddShiftPresetModal",
     components: {
+        BaseInput,
         TextInputComponent,
         BaseModal,
         FormButton,

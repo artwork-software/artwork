@@ -5,12 +5,16 @@ namespace Artwork\Modules\User\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
+use Artwork\Modules\Chat\Models\Chat;
+use Artwork\Modules\Chat\Models\ChatUser;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\EventVerification;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
@@ -31,6 +35,7 @@ use Artwork\Modules\ShiftPlanComment\Models\Traits\HasShiftPlanComments;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
@@ -120,6 +125,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<ShiftQualification> $shiftQualifications
  * @property Collection<Craft> $assignedCrafts
  * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
+ * @property Collection<UserCalendarAbo> $calendarAbo
+ * @property Collection<UserShiftCalendarAbo> $shiftCalendarAbo
  * @property Collection<string> $allPermissions
  * @property array $notification_enums_last_sent_dates
  * @property int $bulk_sort_id
@@ -142,6 +149,14 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $phone_private
  * @property boolean $daily_view
  * @property int $last_project_id
+ * @property array $bulk_column_size
+ * @property string $chat_public_key
+ * @property boolean $use_chat
+ * @property string $work_name
+ * @property string $work_description
+ * @property int $weekly_working_hours
+ * @property float $salary_per_hour
+ * @property string $salary_description
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -159,7 +174,7 @@ class User extends Model implements
     use HasFactory;
     use HasRoles;
     use HasPermissions;
-    use HasProfilePhoto;
+    //use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
     use Searchable;
@@ -169,6 +184,7 @@ class User extends Model implements
     use HasIndividualTimes;
     use HasShiftPlanComments;
     use LaravelPermissionToVueJS;
+    use HasProfilePhotoCustom;
 
     protected $fillable = [
         'first_name',
@@ -221,7 +237,9 @@ class User extends Model implements
         'daily_view',
         'entities_per_page',
         'last_project_id',
-        'bulk_column_size'
+        'bulk_column_size',
+        'chat_public_key',
+        'use_chat',
     ];
 
     protected $casts = [
@@ -251,6 +269,7 @@ class User extends Model implements
         'phone_private' => 'boolean',
         'daily_view' => 'boolean',
         'bulk_column_size' => 'array',
+        'use_chat' => 'boolean',
     ];
 
     protected $hidden = [
@@ -264,10 +283,10 @@ class User extends Model implements
         'profile_photo_url',
         'full_name',
         'type',
-        'assigned_craft_ids',
+        //'assigned_craft_ids',
     ];
 
-    protected $with = ['calendarAbo', 'shiftCalendarAbo'];
+    //protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
     public function getTypeAttribute(): string
     {
@@ -527,6 +546,8 @@ class User extends Model implements
             'business' => $this->business,
             'phone_number' => $this->phone_number,
             'email' => $this->email,
+            'chat_public_key' => $this->chat_public_key,
+            'use_chat' => $this->use_chat,
         ];
     }
 
@@ -602,5 +623,21 @@ class User extends Model implements
     public function lastProject(): HasOne
     {
         return $this->hasOne(Project::class, 'id', 'last_project_id');
+    }
+
+    public function chats(): BelongsToMany
+    {
+        return $this->belongsToMany(Chat::class, 'chat_users')
+            ->using(ChatUser::class);
+    }
+
+    public function verifiableEventTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(EventType::class, 'event_type_user');
+    }
+
+    public function eventVerifications(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(EventVerification::class, 'verifier');
     }
 }

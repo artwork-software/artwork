@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Settings\EventSettings;
 use Artwork\Core\Http\Requests\SearchRequest;
+use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
@@ -482,12 +483,7 @@ class ProjectController extends Controller
         $project->departments()->sync($departments->pluck('id'));
 
         $this->budgetService->generateBasicBudgetValues(
-            $project,
-            $tableService,
-            $columnService,
-            $mainPositionService,
-            $columnSettingService,
-            $sageApiSettingsService
+            $project
         );
 
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id');
@@ -2103,11 +2099,9 @@ class ProjectController extends Controller
                 case ProjectTabComponentEnum::ARTIST_RESIDENCIES->value:
                     Inertia::share([
                         'roomTypes' => TypOfRoom::cases(),
-                        'serviceProviders' => ServiceProvider
-                            ::where('type_of_provider', ServiceProviderTypes::HOUSING->value)
-                            ->without(['contacts'])->get(),
+                        'accommodations' => Accommodation::all(),
                         'artist_residencies' => $project->artistResidencies()
-                            ->with(['serviceProvider'])->get(),
+                            ->with(['accommodation'])->get(),
                     ]);
                     break;
                 case ProjectTabComponentEnum::BULK_EDIT->value:

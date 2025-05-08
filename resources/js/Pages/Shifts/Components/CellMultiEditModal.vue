@@ -8,7 +8,7 @@
 
         <section>
             <h3 class="xsDark">Verfügbarkeit</h3>
-            <Listbox as="div" v-model="multiEditCellForm.vacation_type" class="w-full relative mt-2">
+            <Listbox as="div" v-model="multiEditCellForm.vacation_type" class="w-full relative my-4">
                 <ListboxButton class="menu-button">
                     <div>{{ multiEditCellForm.vacation_type.name }}</div>
                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true" />
@@ -31,18 +31,20 @@
         <section>
             <h4 class="font-semibold">Individuelle Zeit</h4>
             <div v-if="multiEditCellForm.individual_times.length" class="text-sm mt-3 xsLight mb-3">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
                     <span>{{ $t('Title') }}</span>
                     <span class="col-span-2">{{ $t('Period') }}</span>
                 </div>
                 <div v-for="(individual_time, index) in multiEditCellForm.individual_times" :key="index" class="mb-2">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 group">
-                        <TextInputComponent id="title" v-model="individual_time.title" label="Title" :show-label="false" no-margin-top />
+                        <BaseInput id="title" v-model="individual_time.title" label="Title" :show-label="false" no-margin-top />
                         <div class="flex items-center col-span-2">
-                            <TimeInputComponent id="start_time" v-model="individual_time.start_time" classes="rounded-r-none" label="Startzeit" :show-label="false" no-margin-top />
-                            <TimeInputComponent id="end_time" v-model="individual_time.end_time" classes="border-l-0 rounded-l-none" label="Endzeit" :show-label="false" no-margin-top />
+                            <BaseInput type="time" id="start_time" v-model="individual_time.start_time" classes="rounded-r-none" label="Startzeit" :show-label="false" no-margin-top />
+                            <BaseInput type="time" id="end_time" v-model="individual_time.end_time" classes="border-l-0 rounded-l-none" label="Endzeit" :show-label="false" no-margin-top />
                         </div>
-                        <component is="IconTrash" class="h-6 w-6 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5" @click="deleteIndividualTimeByIndex(index)" />
+                        <div class="flex items-center">
+                            <component is="IconTrash" class="h-6 w-6 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5" @click="deleteIndividualTimeByIndex(index)" />
+                        </div>
                     </div>
                     <div v-if="individual_time.error" class="text-xs text-red-500 -mt-2">{{ individual_time.error }}</div>
                 </div>
@@ -56,8 +58,7 @@
         </section>
 
         <section class="my-2">
-            <h4 class="font-semibold">{{ $t('Comment') }}</h4>
-            <TextInputComponent id="shift_comment" v-model="multiEditCellForm.comment" :show-label="false" no-margin-top  label=""/>
+            <BaseTextarea id="shift_comment" v-model="multiEditCellForm.comment" :show-label="false" no-margin-top  label="Comment"/>
         </section>
 
         <div class="flex justify-center mt-5">
@@ -77,6 +78,8 @@ import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import {router, useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import { CheckIcon, ChevronDownIcon } from "@heroicons/vue/solid";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 const props = defineProps({
     multiEditCellByDayAndUser: {

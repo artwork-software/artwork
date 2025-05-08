@@ -71,7 +71,8 @@ class Room extends Model
         'order',
         'everyone_can_book',
         'position',
-        'created_at'
+        'created_at',
+        'relevant_for_disposition'
     ];
 
     protected $with = [
@@ -84,7 +85,8 @@ class Room extends Model
         'fallback_type' => 'boolean',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
-        'temporary' => 'boolean'
+        'temporary' => 'boolean',
+        'relevant_for_disposition' => 'boolean',
     ];
 
     public function area(): BelongsTo

@@ -1,7 +1,7 @@
 <template>
     <app-layout :title="$t('Sources of funding')">
         <div class="">
-            <div class="max-w-screen-xl mb-40 flex flex-row ml-14 mt-5 mr-40">
+            <div class="artwork-container">
                 <div class="flex flex-1 flex-wrap">
                     <div>
                         <p class="items-center flex mr-2 headline1 mb-11">{{ $t('Sources of funding')}}</p>
@@ -245,7 +245,7 @@
                                         </div>
                                     </div>
                                     <div
-                                        v-if="moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.user.id)"
+                                        v-if="moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.auth.user.id)"
                                         class="flex items-center xxsLight subpixel-antialiased ml-14 mt-1">
                                         <IconPinned  stroke-width="1.5" class="h-5 w-5 mr-4 text-primary"/>
                                     </div>
@@ -261,7 +261,7 @@
                                                 </a>
                                             </MenuItem>
                                             <MenuItem class="cursor-pointer" v-slot="{ active }"
-                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.auth.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                 <a @click="duplicateMoneySource(moneySource)"
                                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <IconCopy stroke-width="1.5"
@@ -271,17 +271,17 @@
                                                 </a>
                                             </MenuItem>
                                             <MenuItem class="cursor-pointer" v-slot="{ active }"
-                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.auth.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                 <a @click="pinMoneySource(moneySource)"
                                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <IconPin
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
-                                                    {{moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.user.id) ? $t('Undo pinning') : $t('Pin')}}
+                                                    {{moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.auth.user.id) ? $t('Undo pinning') : $t('Pin')}}
                                                 </a>
                                             </MenuItem>
                                             <MenuItem class="cursor-pointer" v-slot="{ active }"
-                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.auth.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.auth.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
                                                 <a @click="openDeleteSourceModal(moneySource)"
                                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <IconTrash stroke-width="1.5"
@@ -618,8 +618,8 @@ export default defineComponent({
 
             // Grundlegender Vergleich für angepinnte Elemente
             const pinCompare = (a, b) => {
-                const isAPinned = a.pinned_by_users && a.pinned_by_users.includes(this.$page.props.user.id);
-                const isBPinned = b.pinned_by_users && b.pinned_by_users.includes(this.$page.props.user.id);
+                const isAPinned = a.pinned_by_users && a.pinned_by_users.includes(this.$page.props.auth.user.id);
+                const isBPinned = b.pinned_by_users && b.pinned_by_users.includes(this.$page.props.auth.user.id);
 
                 if (isAPinned && !isBPinned) return -1;
                 if (!isAPinned && isBPinned) return 1;

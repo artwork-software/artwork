@@ -28,9 +28,9 @@
         "laravel-lang/native-country-names": "^1.0",
         "laravel-lang/native-currency-names": "^1.1",
         "laravel-lang/native-locale-names": "^2.2",
-        "laravel/framework": "^v10.48.28",
+        "laravel/framework": "^v10.48.29",
         "laravel/horizon": "^5.30.3",
-        "laravel/jetstream": "^v2.16.2",
+        "laravel/jetstream": "^v4.3.1",
         "laravel/sanctum": "^v3.2",
         "laravel/scout": "^v10.9.0",
         "laravel/tinker": "^v2.7.3",
@@ -53,7 +53,7 @@
         "tightenco/ziggy": "^v1.8.2"
     },
     "require-dev": {
-        "barryvdh/laravel-debugbar": "^v3.12.5",
+        "barryvdh/laravel-debugbar": "^v3.15.3",
         "barryvdh/laravel-ide-helper": "^v2.15.1",
         "fakerphp/faker": "^v1.20.0",
         "larastan/larastan": "^2.0",

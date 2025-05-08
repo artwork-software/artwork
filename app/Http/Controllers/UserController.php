@@ -494,7 +494,8 @@ class UserController extends Controller
                 'email',
                 'language',
                 'email_private',
-                'phone_private'
+                'phone_private',
+                'use_chat'
             )
         );
 
@@ -720,6 +721,7 @@ class UserController extends Controller
             'shift_notes',
             'hide_unoccupied_rooms',
             'display_project_groups',
+            'show_unplanned_events'
         ]));
     }
 

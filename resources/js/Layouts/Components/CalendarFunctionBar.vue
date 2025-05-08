@@ -69,7 +69,7 @@
                                 <button type="button" class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
                                     <IconSettings class="h-7 w-7 text-artwork-buttons-context"/>
                                 </button>
-                                <span v-if="$page.props.user.calendar_settings.project_status || $page.props.user.calendar_settings.options || $page.props.user.calendar_settings.project_management || $page.props.user.calendar_settings.repeating_events || $page.props.user.calendar_settings.work_shifts"
+                                <span v-if="$page.props.auth.user.calendar_settings.project_status || $page.props.auth.user.calendar_settings.options || $page.props.auth.user.calendar_settings.project_management || $page.props.auth.user.calendar_settings.repeating_events || $page.props.auth.user.calendar_settings.work_shifts"
                                       class="rounded-full border-2 border-error w-2 h-2 bg-error absolute ml-6 ring-white ring-1">
                                 </span>
                             </span>
@@ -238,11 +238,11 @@ export default {
             multiEdit: false,
 
             userCalendarSettings: useForm({
-                project_status: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.project_status : false,
-                options: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.options : false,
-                project_management: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.project_management : false,
-                repeating_events: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.repeating_events : false,
-                work_shifts: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.work_shifts : false
+                project_status: this.$page.props.auth.user.calendar_settings ? this.$page.props.auth.user.calendar_settings.project_status : false,
+                options: this.$page.props.auth.user.calendar_settings ? this.$page.props.auth.user.calendar_settings.options : false,
+                project_management: this.$page.props.auth.user.calendar_settings ? this.$page.props.auth.user.calendar_settings.project_management : false,
+                repeating_events: this.$page.props.auth.user.calendar_settings ? this.$page.props.auth.user.calendar_settings.repeating_events : false,
+                work_shifts: this.$page.props.auth.user.calendar_settings ? this.$page.props.auth.user.calendar_settings.work_shifts : false
             }),
             externUpdate: false,
             showExportModal: false,
@@ -261,7 +261,7 @@ export default {
             }
         },
         changeAtAGlance() {
-            router.patch(route('user.update.at_a_glance', usePage().props.user.id), {
+            router.patch(route('user.update.at_a_glance', usePage().props.auth.user.id), {
                 at_a_glance: !this.atAGlance
             }, {
                 preserveState: false,
@@ -300,7 +300,7 @@ export default {
             this.activeFilters = activeFilters
         },
         saveUserCalendarSettings() {
-            this.userCalendarSettings.patch(route('user.calendar_settings.update', {user: this.$page.props.user.id}))
+            this.userCalendarSettings.patch(route('user.calendar_settings.update', {user: this.$page.props.auth.user.id}))
         },
         removeFilter(filter) {
 
@@ -359,7 +359,7 @@ export default {
         },
 
         updateFilterValue(key, value){
-            router.patch(route('user.calendar.filter.single.value.update', {user: this.$page.props.user.id}), {
+            router.patch(route('user.calendar.filter.single.value.update', {user: this.$page.props.auth.user.id}), {
                 key: key,
                 value: value
             }, {

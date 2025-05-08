@@ -23,7 +23,7 @@
                       :date-to-show="dateToShow"
                       :user="user_to_edit"
                       :vacations="vacations"
-                      v-if="$can('can manage availability') || user_to_edit.id === usePage().props.user.id || this.hasAdminRole()"/>
+                      v-if="$can('can manage availability') || user_to_edit.id === usePage().props.auth.user.id || this.hasAdminRole()"/>
     </UserEditHeader>
 </template>
 

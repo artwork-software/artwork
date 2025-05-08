@@ -10,14 +10,14 @@
         <form @submit.prevent="createOrUpdate">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="col-span-full">
-                    <TextInputComponent
+                    <BaseInput
                         id="name"
                         v-model="createOrUpdateForm.name"
                         :label="$t('Name')"
                     />
                 </div>
                 <div class="col-span-full">
-                    <TextInputComponent
+                    <BaseInput
                         id="description"
                         v-model="createOrUpdateForm.description"
                         :label="$t('Description')"
@@ -102,6 +102,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     projectPrintLayout: {

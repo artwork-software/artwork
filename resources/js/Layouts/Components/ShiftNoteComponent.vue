@@ -9,7 +9,7 @@
     </div>
     <div v-if="showTextField">
         <div class="cursor-pointer px-1">
-            <textarea ref="descriptionField" v-model="shiftDescription.description" class="w-full h-20 p-1 text-sm border-artwork-buttons-context/30 rounded-lg" maxlength="250" @focusout="updateDescription" />
+            <BaseTextarea ref="descriptionField" id="descriptionField" v-model="shiftDescription.description" label="Description" maxlength="250" @focusout="updateDescription" />
             <div class="text-xs text-end text-artwork-buttons-context">
                 {{ shiftDescription.description.length }} / 250
             </div>
@@ -21,9 +21,11 @@
 import IconLib from "@/Mixins/IconLib.vue";
 import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     name: "ShiftNoteComponent",
+    components: {BaseTextarea},
     props: {
         shift: {
             type: Object,

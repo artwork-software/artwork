@@ -36,6 +36,7 @@ class EventDTO extends Data
         public User|null|Optional $created_by,
         public ?array $formattedDates,
         public ?bool $is_series,
+        public ?int $series_id,
         public Collection $eventProperties,
         public ?bool $occupancy_option,
         public ?int $declinedRoomId = null,
@@ -43,6 +44,8 @@ class EventDTO extends Data
         public Collection $subEvents,
         public SeriesEvents|null $series,
         public ?string $option_string,
+        public ?bool $isPlanning = false,
+        public ?bool $hasVerification = false,
     ) {
     }
 
@@ -75,6 +78,7 @@ class EventDTO extends Data
             created_by: $event->user_id ? $users[$event->user_id] : null,
             formattedDates: $event->getAttribute('formatted_dates') ?? [],
             is_series: $event->is_series,
+            series_id: $event->series_id,
             eventProperties: $event->eventProperties,
             occupancy_option: $event->occupancy_option,
             declinedRoomId: $event->declined_room_id,
@@ -87,6 +91,8 @@ class EventDTO extends Data
             subEvents: $event->subEvents,
             series: $event->is_series ? $event->series : null,
             option_string: $event->option_string,
+            isPlanning: $event->is_planning ?? false,
+            hasVerification: $event->getAttribute('has_verification') ?? false,
         );
     }
 }

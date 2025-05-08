@@ -26,10 +26,10 @@
                 <div class="mb-2">
                     <div class="relative w-full">
                         <div class="w-full">
-                            <TextInputComponent
+                            <BaseInput
                                 id="userSearch"
                                 v-model="template_query"
-                                :label="$t('Which template?*')"
+                                label="Which template?*"
                             />
                         </div>
                         <transition leave-active-class="transition ease-in duration-100"
@@ -104,10 +104,12 @@ import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default defineComponent({
     name: "ImportShiftTemplate",
     components: {
+        BaseInput,
         TextInputComponent,
         BaseModal,
         FormButton,

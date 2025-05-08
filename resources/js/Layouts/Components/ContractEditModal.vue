@@ -33,7 +33,7 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="col-span-full">
-                        <TextInputComponent
+                        <BaseInput
                                v-model="this.contractPartner"
                                id="eventTitle"
                                :label="$t('Contract partner*')"
@@ -121,13 +121,14 @@
                         </Listbox>
                     </div>
                     <div class="col-span-full w-full flex">
-                        <NumberInputComponent
+                        <BaseInput
+                            type="number"
                             id="number"
                             v-model="this.contractAmount"
                             :label="$t('Amount* (fee, co-production contribution, etc.)')"
                         />
-                        <Listbox as="div" class="flex w-24 relative" v-model="selectedCurrency" id="eventType">
-                            <ListboxButton class="menu-button mt-5">
+                        <Listbox as="div" class="flex w-28 relative" v-model="selectedCurrency" id="eventType">
+                            <ListboxButton class="menu-button">
                                 <div class="flex items-center justify-between w-full">
                                     <div class="truncate items-center ml-3 flex">
                                         {{ selectedCurrency.name }}
@@ -195,7 +196,7 @@
                         </div>
                     </div>
                     <div class="col-span-full">
-                        <TextareaComponent
+                        <BaseTextarea
                             :label="$t('Comment / Note')"
                             id="comment"
                             v-model="comment"
@@ -299,6 +300,8 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 export default {
     name: "ContractEditModal",
     mixins: [Permissions, IconLib],
@@ -311,6 +314,8 @@ export default {
         contractTypes: Array,
     },
     components: {
+        BaseTextarea,
+        BaseInput,
         UserSearch,
         TextareaComponent,
         NumberInputComponent,

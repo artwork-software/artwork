@@ -1,8 +1,6 @@
 <template>
     <app-layout :title="moneySource.name">
-
-
-        <div class="-mx-5 pb-10">
+        <div class="artwork-container">
             <div class="pl-20">
                 <!-- Money Source Header -->
                 <div class="max-w-7xl">
@@ -11,9 +9,9 @@
                             :title="moneySource.name"
                         />
                         <!-- Menu -->
-                        <BaseMenu class="ml-4" v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')">
+                        <BaseMenu class="ml-4" v-if="$role('artwork admin') || access_member.includes($page.props.auth.user.id) || competent_member.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')">
                             <MenuItem
-                                v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
+                                v-if="$role('artwork admin') || access_member.includes($page.props.auth.user.id) || competent_member.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                 v-slot="{ active }">
                                 <a @click="openEditMoneySourceModal"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -24,7 +22,7 @@
                                 </a>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <a @click="duplicateMoneySource(this.moneySource) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
+                                <a @click="duplicateMoneySource(this.moneySource) || competent_member.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconCopy stroke-width="1.5"
                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -33,7 +31,7 @@
                                 </a>
                             </MenuItem>
                             <MenuItem
-                                v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
+                                v-if="$role('artwork admin') || access_member.includes($page.props.auth.user.id) || competent_member.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                 v-slot="{ active }">
                                 <a @click="openDeleteSourceModal(this.moneySource)"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -128,18 +126,14 @@
                         <TinyPageHeadline :title="$t('Linked positions')" description="" />
                         <div class="w-full flex items-center justify-end">
                             <Listbox as="div" class="flex h-12 w-64" v-model="wantedProject" id="wantedProject">
-                                <ListboxButton class="menu-button">
-                                    <div class="flex items-center justify-between my-auto w-full">
-                                        <div class="truncate items-center ml-3 flex" v-if="wantedProject">
-                                            <div class="truncate mr-6">{{ wantedProject?.name }}</div>
-                                        </div>
-                                        <div class="truncate items-center ml-3 flex" v-else>
-                                            <span>{{$t('All projects')}}</span>
-                                        </div>
-                                        <span class="ml-2 flex items-center pr-2 pointer-events-none">
-                                        <IconChevronDown  stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
-                                    </span>
+                                <ListboxButton class="menu-button bg-white">
+                                    <div class="truncate items-center flex" v-if="wantedProject">
+                                        <div class="truncate">{{ wantedProject?.name }}</div>
                                     </div>
+                                    <div class="truncate items-center flex" v-else>
+                                        <span>{{$t('All projects')}}</span>
+                                    </div>
+                                    <IconChevronDown  stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">

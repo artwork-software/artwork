@@ -1,6 +1,10 @@
 <template>
-    <div class="max-w-screen-xl">
-        <div class="flex-wrap max-w-5xl">
+    <Head>
+        <link rel="icon" type="image/png" :href="usePage().props.small_logo" />
+        <title>{{ $t('Recycle bin') }} - {{ usePage().props.page_title }}</title>
+    </Head>
+    <div class="artwork-container">
+        <div class="flex-wrap">
             <div class="flex flex-wrap mx-10 ml-14 mt-5">
                 <h2 class="font-black text-primary font-lexend text-3xl w-full">{{  $t('Recycle bin') }}</h2>
                 <p class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">{{
@@ -34,7 +38,7 @@
                                                        :key="page.name"
                                                        :value="page"
                                                        v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between p-3 text-sm subpixel-antialiased']">
+                                            <li @click="redirectToPage(page.href)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between p-3 text-sm subpixel-antialiased']">
                                                 <span
                                                     :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                     {{ page.name }}
@@ -64,7 +68,7 @@
 <script>
 import {Listbox, ListboxButton, ListboxOptions, ListboxOption} from "@headlessui/vue";
 import {SearchIcon, ChevronDownIcon, CheckIcon} from "@heroicons/vue/solid";
-import {router} from "@inertiajs/vue3";
+import {Head, router, usePage} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import Input from "@/Layouts/Components/InputComponent.vue";
@@ -77,16 +81,14 @@ export default {
             selectedTrash: null,
         }
     },
-    watch: {
-        selectedTrash: {
-          handler() {
-              router.get(this.selectedTrash.href)
-          },
-          deep: true
-        }
-    },
     created() {
         this.selectedTrash = this.trashSites[this.$page.component];
+    },
+    methods: {
+        usePage,
+        redirectToPage(href) {
+            this.$inertia.get(href, {}, { preserveState: true });
+        }
     },
     computed: {
         trashSites() {
@@ -140,11 +142,17 @@ export default {
                             'can manage all project budgets without docs'
                         ]
                     ),
+                },
+                'Trash/InventoryArticles': {
+                    name: this.$t('Articles'),
+                    href: route('inventory.articles.trash'),
+                    available: true
                 }
             }
         }
     },
     components: {
+        Head,
         Input, XIcon,
         Listbox,
         SearchIcon,

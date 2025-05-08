@@ -11,7 +11,9 @@
                 @wants-to-add-new-event="showEditEventModel(null)"
                 @update-multi-edit="toggleMultiEdit"
                 @jump-to-day-of-month="jumpToDayOfMonth"
-            />
+                :is-planning="isPlanning"
+            >
+            </FunctionBarCalendar>
             <div class="w-full h-8 px-4 py-2 bg-red-500 cursor-pointer" v-if="eventsWithoutRoom.length > 0" @click="showEventsWithoutRoomComponent = true">
                 <div class="flex items-center justify-center w-full h-full gap-x-1">
                     <component is="IconAlertTriangle" class="size-4 text-white" aria-hidden="true" />
@@ -25,30 +27,28 @@
                 </div>
             </div>
         </div>
-
-
         <div>
-            <div v-if="!usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
+            <div v-if="!usePage().props.auth.user.daily_view && !usePage().props.auth.user.at_a_glance">
                 <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? 'mt-8' : ''">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white px-5'">
                         <CalendarHeader :rooms="rooms" :filtered-events-length="eventsWithoutRoom.length"/>
                         <div class="w-fit events-by-days-container mt-16" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '',]" ref="calendarToCalculate">
                             <div v-for="day in days"
                                  :key="day.fullDay"
-                                 :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                                 :style="{ height: usePage().props.auth.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                  class="flex gap-0.5 day-container"
                                  :class="day.isWeekend ? 'bg-gray-50' : ''"
                                  :data-day="day.fullDay"
                                  :data-day-to-jump="day.withoutFormat">
                                 <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day" v-if="!day.isExtraRow"/>
                                 <div v-for="room in newCalendarData" :key="room.id" class="relative" v-if="!day.isExtraRow">
-                                    <div v-if="room.content[day.fullDay]?.events.length > 1 && !usePage().props.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
+                                    <div v-if="room.content[day.fullDay]?.events.length > 1 && !usePage().props.auth.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
                                         <component is="IconChevronDown" @click="scrollToNextEventInDay(day.withoutFormat, room.content[day.fullDay].events.length,room.roomId)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
                                     </div>
-                                    <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                                    <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.auth.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                                          :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                                          class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.withoutFormat">
-                                        <div v-if="usePage().props.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
+                                        <div v-if="usePage().props.auth.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
                                             <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: first_project_tab_id })"  class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
                                                 <component :is="group.icon" class="size-4" aria-hidden="true"/>
                                                 <span>{{ group.name }}</span>
@@ -73,8 +73,18 @@
                                                     @open-confirm-modal="openDeleteEventModal"
                                                     @show-decline-event-modal="openDeclineEventModal"
                                                     @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                                    :verifierForEventTypIds="verifierForEventTypIds"
+                                                    :is-planning="isPlanning"
                                                 />
                                             </div>
+                                        </div>
+                                        <div v-if="isPlanning" class="absolute right-2 bottom-2 hidden group-hover/container:block">
+                                            <ToolTipComponent
+                                                :tooltip-text="$t('Add new planned event')"
+                                                icon="IconCircleDashedPlus"
+                                                classes="cursor-pointer"
+                                                @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -83,7 +93,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="usePage().props.user.daily_view && !usePage().props.user.at_a_glance">
+            <div v-else-if="usePage().props.auth.user.daily_view && !usePage().props.auth.user.at_a_glance">
                 <AsyncDailyViewCalendar
                     :multi-edit="multiEdit"
                     :rooms="rooms"
@@ -102,6 +112,8 @@
                     @open-confirm-modal="openDeleteEventModal"
                     @show-decline-event-modal="openDeclineEventModal"
                     @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                    :verifierForEventTypIds="verifierForEventTypIds"
+                    :is-planning="isPlanning"
                 />
             </div>
             <div class="mt-[4.5rem] w-max" v-else>
@@ -133,6 +145,8 @@
                                         @open-confirm-modal="openDeleteEventModal"
                                         @show-decline-event-modal="openDeclineEventModal"
                                         @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                        :verifierForEventTypIds="verifierForEventTypIds"
+                                        :is-planning="isPlanning"
                                     />
                                 </div>
                             </div>
@@ -141,7 +155,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="!checkIfAnyRoomHasAnEventOrShift && usePage().props.user.calendar_settings.use_project_time_period">
+        <div v-if="!checkIfAnyRoomHasAnEventOrShift && usePage().props.auth.user.calendar_settings.use_project_time_period">
             <div class="mt-24 ml-4">
                 <div class="border-l-4 border-red-400 bg-red-50 p-4 w-fit">
                     <div class="flex">
@@ -159,7 +173,7 @@
         </div>
     </div>
     <div class="fixed bottom-0 w-full h-32 bg-artwork-navigation-background/30 z-40 pointer-events-none" v-if="multiEdit">
-        <div class="flex items-center justify-center h-full gap-4">
+        <div class="flex items-center justify-center h-full gap-4" v-if="!isPlanning">
             <div>
                 <FormButton :disabled="computedCheckedEventsForMultiEditCount === 0"
                             @click="showMultiEditModal = true"
@@ -188,13 +202,35 @@
                     :text="$t('Cancel selection')"/>
             </div>
         </div>
+        <div class="flex items-center justify-center h-full gap-4" v-else>
+            <div v-if="can('can see planning calendar') || hasAdminRole()">
+                <FormButton :disabled="computedCheckedEventsForMultiEditCount === 0"
+                            @click="requestVerification"
+                            :text="computedCheckedEventsForMultiEditCount + ' ' + $t('request verification')"
+                            class="transition-all duration-300 ease-in-out pointer-events-auto"/>
+            </div>
+            <div v-if="can('can edit planning calendar') || hasAdminRole()">
+                <FormButton :disabled="computedCheckedEventsForMultiEditCount === 0"
+                            @click="approveRequests"
+                            :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Approve events')"
+                            class="transition-all duration-300 ease-in-out pointer-events-auto"/>
+            </div>
+            <div v-if="can('can edit planning calendar') || hasAdminRole()">
+                <FormButton
+                    class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="showRejectEventVerificationModal = true"
+                    :disabled="computedCheckedEventsForMultiEditCount === 0"
+                    :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Reject events')"/>
+            </div>
+        </div>
     </div>
+
     <AsyncEventComponent
         v-if="showEventComponent"
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :calendarProjectPeriod="usePage().props.user.calendar_settings.use_project_time_period"
+        :calendarProjectPeriod="usePage().props.auth.user.calendar_settings.use_project_time_period"
         :project="project"
         :event="eventToEdit"
         :wantedRoomId="wantedRoom"
@@ -204,6 +240,9 @@
         :requires-axios-requests="true"
         @closed="eventComponentClosed"
         :event-statuses="eventStatuses"
+        :is-planning="isPlanning"
+        :wanted-date="wantedDate"
+
     />
 
     <!--<CreateOrUpdateEventModal
@@ -257,10 +296,16 @@
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
     />
 
+    <RejectEventVerificationRequestModal
+        v-if="showRejectEventVerificationModal"
+        @close="closeShowRejectEventVerificationModal"
+        :event-ids="editEvents"
+    />
+
 </template>
 
 <script setup>
-import {computed, defineAsyncComponent, inject, onMounted, ref} from "vue";
+import {computed, defineAsyncComponent, inject, onMounted, onUnmounted, ref} from "vue";
 import {router, usePage, Link} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
@@ -277,47 +322,58 @@ import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeade
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
-
-
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {can} from "laravel-permission-to-vuejs";
 
 const props = defineProps({
-        rooms: {
-            type: Object,
-            required: true,
-        },
-        days: {
-            type: Object,
-            required: true,
-        },
-        calendarData: {
-            type: Object,
-            required: true,
-        },
-        project: {
-            type: Object,
-            default: null,
-            required: false,
-        },
-        eventsWithoutRoom: {
-            type: Object,
-            required: false,
-        },
-        projectNameUsedForProjectTimePeriod: {
-            type: String,
-            required: false,
-            default: ''
-        },
-        firstProjectShiftTabId: {
-            type: [String, Number],
-            required: false,
-            default: null
-        },
-        eventStatuses: {
-            type: Object,
-            required: false,
-            default: null
-        }
-    })
+    rooms: {
+        type: Object,
+        required: true,
+    },
+    days: {
+        type: Object,
+        required: true,
+    },
+    calendarData: {
+        type: Object,
+        required: true,
+    },
+    project: {
+        type: Object,
+        default: null,
+        required: false,
+    },
+    eventsWithoutRoom: {
+        type: Object,
+        required: false,
+    },
+    projectNameUsedForProjectTimePeriod: {
+        type: String,
+        required: false,
+        default: ''
+    },
+    firstProjectShiftTabId: {
+        type: [String, Number],
+        required: false,
+        default: null
+    },
+    eventStatuses: {
+        type: Object,
+        required: false,
+        default: null
+    },
+    isPlanning: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    verifierForEventTypIds: {
+        type: Array,
+        required: false,
+        default: []
+    }
+})
+
 const $t = useTranslation()
 const { composedCurrentDaysInViewRef, composedStartDaysAndEventsIntersectionObserving} = useDaysAndEventsIntersectionObserver()
 const {hasAdminRole} = usePermission(usePage().props)
@@ -338,57 +394,42 @@ const AsyncDailyViewCalendar = defineAsyncComponent({
     loader: () => import('@/Components/Calendar/DailyViewCalendar.vue'),
 })
 
+const RejectEventVerificationRequestModal = defineAsyncComponent({
+    loader: () => import('@/Pages/EventVerification/Components/RejectEventVerificationRequestModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
 const textStyle = computed(() => {
-        const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
-        const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
-        return {
-            fontSize,
-            lineHeight,
-        };
-    })
-const scrollToNextEventInDay = (day, length,room) => {
-        let eventScroll = document.getElementById('event_scroll-' + (length - 1) + '-day-' + day + '-room-' + room);
-        if (eventScroll) {
-            eventScroll.scrollIntoView({
-                behavior: 'smooth', // Optionale Animation für weiches Scrollen
-                block: 'nearest',  // Scrolle nur so weit wie nötig
-                inline: 'nearest' // Stelle sicher, dass es nicht die ganze Seite beeinflusst
-            });
-        }
+    const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
+    const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
+    return {
+        fontSize,
+        lineHeight,
     };
-/*const computedFilteredEvents = computed(() => {
-        let getComputedEventsWithoutRoom = () => {
-            return eventsWithoutRoomRef.value.filter((event) => {
-                let createdBy = event.created_by;
-                let projectLeaders = event.project?.leaders;
+})
+const scrollToNextEventInDay = (day, length,room) => {
+    let eventScroll = document.getElementById('event_scroll-' + (length - 1) + '-day-' + day + '-room-' + room);
+    if (eventScroll) {
+        eventScroll.scrollIntoView({
+            behavior: 'smooth', // Optionale Animation für weiches Scrollen
+            block: 'nearest',  // Scrolle nur so weit wie nötig
+            inline: 'nearest' // Stelle sicher, dass es nicht die ganze Seite beeinflusst
+        })
+    }
+};
 
-                if (projectLeaders && projectLeaders.length > 0) {
-                    if (
-                        createdBy.id === usePage().props.user.id ||
-                        projectLeaders.some((leader) => leader.id === usePage().props.user.id)
-                    ) {
-                        return true;
-                    }
-                } else if (createdBy.id === usePage().props.user.id) {
-                    return true;
-                }
-
-                return false;
-            });
-        }
-
-        return getComputedEventsWithoutRoom();
-    });*/
 const computedCheckedEventsForMultiEditCount = computed(() => {
-        return editEvents.value.length;
-    });
+    return editEvents.value.length;
+});
+
 const eventsWithoutRoomRef = ref(props.eventsWithoutRoom );
 const first_project_calendar_tab_id = inject('first_project_calendar_tab_id');
 const first_project_tab_id = inject('first_project_tab_id');
 const eventTypes = inject('eventTypes');
 const multiEdit = ref(false);
 const isFullscreen = ref(false);
-const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
+const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const showMultiEditModal = ref(false);
 const editEvents = ref([]);
 const editEventsRoomIds = ref([]);
@@ -411,6 +452,17 @@ const roomCollisions = ref([]);
 const showMultiDuplicateModal = ref(false);
 const checkIfScrolledToCalendarRef = ref('!-ml-3');
 const newCalendarData = ref(props.calendarData);
+const wantedDate = ref(null);
+const showRejectEventVerificationModal = ref(false);
+
+const openNewEventModalWithBaseData = (day, roomId) => {
+    eventToEdit.value = false
+    wantedRoom.value = roomId;
+    wantedDate.value = day;
+    showEventComponent.value = true;
+};
+
+
 const handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId) => {
     if (considerOnMultiEdit) {
         editEvents.value.push(eventId);
@@ -480,7 +532,7 @@ const checkIfUserIsAdminOrInGroup = (group) => {
         return false;
     }
 
-    return !group.userIds.includes(usePage().props.user.id);
+    return !group.userIds.includes(usePage().props.auth.user.id);
 }
 
 
@@ -493,13 +545,7 @@ const checkIfAnyRoomHasAnEventOrShift = computed(() => {
     });
 });
 
-/*const checkIfRoomHasEvents = (room) => {
-    return room.content && Object.entries(room.content).some(([date, { events }]) => {
-        return events && events.length > 0;
-    });
-};
-*/
-const toggleMultiEdit = (value) => {
+const toggleMultiEdit = (value, isPlanning = false) => {
     multiEdit.value = value;
 
     if (!value) {
@@ -526,137 +572,121 @@ const cancelMultiEditDuplicateSelection = () => {
     });
 };
 const openDeclineEventModal = (event) => {
-        declineEvent.value = event;
-        showDeclineEventModal.value = true;
-    }
+    declineEvent.value = event;
+    showDeclineEventModal.value = true;
+}
+
 const openDeleteEventModal = (event, type) => {
-        if (type === 'main') {
-            deleteType.value = type;
-            deleteTitle.value = $t('Delete event?');
-            deleteDescription.value = $t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.');
-        } else {
-            deleteType.value = type;
-            deleteTitle.value = $t('Delete sub-event?');
-            deleteDescription.value = $t('Are you sure you want to delete the selected assignments?');
-        }
-        eventToDelete.value = event;
-        deleteComponentVisible.value = true;
+    if (type === 'main') {
+        deleteType.value = type;
+        deleteTitle.value = $t('Delete event?');
+        deleteDescription.value = $t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.');
+    } else {
+        deleteType.value = type;
+        deleteTitle.value = $t('Delete sub-event?');
+        deleteDescription.value = $t('Are you sure you want to delete the selected assignments?');
     }
+    eventToDelete.value = event;
+    deleteComponentVisible.value = true;
+}
+
 const openAddSubEventModal = (desiredEvent, mode, mainEvent) => {
-        if (mode === 'create') {
-            //only set eventToEdit as base for new sub event
-            eventToEdit.value = desiredEvent;
-        } else if (mode === 'edit') {
-            //only set eventToEdit as base for new sub event
-            eventToEdit.value = mainEvent;
-            subEventToEdit.value = desiredEvent;
-        }
-
-        showAddSubEventModal.value = true;
+    if (mode === 'create') {
+        //only set eventToEdit as base for new sub event
+        eventToEdit.value = desiredEvent;
+    } else if (mode === 'edit') {
+        //only set eventToEdit as base for new sub event
+        eventToEdit.value = mainEvent;
+        subEventToEdit.value = desiredEvent;
     }
+
+    showAddSubEventModal.value = true;
+}
+
 const closeAddSubEventModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
-        if (closedOnPurpose) {
-        }
+    if (closedOnPurpose) {}
 
-        showAddSubEventModal.value = false;
-        eventToEdit.value = null;
-        subEventToEdit.value = null;
-    }
+    showAddSubEventModal.value = false;
+    eventToEdit.value = null;
+    subEventToEdit.value = null;
+}
+
 const showEditEventModel = (event) => {
-        eventToEdit.value = event;
-        showEventComponent.value = true;
-    }
+    eventToEdit.value = event;
+    showEventComponent.value = true;
+}
+
 const openFullscreen = () => {
-        let elem = document.getElementById('myCalendar');
-
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) { /* Safari */
-            elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) { /* IE11 */
-            elem.msRequestFullscreen();
-        }
-
-        isFullscreen.value = true;
+    let elem = document.getElementById('myCalendar');
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
     }
+    isFullscreen.value = true;
+}
+
 const closeMultiEditModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
-        showMultiEditModal.value = false;
-        if (closedOnPurpose) {
-            resetMultiEdit();
-        }
+    showMultiEditModal.value = false;
+    if (closedOnPurpose) {
+        resetMultiEdit();
     }
+}
 const closeMultiDuplicateModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
-        showMultiDuplicateModal.value = false;
-        if (closedOnPurpose) {
-            resetMultiEdit();
-        }
+    showMultiDuplicateModal.value = false;
+    if (closedOnPurpose) {
+        resetMultiEdit();
     }
+}
+
 const eventComponentClosed = (closedOnPurpose) => {
-        if (closedOnPurpose) {
-            let calendar_settings = usePage().props.user.calendar_settings;
-
-            //@todo: temporary see ARTWORK-300
-            if (calendar_settings.use_project_time_period) {
-                router.patch(
-                    route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
-                    {
-                        use_project_time_period: true,
-                        project_id: calendar_settings.time_period_project_id,
-                    },
-                    {
-                        preserveState: false,
-                        preserveScroll: true
-                    }
-                );
-                return;
-            }
+    if (closedOnPurpose) {
+        let calendar_settings = usePage().props.auth.user.calendar_settings;
+        //@todo: temporary see ARTWORK-300
+        if (calendar_settings.use_project_time_period) {
+            router.patch(route('user.calendar_settings.toggle_calendar_settings_use_project_period'), {
+                use_project_time_period: true,
+                project_id: calendar_settings.time_period_project_id,
+            }, {
+                preserveState: false,
+                preserveScroll: true
+                }
+            );
+            return;
         }
-
-        showEventComponent.value = false;
     }
+
+    showEventComponent.value = false;
+}
 const deleteEvent = () => {
-        if (deleteType.value === 'main') {
-            axios.delete(route('events.delete', eventToDelete.value));
-        }
-        if (deleteType.value === 'sub') {
-            axios.delete(route('subEvent.delete', eventToDelete.value));
-        }
-        deleteComponentVisible.value = false;
+    if (deleteType.value === 'main') {
+        axios.delete(route('events.delete', eventToDelete.value));
     }
-const closeDeleteSelectedEventsModal = (closedOnPurpose) => {
-        openDeleteSelectedEventsModal.value = false;
+    if (deleteType.value === 'sub') {
+        axios.delete(route('subEvent.delete', eventToDelete.value));
+    }
+    deleteComponentVisible.value = false;
+}
 
-        if (closedOnPurpose) {
+const closeDeleteSelectedEventsModal = (closedOnPurpose) => {
+    openDeleteSelectedEventsModal.value = false;
+    if (closedOnPurpose) {
+        resetMultiEdit();
+    }
+}
+
+const deleteSelectedEvents = () => {
+    axios.post(route('multi-edit.delete'), {
+            events: editEvents.value
+        }
+    ).finally(() => {
+            openDeleteSelectedEventsModal.value = false;
             resetMultiEdit();
         }
-    }
-const deleteSelectedEvents = () => {
-        axios.post(
-            route('multi-edit.delete'),
-            {
-                events: editEvents.value
-            }
-        ).finally(
-            () => {
-
-                openDeleteSelectedEventsModal.value = false;
-                resetMultiEdit();
-            }
-        );
-    };
-
-const dateValue = inject('dateValue');
-
-
-/*const updateFilterValue = (key, value) => {
-    router.patch(route('user.calendar.filter.single.value.update', {user: usePage().props.user.id}), {
-        key: key,
-        value: value
-    }, {
-        preserveScroll: true,
-        preserveState: false
-    });
-}*/
+    );
+};
 
 onMounted(() => {
     window.addEventListener(
@@ -683,7 +713,6 @@ onMounted(() => {
     });
 });
 
-
 const jumpToDayOfMonth = (day) => {
     const dayElement = document.querySelector(`.day-container[data-day-to-jump="${day}"]`);
     if (dayElement) {
@@ -695,10 +724,41 @@ const jumpToDayOfMonth = (day) => {
     }
 }
 
+const approveRequests = () => {
+    router.post(route('event-verifications.approved-by-events'), {
+        events: editEvents.value
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            resetMultiEdit();
+        }
+    })
+}
+
+const requestVerification = () => {
+    router.post(route('events-verifications.request-verification'), {
+        events: editEvents.value
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            resetMultiEdit();
+        }
+    })
+}
+
+const closeShowRejectEventVerificationModal = () => {
+    showRejectEventVerificationModal.value = false;
+    resetMultiEdit();
+}
+
 onMounted(() => {
     const ShiftCalendarListener = useShiftCalendarListener(newCalendarData.value);
     ShiftCalendarListener.init();
 })
+
+
 
 
 </script>

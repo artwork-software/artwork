@@ -53,7 +53,7 @@
                     <div :style="{ width: width - (64 * zoomFactor) + 'px'}" class=" truncate">
                         {{ event.eventName ?? event.projectName }}
                     </div>
-                    <div v-if="$page.props.user.calendar_settings.project_status" class="absolute right-1">
+                    <div v-if="$page.props.auth.user.calendar_settings.project_status" class="absolute right-1">
                         <div v-if="event.projectStateColor"
                              :class="[event.projectStateColor,zoomFactor <= 0.8 ? 'border-2' : 'border-4']"
                              class="rounded-full">
@@ -132,7 +132,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="event.option_string && $page.props.user.calendar_settings.options" class="flex items-center">
+                <div v-if="event.option_string && $page.props.auth.user.calendar_settings.options" class="flex items-center">
                     <div
                         v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
                         class="flex eventTime font-medium subpixel-antialiased"
@@ -147,13 +147,13 @@
             <!-- repeating Event -->
             <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
                  :class="[zoomFactor === 1 ? 'eventText' : '', 'font-semibold']"
-                 v-if="$page.props.user.calendar_settings.repeating_events && event.is_series"
+                 v-if="$page.props.auth.user.calendar_settings.repeating_events && event.is_series"
                  class="uppercase flex items-center">
                 <IconRepeat class="mx-1 h-3 w-3" stroke-width="1.5"/>
                 {{ $t('Repeat event') }}
             </div>
             <!-- User-Icons -->
-            <div class="-ml-3 mb-0.5 w-full" v-if="$page.props.user.calendar_settings.project_management && event.projectLeaders?.length > 0">
+            <div class="-ml-3 mb-0.5 w-full" v-if="$page.props.auth.user.calendar_settings.project_management && event.projectLeaders?.length > 0">
                 <div v-if="event.projectLeaders && !project && zoomFactor >= 0.8"
                      class="mt-1 ml-5 flex flex-wrap">
                     <div class="flex flex-wrap flex-row -ml-1.5"
@@ -200,7 +200,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="$page.props.user.calendar_settings.work_shifts" class="ml-1 pb-1 text-xs">
+        <div v-if="$page.props.auth.user.calendar_settings.work_shifts" class="ml-1 pb-1 text-xs">
             <div v-for="shift in event.shifts">
                 <span>{{ shift.craft.abbreviation }}</span>
                 <span>
@@ -296,7 +296,7 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="$page.props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">
+                    <div v-if="$page.props.auth.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">
                         <div v-for="shift in subEvent.shifts">
                             <span>{{ shift.craft.abbreviation }}</span>
                             (
@@ -399,19 +399,19 @@ export default {
         totalHeight() {
             let height = 42;
             // ProjectStatus is in same row as name -> no extra height needed
-            if (this.$page.props.user.calendar_settings.project_status) height += 0;
+            if (this.$page.props.auth.user.calendar_settings.project_status) height += 0;
             //Options are in same row as time -> no extra height needed
-            if (this.$page.props.user.calendar_settings.options) height += 0;
-            if (this.$page.props.user.calendar_settings.project_management) height += 17;
-            if (this.$page.props.user.calendar_settings.repeating_events) height += 20;
-            if (this.$page.props.user.calendar_settings.work_shifts) height += 18;
+            if (this.$page.props.auth.user.calendar_settings.options) height += 0;
+            if (this.$page.props.auth.user.calendar_settings.project_management) height += 17;
+            if (this.$page.props.auth.user.calendar_settings.repeating_events) height += 20;
+            if (this.$page.props.auth.user.calendar_settings.work_shifts) height += 18;
             return height;
         },
         isRoomAdmin() {
-            return this.rooms?.find(room => room.id === this.event.roomId)?.admins.some(admin => admin.id === this.$page.props.user.id) || false;
+            return this.rooms?.find(room => room.id === this.event.roomId)?.admins.some(admin => admin.id === this.$page.props.auth.user.id) || false;
         },
         isCreator() {
-            return this.event?.created_by?.id === this.$page.props.user.id
+            return this.event?.created_by?.id === this.$page.props.auth.user.id
         },
         roomCanBeBookedByEveryone() {
             return this.rooms?.find(room => room.id === this.event.roomId).everyone_can_book
@@ -440,13 +440,13 @@ export default {
         // calculates if there is unneeded height for each event
         heightSubtraction(event) {
             let heightSubtraction = 0;
-            if (this.$page.props.user.calendar_settings.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)) {
+            if (this.$page.props.auth.user.calendar_settings.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)) {
                 heightSubtraction += 17;
             }
-            if (this.$page.props.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)) {
+            if (this.$page.props.auth.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)) {
                 heightSubtraction += 20;
             }
-            if (this.$page.props.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
+            if (this.$page.props.auth.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
                 heightSubtraction += 18;
             }
             return heightSubtraction;

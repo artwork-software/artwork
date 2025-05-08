@@ -39,7 +39,7 @@
                         <UserPopoverTooltip :id="task.id + 'user' + user.id" :user="user" height="8" width="8" :classes="index > 0 ? '!ring-1 !ring-white' : ''"/>
                     </span>
                     </div>
-                    <BaseMenu has-no-offset class="ml-3" v-if="(canEditComponent && (projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds?.includes($page.props.user.id) || isAdmin)) || isInOwnTaskManagement">
+                    <BaseMenu has-no-offset class="ml-3" v-if="(canEditComponent && (projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds?.includes($page.props.auth.user.id) || isAdmin)) || isInOwnTaskManagement">
                         <MenuItem v-slot="{ active }">
                             <div @click="openEditTaskModal = true"
                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -142,7 +142,7 @@ const props = defineProps({
 })
 
 const filteredUsers = computed(() => {
-    return props.task.task_users?.filter(user => user.id !== usePage().props.user.id);
+    return props.task.task_users?.filter(user => user.id !== usePage().props.auth.user.id);
 })
 
 const openEditTaskModal = ref(false)

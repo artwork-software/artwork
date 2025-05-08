@@ -169,7 +169,7 @@ export default {
             wantedRoom: null,
             roomCollisions: [],
             isFullscreen: false,
-            zoomFactor: this.$page.props.user.zoom_factor ? this.$page.props.user.zoom_factor : 1,
+            zoomFactor: this.$page.props.auth.user.zoom_factor ? this.$page.props.auth.user.zoom_factor : 1,
             multiEdit: false,
             editEvents: [],
             showMultiEditModal: false,
@@ -217,10 +217,10 @@ export default {
                 let projectLeaders = event.projectLeaders;
 
                 if (projectLeaders && projectLeaders.length > 0) {
-                    if (createdBy.id === this.$page.props.user.id || projectLeaders.some((leader) => leader.id === this.$page.props.user.id)) {
+                    if (createdBy.id === this.$page.props.auth.user.id || projectLeaders.some((leader) => leader.id === this.$page.props.auth.user.id)) {
                         return true;
                     }
-                } else if (createdBy.id === this.$page.props.user.id) {
+                } else if (createdBy.id === this.$page.props.auth.user.id) {
                     return true;
                 }
 
@@ -362,7 +362,7 @@ export default {
 
         },
         updateZoomFactorInUser(){
-            router.patch(route('user.update.zoom_factor', {user : this.$page.props.user.id}), {
+            router.patch(route('user.update.zoom_factor', {user : this.$page.props.auth.user.id}), {
                 zoom_factor: this.zoomFactor
             }, {
                 preserveScroll: true
@@ -414,7 +414,7 @@ export default {
             return `${year}-${month}-${day}`;
         },
         updateTimes() {
-            router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+            router.patch(route('update.user.calendar.filter.dates', this.$page.props.auth.user.id), {
                 start_date:  this.dateValueCopy[0],
                 end_date: this.dateValueCopy[1],
             },{

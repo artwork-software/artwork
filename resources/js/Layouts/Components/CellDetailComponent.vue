@@ -159,7 +159,7 @@
                                         </div>
                                     </div>
                                     <button
-                                        v-show="commentHovered === comment.id && comment.user_id === $page.props.user.id"
+                                        v-show="commentHovered === comment.id && comment.user_id === $page.props.auth.user.id"
                                         type="button"
                                         @click="deleteCommentFromCell(comment)">
                                         <span class="sr-only">{{ $t('Remove comment from project') }}</span>

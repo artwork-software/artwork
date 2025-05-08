@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Duty rosters & shift templates')">
-        <div class="ml-9">
+        <div class="">
            <div class="px-5" v-if="showHeadLine">
                <ShiftTabs />
 

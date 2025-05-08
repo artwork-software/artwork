@@ -94,7 +94,7 @@ export default {
     emits: ['closed'],
     computed: {
         historyTabs() {
-            if (this.hasAdminRole() || this.access_budget?.includes(this.$page.props.user.id)) {
+            if (this.hasAdminRole() || this.access_budget?.includes(this.$page.props.auth.user.id)) {
                 return [
                     {name: this.$t('Project'), href: '#', current: this.showProjectHistoryTab},
                     {name: this.$t('Budget'), href: '#', current: this.showBudgetHistoryTab},

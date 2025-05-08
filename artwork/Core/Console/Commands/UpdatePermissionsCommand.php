@@ -86,11 +86,29 @@ class UpdatePermissionsCommand extends Command
                 'name' => PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value,
                 'name_de' => "Termine fest planen",
                 'translation_key' => "Schedule events without request",
-                'group' => 'Room bookings',
+                'group' => 'Event management',
+                'tooltipText' => "Ein User mit diesem Recht darf Termine ohne Anfrage direkt fest planen in allen Räumen",
+                'tooltipKey' => "A user with this permission can schedule events directly without a request in all rooms",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value,
+                'name_de' => "Planungskalender einsehen und Planen",
+                'translation_key' => "View and plan in the planning calendar",
+                'group' => 'Event management',
                 'tooltipText' => 'Ein User mit diesem Recht darf Termine ohne Anfrage direkt fest planen in allen Räumen',
                 'tooltipKey' => 'A user with this permission can schedule events directly without a request in all rooms',
                 'checked' => false
-            ]
+            ],
+            [
+                'name' => PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value,
+                'name_de' => "Geplante Termine bearbeiten, löschen und bestätigen",
+                'translation_key' => "Edit, delete and confirm scheduled events",
+                'group' => 'Event management',
+                'tooltipText' => "Ein User mit diesem Recht kann geplante Termine bearbeiten, löschen und bestätigen",
+                'tooltipKey' => "A user with this permission can edit, delete and confirm scheduled events",
+                'checked' => false
+            ],
         ];
 
         foreach ($permissions as $permission) {

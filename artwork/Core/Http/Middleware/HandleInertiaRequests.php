@@ -10,10 +10,12 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\User\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -28,6 +30,7 @@ class HandleInertiaRequests extends Middleware
 
     /**
      * @return array<string, mixed>
+     * @throws \JsonException
      */
     //@todo: fix phpcs error - complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
@@ -51,9 +54,7 @@ class HandleInertiaRequests extends Middleware
         $banner = $generalSettings->banner_path ? $storage->url($generalSettings->banner_path) : null;
 
         $rolesArray = $user ? $user->allRoles() : [];
-        $permissionsArray = $user ?  $user->hasRole([RoleEnum::ARTWORK_ADMIN->value]) ?
-            Permission::all()->pluck('name') :
-            $user->allPermissions() : [];
+        $permissionsArray = $user ?  $user->hasRole([RoleEnum::ARTWORK_ADMIN->value]) ? Permission::all()->pluck('name') : $user->allPermissions() : [];
 
         // erstelle mir ein Array aus $generalCalendarSettings (Start und end ) für stunden z.b. Start: 22:00 end: 08:00 array = [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
         $start = explode(':', $generalCalendarSettings->start);
@@ -85,6 +86,7 @@ class HandleInertiaRequests extends Middleware
             parent::share($request),
             [
                 'name' => config('app.name'),
+                'use_chat_module' => config('app.use_chat_module'),
                 'small_logo' => $smallLogo,
                 'big_logo' => $bigLogo,
                 'banner' => $banner,
@@ -114,7 +116,10 @@ class HandleInertiaRequests extends Middleware
                 'module_settings' => $this->moduleSettingsService->getModuleSettings(),
                 'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,
                 'isNotionKeySet' => config('app.notion_api_token') !== null && config('app.notion_api_token') !== '',
-                'calendarHours' => $hours
+                'calendarHours' => $hours,
+                'permissions' => json_decode(auth()->check() ? auth()->user()->jsPermissions() : '{}', true, 512, JSON_THROW_ON_ERROR),
+                // chatUsers only on reload and not on page change
+                'chats' => Inertia::lazy(fn() => $user?->chats()->with(['users'])->get()),
             ]
         );
     }

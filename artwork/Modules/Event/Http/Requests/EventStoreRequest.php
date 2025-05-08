@@ -31,6 +31,7 @@ class EventStoreRequest extends EventStoreOrUpdateRequest
             'seriesEnd' => $this->get('seriesEndDate'),
             'allDay' => $this->get('allDay'),
             'event_properties' => $this->get('event_properties'),
+            'is_planning' => $this->get('isPlanning'),
         ];
     }
 }

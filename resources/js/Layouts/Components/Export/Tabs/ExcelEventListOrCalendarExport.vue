@@ -16,8 +16,8 @@
         </div>
     </div>
     <div v-else class="-mt-4 flex flex-row gap-x-2">
-        <DateInputComponent id="startDate" v-model="conditionalDateStart" :label="$t('Start date')" class="-mt-4"/>
-        <DateInputComponent id="endDate" v-model="conditionalDateEnd" :label="$t('End date')" class="-mt-4"/>
+        <BaseInput type="date" id="startDate" v-model="conditionalDateStart" :label="$t('Start date')" class="-mt-4"/>
+        <BaseInput type="date" id="endDate" v-model="conditionalDateEnd" :label="$t('End date')" class="-mt-4"/>
     </div>
     <span v-if="datesInvalid()" class="errorText !text-xs">
         {{ $t('Start date must not be after the end date!') }}
@@ -181,6 +181,7 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import Input from "@/Jetstream/Input.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const receivedFilters = ref([]);
 axios.get(route('calendar.filters')).then((response) => receivedFilters.value = response.data);

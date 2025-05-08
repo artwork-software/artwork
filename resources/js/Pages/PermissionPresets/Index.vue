@@ -1,20 +1,14 @@
 <template>
-    <UserHeader :title="$t('All permission presets')">
-        <div class="xl:max-w-screen-xl mt-12 flex flex-col">
-            <div class="flex items-center">
-                <h2 class="headline1">{{ $t('All permission presets')}}</h2>
-                <div class="flex items-center">
-                    <button @click="openPermissionPresetModal('create')"
-                            type="button"
-                            class="rounded-full bg-artwork-buttons-create p-1 mx-1 text-white shadow-sm hover:bg-artwork-buttons-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
-                        <PlusIcon class="h-4 w-4" aria-hidden="true"/>
-                    </button>
-                    <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                        <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                        <span class="hind ml-1 my-auto">{{ $t('Create new permission presets')}}</span>
-                    </div>
-                </div>
+    <UserHeader title="All permission presets" description="Edit and create permission presets">
+        <template #tabBar>
+            <div class="flex items-center justify-end">
+                <BaseCardButton
+                    text="Create new permission presets"
+                    @click="openPermissionPresetModal('create')"
+                />
             </div>
+        </template>
+        <template #default>
             <ul role="list" class="mt-6 w-full">
                 <li v-for="(permissionPreset, index) in permission_presets"
                     :key="permissionPreset.id"
@@ -91,7 +85,7 @@
                     </Menu>
                 </li>
             </ul>
-        </div>
+        </template>
     </UserHeader>
     <permission-preset-modal
         v-if="showPermissionPresetModal"
@@ -137,9 +131,11 @@ import {router} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
+import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
 
 export default defineComponent({
     components: {
+        BaseCardButton,
         ErrorComponent,
         SuccessModal,
         ConfirmationComponent,

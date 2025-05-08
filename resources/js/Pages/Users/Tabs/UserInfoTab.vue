@@ -8,45 +8,33 @@
                            ref="photo"
                            @change="updatePhotoPreview">
                     <div class="mt-1 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                        <div class="sm:col-span-3 flex items-end">
+                        <div class="sm:col-span-3 flex items-center gap-x-3">
                             <div @click="openChangePictureModal" class="mt-2">
                                 <img :src="this.user_to_edit.profile_photo_url" :alt="this.user_to_edit.first_name"
-                                     class="rounded-full h-20 w-20 object-cover cursor-pointer">
+                                     class="rounded-full h-20 w-20 min-w-20 min-h-20 object-cover cursor-pointer">
                             </div>
-                            <div class="mt-1 ml-5 flex-grow relative">
-                                <input id="first_name"
+                            <BaseInput id="first_name"
                                        v-model="userForm.first_name"
                                        type="text"
-                                       class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"
+                                       label="First Name"
                                        @focusout="this.editUser()"
-                                />
-                                <label for="first_name"
-                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('First name') }}</label>
-                            </div>
+                            />
                         </div>
-                        <div class="sm:col-span-3 flex items-end">
-                            <div class="relative mt-1 w-full">
-                                <input id="last_name"
+                        <div class="sm:col-span-3 flex items-center">
+                            <BaseInput id="first_name"
                                        v-model="userForm.last_name"
                                        type="text"
-                                       class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0
-                                               border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"
+                                       label="Last Name"
                                        @focusout="this.editUser()"
-                                />
-                                <label for="last_name"
-                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
-                                               focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Last name')}}</label>
-                            </div>
+                            />
                         </div>
                     </div>
                     <div v-if="hasNameError" class="text-error mt-1">{{ nameError }}</div>
                 </div>
             </div>
         </div>
-        <div class="mt-20">
-            <TextInputComponent
+        <div class="mt-5">
+            <BaseInput
                 disabled="disabled"
                 type="text"
                 v-model="$page.props.businessName"
@@ -56,53 +44,53 @@
             />
             <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 mt-4">
                 <div class="sm:col-span-3">
-                    <div class="mt-1">
-                        <TextInputComponent
+                    <div class="">
+                        <BaseInput
                             :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
                             :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
                             type="text"
                             v-model="userForm.pronouns"
-                            :label="this.$t('Pronouns')"
+                            label="Pronouns"
                             @focusout="this.editUser()"
                             id="pronouns"
                         />
                     </div>
                 </div>
                 <div class="sm:col-span-3">
-                    <div class="mt-1">
-                        <TextInputComponent
+                    <div class="">
+                        <BaseInput
                             :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
                             :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
                             type="text"
                             v-model="userForm.position"
-                            :label="this.$t('Position')"
+                            label="Position"
                             @focusout="this.editUser()"
                             id="position"
                         />
                     </div>
                 </div>
                 <div class="sm:col-span-3">
-                    <div class="mt-1">
-                        <TextInputComponent
+                    <div class="">
+                        <BaseInput
                             type="text"
                             v-model="this.user_to_edit.email"
                             :disabled="!this.hasAdminRole()"
                             :class="this.hasAdminRole() ? '' : 'bg-gray-100'"
                             @focusout="this.editUser()"
-                            :label="$t('Email')"
+                            label="Email"
                             id="email"
                         />
                         <jet-input-error :message="userForm.errors.email" class="mt-2"/>
                     </div>
                 </div>
                 <div class="sm:col-span-3">
-                    <div class="mt-1">
-                        <TextInputComponent
+                    <div class="">
+                        <BaseInput
                             :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
                             :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
                             type="text"
                             v-model="userForm.phone_number"
-                            :label="$t('Phone number')"
+                            label="Phone number"
                             @focusout="this.editUser()"
                             id="phone_number"
                         />
@@ -112,7 +100,7 @@
                     <Listbox as="div" class="w-52" v-model="selectedLanguage" @update:modelValue="this.editUser()">
                         <ListboxLabel class="block text-sm font-bold leading-6 text-gray-900">{{ $t('Application language')}}</ListboxLabel>
                         <div class="relative mt-2">
-                            <ListboxButton class="relative w-full cursor-default shadow-sm placeholder-secondary rounded-lg focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block border-gray-300 text-start py-2 px-3">
+                            <ListboxButton class="menu-button">
                                 <span class="block truncate">{{ selectedLanguage?.name }}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                   <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -178,12 +166,47 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-span-3 mt-4">
+                    <div class="relative flex items-start">
+                        <div class="flex h-6 items-center">
+                            <input id="use_chat" v-model="userForm.use_chat" @change="editUser" aria-describedby="use_chat-description" name="use_chat" type="checkbox" class="input-checklist" />
+                        </div>
+                        <div class="ml-3 text-sm leading-6">
+                            <label for="use_chat" class="font-medium text-gray-900">
+                                {{ $t('Use Artwork Chat')}}
+                            </label>
+                            <p id="use_chat-description" class="text-gray-500">
+                                {{ $t('Use the chat function in the application.')}}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="rounded-md bg-red-50 p-4 mt-3">
+                        <div class="flex items-center">
+                            <div class="shrink-0">
+                                <component is="IconInfoSquareRoundedFilled" class="size-6 text-red-400" aria-hidden="true" />
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-xs font-lexend font-medium text-red-800">
+                                    <span class="font-bold text-sm">Achtung: Chat-Nachrichten sind Ende-zu-Ende verschlüsselt.</span><br>
+                                    Das bedeutet, dass nur die Teilnehmer des Chats die Inhalte lesen können.
+                                    Der Server hat keinen Zugriff auf den Nachrichteninhalt.
+                                    Solltest du deinen Schlüssel verlieren, sind die Nachrichten für immer verloren.
+                                    Achte darauf, dass du deinen Schlüssel sicher aufbewahrst und nicht deinen Lokalen Speicher leerst.
+                                    <br>
+                                    <span class="font-bold">Nur der Browser, mit dem der Chat erstmals geöffnet wird, kann die Nachrichteninhalte entschlüsseln!</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Button to save chat_private_key -->
+                    <SaveChatKeyButton />
+                </div>
                 <div class="sm:col-span-6">
                     <div class="mt-1">
-                        <TextareaComponent
+                        <BaseTextarea
                             :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
                             :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
-                            :label="$t('What should other artwork users know?')"
+                            label="What should other artwork users know?"
                             v-model="userForm.description"
                             rows="5"
                             @focusout="this.editUser()"
@@ -193,13 +216,13 @@
                 </div>
 
             </div>
-            <div class="mt-8 flex items-center justify-between">
+            <div class="mt-8 flex items-center justify-between w-full">
                 <div class="flex items-center">
                     <div v-if="userForm.departments.length === 0" class="text-secondary subpixel-antialiased my-auto mr-4">{{ $t('Not in any team') }}</div>
-                    <div class="flex -space-x-4 overflow-hidden" v-else>
-                        <img v-for="( team, index ) in userForm.departments" class="inline-block size-10 rounded-full ring-2 ring-white" :src="'/Svgs/TeamIconSvgs/' + team.svg_name + '.svg'" alt="" />
+                    <div class="flex -space-x-4" v-else>
+                        <img v-for="( team, index ) in userForm.departments" class="inline-block size-10 min-w-10 min-h-10 rounded-full ring-2 ring-white" :src="'/Svgs/TeamIconSvgs/' + team.svg_name + '.svg'" alt="" />
                     </div>
-                    <BaseMenu v-show="this.$can('teammanagement')" class="ml-5 mt-2" :right="true" menu-width="w-88">
+                    <BaseMenu has-no-offset v-show="this.$can('teammanagement')" class="ml-5 mt-2" :right="true" menu-width="w-88">
                         <BaseMenuItem icon="IconEdit" @click="openChangeTeamsModal" title="Edit team membership" />
                         <BaseMenuItem icon="IconTrash" @click="deleteFromAllDepartments" title="Remove user from all teams" />
                     </BaseMenu>
@@ -255,7 +278,7 @@
                 {{ $t('Change profile picture')}}
             </div>
             <span class="text-secondary my-auto">
-                    {{ $t('Select your profile picture here. It should not exceed the size of 1024 KB.')}}
+                    {{ $t('Select your profile picture here. It should not exceed the size of 3072 KB.')}}
                 </span>
             <!-- New Profile Photo Preview -->
             <h2 class="" v-show="photoPreview">{{ $t('Preview new profile picture:')}}</h2>
@@ -323,9 +346,15 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import SaveChatKeyButton from "@/Pages/Users/Components/SaveChatKeyButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     components: {
+        BaseTextarea,
+        BaseInput,
+        SaveChatKeyButton,
         BaseMenuItem,
         VisualFeedback,
         TextareaComponent,
@@ -393,6 +422,7 @@ export default {
                 email_private: this.user_to_edit.email_private,
                 phone_private: this.user_to_edit.phone_private,
                 high_contrast: this.calendar_settings.high_contrast,
+                use_chat: this.user_to_edit.use_chat,
             }),
             resetPasswordForm: this.$inertia.form({
                 email: this.user_to_edit.email
@@ -416,7 +446,7 @@ export default {
     },
     methods: {
         isSignedInUser() {
-            return this.user_to_edit.id === this.$page.props.user.id;
+            return this.user_to_edit.id === this.$page.props.auth.user.id;
         },
         openChangeTeamsModal() {
             this.departments.forEach((team) => {

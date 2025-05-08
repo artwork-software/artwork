@@ -1,280 +1,143 @@
 <template>
-    <UserHeader>
-        <div class="">
-            <div class="max-w-screen-xl flex flex-row">
-                <div class="flex flex-1 flex-wrap justify-end">
-                    <div class="flex">
-                        <div class="flex items-center">
-                            <div v-if="!showSearchbar" @click="openSearchbar"
-                                 class="cursor-pointer inset-y-0 mr-3">
-                                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
-                            </div>
-                            <div v-else class="flex items-center w-64 mr-2">
-                                <input ref="searchBarInput" id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                       placeholder="Suche nach User*innen"
-                                       class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
-                            </div>
-                        </div>
-                        <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72" class="pr-2">
-                            <div class="flex items-center justify-end py-1">
-                                <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full"
-                                      @click="this.resetSort()">
-                                    {{ $t('Reset') }}
-                                </span>
-                            </div>
-                            <MenuItem v-for="userSortEnumName in userSortEnumNames"
-                                      v-slot="{ active }">
-                                <div @click="this.sortBy = userSortEnumName; this.applyFiltersAndSort()"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                    {{ getSortEnumTranslation(userSortEnumName) }}
-                                    <IconCheck v-if="this.getUserSortBySetting() === userSortEnumName" class="w-5 h-5"/>
-                                </div>
-                            </MenuItem>
-                        </BaseMenu>
-                        <div class="w-full flex my-auto items-center">
-                            <div class="flex" v-if="this.$can('can manage workers') || this.hasAdminRole()">
-                                <button @click="addingUser = true" type="button"
-                                        class="rounded-full justify-end bg-artwork-buttons-create p-1 mr-1 text-white shadow-sm hover:bg-artwork-buttons-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
-                                    <PlusIcon class="h-4 w-4" aria-hidden="true"/>
-                                </button>
-                                <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                                    <div class="mt-1 ml-2">
-                                        <SvgCollection svgName="arrowLeft"/>
-                                    </div>
-                                    <span class="hind ml-1 my-auto">{{ $t('Invite new users') }}</span>
-                                </div>
-                            </div>
-                        </div>
+    <UserHeader title="Users" description="Invite new users or edit an existing user">
+        <template #tabBar>
+            <div class="flex items-center gap-x-4">
+                <div class="flex items-center">
+                    <div v-if="!showSearchbar" @click="openSearchbar" class="cursor-pointer inset-y-0">
+                        <SearchIcon class="size-7 !text-artwork-buttons-context" aria-hidden="true" stroke-width="1.5"/>
                     </div>
-                    <ul role="list" class="mt-6 w-full">
-                        <li v-if="user_search_results.length < 1" v-for="(user,index) in users"
-                            :key="user.email" class="py-6 flex justify-between">
-                            <div class="flex">
-                                <img class="h-14 w-14 rounded-full object-cover flex-shrink-0 flex justify-start"
-                                     :src="user.profile_photo_url ?? user.profile_image"
-                                     alt=""/>
-                                <div class="ml-3 my-auto w-full justify-start mr-6">
-                                    <div class="flex my-auto">
-                                        <Link :href="checkLink(user) "
-                                              class="mr-3 sDark">
-                                            {{ user.display_name ?? user.provider_name }}
-                                            <span v-if="user.position || user.business">, </span>
-                                        </Link>
-                                        <p class="ml-1 xxsDarkBold my-auto">
-                                            <span v-if="user.business">{{ user.business }}, </span>
-                                            <span v-if="user.position">{{ user.position }}</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center">
-                                <div class="flex mr-8 items-center">
-                                    <div class="-mr-3" v-for="department in user.departments?.slice(0,2)">
-                                        <TeamIconCollection :data-tooltip-target="department.id"
-                                                            class="h-10 w-10 rounded-full ring-2 ring-white"
-                                                            :iconName="department.svg_name"/>
-                                        <div :id="department.id" role="tooltip"
-                                             class="inline-block absolute invisible py-2 px-3 bg-artwork-navigation-background rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
-                                            {{ department.name }}
-                                            <div class="tooltip-arrow" data-popper-arrow></div>
+                    <div v-else class="flex items-center w-64 mr-2">
+                        <input ref="searchBarInput" id="userSearch" v-model="user_query" type="text" autocomplete="off"
+                               placeholder="Suche nach User*innen"
+                               class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+                    </div>
+                </div>
+                <BaseMenu show-sort-icon dots-size="h-7 w-7" has-no-offset dots-color="!text-gray-900" menu-width="w-72">
+                    <div class="flex items-center justify-end py-1">
+                        <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full"
+                              @click="this.resetSort()">
+                            {{ $t('Reset') }}
+                        </span>
+                    </div>
+                    <MenuItem v-for="userSortEnumName in userSortEnumNames" v-slot="{ active }">
+                        <div @click="this.sortBy = userSortEnumName; this.applyFiltersAndSort()" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                            {{ getSortEnumTranslation(userSortEnumName) }}
+                            <IconCheck v-if="this.getUserSortBySetting() === userSortEnumName" class="w-5 h-5"/>
+                        </div>
+                    </MenuItem>
+                </BaseMenu>
+                <div class="w-full">
+                    <BaseCardButton text="Invite new users" class="w-max" @click="addingUser = true" />
+                </div>
+            </div>
+        </template>
+        <template #default>
+            <div class="">
+                <div class="flex flex-row w-full">
+                    <div class="flex flex-1 flex-wrap justify-end w-full">
+
+                        <ul role="list" class="mt-6 w-full">
+                            <li v-if="user_search_results.length < 1" v-for="(user,index) in users"
+                                :key="user.email" class="py-6 flex justify-between">
+                                <div class="flex">
+                                    <img class="h-14 w-14 rounded-full object-cover flex-shrink-0 flex justify-start"
+                                         :src="user.profile_photo_url ?? user.profile_image"
+                                         alt=""/>
+                                    <div class="ml-3 my-auto w-full justify-start mr-6">
+                                        <div class="flex my-auto">
+                                            <Link :href="checkLink(user) "
+                                                  class="mr-3 sDark">
+                                                {{ user.display_name ?? user.provider_name }}
+                                                <span v-if="user.position || user.business">, </span>
+                                            </Link>
+                                            <p class="ml-1 xxsDarkBold my-auto">
+                                                <span v-if="user.business">{{ user.business }}, </span>
+                                                <span v-if="user.position">{{ user.position }}</span></p>
                                         </div>
                                     </div>
-                                    <div v-if="user.departments.length >= 3" class="my-auto">
-
-                                        <Menu as="div" class="relative">
-                                            <div>
-                                                <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                                    <ChevronDownIcon
-                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                                </MenuButton>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="flex mr-8 items-center">
+                                        <div class="-mr-3" v-for="department in user.departments?.slice(0,2)">
+                                            <TeamIconCollection :data-tooltip-target="department.id"
+                                                                class="h-10 w-10 min-w-10 min-h-10 rounded-full ring-2 ring-white"
+                                                                :iconName="department.svg_name"/>
+                                            <div :id="department.id" role="tooltip"
+                                                 class="inline-block absolute invisible py-2 px-3 bg-artwork-navigation-background rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
+                                                {{ department.name }}
+                                                <div class="tooltip-arrow" data-popper-arrow></div>
                                             </div>
-                                            <transition enter-active-class="transition-enter-active"
-                                                        enter-from-class="transition-enter-from"
-                                                        enter-to-class="transition-enter-to"
-                                                        leave-active-class="transition-leave-active"
-                                                        leave-from-class="transition-leave-from"
-                                                        leave-to-class="transition-leave-to">
-                                                <MenuItems
-                                                    class="absolute overflow-y-auto rounded-lg max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                    <MenuItem v-for="department in user.departments"
-                                                              v-slot="{ active }">
-                                                        <Link href="#"
-                                                              :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <TeamIconCollection class="h-10 w-10 rounded-full"
-                                                                                :iconName="department.svg_name"/>
-                                                            <span class="ml-4">
+                                        </div>
+                                        <div v-if="user.departments.length >= 3" class="my-auto">
+
+                                            <Menu as="div" class="relative">
+                                                <div>
+                                                    <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                                        <ChevronDownIcon
+                                                            class="ml-1 flex-shrink-0 min-w-10 min-h-10 h-10 w-10 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                    </MenuButton>
+                                                </div>
+                                                <transition enter-active-class="transition-enter-active"
+                                                            enter-from-class="transition-enter-from"
+                                                            enter-to-class="transition-enter-to"
+                                                            leave-active-class="transition-leave-active"
+                                                            leave-from-class="transition-leave-from"
+                                                            leave-to-class="transition-leave-to">
+                                                    <MenuItems
+                                                        class="absolute overflow-y-auto rounded-lg z-30 max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                        <MenuItem v-for="department in user.departments"
+                                                                  v-slot="{ active }">
+                                                            <Link href="#"
+                                                                  :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                <TeamIconCollection class="h-10 w-10 rounded-full"
+                                                                                    :iconName="department.svg_name"/>
+                                                                <span class="ml-4">
                                                                 {{ department.name }}
                                                             </span>
-                                                        </Link>
-                                                    </MenuItem>
-                                                </MenuItems>
-                                            </transition>
-                                        </Menu>
+                                                            </Link>
+                                                        </MenuItem>
+                                                    </MenuItems>
+                                                </transition>
+                                            </Menu>
+                                        </div>
                                     </div>
-                                </div>
-                                <BaseMenu v-if="hasAdminRole()">
-                                    <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
-                                        <a :href="checkLink(user)"
-                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <PencilAltIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Edit Profile') }}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
-                                        <a @click="openDeleteUserModal(user)"
-                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            <span v-if="user.type === 'user'">
+                                    <BaseMenu v-if="hasAdminRole()" has-no-offset>
+                                        <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
+                                            <a :href="checkLink(user)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <PencilAltIcon
+                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                    aria-hidden="true"/>
+                                                {{ $t('Edit Profile') }}
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
+                                            <a @click="openDeleteUserModal(user)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <TrashIcon
+                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                    aria-hidden="true"/>
+                                                <span v-if="user.type === 'user'">
                                                             {{ $t('Delete user') }}
                                                         </span>
-                                            <span v-else-if="user.type === 'freelancer'">
+                                                <span v-else-if="user.type === 'freelancer'">
                                                             {{ $t('Delete freelancer') }}
                                                         </span>
-                                            <span v-else-if="user.type === 'service_provider'">
+                                                <span v-else-if="user.type === 'service_provider'">
                                                             {{ $t('Delete service provider') }}
                                                         </span>
-                                        </a>
-                                    </MenuItem>
-                                </BaseMenu>
-                            </div>
-                        </li>
-                        <li v-else v-for="(user,index) in user_search_results" :key="user.email"
-                            class="py-6 flex justify-between">
-                            <div class="flex">
-                                <img class="h-14 w-14 rounded-full object-cover flex-shrink-0 flex justify-start"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
-                                <div class="ml-3 my-auto w-full justify-start mr-6">
-                                    <div class="flex my-auto">
-                                        <Link :href="getEditHref(user)" v-if="hasAdminRole()"
-                                              class="mr-3 sDark">
-                                            {{ user.name }}
-                                        </Link>
-                                        <p class="ml-1 xxsDarkBold my-auto"> {{ user.business }},
-                                            {{ user.position }}</p>
-                                    </div>
+                                            </a>
+                                        </MenuItem>
+                                    </BaseMenu>
                                 </div>
-                            </div>
-                            <div class="flex">
-                                <div class="flex mr-8 items-center">
-                                    <div class="-mr-3" v-for="department in user.departments.slice(0,2)">
-                                        <TeamIconCollection :data-tooltip-target="department.id"
-                                                            class="h-10 w-10 rounded-full ring-2 ring-white"
-                                                            :iconName="department.svg_name"/>
-                                        <div :id="department.id" role="tooltip"
-                                             class="inline-block absolute invisible py-2 px-3 bg-artwork-navigation-background rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
-                                            {{ department.name }}
-                                            <div class="tooltip-arrow" data-popper-arrow></div>
-                                        </div>
-                                    </div>
-                                    <div v-if="user.departments.length >= 3" class="my-auto">
-                                        <Menu as="div" class="relative">
-                                            <div>
-                                                <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                                    <ChevronDownIcon
-                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                                </MenuButton>
-                                            </div>
-                                            <transition enter-active-class="transition-enter-active"
-                                                        enter-from-class="transition-enter-from"
-                                                        enter-to-class="transition-enter-to"
-                                                        leave-active-class="transition-leave-active"
-                                                        leave-from-class="transition-leave-from"
-                                                        leave-to-class="transition-leave-to">
-                                                <MenuItems
-                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right rounded-lg shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                    <MenuItem v-for="department in user.departments"
-                                                              v-slot="{ active }">
-                                                        <Link href="#"
-                                                              :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <TeamIconCollection class="h-10 w-10 rounded-full"
-                                                                                :iconName="department.svg_name"/>
-                                                            <span class="ml-4">
-                                                                {{ department.name }}
-                                                            </span>
-                                                        </Link>
-                                                    </MenuItem>
-                                                </MenuItems>
-                                            </transition>
-                                        </Menu>
-                                    </div>
-                                </div>
-                                <BaseMenu v-if="hasAdminRole()">
-                                    <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
-                                        <a :href="getEditHref(user)"
-                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <PencilAltIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Edit Profile') }}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
-                                        <a @click="openDeleteUserModal(user)"
-                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Delete user') }}
-                                        </a>
-                                    </MenuItem>
-                                </BaseMenu>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <!-- Nutzer*in löschen Modal -->
-        <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
-            <div class="mx-4">
-                <div class="headline1 my-2">
-                        <span v-if="userToDelete.type === 'user'">
-                            {{ $t('Delete user') }}
-                        </span>
-                    <span v-else-if="userToDelete.type === 'freelancer'">
-                            {{ $t('Delete freelancer') }}
-                        </span>
-                    <span v-else-if="userToDelete.type === 'service_provider'">
-                            {{ $t('Delete service provider') }}
-                        </span>
-                </div>
-                <div class="errorText">
-                        <span v-if="userToDelete.type === 'user' || userToDelete.type === 'freelancer'">
-                            {{
-                                $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
-                                    last_name: userToDelete.last_name,
-                                    first_name: userToDelete.first_name
-                                })
-                            }}
-                        </span>
-                    <span v-else-if="userToDelete.type === 'service_provider'">
-                            {{
-                            $t('Are you sure you want to delete { serviceProvider } from the system?', {serviceProvider: userToDelete.provider_name})
-                        }}
-                        </span>
-                </div>
-                <div class="flex justify-between mt-6">
-                    <FormButton :text="$t('Delete')" @click="deleteUser"/>
-                    <div class="flex my-auto">
-                            <span @click="closeDeleteUserModal()"
-                                  class="xsLight cursor-pointer">{{ $t('No, not really') }}</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
-        </BaseModal>
-        <!-- Success Modal -->
-        <SuccessModal
-            :open="showSuccessModal"
-            @closed="closeSuccessModal"
-            :title="$t('Users invited')"
-            :description="$t('The users have received an invitation email.')"
-            button="Okay"
-        />
+        </template>
+
     </UserHeader>
 
     <!-- Nutzer*innen einladen Modal -->
@@ -287,6 +150,53 @@
         :permission_presets="permission_presets"
         :users="users"
         :invited-users="invitedUsers"
+    />
+
+    <!-- Nutzer*in löschen Modal -->
+    <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
+        <div class="mx-4">
+            <div class="headline1 my-2">
+                        <span v-if="userToDelete.type === 'user'">
+                            {{ $t('Delete user') }}
+                        </span>
+                <span v-else-if="userToDelete.type === 'freelancer'">
+                            {{ $t('Delete freelancer') }}
+                        </span>
+                <span v-else-if="userToDelete.type === 'service_provider'">
+                            {{ $t('Delete service provider') }}
+                        </span>
+            </div>
+            <div class="errorText">
+                        <span v-if="userToDelete.type === 'user' || userToDelete.type === 'freelancer'">
+                            {{
+                                $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
+                                    last_name: userToDelete.last_name,
+                                    first_name: userToDelete.first_name
+                                })
+                            }}
+                        </span>
+                <span v-else-if="userToDelete.type === 'service_provider'">
+                            {{
+                        $t('Are you sure you want to delete { serviceProvider } from the system?', {serviceProvider: userToDelete.provider_name})
+                    }}
+                        </span>
+            </div>
+            <div class="flex justify-between mt-6">
+                <FormButton :text="$t('Delete')" @click="deleteUser"/>
+                <div class="flex my-auto">
+                            <span @click="closeDeleteUserModal()"
+                                  class="xsLight cursor-pointer">{{ $t('No, not really') }}</span>
+                </div>
+            </div>
+        </div>
+    </BaseModal>
+    <!-- Success Modal -->
+    <SuccessModal
+        :open="showSuccessModal"
+        @closed="closeSuccessModal"
+        :title="$t('Users invited')"
+        :description="$t('The users have received an invitation email.')"
+        button="Okay"
     />
 
 </template>
@@ -342,12 +252,14 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {IconCheck} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
+import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        BaseCardButton,
         IconCheck,
         BaseModal,
         BaseMenu,

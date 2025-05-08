@@ -2,7 +2,7 @@
     <app-layout :title="$t('Event Settings')">
 
            <EventSettingHeader>
-               <div class="mt-4 max-w-3xl">
+               <div class="">
                    <div class="flex items-center justify-between mb-5">
                        <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
                        <AddButtonBig @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
@@ -15,9 +15,8 @@
                        {{ $t('Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name.')}}
                    </div>
                </div>
-               <ul role="list" class="mt-4 mb-20 w-full max-w-3xl">
-                   <li v-for="(eventType,index) in event_types" :key="eventType.id"
-                       class="flex justify-between">
+               <ul role="list" class="mt-5">
+                   <li v-for="(eventType,index) in event_types" :key="eventType.id" class="flex justify-between">
                        <div class="flex my-4">
                            <div>
                                <div class="block w-16 h-16 rounded-full" :style="{'backgroundColor' : eventType.hex_code }" />
@@ -43,6 +42,12 @@
                                             $t('Relevant for project period')
                                        }}
                                    </div>
+                               </div>
+                               <div class="text-gray-400 font-lexend font-extralight text-xs">
+                                   {{ $t('Verification mode')}}: {{ $t(eventType.verification_mode) }}<span v-if="eventType.users?.length > 0">: </span>
+                                   <span>
+                                        {{ eventType.users.map((user) => { return user.name }).join(', ') }}
+                                    </span>
                                </div>
                            </div>
                        </div>
@@ -72,118 +77,13 @@
                </ul>
            </EventSettingHeader>
 
+        <AddEditEventTypeModal
+            :event-type="eventTypeToEdit"
+            v-if="addingEventType"
+            @close="closeAddEventTypeModal"
+        />
 
-        <!-- Termintyp erstellen Modal-->
-        <BaseModal @closed="closeAddEventTypeModal" v-if="addingEventType" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
-                <div class="mx-4">
-                    <ModalHeader
-                        :title="$t('New event type')"
-                    />
-                    <form @submit.prevent="addEventType" class="grid grid-cols-1 gap-4">
-                        <div class="flex items-center">
-                            <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none h-14 w-14">
-                                <ColorPickerComponent @updateColor="addColor" color="#ccc" />
-                            </div>
 
-                            <div class="relative my-auto w-full ml-8">
-                                <TextInputComponent id="name" v-model="eventTypeForm.name" type="text" :label="$t('Event type name*')" required/>
-                            </div>
-                        </div>
-                        <div class="">
-                            <TextInputComponent
-                                :label="$t('Abbreviation of the event type')"
-                                v-model="eventTypeForm.abbreviation"
-                                required
-                                id="abbreviation"
-                            />
-                        </div>
-                        <div class="flex items-center">
-                            <input v-model="eventTypeForm.project_mandatory"
-                                   type="checkbox"
-                                   class="input-checklist"/>
-                            <p :class="[eventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto ">{{$t('project assignment mandatory')}}</p>
-                        </div>
-                        <div class="flex items-center">
-                            <input v-model="eventTypeForm.individual_name"
-                                   type="checkbox"
-                                   class="input-checklist"/>
-                            <p :class="[eventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto ">{{$t('individual event name mandatory')}}</p>
-                        </div>
-                        <div class="flex items-center">
-                            <input v-model="eventTypeForm.relevant_for_project_period"
-                                   type="checkbox"
-                                   class="input-checklist"/>
-                            <p :class="[eventTypeForm.relevant_for_project_period ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto ">{{$t('Relevant for project period')}}</p>
-                        </div>
-                        <div class="mt-5 w-full flex justify-center items-center text-center">
-                            <FormButton
-                                type="submit"
-                                :disabled="this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === ''"
-                                :text="$t('Create event type')" />
-                        </div>
-                    </form>
-                </div>
-        </BaseModal>
-        <!-- Termintyp bearbeiten Modal-->
-        <BaseModal @closed="closeEditEventTypeModal" v-if="editingEventType" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
-                <div class="mx-4">
-                    <ModalHeader
-                        :title="$t('Edit event type')"
-                    />
-                    <form @submit.prevent="editEventType" class="grid grid-cols-1 gap-4">
-                        <div class="flex items-center">
-                            <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none h-14 w-14">
-                                <ColorPickerComponent @updateColor="updateColor" :color="editEventTypeForm.hex_code" />
-                            </div>
-
-                            <div class="relative my-auto w-full ml-8">
-                                <TextInputComponent id="name" v-model="editEventTypeForm.name" type="text" :label="$t('Event type name*')" required/>
-                            </div>
-                        </div>
-                        <div class="">
-                            <TextInputComponent
-                                :label="$t('Abbreviation of the event type')"
-                                v-model="editEventTypeForm.abbreviation"
-                                required
-                                id="abbreviation"
-                            />
-                        </div>
-                        <div class="flex items-center ">
-                            <input v-model="editEventTypeForm.project_mandatory"
-                                   type="checkbox"
-                                   class="input-checklist"/>
-                            <p :class="[editEventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto">{{$t('project assignment mandatory')}}</p>
-                        </div>
-                        <div class="flex items-center">
-                            <input v-model="editEventTypeForm.individual_name"
-                                   type="checkbox"
-                                   class="input-checklist"/>
-                            <p :class="[editEventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto">{{$t('individual event name mandatory')}}</p>
-                        </div>
-                        <div class="flex items-center">
-                            <input v-model="editEventTypeForm.relevant_for_project_period"
-                                   type="checkbox"
-                                   class="input-checklist"/>
-                            <p :class="[editEventTypeForm.relevant_for_project_period ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto">{{$t('Relevant for project period')}}</p>
-                        </div>
-
-                        <div class="mt-8 w-full justify-center flex">
-                            <FormButton
-                                type="submit"
-                                :disabled="this.editEventTypeForm.name === ''"
-                                :text="$t('Save')"
-                            />
-                        </div>
-                    </form>
-                </div>
-        </BaseModal>
-        <!-- Termintyp löschen Modal -->
         <BaseModal @closed="closeDeleteEventTypeModal" v-if="deletingEventType" modal-image="/Svgs/Overlays/illu_appointment_edit.svg" :show-image="false">
                 <div class="mx-4">
                     <div class="headline1 my-2">
@@ -241,7 +141,7 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSettingHeader.vue";
 import {ColorPicker} from "vue3-colorpicker";
-
+import AddEditEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/AddEditEventTypModal.vue";
 export default {
     mixins: [Permissions],
     computed: {
@@ -305,6 +205,7 @@ export default {
         TrashIcon,
         PencilAltIcon,
         XIcon,
+        AddEditEventTypeModal
     },
     props: ['event_types'],
     data() {
@@ -333,7 +234,8 @@ export default {
                 abbreviation: '',
                 relevant_for_project_period: false,
                 id: null
-            })
+            }),
+            eventTypeToEdit: null,
         }
     },
     methods: {
@@ -347,14 +249,8 @@ export default {
             this.addingEventType = true;
         },
         openEditEventTypeModal(eventType) {
-            this.editEventTypeForm.hex_code = eventType.hex_code;
-            this.editEventTypeForm.name = eventType.name;
-            this.editEventTypeForm.id = eventType.id;
-            this.editEventTypeForm.project_mandatory = eventType.project_mandatory;
-            this.editEventTypeForm.individual_name = eventType.individual_name;
-            this.editEventTypeForm.abbreviation = eventType.abbreviation;
-            this.editEventTypeForm.relevant_for_project_period = eventType.relevant_for_project_period;
-            this.editingEventType = true;
+            this.eventTypeToEdit = eventType;
+            this.addingEventType = true
         },
         closeEditEventTypeModal() {
             this.editEventTypeForm.hex_code = "";
@@ -367,12 +263,7 @@ export default {
         },
         closeAddEventTypeModal() {
             this.addingEventType = false;
-            this.eventTypeForm.name = "";
-            this.eventTypeForm.hex_code = "";
-            this.eventTypeForm.project_mandatory = false;
-            this.eventTypeForm.individual_name = false;
-            this.eventTypeForm.relevant_for_project_period = false;
-            this.eventTypeForm.abbreviation = '';
+            this.eventTypeToEdit = null;
         },
         addEventType() {
             this.eventTypeForm.post(route('event_types.store'));

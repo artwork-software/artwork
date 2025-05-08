@@ -9,15 +9,12 @@
 
         <div class="relative">
             <div class="my-auto w-full relative">
-                <TextInputComponent
+                <BaseInput
                     id="userSearch"
                     v-model="searchTimeline"
-                    :label="$t('Search for timeline preset')"
+                    label="Search for timeline preset"
                     class="w-full"
                     @focus="searchTimeline = ''"/>
-                <div class="absolute right-2 top-3">
-                    <IconX class="h-6 w-6 text-gray-400" v-if="searchTimeline.length > 0" @click="searchTimeline = ''"/>
-                </div>
             </div>
             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                 <div v-if="timelinePresets.length > 0" class="absolute rounded-lg z-10 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
@@ -67,6 +64,7 @@ import {ref, watch} from "vue";
 import {IconX} from "@tabler/icons-vue";
 import {router, useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     event: {

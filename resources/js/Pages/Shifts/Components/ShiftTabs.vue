@@ -22,7 +22,7 @@ export default defineComponent({
         return {
             tabs: [
                 { name: this.$t('Duty rosters'), href: route('shifts.plan'), current: route().current('shifts.plan') },
-                { name: this.$t('My Operational plan'), href: route('user.operationPlan', this.$page.props.user.id), current: route().current('user.operationPlan') },
+                { name: this.$t('My Operational plan'), href: route('user.operationPlan', this.$page.props.auth.user.id), current: route().current('user.operationPlan') },
                 { name: this.$t('Shift templates'), href: route('shifts.presets'), current: route().current('shifts.presets') || route().current('shifts.timeline-presets.index')}
             ]
         }

@@ -98,8 +98,8 @@ export default {
             return (totalDays * hoursPerDay).toFixed(1);
         },
         checkIfThisIsMe(){
-            if(this.$page.props.user_to_edit){
-                return this.$page.props.user_to_edit.id === this.$page.props.user.id;
+            if(this.$page.props.auth.user_to_edit){
+                return this.$page.props.auth.user_to_edit.id === this.$page.props.auth.user.id;
             }
         },
     },

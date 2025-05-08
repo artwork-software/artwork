@@ -38,7 +38,7 @@ const props = defineProps({
 
 const checkPermission = (project) => {
     const projectUsersIds = project?.users?.map(user => user.id);
-    return !(hasAdminRole || projectUsersIds.includes(usePage().props.user.id));
+    return !(hasAdminRole || projectUsersIds.includes(usePage().props.auth.user.id));
 }
 
 </script>

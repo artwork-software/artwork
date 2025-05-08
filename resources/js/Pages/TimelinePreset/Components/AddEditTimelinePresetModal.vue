@@ -8,7 +8,7 @@
         <form @submit.prevent="updateOrCreate" class="w-full">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="col-span-full">
-                    <TextInputComponent
+                    <BaseInput
                         id="name"
                         v-model="createOrUpdateForm.name"
                         :label="$t('Name of the template*')"
@@ -31,7 +31,7 @@
                    </div>
                </div>
                 <div class="col-span-full">
-                    <TextareaComponent
+                    <BaseTextarea
                         v-model="rawText"
                         id="rawText"
                         :label="$t('Enter your times here. Each line is interpreted as a separate entry.')"
@@ -85,6 +85,8 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {useForm} from "@inertiajs/vue3";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 const props = defineProps({
     presetToEdit: {

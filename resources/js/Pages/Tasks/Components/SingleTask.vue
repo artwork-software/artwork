@@ -27,7 +27,7 @@
             <div v-show="!task.isPrivate"
                  class="my-auto">
                 <img class="h-9 w-9 rounded-full object-cover"
-                     :src="$page.props.user.profile_photo_url"
+                     :src="$page.props.auth.user.profile_photo_url"
                      alt=""/>
             </div>
         </div>

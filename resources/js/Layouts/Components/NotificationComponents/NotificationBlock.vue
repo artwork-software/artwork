@@ -1,5 +1,5 @@
 <template>
-    <div class="flex justify-between items-start my-5">
+    <div class="flex justify-between items-start" :class="isDashboard ? '' : 'my-5'">
         <div class="flex items-start gap-3">
             <img :src="'/Svgs/IconSvgs/icon_notification_' + notification.data.icon + '.svg'" alt="">
             <div class="">
@@ -18,13 +18,13 @@
                     <div class="flex items-center gap-2 xxsLight" v-if="notification.data?.description[0]">
                         {{ notification.data?.description[0].text }}
                         {{ $t('from')}}
-                        <NewUserToolTip :id="notification.id" :user="notification.data?.description[0]?.created_by"
+                        <UserPopoverTooltip :id="notification.id" :user="notification.data?.description[0]?.created_by"
                                         height="5" width="5"/>
                     </div>
                     <div class="flex items-center gap-2 xxsLight" v-else-if="notification.data.created_by">
                         {{ notification.data.created_at }}
                         {{ $t('from')}}
-                        <NewUserToolTip :id="notification.id" :user="notification.data?.created_by" height="5"
+                        <UserPopoverTooltip :id="notification.id" :user="notification.data?.created_by" height="5"
                                         width="5"/>
                     </div>
                 </div>
@@ -32,7 +32,7 @@
                     <div v-for="(description, index) in notification.data?.description" class="divide-x">
                         <p v-if="description.type !== 'comment'">
                             <a :href="description.href" v-if="description.type === 'link'"
-                               class="text-indigo-800">{{ description.title }}</a>
+                               class="text-artwork-buttons-create">{{ description.title }}</a>
                             <span v-else>{{ description.title }}</span>
                         </p>
                     </div>
@@ -149,10 +149,12 @@ import UserVacationHistoryModal from "@/Pages/Notifications/Components/UserVacat
 import EventHistoryModal from "@/Pages/Notifications/Components/EventHistoryModal.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: "NotificationBlock",
     components: {
+        UserPopoverTooltip,
         EventsWithoutRoomComponent,
         EventHistoryModal,
         UserVacationHistoryModal,
@@ -178,7 +180,8 @@ export default {
         'first_project_shift_tab_id',
         'first_project_budget_tab_id',
         'first_project_calendar_tab_id',
-        'eventStatuses'
+        'eventStatuses',
+        'isDashboard',
     ],
     data() {
         return {

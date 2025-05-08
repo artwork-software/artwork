@@ -1,15 +1,14 @@
 <template>
     <div class="relative">
         <div class="my-auto w-full relative">
-            <TextInputComponent
+            <BaseInput
                 id="userSearch"
                 v-model="user_search_query"
-                :label="$t(label)"
+                :label="label"
                 class="w-full"
-                @focus="user_search_query = ''"/>
-            <div class="absolute right-2 top-3">
-                <IconX class="h-6 w-6 text-gray-400" v-if="user_search_query.length > 0" @click="closeSearch"/>
-            </div>
+                @focus="user_search_query = ''"
+                :disabled="disabled"
+            />
         </div>
         <transition leave-active-class="transition ease-in duration-100" leave-fromÏ-class="opacity-100" leave-to-class="opacity-0">
             <div v-if="users?.length > 0" class="absolute rounded-lg z-10 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
@@ -50,6 +49,7 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const booleanDefaultFalseCfg = {
     type: Boolean,
@@ -58,7 +58,7 @@ const booleanDefaultFalseCfg = {
 export default {
     name: "UserSearch",
     mixins: [IconLib],
-    components: {AlertComponent, TextInputComponent, TeamIconCollection},
+    components: {BaseInput, AlertComponent, TextInputComponent, TeamIconCollection},
     data() {
         return {
             user_search_query: '',
@@ -80,9 +80,15 @@ export default {
         onlyTeam: booleanDefaultFalseCfg,
         searchWorkers: booleanDefaultFalseCfg,
         dontCloseOnSelect: booleanDefaultFalseCfg,
+        onlyUseChatUsers: booleanDefaultFalseCfg,
+        withoutSelf: booleanDefaultFalseCfg,
         currentCraft: {
             type: Object,
             required: false
+        },
+        disabled: {
+            type: Boolean,
+            default: false
         }
     },
     computed: {
@@ -106,6 +112,14 @@ export default {
 
             if (this.onlyTeam) {
                 return this.teamMember.includes(user.id)
+            }
+
+            if (this.onlyUseChatUsers) {
+                return user.use_chat;
+            }
+
+            if (this.withoutSelf) {
+                return user.id !== this.$page.props.auth.user.id;
             }
 
             return true;

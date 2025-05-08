@@ -22,22 +22,18 @@
                         </div>
                     </transition>
 
-                    <div class="my-5">
+                    <div class="mt-5">
                         <h3 class="headline3">{{ $t('Select states & color') }}</h3>
                         <p class="xsLight w-1/2 my-2">
                             {{ $t('Select the federal states for which you want to import the public holidays and school vacations into your calendar. You can select as many federal states as you like. You can then specify a color in which the public holidays and school vacations should be displayed in your calendar.') }}
                         </p>
-                        <div class="flex items-center gap-4 w-full">
+                        <div class="flex items-center gap-4 w-full mt-3">
                             <Listbox as="div" class="relative w-96">
-                                <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 px-4 text-left text-gray-900 ring-2 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
-                                    <div class="flex items-center justify-between w-full">
-                                        <div class="xsLight">
-                                            {{ $t('Select federal states') }}
-                                        </div>
-                                        <div>
-                                            <component is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
-                                        </div>
-                                    </div>
+                                <ListboxButton class="menu-button">
+                                    <span class="flex items-center justify-between w-full">
+                                       {{ $t('Select federal states') }}
+                                    </span>
+                                    <component is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
@@ -52,8 +48,8 @@
 
                             <ColorPickerComponent @update-color="updateColor" :color="holidayForm.color" />
                         </div>
-                        <div class="w-full">
-                            <div class="flex items-center flex-wrap gap-2 mt-4 w-1/2">
+                        <div class="w-full" v-if="holidayForm.selectedSubdivisions.length > 0">
+                            <div class="flex items-center flex-wrap gap-2 my-4 w-1/2">
                                 <div v-for="selectedSubdivision in holidayForm.selectedSubdivisions" :key="selectedSubdivision.id" class="break-keep">
                                     <div class="px-2 py-1 bg-tagBg rounded-full min-w-fit text-tagText text-xs cursor-pointer hover:bg-red-600/20 hover:border-red-500/40 hover:text-red-600 transition-colors duration-300 ease-in-out border border-tagBg"
                                          @click="removeSubDivisionFormForm(selectedSubdivision.id)">
@@ -74,7 +70,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
                             <div class="relative flex items-start">
                                 <div class="flex h-6 items-center">
-                                    <input id="comments" v-model="holidayForm.public_holidays" aria-describedby="comments-description" name="comments" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-hover" />
+                                    <input id="comments" v-model="holidayForm.public_holidays" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
                                 </div>
                                 <div class="ml-3 text-sm/6">
                                     <label for="comments" class="headline3">{{ $t('Holidays') }}</label>
@@ -85,7 +81,7 @@
                             </div>
                             <div class="relative flex items-start">
                                 <div class="flex h-6 items-center">
-                                    <input v-model="holidayForm.school_holidays" id="candidates" aria-describedby="candidates-description" name="candidates" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-hover" />
+                                    <input v-model="holidayForm.school_holidays" id="candidates" aria-describedby="candidates-description" name="candidates" type="checkbox" class="input-checklist" />
                                 </div>
                                 <div class="ml-3 text-sm/6">
                                     <label for="candidates" class="headline3">{{ $t('School vacations') }}</label>
@@ -130,23 +126,19 @@
                             {{ $t('Saved. The changes have been successfully applied.') }}
                         </div>
                     </transition>
-                    <div class="my-5">
+                    <div class="my-4">
                         <h3 class="headline3">{{ $t('Select states & color') }}</h3>
                         <p class="xsLight w-1/2 my-2">
                             <!-- text für selbst angelegte Feiertage und deren bundesländer -->
                             {{ $t('Select the federal states that should apply to this public holiday. You can select as many federal states as you like. You can then specify a color in which the public holiday should be displayed in your calendar. You do not have to select a federal state if the public holiday applies throughout Germany.') }}
                         </p>
-                        <div class="flex items-center gap-4 w-full">
+                        <div class="flex items-center gap-4 w-full mt-3">
                             <Listbox as="div" class="relative w-96" v-model="customHolidayForm.selectedSubdivisions" multiple>
-                                <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 px-4 text-left text-gray-900 ring-2 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
-                                    <div class="flex items-center justify-between w-full">
-                                        <div class="xsLight">
-                                            {{ $t('Select federal states') }}
-                                        </div>
-                                        <div>
-                                            <component is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
-                                        </div>
-                                    </div>
+                                <ListboxButton class="menu-button">
+                                    <span>
+                                        {{ $t('Select federal states') }}
+                                    </span>
+                                    <component is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
@@ -165,7 +157,7 @@
 
                             <ColorPickerComponent @update-color="updateColorCustomHoliday" :color="customHolidayForm.color" />
                         </div>
-                        <div class="w-full">
+                        <div class="w-full" v-if="customHolidayForm.selectedSubdivisions.length > 0">
                             <div class="flex items-center flex-wrap gap-2 mt-4 w-1/2">
                                 <div v-for="selectedSubdivision in customHolidayForm.selectedSubdivisions" :key="selectedSubdivision.id" class="break-keep">
                                     <div class="px-2 py-1 bg-tagBg rounded-full min-w-fit text-tagText text-xs cursor-pointer hover:bg-red-600/20 hover:border-red-500/40 hover:text-red-600 transition-colors duration-300 ease-in-out border border-tagBg"
@@ -178,19 +170,19 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="col-span-2">
-                            <TextInputComponent id="title" v-model="customHolidayForm.name" :label="$t('Name')" />
+                            <BaseInput id="title" v-model="customHolidayForm.name" label="Name" />
                             <div class="text-red-500 text-xs mt-1" v-show="customHolidayForm.errors.name">
                                 {{ customHolidayForm.errors.name }}
                             </div>
                         </div>
                         <div>
-                            <DateInputComponent id="start" v-model="customHolidayForm.date" :label="$t('Start-Time') + '*'" />
+                            <BaseInput type="date" id="start" v-model="customHolidayForm.date" label="Start-Time*" />
                             <div class="text-red-500 text-xs mt-1" v-show="customHolidayForm.errors.date">
                                 {{ customHolidayForm.errors.date }}
                             </div>
                         </div>
                         <div>
-                            <DateInputComponent id="end" v-model="customHolidayForm.end_date" :label="$t('End-Time')" />
+                            <BaseInput type="date" id="end" v-model="customHolidayForm.end_date" label="End-Time" />
                         </div>
                         <div class="col-span-2">
                             <SwitchGroup as="div" class="flex items-center cursor-pointer">
@@ -346,6 +338,7 @@ import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EditHolidayModal from "@/Pages/Settings/Holidays/Components/EditHolidayModal.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     holidays: {

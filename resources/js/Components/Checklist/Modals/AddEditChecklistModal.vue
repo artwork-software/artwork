@@ -12,16 +12,12 @@
             <div class="px-8 py-2" v-if="!checklistToEdit">
                 <Listbox class="w-full" v-model="selectedTemplate">
                     <div class="relative">
-                        <ListboxButton class="w-full h-12 flex xsDark items-center text-left border-2 border-gray-300 bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
-                            <div class="block truncate items-center">
-                                <span>{{ selectedTemplate.name }}</span>
-                            </div>
-                            <div v-if="selectedTemplate.name === ''" class="block truncate">
+                        <ListboxButton class="menu-button">
+                            <span v-if="selectedTemplate.name !== ''">{{ selectedTemplate.name }}</span>
+                            <span v-else>
                                 {{ $t('No template') }}
-                            </div>
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                            </div>
+                            </span>
+                            <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true"/>
                         </ListboxButton>
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100"
@@ -69,11 +65,11 @@
             </div>
             <div class="px-8 py-2 mb-6">
                 <div class="flex">
-                    <TextInputComponent
+                    <BaseInput
                         id="checklistName"
                         v-if="selectedTemplate.name === ''"
                         v-model="checklistForm.name"
-                        :label="$t('Name of the checklist*')"
+                        label="Name of the checklist*"
                     />
                 </div>
             </div>
@@ -134,6 +130,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     project: {
@@ -176,7 +173,7 @@ const checklistForm = useForm({
     private: props.checklistToEdit ? props.checklistToEdit.private : false,
     template_id: null,
     user_id: null,
-    creator_id: usePage().props.user.id,
+    creator_id: usePage().props.auth.user.id,
     tab_id: props.tab_id ? props.tab_id : null
 });
 

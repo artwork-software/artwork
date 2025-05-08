@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col gap-y-1.5">
-        <TextInputComponent
+        <BaseInput
             id="title"
             v-model="pdf.title"
             :label="$t('Heading')"/>
@@ -36,11 +36,11 @@
             </div>
         </div>
         <div class="flex flex-row gap-x-2" v-if="!pdfSelectedProject">
-            <DateInputComponent
+            <BaseInput type="date"
                 v-model="pdf.start"
                 :label="$t('Start date')"
                 id="start"/>
-            <DateInputComponent
+            <BaseInput type="date"
                 v-model="pdf.end"
                 :label="$t('End date')"
                 id="end"/>
@@ -129,11 +129,13 @@ import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import {DocumentReportIcon} from "@heroicons/vue/outline";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default {
     name: "PdfCalendarExport",
     mixins: [Permissions, IconLib],
     components: {
+        BaseInput,
         BaseButton,
         Switch,
         SwitchGroup,

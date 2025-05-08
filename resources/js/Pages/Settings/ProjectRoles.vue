@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="$t('Project Role Settings')">
-        <div class="max-w-screen-lg my-8 ml-14 mr-40">
+        <div class="artwork-container">
             <div class="">
                 <h2 class="headline1 my-6">{{$t('Project Role Settings')}}</h2>
                 <div class="xsLight">
@@ -32,7 +32,7 @@
                 :title="$t('Add Project Role')"
                 :description="$t('Add a new project role.')"
             />
-            <TextInputComponent label="Name" id="title" v-model="projectRoleForm.name" />
+            <BaseInput label="Name" id="title" v-model="projectRoleForm.name" />
             <div class="justify-center flex w-full my-6">
                 <FormButton :text="$t('Save')" :disabled="projectRoleForm.name.length < 1" @click="addProjectRole"/>
             </div>
@@ -51,10 +51,13 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default {
     name: "ProjectRoles",
-    components: {TextInputComponent, ModalHeader, FormButton, Input, BaseModal, PlusButton, AppLayout, ProjectTabs},
+    components: {
+        BaseInput,
+        TextInputComponent, ModalHeader, FormButton, Input, BaseModal, PlusButton, AppLayout, ProjectTabs},
     mixins: [IconLib],
     props: {
         projectRoles: {

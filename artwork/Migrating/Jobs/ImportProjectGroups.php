@@ -51,12 +51,7 @@ class ImportProjectGroups
         );
 
         $budgetService->generateBasicBudgetValues(
-            $projectGroup,
-            $tableService,
-            $columnService,
-            $mainPositionService,
-            $columnSettingService,
-            $sageApiSettingsService
+            $projectGroup
         );
     }
 

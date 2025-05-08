@@ -102,5 +102,13 @@ return [
             'add' => 'You have been appointed as the room admin of :room',
             'remove' => 'You have been removed as the room admin of :room'
         ],
-    ]
+    ],
+    'request-verification' => [
+        'new' => 'New request for planned event',
+        'open-index' => 'Planning event requests open',
+        'approved-finished' => 'Planning event request approved and completed',
+        'user-approved' => 'Planning event request approved by :name',
+        'event-verification-description' => 'The planned event ":event" has been approved',
+        'user-rejected' => 'Planning event request rejected by :name',
+    ],
 ];

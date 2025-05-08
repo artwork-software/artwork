@@ -1,13 +1,13 @@
 <template>
     <MenuItem v-slot="{ active }">
-        <a :href="link" v-if="asLink"
-           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-            <component :is="icon" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+        <Link :href="link" v-if="asLink"
+           :class="[whiteMenuBackground ? 'hover:bg-artwork-navigation-color/30 hover:text-artwork-buttons-create text-gray-500' : 'hover:bg-artwork-navigation-color/10 hover:text-white text-white', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+            <component :is="icon" class="mr-3 h-5 w-5 text-primaryText" :class="whiteMenuBackground ? 'group-hover:text-artwork-buttons-create text-gray-500' : ' group-hover:text-white text-gray-400'" aria-hidden="true"/>
             {{ withoutTranslation ? title : $t(title) }}
-        </a>
+        </Link>
         <div v-else
-           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-            <component :is="icon" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+           :class="[whiteMenuBackground ? 'hover:bg-artwork-navigation-color/30 hover:text-artwork-buttons-create text-gray-500' : 'hover:bg-artwork-navigation-color/10 hover:text-white text-white', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+            <component :is="icon" class="mr-3 h-5 w-5 text-primaryText" :class="whiteMenuBackground ? 'group-hover:text-artwork-buttons-create text-gray-500' : 'group-hover:text-white text-gray-400'" aria-hidden="true"/>
             {{ withoutTranslation ? title : $t(title) }}
         </div>
     </MenuItem>
@@ -16,6 +16,7 @@
 <script setup>
 
 import {MenuItem} from "@headlessui/vue";
+import {Link} from "@inertiajs/vue3";
 
 const props = defineProps({
     asLink: {
@@ -37,6 +38,10 @@ const props = defineProps({
     withoutTranslation: {
         type: Boolean,
         required: false,
+        default: false
+    },
+    whiteMenuBackground: {
+        type: Boolean,
         default: false
     }
 })

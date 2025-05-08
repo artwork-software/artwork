@@ -17,8 +17,10 @@
                     </div>
                 </div>
                 <form class="space-y-10" @submit.prevent="submit">
-                    <TextInputComponent id="email" v-model="form.email" :label="$t('Email') + '*'" required/>
-                    <TextInputComponent id="password" type="password" v-model="form.password" :label="$t('Password') + '*'" required/>
+                    <div class="space-y-4">
+                        <BaseInput id="email" v-model="form.email" :label="$t('Email') + '*'" required/>
+                        <BaseInput id="password" type="password" v-model="form.password" :label="$t('Password') + '*'" required/>
+                    </div>
                     <jet-input-error :message="errors.email" class="mt-2"/>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
@@ -26,7 +28,7 @@
                         </div>
                         <div class="text-sm">
                             <Link v-if="canResetPassword" :href="route('password.request')"
-                                  class="text-xs text-secondary subpixel-antialiased hover:font-semibold hover:text-primary">
+                                  class="!text-xs xsLight !font-lexend subpixel-antialiased hover:font-semibold hover:text-primary">
                                 {{ $t('Forgot your password?') }}
                             </Link>
                         </div>
@@ -40,7 +42,7 @@
                 </form>
 
             </div>
-            <div class="flex gap-x-4 mt-12 text-secondary subpixel-antialiased text-sm tracking-wide">
+            <div class="flex gap-x-4 mt-12 xsLight !font-lexend subpixel-antialiased text-sm tracking-wide">
                 <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
                     {{ $t('Imprint') }}
                 </a>
@@ -83,10 +85,12 @@ import Permissions from "@/Mixins/Permissions.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import { reloadRolesAndPermissions } from 'laravel-permission-to-vuejs'
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        BaseInput,
         TextInputComponent,
         BaseButton,
         SvgCollection,

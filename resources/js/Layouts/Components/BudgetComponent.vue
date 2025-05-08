@@ -65,7 +65,7 @@
                 <thead>
                 <tr class="relative">
                     <th v-for="(column,index) in computedSortedColumns"
-                        v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
+                        v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
                         :class="index === 0 ? 'w-28' : index === 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48'">
                         <div class="flex items-center group" :key="column.id"
                              :class="index > 2 ? 'justify-end text-right' : ' justify-between'">
@@ -340,7 +340,7 @@
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns?.slice(3)"
-                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
+                                    v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
                                          :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
                                         <img @click="openBudgetSumDetailModal('COST', column, 'comment')"
@@ -382,7 +382,7 @@
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)"
-                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
+                                    v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                         <span
                                             v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
@@ -451,7 +451,7 @@
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)"
-                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
+                                    v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
                                          :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
                                         <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')"
@@ -494,7 +494,7 @@
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)"
-                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
+                                    v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                          <span
                                              v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
@@ -540,7 +540,7 @@
                     <td class="w-72 my-2">SUM</td>
                     <td class="flex items-center w-48"
                         v-for="column in table.columns.slice(3)"
-                        v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
+                        v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                         <div class="w-48 my-2 p-1" :class="[
                             this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : '',
                              this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0) < 0 ? 'text-red-500' : '',
@@ -905,8 +905,8 @@ export default {
             }),
             cellDetailOpenTab: 'calculation',
             sumDetailOpenTab: 'comment',
-            userExcludeCommentedBudgetItems: this.$page.props.user.commented_budget_items_setting ?
-                this.$page.props.user.commented_budget_items_setting.exclude === 1 :
+            userExcludeCommentedBudgetItems: this.$page.props.auth.user.commented_budget_items_setting ?
+                this.$page.props.auth.user.commented_budget_items_setting.exclude === 1 :
                 false,
             showDeleteSageNotAssignedDataConfirmationModal: false,
             sageNotAssignedDataToDelete: null
@@ -964,12 +964,12 @@ export default {
     watch: {
         userExcludeCommentedBudgetItems: {
             handler(excludeHiddenItems) {
-                if (this.$page.props.user.commented_budget_items_setting === null) {
+                if (this.$page.props.auth.user.commented_budget_items_setting === null) {
                     router.post(
                         route(
                             'user.commentedBudgetItemsSettings.store',
                             {
-                                user: this.$page.props.user.id
+                                user: this.$page.props.auth.user.id
                             }
                         ),
                         {
@@ -987,8 +987,8 @@ export default {
                     route(
                         'user.commentedBudgetItemsSettings.update',
                         {
-                            user: this.$page.props.user.id,
-                            commentedBudgetItemsSetting: this.$page.props.user.commented_budget_items_setting.id
+                            user: this.$page.props.auth.user.id,
+                            commentedBudgetItemsSetting: this.$page.props.auth.user.commented_budget_items_setting.id
                         }
                     ),
                     {
@@ -1038,7 +1038,7 @@ export default {
         hasBudgetAccess() {
             return this.hasAdminRole() ||
                 this.budgetAccess?.filter(
-                    (user) => user.id === this.$page.props.user.id
+                    (user) => user.id === this.$page.props.auth.user.id
                 ).length > 0 ||
                 this.$canAny(
                     [

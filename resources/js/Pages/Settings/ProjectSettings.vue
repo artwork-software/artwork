@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Project Settings')">
-        <div class="max-w-screen-lg my-8 ml-14 mr-40">
+        <div class="artwork-container">
             <div class="">
                 <h2 class="headline1 my-6">{{$t('Project Settings')}}</h2>
                 <div class="xsLight">
@@ -10,7 +10,7 @@
 
             <ProjectTabs />
 
-            <div class="flex flex-wrap pb-8">
+            <div class="space-y-10 pb-8">
                 <ProjectSettingsItem
                     :title="$t('Genres')"
                     :description="$t('Define genres that projects can be assigned to later.')"

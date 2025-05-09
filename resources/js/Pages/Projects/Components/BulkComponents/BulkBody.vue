@@ -5,14 +5,14 @@
                 {{ $t('Data is currently loaded. Please wait') }}
             </div>
         </div>
-        <div class="flex items-center justify-end gap-x-4 print:hidden" v-if="!isInModal">
+        <div class="flex items-center justify-end gap-x-4 w-56 print:hidden" v-if="!isInModal">
             <MultiEditSwitch :multi-edit="multiEdit"
                              :room-mode="false"
                              @update:multi-edit="UpdateMultiEditEmits"/>
             <ToolTipComponent
                 icon="IconCircuitCapacitorPolarized"
                 icon-size="h-7 w-7"
-                :tooltip-text="$t('Customize the column size individually for each column.')"
+                :tooltip-text="$t('Customize column size')"
                 direction="bottom"
                 @click="showIndividualColumnSizeConfigModal = true"
             />
@@ -21,8 +21,11 @@
                               :tooltip-text="$t('Export project list')"
                               direction="bottom"
                               @click="showExportModal = true"/>
-            <IconCalendarMonth class="w-6 h-6 cursor-pointer text-artwork-buttons-context" stroke-width="1.2"
-                               @click="useProjectTimePeriodAndRedirect()"/>
+            <ToolTipComponent icon="IconCalendarMonth"
+                              icon-size="h-7 w-7"
+                              :tooltip-text="$t('Show project period in calendar')"
+                              direction="bottom"
+                              @click="useProjectTimePeriodAndRedirect()"/>
             <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
                 <MenuItem v-slot="{ active }">
                     <div @click="updateUserSortId(1)"

@@ -282,7 +282,7 @@
                                                     icon="IconInfoCircle"
                                                     icon-size="size-4"
                                                     direction="top"
-                                                    tooltip-width="break-all !text-xs"
+                                                    tooltipCssClass="break-all !text-xs"
                                                 />
                                                 <!--<component is="IconTrash" class="h-5 w-5 text-red-600 cursor-pointer"
                                                            v-if="property.categoryProperty"

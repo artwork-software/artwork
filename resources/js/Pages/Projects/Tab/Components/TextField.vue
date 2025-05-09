@@ -63,7 +63,7 @@ export default {
                     :disabled="!this.canEditComponent"
                     @focusout="updateTextData"
                     v-model="text"
-                    :label="text"
+                    :label="projectData.data.placeholder"
                     without-translation
                     name="email" id="email"
                     :class="inSidebar ? 'bg-primary text-white' : ''"

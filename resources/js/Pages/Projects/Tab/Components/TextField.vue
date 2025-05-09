@@ -59,6 +59,7 @@ export default {
             </label>
             <div class="mt-2 w-96">
                 <BaseInput
+                    :id="projectData.id"
                     type="text"
                     :disabled="!this.canEditComponent"
                     @focusout="updateTextData"

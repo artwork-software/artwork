@@ -9,13 +9,14 @@
                   @click="handleDescriptionClick()"
                   v-html="projectData.project_value?.data?.text ? projectData.project_value.data.text : (this.canEditComponent ? $t('Click here to add text') : '')">
         </div>
+
             <TextareaComponent
                 v-else
                 :disabled="!this.canEditComponent"
                 :label="data.data.placeholder"
                 :ref="`description-${this.projectId}`"
                 :class="inSidebar ? 'bg-primary text-white' : ''"
-                id="placeholder"
+                :id="data.id"
                 :show-label="false"
                 no-margin-top
                 @focusout="updateTextData()"

@@ -54,7 +54,7 @@
                                                 <span>{{ group.name }}</span>
                                             </Link>
                                         </div>
-                                        <div v-if="composedCurrentDaysInViewRef.has(day.fullDay)" v-for="(event, index) in room.content[day.fullDay].events">
+                                        <div v-for="(event, index) in room.content[day.fullDay].events">
                                             <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.withoutFormat + '-room-' + room.roomId">
                                                 <AsyncSingleEventInCalendar
                                                     :event="event"
@@ -688,31 +688,6 @@ const deleteSelectedEvents = () => {
     );
 };
 
-onMounted(() => {
-    window.addEventListener(
-        "fullscreenchange",
-        () => {
-            if (!document.fullscreenElement) {
-                isFullscreen.value = false;
-            }
-        }
-    );
-
-    composedStartDaysAndEventsIntersectionObserving();
-
-    // add a watch or something to check if the user is scrolled down to CalendarRef if yes add to checkIfScrolledToCalendarRef = fixed
-
-    window.addEventListener('scroll', () => {
-        //null check if someone switches to at a glance calendar, dom element is removed
-        //but listener is still registered
-        if (document.getElementById('myCalendar')?.getBoundingClientRect().top < 0) {
-            checkIfScrolledToCalendarRef.value = 'fixed !-ml-2';
-        } else {
-            checkIfScrolledToCalendarRef.value = '';
-        }
-    });
-});
-
 const jumpToDayOfMonth = (day) => {
     const dayElement = document.querySelector(`.day-container[data-day-to-jump="${day}"]`);
     if (dayElement) {
@@ -754,13 +729,71 @@ const closeShowRejectEventVerificationModal = () => {
 }
 
 onMounted(() => {
-    const ShiftCalendarListener = useShiftCalendarListener(newCalendarData.value);
+    const ShiftCalendarListener = useShiftCalendarListener(newCalendarData);
     ShiftCalendarListener.init();
 })
 
+onMounted(async () => {
+    const dateRanges = splitByMonth();
+    const updated = JSON.parse(JSON.stringify(newCalendarData.value));
 
+    for (let i = 0; i < dateRanges.length; i++) {
+        const batch = dateRanges.slice(i, i + 1);
+        const responses = await Promise.all(
+            batch.map(([start_date, end_date]) =>
+                axios.get(route('events'), { params: { start_date, end_date } })
+            )
+        );
 
+        responses.forEach(res => {
+            res.data.calendar.forEach(fullRoom => {
+                const target = updated.find(r => r.roomId === fullRoom.roomId);
+                if (!target) return;
+                Object.entries(fullRoom.content).forEach(([day, { events }]) => {
+                    if (target.content[day]) {
+                        target.content[day].events = events;
+                    }
+                });
+            });
+        });
 
+        newCalendarData.value = JSON.parse(JSON.stringify(updated));
+    }
+});
+
+const splitByMonth = () => {
+    const dateValues = inject('dateValue');
+    const result = [];
+    const start = new Date(dateValues[0]);
+    const end   = new Date(dateValues[1]);
+
+    const lastDayOf = (year, month) => new Date(year, month + 1, 0).getDate();
+
+    let currYear  = start.getFullYear();
+    let currMonth = start.getMonth();
+    let currDay   = start.getDate();
+
+    while (currYear < end.getFullYear() || currMonth < end.getMonth()) {
+        const monthLastDay = lastDayOf(currYear, currMonth);
+        result.push([
+            `${currYear.toString().padStart(4,'0')}-${(currMonth+1).toString().padStart(2,'0')}-${currDay.toString().padStart(2,'0')}`,
+            `${currYear.toString().padStart(4,'0')}-${(currMonth+1).toString().padStart(2,'0')}-${monthLastDay.toString().padStart(2,'0')}`
+        ]);
+        currDay = 1;
+        currMonth++;
+        if (currMonth === 12) {
+            currMonth = 0;
+            currYear++;
+        }
+    }
+
+    result.push([
+        `${currYear.toString().padStart(4,'0')}-${(currMonth+1).toString().padStart(2,'0')}-${currDay.toString().padStart(2,'0')}`,
+        dateValues[1]
+    ]);
+
+    return result;
+}
 </script>
 
 <style scoped>

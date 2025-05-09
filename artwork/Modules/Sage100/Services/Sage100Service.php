@@ -20,6 +20,7 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Sage100\Clients\Sage100Client;
 use Artwork\Modules\Sage100\Clients\SageClient;
 use Artwork\Modules\Sage100\Clients\SageClientFactory;
+use Artwork\Modules\Sage100\Helpers\SageDataBookingTypeSplitter;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -42,7 +43,8 @@ class Sage100Service
         private readonly SageAssignedDataService $sageAssignedDataService,
         private readonly SageNotAssignedDataService $sageNotAssignedDataService,
         private readonly SageApiSettingsService $sageApiSettingsService,
-        private readonly ProjectService $projectService
+        private readonly ProjectService $projectService,
+        private readonly SageDataBookingTypeSplitter $sageDataBookingTypeSplitter
     ) {
         $this->sage100Client = $this->sage100ClientFactory->createClient();
     }
@@ -53,8 +55,29 @@ class Sage100Service
     ): int {
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
+
+        $data = $this->getData($count, $specificDay);
+        [$regularBookings, $collectiveBookings] = $this->sageDataBookingTypeSplitter
+            ->splitDataIntoRegularAndCollectiveBookings($data);
+
+        $this->importRegularBookings($regularBookings);
+        $this->importCollectiveBookings($collectiveBookings);
+
+        return 0;
+    }
+
+    private function importCollectiveBookings(
+        array $collectiveBookings,
+    ): void
+    {
+
+    }
+
+    private function importRegularBookings(
+        array $regularBookings,
+    ): void {
         /** @var array $item */
-        foreach (($data = $this->getData($count, $specificDay)) as $item) {
+        foreach ($regularBookings as $item) {
             if (!$item['ID']) {
                 continue;
             }
@@ -157,8 +180,6 @@ class Sage100Service
         if (!empty($data)) {
             $this->updateSageApiSettingsBookingDateFromData($data);
         }
-
-        return 0;
     }
 
     public function dropData(
@@ -312,7 +333,7 @@ class Sage100Service
                         $subPositionRow->cells()->create([
                             'column_id' => $column->id,
                             'sub_position_row_id' => $subPositionRow->id,
-                            'value' =>  $sageAssignedData->sa_kto !== '' ?
+                            'value' => $sageAssignedData->sa_kto !== '' ?
                                 $sageAssignedData->sa_kto :
                                 $sageAssignedData->kto_soll,
                             'verified_value' => null,
@@ -410,7 +431,7 @@ class Sage100Service
                         $subPositionRow->cells()->create([
                             'column_id' => $column->id,
                             'sub_position_row_id' => $subPositionRow->id,
-                            'value' =>  $sageAssignedData->sa_kto !== '' ?
+                            'value' => $sageAssignedData->sa_kto !== '' ?
                                 $sageAssignedData->sa_kto :
                                 $sageAssignedData->kto_soll,
                             'verified_value' => null,
@@ -585,18 +606,6 @@ class Sage100Service
         int|null $count,
         string|null $specificDay,
     ): array {
-//        return json_decode(
-//            file_get_contents(
-//                implode(
-//                    DIRECTORY_SEPARATOR,
-//                    [
-//                        base_path(),
-//                        'xxx.json'
-//                    ]
-//                )
-//            ),
-//            true
-//        )['$resources'];
         return $this->sage100Client->getData($this->buildQuery($count, $specificDay));
     }
 
@@ -691,8 +700,8 @@ class Sage100Service
     /**
      * @throws Throwable
      */
-    public function deleteSageData(
-    ): int {
+    public function deleteSageData(): int
+    {
         try {
             if (!$this->databaseService->inTransaction()) {
                 $this->databaseService->beginTransaction();

@@ -35,7 +35,7 @@ export default {
                 }
             }, {
                 preserveScroll: true,
-                preserveState: false
+                preserveState: true
             })
         },
     },

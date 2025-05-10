@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Sage100\Services;
 
 use Artwork\Core\Services\DatabaseService;
+use Artwork\Modules\Budget\Models\CollectiveBookings\CollectiveBooking;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
@@ -26,6 +27,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Throwable;
 
@@ -60,7 +62,7 @@ class Sage100Service
         [$regularBookings, $collectiveBookings] = $this->sageDataBookingTypeSplitter
             ->splitDataIntoRegularAndCollectiveBookings($data);
 
-        $this->importRegularBookings($regularBookings);
+       # $this->importRegularBookings($regularBookings);
         $this->importCollectiveBookings($collectiveBookings);
 
         return 0;
@@ -68,9 +70,58 @@ class Sage100Service
 
     private function importCollectiveBookings(
         array $collectiveBookings,
-    ): void
-    {
+    ): void {
+        foreach ($collectiveBookings as $key => $items) {
+            DB::beginTransaction();
+            try {
+                [$sageId, $ktoSoll, $ktoHaben] = explode('-', $key);
 
+                $serviceToUse = $this->sageNotAssignedDataService;
+
+                // ParentBooking could either be a sageAssignedData or sageNotAssignedData.
+                // If nothing is found we create a new one
+                if ($parentBooking = $this->sageAssignedDataService->findParentBookingByIdentifiers(
+                    $sageId,
+                    $ktoSoll,
+                    $ktoHaben,
+                )) {
+                    $serviceToUse = $this->sageAssignedDataService;
+                } else {
+                    $parentBooking = $this->sageNotAssignedDataService->findParentBookingByIdentifiers(
+                        $sageId,
+                        $ktoSoll,
+                        $ktoHaben,
+                    );
+
+                    if ($parentBooking) {
+                        $serviceToUse = $this->sageNotAssignedDataService;
+                    } else {
+                        $parentBooking = $this->sageNotAssignedDataService->createFromSageApiData(
+                            $items[0],
+                        );
+                        $parentBooking->is_collective_booking = true;
+                    }
+                }
+
+                //cost of parentBooking is the amount of all child bookings
+                $parentBooking->buchungsbetrag = 0;
+                $serviceToUse->deleteChildData($parentBooking);
+
+                foreach ($items as $item) {
+                    if (!$booking = $this->importBooking($item, $parentBooking)) {
+                        continue;
+                    }
+                    $parentBooking->buchungsbetrag += $booking->buchungsbetrag;
+                }
+
+                $parentBooking->save();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                report($e);
+                continue;
+            }
+            DB::commit();
+        }
     }
 
     private function importRegularBookings(
@@ -78,108 +129,118 @@ class Sage100Service
     ): void {
         /** @var array $item */
         foreach ($regularBookings as $item) {
-            if (!$item['ID']) {
-                continue;
-            }
+            $this->importBooking($item);
+        }
 
-            if ($this->updateExistingSageAssignedDataIfExists($item)) {
-                continue;
+        //if data was imported update import date from latest given booking-date (Buchungsdatum)
+        if (!empty($regularBookings)) {
+            $this->updateSageApiSettingsBookingDateFromData($regularBookings);
+        }
+    }
+
+    private function importBooking(
+        array $item,
+        CollectiveBooking $parentBooking = null
+    ): SageAssignedData|SageNotAssignedData|null {
+
+        $sageNotAssignedData = null;
+        if (!$item['ID']) {
+            return null;
+        }
+
+        if (!$parentBooking) {
+            if($this->updateExistingSageAssignedDataIfExists($item)) {
+                return null;
             }
             $sageNotAssignedData = $this->updateExistingSageNotAssignedDataIfExists($item);
+        }
 
-            //KstTrager (Kostenstelle) is unique and exists only in one Project, find it
-            if (!$item['KstTraeger']) {
-                continue;
-            }
-            $project = $this->projectService->getProjectByCostCenter($item['KstTraeger']);
+        //KstTrager (Kostenstelle) is unique and exists only in one Project, find it
+        if (!$item['KstTraeger']) {
+            return null;
+        }
+        $project = $this->projectService->getProjectByCostCenter($item['KstTraeger']);
 
-            if (is_null($project)) {
-                //create project unrelated SageNotAssignedData if no Project is found
-                $this->createSageNotAssignedData($item);
+        if (is_null($project)) {
+            //create project unrelated SageNotAssignedData if no Project is found
+            return $this->createSageNotAssignedData($item, null, $parentBooking);
+        }
 
-                continue;
-            }
+        //find SubPositionRows containing ColumnCells with SaKto (KTO) and KstStelle (KST)
+        $subPositionRows = $this->findSubPositionRowsByKtoShouldAndKst(
+            $item['KtoSoll'],
+            $item['KstStelle'],
+            $project
+        );
 
-            //find SubPositionRows containing ColumnCells with SaKto (KTO) and KstStelle (KST)
-            $subPositionRows = $this->findSubPositionRowsByKtoShouldAndKst(
-                $item['KtoSoll'],
-                $item['KstStelle'],
-                $project
+        //create project related SageNotAssignedData if not exactly one SubPositionRow
+        if ($subPositionRows->count() !== 1) {
+            return $this->createSageNotAssignedData($item, $project->id, $parentBooking);
+        }
+
+        /** @var Column|null $sageColumn */
+        $sageColumn = $project->table->columns->where('type', 'sage')->first();
+        if (!$sageColumn instanceof Column) {
+            $sageColumn = $this->createSageColumnForTable($project->table);
+        }
+
+        $subPositionRowsSageColumnCellId = $sageColumn
+            ->cells
+            ->where('sub_position_row_id', $subPositionRows->first()->id)
+            ->first()
+            ->id;
+
+        if ($sageNotAssignedData) {
+            $sageData = $this->sageAssignedDataService->createFromSageNotAssignedData(
+                $subPositionRowsSageColumnCellId,
+                $sageNotAssignedData,
             );
+        } else {
+            //otherwise create a new SageAssignedData entity
+            $sageData = $this->sageAssignedDataService->createFromSageApiData(
+                $subPositionRowsSageColumnCellId,
+                $item,
+                $parentBooking,
+            );
+        }
 
-            //create project related SageNotAssignedData if not exactly one SubPositionRow
-            if ($subPositionRows->count() !== 1) {
-                $this->createSageNotAssignedData($item, $project->id);
-
-                continue;
-            }
-
-            /** @var Column|null $sageColumn */
-            $sageColumn = $project->table->columns->where('type', 'sage')->first();
-            if (!$sageColumn instanceof Column) {
-                $sageColumn = $this->createSageColumnForTable($project->table);
-            }
-
-            $subPositionRowsSageColumnCellId = $sageColumn
-                ->cells
-                ->where('sub_position_row_id', $subPositionRows->first()->id)
-                ->first()
-                ->id;
-
-            if ($sageNotAssignedData instanceof SageNotAssignedData) {
-                $this->sageAssignedDataService->createFromSageNotAssignedData(
-                    $subPositionRowsSageColumnCellId,
-                    $sageNotAssignedData,
+        if (
+            !$project->getAttribute('is_group') &&
+            ($projectGroups = $project->getAttribute('groups'))->isNotEmpty()
+        ) {
+            //if dataset isnt matching we dont create any SageNotAssignedData entities because its already
+            //assigned to previous handled project
+            foreach ($projectGroups as $projectGroup) {
+                $subPositionRows = $this->findSubPositionRowsByKtoShouldAndKst(
+                    $item['KtoSoll'],
+                    $item['KstStelle'],
+                    $projectGroup
                 );
-            } else {
-                //otherwise create a new SageAssignedData entity
-                $this->sageAssignedDataService->createFromSageApiData(
+
+                if ($subPositionRows->count() === 0) {
+                    continue;
+                }
+
+                /** @var Column|null $sageColumn */
+                $sageColumn = $projectGroup->table->columns->where('type', 'sage')->first();
+                if (!$sageColumn instanceof Column) {
+                    $sageColumn = $this->createSageColumnForTable($projectGroup->table);
+                }
+
+                $subPositionRowsSageColumnCellId = $sageColumn
+                    ->cells
+                    ->where('sub_position_row_id', $subPositionRows->first()->id)
+                    ->first()
+                    ->id;
+
+                $sageData = $this->sageAssignedDataService->createFromSageApiData(
                     $subPositionRowsSageColumnCellId,
                     $item
                 );
             }
-
-            if (
-                !$project->getAttribute('is_group') &&
-                ($projectGroups = $project->getAttribute('groups'))->isNotEmpty()
-            ) {
-                //if dataset isnt matching we dont create any SageNotAssignedData entities because its already
-                //assigned to previous handled project
-                foreach ($projectGroups as $projectGroup) {
-                    $subPositionRows = $this->findSubPositionRowsByKtoShouldAndKst(
-                        $item['KtoSoll'],
-                        $item['KstStelle'],
-                        $projectGroup
-                    );
-
-                    if ($subPositionRows->count() === 0) {
-                        continue;
-                    }
-
-                    /** @var Column|null $sageColumn */
-                    $sageColumn = $projectGroup->table->columns->where('type', 'sage')->first();
-                    if (!$sageColumn instanceof Column) {
-                        $sageColumn = $this->createSageColumnForTable($projectGroup->table);
-                    }
-
-                    $subPositionRowsSageColumnCellId = $sageColumn
-                        ->cells
-                        ->where('sub_position_row_id', $subPositionRows->first()->id)
-                        ->first()
-                        ->id;
-
-                    $this->sageAssignedDataService->createFromSageApiData(
-                        $subPositionRowsSageColumnCellId,
-                        $item
-                    );
-                }
-            }
         }
 
-        //if data was imported update import date from latest given booking-date (Buchungsdatum)
-        if (!empty($data)) {
-            $this->updateSageApiSettingsBookingDateFromData($data);
-        }
+        return $sageData;
     }
 
     public function dropData(
@@ -577,19 +638,30 @@ class Sage100Service
     private function createSageNotAssignedData(
         array $item,
         ?int $projectId = null,
-    ): void {
-        $sageData = $this->sageNotAssignedDataService->findBySageIdKtoSollAndKtoHaben(
+        CollectiveBooking $collectiveBooking = null
+    ): SageNotAssignedData {
+
+        //if we have a parent the children have been purged before, so it's okay to always create a new one
+        if ($collectiveBooking) {
+            return $this->sageNotAssignedDataService->createFromSageApiData(
+                $item,
+                $projectId,
+                $collectiveBooking
+            );
+        }
+
+        if ($sageData = $this->sageNotAssignedDataService->findBySageIdKtoSollAndKtoHaben(
             $item['ID'],
             $item['KtoSoll'],
             $item['KtoHaben'],
-        );
-
-        if (!$sageData) {
-            $this->sageNotAssignedDataService->createFromSageApiData(
-                $item,
-                $projectId
-            );
+        )) {
+            return $sageData;
         }
+
+        return $this->sageNotAssignedDataService->createFromSageApiData(
+            $item,
+            $projectId
+        );
     }
 
     private function updateSageApiSettingsBookingDateFromData(

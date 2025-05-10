@@ -2632,5 +2632,7 @@
     "No events found": "Keine Termine gefunden",
     "The sum of the quantities of the status values exceeds the total quantity of the article": "Die Summe der Mengen der Statuswerte überschreitet die Gesamtmenge des Artikels",
     "Total quantity*": "Gesamtmenge*",
-    "Quantity per status": "Menge pro Status"
+    "Quantity per status": "Menge pro Status",
+    "Collective Booking": "Sammelbuchung",
+    "single booking": "Einzelbuchung"
 }

@@ -177,6 +177,7 @@ class ProjectController extends Controller
         private readonly AuthManager $authManager,
         private readonly EventTypeService $eventTypeService,
         private readonly RoomService $roomService,
+        private readonly Sage100Service $sage100Service,
         private readonly UserService $userService,
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly TimelineService $timelineService,
@@ -421,17 +422,12 @@ class ProjectController extends Controller
 
     public function store(
         StoreProjectRequest $request,
-        TableService $tableService,
-        ColumnService $columnService,
-        MainPositionService $mainPositionService,
-        BudgetColumnSettingService $columnSettingService,
-        SageApiSettingsService $sageApiSettingsService
     ): JsonResponse|RedirectResponse {
         if (
             !Auth::user()->canAny([
-            PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
-            PermissionEnum::WRITE_PROJECTS->value,
-            PermissionEnum::PROJECT_MANAGEMENT->value
+                PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
+                PermissionEnum::WRITE_PROJECTS->value,
+                PermissionEnum::PROJECT_MANAGEMENT->value
             ])
         ) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
@@ -1787,12 +1783,8 @@ class ProjectController extends Controller
 
     public function dropSageData(
         Request $request,
-        Sage100Service $sage100Service,
-        ColumnService $columnService,
-        SageAssignedDataService $sageAssignedDataService,
-        SageNotAssignedDataService $sageNotAssignedDataService
     ): void {
-        $sage100Service->dropData($request, $columnService, $sageAssignedDataService, $sageNotAssignedDataService);
+        $this->sage100Service->dropData($request);
     }
 
     public function addMainPosition(Request $request): void
@@ -2984,11 +2976,6 @@ class ProjectController extends Controller
 
     public function duplicate(
         Project $project,
-        TableService $tableService,
-        ColumnService $columnService,
-        MainPositionService $mainPositionService,
-        BudgetColumnSettingService $columnSettingService,
-        SageApiSettingsService $sageApiSettingsService,
         Request $request
     ): JsonResponse|RedirectResponse {
         // authorization
@@ -3020,11 +3007,6 @@ class ProjectController extends Controller
 
         $this->budgetService->generateBasicBudgetValues(
             $newProject,
-            $tableService,
-            $columnService,
-            $mainPositionService,
-            $columnSettingService,
-            $sageApiSettingsService
         );
 
         $newProject->users()->attach([Auth::id() => ['access_budget' => true]]);

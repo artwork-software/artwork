@@ -19,17 +19,17 @@
                                 <div class="flex items-center gap-x-3">
                                     <div class="text-gray-700 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
                                         <div @click="showBackdrop = !showBackdrop">
-                                            <ToolTipDefault top show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
+                                            <ToolTipDefault bottom show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
                                         </div>
                                     </div>
                                     <div ref="dragHandleRef" class=" hover:text-yellow-600 transition-all duration-150 ease-in-out cursor-grab dragHandle">
                                         <div>
-                                            <ToolTipDefault top show-draggable :tooltip-text="$t('Hold here to move')"/>
+                                            <ToolTipDefault bottom show-draggable :tooltip-text="$t('Hold here to move')"/>
                                         </div>
                                     </div>
                                     <div class="text-gray-700 hover:text-artwork-messages-error transition-all duration-150 ease-in-out cursor-pointer">
                                         <div @click="closeModal">
-                                            <ToolTipDefault top show-x-icon :tooltip-text="$t('Close Window')"/>
+                                            <ToolTipDefault bottom show-x-icon :tooltip-text="$t('Close Window')"/>
                                         </div>
                                     </div>
                                 </div>

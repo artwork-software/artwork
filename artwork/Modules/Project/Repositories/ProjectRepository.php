@@ -72,7 +72,6 @@ class ProjectRepository extends BaseRepository
         $firstEvent = $project->events()
             ->select('events.*')
             ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
-            ->where('event_types.relevant_for_project_period', true)
             ->orderBy('start_time', 'asc')
             ->first();
         //$firstEvent = $project->events()
@@ -97,7 +96,6 @@ class ProjectRepository extends BaseRepository
         $lastEvent = $project->events()
             ->select('events.*')
             ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
-            ->where('event_types.relevant_for_project_period', true)
             ->orderByStartTime('DESC')
             ->limit(1)
             ->first();

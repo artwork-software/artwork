@@ -22,13 +22,20 @@
                 <div class="flex flex-wrap w-8">
                     <div class="flex">
                         <BaseMenu v-if="this.hasBudgetAccess || this.$can('edit budget templates')">
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
-                                <span @click="fixSubPosition(subPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
+                                      v-slot="{ active }"
+                                      v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
+                                <span @click="fixSubPosition(subPosition.id)"
+                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <IconLock stroke-width="1.5"
+                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                              aria-hidden="true"/>
                                     {{ $t('Commitment') }}
                                 </span>
                             </MenuItem>
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
+                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
+                                      v-slot="{ active }"
+                                      v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
                                 <span @click="unfixSubPosition(subPosition.id)"
                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconLockOpen stroke-width="1.5"
@@ -87,8 +94,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
-                                     class="my-4 h-6 flex items-center" v-else>
+                                <div
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
+                                    class="my-4 h-6 flex items-center" v-else>
                                     <div class="flex flex-row items-center relative">
                                         <input v-model="cell.searchValue"
                                                :placeholder="cell.value"
@@ -134,7 +142,7 @@
                                                     @click="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, mainPosition.is_verified, subPosition.is_verified)">
                                                     <div class="flex">
                                                         <div class="w-1/2 text-left truncate">
-                                                    {{ cost_unit.cost_unit_number }}
+                                                            {{ cost_unit.cost_unit_number }}
                                                         </div>
                                                         <div class="w-1/2 text-right truncate">
                                                             {{ cost_unit.title }}
@@ -154,24 +162,46 @@
                                 <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '',
                                     index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end',
                                     cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
-                                    class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
-                                    <div class=" flex items-center" v-if="cell.column.type !== 'project_relevant_column'">
-                                        <div class="cursor-pointer" @click="handleCellClick(cell, 'comment', index, row)" v-if="cell.comments_count > 0">
-                                            <IconMessageDots class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
+                                     class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
+                                    <div class=" flex items-center"
+                                         v-if="cell.column.type !== 'project_relevant_column'">
+                                        <div class="cursor-pointer"
+                                             @click="handleCellClick(cell, 'comment', index, row)"
+                                             v-if="cell.comments_count > 0">
+                                            <IconMessageDots
+                                                class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
                                         </div>
-                                        <IconCalculator @click="handleCellClick(cell, 'calculation', index, row)" v-if="cell.calculations_count > 0" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        <IconLink @click="handleCellClick(cell, 'moneysource', index, row)" v-if="cell.linked_money_source_id !== null" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        <IconAdjustmentsAlt v-if="cell.sage_assigned_data.length >= 1" @click="handleCellClick(cell, 'sageAssignedData', index, row)" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md" :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'" stroke-width="1.5"/>
+                                        <IconCalculator @click="handleCellClick(cell, 'calculation', index, row)"
+                                                        v-if="cell.calculations_count > 0"
+                                                        class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
+                                        <IconLink @click="handleCellClick(cell, 'moneysource', index, row)"
+                                                  v-if="cell.linked_money_source_id !== null"
+                                                  class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
+                                        <IconAbacus
+                                            v-if="cell.sage_assigned_data.length >= 1 && cell.sage_assigned_data[0].is_collective_booking"/>
+                                        <IconAdjustmentsAlt v-if="cell.sage_assigned_data.length >= 1"
+                                                            @click="handleCellClick(cell, 'sageAssignedData', index, row)"
+                                                            class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md"
+                                                            :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'"
+                                                            stroke-width="1.5"/>
                                         <div>
                                             <div v-if="cell.column.type === 'sage'" class="flex items-center">
-                                                <SageDropCellElement :cell="cell" :value="this.toCurrencyString(cell.sage_value)"/>
-                                                <SageDragCellElement v-if="cell.sage_assigned_data.length >= 1" :cell="cell" class="hidden group-hover:block"/>
+                                                <SageDropCellElement :cell="cell"
+                                                                     :value="this.toCurrencyString(cell.sage_value)"/>
+                                                <SageDragCellElement v-if="cell.sage_assigned_data.length >= 1"
+                                                                     :cell="cell" class="hidden group-hover:block"/>
                                             </div>
-                                            <span @mousedown="storeFocus(cell.id)" @click="handleCellClick(cell, '', index, row)" v-else>{{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}</span>
+                                            <span @mousedown="storeFocus(cell.id)"
+                                                  @click="handleCellClick(cell, '', index, row)" v-else>{{
+                                                    index < 3 ? cell.value : this.toCurrencyString(cell.value)
+                                                }}</span>
                                         </div>
                                     </div>
                                     <div v-else class="flex items-center gap-x-1">
-                                        <component @click="openRelevantBudgetDataSumModalForCell(cell)" v-if="calculateRelevantBudgetDataSumFormProjectsInGroup(cell) > 0" is="IconList" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color" />
+                                        <component @click="openRelevantBudgetDataSumModalForCell(cell)"
+                                                   v-if="calculateRelevantBudgetDataSumFormProjectsInGroup(cell) > 0"
+                                                   is="IconList"
+                                                   class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
                                         {{ toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroup(cell)) }}
                                     </div>
                                 </div>
@@ -185,9 +215,12 @@
                                            v-model="cell.value"
                                            @keyup="isNumber($event, index)"
                                            @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
-                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 " @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 absolute right-4 translate-x-1/2 z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
+                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 "
+                                                    @click="openCellDetailModal(cell)"
+                                                    class="h-6 w-6 flex-shrink-0 -ml-3 absolute right-4 translate-x-1/2 z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
                                 </div>
-                                <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
+                                <div
+                                    :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
                                     class="my-4 h-6 flex items-center justify-end"
                                     @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                                     v-else>
@@ -199,7 +232,9 @@
                                     <img v-if="cell.linked_money_source_id !== null"
                                          src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
                                     {{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}
-                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
+                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked"
+                                                    @click="openCellDetailModal(cell)"
+                                                    class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
                                 </div>
                             </div>
                         </td>
@@ -212,7 +247,9 @@
                                         <span
                                             @click=""
                                             :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                            <IconLock stroke-width="1.5"
+                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                      aria-hidden="true"/>
                                             {{ $t('Exclude') }}
                                         </span>
                         </MenuItem>
@@ -249,13 +286,15 @@
                         </MenuItem>
                     </BaseMenu>
                 </tr>
-                <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id" :sub-position-id="subPosition.id"/>
+                <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id"
+                                     :sub-position-id="subPosition.id"/>
                 <div @click="addRowToSubPosition(subPosition, row)"
                      v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
                      class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-artwork-buttons-create hover:border-t-2 hover:border-artwork-buttons-create">
                     <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                         {{ $t('Row') }}
-                        <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
+                        <IconCirclePlus stroke-width="1.5"
+                                        class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
                     </div>
                 </div>
             </div>
@@ -264,10 +303,12 @@
                  class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
                 <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                     {{ $t('Row') }}
-                    <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
+                    <IconCirclePlus stroke-width="1.5"
+                                    class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
                 </div>
             </div>
-            <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id" :sub-position-id="subPosition.id"/>
+            <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
+                                 :sub-position-id="subPosition.id"/>
             <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
                 <td class="w-28"></td>
                 <td class="w-28"></td>
@@ -477,7 +518,7 @@ export default {
     },
     methods: {
         usePage,
-        openRelevantBudgetDataSumModalForCell(cell){
+        openRelevantBudgetDataSumModalForCell(cell) {
             const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
             if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
             const relevantData = data[this.mainPosition.type].filter(item => item?.groupRowId === cell?.sub_position_row_id);
@@ -678,16 +719,17 @@ export default {
                 cell.clicked = false;
                 if (this.nextCellId) {
                     let nextCell = this.subPosition.sub_position_rows.find(row => row.cells.find(cell => cell.id === this.nextCellId))?.cells.find(cell => cell.id === this.nextCellId);
-                    if(nextCell) {
+                    if (nextCell) {
                         if (cell.id !== nextCell.id) {
                             nextCell.clicked = !nextCell.clicked
                             if (nextCell.clicked) {
-                                nextTick( () => {
+                                nextTick(() => {
                                     this.$refs[`cell-${nextCell.id}`][0].select();
                                     localStorage.removeItem('nextCellId');
                                 })
                             }
-                        } {
+                        }
+                        {
                             localStorage.removeItem('nextCellId');
                         }
                     }
@@ -719,7 +761,7 @@ export default {
                 onFinish: onFinish
             });
         },
-        storeFocus(cellId){
+        storeFocus(cellId) {
             this.nextCellId = cellId;
             localStorage.setItem('nextCellId', cellId);
         },

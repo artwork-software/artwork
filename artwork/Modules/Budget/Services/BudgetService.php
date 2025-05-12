@@ -35,7 +35,8 @@ class BudgetService
         private readonly BudgetColumnSettingService $columnSettingService,
         private readonly TableService $tableService,
         private readonly SageAssignedDataCommentService $sageAssignedDataCommentService,
-        private readonly SageApiSettingsService $sageApiSettingsService
+        private readonly SageApiSettingsService $sageApiSettingsService,
+        private readonly SageNotAssignedDataService $sageNotAssignedDataService
     )
     {
     }
@@ -279,11 +280,7 @@ class BudgetService
         $globalGroup = collect();
 
         if ($this->sageApiSettingsService->getFirst()?->enabled) {
-            $sageNotAssigned = SageNotAssignedData::query()
-                ->where('project_id', $project->id)
-                ->orWhere('project_id', null)
-                ->orderBy('buchungsdatum', 'desc')
-                ->get();
+            $sageNotAssigned = $this->sageNotAssignedDataService->getForFrontend($project);
 
             $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project): void {
                 if ($item->project_id === null) {
@@ -411,6 +408,7 @@ class BudgetService
                             $query
                                 ->with([
                                     'sageAssignedData',
+                                    'sageAssignedData.findChildren',
                                     'sageAssignedData.comments' => function (HasMany $hasMany): HasMany {
                                         return $hasMany->orderBy('created_at', 'desc');
                                     },

@@ -62,7 +62,7 @@ class Sage100Service
         [$regularBookings, $collectiveBookings] = $this->sageDataBookingTypeSplitter
             ->splitDataIntoRegularAndCollectiveBookings($data);
 
-       # $this->importRegularBookings($regularBookings);
+        $this->importRegularBookings($regularBookings);
         $this->importCollectiveBookings($collectiveBookings);
 
         return 0;

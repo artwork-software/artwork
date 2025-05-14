@@ -3,6 +3,8 @@
 namespace Artwork\Modules\Inventory\Models;
 
 use Artwork\Core\Casts\TranslatedDateTimeCast;
+use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
+use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Models\Traits\HasInventoryProperties;
 use Artwork\Modules\Manufacturer\Models\Manufacturer;
 use Artwork\Modules\Room\Models\Room;
@@ -88,6 +90,20 @@ class InventoryArticle extends Model
             'inventory_article_id',
             'inventory_article_status_id'
         )->withPivot('value');
+    }
+
+    public function internalIssues(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphedByMany(InternalIssue::class, 'issuable', 'issuable_inventory_article')
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
+    public function externalIssues(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphedByMany(ExternalIssue::class, 'issuable', 'issuable_inventory_article')
+            ->withPivot('quantity')
+            ->withTimestamps();
     }
 
     public function searchableAs(): string

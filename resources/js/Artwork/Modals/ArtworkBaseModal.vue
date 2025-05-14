@@ -99,7 +99,7 @@ const dragHandleRef = ref(null)
 function initDraggable() {
     nextTick(() => {
         const container = containerRef.value?.$el || containerRef.value
-        const dragHandle = dragHandleRef.value;
+        const dragHandle = dragHandleRef?.value.$el || dragHandleRef.value;
 
         let isDragging = false;
         let offsetX = 0;

@@ -17,6 +17,7 @@ use Database\Seeders\ProjectManagementBuilderSeed;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Laravel\Passport\Passport;
 
 class UpdateArtwork extends Command
 {
@@ -103,5 +104,12 @@ class UpdateArtwork extends Command
 
         $this->info('----------------------------------------------------------');
         $this->info('Artwork Update Command has finished');
+        //Setup Passport
+        $this->info('----------------------------------------------------------');
+        $this->info('Setting up Laravel Passport if not already set up');
+        if (!is_readable(Passport::keyPath('oauth-public.key'))) {
+            $this->info('Laravel Passport is not set up, creating');
+            $this->call('passport:keys --force');
+        }
     }
 }

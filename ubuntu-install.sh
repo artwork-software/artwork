@@ -219,6 +219,7 @@ sudo php /var/www/html/artisan storage:link
 sudo php /var/www/html/artisan optimize
 sudo php /var/www/html/artisan migrate:fresh --force
 sudo php /var/www/html/artisan db:seed:production
+sudo php /var/www/html/artisan passport:keys --force
 
 # Setup JS
 log "Installiere und baue JavaScript-Abhängigkeiten..."

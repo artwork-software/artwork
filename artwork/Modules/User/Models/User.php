@@ -174,6 +174,7 @@ class User extends Model implements
     use HasFactory;
     use HasRoles;
     use HasPermissions;
+    use HasApiTokens;
     //use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;

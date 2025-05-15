@@ -3,15 +3,21 @@
 namespace Artwork\Modules\Budget\Services;
 
 use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\CollectiveBookings\CollectiveBooking;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Repositories\SageNotAssignedDataRepository;
+use Artwork\Modules\Budget\Services\CollectiveBookings\HandlesCollectiveBookings;
+use Artwork\Modules\Budget\Services\CollectiveBookings\CollectiveBookingService;
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Redirect;
 
-readonly class SageNotAssignedDataService
+readonly class SageNotAssignedDataService implements CollectiveBookingService
 {
-    public function __construct(private SageNotAssignedDataRepository $sageNotAssignedDataRepository,)
+    use HandlesCollectiveBookings;
+
+    public function __construct(private SageNotAssignedDataRepository $sageNotAssignedDataRepository)
     {
     }
 
@@ -31,7 +37,11 @@ readonly class SageNotAssignedDataService
         return $sageNotAssignedData;
     }
 
-    public function createFromSageApiData(array $data, int|null $projectId = null): SageNotAssignedData
+    public function createFromSageApiData(
+        array $data,
+        int|null $projectId = null,
+        CollectiveBooking|null $collectiveBooking = null,
+    ): SageNotAssignedData
     {
         return $this->create([
             'project_id' => $projectId,
@@ -49,14 +59,17 @@ readonly class SageNotAssignedDataService
             'kst_traeger' => $data['KstTraeger'],
             'kst_stelle' => $data['KstStelle'],
             'buchungsdatum' => $data['Buchungsdatum'],
+            'is_collective_booking' => false,
+            'parent_booking_id' => $collectiveBooking?->id,
         ]);
     }
 
     public function createFromSageAssignedData(
         SageAssignedData $sageAssignedData,
-        int|null $projectId = null
+        int|null $projectId = null,
+        CollectiveBooking|null $newParent = null,
     ): SageNotAssignedData {
-        return $this->create([
+        $sageNotAssignedData = $this->create([
             'project_id' => $projectId,
             'sage_id' => $sageAssignedData->sage_id,
             'tan' => $sageAssignedData->tan,
@@ -72,7 +85,17 @@ readonly class SageNotAssignedDataService
             'kst_traeger' => $sageAssignedData->kst_traeger,
             'kst_stelle' => $sageAssignedData->kst_stelle,
             'buchungsdatum' => $sageAssignedData->buchungsdatum,
+            'is_collective_booking' => $sageAssignedData->is_collective_booking,
+            'parent_booking_id' => $newParent?->id,
         ]);
+        if ($sageAssignedData->is_collective_booking) {
+            foreach($sageAssignedData->findChildren()->get() as $child) {
+                $this->createFromSageAssignedData($child, null, $sageNotAssignedData);
+            }
+            app(SageAssignedDataService::class)->deleteChildData($sageAssignedData);
+        }
+
+        return $sageNotAssignedData;
     }
 
     public function findBySageId(int $sageId): SageNotAssignedData|null
@@ -80,8 +103,11 @@ readonly class SageNotAssignedDataService
         return $this->sageNotAssignedDataRepository->findBySageId($sageId);
     }
 
-    public function findBySageIdKtoSollAndKtoHaben(int $sageId, string $ktoSoll, string $ktoHaben): SageNotAssignedData|null
-    {
+    public function findBySageIdKtoSollAndKtoHaben(
+        int $sageId,
+        string $ktoSoll,
+        string $ktoHaben
+    ): SageNotAssignedData|null {
         return $this->sageNotAssignedDataRepository->findBySageIdKtoSollAndKtoHaben($sageId, $ktoSoll, $ktoHaben);
     }
 
@@ -113,13 +139,13 @@ readonly class SageNotAssignedDataService
         // check if any cell in $columnCells has a value with the same
         // $sageNotAssignedData->sa_kto as $columnCell->value in the first three columns
         $cellWithSameSaKto = $columnCells->first(
-            fn (ColumnCell $cell) => $cell->value === $sageNotAssignedData->sa_kto
+            fn(ColumnCell $cell) => $cell->value === $sageNotAssignedData->sa_kto
         );
 
         // check if any cell in $columnCells has a value with the same
         // $sageNotAssignedData->kst_stelle as $columnCell->value
         $cellWithSameKstStelle = $columnCells->first(
-            fn (ColumnCell $cell) => $cell->value === $sageNotAssignedData->kst_stelle
+            fn(ColumnCell $cell) => $cell->value === $sageNotAssignedData->kst_stelle
         );
 
         // now we can check if $cellWithSameSaKto and $cellWithSameKstStelle are not null
@@ -148,8 +174,9 @@ readonly class SageNotAssignedDataService
 
             $currentCellValue = $columnCell->value;
             $columnCell->update(
-                ['value' => floatval(str_replace(',', '.', $columnCell->value)) +
-                    floatval(str_replace(',', '.', $sageNotAssignedData->buchungsbetrag))
+                [
+                    'value' => floatval(str_replace(',', '.', $columnCell->value)) +
+                        floatval(str_replace(',', '.', $sageNotAssignedData->buchungsbetrag))
                 ]
             );
 
@@ -167,5 +194,21 @@ readonly class SageNotAssignedDataService
     public function forceDeleteAll(): void
     {
         $this->sageNotAssignedDataRepository->forceDeleteAll();
+    }
+
+    public function findParentBookingByIdentifiers(
+        ...$identifiers
+    ): CollectiveBooking|null {
+        [$sageId, $ktoSoll, $ktoHaben] = $identifiers;
+        return $this->sageNotAssignedDataRepository->findParentBookingBySageIdKtoSollAndKtoHaben(
+            $sageId,
+            $ktoSoll,
+            $ktoHaben
+        );
+    }
+
+    public function getForFrontend(?Project $project): Collection
+    {
+        return $this->sageNotAssignedDataRepository->getForFrontend($project?->id)->get();
     }
 }

@@ -3,8 +3,11 @@
 namespace Artwork\Modules\Budget\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Budget\Models\CollectiveBookings\CollectiveBooking;
+use Artwork\Modules\Budget\Models\CollectiveBookings\IsCollectiveBooking;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,12 +30,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $kst_traeger
  * @property string $kst_stelle
  * @property string $buchungsdatum
+ * @property bool $is_collective_booking
+ * @property integer|null $parent_booking_id
+ * @property-read SageNotAssignedData[]|Collection $children
  */
-class SageNotAssignedData extends Model
+class SageNotAssignedData extends Model implements CollectiveBooking
 {
     use HasFactory;
     use SoftDeletes;
     use Prunable;
+    use IsCollectiveBooking;
 
     protected $fillable = [
         'project_id',
@@ -49,7 +56,9 @@ class SageNotAssignedData extends Model
         'sa_kto',
         'kst_traeger',
         'kst_stelle',
-        'buchungsdatum'
+        'buchungsdatum',
+        'is_collective_booking',
+        'parent_booking_id',
     ];
 
     public function project(): BelongsTo

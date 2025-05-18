@@ -2636,5 +2636,19 @@
     "Collective Booking": "Sammelbuchung",
     "single booking": "Einzelbuchung",
     "Show project period in calendar": "Projektzeitraum im Kalender anzeigen",
-    "Artwork Interface": "Schnittstelle Artwork"
+    "Artwork interface": "Schnittstelle Artwork",
+    "API Keys Management": "API Keys Management",
+    "Create New API Key": "Api Key erstellen",
+    "Last Used": "Zuletzt verwendet",
+    "Expires": "Läuft ab",
+    "Revoke": "Widerrufen",
+    "Show": "Anzeigen",
+    "Expired": "Abgelaufen",
+    "Expires At": "Läuft ab am",
+    "Active": "Aktiv",
+    "Revoke API Key": "API Key Widerrufen",
+    "Can not show token": "Token kann nicht angezeigt werden",
+    "No API keys found": "Keine API Keys gefunden",
+    "Are you sure you want to revoke this API key? This action cannot be undone.": "Möchtest du diesen API-Schlüssel wirklich widerrufen? Diese Aktion kann nicht rückgängig gemacht werden."
+
 }

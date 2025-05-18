@@ -56,6 +56,7 @@ use Artwork\Modules\User\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Passport\Passport;
+use Laravel\Passport\Token;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -76,6 +77,7 @@ class AuthServiceProvider extends ServiceProvider
         Freelancer::class => FreelancerPolicy::class,
         ServiceProviderModel::class => ServiceProviderPolicy::class,
         GeneralSettings::class => GeneralSettingsPolicy::class,
+        Token::class => GeneralSettings::class, // If you can change general settings, you can change ApiTokens too
         ShiftQualification::class => ShiftQualificationPolicy::class,
         SageApiSettings::class => SageApiSettingsPolicy::class,
         SageAssignedDataComment::class => SageAssignedDataCommentPolicy::class,

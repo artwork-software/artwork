@@ -19,6 +19,7 @@
                     <transition name="fade">
                         <div v-if="openSection === openSections.ARTWORK" class="p-4 bg-white rounded shadow">
                             <ArtworkApiSettings
+                                :tokens="tokens"
                             />
                         </div>
                     </transition>
@@ -53,7 +54,11 @@ import ArtworkApiSettings from "@/Pages/Interfaces/Artwork/ArtworkApiSettings.vu
 defineProps({
     title: String,
     sageSettings: Object,
-    tableColumnOrder: Array
+    tableColumnOrder: Array,
+    tokens: {
+        type: Array,
+        default: () => []
+    }
 })
 
 const openSections = {

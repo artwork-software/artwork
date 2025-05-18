@@ -2633,5 +2633,18 @@
     "Collective Booking": "Collective Booking",
     "single booking": "Single Booking",
     "Show project period in calendar": "Show project period in calendar",
-    "Artwork Interface": "Artwork Interface"
+    "Artwork interface": "Artwork interface",
+    "API Keys Management": "API Keys Management",
+    "Create New API Key": "Create New API Key",
+    "Last Used": "Last Used",
+    "Expires": "Expires",
+    "Revoke": "Revoke",
+    "Show": "Show",
+    "Expired": "Expired",
+    "Expires At": "Expires At",
+    "Active": "Active",
+    "Revoke API Key": "Revoke API Key",
+    "No API keys found": "No API keys found",
+    "Can not show token": "Can not show token",
+    "Are you sure you want to revoke this API key? This action cannot be undone.": "Are you sure you want to revoke this API key? This action cannot be undone."
 }

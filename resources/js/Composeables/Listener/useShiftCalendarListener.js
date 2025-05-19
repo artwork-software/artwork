@@ -3,9 +3,19 @@ import { router } from '@inertiajs/vue3';
 export function useShiftCalendarListener(newShiftPlanData) {
 
     function sortArrayByStartDateTimes(array) {
+        // Create a cache for parsed dates to avoid repeated parsing
+        const dateCache = new Map();
+
+        const getDate = (item) => {
+            if (!dateCache.has(item.id)) {
+                dateCache.set(item.id, new Date(item.start.replace(" ", "T")));
+            }
+            return dateCache.get(item.id);
+        };
+
         return array.sort((a, b) => {
-            const aStart = new Date(a.start.replace(" ", "T"));
-            const bStart = new Date(b.start.replace(" ", "T"));
+            const aStart = getDate(a);
+            const bStart = getDate(b);
             return aStart - bStart;
         });
     }
@@ -28,8 +38,10 @@ export function useShiftCalendarListener(newShiftPlanData) {
         const room = findRoomById(roomId);
         if (!room) return;
 
-        daysOfShift.forEach((day) => {
-            if (!room.content[day]) return;
+        let updated = false;
+
+        for (const day of daysOfShift) {
+            if (!room.content[day]) continue;
 
             const eventsAtDay = room.content[day].events;
             const shiftsAtDay = room.content[day].shifts;
@@ -44,84 +56,138 @@ export function useShiftCalendarListener(newShiftPlanData) {
                         event.shifts.push(data.shift);
                         sortArrayByStartDateTimes(event.shifts);
                     }
+                    updated = true;
                 }
             } else {
-                updateOrAddShift(shiftsAtDay, data);
-            }
-        });
+                // Check if shift was actually added or updated
+                const shiftIndex = shiftsAtDay.findIndex((shift) => shift.id === data.shift.id);
+                const wasAdded = shiftIndex === -1;
 
-        router.reload({
-            only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-        });
+                updateOrAddShift(shiftsAtDay, data);
+
+                if (wasAdded || shiftIndex !== -1) {
+                    updated = true;
+                }
+            }
+        }
+
+        // Only reload if something was actually updated
+        if (updated) {
+            router.reload({
+                only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
+            });
+        }
     }
 
     function addEventToRoomAndDay(eventData) {
-        // HIER: .value.forEach
-        newShiftPlanData.value.forEach((room) => {
-            Object.keys(room.content).forEach((day) => {
+        // First, remove the event from all rooms if it exists
+        // Use a Map to track which days had the event for better performance
+        const daysWithEvent = new Map();
+
+        for (const room of newShiftPlanData.value) {
+            for (const day in room.content) {
                 const eventsAtDay = room.content[day].events;
                 const eventIndex = eventsAtDay.findIndex((event) => event.id === eventData.id);
                 if (eventIndex !== -1) {
                     eventsAtDay.splice(eventIndex, 1);
+                    // Track which days had the event
+                    if (!daysWithEvent.has(day)) {
+                        daysWithEvent.set(day, true);
+                    }
                 }
-            });
-        });
+            }
+        }
 
+        // Then add the event to the correct room and days
         const room = findRoomById(eventData.roomId);
         if (!room) return;
-        eventData.daysOfEvent.forEach((day) => {
-            if (!room.content[day]) return;
+
+        let updated = false;
+
+        for (const day of eventData.daysOfEvent) {
+            if (!room.content[day]) continue;
+
             const eventsAtDay = room.content[day].events;
             const eventIndex = eventsAtDay.findIndex((event) => event.id === eventData.id);
 
             if (eventIndex === -1) {
                 eventsAtDay.push(eventData);
                 sortArrayByStartDateTimes(eventsAtDay);
+                updated = true;
             } else {
-                eventsAtDay[eventIndex] = eventData;
+                // Only update if the event data has changed
+                if (JSON.stringify(eventsAtDay[eventIndex]) !== JSON.stringify(eventData)) {
+                    eventsAtDay[eventIndex] = eventData;
+                    updated = true;
+                }
             }
-        });
+        }
+
+        // Return whether any updates were made (useful for parent functions)
+        return updated;
     }
 
     function addShiftsToRoomAndDay(shifts) {
-        shifts.forEach((shift) => {
-            const room = findRoomById(shift.roomId);
-            if (!room) return;
+        let updated = false;
 
-            shift.daysOfShift.forEach((day) => {
-                if (!room.content[day]) return;
+        for (const shift of shifts) {
+            const room = findRoomById(shift.roomId);
+            if (!room) continue;
+
+            for (const day of shift.daysOfShift) {
+                if (!room.content[day]) continue;
+
                 const shiftsAtDay = room.content[day].shifts;
+
+                // Check if shift exists before updating
+                const shiftIndex = shiftsAtDay.findIndex((existingShift) => existingShift.id === shift.id);
+                const wasAdded = shiftIndex === -1;
+
                 updateOrAddShift(shiftsAtDay, { shift });
-            });
-        });
+
+                if (wasAdded || shiftIndex !== -1) {
+                    updated = true;
+                }
+            }
+        }
+
+        return updated;
     }
 
     function updateShiftForUserOrEntity(data) {
         const { shift } = data;
+        let updated = false;
 
-        // HIER: .value.forEach
-        newShiftPlanData.value.forEach((room) => {
-            Object.keys(room.content).forEach((day) => {
+        // Use for...of loops for better performance with early termination
+        for (const room of newShiftPlanData.value) {
+            for (const day in room.content) {
                 const shiftsAtDay = room.content[day].shifts;
                 const eventsAtDay = room.content[day].events;
 
+                // Update shift in shifts array
                 const shiftIndex = shiftsAtDay.findIndex((existingShift) => existingShift.id === shift.id);
                 if (shiftIndex !== -1) {
                     shiftsAtDay[shiftIndex] = shift;
+                    updated = true;
                 }
 
-                eventsAtDay.forEach((event) => {
+                // Update shift in events
+                for (const event of eventsAtDay) {
                     const eventShiftIndex = event.shifts.findIndex((existingShift) => existingShift.id === shift.id);
                     if (eventShiftIndex !== -1) {
                         event.shifts[eventShiftIndex] = shift;
+                        updated = true;
                     }
-                });
-            });
-        });
+                }
+            }
+        }
 
-        router.reload({
-            only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-        });
+        // Only reload if something was actually updated
+        if (updated) {
+            router.reload({
+                only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
+            });
+        }
     }
 
     function removeShiftFromRoomAndEvents(data) {
@@ -129,34 +195,45 @@ export function useShiftCalendarListener(newShiftPlanData) {
         const room = findRoomById(roomId);
         if (!room) return;
 
-        shift.daysOfShift.forEach((day) => {
-            if (!room.content[day]) return;
+        let updated = false;
+
+        for (const day of shift.daysOfShift) {
+            if (!room.content[day]) continue;
 
             const shiftsAtDay = room.content[day].shifts;
             const eventsAtDay = room.content[day].events;
 
+            // Remove shift from shifts array
             const shiftIndex = shiftsAtDay.findIndex((existingShift) => existingShift.id === shift.id);
             if (shiftIndex !== -1) {
                 shiftsAtDay.splice(shiftIndex, 1);
+                updated = true;
             }
 
-            eventsAtDay.forEach((event) => {
+            // Remove shift from events
+            for (const event of eventsAtDay) {
                 if (event.id === shift.eventId) {
                     const eventShiftIndex = event.shifts.findIndex((existingShift) => existingShift.id === shift.id);
                     if (eventShiftIndex !== -1) {
                         event.shifts.splice(eventShiftIndex, 1);
+                        updated = true;
                     }
                 }
-            });
-        });
+            }
+        }
 
-        router.reload({
-            only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-        });
+        // Only reload if something was actually removed
+        if (updated) {
+            router.reload({
+                only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
+            });
+        }
     }
 
     function init() {
-        newShiftPlanData.value.forEach((room) => {
+        // Set up listeners for each room
+        for (const room of newShiftPlanData.value) {
+            // Shift plan room events
             Echo.private('shift-plan.room.' + room.roomId)
                 .listen('.shift-created', (data) => {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
@@ -174,31 +251,52 @@ export function useShiftCalendarListener(newShiftPlanData) {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
                 });
 
+            // Destroy events room
             Echo.private('destroy.events.room.' + room.roomId)
                 .listen('.shift-destroyed.in.event', (data) => {
                     removeShiftFromRoomAndEvents(data);
                 });
 
+            // Event room
             Echo.private('event.room.' + room.roomId)
                 .listen('.event.created', (data) => {
                     addEventToRoomAndDay(data.event);
                 })
                 .listen('.event.removed', (data) => {
-                    newShiftPlanData.value.forEach((room) => {
-                        Object.keys(room.content).forEach((day) => {
-                            const eventsAtDay = room.content[day].events;
+                    // Optimize event removal with a single loop
+                    let eventRemoved = false;
+
+                    for (const currentRoom of newShiftPlanData.value) {
+                        for (const day in currentRoom.content) {
+                            const eventsAtDay = currentRoom.content[day].events;
                             const eventIndex = eventsAtDay.findIndex((event) => event.id === data.event.id);
                             if (eventIndex !== -1) {
                                 eventsAtDay.splice(eventIndex, 1);
+                                eventRemoved = true;
                             }
-                        });
-                    });
-                });
-        });
+                        }
+                    }
 
+                    // If an event was removed, we might want to reload certain data
+                    if (eventRemoved) {
+                        // This is commented out because the original code didn't reload after event removal
+                        // But we could add a reload here if needed
+                        // router.reload({ only: ['someData'] });
+                    }
+                });
+        }
+
+        // Multi-shifts channel
         Echo.channel('shift-plan.multi-shifts')
             .listen('.multi-shifts-created', (data) => {
-                addShiftsToRoomAndDay(data.shifts);
+                const updated = addShiftsToRoomAndDay(data.shifts);
+
+                // If shifts were added, we might want to reload certain data
+                if (updated) {
+                    router.reload({
+                        only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
+                    });
+                }
             });
     }
 

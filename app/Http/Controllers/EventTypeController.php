@@ -73,7 +73,7 @@ class EventTypeController extends Controller
                 $eventType->delete();
                 return Redirect::route('event_types.management');
             } catch (\Exception $e) {
-                return $e;
+                return Redirect::back()->with('error', 'Failed to delete event type: ' . $e->getMessage());
             }
         } else {
             return response()->json(['error' => 'This EventType cant be deleted.'], 403);

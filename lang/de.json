@@ -377,7 +377,7 @@
     "project assignment mandatory": "Projektzuordnung verpflichtend",
     "Create event type": "Termintyp anlegen",
     "name": "Name",
-    "Are you sure you want to delete the event type {eventType} from the system? All events that are assigned to this type will be set to undefined": "Bist du sicher, dass du den Termintyp {eventType} aus dem System löschen willst? Alle Termine, die diesem Typ zugeordnet sind, werden auf undefiniert gesetzt",
+    "Are you sure you want to delete the event type {eventType} from the system? All events that are currently assigned to this type will be reassigned to the first event type.": "Bist du sicher, dass du den Termintyp {eventType} aus dem System löschen willst? Alle Termine, die diesem Typ zugeordnet sind, werden auf den ersten Termintypen gesetzt",
     "No, actually not": "Nein, doch nicht",
     "The event type {eventType} cannot be deleted because it is the standard event type.": "Der Termintyp {eventType} kann nicht gelöscht werden, da es sich um den Standard-Termintyp handelt.",
     "Ok": "Ok",

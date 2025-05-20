@@ -3,6 +3,7 @@
 namespace Artwork\Modules\EventType\Models;
 
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
@@ -58,7 +59,7 @@ class EventType extends Model
 
     public function events(): HasMany
     {
-        return $this->hasMany(Event::class);
+        return $this->hasMany(Event::class, 'event_type_id', 'id');
     }
 
     public function verifiers(): BelongsToMany
@@ -69,5 +70,9 @@ class EventType extends Model
     public function specificVerifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'specific_verifier_id', 'id', 'users');
+    }
+    public function subEvents(): HasMany
+    {
+        return $this->hasMany(Event::class, 'event_type_id', 'id');
     }
 }

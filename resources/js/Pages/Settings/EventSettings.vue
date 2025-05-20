@@ -90,7 +90,7 @@
                         {{$t('Delete event type')}}
                     </div>
                     <div class="errorText">
-                        {{$t('Are you sure you want to delete the event type {eventType} from the system? All events that are assigned to this type will be set to "undefined".', {eventType: eventTypeToDelete.name})}}
+                        {{$t('Are you sure you want to delete the event type {eventType} from the system? All events that are currently assigned to this type will be reassigned to the first event type.', {eventType: eventTypeToDelete.name})}}
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
@@ -289,8 +289,12 @@ export default {
             this.eventTypeToDelete = null;
         },
         deleteEventType() {
-            this.$inertia.delete(`../event_types/${this.eventTypeToDelete.id}`);
-            this.closeDeleteEventTypeModal();
+            this.$inertia.delete(`../event_types/${this.eventTypeToDelete.id}`, {
+                onSuccess: () => {
+                    this.closeDeleteEventTypeModal();
+                    window.location.reload();
+                }
+            });
         }
     },
     setup() {

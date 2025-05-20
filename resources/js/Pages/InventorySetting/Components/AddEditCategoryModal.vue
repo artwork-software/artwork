@@ -57,6 +57,80 @@
                                                    :placeholder="$t('Default Value')"
                                             />
 
+                                            <div v-if="property.type === 'checkbox'" class="px-3">
+                                                <input type="checkbox" v-model="property.defaultValue"
+                                                       class="input-checklist"/>
+                                            </div>
+
+                                            <Combobox v-if="property.type === 'room'" as="div" v-model="property.defaultValue"
+                                                  @update:modelValue="roomQuery = ''">
+                                                <div class="relative">
+                                                    <ComboboxInput
+                                                        class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                        @change="roomQuery = $event.target.value" @blur="roomQuery = ''"
+                                                        :display-value="(person) => property.defaultValue ? props.rooms?.find((room) => room.id === parseInt(property.defaultValue) )?.name : ''"/>
+                                                    <ComboboxButton
+                                                        class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                        <component is="IconSelector" class="size-5 text-gray-400"
+                                                                   aria-hidden="true"/>
+                                                    </ComboboxButton>
+
+                                                    <ComboboxOptions v-if="filteredRooms?.length > 0"
+                                                                     class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                        <ComboboxOption v-for="room in filteredRooms" :key="room.id"
+                                                                        :value="room.id" as="template"
+                                                                        v-slot="{ active, selected }">
+                                                            <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                    <span
+                                                                        :class="['block truncate', selected && 'font-semibold']">
+                                                                      {{ room.name }}
+                                                                    </span>
+                                                                <span v-if="selected"
+                                                                      :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                      <component is="IconCheck" class="size-5"
+                                                                                 aria-hidden="true"/>
+                                                                    </span>
+                                                            </li>
+                                                        </ComboboxOption>
+                                                    </ComboboxOptions>
+                                                </div>
+                                            </Combobox>
+
+                                            <Combobox v-if="property.type === 'manufacturer'" as="div"
+                                                  v-model="property.defaultValue" @update:modelValue="manufacturerQuery = ''">
+                                                <div class="relative">
+                                                    <ComboboxInput
+                                                        class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                        @change="manufacturerQuery = $event.target.value"
+                                                        @blur="manufacturerQuery = ''"
+                                                        :display-value="(person) => property.defaultValue ? props.manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.defaultValue) )?.name : ''"/>
+                                                    <ComboboxButton
+                                                        class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                        <component is="IconSelector" class="size-5 text-gray-400"
+                                                                   aria-hidden="true"/>
+                                                    </ComboboxButton>
+
+                                                    <ComboboxOptions v-if="filteredManufacturers?.length > 0"
+                                                                     class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                        <ComboboxOption v-for="manufacturer in filteredManufacturers"
+                                                                        :key="manufacturer.id" :value="manufacturer.id" as="template"
+                                                                        v-slot="{ active, selected }">
+                                                            <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                    <span
+                                                                        :class="['block truncate', selected && 'font-semibold']">
+                                                                      {{ manufacturer.name }}
+                                                                    </span>
+                                                                <span v-if="selected"
+                                                                      :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                      <component is="IconCheck" class="size-5"
+                                                                                 aria-hidden="true"/>
+                                                                    </span>
+                                                            </li>
+                                                        </ComboboxOption>
+                                                    </ComboboxOptions>
+                                                </div>
+                                            </Combobox>
+
                                             <div v-if="property.type === 'selection'" class="">
                                                 <div class="mt-2 grid grid-cols-1">
                                                     <select id="location" name="location" v-model="property.defaultValue" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
@@ -176,6 +250,80 @@
                                                                        :placeholder="$t('Default Value')"
                                                                 />
 
+                                                                <div v-if="property.type === 'checkbox'" class="px-3">
+                                                                    <input type="checkbox" v-model="property.defaultValue"
+                                                                           class="input-checklist"/>
+                                                                </div>
+
+                                                                <Combobox v-if="property.type === 'room'" as="div" v-model="property.defaultValue"
+                                                                      @update:modelValue="roomQuery = ''">
+                                                                    <div class="relative">
+                                                                        <ComboboxInput
+                                                                            class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                                            @change="roomQuery = $event.target.value" @blur="roomQuery = ''"
+                                                                            :display-value="(person) => property.defaultValue ? props.rooms?.find((room) => room.id === parseInt(property.defaultValue) )?.name : ''"/>
+                                                                        <ComboboxButton
+                                                                            class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                                            <component is="IconSelector" class="size-5 text-gray-400"
+                                                                                       aria-hidden="true"/>
+                                                                        </ComboboxButton>
+
+                                                                        <ComboboxOptions v-if="filteredRooms?.length > 0"
+                                                                                         class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                                            <ComboboxOption v-for="room in filteredRooms" :key="room.id"
+                                                                                            :value="room.id" as="template"
+                                                                                            v-slot="{ active, selected }">
+                                                                                <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                                        <span
+                                                                                            :class="['block truncate', selected && 'font-semibold']">
+                                                                                          {{ room.name }}
+                                                                                        </span>
+                                                                                    <span v-if="selected"
+                                                                                          :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                                          <component is="IconCheck" class="size-5"
+                                                                                                     aria-hidden="true"/>
+                                                                                        </span>
+                                                                                </li>
+                                                                            </ComboboxOption>
+                                                                        </ComboboxOptions>
+                                                                    </div>
+                                                                </Combobox>
+
+                                                                <Combobox v-if="property.type === 'manufacturer'" as="div"
+                                                                      v-model="property.defaultValue" @update:modelValue="manufacturerQuery = ''">
+                                                                    <div class="relative">
+                                                                        <ComboboxInput
+                                                                            class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                                            @change="manufacturerQuery = $event.target.value"
+                                                                            @blur="manufacturerQuery = ''"
+                                                                            :display-value="(person) => property.defaultValue ? props.manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.defaultValue) )?.name : ''"/>
+                                                                        <ComboboxButton
+                                                                            class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                                            <component is="IconSelector" class="size-5 text-gray-400"
+                                                                                       aria-hidden="true"/>
+                                                                        </ComboboxButton>
+
+                                                                        <ComboboxOptions v-if="filteredManufacturers?.length > 0"
+                                                                                         class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                                            <ComboboxOption v-for="manufacturer in filteredManufacturers"
+                                                                                            :key="manufacturer.id" :value="manufacturer.id" as="template"
+                                                                                            v-slot="{ active, selected }">
+                                                                                <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                                        <span
+                                                                                            :class="['block truncate', selected && 'font-semibold']">
+                                                                                          {{ manufacturer.name }}
+                                                                                        </span>
+                                                                                    <span v-if="selected"
+                                                                                          :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                                          <component is="IconCheck" class="size-5"
+                                                                                                     aria-hidden="true"/>
+                                                                                        </span>
+                                                                                </li>
+                                                                            </ComboboxOption>
+                                                                        </ComboboxOptions>
+                                                                    </div>
+                                                                </Combobox>
+
                                                                 <div v-if="property.type === 'selection'" class="">
                                                                     <div class="mt-2 grid grid-cols-1">
                                                                         <select id="location" name="location" v-model="property.defaultValue" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
@@ -238,8 +386,9 @@ import PropertiesMenu from "@/Components/Menu/PropertiesMenu.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {computed, onMounted, ref} from "vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
-import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
+import {Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions} from "@headlessui/vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import {IconCheck, IconSelector} from "@tabler/icons-vue";
 
 const props = defineProps({
     category: {
@@ -247,6 +396,14 @@ const props = defineProps({
         required: false
     },
     properties: {
+        type: Object,
+        required: false
+    },
+    rooms: {
+        type: Object,
+        required: false
+    },
+    manufacturers: {
         type: Object,
         required: false
     }
@@ -260,8 +417,26 @@ const categoryForm = useForm({
 })
 
 const subCategories = ref([]);
+const roomQuery = ref('');
+const manufacturerQuery = ref('');
 
 const emit = defineEmits(["close"]);
+
+const filteredRooms = computed(() =>
+    roomQuery.value === ''
+        ? props.rooms
+        : props.rooms?.filter((room) => {
+            return room.name.toLowerCase().includes(roomQuery.value.toLowerCase())
+        }),
+);
+
+const filteredManufacturers = computed(() =>
+    manufacturerQuery.value === ''
+        ? props.manufacturers
+        : props.manufacturers?.filter((manufacturer) => {
+            return manufacturer.name.toLowerCase().includes(manufacturerQuery.value.toLowerCase())
+        }),
+);
 
 const addEmptySubCategory = () => {
     subCategories.value.push({

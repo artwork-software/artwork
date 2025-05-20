@@ -377,7 +377,7 @@
     "project assignment mandatory": "Projektzuordnung verpflichtend",
     "Create event type": "Termintyp anlegen",
     "name": "Name",
-    "Are you sure you want to delete the event type {eventType} from the system? All events that are assigned to this type will be set to undefined": "Bist du sicher, dass du den Termintyp {eventType} aus dem System löschen willst? Alle Termine, die diesem Typ zugeordnet sind, werden auf undefiniert gesetzt",
+    "Are you sure you want to delete the event type {eventType} from the system? All events that are currently assigned to this type will be reassigned to the first event type.": "Bist du sicher, dass du den Termintyp {eventType} aus dem System löschen willst? Alle Termine, die diesem Typ zugeordnet sind, werden auf den ersten Termintypen gesetzt",
     "No, actually not": "Nein, doch nicht",
     "The event type {eventType} cannot be deleted because it is the standard event type.": "Der Termintyp {eventType} kann nicht gelöscht werden, da es sich um den Standard-Termintyp handelt.",
     "Ok": "Ok",
@@ -2651,5 +2651,7 @@
     "Can not show token": "Token kann nicht angezeigt werden",
     "No API keys found": "Keine API Keys gefunden",
     "Are you sure you want to revoke this API key? This action cannot be undone.": "Möchtest du diesen API-Schlüssel wirklich widerrufen? Diese Aktion kann nicht rückgängig gemacht werden."
-
+    "The sum of the quantities of the status values falls below the total quantity of the article": "Die Summe der Mengen der Statuswerte liegt unter der Gesamtmenge des Artikels",
+    "Detailed Article quantity is less than total article quantity": "Detaillierte Artikelmenge ist kleiner als Artikelgesamtmenge",
+    "Detailed Article quantity is greater than total article quantity": "Detaillierte Artikelmenge ist größer als Artikelgesamtmenge"
 }

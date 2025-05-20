@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -49,17 +51,17 @@ class EventTypeController extends Controller
         if ($eventType->getAttribute('id') === 1) {
             return Redirect::back();
         }
-        if ($eventType->name !== 'undefiniert') {
-            $events = $eventType->events()->get();
 
-            foreach ($events as $event) {
-                $event->update(['event_type_id' => 1]);
-            }
+        try {
+            // Get all events associated with this event type
+            $eventType->events()->update(['event_type_id' => 1]);
+            $eventType->verifiers()->detach();
+            $eventType->subEvents()->update(['event_type_id' => 1]);
+            // Delete the event type after all events have been reassigned
             $eventType->delete();
-
             return Redirect::route('event_types.management');
-        } else {
-            return response()->json(['error' => 'This EventType cant be deleted.'], 403);
+        } catch (\Exception $e) {
+            return $e;
         }
     }
 

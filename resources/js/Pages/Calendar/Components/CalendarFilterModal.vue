@@ -269,9 +269,18 @@ const returnNullIfFalse = (variable) => {
 }
 
 const applyFilter = () => {
+    // Get all area filters from areaFilters
+    let areaFilterIds = [];
+    Object.keys(filteredOptionsByCategories.value.areaFilters).forEach(areaKey => {
+        const areaFilterArray = filteredOptionsByCategories.value.areaFilters[areaKey];
+        if (areaFilterArray && Array.isArray(areaFilterArray)) {
+            areaFilterIds = [...areaFilterIds, ...areaFilterArray.filter(item => item.checked).map(item => item.id)];
+        }
+    });
+
     router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), {
         rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
-        areas: arrayToIds(filteredOptionsByCategories.value.roomFilters.areas),
+        areas: areaFilterIds.length > 0 ? areaFilterIds : null,
         event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
         room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_attributes),
         room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_categories),
@@ -283,11 +292,20 @@ const applyFilter = () => {
 }
 
 const saveFilter = () => {
+    // Get all area filters from areaFilters
+    let areaFilterIds = [];
+    Object.keys(filteredOptionsByCategories.value.areaFilters).forEach(areaKey => {
+        const areaFilterArray = filteredOptionsByCategories.value.areaFilters[areaKey];
+        if (areaFilterArray && Array.isArray(areaFilterArray)) {
+            areaFilterIds = [...areaFilterIds, ...areaFilterArray.filter(item => item.checked).map(item => item.id)];
+        }
+    });
+
     // save filter to user filters
     router.post(route('filter.store'), {
         name: saveFilterForm.name,
         rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
-        areas: arrayToIds(filteredOptionsByCategories.value.roomFilters.areas),
+        areas: areaFilterIds.length > 0 ? areaFilterIds : null,
         event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
         room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_attributes),
         room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_categories),

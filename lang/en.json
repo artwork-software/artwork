@@ -2632,5 +2632,8 @@
     "Quantity per Status": "Quantity per Status",
     "Collective Booking": "Collective Booking",
     "single booking": "Single Booking",
-    "Show project period in calendar": "Show project period in calendar"
+    "Show project period in calendar": "Show project period in calendar",
+    "The sum of the quantities of the status values falls below the total quantity of the article": "The sum of the quantities of the status values falls below the total quantity of the article",
+    "Detailed Article quantity is greater than total article quantity": "Detailed Article quantity is greater than total article quantity",
+    "Detailed Article quantity is less than total article quantity": "Detailed Article quantity is less than total article quantity"
 }

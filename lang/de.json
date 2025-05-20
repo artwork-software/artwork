@@ -2635,5 +2635,8 @@
     "Quantity per status": "Menge pro Status",
     "Collective Booking": "Sammelbuchung",
     "single booking": "Einzelbuchung",
-    "Show project period in calendar": "Projektzeitraum im Kalender anzeigen"
+    "Show project period in calendar": "Projektzeitraum im Kalender anzeigen",
+    "The sum of the quantities of the status values falls below the total quantity of the article": "Die Summe der Mengen der Statuswerte liegt unter der Gesamtmenge des Artikels",
+    "Detailed Article quantity is less than total article quantity": "Detaillierte Artikelmenge ist kleiner als Artikelgesamtmenge",
+    "Detailed Article quantity is greater than total article quantity": "Detaillierte Artikelmenge ist größer als Artikelgesamtmenge"
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -50,33 +51,17 @@ class EventTypeController extends Controller
         if ($eventType->getAttribute('id') === 1) {
             return Redirect::back();
         }
-        if ($eventType->name !== 'undefiniert') {
-            try {
-                // Get all events associated with this event type
-                $events = $eventType->events()->get();
-                $verifiers = $eventType->verifiers()->get();
 
-                // If there are events associated with this event type, reassign them
-                if ($events?->count() > 0) {
-                    // Update each event to use event type with ID 1
-                    foreach ($events as $event) {
-                        $event->event_type_id = 1;
-                        $event->save();
-                    }
-                }
-                if ($verifiers?->count() > 0) {
-                    foreach ($verifiers as $verifier) {
-                        $eventType->verifiers()->detach($verifier);
-                    }
-                }
-                // Delete the event type after all events have been reassigned
-                $eventType->delete();
-                return Redirect::route('event_types.management');
-            } catch (\Exception $e) {
-                return Redirect::back()->with('error', 'Failed to delete event type: ' . $e->getMessage());
-            }
-        } else {
-            return response()->json(['error' => 'This EventType cant be deleted.'], 403);
+        try {
+            // Get all events associated with this event type
+            $eventType->events()->update(['event_type_id' => 1]);
+            $eventType->verifiers()->detach();
+            $eventType->subEvents()->update(['event_type_id' => 1]);
+            // Delete the event type after all events have been reassigned
+            $eventType->delete();
+            return Redirect::route('event_types.management');
+        } catch (\Exception $e) {
+            return $e;
         }
     }
 

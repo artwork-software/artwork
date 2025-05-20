@@ -295,7 +295,6 @@
                                     </td>
 
                                     <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
-
                                         <Combobox v-if="property.type === 'room'" as="div" v-model="property.value"
                                                   @update:modelValue="query = ''">
                                             <div class="relative">
@@ -508,10 +507,13 @@
                                         class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0"
                                         v-for="property in articleForm.detailed_article_quantities?.[0]?.properties">
                                         {{ property.name }}<span v-if="property.is_required">*</span></th>
+                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0 w-10">
+                                        <!-- Empty header for delete button column -->
+                                    </th>
                                 </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
-                                <tr class="divide-x divide-gray-200"
+                                <tr class="divide-x divide-gray-200 group"
                                     v-for="(detailedArticle, index) in articleForm?.detailed_article_quantities">
                                     <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0">
                                         <input type="text" v-model="detailedArticle.name"
@@ -614,7 +616,7 @@
                                         </Combobox>
 
                                         <input
-                                            v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer'"
+                                            v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
                                             :type="property.type" v-model="property.value"
                                             :required="property.is_required"
                                             class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
@@ -647,6 +649,21 @@
                                                    @change="property.value = $event.target.checked"
                                                    class="input-checklist"/>
                                         </div>
+
+                                        <div v-if="property.type === 'selection'" class="">
+                                            <div class="mt-2 grid grid-cols-1">
+                                                <select id="location" name="location" v-model="property.value" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                    <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0 relative">
+                                        <button type="button" v-if="articleForm.detailed_article_quantities.length > 1"
+                                                class="invisible group-hover:visible text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out absolute right-2 top-1/2 transform -translate-y-1/2"
+                                                @click="removeDetailedArticle(index)">
+                                            <component is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
+                                        </button>
                                     </td>
                                 </tr>
 
@@ -675,7 +692,7 @@
                                                   v-else>{{ formatQuantity(calculateTotalQuantity) ?? 0 }}</span>
                                         </div>
                                     </td>
-                                    <td :colspan="articleForm.detailed_article_quantities?.[0]?.properties.length ?? 0"
+                                    <td :colspan="(articleForm.detailed_article_quantities?.[0]?.properties.length ?? 0) + 1"
                                         class="p-2 text-xs whitespace-nowrap text-gray-500 font-lexend font-medium cursor-default flex items-center justify-between">
                                         <div v-if="calculateTotalQuantity > articleForm.quantity" class="text-red-600">
                                             <div>
@@ -775,7 +792,22 @@ const getValue = (prop) => {
 }
 
 const booleanValue = (val) => {
-    return val === true || val === 1 || val === "1" || val === "true";
+    // Handle various truthy values
+    if (val === true || val === 1 || val === "1" || val === "true" || val === "on") {
+        return true;
+    }
+
+    // Handle string values case-insensitively
+    if (typeof val === 'string' && val.toLowerCase() === 'true') {
+        return true;
+    }
+
+    // Handle any non-empty string that's not explicitly falsy
+    if (typeof val === 'string' && val !== '' && val !== '0' && val.toLowerCase() !== 'false') {
+        return true;
+    }
+
+    return false;
 };
 
 const getIsDeletable = (id) => {
@@ -916,6 +948,13 @@ const addNewDetailedArticle = () => {
     });
 }
 
+const removeDetailedArticle = (index) => {
+    // Ensure at least one detailed article remains
+    if (articleForm.detailed_article_quantities.length > 1) {
+        articleForm.detailed_article_quantities.splice(index, 1);
+    }
+}
+
 const calculateTotalQuantity = computed(() => {
     return articleForm.detailed_article_quantities?.reduce((total, detailedArticle) => {
         const quantity = parseInt(detailedArticle?.quantity, 10);
@@ -963,10 +1002,10 @@ watch(selectedCategory, (value) => {
                             value: existing.value,
                         });
                     } else {
-                        // Neue Property erhält einen leeren Wert
+                        // Neue Property erhält den Default-Wert aus pivot oder einen leeren Wert
                         mergedProps.push({
                             ...np,
-                            value: '',
+                            value: np.pivot?.value ?? '',
                         });
                     }
                 });
@@ -1006,7 +1045,7 @@ watch(selectedCategory, (value) => {
                 name: prop.name,
                 tooltip_text: prop.tooltip_text,
                 type: prop.type,
-                value: '',
+                value: prop.pivot?.value ?? '',
                 is_required: prop.is_required,
                 categoryProperty: getIsDeletable(prop.id),
                 select_values: prop.select_values
@@ -1035,10 +1074,10 @@ watch(selectedSubCategory, (value) => {
                             value: existing.value,
                         });
                     } else {
-                        // Neue Property erhält einen leeren Wert
+                        // Neue Property erhält den Default-Wert aus pivot oder einen leeren Wert
                         mergedProps.push({
                             ...np,
-                            value: '',
+                            value: np.pivot?.value ?? '',
                         });
                     }
                 });
@@ -1087,7 +1126,7 @@ watch(selectedSubCategory, (value) => {
                 name: prop.name,
                 tooltip_text: prop.tooltip_text,
                 type: prop.type,
-                value: '',
+                value: prop.pivot?.value ?? '',
                 is_required: prop.is_required,
                 categoryProperty: getIsDeletable(prop.id),
                 select_values: prop.select_values
@@ -1110,7 +1149,7 @@ watch(() => articleForm.is_detailed_quantity, (value) => {
                     name: prop.name,
                     tooltip_text: prop.tooltip_text,
                     type: prop.type,
-                    value: '',
+                    value: prop.value || prop.pivot?.value || '',
                     is_required: prop.is_required,
                     categoryProperty: getIsDeletable(prop.id),
                     select_values: prop.select_values
@@ -1128,7 +1167,7 @@ watch(() => articleForm.is_detailed_quantity, (value) => {
                 name: prop.name,
                 tooltip_text: prop.tooltip_text,
                 type: prop.type,
-                value: '',
+                value: prop.value || prop.pivot?.value || '',
                 is_required: prop.is_required,
                 categoryProperty: getIsDeletable(prop.id),
                 select_values: prop.select_values
@@ -1187,7 +1226,7 @@ onMounted(() => {
             name: prop.name,
             tooltip_text: prop.tooltip_text,
             type: prop.type,
-            value: '',
+            value: prop.value ?? prop.pivot?.value ?? '',
             is_required: prop.is_required,
             categoryProperty: getIsDeletable(prop.id),
             select_values: prop.select_values

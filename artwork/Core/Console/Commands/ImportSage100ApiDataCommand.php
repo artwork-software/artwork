@@ -21,7 +21,6 @@ class ImportSage100ApiDataCommand extends Command
             return $sage100Service->deleteSageData();
         }
 
-
         return $sage100Service->importDataToBudget(
             $this->argument('count'),
             $this->argument('specificDay'),

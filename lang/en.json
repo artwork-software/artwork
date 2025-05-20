@@ -378,7 +378,7 @@
     "project assignment mandatory": "project assignment mandatory",
     "Create event type": "Create event type",
     "name": "name",
-    "Are you sure you want to delete the event type {eventType} from the system? All events that are assigned to this type will be set to undefined": "Are you sure you want to delete the event type {eventType} from the system? All events that are assigned to this type will be set to undefined",
+    "Are you sure you want to delete the event type {eventType} from the system? All events that are currently assigned to this type will be reassigned to the first event type.": "Are you sure you want to delete the event type {eventType} from the system? All events that are currently assigned to this type will be reassigned to the first event type.",
     "No, actually not": "No, actually not",
     "The event type {eventType} cannot be deleted because it is the standard event type.": "The event type {eventType} cannot be deleted because it is the standard event type.",
     "Ok": "Ok",
@@ -2630,5 +2630,7 @@
     "The sum of the quantities of the status values exceeds the total quantity of the article": "The sum of the quantities of the status values exceeds the total quantity of the article",
     "Total quantity*": "Total quantity*",
     "Quantity per Status": "Quantity per Status",
+    "Collective Booking": "Collective Booking",
+    "single booking": "Single Booking",
     "Show project period in calendar": "Show project period in calendar"
 }

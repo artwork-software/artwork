@@ -52,7 +52,7 @@ export default {
 </script>
 
 <template>
-    <div class="mb-3 flex items-start gap-x-4">
+    <div class="my-2 flex items-start gap-x-4">
         <div>
             <label for="email" class="block text-sm font-bold leading-6" :class="inSidebar ? 'text-white' : ' text-gray-900' ">
                 {{ projectData.data.label }}

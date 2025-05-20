@@ -42,9 +42,9 @@ class UserIndexResource extends JsonResource
                         'description' => $shift->getAttribute('description'),
                         'craftAbbreviation' => $shift->getAttribute('craft')->getAttribute('abbreviation'),
                         'days_of_shift' => $shift->getAttribute('days_of_shift'),
-                        'roomName' => $event->getAttribute('room')?->getAttribute('name'),
-                        'eventName' => $event->getAttribute('name') ?? $event->getAttribute('eventName'),
-                        'eventTypeAbbreviation' => $event->getAttribute('event_type')->getAttribute('abbreviation'),
+                        'roomName' => $event?->getAttribute('room')?->getAttribute('name'),
+                        'eventName' => $event?->getAttribute('name') ?? $event?->getAttribute('eventName'),
+                        'eventTypeAbbreviation' => $event?->getAttribute('event_type')->getAttribute('abbreviation'),
                     ];
                 }
             ),

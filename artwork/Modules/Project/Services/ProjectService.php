@@ -145,15 +145,31 @@ class ProjectService
                         $builder->whereIn('state', $projectStateIds);
                     }
                 )
+                // Apply "Show only my projects" filter separately with AND logic
+                ->when(
+                    $projectFilters?->contains('showOnlyMyProjects'),
+                    function (Builder $builder): void {
+                        $userId = $this->userService->getAuthUserId();
+                        $builder->where(function ($query) use ($userId) {
+                            $query->where('user_id', $userId)
+                                  ->orWhereHas('users', function ($query) use ($userId) {
+                                      $query->where('user_id', $userId);
+                                  });
+                        });
+                    }
+                )
+                // Apply other filters with OR logic
                 ->when(
                     $projectFilters?->isNotEmpty(),
                     function (Builder $builder) use ($projectFilters): void {
                         $builder->where(function (Builder $builder) use ($projectFilters): void {
                             foreach ($projectFilters as $filter) {
+                                if ($filter === 'showOnlyMyProjects') {
+                                    // Skip this filter as it's already applied above
+                                    continue;
+                                }
+
                                 switch ($filter) {
-                                    case 'showOnlyMyProjects':
-                                        $builder->orWhere('user_id', $this->userService->getAuthUserId());
-                                        break;
                                     case 'showProjectGroups':
                                         $builder->orWhere('is_group', 1);
                                         break;

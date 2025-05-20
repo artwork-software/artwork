@@ -850,10 +850,10 @@ readonly class EventService
         if (!empty ($filter->event_types)) {
             $q->where('events.event_type_id', $filter->event_types);
         }
-        
+
         $q->whereIn('room_id', $rooms->pluck('id'));
         $events = $q->get();
-        
+
         foreach ($rooms as $room) {
             if ($isShiftPlan) {
                 $shifts = $room->shifts->filter(function ($shift) use ($startDate, $endDate) {
@@ -863,7 +863,7 @@ readonly class EventService
 
                 $room->shifts = $shifts;
             }
-            
+
             $roomEvents = $events->filter(function ($event) use ($room) {
                 return $event->room_id === $room->id;
             });
@@ -1388,7 +1388,7 @@ readonly class EventService
         $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings);
 
         $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate, $userCalendarSettings);
-        
+
         $mappedRooms = $this->mapRoomsToContentForCalendar($rooms, $startDate, $endDate);
 
         if ($useProjectTimePeriod && !$startDate && !$endDate) {
@@ -1706,7 +1706,7 @@ readonly class EventService
 
         $eventStatusSetting = app(EventSettings::class);
 
-        if ($eventStatusSetting->enable_status) {
+        if ($eventStatusSetting->enable_status && isset($event['status']['id'])) {
             $createdEvent->update([
                 'event_status_id' => $event['status']['id']
             ]);
@@ -1752,7 +1752,7 @@ readonly class EventService
 
         $eventStatusSetting = app(EventSettings::class);
 
-        if ($eventStatusSetting->enable_status) {
+        if ($eventStatusSetting->enable_status && isset($data['status']['id'])) {
             $this->eventRepository->update($event, [
                 'event_status_id' => $data['status']['id']
             ]);

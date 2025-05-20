@@ -28,7 +28,7 @@ class UpdateOrCreateProjectRelevantColumn extends Seeder
                 $table = $project?->table;
                 $column = $table?->columns()->where('type', 'project_relevant_column')->first();
 
-                if (!$column) {
+                if (!$column && $table) {
                     $newColumn = $this->columnService->createColumnInTable(
                         $table,
                         'Unterprojekte',

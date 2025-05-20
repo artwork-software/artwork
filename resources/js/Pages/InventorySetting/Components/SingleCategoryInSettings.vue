@@ -21,6 +21,8 @@
     <AddEditCategoryModal
         :category="category"
         :properties="properties"
+        :rooms="rooms"
+        :manufacturers="manufacturers"
         v-if="showAddEditCategoryModal"
         @close="showAddEditCategoryModal = false"
     />
@@ -47,6 +49,14 @@ const props = defineProps({
         required: true
     },
     properties: {
+        type: Object,
+        required: true
+    },
+    rooms: {
+        type: Object,
+        required: true
+    },
+    manufacturers: {
         type: Object,
         required: true
     }

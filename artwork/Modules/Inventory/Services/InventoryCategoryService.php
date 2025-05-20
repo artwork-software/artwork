@@ -56,6 +56,11 @@ class InventoryCategoryService
         return $this->repository->paginateWithRelations($perPage);
     }
 
+    public function paginateForApi(int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        return $this->repository->paginateForApi($perPage);
+    }
+
     protected function syncPropertiesWithArticles($categoryOrSubCategoryModel, $newProperties): void
     {
         $newPropertyIdsWithValues = collect($newProperties)->keyBy('id');

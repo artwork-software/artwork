@@ -2645,6 +2645,7 @@
     "Active": "Active",
     "Revoke API Key": "Revoke API Key",
     "No API keys found": "No API keys found",
+    "Never": "Never",
     "Can not show token": "Can not show token",
     "Are you sure you want to revoke this API key? This action cannot be undone.": "Are you sure you want to revoke this API key? This action cannot be undone."
 }

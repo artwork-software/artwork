@@ -13,7 +13,7 @@
       </div>
     </div>
 
-    <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="bg-white shadow rounded-lg">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
@@ -78,7 +78,8 @@
                   </button>
                 </div>
                 <div v-if="activeDropdown === token.id"
-                     class="origin-top-right absolute right-0 mt-2 w-28 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+                     class="origin-top-right absolute right-0 mt-2 w-28 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10 dropdown-menu"
+                     style="max-height: 200px; overflow-y: auto;"
                 >
                   <div class="py-1">
                     <button
@@ -371,5 +372,13 @@ export default defineComponent({
 <style scoped>
 .origin-top-right {
   transform-origin: top right;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  transform: translateY(0);
+  max-height: 200px;
+  overflow-y: auto;
 }
 </style>

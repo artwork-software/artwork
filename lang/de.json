@@ -2650,7 +2650,7 @@
     "Never": "Nie",
     "Can not show token": "Token kann nicht angezeigt werden",
     "No API keys found": "Keine API Keys gefunden",
-    "Are you sure you want to revoke this API key? This action cannot be undone.": "Möchtest du diesen API-Schlüssel wirklich widerrufen? Diese Aktion kann nicht rückgängig gemacht werden."
+    "Are you sure you want to revoke this API key? This action cannot be undone.": "Möchtest du diesen API-Schlüssel wirklich widerrufen? Diese Aktion kann nicht rückgängig gemacht werden.",
     "The sum of the quantities of the status values falls below the total quantity of the article": "Die Summe der Mengen der Statuswerte liegt unter der Gesamtmenge des Artikels",
     "Detailed Article quantity is less than total article quantity": "Detaillierte Artikelmenge ist kleiner als Artikelgesamtmenge",
     "Detailed Article quantity is greater than total article quantity": "Detaillierte Artikelmenge ist größer als Artikelgesamtmenge"

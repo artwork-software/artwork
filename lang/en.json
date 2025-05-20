@@ -2647,7 +2647,7 @@
     "No API keys found": "No API keys found",
     "Never": "Never",
     "Can not show token": "Can not show token",
-    "Are you sure you want to revoke this API key? This action cannot be undone.": "Are you sure you want to revoke this API key? This action cannot be undone."
+    "Are you sure you want to revoke this API key? This action cannot be undone.": "Are you sure you want to revoke this API key? This action cannot be undone.",
     "The sum of the quantities of the status values falls below the total quantity of the article": "The sum of the quantities of the status values falls below the total quantity of the article",
     "Detailed Article quantity is greater than total article quantity": "Detailed Article quantity is greater than total article quantity",
     "Detailed Article quantity is less than total article quantity": "Detailed Article quantity is less than total article quantity"

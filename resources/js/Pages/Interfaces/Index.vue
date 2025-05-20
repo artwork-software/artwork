@@ -88,4 +88,10 @@ function toggleSection(section) {
     opacity: 0;
     transform: translateY(-5px);
 }
+
+/* Ensure dropdowns in child components are visible */
+:deep(.dropdown-menu) {
+    z-index: 50;
+    position: absolute;
+}
 </style>

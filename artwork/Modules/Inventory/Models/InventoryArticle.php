@@ -56,8 +56,6 @@ class InventoryArticle extends Model
         'deleted_at' => TranslatedDateTimeCast::class,
     ];
 
-    //protected $with = ['category', 'subCategory', 'properties', 'images'];
-
     protected $appends = ['room', 'manufacturer'];
 
     public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo

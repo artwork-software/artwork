@@ -216,13 +216,16 @@
                         </div>
                     </div>
 
-                    <div v-if="calculateStatusQuantityInArticle > articleForm.quantity">
-                        <p class="text-red-500 font-lexend text-sm mt-2">
+                    <div v-if="calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity">
+                        <p class="text-red-500 font-lexend text-sm mt-2" v-if="calculateStatusQuantityInArticle > articleForm.quantity">
                             {{ $t('The sum of the quantities of the status values exceeds the total quantity of the article') }}
+                        </p>
+                        <p class="text-red-500 font-lexend text-sm mt-2" v-if="calculateStatusQuantityInArticle < articleForm.quantity">
+                            {{ $t('The sum of the quantities of the status values falls below the total quantity of the article') }}
                         </p>
                         <div class="flex items-center justify-between font-lexend text-sm mt-1">
                             <span>{{ $t('Total quantity') }}:</span>
-                            <span v-if="calculateStatusQuantityInArticle > articleForm.quantity"
+                            <span v-if="calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity"
                                   @click="articleForm.quantity = calculateStatusQuantityInArticle"
                                   class="flex items-center gap-x-0.5  cursor-pointer">
                                                     <ToolTipWithTextComponent
@@ -694,9 +697,12 @@
                                     </td>
                                     <td :colspan="(articleForm.detailed_article_quantities?.[0]?.properties.length ?? 0) + 1"
                                         class="p-2 text-xs whitespace-nowrap text-gray-500 font-lexend font-medium cursor-default flex items-center justify-between">
-                                        <div v-if="calculateTotalQuantity > articleForm.quantity" class="text-red-600">
-                                            <div>
-                                                {{ $t('Detailed Article quantity is greater than article quantity') }}
+                                        <div v-if="calculateTotalQuantity > articleForm.quantity || calculateTotalQuantity < articleForm.quantity" class="text-red-600">
+                                            <div v-if="calculateTotalQuantity > articleForm.quantity">
+                                                {{ $t('Detailed Article quantity is greater than total article quantity') }}
+                                            </div>
+                                            <div v-if="calculateTotalQuantity < articleForm.quantity">
+                                                {{ $t('Detailed Article quantity is less than total article quantity') }}
                                             </div>
                                         </div>
                                     </td>
@@ -719,7 +725,9 @@
             </div>
             <div class="flex items-center justify-center my-10">
                 <FormButton type="submit" :text="article ? $t('Update') : $t('Create')"
-                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory || calculateTotalQuantity > articleForm.quantity || calculateStatusQuantityInArticle > articleForm.quantity"
+                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory ||
+                            (articleForm.is_detailed_quantity && (calculateTotalQuantity > articleForm.quantity || calculateTotalQuantity < articleForm.quantity)) ||
+                            (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity))"
                             :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''"/>
             </div>
         </form>

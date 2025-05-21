@@ -725,7 +725,9 @@
             </div>
             <div class="flex items-center justify-center my-10">
                 <FormButton type="submit" :text="article ? $t('Update') : $t('Create')"
-                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory || calculateTotalQuantity > articleForm.quantity || calculateTotalQuantity < articleForm.quantity || calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity"
+                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory ||
+                            (articleForm.is_detailed_quantity && (calculateTotalQuantity > articleForm.quantity || calculateTotalQuantity < articleForm.quantity)) ||
+                            (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity))"
                             :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''"/>
             </div>
         </form>

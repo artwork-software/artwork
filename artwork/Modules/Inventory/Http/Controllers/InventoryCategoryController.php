@@ -90,6 +90,8 @@ class InventoryCategoryController extends Controller
         return Inertia::render('InventorySetting/Categories', [
             'categories' => $this->categoryService->paginateWithRelations(),
             'properties' => $this->propertyRepository->all(),
+            'rooms' => Room::all(),
+            'manufacturers' => Manufacturer::all(),
         ]);
     }
 

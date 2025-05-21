@@ -29,7 +29,7 @@
                             </thead>
                             <tbody class="divide-y divide-gray-200 bg-white">
                             <tr v-for="category in categories.data" :key="category?.id" class="divide-x divide-gray-200">
-                                <SingleCategoryInSettings :category="category" :properties="properties" />
+                                <SingleCategoryInSettings :category="category" :properties="properties" :rooms="rooms" :manufacturers="manufacturers" />
                             </tr>
                             </tbody>
                         </table>
@@ -45,6 +45,8 @@
             <AddEditCategoryModal
                 :category="null"
                 :properties="properties"
+                :rooms="rooms"
+                :manufacturers="manufacturers"
                 v-if="showAddEditCategoryModal"
                 @close="showAddEditCategoryModal = false"
             />
@@ -68,6 +70,14 @@ const props = defineProps({
         required: true
     },
     properties: {
+        type: Object,
+        required: true
+    },
+    rooms: {
+        type: Object,
+        required: true
+    },
+    manufacturers: {
         type: Object,
         required: true
     }

@@ -338,11 +338,14 @@ readonly class CalendarDataService
         }
 
         $firstEvent = $this->projectService->getFirstEventInProject($project);
-        $latestEvent = $this->projectService->getLastEventInProject($project);
+        $latestEvent = $this->projectService->getLatestEndingEventInProject($project);
+
+        // For events with specific start and end times, add a day to ensure the last day is included
+        $endDate = $latestEvent ? $latestEvent->getAttribute('end_time')->copy()->endOfDay() : $today->endOfDay();
 
         return [
             $firstEvent ? $firstEvent->getAttribute('start_time')->startOfDay() : $today->startOfDay(),
-            $latestEvent ? $latestEvent->getAttribute('end_time')->endOfDay() : $today->endOfDay(),
+            $endDate,
         ];
     }
 }

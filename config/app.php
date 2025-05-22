@@ -182,6 +182,7 @@ return [
         Intervention\Image\ImageServiceProvider::class,
         Artwork\Modules\Setup\SetupServiceProvider::class,
         Artwork\Modules\Holidays\HolidayServiceProvider::class,
+        Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider::class,
     ],
 
     /*

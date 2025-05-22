@@ -147,14 +147,17 @@ readonly class EventCalendarService
         $startDate,
         $endDate,
     ): Collection {
+        // Ensure endDate is at the end of the day to include events on the last day
+        $endDateEndOfDay = $endDate instanceof Carbon ? $endDate->copy()->endOfDay() : Carbon::parse($endDate)->endOfDay();
+
         return $eventsQuery
             ->whereIn('room_id', $rooms->pluck('id'))
-            ->where(function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('start_time', [$startDate, $endDate])
-                    ->orWhereBetween('end_time', [$startDate, $endDate])
-                    ->orWhere(function ($q) use ($startDate, $endDate) {
+            ->where(function ($q) use ($startDate, $endDateEndOfDay) {
+                $q->whereBetween('start_time', [$startDate, $endDateEndOfDay])
+                    ->orWhereBetween('end_time', [$startDate, $endDateEndOfDay])
+                    ->orWhere(function ($q) use ($startDate, $endDateEndOfDay) {
                         $q->where('start_time', '<=', $startDate)
-                            ->where('end_time', '>=', $endDate);
+                            ->where('end_time', '>=', $endDateEndOfDay);
                     });
             })
             ->when(!empty($filter->event_types), fn($q) => $q->whereIn('event_type_id', $filter->event_types))

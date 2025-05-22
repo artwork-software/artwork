@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
 use Artwork\Modules\Budget\Services\TableColumnOrderService;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Passport\Token;
 use Throwable;
 
 class ToolSettingsInterfacesController extends Controller
@@ -30,12 +32,30 @@ class ToolSettingsInterfacesController extends Controller
      * @throws AuthorizationException
      */
     public function index(): Response {
-        $this->authorize('view', SageApiSettings::class);
+        $this->authorize('view', Token::class);
+
+        $tokens = Token::with(['apiAccessToken'])
+            ->orderBy('name')
+            ->get()
+            ->map(function (Token $token): array {
+                return [
+                    'id' => $token->id,
+                    'name' => $token->name,
+                    "revoked" => $token->revoked,
+                    'created_at' => $token->created_at,
+                    'expires_at' => $token->expires_at,
+                    'last_used_at' => $token->last_used_at,
+                    'access_token' => $token->apiAccessToken?->access_token ?? null,
+                ];
+            });
+
+
         return Inertia::render(
             'Interfaces/Index',
             [
                 'sageSettings' => $this->sageApiSettingsService->getFirst(),
-                'tableColumnOrder' => $this->tableColumnOrderService->getAllOrderedByPosition()
+                'tableColumnOrder' => $this->tableColumnOrderService->getAllOrderedByPosition(),
+                'tokens' => $tokens,
             ]
         );
     }

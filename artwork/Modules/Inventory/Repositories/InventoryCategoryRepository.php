@@ -26,4 +26,21 @@ class InventoryCategoryRepository
         $category->update($data);
         return $category;
     }
+
+    public function paginateForApi(int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        return InventoryCategory::with([
+            'properties',
+            'subcategories',
+            'subcategories.properties',
+            'articles',
+            'articles.properties',
+            'articles.images',
+            'subcategories.articles',
+            'subcategories.articles.properties',
+            'subcategories.articles.images'
+        ])
+            ->orderBy('name')
+            ->paginate($perPage);
+    }
 }

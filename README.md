@@ -195,12 +195,12 @@ sail artisan queue:work
 ```
 
 6. Start the frontend by running
-   
+
 ```shell
 sail npm run dev 
 ```
 7. Publish the app storage folder to display the artwork logo by running
-   
+
 ```shell
 sail artisan storage:link
 ```
@@ -305,3 +305,23 @@ Password: TestPass1234!$
 NOTE: the Mailing of this test-instance will always end in a mailtrap which is setup by us. so there wont be outgoing mails to your emails.
 
 Feel free to explore the features of Artwork and manage your projects effectively!
+
+# API
+
+## Prerequisites
+
+Before you can use the Inventory API endpoint, you need to generate an API key:
+
+1. Log in to Artwork
+2. Navigate to **Tool Settings → Interfaces**
+3. Click on "Create API Key"
+4. Enter a name for your API key
+5. Optional: Set an expiration date
+6. Click on "Create"
+7. Copy the generated API key and store it securely
+
+## Routes and usage
+
+We provide a postman collection and openapi.yaml.
+
+For detailed information on the API routes, please refer to the OpenAPI documentation.

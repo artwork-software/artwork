@@ -33,9 +33,16 @@ export default {
     },
     methods: {
         onDragStart(event) {
+            // Only send minimal data to reduce payload size
+            const minimalData = {
+                id: this.sidebarTab.id,
+                name: this.sidebarTab.name,
+                order: this.sidebarTab.order
+            };
+
             event.dataTransfer.setData(
                 'application/json',
-                JSON.stringify( this.sidebarTab )
+                JSON.stringify(minimalData)
             );
         },
         removeComponentFromSidebar(id) {
@@ -45,12 +52,19 @@ export default {
             })
         },
         updateComponentOrder(components) {
+            // Update local order
             components.map((component, index) => {
                 component.order = index + 1
             })
 
+            // Create a minimal payload with only necessary data (id and order)
+            const minimalComponents = components.map(component => ({
+                id: component.id,
+                order: component.order
+            }));
+
             this.$inertia.post(route('sidebar.tab.update.component.order', {projectTabSidebarTab: this.sidebarTab.id}), {
-                components: components,
+                components: minimalComponents,
             }, {
                 preserveScroll: true
             });

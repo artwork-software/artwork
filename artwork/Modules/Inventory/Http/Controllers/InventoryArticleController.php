@@ -9,7 +9,7 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Illuminate\Auth\AuthManager;
 use Inertia\Inertia;
-use JetBrains\PhpStorm\NoReturn;
+use Illuminate\Http\Request;
 
 class InventoryArticleController extends Controller
 {
@@ -93,5 +93,44 @@ class InventoryArticleController extends Controller
         /** @var InventoryArticle $article */
         $article = InventoryArticle::onlyTrashed()->findOrFail($inventoryArticle);
         $this->inventoryArticleService->restore($article);
+    }
+
+    public function availableStock(InventoryArticle $inventoryArticle, string $startDate, string $endDate)
+    {
+       // get all available stock for the given article
+        // get article stock for the given date range in all issues and returns the available stock of the article
+        $availableStock = $this->inventoryArticleService->getAvailableStock($inventoryArticle, $startDate, $endDate);
+        return response()->json([
+            'availableStock' => $availableStock
+        ]);
+    }
+
+    public function availableStockBatch(Request $request)
+    {
+        $articleIds = $request->get('article_ids', []);
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+
+        $results = [];
+
+        foreach ($articleIds as $id) {
+            $article = InventoryArticle::find($id);
+            if ($article) {
+                $results[$id] = $article->getAvailableStock($startDate, $endDate);
+            }
+        }
+
+        return response()->json(['data' => $results]);
+    }
+
+    public function search(Request $request){
+        $search = $request->get('search');
+        // search for articles by name and return Articles with category and subcategory and quantity
+        $articles = InventoryArticle::with(['category', 'subCategory'])
+            ->where('name', 'like', "%$search%")
+            ->get();
+
+        return response()->json($articles);
+
     }
 }

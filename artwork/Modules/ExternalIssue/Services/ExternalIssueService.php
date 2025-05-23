@@ -4,12 +4,14 @@ namespace Artwork\Modules\ExternalIssue\Services;
 
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssueFile;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Storage;
 
 class ExternalIssueService
 {
-    public function store(array $data, array $files = []): ExternalIssue
+    public function store(array $data, User $user, array $files = []): ExternalIssue
     {
+        $data['issued_by_id'] = $user->id;
         $issue = ExternalIssue::create($data);
 
         if (!empty($files)) {
@@ -18,6 +20,13 @@ class ExternalIssueService
 
         if (!empty($data['articles'])) {
             $this->syncArticles($issue, $data['articles']);
+        }
+
+        if (isset($data['special_items'])) {
+            $issue->specialItems()->delete();
+            foreach ($data['special_items'] as $item) {
+                $issue->specialItems()->create($item);
+            }
         }
 
         return $issue->fresh(['files', 'articles']);
@@ -35,6 +44,14 @@ class ExternalIssueService
             $this->syncArticles($issue, $data['articles']);
         }
 
+
+        if (isset($data['special_items'])) {
+            $issue->specialItems()->delete();
+            foreach ($data['special_items'] as $item) {
+                $issue->specialItems()->create($item);
+            }
+        }
+
         return $issue->fresh(['files', 'articles']);
     }
 
@@ -49,13 +66,17 @@ class ExternalIssueService
             $issue->articles()->detach($article);
         }
 
+        foreach ($issue->specialItems as $item) {
+            $item->delete();
+        }
+
         $issue->delete();
     }
 
     protected function handleFiles(ExternalIssue $issue, array $files): void
     {
         foreach ($files as $file) {
-            $path = $file->store('external_material_issues');
+            $path = $file->store('external_material_issues', 'public');
             ExternalIssueFile::create([
                 'external_issue_id' => $issue->id,
                 'file_path' => $path,

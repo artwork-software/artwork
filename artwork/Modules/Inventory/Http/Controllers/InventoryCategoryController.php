@@ -112,4 +112,12 @@ class InventoryCategoryController extends Controller
 
         $inventoryCategory->delete();
     }
+
+    public function getAllCategories(){
+        $categories = InventoryCategory::with(['subcategories', 'articles.category', 'articles.subCategory'])->get();
+
+        return response()->json([
+            'categories' => $categories,
+        ]);
+    }
 }

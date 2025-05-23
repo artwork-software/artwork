@@ -23,7 +23,7 @@ class StoreExternalIssueRequest extends FormRequest
     {
         return [
             'material_value' => 'required|numeric|min:0',
-            'issued_by_id' => 'required|exists:users,id',
+            'issued_by_id' => 'nullable|exists:users,id',
             'received_by_id' => 'nullable|exists:users,id',
             'issue_date' => 'required|date',
             'return_date' => 'required|date|after_or_equal:issue_date',
@@ -33,6 +33,15 @@ class StoreExternalIssueRequest extends FormRequest
             'external_email' => 'nullable|email|max:255',
             'external_phone' => 'nullable|string|max:50',
             'files.*' => 'file|max:10240',
+            'special_items' => 'nullable|array',
+            'special_items.*.name' => 'required|string|max:255',
+            'special_items.*.quantity' => 'required|integer|min:1',
+            'special_items.*.description' => 'nullable|string',
+            'special_items.*.inventory_category_id' => 'nullable|exists:inventory_categories,id',
+            'special_items.*.inventory_sub_category_id' => 'nullable|exists:inventory_sub_categories,id',
+            'articles' => 'nullable|array',
+            'articles.*.id' => 'required|exists:inventory_articles,id',
+            'articles.*.quantity' => 'required|integer|min:1',
         ];
     }
 }

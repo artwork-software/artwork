@@ -204,4 +204,38 @@ class InventoryArticle extends Model
         ];
     }
 
+    public function getAvailableStock(string $startDate, string $endDate): array
+    {
+        $usedQuantity = 0;
+        $internalIssues = $this->internalIssues()
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate]);
+            })->get();
+
+        foreach ($internalIssues as $issue) {
+            $usedQuantity += $issue->pivot->quantity ?? 0;
+        }
+
+        $externalIssues = $this->externalIssues()
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('issue_date', [$startDate, $endDate])
+                    ->orWhereBetween('return_date', [$startDate, $endDate]);
+            })->get();
+
+        foreach ($externalIssues as $issue) {
+            $usedQuantity += $issue->pivot->quantity ?? 0;
+        }
+
+        $total = $this->quantity;
+        $available = max($total - $usedQuantity, 0);
+
+        return [
+            'available' => $available,
+            'total' => $total,
+            'reserved' => $usedQuantity,
+            'quantity' => $this->quantity,
+        ];
+    }
+
 }

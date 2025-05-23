@@ -277,6 +277,15 @@ const navigation = ref([
         has_permission: true,
     },
     {
+        name: 'Material Issues',
+        href: route('issue-of-material.index'),
+        icon: 'IconBrowserShare',
+        current: route().current('issue-of-material.index'),
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: true,
+    },
+    {
         name: 'To-dos',
         href: route('tasks.own'),
         icon: 'IconListCheck',

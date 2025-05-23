@@ -245,4 +245,12 @@ class InventoryArticleRepository
 
         $article->restore();
     }
+
+    public function getAvailableStock(InventoryArticle $article, string $startDate, string $endDate): array
+    {
+        // Get all available stock for the given article
+        // get article stock for the given date range in all issues and returns the available stock of the article
+        return $article->getAvailableStock($startDate, $endDate);
+
+    }
 }

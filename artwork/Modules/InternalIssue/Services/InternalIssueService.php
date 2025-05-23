@@ -28,7 +28,9 @@ class InternalIssueService
             $this->syncArticles($issue, $data['articles']);
         }
 
-        return $issue->fresh(['files', 'articles', 'specialItems']);
+        $issue->responsibleUsers()->sync($data['responsible_user_ids'] ?? []);
+
+        return $issue->fresh(['files', 'articles', 'specialItems', 'room', 'project', 'responsibleUsers']);
     }
 
     public function update(InternalIssue $issue, array $data, array $files = []): InternalIssue
@@ -51,7 +53,9 @@ class InternalIssueService
             $this->syncArticles($issue, $data['articles']);
         }
 
-        return $issue->fresh(['files', 'articles', 'specialItems']);
+        $issue->responsibleUsers()->sync($data['responsible_user_ids'] ?? []);
+
+        return $issue->fresh(['files', 'articles', 'specialItems', 'room', 'project', 'responsibleUsers']);
     }
 
     public function delete(InternalIssue $issue): void
@@ -60,13 +64,22 @@ class InternalIssueService
             Storage::delete($file->file_path);
             $file->delete();
         }
+
+        foreach ($issue->articles as $article) {
+            $issue->articles()->detach($article);
+        }
+
+        foreach ($issue->specialItems as $item) {
+            $item->delete();
+        }
+
         $issue->delete();
     }
 
     protected function handleFiles(InternalIssue $issue, array $files): void
     {
         foreach ($files as $file) {
-            $path = $file->store('materialausgabe');
+            $path = $file->store('material-issue');
             InternalIssueFile::create([
                 'internal_issue_id' => $issue->id,
                 'file_path' => $path,
@@ -84,4 +97,11 @@ class InternalIssueService
 
         $issue->articles()->sync($syncData);
     }
+
+    public function deleteFile(InternalIssueFile $file): void
+    {
+        Storage::delete($file->file_path);
+        $file->delete();
+    }
+
 }

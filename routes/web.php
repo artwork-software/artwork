@@ -98,7 +98,9 @@ use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
+use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
+use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
@@ -2111,6 +2113,37 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('/update/{contact}', [ContactController::class, 'update'])->name('contact.update');
         Route::delete('/destroy/{contact}', [ContactController::class, 'destroy'])->name('contact.destroy');
     });
+
+    Route::controller(InternalIssueController::class)->prefix('issue-of-material')->group(function() {
+        Route::get('/', 'index')->name('issue-of-material.index');
+        Route::post('/store', 'store')->name('issue-of-material.store');
+        Route::patch('/{internalIssue}/update', 'update')->name('issue-of-material.update');
+        Route::delete('/{internalIssue}/destroy', 'destroy')->name('issue-of-material.destroy');
+        // issue-of-material.set-special-items-done
+        Route::post('/{internalIssue}/set-special-items-done', 'setSpecialItemsDone')->name('issue-of-material.set-special-items-done');
+    });
+
+    Route::controller(ExternalIssueController::class)->prefix('extern-issue-of-material')->group(function() {
+        Route::get('/', 'index')->name('extern-issue-of-material.index');
+        Route::post('/store', 'store')->name('extern-issue-of-material.store');
+        Route::patch('/{externalIssue}/update', 'update')->name('extern-issue-of-material.update');
+        Route::delete('/{externalIssue}/destroy', 'destroy')->name('extern-issue-of-material.destroy');
+        //extern-issue-of-material.return
+        Route::post('/{externalIssue}/return', 'returnExternal')->name('extern-issue-of-material.return');
+        // extern-issue-of-material.set-special-items-done
+        Route::post('/{externalIssue}/set-special-items-done', 'setSpecialItemsDone')->name('extern-issue-of-material.set-special-items-done');
+        // extern-issue-of-material.print
+        Route::get('/print/{externalIssue}', 'print')->name('extern-issue-of-material.print');
+    });
+
+    Route::delete('/issue-of-material/file/{internalIssueFile}/delete', [InternalIssueController::class, 'fileDelete'])->name('issue-of-material.file.delete');
+
+    // get inventory.articles.available-stock article.id, start_date, end_date
+    Route::get('/articles/available-stock/{inventoryArticle}/{startDate}/{endDate}', [InventoryArticleController::class, 'availableStock'])
+        ->name('inventory.articles.available-stock');
+
+    Route::post('inventory/articles/available-stock-batch', [InventoryArticleController::class, 'availableStockBatch'])
+        ->name('inventory.articles.available-stock.batch');
 });
 
 Route::get(

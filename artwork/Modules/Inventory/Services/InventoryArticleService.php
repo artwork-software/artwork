@@ -154,4 +154,10 @@ class InventoryArticleService
     {
         $this->articleRepository->attachStatusValues($article, $statusValues);
     }
+
+
+    public function getAvailableStock(InventoryArticle $article, string $startDate, string $endDate): array
+    {
+        return $this->articleRepository->getAvailableStock($article, $startDate, $endDate);
+    }
 }

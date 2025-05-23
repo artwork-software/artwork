@@ -21,7 +21,6 @@ return new class extends Migration
             $table->time('end_time')->default('23:59');
             $table->foreignId('room_id')->nullable()->constrained()->nullOnDelete();
             $table->text('notes')->nullable();
-            $table->json('responsible_user_ids')->nullable();
             $table->boolean('special_items_done')->default(false);
             $table->timestamps();
         });

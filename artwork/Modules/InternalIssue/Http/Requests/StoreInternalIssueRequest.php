@@ -38,7 +38,7 @@ class StoreInternalIssueRequest extends FormRequest
             'special_items.*.name' => 'required|string|max:255',
             'special_items.*.quantity' => 'required|integer|min:1',
             'special_items.*.description' => 'nullable|string',
-            'special_items.*.inventory_category_id' => 'required|exists:inventory_categories,id',
+            'special_items.*.inventory_category_id' => 'nullable|exists:inventory_categories,id',
             'special_items.*.inventory_sub_category_id' => 'nullable|exists:inventory_sub_categories,id',
             'articles' => 'nullable|array',
             'articles.*.id' => 'required|exists:inventory_articles,id',

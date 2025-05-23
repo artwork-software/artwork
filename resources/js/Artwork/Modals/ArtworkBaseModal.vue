@@ -89,9 +89,13 @@ const props = defineProps({
         type: String,
         default: 'This is a description'
     },
+    showBackdrop: {
+        type: Boolean,
+        default: true
+    }
 })
 const open = ref(true)
-const showBackdrop = ref(true)
+const showBackdrop = ref(props.showBackdrop)
 
 const emits = defineEmits(['close'])
 const containerRef = ref(null)

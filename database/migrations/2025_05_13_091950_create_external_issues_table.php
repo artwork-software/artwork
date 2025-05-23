@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('external_issues', function (Blueprint $table) {
             $table->id();
             $table->decimal('material_value', 10, 2);
-            $table->foreignId('issued_by_id')->constrained('users')->nullOnDelete();
+            $table->foreignId('issued_by_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('received_by_id')->nullable()->constrained('users')->nullOnDelete();
             $table->date('issue_date');
             $table->date('return_date');

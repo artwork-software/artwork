@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('special_items', function (Blueprint $table) {
             $table->id();
+            $table->morphs('issuable'); // issuable_type, issuable_id
+            $table->string('name');
+            $table->integer('quantity');
+            $table->text('description')->nullable();
+            $table->foreignId('inventory_category_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('inventory_sub_category_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
         });
     }

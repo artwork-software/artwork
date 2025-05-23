@@ -191,12 +191,12 @@ sail artisan queue:work
 ```
 
 6. Start the frontend by running
-   
+
 ```shell
 sail npm run dev 
 ```
 7. Publish the app storage folder to display the artwork logo by running
-   
+
 ```shell
 sail artisan storage:link
 ```
@@ -281,3 +281,17 @@ To be able to invite new Users you need to update the .env file with your mail c
 If you have questions, feel free to open an issue :) 
 
 Feel free to explore the features of Artwork and manage your projects effectively!
+
+# API
+
+## Prerequisites
+
+Before you can use the Inventory API endpoint, you need to generate an API key:
+
+1. Log in to Artwork
+2. Navigate to **Tool Settings → Interfaces**
+3. Click on "Create API Key"
+4. Enter a name for your API key
+5. Optional: Set an expiration date
+6. Click on "Create"
+7. Copy the generated API key and store it securely

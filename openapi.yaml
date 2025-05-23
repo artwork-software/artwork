@@ -1,0 +1,611 @@
+openapi: 3.0.3
+info:
+  title: Artwork Inventory API
+  description: |
+    API for accessing and managing inventory data in Artwork.
+
+    ## Authentication
+
+    All API endpoints require authentication using a Bearer token.
+    To generate an API key:
+    1. Log in to Artwork
+    2. Navigate to **Tooleinstellungen → Schnittstellen**
+    3. Click on "API Key erstellen"
+    4. Enter a name for your API key
+    5. Optionally set an expiration date
+    6. Click "Erstellen"
+    7. Copy the generated API key and store it securely
+  version: 1.0.0
+  contact:
+    name: Artwork Support
+servers:
+  - url: https://ihre-artwork-domain.de
+    description: Production server
+security:
+  - bearerAuth: []
+paths:
+  /api/inventory:
+    get:
+      summary: Get inventory
+      description: Returns a paginated list of all inventory categories with their articles
+      operationId: getInventory
+      parameters:
+        - name: per_page
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            default: 15
+            minimum: 1
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInventoryResponse'
+              example:
+                data:
+                  - id: 1
+                    name: "Test"
+                    description: null
+                    properties: []
+                    subcategories: []
+                    articles:
+                      - id: 1
+                        name: "Scheinwerfer"
+                        description: "Test"
+                        inventory_category_id: 1
+                        inventory_sub_category_id: null
+                        quantity: 0
+                        is_detailed_quantity: false
+                        properties: []
+                        images:
+                          - id: 1
+                            image: "inventory_articles/Ea9aishPBk3xZXgu0xNzMj1EDruyJT6WFXLP7GcP.jpg"
+                            is_main_image: true
+                            order: 0
+                          - id: 2
+                            image: "inventory_articles/XsR1DPMjrEU6wj1lssSEAoAPFbbbQJ1IVb1EF6JO.jpg"
+                            is_main_image: false
+                            order: 0
+                        room:
+                          id: 3
+                          name: "Lager"
+                          property_id: 2
+                        manufacturer:
+                          id: 2
+                          name: "Arri"
+                          property_id: 1
+                meta:
+                  current_page: 1
+                  from: 1
+                  last_page: 1
+                  path: "https://artwork.ddev.site/api/inventory"
+                  per_page: 15
+                  to: 1
+                  total: 1
+                links:
+                  - url: null
+                    label: "&laquo; Zurück"
+                    active: false
+                  - url: "https://artwork.ddev.site/api/inventory?page=1"
+                    label: "1"
+                    active: true
+                  - url: null
+                    label: "Weiter &raquo;"
+                    active: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/inventory/articles:
+    get:
+      summary: Get inventory articles
+      description: Returns a paginated list of all inventory articles
+      operationId: getInventoryArticles
+      parameters:
+        - name: per_page
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            default: 15
+            minimum: 1
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: search
+          in: query
+          description: Search term for filtering articles
+          required: false
+          schema:
+            type: string
+        - name: category_id
+          in: query
+          description: Category ID for filtering articles
+          required: false
+          schema:
+            type: integer
+        - name: subcategory_id
+          in: query
+          description: Subcategory ID for filtering articles
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedArticlesResponse'
+              example:
+                data:
+                  - id: 1
+                    name: "Scheinwerfer"
+                    description: "Test"
+                    inventory_category_id: 1
+                    inventory_sub_category_id: null
+                    quantity: 0
+                    is_detailed_quantity: false
+                    properties:
+                      - id: 1
+                        name: "Hersteller"
+                        type: "manufacturer"
+                        pivot:
+                          value: "2"
+                      - id: 2
+                        name: "Raum"
+                        type: "room"
+                        pivot:
+                          value: "3"
+                    images:
+                      - id: 1
+                        image: "inventory_articles/Ea9aishPBk3xZXgu0xNzMj1EDruyJT6WFXLP7GcP.jpg"
+                        is_main_image: true
+                        order: 0
+                      - id: 2
+                        image: "inventory_articles/XsR1DPMjrEU6wj1lssSEAoAPFbbbQJ1IVb1EF6JO.jpg"
+                        is_main_image: false
+                        order: 0
+                    room:
+                      id: 3
+                      name: "Lager"
+                      property_id: 2
+                    manufacturer:
+                      id: 2
+                      name: "Arri"
+                      property_id: 1
+                meta:
+                  current_page: 1
+                  from: 1
+                  last_page: 1
+                  path: "https://artwork.ddev.site/api/inventory/articles"
+                  per_page: 15
+                  to: 1
+                  total: 1
+                links:
+                  - url: null
+                    label: "&laquo; Zurück"
+                    active: false
+                  - url: "https://artwork.ddev.site/api/inventory/articles?page=1"
+                    label: "1"
+                    active: true
+                  - url: null
+                    label: "Weiter &raquo;"
+                    active: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/inventory/articles/{id}:
+    get:
+      summary: Get inventory article by ID
+      description: Returns a specific inventory article by ID
+      operationId: getInventoryArticleById
+      parameters:
+        - name: id
+          in: path
+          description: ID of the article to retrieve
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+              example:
+                id: 1
+                name: "Scheinwerfer"
+                description: "Test"
+                inventory_category_id: 1
+                inventory_sub_category_id: null
+                quantity: 0
+                is_detailed_quantity: false
+                properties:
+                  - id: 1
+                    name: "Hersteller"
+                    type: "manufacturer"
+                    pivot:
+                      value: "2"
+                  - id: 2
+                    name: "Raum"
+                    type: "room"
+                    pivot:
+                      value: "3"
+                images:
+                  - id: 1
+                    image: "inventory_articles/Ea9aishPBk3xZXgu0xNzMj1EDruyJT6WFXLP7GcP.jpg"
+                    is_main_image: true
+                    order: 0
+                  - id: 2
+                    image: "inventory_articles/XsR1DPMjrEU6wj1lssSEAoAPFbbbQJ1IVb1EF6JO.jpg"
+                    is_main_image: false
+                    order: 0
+                room:
+                  id: 3
+                  name: "Lager"
+                  property_id: 2
+                manufacturer:
+                  id: 2
+                  name: "Arri"
+                  property_id: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter your API key with the format `Bearer {api_key}`
+  responses:
+    Unauthorized:
+      description: Unauthorized - Invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: "Unauthenticated."
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: "Sie haben keine Berechtigung, auf diese Ressource zuzugreifen."
+    NotFound:
+      description: Not Found - Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: "Die angeforderte Ressource wurde nicht gefunden."
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+      required:
+        - message
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          description: Current page number
+        from:
+          type: integer
+          description: Index of the first item on the current page
+        last_page:
+          type: integer
+          description: Last page number
+        path:
+          type: string
+          description: Base path of the API request
+        per_page:
+          type: integer
+          description: Number of items per page
+        to:
+          type: integer
+          description: Index of the last item on the current page
+        total:
+          type: integer
+          description: Total number of items
+      required:
+        - current_page
+        - from
+        - last_page
+        - path
+        - per_page
+        - to
+        - total
+    PaginationLink:
+      type: object
+      properties:
+        url:
+          type: string
+          nullable: true
+          description: URL to the page (null if not available)
+        label:
+          type: string
+          description: Label of the link
+        active:
+          type: boolean
+          description: Flag indicating if the link represents the current page
+      required:
+        - label
+        - active
+    CategoryLinks:
+      type: object
+      properties:
+        first:
+          type: string
+          description: URL to the first page
+        last:
+          type: string
+          description: URL to the last page
+        prev:
+          type: string
+          nullable: true
+          description: URL to the previous page (null if not available)
+        next:
+          type: string
+          nullable: true
+          description: URL to the next page (null if not available)
+    Room:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the room
+        name:
+          type: string
+          description: Name of the room
+        property_id:
+          type: integer
+          description: ID of the property that references this room
+      required:
+        - name
+    Manufacturer:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the manufacturer
+        name:
+          type: string
+          description: Name of the manufacturer
+        property_id:
+          type: integer
+          description: ID of the property that references this manufacturer
+      required:
+        - name
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the article
+        name:
+          type: string
+          description: Name of the article
+        description:
+          type: string
+          nullable: true
+          description: Description of the article
+        inventory_category_id:
+          type: integer
+          description: ID of the associated category
+        inventory_sub_category_id:
+          type: integer
+          nullable: true
+          description: ID of the associated subcategory
+        quantity:
+          type: integer
+          description: Available quantity
+        is_detailed_quantity:
+          type: boolean
+          description: Flag indicating if detailed quantity information is available
+        properties:
+          type: array
+          description: Array of article properties
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: ID of the property
+              name:
+                type: string
+                description: Name of the property
+              type:
+                type: string
+                description: Type of the property
+              pivot:
+                type: object
+                properties:
+                  value:
+                    type: string
+                    description: Value of the property
+        images:
+          type: array
+          description: Array of article images
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: ID of the image
+              image:
+                type: string
+                description: URL to the image
+              is_main_image:
+                type: boolean
+                description: Flag indicating if this is the main image
+              order:
+                type: integer
+                description: Order of the image
+        room:
+          $ref: '#/components/schemas/Room'
+        manufacturer:
+          $ref: '#/components/schemas/Manufacturer'
+      required:
+        - id
+        - name
+        - inventory_category_id
+        - quantity
+        - is_detailed_quantity
+        - properties
+        - images
+        - room
+        - manufacturer
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the category
+        name:
+          type: string
+          description: Name of the category
+        description:
+          type: string
+          nullable: true
+          description: Description of the category
+        properties:
+          type: array
+          description: Array of category properties
+          items:
+            type: object
+        subcategories:
+          type: array
+          description: Array of subcategories
+          items:
+            type: object
+        articles:
+          type: array
+          description: Array of articles in this category
+          items:
+            $ref: '#/components/schemas/Article'
+      required:
+        - id
+        - name
+        - properties
+        - subcategories
+        - articles
+    CategorySimple:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the category
+        name:
+          type: string
+          description: Name of the category
+        description:
+          type: string
+          nullable: true
+          description: Description of the category
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      required:
+        - id
+        - name
+        - created_at
+        - updated_at
+    PaginatedInventoryResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Array of inventory categories
+          items:
+            $ref: '#/components/schemas/Category'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+        links:
+          type: array
+          description: Navigation information for pagination
+          items:
+            $ref: '#/components/schemas/PaginationLink'
+      required:
+        - data
+        - meta
+        - links
+    PaginatedCategoriesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Array of inventory categories
+          items:
+            $ref: '#/components/schemas/CategorySimple'
+        links:
+          $ref: '#/components/schemas/CategoryLinks'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+      required:
+        - data
+        - links
+        - meta
+
+    PaginatedArticlesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Array of inventory articles
+          items:
+            $ref: '#/components/schemas/Article'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+        links:
+          type: array
+          description: Navigation information for pagination
+          items:
+            $ref: '#/components/schemas/PaginationLink'
+      required:
+        - data
+        - meta
+        - links

@@ -1,6 +1,7 @@
 <?php
 
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
+use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController;
 use Artwork\Modules\User\Services\UserStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -46,4 +47,6 @@ Route::get('/user-status/{id}', function ($id, UserStatusService $service) {
 // Inventory API routes
 Route::middleware('auth:api')->group(function () {
     Route::get('/inventory', [InventoryCategoryApiController::class, 'index']);
+    Route::get('/inventory/articles', [InventoryArticleApiController::class, 'index']);
+    Route::get('/inventory/articles/{article}', [InventoryArticleApiController::class, 'show']);
 });

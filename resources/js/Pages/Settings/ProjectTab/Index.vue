@@ -60,12 +60,19 @@ export default {
     },
     methods:{
         updateComponentOrder(components) {
+            // Update local order
             components.map((component, index) => {
                 component.order = index + 1
             })
 
+            // Create a minimal payload with only necessary data (id and order)
+            const minimalComponents = components.map(component => ({
+                id: component.id,
+                order: component.order
+            }));
+
             this.$inertia.post(route('tab.reorder'), {
-                components: components,
+                components: minimalComponents,
             }, {
                 preserveScroll: true
             });

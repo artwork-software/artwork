@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        /*
         Schema::create('api_access_tokens', function (Blueprint $table) {
             $table->id();
             $table->text('passport_token_id');
             $table->text('access_token');
             $table->timestamps();
         });
+        */
     }
 
     /**

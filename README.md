@@ -295,3 +295,9 @@ Before you can use the Inventory API endpoint, you need to generate an API key:
 5. Optional: Set an expiration date
 6. Click on "Create"
 7. Copy the generated API key and store it securely
+
+## Routes and usage
+
+We provide a postman collection and openapi.yaml.
+
+For detailed information on the API routes, please refer to the OpenAPI documentation.

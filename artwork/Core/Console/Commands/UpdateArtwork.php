@@ -109,7 +109,7 @@ class UpdateArtwork extends Command
         $this->info('Setting up Laravel Passport if not already set up');
         if (!is_readable(Passport::keyPath('oauth-public.key'))) {
             $this->info('Laravel Passport is not set up, creating');
-            $this->call('passport:keys --force');
+            $this->call('passport:keys', ['--force' => true]);
         }
     }
 }

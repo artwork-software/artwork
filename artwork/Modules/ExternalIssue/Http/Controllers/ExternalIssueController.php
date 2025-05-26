@@ -7,6 +7,7 @@ use Artwork\Modules\ExternalIssue\Http\Requests\StoreExternalIssueRequest;
 use Artwork\Modules\ExternalIssue\Http\Requests\UpdateExternalIssueRequest;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\ExternalIssue\Services\ExternalIssueService;
+use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\User\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Auth\AuthManager;
@@ -23,12 +24,28 @@ class ExternalIssueController extends Controller
     public function index()
     {
         $entitiesPerPage = request()?->input('entitiesPerPage', 10);
-        $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy'])
-            ->orderBy('issue_date')
-            ->orderBy('return_date')
-            ->paginate($entitiesPerPage);
+        $articleIds = request()?->input('article_ids', []);
+
+        // if articleIds is provided, filter issues by articles
+        if (!empty($articleIds)) {
+            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy'])
+                ->whereHas('articles', function ($query) use ($articleIds) {
+                    $query->whereIn('inventory_articles.id', [$articleIds]);
+                })
+                ->orderBy('issue_date')
+                ->orderBy('return_date')
+                ->paginate($entitiesPerPage);
+        } else {
+            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy'])
+                ->orderBy('issue_date')
+                ->orderBy('return_date')
+                ->paginate($entitiesPerPage);
+        }
+
         return Inertia::render('IssueOfMaterial/ExternIssueOfMaterialManagement', [
             'issues' => $issues,
+            'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
+                ->get() : [],
         ]);
     }
 

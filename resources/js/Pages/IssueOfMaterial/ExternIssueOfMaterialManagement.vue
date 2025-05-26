@@ -6,14 +6,11 @@
                 <!-- Platzhalter für deinen +-Button -->
                 <div class="flex items-center gap-x-1 w-96">
                     <!-- Suche nach artikeln in DB, mit Auswahl wird Tag-Bubble hinzugefügt und es werden nur noch die MA angezeigt, welche diesen Artikel im Article-Array haben -->
-                    <BaseInput
-                        type="text"
-                        id="search"
+                    <ArticleSearch
+                        @article-selected="addArticleNameToFilter"
                         class="w-72"
-                        :label="$t('Search')"
-                        v-model="articleName"
                     />
-                    <button type="button" @click="addArticleNameToFilter" class="p-4 flex items-center justify-center bg-gray-100 shadow-sm border border-gray-200 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <button type="button" @click="filterIssueByArticleIds" class="p-4 flex items-center justify-center bg-gray-100 shadow-sm border border-gray-200 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <component is="IconSearch" class="size-5" stroke-width="1.5"/>
                     </button>
                 </div>
@@ -32,7 +29,7 @@
             <div class="mb-4">
                 <div class="flex flex-wrap gap-2">
                     <div v-for="(articleName, index) in articleNamesForFilter" :key="index" class="bg-blue-50 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded-full flex items-center border border-blue-200 font-lexend">
-                        {{ articleName }}
+                        {{ articleName.name }}
                         <button type="button" @click="articleNamesForFilter.splice(index, 1)" class="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none">
                             <component is="IconX" class="size-4" />
                         </button>
@@ -78,7 +75,7 @@
                     <!-- Tabellenüberschrift -->
                     <div class="">
                         <!-- Alle Materialausgaben -->
-                        <WhiteInnerCard class="my-3 group/issueOfMaterial" :key="issueOfMaterial.id" v-for="issueOfMaterial in filteredIssues">
+                        <WhiteInnerCard class="my-3 group/issueOfMaterial" :key="issueOfMaterial.id" v-for="issueOfMaterial in issues.data">
                             <SingleExternMaterialIssue :extern-material-issue="issueOfMaterial" />
                         </WhiteInnerCard>
                     </div>
@@ -113,39 +110,50 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import IssueTabs from "@/Pages/IssueOfMaterial/Components/IssueTabs.vue";
 import SingleExternMaterialIssue from "@/Pages/IssueOfMaterial/Components/SingleExternMaterialIssue.vue";
+import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 const props = defineProps({
     issues: {
         type: Object,
         required: false,
-
+    },
+    articlesInFilter: {
+        type: Array,
+        required: false,
+        default: () => []
     }
 })
 const showIssueOfMaterialModal = ref(false);
-const articleNamesForFilter = ref([]);
-const articleName = ref('');
-const addArticleNameToFilter = () => {
-    if (articleName.value.length > 0) {
-        articleNamesForFilter.value.push(articleName.value);
-        articleName.value = '';
-    }
-};
-
 
 const openIssueOfMaterialModal = () => {
     showIssueOfMaterialModal.value = true;
 };
 
-
-const filteredIssues = computed(() => {
-    if (articleNamesForFilter.value.length === 0) {
-        return props.issues.data;
+const articleNamesForFilter = ref( props.articlesInFilter ?? [] );
+const articleName = ref('');
+const addArticleNameToFilter = (article) => {
+    if (!articleNamesForFilter.value.includes(article)) {
+        articleNamesForFilter.value.push(article);
     }
-    return props.issues.data.filter(issue => {
-        return articleNamesForFilter.value.some(articleName => {
-            return issue.articles.some(article => article.name.includes(articleName));
-        });
-    });
-});
+    articleName.value = '';
+};
+
+const filterIssueByArticleIds = () => {
+
+    router.reload({
+        data: {
+            article_ids: articleNamesForFilter.value.map(a => a.id).join(',')
+        }
+    })
+};
+
+// watch on articleNamesForFilter to update the URL with the article_ids
+import {watch} from "vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import {router} from "@inertiajs/vue3";
+
+watch(articleNamesForFilter, (newValue) => {
+    filterIssueByArticleIds()
+}, {deep: true});
 </script>
 
 <style scoped>

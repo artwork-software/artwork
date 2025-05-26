@@ -126,6 +126,12 @@ const props = defineProps({
     }
 })
 const showIssueOfMaterialModal = ref(false);
+
+
+const openIssueOfMaterialModal = () => {
+    showIssueOfMaterialModal.value = true;
+};
+
 const articleNamesForFilter = ref( props.articlesInFilter ?? [] );
 const articleName = ref('');
 const addArticleNameToFilter = (article) => {
@@ -133,11 +139,6 @@ const addArticleNameToFilter = (article) => {
         articleNamesForFilter.value.push(article);
     }
     articleName.value = '';
-};
-
-
-const openIssueOfMaterialModal = () => {
-    showIssueOfMaterialModal.value = true;
 };
 
 const filterIssueByArticleIds = () => {

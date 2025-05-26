@@ -341,6 +341,17 @@
                                             {{ $t('Show fixed events') }}
                                         </label>
                                     </div>
+                                    <div class="flex items-center py-1" v-if="!isPlanning">
+                                        <input id="cb-show-planned-events"
+                                               v-model="userCalendarSettings.show_planned_events"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-show-planned-events"
+                                               :class="userCalendarSettings.show_planned_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Show planned events') }}
+                                        </label>
+                                    </div>
                                 </div>
                                 <div class="flex justify-end">
                                     <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">
@@ -464,6 +475,7 @@ const userCalendarSettings = useForm({
     hide_unoccupied_rooms: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.hide_unoccupied_rooms : false,
     display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
     show_unplanned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_unplanned_events : false,
+    show_planned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_planned_events : false,
 });
 
 

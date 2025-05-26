@@ -78,11 +78,11 @@
                                                 />
                                             </div>
                                         </div>
-                                        <div v-if="isPlanning" class="absolute right-2 bottom-2 hidden group-hover/container:block">
+                                        <div class="absolute right-2 bottom-10 hidden group-hover/container:block">
                                             <ToolTipComponent
-                                                :tooltip-text="$t('Add new planned event')"
+                                                :tooltip-text="isPlanning ? $t('Add new planned event') : $t('Add new event on this day')"
                                                 icon="IconCircleDashedPlus"
-                                                classes="cursor-pointer"
+                                                classes="cursor-pointer bg-artwork-buttons-create text-white h-8 w-8 flex items-center justify-center rounded-full"
                                                 @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)"
                                             />
                                         </div>
@@ -741,7 +741,7 @@ onMounted(async () => {
         const batch = dateRanges.slice(i, i + 1);
         const responses = await Promise.all(
             batch.map(([start_date, end_date]) =>
-                axios.get(route('events'), { params: { start_date, end_date } })
+                axios.get(route('events'), { params: { start_date, end_date, isPlanning: props.isPlanning } })
             )
         );
 
@@ -821,7 +821,3 @@ const splitByMonth = () => {
 }
 
 </style>
-
-
-
-

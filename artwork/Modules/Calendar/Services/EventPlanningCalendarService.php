@@ -76,8 +76,14 @@ class EventPlanningCalendarService
                     $q->whereIn('event_property_id', $filter->event_properties);
                 });
             })
-            ->when(!$userCalendarSettings?->show_unplanned_events, function ($q) {
-                $q->where('is_planning', true);
+            ->where(function($query) use ($userCalendarSettings) {
+                // Always include planning events
+                $query->where('is_planning', true);
+
+                // If show_unplanned_events is true, also include non-planning events
+                if ($userCalendarSettings?->show_unplanned_events) {
+                    $query->orWhere('is_planning', false);
+                }
             })
             ->orderBy('start_time')
             ->get();

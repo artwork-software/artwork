@@ -190,6 +190,7 @@ class EventController extends Controller
         $user = $this->authManager->user();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
         $userCalendarSettings = $user->getAttribute('calendar_settings');
+        $isPlanning = $request->input('isPlanning') === 'true';
 
         $this->userService->shareCalendarAbo('calendar');
         $dateRangeRequested = false;
@@ -249,27 +250,56 @@ class EventController extends Controller
         );
 
         if ($dateRangeRequested) {
-            $this->eventCalendarService->filterRoomsEvents(
-                $rooms,
-                $userCalendarFilter,
-                $startDate,
-                $endDate,
-                $userCalendarSettings
-            );
+            if ($isPlanning) {
+                $this->eventPlanningCalendarService->filterRoomsEvents(
+                    $rooms,
+                    $userCalendarFilter,
+                    $startDate,
+                    $endDate,
+                    $userCalendarSettings
+                );
+            } else {
+                $this->eventCalendarService->filterRoomsEvents(
+                    $rooms,
+                    $userCalendarFilter,
+                    $startDate,
+                    $endDate,
+                    $userCalendarSettings
+                );
+            }
         } else {
-            $this->eventCalendarService->filterRoomsEventsWithMinimalData(
-                $rooms,
-                $userCalendarFilter,
-                $startDate,
-                $endDate
-            );
+            if ($isPlanning) {
+                $this->eventPlanningCalendarService->filterRoomsEvents(
+                    $rooms,
+                    $userCalendarFilter,
+                    $startDate,
+                    $endDate,
+                    $userCalendarSettings
+                );
+            } else {
+                $this->eventCalendarService->filterRoomsEventsWithMinimalData(
+                    $rooms,
+                    $userCalendarFilter,
+                    $startDate,
+                    $endDate,
+                    $userCalendarSettings
+                );
+            }
         }
 
-        $calendarData = $this->eventCalendarService->mapRoomsToContentForCalendar(
-            $rooms,
-            $startDate,
-            $endDate,
-        );
+        if ($isPlanning) {
+            $calendarData = $this->eventPlanningCalendarService->mapRoomsToContentForCalendar(
+                $rooms,
+                $startDate,
+                $endDate,
+            );
+        } else {
+            $calendarData = $this->eventCalendarService->mapRoomsToContentForCalendar(
+                $rooms,
+                $startDate,
+                $endDate,
+            );
+        }
 
         $dateValue = [
             $startDate ? $startDate->format('Y-m-d') : null,

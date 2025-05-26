@@ -368,7 +368,7 @@ const upload = (event) => {
 }
 
 const removeFile = (id) => {
-    router.delete(route('issue-of-material.file.delete', id), {
+    router.delete(route('extern-issue-of-material.file.delete', id), {
         onSuccess: () => {
             externMaterialIssueForm.files = externMaterialIssueForm.files.filter(file => file.id !== id)
         }

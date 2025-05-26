@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\ExternalIssue\Http\Requests\StoreExternalIssueRequest;
 use Artwork\Modules\ExternalIssue\Http\Requests\UpdateExternalIssueRequest;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
+use Artwork\Modules\ExternalIssue\Models\ExternalIssueFile;
 use Artwork\Modules\ExternalIssue\Services\ExternalIssueService;
+use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\User\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -86,5 +88,11 @@ class ExternalIssueController extends Controller
 
         $pdf = Pdf::loadView('pdf.external_issue', ['issue' => $externalIssue]);
         return $pdf->download('leihschein_' . $externalIssue->id . '.pdf');
+    }
+
+    public function fileDelete(ExternalIssueFile $externalIssueFile): void
+    {
+        $this->externalIssueService
+            ->deleteFile($externalIssueFile);
     }
 }

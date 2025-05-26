@@ -93,4 +93,10 @@ class ExternalIssueService
 
         $issue->articles()->sync($syncData);
     }
+
+    public function deleteFile(ExternalIssueFile $file): void
+    {
+        Storage::delete($file->file_path);
+        $file->delete();
+    }
 }

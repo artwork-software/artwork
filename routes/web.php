@@ -2137,6 +2137,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::delete('/issue-of-material/file/{internalIssueFile}/delete', [InternalIssueController::class, 'fileDelete'])->name('issue-of-material.file.delete');
+    Route::delete('/extern-issue-of-material/file/{externalIssueFile}/delete', [ExternalIssueController::class, 'fileDelete'])->name('extern-issue-of-material.file.delete');
 
     // get inventory.articles.available-stock article.id, start_date, end_date
     Route::get('/articles/available-stock/{inventoryArticle}/{startDate}/{endDate}', [InventoryArticleController::class, 'availableStock'])

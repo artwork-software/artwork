@@ -8,6 +8,7 @@ use Artwork\Modules\InternalIssue\Http\Requests\UpdateInternalIssueRequest;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\InternalIssue\Services\InternalIssueService;
+use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 
@@ -18,13 +19,28 @@ class InternalIssueController extends Controller
     public function index(): \Inertia\Response
     {
         $entitiesPerPage = request()?->input('entitiesPerPage', 10);
-        $issues = InternalIssue::with(['files', 'articles', 'specialItems', 'room', 'project', 'responsibleUsers'])
-            ->orderBy('start_date')
-            ->orderBy('start_time')
-            ->paginate($entitiesPerPage);
+        $articleIds = request()?->input('article_ids', []);
+
+        // if articleIds is provided, filter issues by articles
+        if (!empty($articleIds)) {
+            $issues = InternalIssue::with(['files', 'articles', 'specialItems', 'room', 'project', 'responsibleUsers'])
+                ->whereHas('articles', function ($query) use ($articleIds) {
+                    $query->whereIn('inventory_articles.id', [$articleIds]);
+                })
+                ->orderBy('start_date')
+                ->orderBy('start_time')
+                ->paginate($entitiesPerPage);
+        } else {
+            $issues = InternalIssue::with(['files', 'articles', 'specialItems', 'room', 'project', 'responsibleUsers'])
+                ->orderBy('start_date')
+                ->orderBy('start_time')
+                ->paginate($entitiesPerPage);
+        }
 
         return Inertia::render('IssueOfMaterial/IssueOfMaterialManagement', [
             'issues' => $issues,
+            'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
+                ->get() : [],
         ]);
     }
 
@@ -59,3 +75,4 @@ class InternalIssueController extends Controller
         $internalIssue->update(['special_items_done' => true]);
     }
 }
+

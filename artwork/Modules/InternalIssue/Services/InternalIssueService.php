@@ -79,7 +79,7 @@ class InternalIssueService
     protected function handleFiles(InternalIssue $issue, array $files): void
     {
         foreach ($files as $file) {
-            $path = $file->store('material-issue');
+            $path = $file->store('material-issue', 'public');
             InternalIssueFile::create([
                 'internal_issue_id' => $issue->id,
                 'file_path' => $path,

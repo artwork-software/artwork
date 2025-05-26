@@ -212,6 +212,12 @@ const computedBudgetRoute = computed(() => {
 
     return desiredBudgetRoute
 })
+
+const moduleIsVisible = (module) => {
+    return is('artwork admin') || usePage().props.module_settings[module];
+}
+
+
 const navigation = ref([
     {
         name: 'Dashboard',
@@ -229,7 +235,7 @@ const navigation = ref([
         current: route().current('projects'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: moduleIsVisible('projects'),
     },
     {
         name: 'Calendar',
@@ -238,7 +244,7 @@ const navigation = ref([
         current: route().current('events'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: moduleIsVisible('room_assignment'),
     },
     {
         name: 'Shift plan',
@@ -247,7 +253,7 @@ const navigation = ref([
         current: route().current('shifts.plan'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: can('can view shift plan') || is('artwork admin'),
+        has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
     },
     {
         name: 'Planning Calendar',
@@ -274,7 +280,7 @@ const navigation = ref([
         current: route().current('inventory.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: moduleIsVisible('inventory'),
     },
     {
         name: 'To-dos',
@@ -283,7 +289,7 @@ const navigation = ref([
         current: route().current('tasks.own'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: moduleIsVisible('tasks'),
     },
     {
         name: 'Sources of funding',
@@ -292,7 +298,7 @@ const navigation = ref([
         current: route().current('money_sources.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: can('view edit add money_sources | can edit and delete money sources') || is('artwork admin'),
+        has_permission: can('view edit add money_sources | can edit and delete money sources') || moduleIsVisible('sources_of_funding'),
     },
     {
         name: 'Users',
@@ -301,7 +307,7 @@ const navigation = ref([
         current: route().current('users'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: moduleIsVisible('users'),
     },
     {
         name: 'Contracts',
@@ -310,7 +316,7 @@ const navigation = ref([
         current: route().current('contracts.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: can('view edit upload contracts | can see and download contract modules') || is('artwork admin'),
+        has_permission: can('view edit upload contracts | can see and download contract modules') || moduleIsVisible('contracts'),
     },
     {
         name: 'System',
@@ -441,6 +447,8 @@ const showToolTipForItem = (item) => {
 const hideToolTipForItem = (item) => {
     item.showToolTipForItem = false
 }
+
+
 
 
 </script>

@@ -2563,6 +2563,7 @@
     "Reject events": "Reject events",
     "request verification": "request verification",
     "Show fixed events": "Show fixed events",
+    "Show planned events": "Show planned events",
     "Planned Events": "Planned Events",
     "You can see all planned events here. You can also request a verification directly here.": "You can see all planned events here. You can also request a verification directly here.",
     "Request Verification": "Request Verification",
@@ -2650,5 +2651,8 @@
     "Are you sure you want to revoke this API key? This action cannot be undone.": "Are you sure you want to revoke this API key? This action cannot be undone.",
     "The sum of the quantities of the status values falls below the total quantity of the article": "The sum of the quantities of the status values falls below the total quantity of the article",
     "Detailed Article quantity is greater than total article quantity": "Detailed Article quantity is greater than total article quantity",
-    "Detailed Article quantity is less than total article quantity": "Detailed Article quantity is less than total article quantity"
+    "Detailed Article quantity is less than total article quantity": "Detailed Article quantity is less than total article quantity",
+    "Add new event on this day": "Add new event on this day",
+    "Date & Time": "Date & Time",
+    "Repeat Event": "Repeat Event"
 }

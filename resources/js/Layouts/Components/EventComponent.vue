@@ -22,19 +22,10 @@
             <ModalHeader v-else
                 :title="$t('Event')"
             />
-
             <!--    Form    -->
             <!--    Type and Title    -->
-            <div class="grid gird-cols-1 md:grid-cols-2 gap-x-4 mb-4">
+            <div class="grid gird-cols-1 md:grid-cols-2 gap-x-4 mb-4" v-if="canEdit">
                 <div class="h-full">
-                    <div class="w-full flex items-center truncate h-full" v-if="!canEdit">
-                        <div>
-                            <div class="block w-10 h-10 rounded-full" :style="{'backgroundColor' : selectedEventType?.hex_code }"/>
-                        </div>
-                        <p class="ml-2 flex items-center text-lg font-lexend font-semibold">
-                            {{ selectedEventType?.name }}
-                        </p>
-                    </div>
                     <Listbox as="div" class="" v-model="selectedEventType" v-if="canEdit" id="eventType">
                         <!--<ListboxLabel class="xsLight mb-0">{{ $t('Event type') }}</ListboxLabel>-->
                         <ListboxButton class="menu-button-no-padding relative">
@@ -101,14 +92,11 @@
                             v-html="Array.isArray(error?.eventName) ? error.eventName.join('.<br> ') : error?.eventName">
                         </p>
                     </div>
-                    <div v-else class="flex w-1/2 ml-12 items-center">
-                        {{ this.eventName }}
-                    </div>
                 </div>
             </div>
             <div class="grid gird-cols-1 md:grid-cols-2 gap-x-4 mb-4" v-if="usePage().props.event_status_module">
                 <div class="h-full">
-                    <Listbox as="div" class="" v-model="selectedEventStatus" id="eventType">
+                    <Listbox as="div" class="" v-model="selectedEventStatus" id="eventType" v-if="canEdit">
                         <ListboxButton class="menu-button-no-padding relative">
                             <div class="truncate">
                                 <div class="top-2 left-4 absolute text-gray-500 text-xs">
@@ -162,42 +150,156 @@
                 </div>
             </div>
 
-            <div v-if="!canEdit" class="flex w-full">
-                <div class="w-1/2 flex items-center my-auto" v-if="this.selectedProject?.id">
-                    {{ $t('assigned to') }}: <a
-                    :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
-                    class="ml-3 mt-1 text-sm items-center flex font-bold font-lexend text-primary">
-                    {{ this.selectedProject?.name }}
-                </a>
+            <!-- Read-only mode (canEdit=false) - Redesigned layout -->
+            <div v-if="!canEdit">
+                <!-- Event header with type and title -->
+                <div class="flex items-center mb-6">
+                    <div class="flex-shrink-0 mr-4">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center" :style="{'backgroundColor' : selectedEventType?.hex_code }"></div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-lexend font-semibold">{{ this.eventName }}</h2>
+                        <div class="flex items-center mt-1">
+                            <span class="text-sm font-medium text-gray-600">{{ selectedEventType?.name }}</span>
+                            <span v-if="selectedEventStatus" class="flex items-center ml-4">
+                                <div class="w-3 h-3 rounded-full mr-1" :style="{'backgroundColor' : selectedEventStatus?.color }"></div>
+                                <span class="text-sm font-medium text-gray-600">{{ selectedEventStatus?.name }}</span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center w-1/2">
-                    <p class="truncate xsLight subpixel-antialiased max-w-60">
-                        {{ $t('Created by') }}
-                        <UserPopoverTooltip :user="this.event.created_by"
-                                            :id="this.event.created_by?.id ?? 'deletedUserTooltip'"
-                                            height="9"
-                                            width="9" class="ml-2"/>
-                    </p>
+
+                <!-- Event details section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Left column -->
+                    <div>
+                        <!-- Date and time information -->
+                        <div class="mb-4">
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">{{ $t('Date & Time') }}</h3>
+                            <div class="flex items-center">
+                                <p class="sDark">
+                                    <span v-if="this.startDate === this.endDate">
+                                        {{ this.startDate.toString().substring(10, 8) }}.{{
+                                            this.startDate.toString().substring(7, 5)
+                                        }}.{{ this.startDate.toString().substring(4, 0) }},
+                                        {{ this.startTime }} - {{ this.endTime }}
+                                    </span>
+                                    <span v-else>
+                                        {{ this.startDate.toString().substring(10, 8) }}.{{
+                                            this.startDate.toString().substring(7, 5)
+                                        }}.{{ this.startDate.toString().substring(4, 0) }},
+                                        {{ this.startTime }} -
+                                        {{ this.endDate.toString().substring(10, 8) }}.{{
+                                            this.endDate.toString().substring(7, 5)
+                                        }}.{{ this.endDate.toString().substring(4, 0) }},
+                                        {{ this.endTime }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Room information -->
+                        <div class="mb-4">
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">{{ $t('Room') }}</h3>
+                            <div class="flex items-center sDark">
+                                <p>{{ this.selectedRoom?.name }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Project information (if available) -->
+                        <div v-if="this.selectedProject?.id" class="mb-4">
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">{{ $t('Project') }}</h3>
+                            <div class="flex items-center sDark">
+                                <a v-if="canAccessProject()" :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})">
+                                    {{ this.selectedProject?.name }}
+                                </a>
+                                <span v-else class="sDark">
+                                    {{ this.selectedProject?.name }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right column -->
+                    <div>
+                        <!-- Created by information -->
+                        <div class="mb-4">
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">{{ $t('Created by') }}</h3>
+                            <div class="flex items-center">
+                                <UserPopoverTooltip :user="this.event.created_by"
+                                                   :id="this.event.created_by?.id ?? 'deletedUserTooltip'"
+                                                   height="7"
+                                                   width="7" class="mr-2"/>
+                                <p class="sDark">{{ this.event.created_by?.full_name }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Series information (if applicable) -->
+                        <div v-if="event?.is_series" class="mb-4">
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">{{ $t('Repeat Event') }}</h3>
+                            <div class="flex items-center">
+                                <p class="sDark">
+                                    {{ $t('Cycle: {0} to {1}', [selectedFrequency.name, convertDateFormat(seriesEndDate)]) }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div v-if="!canEdit" class="my-2">
-                <div v-if="this.startDate === this.endDate">
-                    {{ this.selectedRoom?.name }},
-                    {{ this.startDate.toString().substring(10, 8) }}.{{
-                        this.startDate.toString().substring(7, 5)
-                    }}.{{ this.startDate.toString().substring(4, 0) }},
-                    {{ this.startTime }} - {{ this.endTime }}
+
+                <!-- Description section (if available) -->
+                <div v-if="this.description" class="mt-6 border-t border-gray-200 pt-4">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">{{ $t('Description') }}</h3>
+                    <p class="text-gray-800 whitespace-pre-line">{{ this.description }}</p>
                 </div>
-                <div v-else>
-                    {{ this.selectedRoom?.name }},
-                    {{ this.startDate.toString().substring(10, 8) }}.{{
-                        this.startDate.toString().substring(7, 5)
-                    }}.{{ this.startDate.toString().substring(4, 0) }},
-                    {{ this.startTime }} -
-                    {{ this.endDate.toString().substring(10, 8) }}.{{
-                        this.endDate.toString().substring(7, 5)
-                    }}.{{ this.endDate.toString().substring(4, 0) }},
-                    {{ this.endTime }}
+
+                <!-- Event properties section (if available) -->
+                <div v-if="event_properties.filter((eventProperty) => eventProperty.checked)?.length > 0" class="mt-6 border-t border-gray-200 pt-4">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">{{ $t('Properties') }}</h3>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <div v-for="(eventProperty, index) in event_properties.filter((eventProperty) => eventProperty.checked)"
+                             class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            <component :is="eventProperty.icon" class="w-4 h-4 mr-1" />
+                            {{ eventProperty.name }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments section (if available) -->
+                <div v-if="showComments && this.event.comments && this.event.comments.length > 0" class="mt-6 border-t border-gray-200 pt-4">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">{{ $t('Comments') }}</h3>
+                    <div class="space-y-4">
+                        <div v-for="comment in this.event.comments" class="bg-gray-50 rounded-lg p-3">
+                            <div class="flex items-center mb-2">
+                                <NewUserToolTip :id="comment.id" :user="comment.user" :height="6" :width="6" class="mr-2"></NewUserToolTip>
+                                <span class="text-xs text-gray-500">{{ comment.created_at }}</span>
+                            </div>
+                            <p class="text-gray-800">{{ comment.comment }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rejections section (for planning events) -->
+                <div v-if="event && event?.isPlanning && event?.verifications && event?.verifications.some(v => v.rejection_reason !== null)" class="mt-6 border-t border-gray-200 pt-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-500">{{ $t('Rejections') }}</h3>
+                        <button @click="showRejections = !showRejections" class="text-gray-400 hover:text-gray-600">
+                            <IconChevronDown class="h-5 w-5" :class="showRejections ? 'rotate-180': ''" />
+                        </button>
+                    </div>
+                    <div v-if="showRejections" class="space-y-3">
+                        <div v-for="verification in event?.verifications" :key="verification.id" v-if="verification.rejection_reason !== null" class="bg-gray-50 rounded-lg p-3">
+                            <div class="flex items-start">
+                                <UserPopoverTooltip :user="verification?.verifier" class="mr-3 flex-shrink-0" />
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between w-full mb-1">
+                                        <h4 class="text-sm font-medium text-gray-800">{{ verification?.verifier?.full_name }}</h4>
+                                        <p class="text-xs text-gray-500">{{ verification?.created_at }}</p>
+                                    </div>
+                                    <p class="text-sm text-gray-700">{{ verification?.rejection_reason }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -273,7 +375,7 @@
                 </div>
             </div>
             <!-- Serien Termin -->
-            <div v-if="!event">
+            <div v-if="!event && canEdit">
                 <SwitchGroup as="div" class="flex items-center mt-3 mb-1">
                     <Switch v-model="series"
                             :class="[series ? 'bg-indigo-600 cursor-pointer' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
@@ -339,8 +441,8 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="event?.is_series" class="xsLight mt-2">{{ $t('Event is part of a repeat event') }}</div>
-            <div v-if="event?.is_series" class="xsLight mb-2">
+            <div v-else-if="event?.is_series && canEdit" class="xsLight mt-2">{{ $t('Event is part of a repeat event') }}</div>
+            <div v-if="event?.is_series && canEdit" class="xsLight mb-2">
                 {{ $t('Cycle: {0} to {1}', [selectedFrequency.name, convertDateFormat(seriesEndDate)]) }}
             </div>
             <!--    Room    -->
@@ -383,7 +485,7 @@
             </div>
 
             <!--Gray Background Area -->
-            <div class="bg-lightBackgroundGray my-4 -mx-8 pt-1 pb-4">
+            <div class="bg-lightBackgroundGray my-4 -mx-8 pt-1 pb-4" v-if="canEdit">
                 <div class="px-10">
                     <!--    Project    -->
                     <div v-if="canEdit">
@@ -399,11 +501,14 @@
                         <div v-if="showProjectInfo">
                             <div class="xsLight flex" v-if="!this.creatingProject">
                                 {{ $t('Currently assigned to:') }}
-                                <a v-if="this.selectedProject?.id"
+                                <a v-if="this.selectedProject?.id && canAccessProject()"
                                    :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
                                    class="ml-3 flex xsDark">
                                     {{ this.selectedProject?.name }}
                                 </a>
+                                <span v-else-if="this.selectedProject?.id" class="ml-3 flex xsDark">
+                                    {{ this.selectedProject?.name }}
+                                </span>
                                 <div v-else class="xsDark ml-2">
                                     {{ this.selectedProject?.name ?? 'Keinem Projekt' }}
                                 </div>
@@ -638,10 +743,11 @@
                 </div>
             </div>
 
+            <!-- Action buttons for edit mode -->
             <div v-if="canEdit">
                 <div class="flex justify-center w-full py-4" v-if="hasAdminRole() || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.auth.user.id) || $can('create events without request')">
                     <FormButton
-                        :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '') || !hasAdminRole()"
+                        :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
                         @click="updateOrCreateEvent()"
                         :text="this.event?.occupancy_option ? this.accept ? $t('Commitments') : this.optionAccept ? $t('Optional commitment') : this.adminComment !== '' ? $t('Send message') : $t('Save') : $t('Save')"
                     />
@@ -653,6 +759,13 @@
                         :text="$t('Request occupancy')"
                     />
                 </div>
+            </div>
+            <!-- Close button for read-only mode -->
+            <div v-else class="flex justify-center w-full py-4">
+                <FormButton
+                    @click="closeModal"
+                    :text="$t('Close')"
+                />
             </div>
         </div>
     </BaseModal>
@@ -948,6 +1061,24 @@ export default {
     },
     methods: {
         usePage,
+        canAccessProject() {
+            // Check if user has read or write rights for all projects
+            if (this.$can('view projects') || this.$can('write projects')) {
+                return true;
+            }
+
+            // Check if user is the creator of the project
+            if (this.selectedProject?.creator_id === this.$page.props.auth.user.id) {
+                return true;
+            }
+
+            // Check if user is a team member of the project
+            if (this.selectedProject?.team_members?.some(member => member.id === this.$page.props.auth.user.id)) {
+                return true;
+            }
+
+            return false;
+        },
         convertDateFormat(dateString) {
             const parts = dateString.split('-');
             return parts[2] + "." + parts[1] + "." + parts[0];

@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $hide_unoccupied_rooms
  * @property boolean $display_project_groups
  * @property boolean $show_unplanned_events
+ * @property boolean $show_planned_events
  */
 class UserCalendarSettings extends Model
 {
@@ -60,7 +61,8 @@ class UserCalendarSettings extends Model
         'shift_notes',
         'hide_unoccupied_rooms',
         'display_project_groups',
-        'show_unplanned_events'
+        'show_unplanned_events',
+        'show_planned_events'
     ];
 
     protected $casts = [
@@ -81,6 +83,7 @@ class UserCalendarSettings extends Model
         'hide_unoccupied_rooms' => 'boolean',
         'display_project_groups' => 'boolean',
         'show_unplanned_events' => 'boolean',
+        'show_planned_events' => 'boolean',
     ];
 
     public function user(): BelongsTo

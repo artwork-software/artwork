@@ -117,6 +117,7 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExpo
 use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
+use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
@@ -2138,6 +2139,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::delete('/issue-of-material/file/{internalIssueFile}/delete', [InternalIssueController::class, 'fileDelete'])->name('issue-of-material.file.delete');
     Route::delete('/extern-issue-of-material/file/{externalIssueFile}/delete', [ExternalIssueController::class, 'fileDelete'])->name('extern-issue-of-material.file.delete');
+
+    Route::prefix('material-sets')
+        ->as('material-sets.')
+        ->controller(MaterialSetController::class)
+        ->group(function () {
+            Route::get('/', 'index')->name('index');     // material-sets.index
+            Route::post('/', 'store')->name('store');    // material-sets.store
+            Route::patch('{set}', 'update')->name('update');  // material-sets.update
+            Route::delete('{set}', 'destroy')->name('destroy');
+        });
 
     // get inventory.articles.available-stock article.id, start_date, end_date
     Route::get('/articles/available-stock/{inventoryArticle}/{startDate}/{endDate}', [InventoryArticleController::class, 'availableStock'])

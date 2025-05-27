@@ -2674,5 +2674,17 @@
     "Detailed information on the planned internal material issue - including time period, room, inventory and special items.": "Detaillierte Informationen zur geplanten internen Materialausgabe - einschließlich Zeitraum, Raum, Inventar und Sonderartikel.",
     "Special article": "Sonderartikel",
     "There are unmarked special items in this material issue.": "In dieser Materialausgabe gibt es unmarkierte Sonderartikel.",
-    "No issues of material found": "Keine Materialausgaben gefunden"
+    "No issues of material found": "Keine Materialausgaben gefunden",
+    "Material Sets": "Material-Sets",
+    "New Material Set": "Neues Material-Set",
+    "No material sets found.": "Keine Material-Sets gefunden.",
+    "Edit Material Set": "Material-Set bearbeiten",
+    "Create Material Set": "Material-Set erstellen",
+    "Edit the material set details": "Material-Set-Details bearbeiten",
+    "Create a new material set": "Erstelle ein neues Material-Set",
+    "Articles in Set": "Artikel im Set",
+    "Update Material Set": "Material-Set aktualisieren",
+    "Items in this set.": "Artikel in diesem Set.",
+    "Delete Material Set": "Material-Set löschen",
+    "Are you sure you want to delete this material set? This action cannot be undone.": "Möchtest du dieses Material-Set wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 }

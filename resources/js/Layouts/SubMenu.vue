@@ -352,6 +352,13 @@ const navigation = ref([
                 has_permission: is('artwork admin')
             },
             {
+                name: 'Material Sets',
+                href: route('material-sets.index'),
+                icon: 'IconParentheses',
+                current: route().current('material-sets.index'),
+                has_permission: is('artwork admin')
+            },
+            {
                 name: 'Rooms',
                 href: route('areas.management'),
                 icon: 'IconDoor',

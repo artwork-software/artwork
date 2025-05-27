@@ -766,6 +766,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/user/{user}/worker/shift-plan/filters/update',
         [UserShiftCalendarFilterController::class, 'updateUserWorkerShiftPlanFilters']
     )->name('update.user.worker.shift-plan.filters.update');
+    Route::patch(
+        '/user/{user}/inventory/article-plan/filters/update',
+        [UserShiftCalendarFilterController::class, 'updateInventoryArticlePlanFilters']
+    )->name('update.user.inventory.article-plan.filters.update');
 
     //user.update.zoom_factor
     Route::patch('/user/{user}/update/zoom_factor', [UserController::class, 'updateZoomFactor'])
@@ -1751,6 +1755,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('remove.day.service.from.user');
 
     Route::group(['prefix' => 'inventory-management'], function (): void {
+
+        Route::get('/article/planning', [InventoryArticleController::class, 'index'])
+            ->name('inventory-management.article.planning');
+
         Route::get('/', [InventoryController::class, 'inventory'])
             ->name('inventory-management.inventory');
 

@@ -253,4 +253,9 @@ class InventoryArticleRepository
         return $article->getAvailableStock($startDate, $endDate);
 
     }
+
+    public function getAllWithCategories(): \Illuminate\Support\Collection
+    {
+        return InventoryArticle::with(['category', 'subCategory'])->get()->keyBy('id');
+    }
 }

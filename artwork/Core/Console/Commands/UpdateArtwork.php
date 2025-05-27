@@ -102,6 +102,21 @@ class UpdateArtwork extends Command
         $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder', '--force' => true]);
 
         $this->info('----------------------------------------------------------');
+        // add inventory article plan filter to all users from today + 1 month
+        $this->info('add inventory article plan filter to all users');
+        $users = User::all();
+        $users->each(function ($user) {
+            // if allready exists, skip
+            if ($user->inventoryArticlePlanFilter) {
+                return;
+            }
+            $user->inventoryArticlePlanFilter()->create([
+                'start_date' => now(),
+                'end_date' => now()->addMonth(),
+            ]);
+        });
+
+        $this->info('----------------------------------------------------------');
         $this->info('Artwork Update Command has finished');
     }
 }

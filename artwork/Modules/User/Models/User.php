@@ -490,6 +490,11 @@ class User extends Model implements
         return $this->hasOne(UserWorkerShiftPlanFilter::class);
     }
 
+    public function inventoryArticlePlanFilter(): HasOne
+    {
+        return $this->hasOne(UserInventoryArticlePlanFilter::class);
+    }
+
     /**
      * @return array<int>
      */

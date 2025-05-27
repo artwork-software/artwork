@@ -3,11 +3,17 @@
 namespace Artwork\Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
+use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
+use Artwork\Modules\Inventory\Services\InventoryPlanningService;
+use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
@@ -16,7 +22,8 @@ class InventoryArticleController extends Controller
 
     public function __construct(
         private readonly InventoryArticleService $inventoryArticleService,
-        private readonly AuthManager $authManager
+        private readonly AuthManager $authManager,
+        protected InventoryPlanningService $inventoryPlanningService,
     ){
     }
 
@@ -25,6 +32,11 @@ class InventoryArticleController extends Controller
      */
     public function index()
     {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $data = $this->inventoryPlanningService->getAvailabilityData($user);
+
+        return Inertia::render('Inventory/InventoryArticlePlanning', $data);
     }
 
     /**

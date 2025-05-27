@@ -67,8 +67,6 @@ class InventoryArticleService
 
         $this->articleRepository->addImages($article, $images, $mainImageIndex);
 
-        $article = $article->fresh();
-
         $this->articleRepository->attachProperties($article, $request->collect('properties'));
         $this->articleRepository->addDetailedArticles($article, $request->collect('detailed_article_quantities'));
 

@@ -1,13 +1,13 @@
 <template>
     <tr :key="set.id" class="divide-x divide-gray-200">
         <td class="py-4 pr-4 pl-4 text-sm font-medium text-gray-900 sm:pl-0">{{ set.name }}</td>
-        <td class="p-4 text-sm text-gray-500">{{ set.description || '–' }}</td>
+        <td class="p-4 text-sm text-gray-500 w-[50%]">
+            <div class="line-clamp-1">
+                {{ set.description || '–' }}
+            </div>
+        </td>
         <td class="p-4 text-sm text-gray-500 w-fit">
-            <ToolTipWithTextComponent :text="set.items?.length + ' ' + $t('Items in this set.')" direction="top" :tooltip-text="createToolTipTextByItems">
-                <span class="text-gray-400 hover:text-gray-600 cursor-pointer">
-                    <component is="IconInfoCircle" class="size-4" />
-                </span>
-            </ToolTipWithTextComponent>
+            <ToolTipWithTextComponent :text="set.items?.length + ' ' + $t('Items in this set.')" direction="top" :tooltip-text="createToolTipTextByItems" />
         </td>
         <td class="py-4 pr-4 pl-4 text-sm text-gray-500 sm:pr-0">
             <div class="flex space-x-3">

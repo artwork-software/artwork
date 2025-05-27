@@ -107,7 +107,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseCard from "@/Artwork/Cards/BaseCard.vue";
 import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
-import {computed, ref} from "vue";
+import {computed, ref, provide} from "vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import SingleInternMaterialIssue from "@/Pages/IssueOfMaterial/Components/SingleInternMaterialIssue.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
@@ -123,10 +123,14 @@ const props = defineProps({
         type: Array,
         required: false,
         default: () => []
+    },
+    materialSets: {
+        type: Object,
+        required: false,
     }
 })
 const showIssueOfMaterialModal = ref(false);
-
+provide("materialSets", props.materialSets);
 
 const openIssueOfMaterialModal = () => {
     showIssueOfMaterialModal.value = true;

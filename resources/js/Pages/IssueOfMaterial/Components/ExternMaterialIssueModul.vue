@@ -45,7 +45,7 @@
                     <div class="col-span-full">
                         <button @click="$refs.externMaterialIssueFiles.click()" type="button" class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
                             <component is="IconFile" class="mx-auto size-12 text-gray-400" stroke-width="1" />
-                            <span class="mt-2 block text-sm font-semibold text-gray-900">Dateiablage</span>
+                            <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t('File storage') }}</span>
                             <input
                                 @change="upload"
                                 class="hidden"
@@ -114,7 +114,10 @@
                     <!-- searchbar -->
                     <ArticleSearch @article-selected="addArticleToIssue" class="w-full"/>
                     <button type="button" @click="showArticleFilterModal = true" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                        <component is="IconListSearch" class="size-7" stroke-width="1.5"/>
+                        <ToolTipComponent icon="IconListSearch" :tooltip-text="$t('Search for articles')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
+                    </button>
+                    <button type="button" @click="showSelectMaterialSetModal = true" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ">
+                        <ToolTipComponent icon="IconParentheses" :tooltip-text="$t('Select material sets')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                     </button>
                 </div>
                 <div class="mt-4">
@@ -128,9 +131,9 @@
                                     <p class="text-xs">
                                         {{ article.description }}
                                     </p>
-                                    <p class="text-xs flex items-center gap-x-1">Verfügbarer Bestand für Ausgabezeitraum:
+                                    <p class="text-xs flex items-center gap-x-1">{{ $t('Available stock for issue period') }}:
                                         <span v-if="!article.availableStockRequestIsLoading">{{ article.availableStock?.available }}</span>
-                                        <span v-else class="flex items-center gap-x-1">Wird abgefragt
+                                        <span v-else class="flex items-center gap-x-1">{{ $t('Is queried') }}
                                             <component is="IconLoader" class="inline-block h-4 w-4 animate-spin text-gray-400" stroke-width="1.5"/>
                                         </span>
                                     </p>
@@ -160,9 +163,9 @@
                     <!-- special items -->
                     <div class="flex items-center justify-between my-4">
                         <div>
-                            <h2 class="font-lexend font-bold">Sonderartikel</h2>
+                            <h2 class="font-lexend font-bold">{{ $t('Special article') }}</h2>
                         </div>
-                        <button type="button" class="text-blue-500 underline text-xs font-lexend" @click="addSpecialItem">Sonderartikel hinzufügen</button>
+                        <button type="button" class="text-blue-500 underline text-xs font-lexend" @click="addSpecialItem">{{ $t('Add special article') }}</button>
                     </div>
                     <div class="bg-backgroundGray px-4 py-3 rounded-lg border border-gray-200 min-h-60 max-h-60 overflow-scroll">
                         <div class="divide-y divide-gray-200 divide-dashed">
@@ -199,7 +202,12 @@
         v-if="showArticleFilterModal"
         @close="showArticleFilterModal = false"
         @add-article="addArticleToIssue"
+    />
 
+    <SelectMaterialSetModal
+        v-if="showSelectMaterialSetModal"
+        @close="showSelectMaterialSetModal = false"
+        @add-material-set="addMaterialSetToIssue"
     />
 </template>
 
@@ -218,6 +226,8 @@ import {router, useForm} from "@inertiajs/vue3";
 import {onMounted, ref, watch} from "vue";
 import debounce from "lodash.debounce";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import SelectMaterialSetModal from "@/Pages/IssueOfMaterial/Components/SelectMaterialSetModal.vue";
 
 const props = defineProps({
     externMaterialIssue: {
@@ -256,6 +266,7 @@ const externMaterialIssueForm = useForm({
 })
 
 const showArticleFilterModal = ref(false)
+const showSelectMaterialSetModal = ref(false)
 
 
 const addSpecialItem = () => {
@@ -271,7 +282,6 @@ const removeSpecialArticle = (index) => {
 }
 
 const addArticleToIssue = (article) => {
-    // Check if the article is already in the array
     const articleExists = externMaterialIssueForm.articles.find(a => a.id === article.id)
     if (!articleExists) {
         externMaterialIssueForm.articles.push({
@@ -283,8 +293,20 @@ const addArticleToIssue = (article) => {
             availableStockRequestIsLoading: true,
         })
     }
+    checkAvailableStock()
+}
 
-    // after add check the available stock
+const addMaterialSetToIssue = (materialSet) => {
+    const existingArticleIds = externMaterialIssueForm.articles.map(a => a.id)
+    const newArticles = materialSet.items.filter(item => !existingArticleIds.includes(item.article.id)).map(item => ({
+        id: item.article.id,
+        name: item.article.name,
+        description: item.article.description,
+        quantity: item.quantity || 1,
+        availableStock: 0,
+        availableStockRequestIsLoading: true,
+    }))
+    externMaterialIssueForm.articles.push(...newArticles)
     checkAvailableStock()
 }
 

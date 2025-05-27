@@ -10,6 +10,7 @@ use Artwork\Modules\ExternalIssue\Models\ExternalIssueFile;
 use Artwork\Modules\ExternalIssue\Services\ExternalIssueService;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Artwork\Modules\User\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Auth\AuthManager;
@@ -48,6 +49,7 @@ class ExternalIssueController extends Controller
             'issues' => $issues,
             'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
                 ->get() : [],
+            'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
         ]);
     }
 

@@ -9,6 +9,7 @@ use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\InternalIssue\Services\InternalIssueService;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 
@@ -41,6 +42,7 @@ class InternalIssueController extends Controller
             'issues' => $issues,
             'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
                 ->get() : [],
+            'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
         ]);
     }
 

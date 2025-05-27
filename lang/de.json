@@ -2686,5 +2686,16 @@
     "Update Material Set": "Material-Set aktualisieren",
     "Items in this set.": "Artikel in diesem Set.",
     "Delete Material Set": "Material-Set löschen",
-    "Are you sure you want to delete this material set? This action cannot be undone.": "Möchtest du dieses Material-Set wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    "Are you sure you want to delete this material set? This action cannot be undone.": "Möchtest du dieses Material-Set wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "Select material sets": "Material-Sets auswählen",
+    "Select Material Set": "Material-Set auswählen",
+    "Select a material set to issue.": "Wähle ein Material-Set zur Ausgabe aus.",
+    "Please select a material set to issue.": "Bitte wähle ein Material-Set zur Ausgabe aus.",
+    "File storage": "Dateispeicher",
+    "Remove assignment": "Zuweisung entfernen",
+    "Project assignment (optional)": "Projektzuweisung (optional)",
+    "Room allocation (optional)": "Raumzuweisung (optional)",
+    "Available stock for issue period": "Verfügbarer Bestand für den Ausgabezeitraum",
+    "Is queried": "Wird abgefragt",
+    "Add special article": "Sonderartikel hinzufügen"
 }

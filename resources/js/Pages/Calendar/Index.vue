@@ -127,10 +127,18 @@ provide('areas', props.areas);
 
 const showCalendarWarning = ref(props.calendarWarningText)
 
+// Use a more efficient approach for the warning timeout
 onMounted(() => {
-    setTimeout(() => {
-        showCalendarWarning.value = ''
-    }, 5000)
+    if (showCalendarWarning.value) {
+        const timer = setTimeout(() => {
+            showCalendarWarning.value = ''
+        }, 5000)
+
+        // Clean up the timer if component is unmounted before timeout completes
+        onUnmounted(() => {
+            clearTimeout(timer)
+        })
+    }
 })
 
 onUnmounted(() => {

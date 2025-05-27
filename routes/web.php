@@ -123,6 +123,7 @@ use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
+use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -191,6 +192,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::put('/file-settings', [FileSettingsController::class, 'store'])
                 ->name('tool.file-settings.store');
         });
+
+        //API SETTINGS
+        Route::resource('api-management', ApiManagementController::class)
+            ->only(['index', 'store', 'destroy'])
+            ->names([
+                'index' => 'api-management.index',
+                'store' => 'api-management.store',
+                'destroy' => 'api-management.destroy'
+        ]);
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {

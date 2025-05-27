@@ -39,4 +39,17 @@ class SageAssignedDataRepository extends BaseRepository
     {
         return $this->getNewModelQuery()->whereNotIn('id', $excluded)->where('sage_id', '=', $sageId)->get();
     }
+
+    public function findParentBookingBySageIdKtoSollAndKtoHaben(
+        string $sageId,
+        string $ktoSoll,
+        string $ktoHaben
+    ): SageAssignedData|null {
+        return $this->getNewModelQuery()
+            ->where('sage_id', '=', $sageId)
+            ->where('kto_soll', '=', $ktoSoll)
+            ->where('kto_haben', '=', $ktoHaben)
+            ->where('is_collective_booking', '=', true)
+            ->first();
+    }
 }

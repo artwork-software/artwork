@@ -1,5 +1,5 @@
 <template>
-    <Disclosure as="div" class="mb-4" v-slot="{ open }" >
+    <Disclosure as="div" class="my-2" v-slot="{ open }" >
         <DisclosureButton class="py-2 px-4 bg-gray-200 text-gray-900 flex justify-between items-center w-full" :class="{ 'rounded-t-lg': open, 'rounded-lg': !open }">
             <div class="flex items-center h-full gap-x-2 xsDark font-bold">
                 {{ component.component.data.label }}

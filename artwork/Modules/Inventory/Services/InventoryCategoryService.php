@@ -56,6 +56,11 @@ class InventoryCategoryService
         return $this->repository->paginateWithRelations($perPage);
     }
 
+    public function paginateForApi(int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        return $this->repository->paginateForApi($perPage);
+    }
+
     protected function syncPropertiesWithArticles($categoryOrSubCategoryModel, $newProperties): void
     {
         $newPropertyIdsWithValues = collect($newProperties)->keyBy('id');
@@ -64,6 +69,7 @@ class InventoryCategoryService
 
         $toAdd = array_diff($newPropertyIds, $currentPropertyIds);
         $toRemove = array_diff($currentPropertyIds, $newPropertyIds);
+        $toUpdate = array_intersect($newPropertyIds, $currentPropertyIds);
 
         if (!empty($toRemove)) {
             $categoryOrSubCategoryModel->properties()->detach($toRemove);
@@ -82,6 +88,23 @@ class InventoryCategoryService
                 $article->properties()->syncWithoutDetaching([
                     $propertyId => ['value' => $defaultValue]
                 ]);
+            }
+        }
+
+        // Update existing properties with new default values
+        foreach ($toUpdate as $propertyId) {
+            $defaultValue = $newPropertyIdsWithValues[$propertyId]['defaultValue'] ?? '';
+
+            // Update the pivot value for the existing property
+            $categoryOrSubCategoryModel->properties()->updateExistingPivot($propertyId, ['value' => $defaultValue]);
+
+            // Update articles that don't have a custom value set
+            foreach ($categoryOrSubCategoryModel->articles as $article) {
+                // Only update if the article has this property and the value is empty or matches the old default
+                $articleProperty = $article->properties()->where('inventory_article_property_id', $propertyId)->first();
+                if ($articleProperty && empty($articleProperty->pivot->value)) {
+                    $article->properties()->updateExistingPivot($propertyId, ['value' => $defaultValue]);
+                }
             }
         }
     }

@@ -13,7 +13,7 @@
             :class="[
         'peer block w-full shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create',
         disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white',
-        isSmall ? 'px-2 pt-3 pb-1 text-xs' : 'px-4 pt-6 pb-2 text-sm',
+        label ? isSmall ? 'px-2 pt-3 pb-1 text-xs' : 'px-4 pt-6 pb-2 text-sm' : 'px-4 py-3 text-sm',
         type === 'number' ? 'appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none' : ''
       ]"
         />
@@ -33,8 +33,7 @@
                 <component is="IconLoader" class="size-4 text-gray-500" />
             </div>
         </div>
-
-        <label
+        <label v-if="label"
             :for="id"
             :class="[
         'absolute text-gray-500 text-xs transition-all duration-300 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-500 peer-focus:text-xs peer-focus:text-artwork-buttons-create',

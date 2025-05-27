@@ -267,7 +267,7 @@
                                 {{ $t('Reject verification') }}
                             </div>
                         </MenuItem>
-                        <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole)" v-slot="{ active }">
+                        <MenuItem v-slot="{ active }">
                             <div @click="$emit('editEvent', event)"
                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                 <IconEdit class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
@@ -278,7 +278,7 @@
                             <div
                                 @click="$emit('openAddSubEventModal', event, 'create', null)"
                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="inline w-6 h-6 mr-2"/>
+                                <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
                                 {{$t('Add Sub-Event')}}
                             </div>
                         </MenuItem>
@@ -545,7 +545,7 @@
                                         <div
                                             @click="$emit('openAddSubEventModal', event, 'create', null)"
                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="inline w-6 h-6 mr-2"/>
+                                            <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
                                             {{$t('Add Sub-Event')}}
                                         </div>
                                     </MenuItem>

@@ -49,7 +49,7 @@ export default {
 </script>
 
 <template>
-    <div class="flex items-start gap-x-4">
+    <div class="flex my-2 items-start gap-x-4">
         <div class="relative flex items-start">
             <div class="flex h-6 items-center">
                 <input :disabled="!this.canEditComponent"

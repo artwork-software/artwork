@@ -76,7 +76,7 @@
                                     </Link>
                                     <div v-else>
                                         <div v-if="item.has_permission" class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 font-semibold p-2">
-                                            <BaseMenu white-menu-background :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
+                                            <BaseMenu white-menu-background needs-max-height :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
                                                 <div v-for="subMenu in item.subMenus" :key="subMenu.name">
                                                     <BaseMenuItem white-menu-background as-link v-if="subMenu.has_permission" :href="subMenu.href" :icon="subMenu.icon" :title="subMenu.name" />
                                                 </div>
@@ -212,6 +212,12 @@ const computedBudgetRoute = computed(() => {
 
     return desiredBudgetRoute
 })
+
+const moduleIsVisible = (module) => {
+    return is('artwork admin') || usePage().props.module_settings[module];
+}
+
+
 const navigation = ref([
     {
         name: 'Dashboard',
@@ -229,7 +235,7 @@ const navigation = ref([
         current: route().current('projects'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: moduleIsVisible('projects'),
     },
     {
         name: 'Calendar',
@@ -238,7 +244,7 @@ const navigation = ref([
         current: route().current('events'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: moduleIsVisible('room_assignment'),
     },
     {
         name: 'Shift plan',
@@ -247,7 +253,7 @@ const navigation = ref([
         current: route().current('shifts.plan'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: can('can view shift plan') || is('artwork admin'),
+        has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
     },
     {
         name: 'Planning Calendar',
@@ -274,7 +280,7 @@ const navigation = ref([
         current: route().current('inventory.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: moduleIsVisible('inventory'),
     },
     {
         name: 'Inventory',
@@ -301,7 +307,7 @@ const navigation = ref([
         current: route().current('tasks.own'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: moduleIsVisible('tasks'),
     },
     {
         name: 'Sources of funding',
@@ -310,7 +316,7 @@ const navigation = ref([
         current: route().current('money_sources.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: can('view edit add money_sources | can edit and delete money sources') || is('artwork admin'),
+        has_permission: can('view edit add money_sources | can edit and delete money sources') || moduleIsVisible('sources_of_funding'),
     },
     {
         name: 'Users',
@@ -319,7 +325,7 @@ const navigation = ref([
         current: route().current('users'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: moduleIsVisible('users'),
     },
     {
         name: 'Contracts',
@@ -328,7 +334,7 @@ const navigation = ref([
         current: route().current('contracts.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: can('view edit upload contracts | can see and download contract modules') || is('artwork admin'),
+        has_permission: can('view edit upload contracts | can see and download contract modules') || moduleIsVisible('contracts'),
     },
     {
         name: 'System',
@@ -466,6 +472,8 @@ const showToolTipForItem = (item) => {
 const hideToolTipForItem = (item) => {
     item.showToolTipForItem = false
 }
+
+
 
 
 </script>

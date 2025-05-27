@@ -32,3 +32,4 @@ public/build
 profiling.*
 cachegrind.*
 /storage/app/public/inventory_articles/*
+.junie

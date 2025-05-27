@@ -8,7 +8,7 @@ class InventoryCategoryRepository
 {
     public function allWithRelations()
     {
-        return InventoryCategory::with(['subcategories.properties', 'properties'])->get();
+        return InventoryCategory::with(['subcategories.properties', 'subcategories.articles', 'properties', 'articles'])->get();
     }
 
     public function paginateWithRelations(int $perPage = 50)

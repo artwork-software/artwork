@@ -2657,5 +2657,7 @@
     "Detailed Article quantity is greater than total article quantity": "Detaillierte Artikelmenge ist größer als Artikelgesamtmenge",
     "Add new event on this day": "Neuen Termin an diesem Tag erstellen",
     "Date & Time": "Datum & Zeit",
-    "Repeat Event": "Wiederholungstermin"
+    "Repeat Event": "Wiederholungstermin",
+    "Please select": "Bitte auswählen",
+    "All articles": "Alle Artikel"
 }

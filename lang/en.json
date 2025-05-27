@@ -2654,5 +2654,7 @@
     "Detailed Article quantity is less than total article quantity": "Detailed Article quantity is less than total article quantity",
     "Add new event on this day": "Add new event on this day",
     "Date & Time": "Date & Time",
-    "Repeat Event": "Repeat Event"
+    "Repeat Event": "Repeat Event",
+    "Please select": "Please select",
+    "All articles": "All articles"
 }

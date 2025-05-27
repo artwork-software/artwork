@@ -33,7 +33,7 @@ class InventoryCategoryController extends Controller
         ?InventoryCategory $inventoryCategory = null,
         ?InventorySubCategory $inventorySubCategory = null
     ): \Inertia\Response {
-        $inventoryCategory?->load(['subcategories', 'properties']);
+        $inventoryCategory?->load(['subcategories', 'subcategories.articles', 'properties']);
         $inventorySubCategory?->load(['properties']);
 
         $filterableProperties = collect();

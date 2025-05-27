@@ -23,8 +23,7 @@ test('users can update update other users', function (): void {
         "last_name" => "Willems",
         "position" => "CEO",
         "phone_number" => "1337",
-        "permissions" => [PermissionEnum::ROOM_UPDATE->value],
-        "departments" => [$department]
+        "departments" => [['id' => $department->id]]
     ]);
 
     $response->assertRedirect();

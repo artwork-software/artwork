@@ -47,6 +47,9 @@ class ExternalIssueService
 
         if (isset($data['special_items'])) {
             $issue->specialItems()->delete();
+            $issue->update([
+                'special_items_done' => false
+            ]);
             foreach ($data['special_items'] as $item) {
                 $issue->specialItems()->create($item);
             }

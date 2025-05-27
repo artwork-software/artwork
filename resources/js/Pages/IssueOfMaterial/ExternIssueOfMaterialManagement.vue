@@ -1,13 +1,10 @@
 <template>
     <AppLayout :title="$t('Inventory')">
         <div class="px-10 w-full mx-auto">
-            <div class="flex justify-between items-center p-5">
+            <div class="flex justify-between items-center pt-5">
                 <h2 class="text-2xl font-semibold">{{ $t('Material issue book')}}</h2>
                 <div class="flex items-center gap-x-1 w-96">
-                    <ArticleSearch
-                        @article-selected="addArticleNameToFilter"
-                        class="w-72"
-                    />
+                    <ArticleSearch @article-selected="addArticleNameToFilter" class="w-72" />
                     <button type="button" @click="filterIssueByArticleIds" class="p-4 flex items-center justify-center bg-gray-100 shadow-sm border border-gray-200 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <component is="IconSearch" class="size-5" stroke-width="1.5"/>
                     </button>

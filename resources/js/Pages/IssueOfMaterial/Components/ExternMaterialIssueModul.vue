@@ -180,6 +180,7 @@
         <div class="flex justify-center w-full">
             <FormButton
                 :text="externMaterialIssue?.id ? $t('Update') : $t('Save')"
+                :disabled="externMaterialIssueForm.processing || !externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date || !externMaterialIssueForm.material_value"
                 type="submit"
             />
         </div>

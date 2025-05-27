@@ -1,7 +1,7 @@
 <template>
     <AppLayout :title="$t('Inventory')">
         <div class="px-10 w-full mx-auto">
-            <div class="flex justify-between items-center p-5">
+            <div class="flex justify-between items-center pt-5">
                 <h2 class="text-2xl font-semibold">{{ $t('Material issue book')}}</h2>
                 <div class="flex items-center gap-x-1 w-96">
                     <ArticleSearch

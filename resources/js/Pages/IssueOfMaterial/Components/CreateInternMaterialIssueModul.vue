@@ -225,6 +225,7 @@
         <div class="flex justify-center w-full">
             <FormButton
                 :text="issueOfMaterial?.id ? $t('Update') : $t('Save')"
+                :disabled="internMaterialIssue.processing || !internMaterialIssue.start_date || !internMaterialIssue.end_date || !internMaterialIssue.name"
                 type="submit"
             />
         </div>

@@ -1,10 +1,7 @@
 <template>
     <form @submit.prevent="submit" class="mx-4">
-
         <div class="grid gird-cols-1 md:grid-cols-2 gap-x-4 mb-4">
-            <!-- daten eingabe -->
             <div>
-                <!--    Form    -->
                 <div class="grid gird-cols-1 md:grid-cols-2 gap-4">
                     <div class="col-span-full">
                         <BaseInput id="name" v-model="internMaterialIssue.name" :label="$t('Name')" />
@@ -99,7 +96,6 @@
                             />
                         </button>
 
-                        <!-- file list -->
                         <div class="mt-4">
                             <div class="">
                                 <div class="divide-y divide-gray-200 divide-dashed">
@@ -111,7 +107,6 @@
                                                 </h2>
                                             </div>
                                             <div>
-                                                <!-- remove file button -->
                                                 <div class="flex items-center justify-end">
                                                     <button type="button" class="text-xs text-red-500" @click="removeFile(file.id)">
                                                         <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
@@ -129,12 +124,10 @@
                                                     {{ file.name ?? file.original_name }}
                                                 </h2>
                                                 <p class="text-xs" v-if="file.size">
-                                                    <!-- size in MB -->
                                                     {{ (file.size / 1024 / 1024).toFixed(2) }} MB
                                                 </p>
                                             </div>
                                             <div>
-                                                <!-- remove file button -->
                                                 <div class="flex items-center justify-end">
                                                     <button type="button" class="text-xs text-red-500" @click="internMaterialIssue.files.splice(index, 1)">
                                                         <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
@@ -147,15 +140,11 @@
                             </div>
                         </div>
                     </div>
-                    <!-- file upload with drag and drop  -->
                 </div>
             </div>
 
-            <!-- Articles -->
             <div>
-                <!-- inventory articles -->
                 <div class="flex items-center w-full gap-x-4">
-                    <!-- searchbar -->
                     <ArticleSearch @article-selected="addArticleToIssue" class="w-full"/>
                     <button type="button" @click="showArticleFilterModal = true" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <ToolTipComponent icon="IconListSearch" :tooltip-text="$t('Search for articles')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
@@ -204,7 +193,6 @@
                 </div>
 
                 <div>
-                    <!-- special items -->
                     <div class="flex items-center justify-between my-4">
                         <div>
                             <h2 class="font-lexend font-bold">{{ $t('Special article') }}</h2>

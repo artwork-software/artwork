@@ -32,12 +32,16 @@
             <div class="flex items-center text-xs">
                 <div class="">
                     <div v-if="!issueOfMaterial?.special_items_done && issueOfMaterial?.special_items?.length > 0">
-                        <!-- Hier Warning Icon -->
-                        <span class="text-red-500 font-bold">Offen</span>
+                        <span class="text-red-500 font-bold">
+                            <component is="IconAlertTriangle" class="size-4 inline-block mr-1" />
+                            {{ $t('Special items not completed') }}
+                        </span>
                     </div>
                     <div v-else>
-                        <!-- Hier Kein Icon oder Haken -->
-                        <span class="text-green-500 font-bold">Abgeschlossen</span>
+                        <span class="text-green-500 font-bold">
+                            <component is="IconCheck" class="size-4 inline-block mr-1" />
+                            {{ $t('Completed') }}
+                        </span>
                     </div>
                 </div>
             </div>

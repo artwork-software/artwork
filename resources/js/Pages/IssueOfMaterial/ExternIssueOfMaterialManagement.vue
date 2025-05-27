@@ -3,9 +3,7 @@
         <div class="px-10 w-full mx-auto">
             <div class="flex justify-between items-center p-5">
                 <h2 class="text-2xl font-semibold">{{ $t('Material issue book')}}</h2>
-                <!-- Platzhalter für deinen +-Button -->
                 <div class="flex items-center gap-x-1 w-96">
-                    <!-- Suche nach artikeln in DB, mit Auswahl wird Tag-Bubble hinzugefügt und es werden nur noch die MA angezeigt, welche diesen Artikel im Article-Array haben -->
                     <ArticleSearch
                         @article-selected="addArticleNameToFilter"
                         class="w-72"
@@ -39,7 +37,6 @@
             <div class="relative">
                 <BaseCard class="p-4">
                     <div class="sticky top-0 z-10 mb-4 rounded-lg bg-white w-full">
-                        <!-- Grid, das nur in einer Zeile flowt -->
                         <div class="grid px-3 py-3 grid-cols-9 gap-4 w-full">
                             <div class="col-span-1 w-full">
                                 <h3 class="xsDark">{{ $t('Material value') }}</h3>
@@ -65,22 +62,16 @@
                             <div class="flex items-center">
                                 <h3 class="xsDark">{{ $t('Status') }}</h3>
                             </div>
-                            <!-- Optional: Eine leere Zelle für das Menü -->
                             <div class="flex items-center"></div>
                         </div>
                     </div>
-                    <!-- Header mit Titel und +-Button -->
 
-
-                    <!-- Tabellenüberschrift -->
                     <div class="">
-                        <!-- Alle Materialausgaben -->
                         <WhiteInnerCard class="my-3 group/issueOfMaterial" :key="issueOfMaterial.id" v-for="issueOfMaterial in issues.data">
                             <SingleExternMaterialIssue :extern-material-issue="issueOfMaterial" />
                         </WhiteInnerCard>
                     </div>
 
-                    <!-- Paginator -->
                     <div class="mt-10 px-2">
                         <BasePaginator property-name="issues" :entities="issues" />
                     </div>
@@ -103,14 +94,15 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseCard from "@/Artwork/Cards/BaseCard.vue";
 import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
-import {computed, ref, provide} from "vue";
+import { ref, provide } from "vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
-import SingleInternMaterialIssue from "@/Pages/IssueOfMaterial/Components/SingleInternMaterialIssue.vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import IssueTabs from "@/Pages/IssueOfMaterial/Components/IssueTabs.vue";
 import SingleExternMaterialIssue from "@/Pages/IssueOfMaterial/Components/SingleExternMaterialIssue.vue";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
+import {watch} from "vue";
+import {router} from "@inertiajs/vue3";
+
 const props = defineProps({
     issues: {
         type: Object,
@@ -126,6 +118,7 @@ const props = defineProps({
         required: true
     }
 })
+
 const showIssueOfMaterialModal = ref(false);
 provide("materialSets", props.materialSets);
 const openIssueOfMaterialModal = () => {
@@ -150,10 +143,6 @@ const filterIssueByArticleIds = () => {
     })
 };
 
-// watch on articleNamesForFilter to update the URL with the article_ids
-import {watch} from "vue";
-import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
-import {router} from "@inertiajs/vue3";
 
 watch(articleNamesForFilter, (newValue) => {
     filterIssueByArticleIds()

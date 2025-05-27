@@ -3,24 +3,26 @@
         @close="$emit('close')"
         modal-size="max-w-7xl"
         :title="issueOfMaterial?.id ?  $t('Edit issue of material') : $t('New issue of material')"
-        :description="issueOfMaterial?.id ? $t('Edit Text') : $t('Create Text')"
+        :description="issueOfMaterial?.id ? $t('Edit the details of the issue of material') : $t('Create a new issue of material')"
     >
 
         <div class="w-fit mb-5">
             <SwitchGroup as="div" class="flex items-center justify-between gap-x-4">
                     <span class="flex grow flex-col">
-                      <SwitchLabel as="span" class="text-sm/6 font-medium text-gray-900" passive>Interne Materialausgabe</SwitchLabel>
+                      <SwitchLabel as="span" class="text-sm/6 font-medium text-gray-900" passive>
+                          {{ $t('Internal material issue') }}
+                      </SwitchLabel>
                       <SwitchDescription as="span" class="text-xs text-gray-500">
-                          Erstelle eine interne Materialausgabe für Mitarbeiter
+                          {{ $t('Create an internal material issue for employees') }}
                       </SwitchDescription>
                     </span>
                 <Switch v-model="internOrExternal" :class="[internOrExternal ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-hidden']">
                     <span aria-hidden="true" :class="[internOrExternal ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out']" />
                 </Switch>
                 <span class="flex grow flex-col">
-                      <SwitchLabel as="span" class="text-sm/6 font-medium text-gray-900" passive>Leihschein</SwitchLabel>
+                      <SwitchLabel as="span" class="text-sm/6 font-medium text-gray-900" passive>{{ $t('Borrowing slip') }}</SwitchLabel>
                       <SwitchDescription as="span" class="text-xs text-gray-500">
-                            Erstelle einen Leihschein für externe Materialausgaben
+                          {{ $t('Create a borrowing slip for external material issues') }}
                       </SwitchDescription>
                     </span>
             </SwitchGroup>

@@ -27,17 +27,20 @@
             <div class="flex items-center text-xs">
                 <div class="">
                     <div v-if="!externMaterialIssue?.special_items_done && externMaterialIssue?.special_items?.length > 0">
-                        <!-- Hier Warning Icon -->
-                        <span class="text-red-500 font-bold">Offen</span>
+                        <span class="text-red-500 font-bold">
+                            <component is="IconAlertTriangle" class="size-4 inline-block mr-1" />
+                            {{ $t('Special items not completed') }}
+                        </span>
                     </div>
                     <div v-else>
-                        <!-- Hier Kein Icon oder Haken -->
-                        <span class="text-green-500 font-bold">Abgeschlossen</span>
+                        <span class="text-green-500 font-bold">
+                            <component is="IconCheck" class="size-4 inline-block mr-1" />
+                            {{ $t('Completed') }}
+                        </span>
                     </div>
                 </div>
             </div>
             <div class="flex items-center justify-end w-full gap-x-3">
-                <!-- print icon -->
                 <div class="">
                     <component is="IconPrinter" class="size-5 mr-2" stroke-width="1.5" @click="printExternal()" />
                 </div>
@@ -124,7 +127,6 @@ const deleteIssue = () => {
     });
 }
 
-//const setspecial_items_done
 const setSpecialItemsDone = () => {
     router.post(route('extern-issue-of-material.set-special-items-done', props.externMaterialIssue.id), {
         preserveState: true,

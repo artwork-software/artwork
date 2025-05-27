@@ -6,7 +6,6 @@
         modal-size="max-w-4xl"
     >
         <div class="mt-6 space-y-6 text-sm text-gray-800">
-            <!-- Allgemeine Infos -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <p class="text-gray-500">{{ $t('Name')}}</p>
@@ -27,7 +26,7 @@
                     </p>
                 </div>
                 <div>
-                    <p class="text-gray-500">Verantwortliche Personen</p>
+                    <p class="text-gray-500">{{ $t('Responsible persons') }}</p>
                     <div class="flex items-center print:hidden">
                         <div class="flex -space-x-2 overflow-hidden items-center">
                             <UserPopoverTooltip v-for="user in issue.responsible_users" :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />

@@ -6,8 +6,6 @@
         modal-size="max-w-4xl"
     >
         <div class="mt-6 space-y-6 text-sm text-gray-800">
-
-            <!-- Basisdaten -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <p class="text-gray-500">{{ $t('Material value')}}</p>
@@ -32,8 +30,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Externe Person -->
             <div>
                 <p class="text-gray-500">{{ $t('External contact person / company')}}</p>
                 <p class="font-medium">
@@ -44,7 +40,6 @@
                 </p>
             </div>
 
-            <!-- Artikel -->
             <div>
                 <p class="text-gray-500">{{ $t('Articles')}}</p>
                 <div v-if="issue.articles?.length">
@@ -58,7 +53,6 @@
                 <p v-else class="text-gray-500 italic">{{ $t('No items assigned.')}}</p>
             </div>
 
-            <!-- Sonderartikel -->
             <div v-if="issue.special_items?.length">
                 <p class="text-gray-500">{{ $t('Special article')}}</p>
                 <ul class="divide-y border rounded overflow-hidden">
@@ -69,14 +63,11 @@
                 </ul>
             </div>
 
-
-            <!-- Mängel -->
             <div v-if="issue.return_remarks">
                 <p class="text-gray-500">{{ $t('Defects after return') }}</p>
                 <p class="whitespace-pre-line font-medium">{{ issue.return_remarks }}</p>
             </div>
 
-            <!-- Dateien -->
             <div v-if="issue.files?.length">
                 <p class="text-gray-500">{{ $t('Files') }}</p>
                 <ul class="list-disc list-inside space-y-1">
@@ -88,7 +79,6 @@
                 </ul>
             </div>
 
-            <!-- Schließen -->
             <div class="flex justify-end mt-6">
                 <ArtworkBaseModalButton type="button" variant="danger" @click="$emit('close')">
                     {{ $t('Close') }}

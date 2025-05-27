@@ -2697,5 +2697,16 @@
     "Room allocation (optional)": "Raumzuweisung (optional)",
     "Available stock for issue period": "Verfügbarer Bestand für den Ausgabezeitraum",
     "Is queried": "Wird abgefragt",
-    "Add special article": "Sonderartikel hinzufügen"
+    "Add special article": "Sonderartikel hinzufügen",
+    "Completed": "Abgeschlossen",
+    "Special items not completed": "Sonderartikel nicht abgeschlossen",
+    "Responsible persons": "Verantwortliche Personen",
+    "Search article categories": "Artikelkategorien durchsuchen",
+    "Select a category to view and add articles.": "Bitte wähle eine Kategorie aus, um Artikel anzuzeigen und hinzuzufügen.",
+    "Edit the details of the issue of material": "Bearbeite die Details der Materialausgabe",
+    "Create a new issue of material": "Erstelle eine neue Materialausgabe",
+    "Internal material issue": "Interne Materialausgabe",
+    "Create an internal material issue for employees": "Erstelle eine interne Materialausgabe für Mitarbeiter*innen",
+    "Borrowing slip": "Leihschein",
+    "Create a borrowing slip for external material issues": "Erstelle einen Leihschein für externe Materialausgaben"
 }

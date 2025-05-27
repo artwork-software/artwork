@@ -1,8 +1,8 @@
 <template>
     <ArtworkBaseModal
-        :title="$t('Durchsuche Artikel')"
-        :description="$t('Durchsuche Artikel')"
-        @close="emits('close')"
+        title="Search article categories"
+        description="Select a category to view and add articles."
+        @close="$emit('close')"
     >
 
         <Listbox as="div" v-model="selectedCategory">

@@ -2694,5 +2694,16 @@
     "Room allocation (optional)": "Room allocation (optional)",
     "Available stock for issue period": "Available stock for issue period",
     "Is queried": "Is queried",
-    "Add special article": "Add special article"
+    "Add special article": "Add special article",
+    "Completed": "Completed",
+    "Special items not completed": "Special items not completed",
+    "Responsible persons": "Responsible persons",
+    "Search article categories": "Search article categories",
+    "Select a category to view and add articles.": "Select a category to view and add articles.",
+    "Edit the details of the issue of material": "Edit the details of the issue of material",
+    "Create a new issue of material": "Create a new issue of material",
+    "Internal material issue": "Internal material issue",
+    "Create an internal material issue for employees": "Create an internal material issue for employees",
+    "Borrowing slip": "Borrowing slip",
+    "Create a borrowing slip for external material issues": "Create a borrowing slip for external material issues"
 }

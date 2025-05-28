@@ -20,11 +20,13 @@ import ProjectGroupAddProject from "@/Pages/Projects/Components/Modals/ProjectGr
 import {nextTick} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import PrintLayoutSelectorModal from "@/Pages/Projects/Components/PrintLayoutSelectorModal.vue";
+import ProjectStateChangeModal from "@/Layouts/Components/ProjectStateChangeModal.vue";
 
 export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib, ColorHelper],
     components: {
+        ProjectStateChangeModal,
         PrintLayoutSelectorModal,
         ToolTipComponent,
         ProjectGroupAddProject,
@@ -80,6 +82,7 @@ export default {
             projectToDelete: null,
             showAddProjectToGroup: false,
             showPrintLayoutSelectorModal: false,
+            showProjectStateChangeModal: false,
         }
     },
     computed: {
@@ -131,6 +134,9 @@ export default {
         },
         locationString() {
             return Object.values(this.headerObject.roomsWithAudience).join(", ");
+        },
+        openProjectStateChangeModal() {
+            this.showProjectStateChangeModal = true;
         },
 
     }
@@ -333,6 +339,7 @@ export default {
                 :project-groups="headerObject.projectGroups"
                 :states="headerObject.states"
                 @close-create-project-modal="closeEditProjectModal"
+                @open-project-state-change-modal="openProjectStateChangeModal"
                 :create-settings="createSettings"
                 :project="project"
             />
@@ -388,6 +395,10 @@ export default {
                 :print-layouts="printLayouts" :project="project"
                 v-if="showPrintLayoutSelectorModal"
                 @close="showPrintLayoutSelectorModal = false"
+            />
+            <ProjectStateChangeModal :project-id="project.id"
+                                     v-if="showProjectStateChangeModal"
+                                     @close="showProjectStateChangeModal = false"
             />
         </div>
     </AppLayout>

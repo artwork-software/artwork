@@ -2269,6 +2269,12 @@
     "Break length*": "Break length*",
     "Should the editing window be closed after saving?": "Should the editing window be closed after saving?",
     "Add shift": "Add shift",
+    "Add Status": "Add Status",
+    "Edit Status": "Edit Status",
+    "Project counts as \"in planning\"": "Project counts as \"in planning\"",
+    "When a project counts as \"in planning\", all appointments assigned to this project during creation are initially planned appointments instead of firmly scheduled ones.": "When a project counts as \"in planning\", all appointments assigned to this project during creation are initially planned appointments instead of firmly scheduled ones.",
+    "Planning": "Planning",
+    "When active, newly created appointments are automatically planning appointments": "When active, newly created appointments are automatically planning appointments",
     "Delete shift without Event": "Delete shift without Event",
     "Do you really want to delete this shift?": "Do you really want to delete this shift?",
     "Delete shift": "Delete shift",
@@ -2656,5 +2662,8 @@
     "Date & Time": "Date & Time",
     "Repeat Event": "Repeat Event",
     "Please select": "Please select",
-    "All articles": "All articles"
+    "All articles": "All articles",
+    "The new project status is no longer marked as planned. Do you want to request verification for all planning events of the project?": "The new project status is no longer marked as planned. Do you want to request verification for all planning events of the project?",
+    "Request appointments verification": "Request appointments verification",
+    "Project status change": "Project status change"
 }

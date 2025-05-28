@@ -70,8 +70,11 @@
                                 <span class="">
                                     <span class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : event.type?.hex_code }"/>
                                 </span>
-                                <span class="truncate print:w-full" :style="getColumnTextSize(2)">
+                                <span class="truncate print:w-full flex items-center" :style="getColumnTextSize(2)">
                                     {{ event.type?.name }}
+                                    <span v-if="event.is_planning" class="ml-1 text-blue-500" title="Planning Event">
+                                        <IconCalendarCog class="h-4 w-4" />
+                                    </span>
                                 </span>
                             </span>
                             <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden"
@@ -257,6 +260,7 @@
 
 <script setup>
 import {
+    IconCalendarCog,
     IconCheck,
     IconChevronDown,
     IconCircleCheckFilled,
@@ -455,4 +459,3 @@ onMounted(() => {
     dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '')
 });
 </script>
-

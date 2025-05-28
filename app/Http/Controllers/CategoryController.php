@@ -68,7 +68,8 @@ class CategoryController extends Controller
             'states' => ProjectState::all()->map(fn($state) => [
                 'id' => $state->id,
                 'name' => $state->name,
-                'color' => $state->color
+                'color' => $state->color,
+                'is_planning' => $state->is_planning
             ]),
             'createSettings' => app(ProjectCreateSettings::class)
         ]);

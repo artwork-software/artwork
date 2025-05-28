@@ -325,7 +325,7 @@ const {hasAdminRole} = usePermission(usePage().props),
     },
     addEmptyEvent = () => {
         isLoading.value = true;
-
+        events.forEach(event => { event.isNew = false; });
         let newDate = new Date();
         if (events.length > 0) {
             let lastEvent = events[events.length - 1];
@@ -347,6 +347,7 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copyCount: 1,
                 copyType: copyTypes.value[0],
                 description: '',
+                isNew: true
             });
             isLoading.value = false;
         } else {
@@ -367,7 +368,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                         copy: false,
                         copyCount: 1,
                         copyType: copyTypes.value[0],
-                        description: ''
+                        description: '',
+                        isNew: true
                     }
                 }, {
                     preserveState: false,
@@ -390,7 +392,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                         copy: false,
                         copyCount: 1,
                         copyType: copyTypes.value[0],
-                        description: ''
+                        description: '',
+                        isNew: true
                     }
                 }, {
                     preserveState: false,
@@ -446,6 +449,7 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copyCount: 1,
                 copyType: copyTypes.value[0],
                 description: event.description,
+                isNew: true
             });
 
             createdEvents.push({
@@ -459,7 +463,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copy: false,
                 copyCount: 1,
                 copyType: copyTypes.value[0],
-                description: event.description
+                description: event.description,
+                isNew: true
             });
         }
 
@@ -550,16 +555,21 @@ onMounted(() => {
                 copyType: copyTypes.value[0],
                 index: events.length + 1,
                 description: event.description,
-                // if created_at is not older than 5 minutes, the event is new
-                isNew: new Date(event.created_at) > new Date(new Date().getTime() - 5 * 60000)
+                isNew: false // Standardmäßig false setzen
             });
         });
+
+        // Nur das letzte Event als "neu" markieren
+        if (events.length > 0) {
+            events.forEach(event => event.isNew = false);
+            events[events.length - 1].isNew = true;
+        }
+
         isLoading.value = false;
     } else {
         isLoading.value = false;
     }
 
-    // if usePage().props.auth.user.bulk_sort_id === 3 order events by day and start_time and room.position
     if (usePage().props.auth.user.bulk_sort_id === 3) {
         events.sort((a, b) => {
             if (a.day === b.day) {
@@ -571,7 +581,6 @@ onMounted(() => {
             return a.day.localeCompare(b.day);
         });
     }
-
 
     if (props.isInModal) {
         addEmptyEvent();

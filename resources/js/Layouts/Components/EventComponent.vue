@@ -1,12 +1,9 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true">
+    <ArtworkBaseModal @closed="closeModal" v-if="true" :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : this.event?.isPlanning ? $t('Planned Event') : $t('Event') : isPlanning ? $t('Create planned Event') : $t('New room allocation')"
+                      :description="$t('Please make sure that you allow for preparation and follow-up time.')">
         <div class="mx-4">
             <!--   Heading   -->
             <div v-if="this.isRoomAdmin || this.hasAdminRole()">
-                <ModalHeader
-                    :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : this.event?.isPlanning ? $t('Planned Event') : $t('Event') : isPlanning ? $t('Create planned Event') : $t('New room allocation')"
-                    :description="$t('Please make sure that you allow for preparation and follow-up time.')"
-                />
                 <div v-if="event?.id" class="flex items-center mb-4">
                     {{ $t('Created by') }}
                     <div>
@@ -768,7 +765,8 @@
                 />
             </div>
         </div>
-    </BaseModal>
+
+    </ArtworkBaseModal>
 
     <!-- Event löschen Modal -->
     <confirmation-component
@@ -827,6 +825,7 @@ import {inject} from "vue";
 import Button from "@/Jetstream/Button.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const {getDaysOfEvent} = useEvent();
 
@@ -852,6 +851,7 @@ export default {
         Permissions, IconLib
     ],
     components: {
+        ArtworkBaseModal,
         BaseTextarea,
         BaseInput,
         Button,
@@ -944,7 +944,7 @@ export default {
             eventStatus: null,
             eventTypeName: null,
             selectedEventType: this.eventTypes[0],
-            selectedEventStatus: this.eventStatuses?.find(status => status.default),
+            selectedEventStatus: this.eventStatuses?.find(status => status.default) ?? this.eventStatuses[0],
             showProjectInfo: this.project ? true : this.calendarProjectPeriod && this.$page.props.auth.user.calendar_settings.time_period_project_id ? true :false,
             allDayEvent: false,
             selectedProject: null,
@@ -1120,7 +1120,11 @@ export default {
             this.oldEndTime = this.endTime;
             this.title = this.event.title;
             this.eventName = this.event.eventName;
-            this.selectedEventStatus = this.eventStatuses.find(status => status.id === this.event?.eventStatus?.id ?? this.event?.eventStatusId);
+            const eventStatusId = this.event?.eventStatus?.id
+                ?? this.event?.eventStatusId
+                ?? this.event?.event_status_id;
+
+            this.selectedEventStatus = this.eventStatuses.find(status => status.id === eventStatusId);
             this.allDayEvent = this.event.allDay ? this.event.allDay : false;
             if (!this.event.eventType?.id) {
                 this.selectedEventType = this.eventTypes[0];

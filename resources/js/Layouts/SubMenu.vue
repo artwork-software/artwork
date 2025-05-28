@@ -240,20 +240,11 @@ const navigation = ref([
     {
         name: 'Calendar',
         href: route('events'),
-        icon: 'IconCalendarMonth',
+        icon: 'IconCalendarClock',
         current: route().current('events'),
         isMenu: false,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('room_assignment'),
-    },
-    {
-        name: 'Shift plan',
-        href: route('shifts.plan'),
-        icon: 'IconCalendarUser',
-        current: route().current('shifts.plan'),
-        isMenu: false,
-        showToolTipForItem: false,
-        has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
     },
     {
         name: 'Planning Calendar',
@@ -272,6 +263,15 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: can('can see planning calendar | can edit planning calendar') || is('artwork admin'),
+    },
+    {
+        name: 'Shift plan',
+        href: route('shifts.plan'),
+        icon: 'IconCalendarUser',
+        current: route().current('shifts.plan'),
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
     },
     {
         name: 'Inventory',

@@ -3078,6 +3078,9 @@ class EventController extends Controller
         Project $project
     ): RedirectResponse {
         $data =  $request->input('event', []);
+
+
+
         $event = $this->eventService->createBulkEvent(
             $data,
             $project,

@@ -38,12 +38,17 @@ class InventoryCategoryController extends Controller
             'subcategories' => function ($query) {
                 $query->orderBy('name');
             },
+            'subcategories.articles' => function ($query) {
+                $query->orderBy('name');
+            },
             'properties' => function ($query) {
                 $query->orderBy('name');
             }
         ]);
         
         $inventorySubCategory?->load(['properties' => function ($query) {
+            $query->orderBy('name');
+        }, 'articles' => function ($query) {
             $query->orderBy('name');
         }]);
 
@@ -53,14 +58,14 @@ class InventoryCategoryController extends Controller
             $filterableProperties = $inventoryCategory->properties()
                 ->filterable()
                 ->orderBy('name')
-                ->get(['id', 'name', 'type']);
+                ->get();
         }
 
         if ($inventorySubCategory) {
             $subProperties = $inventorySubCategory->properties()
                 ->filterable()
                 ->orderBy('name')
-                ->get(['id', 'name', 'type']);
+                ->get();
                 
             $filterableProperties = $filterableProperties
                 ->merge($subProperties)

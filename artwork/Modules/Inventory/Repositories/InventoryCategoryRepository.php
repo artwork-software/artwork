@@ -36,6 +36,7 @@ readonly class InventoryCategoryRepository
                     $query->select('id', 'inventory_category_id', 'name')
                         ->orderBy('name');
                 },
+                'subcategories.articles',
                 'properties' => function ($query) {
                     $query->select('inventory_article_properties.id', 'name', 'type')
                         ->orderBy('name');

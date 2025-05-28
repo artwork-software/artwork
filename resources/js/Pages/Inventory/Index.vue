@@ -106,6 +106,7 @@
                 :manufacturers="props.manufacturers"
             />
         </div>
+
     </AppLayout>
 </template>
 

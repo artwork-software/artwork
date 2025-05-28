@@ -11,7 +11,7 @@
                 </div>
 
                 <div>
-                    <BaseButton v-if="can('inventory.disposition')" :text="$t('New issue of material')" @click="openIssueOfMaterialModal">
+                    <BaseButton v-if="can('inventory.disposition') || is('artwork admin')" :text="$t('New issue of material')" @click="openIssueOfMaterialModal">
                         <component is="IconCopyPlus" class="size-5 mr-2" />
                     </BaseButton>
                 </div>
@@ -99,7 +99,7 @@ import SingleExternMaterialIssue from "@/Pages/IssueOfMaterial/Components/Single
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import {watch} from "vue";
 import {router} from "@inertiajs/vue3";
-import {can} from "laravel-permission-to-vuejs";
+import {can, is} from "laravel-permission-to-vuejs";
 
 const props = defineProps({
     issues: {

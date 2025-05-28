@@ -113,7 +113,7 @@ return [
     ],
     'inventory_article_changed_title' => 'Inventory article changed: :articleName',
     'inventory_article_changed_description' => 'The article ":articleName" or one of its status values has changed.',
-    'inventory_article_overbooked_title' => 'Article in your material issue ":issueName" is now overbooked',
-    'inventory_article_overbooked_description' => 'The article in your material issue ":issueName" is now overbooked.',
+    'inventory_article_overbooked_title' => 'Article ":articleName" in your material issue ":issueName" is now overbooked',
+    'inventory_article_overbooked_description' => 'The article ":articleName" in your material issue ":issueName" is now overbooked.',
     'material_issue' => 'Material issue: :issueName',
 ];

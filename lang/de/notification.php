@@ -115,7 +115,7 @@ return [
     ],
     'inventory_article_changed_title' => 'Materialänderung: :articleName',
     'inventory_article_changed_description' => 'Der Artikel ":articleName" oder einer seiner Statuswerte hat sich geändert.',
-    'inventory_article_overbooked_title' => 'Artikel in deiner Materialausgabe ":issueName" ist nun überbucht',
-    'inventory_article_overbooked_description' => 'Der Artikel in deiner Materialausgabe ":issueName" ist nun überbucht.',
+    'inventory_article_overbooked_title' => 'Artikel ":articleName" in deiner Materialausgabe ":issueName" ist nun überbucht',
+    'inventory_article_overbooked_description' => 'Der Artikel ":articleName" in deiner Materialausgabe ":issueName" ist nun überbucht.',
     'material_issue' => 'Materialausgabe: :issueName',
 ];

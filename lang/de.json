@@ -2754,6 +2754,7 @@
     "Inventory disposition": "Inventardisposition",
     "Allows disposition and management of inventory": "Erlaubt die Disposition und Verwaltung des Inventars",
     "Delete sets/stocks to trash": "Sets/Bestand in Papierkorb löschen",
-    "Allows deleting sets or stock to trash": "Erlaubt das Löschen von Sets oder Bestand in den Papierkorb"
-
+    "Allows deleting sets or stock to trash": "Erlaubt das Löschen von Sets oder Bestand in den Papierkorb",
+    "Please select": "Bitte auswählen",
+    "All articles": "Alle Artikel"
 }

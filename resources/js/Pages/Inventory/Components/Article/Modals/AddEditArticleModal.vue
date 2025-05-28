@@ -407,6 +407,7 @@
                                         <div v-if="property.type === 'selection'" class="">
                                             <div class="mt-2 grid grid-cols-1">
                                                 <select id="location" name="location" v-model="property.value" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                    <option v-if="property.is_required" value="" disabled selected>{{ $t('Please select') }}*</option>
                                                     <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
                                                 </select>
                                             </div>
@@ -656,6 +657,7 @@
                                         <div v-if="property.type === 'selection'" class="">
                                             <div class="mt-2 grid grid-cols-1">
                                                 <select id="location" name="location" v-model="property.value" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                    <option v-if="property.is_required" value="" disabled selected>{{ $t('Please select') }}*</option>
                                                     <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
                                                 </select>
                                             </div>

@@ -9,7 +9,7 @@
                             <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
                                 <div class="p-1 rounded-lg w-1 bg-gray-500"></div>
                                 <Link preserve-scroll :href="route('inventory.index')" class="group flex items-center justify-between w-full">
-                                    <span class=" text-sm font-bold tracking-tight" :class="route().current('inventory.index') ? 'text-artwork-buttons-create' : ''">{{ $t('All Products') }}</span>
+                                    <span class=" text-sm font-bold tracking-tight" :class="route().current('inventory.index') ? 'text-artwork-buttons-create' : ''">{{ $t('All articles') }}</span>
                                     <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 ring-1 ring-blue-500/10 ring-inset">{{ props.articlesCount }}</span>
                                 </Link>
                             </div>
@@ -26,9 +26,12 @@
                                                     {{ category.name }}
                                                 </div>
                                             </div>
-                                            <span v-if="category?.subcategories?.length > 0">
-                                            <component is="IconChevronDown" class="size-5" stroke-width="1" aria-hidden="true"  :class="[category.id === currentCategory?.id ? 'rotate-180' : '']" />
-                                        </span>
+                                            <div class="flex items-center gap-x-2">
+                                                <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 ring-1 ring-blue-500/10 ring-inset">{{ category.articles?.length || 0 }}</span>
+                                                <span v-if="category?.subcategories?.length > 0">
+                                                    <component is="IconChevronDown" class="size-5" stroke-width="1" aria-hidden="true"  :class="[category.id === currentCategory?.id ? 'rotate-180' : '']" />
+                                                </span>
+                                            </div>
                                         </Link>
                                         <div v-if="category.id === currentCategory?.id" :class="currentCategory?.subcategories?.length > 0 ? 'mt-4' : ''">
                                             <div v-for="subCategory in currentCategory.subcategories" :key="category.id" class="first:pt-0 last:pb-0">
@@ -39,11 +42,14 @@
                                                             inventoryCategory: category.id,
                                                             inventorySubCategory: subCategory.id
                                                         }) ? 'text-artwork-buttons-create font-semibold' : '']">
-                                                    <div class="first-letter:capitalize text-xs px-3 py-1 flex items-center gap-x-0.5">
-                                                        <component is="IconPointFilled" class="size-4" stroke-width="1" aria-hidden="true" />
-                                                        <span class="first-letter:capitalize">
-                                                        {{ subCategory.name }}
-                                                    </span>
+                                                    <div class="first-letter:capitalize text-xs px-3 py-1 flex items-center justify-between w-full">
+                                                        <div class="flex items-center gap-x-0.5">
+                                                            <component is="IconPointFilled" class="size-4" stroke-width="1" aria-hidden="true" />
+                                                            <span class="first-letter:capitalize">
+                                                                {{ subCategory.name }}
+                                                            </span>
+                                                        </div>
+                                                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 ring-1 ring-blue-500/10 ring-inset">{{ subCategory.articles?.length || 0 }}</span>
                                                     </div>
                                                 </Link>
                                             </div>

@@ -13,8 +13,7 @@ readonly class InventoryCategoryRepository
 {
     public function __construct(
         private InventoryCategory $inventoryCategory
-    ) {
-    }
+    ) {}
 
     public function getNewModelInstance(array $attributes = []): InventoryCategory
     {

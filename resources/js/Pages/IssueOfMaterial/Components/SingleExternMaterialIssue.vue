@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4 font-lexend">
+    <div class="p-4 font-lexend" :class="{ 'border-2 border-pink-500 rounded-lg': usePage().props.urlParameters.issue === issueOfMaterial.id.toString() }">
         <div class="grid grid-cols-1 md:grid-cols-9 gap-4">
             <div @click="showIssueOfMaterialDetailModal = true" class="flex items-center w-full cursor-pointer group-hover/issueOfMaterial:text-artwork-buttons-create text-sm">
                 {{externMaterialIssue.material_value}}
@@ -53,6 +53,7 @@
             </div>
         </div>
 
+
     </div>
 
     <issue-of-material-modal
@@ -87,7 +88,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import {computed, ref} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import EnterExternalIssueReturnModal from "@/Pages/IssueOfMaterial/Components/EnterExternalIssueReturnModal.vue";
 import ExternalMaterialIssueDetailModal from "@/Pages/IssueOfMaterial/Components/ExternalMaterialIssueDetailModal.vue";
 

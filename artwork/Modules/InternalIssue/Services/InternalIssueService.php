@@ -4,10 +4,16 @@ namespace Artwork\Modules\InternalIssue\Services;
 
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
+use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Illuminate\Support\Facades\Storage;
 
 class InternalIssueService
 {
+    public function __construct(
+        protected readonly InventoryArticleService $articleService,
+    ){
+    }
+
     public function store(array $data, array $files = []): InternalIssue
     {
         $issue = InternalIssue::create($data);
@@ -99,6 +105,11 @@ class InternalIssueService
         ])->toArray();
 
         $issue->articles()->sync($syncData);
+
+        foreach ($articles as $article) {
+            $articleFounded = $issue->articles->firstWhere('id', $article['id']);
+            $this->articleService->checkAndNotifyOverbooking($articleFounded);
+        }
     }
 
     public function deleteFile(InternalIssueFile $file): void

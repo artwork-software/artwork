@@ -22,7 +22,7 @@
 
 
                 <div class="mt-5">
-                    <SmallFormButton class="flex items-center gap-x-2 font-lexend" @click="showAddEditArticleModal = true">
+                    <SmallFormButton v-if="can('inventory.create_edit')" class="flex items-center gap-x-2 font-lexend" @click="showAddEditArticleModal = true">
                         <component is="IconBarcode" class="size-5" aria-hidden="true" />
                         <span>
                             {{ $t('Add Article') }}
@@ -130,6 +130,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {IconIdBadge} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import {can} from "laravel-permission-to-vuejs";
 const props = defineProps({
     categories: {
         type: Object,

@@ -3,9 +3,9 @@
 namespace Artwork\Modules\Inventory\Models;
 
 use Artwork\Core\Casts\TranslatedDateTimeCast;
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Inventory\Models\Traits\HasCategoryProperties;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**

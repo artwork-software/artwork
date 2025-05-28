@@ -4,11 +4,18 @@ namespace Artwork\Modules\ExternalIssue\Services;
 
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssueFile;
+use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Storage;
 
 class ExternalIssueService
 {
+
+    public function __construct(
+        protected readonly InventoryArticleService $articleService,
+    ) {
+    }
+
     public function store(array $data, User $user, array $files = []): ExternalIssue
     {
         $data['issued_by_id'] = $user->id;
@@ -95,6 +102,11 @@ class ExternalIssueService
         ])->toArray();
 
         $issue->articles()->sync($syncData);
+
+        foreach ($articles as $article) {
+            $articleFounded = $issue->articles->firstWhere('id', $article['id']);
+            $this->articleService->checkAndNotifyOverbooking($articleFounded);
+        }
     }
 
     public function deleteFile(ExternalIssueFile $file): void

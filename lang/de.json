@@ -2733,5 +2733,27 @@
     "Detailed Article quantity is greater than total article quantity": "Detaillierte Artikelmenge ist größer als Artikelgesamtmenge",
     "Add new event on this day": "Neuen Termin an diesem Tag erstellen",
     "Date & Time": "Datum & Zeit",
-    "Repeat Event": "Wiederholungstermin"
+    "Repeat Event": "Wiederholungstermin",
+    "Inventory article changed": "Inventarartikel geändert",
+    "Inventory article overbooked": "Inventarartikel überbucht",
+    "The article in your material issue is now overbooked.": "Der Artikel in deiner Materialausgabe ist jetzt überbucht.",
+    "An inventory article or one of its status values has changed.": "Ein Inventarartikel oder einer seiner Statuswerte wurde geändert.",
+    "Inventory & Material Issues": "Inventar & Materialausgaben",
+    "Get notified about changes or overbooking of inventory articles and material issues.": "Über Änderungen oder Überbuchungen von Inventarartikeln und Materialausgaben benachrichtigt werden.",
+    "Article Planning": "Artikelplanung",
+    "Article Usage Overview": "Artikelverwendungsübersicht",
+    "Overview of internal and external usage for the selected article.": "Übersicht über die interne und externe Nutzung des ausgewählten Artikels.",
+    "Create & edit sets": "Sets anlegen & bearbeiten",
+    "Allows creating and editing sets": "Erlaubt das Erstellen und Bearbeiten von Sets",
+    "Delete sets": "Sets löschen",
+    "Allows deleting sets": "Erlaubt das Löschen von Sets",
+    "Create & edit inventory": "Inventar anlegen & bearbeiten",
+    "Allows creating and editing inventory": "Erlaubt das Anlegen und Bearbeiten von Inventar",
+    "Delete inventory": "Inventar löschen",
+    "Allows deleting inventory": "Erlaubt das Löschen von Inventar",
+    "Inventory disposition": "Inventardisposition",
+    "Allows disposition and management of inventory": "Erlaubt die Disposition und Verwaltung des Inventars",
+    "Delete sets/stocks to trash": "Sets/Bestand in Papierkorb löschen",
+    "Allows deleting sets or stock to trash": "Erlaubt das Löschen von Sets oder Bestand in den Papierkorb"
+
 }

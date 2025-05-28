@@ -113,4 +113,9 @@ return [
         'event-verification-description' => 'Der geplante Termin ":event" wurde genehmigt',
         'user-rejected' => 'Planungsterminanfrage von :name abgelehnt',
     ],
+    'inventory_article_changed_title' => 'Materialänderung: :articleName',
+    'inventory_article_changed_description' => 'Der Artikel ":articleName" oder einer seiner Statuswerte hat sich geändert.',
+    'inventory_article_overbooked_title' => 'Artikel in deiner Materialausgabe ":issueName" ist nun überbucht',
+    'inventory_article_overbooked_description' => 'Der Artikel in deiner Materialausgabe ":issueName" ist nun überbucht.',
+    'material_issue' => 'Materialausgabe: :issueName',
 ];

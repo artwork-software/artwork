@@ -4,7 +4,7 @@
             <div class="flex justify-between items-center">
                 <h1 class="text-xl font-semibold text-gray-800">{{ $t('Material Sets') }}</h1>
 
-                <BaseButton :text="$t('New Material Set')" @click="showCreateOrUpdateMaterialSetModal = true">
+                <BaseButton v-if="can('set.create_edit')" :text="$t('New Material Set')" @click="showCreateOrUpdateMaterialSetModal = true">
                     <component is="IconCopyPlus" class="size-5 mr-2" />
                 </BaseButton>
             </div>
@@ -61,6 +61,7 @@ import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import CreateOrUpdateMaterialSetModal from "@/Pages/MaterialSet/Components/CreateOrUpdateMaterialSetModal.vue";
 import {ref} from "vue";
 import SingleMaterialSet from "@/Pages/MaterialSet/Components/SingleMaterialSet.vue";
+import {can} from "laravel-permission-to-vuejs";
 
 const props = defineProps({
     materialSets: {

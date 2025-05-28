@@ -280,16 +280,16 @@ const navigation = ref([
         current: route().current('inventory.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: moduleIsVisible('inventory'),
+        has_permission: moduleIsVisible('inventory')
     },
     {
-        name: 'Inventory',
+        name: 'Article Planning',
         href: route('inventory-management.article.planning'),
-        icon: 'IconBuildingWarehouse',
+        icon: 'IconCalendarExclamation',
         current: route().current('inventory-management.article.planning'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: is('artwork admin') || can('inventory.disposition'),
     },
     {
         name: 'Material Issues',
@@ -298,7 +298,7 @@ const navigation = ref([
         current: route().current('issue-of-material.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: true,
+        has_permission: is('artwork admin') || can('inventory.disposition'),
     },
     {
         name: 'To-dos',
@@ -343,7 +343,7 @@ const navigation = ref([
         current: true,
         isMenu: true,
         showToolTipForItem: false,
-        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates') || is('artwork admin'),
+        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete') || is('artwork admin'),
         subMenus: [
             {
                 name: 'Tool Settings',
@@ -371,7 +371,7 @@ const navigation = ref([
                 href: route('material-sets.index'),
                 icon: 'IconParentheses',
                 current: route().current('material-sets.index'),
-                has_permission: is('artwork admin')
+                has_permission: is('artwork admin') || can('set.create_edit | set.delete')
             },
             {
                 name: 'Rooms',

@@ -14,7 +14,7 @@
                 </div>
 
                 <div>
-                    <BaseButton :text="$t('New issue of material')" @click="openIssueOfMaterialModal">
+                    <BaseButton v-if="can('inventory.disposition')" :text="$t('New issue of material')" @click="openIssueOfMaterialModal">
                         <component is="IconCopyPlus" class="size-5 mr-2" />
                     </BaseButton>
                 </div>
@@ -102,9 +102,10 @@ import SingleInternMaterialIssue from "@/Pages/IssueOfMaterial/Components/Single
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import IssueTabs from "@/Pages/IssueOfMaterial/Components/IssueTabs.vue";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import {watch} from "vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import {can} from "laravel-permission-to-vuejs";
 
 const props = defineProps({
     issues: {

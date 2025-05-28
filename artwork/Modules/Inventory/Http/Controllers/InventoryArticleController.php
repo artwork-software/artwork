@@ -35,7 +35,12 @@ class InventoryArticleController extends Controller
         /** @var User $user */
         $user = $this->authManager->user();
         $data = $this->inventoryPlanningService->getAvailabilityData($user);
-
+        if (request()?->has(['article_id', 'date'])) {
+            $data['detailsForModal'] = $this->inventoryPlanningService->getDetailsForModal(
+                request('article_id'),
+                request('date')
+            );
+        }
         return Inertia::render('Inventory/InventoryArticlePlanning', $data);
     }
 
@@ -123,26 +128,45 @@ class InventoryArticleController extends Controller
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
 
-        $results = [];
+        // Optimiere durch Eager Loading aller benötigten Daten
+        $articles = InventoryArticle::whereIn('id', $articleIds)
+            ->with([
+                'internalIssues' => function ($query) use ($startDate, $endDate) {
+                    $query->where(function ($q) use ($startDate, $endDate) {
+                        $q->whereBetween('start_date', [$startDate, $endDate])
+                          ->orWhereBetween('end_date', [$startDate, $endDate]);
+                    });
+                },
+                'externalIssues' => function ($query) use ($startDate, $endDate) {
+                    $query->where(function ($q) use ($startDate, $endDate) {
+                        $q->whereBetween('issue_date', [$startDate, $endDate])
+                          ->orWhereBetween('return_date', [$startDate, $endDate]);
+                    });
+                }
+            ])
+            ->get()
+            ->keyBy('id');
 
+        $results = [];
         foreach ($articleIds as $id) {
-            $article = InventoryArticle::find($id);
-            if ($article) {
-                $results[$id] = $article->getAvailableStock($startDate, $endDate);
+            if ($articles->has($id)) {
+                $results[$id] = $articles[$id]->getAvailableStock($startDate, $endDate);
             }
         }
 
         return response()->json(['data' => $results]);
     }
 
-    public function search(Request $request){
+    public function search(Request $request)
+    {
         $search = $request->get('search');
-        // search for articles by name and return Articles with category and subcategory and quantity
+        
+        // Optimiere die Suche durch Eager Loading
         $articles = InventoryArticle::with(['category', 'subCategory'])
             ->where('name', 'like', "%$search%")
-            ->get();
+            ->limit(50) // Limitiere Ergebnisse für bessere Performance
+            ->get(['id', 'name', 'quantity', 'inventory_category_id', 'inventory_sub_category_id']);
 
         return response()->json($articles);
-
     }
 }

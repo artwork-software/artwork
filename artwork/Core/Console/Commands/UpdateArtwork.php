@@ -84,6 +84,22 @@ class UpdateArtwork extends Command
                 'enabled_email' => true,
                 'enabled_push' => true,
             ]);
+            // Neue Notification-Typen für Inventory
+            foreach ([
+                NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
+                NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
+            ] as $enum) {
+                $user->notificationSettings()->updateOrCreate([
+                    'type' => $enum->value,
+                ], [
+                    'frequency' => NotificationFrequencyEnum::DAILY->value,
+                    'group_type' => $enum->groupType(),
+                    'title' => $enum->title(),
+                    'description' => $enum->description(),
+                    'enabled_email' => true,
+                    'enabled_push' => true,
+                ]);
+            }
         });
 
         $this->info('----------------------------------------------------------');

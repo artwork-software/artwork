@@ -11,10 +11,10 @@
         </td>
         <td class="py-4 pr-4 pl-4 text-sm text-gray-500 sm:pr-0">
             <div class="flex space-x-3">
-                <button @click="showCreateOrUpdateMaterialSetModal = true" class="text-blue-600 hover:underline text-sm">
+                <button @click="showCreateOrUpdateMaterialSetModal = true" class="text-blue-600 hover:underline text-sm" v-if="can('set.create_edit')">
                     <component is="IconEdit" class="size-4 mr-1" />
                 </button>
-                <button @click="showConfirmDeleteModal = true" class="text-red-600 hover:underline text-sm">
+                <button @click="showConfirmDeleteModal = true" class="text-red-600 hover:underline text-sm" v-if="can('set.delete')">
                     <component is="IconTrash" class="size-4 mr-1" />
                 </button>
             </div>
@@ -40,6 +40,7 @@
 
 import {computed, defineAsyncComponent, ref} from "vue";
 import {router} from "@inertiajs/vue3";
+import {can} from "laravel-permission-to-vuejs";
 
 const props = defineProps({
     set: {

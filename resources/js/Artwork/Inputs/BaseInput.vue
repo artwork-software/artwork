@@ -9,6 +9,7 @@
             @blur="onBlur"
             :disabled="disabled"
             :required="required"
+            :step="type === 'number' ? step : undefined"
             :class="[
         'peer block w-full shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create',
         disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white',
@@ -17,7 +18,7 @@
       ]"
         />
 
-        <div v-if="model?.length > 0 && type !== 'date' && type !== 'time'" class="absolute right-1 top-0 bottom-0 flex items-center pr-2">
+        <div v-if="model?.length > 0 && type !== 'date' && type !== 'time' && !showLoading" class="absolute right-1 top-0 bottom-0 flex items-center pr-2">
             <button
                 type="button"
                 @click="model = ''"
@@ -27,6 +28,11 @@
             </button>
         </div>
 
+        <div v-if="model?.length > 0 && type !== 'date' && type !== 'time' && showLoading" class="absolute right-1 top-0 bottom-0 flex items-center pr-2">
+            <div class="animate-spin">
+                <component is="IconLoader" class="size-4 text-gray-500" />
+            </div>
+        </div>
         <label v-if="label"
             :for="id"
             :class="[
@@ -55,7 +61,9 @@ const props = defineProps({
     disabled: { type: Boolean, default: false },
     required: { type: Boolean, default: false },
     isSmall: { type: Boolean, default: false },
-    withoutTranslation: { type: Boolean, default: false }
+    withoutTranslation: { type: Boolean, default: false },
+    step: { type: Number, default: 1 },
+    showLoading: { type: Boolean, default: false }
 })
 
 const focused = ref(false)

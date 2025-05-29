@@ -45,7 +45,7 @@
     <!-- Static sidebar for desktop -->
     <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col" :class="isFullSideBar ? 'lg:w-72' : 'lg:w-16'">
         <!-- Sidebar component, swap this element with another sidebar if you like -->
-        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-auto border-r border-gray-200 bg-artwork-navigation-background">
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-auto bg-artwork-navigation-background">
             <div class="flex h-16 shrink-0 items-center justify-center">
                 <div :class="isFullSideBar ? 'w-full flex mx-6' : ''" class="mt-5">
                     <div class="group relative">
@@ -280,7 +280,25 @@ const navigation = ref([
         current: route().current('inventory.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: moduleIsVisible('inventory'),
+        has_permission: moduleIsVisible('inventory')
+    },
+    {
+        name: 'Article Planning',
+        href: route('inventory-management.article.planning'),
+        icon: 'IconCalendarExclamation',
+        current: route().current('inventory-management.article.planning'),
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: is('artwork admin') || can('inventory.disposition'),
+    },
+    {
+        name: 'Material Issues',
+        href: route('issue-of-material.index'),
+        icon: 'IconBrowserShare',
+        current: route().current('issue-of-material.index'),
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: is('artwork admin') || can('inventory.disposition'),
     },
     {
         name: 'To-dos',
@@ -325,7 +343,7 @@ const navigation = ref([
         current: true,
         isMenu: true,
         showToolTipForItem: false,
-        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates') || is('artwork admin'),
+        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete') || is('artwork admin'),
         subMenus: [
             {
                 name: 'Tool Settings',
@@ -347,6 +365,13 @@ const navigation = ref([
                 icon: 'IconBuildingWarehouse',
                 current: route().current('inventory-management.settings.index'),
                 has_permission: is('artwork admin')
+            },
+            {
+                name: 'Material Sets',
+                href: route('material-sets.index'),
+                icon: 'IconParentheses',
+                current: route().current('material-sets.index'),
+                has_permission: is('artwork admin') || can('set.create_edit | set.delete')
             },
             {
                 name: 'Rooms',

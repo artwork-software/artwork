@@ -296,4 +296,18 @@ class RoomController extends Controller
         );
         return $collisions;
     }
+
+    public function search(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $search = $request->get('search');
+        $rooms = Room::query()
+            ->where('name', 'like', "%{$search}%")
+            ->orWhereHas('area', function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
+            ->with(['area'])
+            ->get();
+
+        return response()->json($rooms);
+    }
 }

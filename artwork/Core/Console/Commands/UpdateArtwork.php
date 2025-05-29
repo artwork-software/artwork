@@ -84,6 +84,22 @@ class UpdateArtwork extends Command
                 'enabled_email' => true,
                 'enabled_push' => true,
             ]);
+            // Neue Notification-Typen für Inventory
+            foreach ([
+                NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
+                NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
+            ] as $enum) {
+                $user->notificationSettings()->updateOrCreate([
+                    'type' => $enum->value,
+                ], [
+                    'frequency' => NotificationFrequencyEnum::DAILY->value,
+                    'group_type' => $enum->groupType(),
+                    'title' => $enum->title(),
+                    'description' => $enum->description(),
+                    'enabled_email' => true,
+                    'enabled_push' => true,
+                ]);
+            }
         });
 
         $this->info('----------------------------------------------------------');
@@ -101,6 +117,21 @@ class UpdateArtwork extends Command
         // add to all project Groups the new column with type project_relevant_column
         $this->info('add basic inventory article status');
         $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder', '--force' => true]);
+
+        $this->info('----------------------------------------------------------');
+        // add inventory article plan filter to all users from today + 1 month
+        $this->info('add inventory article plan filter to all users');
+        $users = User::all();
+        $users->each(function ($user) {
+            // if allready exists, skip
+            if ($user->inventoryArticlePlanFilter) {
+                return;
+            }
+            $user->inventoryArticlePlanFilter()->create([
+                'start_date' => now(),
+                'end_date' => now()->addMonth(),
+            ]);
+        });
 
         $this->info('----------------------------------------------------------');
         $this->info('Artwork Update Command has finished');

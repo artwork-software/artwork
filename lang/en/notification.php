@@ -111,4 +111,9 @@ return [
         'event-verification-description' => 'The planned event ":event" has been approved',
         'user-rejected' => 'Planning event request rejected by :name',
     ],
+    'inventory_article_changed_title' => 'Inventory article changed: :articleName',
+    'inventory_article_changed_description' => 'The article ":articleName" or one of its status values has changed.',
+    'inventory_article_overbooked_title' => 'Article ":articleName" in your material issue ":issueName" is now overbooked',
+    'inventory_article_overbooked_description' => 'The article ":articleName" in your material issue ":issueName" is now overbooked.',
+    'material_issue' => 'Material issue: :issueName',
 ];

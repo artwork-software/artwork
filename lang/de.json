@@ -2660,12 +2660,12 @@
     "Sub-Category": "Unterkategorie",
     "External Material issue book": "Externes Materialausgabe-Buch",
     "Issued By": "Ausgegeben von",
-    "Received by": "Erhalten von",
+    "Received by": "Angenommen von",
     "Delete issue of material": "Materialausgabe löschen",
     "Are you sure you want to delete this issue of material?": "Möchtest du diese Materialausgabe wirklich löschen?",
     "Enter return": "Rückgabe eingeben",
     "Enter the return of an external material issue": "Gib die Rückgabe einer externen Materialausgabe ein",
-    "Special items closed": "Spezialartikel Abgeschlossen",
+    "Special items closed": "Sonderartikel bestätigen",
     "External contact person / company": "Externer Ansprechpartner / Firma",
     "No items assigned.": "Keine Artikel zugewiesen.",
     "Material value": "Materialwert",
@@ -2756,5 +2756,7 @@
     "Delete sets/stocks to trash": "Sets/Bestand in Papierkorb löschen",
     "Allows deleting sets or stock to trash": "Erlaubt das Löschen von Sets oder Bestand in den Papierkorb",
     "Please select": "Bitte auswählen",
-    "All articles": "Alle Artikel"
+    "All articles": "Alle Artikel",
+    "Unresolved Special Items": "Offene Sonderartikel",
+    "Material Value": "Materialwert"
 }

@@ -38,7 +38,7 @@
                 <BaseCard class="p-4">
                     <div class="sticky top-0 z-10 mb-4 rounded-lg bg-white w-full">
                         <div class="grid px-3 py-3 grid-cols-9 gap-4 w-full">
-                            <div class="col-span-1 w-full">
+                            <div class="flex items-center">
                                 <h3 class="xsDark">{{ $t('Name') }}</h3>
                             </div>
                             <div class="flex items-center">
@@ -60,7 +60,7 @@
                                 <h3 class="xsDark">{{ $t('Responsible') }}</h3>
                             </div>
                             <div class="flex items-center">
-                                <h3 class="xsDark">{{ $t('Status') }}</h3>
+                                <h3 class="xsDark">{{ $t('Unresolved Special Items') }}</h3>
                             </div>
                             <div class="flex items-center"></div>
                         </div>

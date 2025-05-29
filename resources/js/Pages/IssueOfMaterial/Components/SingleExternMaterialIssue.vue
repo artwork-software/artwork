@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4 font-lexend" :class="{ 'border-2 border-pink-500 rounded-lg': usePage().props.urlParameters.issue === issueOfMaterial.id.toString() }">
+    <div class="p-4 font-lexend" :class="{ 'border-2 border-pink-500 rounded-lg': usePage().props.urlParameters.issue === externMaterialIssue.id.toString() }">
         <div class="grid grid-cols-1 md:grid-cols-9 gap-4">
             <div @click="showIssueOfMaterialDetailModal = true" class="flex items-center w-full cursor-pointer group-hover/issueOfMaterial:text-artwork-buttons-create text-sm">
                 {{externMaterialIssue.material_value}}
@@ -41,7 +41,7 @@
                 </div>
             </div>
             <div class="flex items-center justify-end w-full gap-x-3">
-                <div class="">
+                <div class="cursor-pointer">
                     <component is="IconPrinter" class="size-5 mr-2" stroke-width="1.5" @click="printExternal()" />
                 </div>
                 <BaseMenu white-menu-background has-no-offset menu-width="w-fit">

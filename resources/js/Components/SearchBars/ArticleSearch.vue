@@ -15,7 +15,7 @@
                 <div class="border-gray-200 py-4">
                     <div v-for="(article, index) in articles" :key="index" class="flex items-center cursor-pointer">
                         <div class="flex-1 text-sm" @click="selectArticle(article)">
-                            <div class="px-4 py-3  hover:border-l-4 hover:border-l-artwork-buttons-create">
+                            <div class="px-4 py-3 relative border-l-4 border-l-transparent hover:border-l-transparent before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 hover:before:bg-artwork-buttons-create before:transition-colors">
                                 <p class="truncate font-medium font-lexend">{{ article.name }}</p>
                                 <p class="text-xs text-gray-400 mt-0.5 font-lexend font-light">
                                     {{ $t('This article comes from the category {0}.', [article.category.name])}}

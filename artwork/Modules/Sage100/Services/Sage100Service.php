@@ -74,7 +74,7 @@ class Sage100Service
         foreach ($collectiveBookings as $key => $items) {
             DB::beginTransaction();
             try {
-                [$sageId, $ktoSoll, $ktoHaben] = explode('-', $key);
+                [$sageId, $ktoSoll, $ktoHaben, $kstTraeger] = explode('-', $key);
 
                 $serviceToUse = $this->sageNotAssignedDataService;
 
@@ -84,6 +84,7 @@ class Sage100Service
                     $sageId,
                     $ktoSoll,
                     $ktoHaben,
+                    $kstTraeger
                 )) {
                     $serviceToUse = $this->sageAssignedDataService;
                 } else {
@@ -91,6 +92,7 @@ class Sage100Service
                         $sageId,
                         $ktoSoll,
                         $ktoHaben,
+                        $kstTraeger
                     );
 
                     if ($parentBooking) {
@@ -575,7 +577,12 @@ class Sage100Service
     private function updateExistingSageAssignedDataIfExists(
         array $item,
     ): bool {
-        $sageAssignedData = $this->sageAssignedDataService->findBySageId($item['ID']);
+        $sageAssignedData = $this->sageAssignedDataService->findBookingByIdentifiers(
+            $item['ID'],
+            $item['KtoSoll'],
+            $item['KtoHaben'],
+            $item['KstTraeger'],
+        );
 
         if (is_null($sageAssignedData)) {
             return false;
@@ -615,10 +622,11 @@ class Sage100Service
     private function updateExistingSageNotAssignedDataIfExists(
         array $item,
     ): SageNotAssignedData|null {
-        $sageNotAssignedData = $this->sageNotAssignedDataService->findBySageIdKtoSollAndKtoHaben(
+        $sageNotAssignedData = $this->sageNotAssignedDataService->findBookingByIdentifiers(
             $item['ID'],
             $item['KtoSoll'],
             $item['KtoHaben'],
+            $item['KstTraeger'],
         );
 
         if ($sageNotAssignedData instanceof SageNotAssignedData) {
@@ -650,10 +658,11 @@ class Sage100Service
             );
         }
 
-        if ($sageData = $this->sageNotAssignedDataService->findBySageIdKtoSollAndKtoHaben(
+        if ($sageData = $this->sageNotAssignedDataService->findBookingByIdentifiers(
             $item['ID'],
             $item['KtoSoll'],
             $item['KtoHaben'],
+            $item['KstTraeger'],
         )) {
             return $sageData;
         }

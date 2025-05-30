@@ -552,7 +552,7 @@ class Sage100Service
     {
         $subPositionRows = Collection::make();
 
-        $project->table->mainPositions->each(
+        $project->table?->mainPositions->each(
             function (MainPosition $mainPosition) use ($ktoShould, $kst, $subPositionRows): void {
                 $mainPosition->subPositions->each(
                     function (SubPosition $subPosition) use ($ktoShould, $kst, $subPositionRows): void {

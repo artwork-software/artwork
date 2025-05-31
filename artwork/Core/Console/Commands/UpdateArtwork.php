@@ -2,21 +2,15 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Modules\Budget\Models\MainPosition;
-use Artwork\Modules\Budget\Models\SubPosition;
-use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Models\NotificationSetting;
-use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
-use Artwork\Modules\ServiceProviderContacts\Models\ServiceProviderContacts;
 use Artwork\Modules\User\Models\User;
 use Database\Seeders\ProjectManagementBuilderSeed;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 use Laravel\Passport\Passport;
 
 class UpdateArtwork extends Command
@@ -24,6 +18,7 @@ class UpdateArtwork extends Command
     public function __construct(
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
         private readonly ColumnService $columnService,
+        private readonly CraftItemMigrationService $craftItemMigrationService,
     ) {
         parent::__construct();
     }
@@ -132,6 +127,15 @@ class UpdateArtwork extends Command
                 'end_date' => now()->addMonth(),
             ]);
         });
+
+        $this->info('----------------------------------------------------------');
+        $this->info('Migrating craft inventory items to inventory articles');
+        $result = $this->craftItemMigrationService->migrateCraftItemsToInventoryArticles();
+        $this->info("Migration completed!");
+        $this->info("Successfully migrated: {$result['success_count']} items");
+        if (isset($result['skipped_count']) && $result['skipped_count'] > 0) {
+            $this->info("Skipped: {$result['skipped_count']} items (already migrated)");
+        }
 
         $this->info('----------------------------------------------------------');
         $this->info('Artwork Update Command has finished');

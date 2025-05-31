@@ -1,7 +1,8 @@
 <template>
     <div class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden font-lexend" @click="showArticleDetail = true">
         <div class="flex items-center justify-center">
-            <img :src="getMainImageInImage.image" @error="(e) => e.target.src = usePage().props.big_logo" alt="" class="w-44 h-44 object-contain rounded-lg">
+            <img v-if="hasImage" :src="getMainImageInImage.image" alt="" class="w-44 h-44 object-contain rounded-lg">
+            <component v-else is="IconPhoto" class="w-44 h-44 text-gray-400" aria-hidden="true" />
         </div>
         <div class="mt-4">
             <div class="flex items-center">
@@ -47,7 +48,7 @@
 import {Link, usePage} from "@inertiajs/vue3";
 import {computed, defineAsyncComponent, ref} from "vue";
 import {useTranslation} from "@/Composeables/Translation.js";
-import {IconIdBadge} from "@tabler/icons-vue";
+import {IconIdBadge, IconPhoto} from "@tabler/icons-vue";
 const $t = useTranslation()
 
 const props = defineProps({
@@ -74,6 +75,11 @@ const AddEditArticleModal = defineAsyncComponent({
 
 const showArticleDetail = ref(false)
 
+const hasImage = computed(() => {
+    const images = props.item.images || [];
+    return images.length > 0;
+});
+
 const getMainImageInImage = computed(() => {
     const images = props.item.images || [];
 
@@ -88,9 +94,9 @@ const getMainImageInImage = computed(() => {
         image: '/storage/' + images[0].image,
     };
 
-    // 3. Wenn keine Bilder vorhanden sind, gib ein Standardbild zurück
+    // 3. Wenn keine Bilder vorhanden sind, gib ein leeres Objekt zurück
     return {
-        image: usePage().props.big_logo, // Passe den Pfad zu deinem Standardbild an
+        image: '',
     };
 });
 

@@ -16,8 +16,7 @@
                                 <span class="sr-only">{{ image.image }}</span>
                                 <span class="block aspect-square">
                                     <img :src="'/storage/' + image.image" alt=""
-                                         class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                                         @error="(e) => e.target.src = usePage().props.big_logo"/>
+                                         class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"/>
                                 </span>
                                 <span
                                     :class="[selected ? 'ring-2 ring-indigo-500 ring-offset-2' : '', 'pointer-events-none absolute inset-0 rounded-lg']"
@@ -33,14 +32,12 @@
                             <img :src="'/storage/' + image.image"
                                  :alt="image.alt"
                                  class="max-h-[30vh] min-h-[30vh] w-full object-contain rounded-lg transition"
-                                 @error="(e) => e.target.src = usePage().props.big_logo"
                             />
                         </TabPanel>
                     </TabPanels>
                 </TabGroup>
-                <div v-else class="flex flex-row-reverse max-w-xl mx-auto p-1">
-                    <img :src="usePage().props.big_logo" alt=""
-                         class="aspect-square w-full object-contain sm:rounded-lg"/>
+                <div v-else class="flex justify-center items-center max-w-xl mx-auto p-1">
+                    <component is="IconPhoto" class="max-h-[30vh] min-h-[30vh] w-full text-gray-400" aria-hidden="true" />
                 </div>
             </div>
             <!-- Product info -->
@@ -273,8 +270,8 @@ import {
 import {router, usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
 import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
-import {nextTick, ref} from "vue";
-import {IconEdit} from "@tabler/icons-vue";
+import {nextTick, ref, computed} from "vue";
+import {IconEdit, IconPhoto} from "@tabler/icons-vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {can, is} from "laravel-permission-to-vuejs";
 
@@ -293,6 +290,10 @@ const emit = defineEmits([
 ])
 
 const showConfirmDelete = ref(false);
+
+const hasImages = computed(() => {
+    return props.article.images && props.article.images.length > 0;
+});
 
 
 const confirmDelete = () => {

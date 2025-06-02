@@ -218,6 +218,14 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- checkbox for special_items_done -->
+                    <div class="mt-4">
+                        <label class="flex items-center gap-x-2">
+                            <input type="checkbox" v-model="internMaterialIssue.special_items_done" class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                            <span class="text-sm">{{ $t('Special items done') }}</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>

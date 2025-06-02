@@ -157,15 +157,18 @@ class InventoryArticleController extends Controller
         return response()->json(['data' => $results]);
     }
 
-    public function search(Request $request)
+    public function search(Request $request): \Illuminate\Http\JsonResponse
     {
-        $search = $request->get('search');
-        
-        // Optimiere die Suche durch Eager Loading
-        $articles = InventoryArticle::with(['category', 'subCategory'])
-            ->where('name', 'like', "%$search%")
-            ->limit(50) // Limitiere Ergebnisse für bessere Performance
-            ->get(['id', 'name', 'quantity', 'inventory_category_id', 'inventory_sub_category_id']);
+        $search = $request->input('article_search');
+
+        if (empty(trim($search))) {
+            return response()->json([], 200); // Oder returniere eine sinnvolle Fehlermeldung
+        }
+
+        $articles = InventoryArticle::search($search)
+            ->take(50)
+            ->get()
+            ->load(['category', 'subCategory']);
 
         return response()->json($articles);
     }

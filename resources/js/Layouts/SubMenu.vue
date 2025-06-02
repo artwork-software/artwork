@@ -76,7 +76,7 @@
                                     </Link>
                                     <div v-else>
                                         <div v-if="item.has_permission" class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 font-semibold p-2">
-                                            <BaseMenu white-menu-background needs-max-height :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
+                                            <BaseMenu white-menu-background  :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
                                                 <div v-for="subMenu in item.subMenus" :key="subMenu.name">
                                                     <BaseMenuItem white-menu-background as-link v-if="subMenu.has_permission" :href="subMenu.href" :icon="subMenu.icon" :title="subMenu.name" />
                                                 </div>
@@ -240,7 +240,7 @@ const navigation = ref([
     {
         name: 'Calendar',
         href: route('events'),
-        icon: 'IconCalendarMonth',
+        icon: 'IconCalendarClock',
         current: route().current('events'),
         isMenu: false,
         showToolTipForItem: false,
@@ -256,49 +256,61 @@ const navigation = ref([
         has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
     },
     {
-        name: 'Planning Calendar',
-        href: route('planning-event-calendar.index'),
+        name: 'Event Planning',
+        href: '#',
         icon: 'IconCalendarCog',
-        current: route().current('planning-event-calendar.index'),
-        isMenu: false,
-        showToolTipForItem: false,
-        has_permission: can('can see planning calendar') || is('artwork admin'),
-    },
-    {
-        name: 'Event Verifications',
-        href: route('event-verifications.index'),
-        icon: 'IconCalendarCheck',
-        current: route().current('event-verifications.index'),
-        isMenu: false,
+        current: true,
+        isMenu: true,
         showToolTipForItem: false,
         has_permission: can('can see planning calendar | can edit planning calendar') || is('artwork admin'),
+        subMenus: [
+            {
+                name: 'Planning Calendar',
+                href: route('planning-event-calendar.index'),
+                icon: 'IconCalendarCog',
+                current: route().current('planning-event-calendar.index'),
+                has_permission: can('can see planning calendar') || is('artwork admin'),
+            },
+            {
+                name: 'Event Verifications',
+                href: route('event-verifications.index'),
+                icon: 'IconCalendarCheck',
+                current: route().current('event-verifications.index'),
+                has_permission: can('can see planning calendar | can edit planning calendar') || is('artwork admin'),
+            },
+        ]
     },
     {
-        name: 'Inventory',
-        href: route('inventory.index'),
+        name: 'Inventory System',
+        href: '#',
         icon: 'IconBuildingWarehouse',
-        current: route().current('inventory.index'),
-        isMenu: false,
+        current: true,
+        isMenu: true,
         showToolTipForItem: false,
-        has_permission: moduleIsVisible('inventory')
-    },
-    {
-        name: 'Article Planning',
-        href: route('inventory-management.article.planning'),
-        icon: 'IconCalendarExclamation',
-        current: route().current('inventory-management.article.planning'),
-        isMenu: false,
-        showToolTipForItem: false,
-        has_permission: is('artwork admin') || can('inventory.disposition'),
-    },
-    {
-        name: 'Material Issues',
-        href: route('issue-of-material.index'),
-        icon: 'IconBrowserShare',
-        current: route().current('issue-of-material.index'),
-        isMenu: false,
-        showToolTipForItem: false,
-        has_permission: is('artwork admin') || can('inventory.disposition'),
+        has_permission: moduleIsVisible('inventory'),
+        subMenus: [
+            {
+                name: 'Inventory',
+                href: route('inventory.index'),
+                icon: 'IconBuildingWarehouse',
+                current: route().current('inventory.index'),
+                has_permission: moduleIsVisible('inventory')
+            },
+            {
+                name: 'Article Planning',
+                href: route('inventory-management.article.planning'),
+                icon: 'IconCalendarExclamation',
+                current: route().current('inventory-management.article.planning'),
+                has_permission: is('artwork admin') || can('inventory.disposition'),
+            },
+            {
+                name: 'Material Issues',
+                href: route('issue-of-material.index'),
+                icon: 'IconBrowserShare',
+                current: route().current('issue-of-material.index'),
+                has_permission: is('artwork admin') || can('inventory.disposition'),
+            },
+        ]
     },
     {
         name: 'To-dos',

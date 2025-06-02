@@ -42,6 +42,7 @@ class StoreExternalIssueRequest extends FormRequest
             'articles' => 'nullable|array',
             'articles.*.id' => 'required|exists:inventory_articles,id',
             'articles.*.quantity' => 'required|integer|min:1',
+            'special_items_done' => 'boolean',
         ];
     }
 }

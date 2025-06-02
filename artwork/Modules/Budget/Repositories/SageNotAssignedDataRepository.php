@@ -46,16 +46,33 @@ class SageNotAssignedDataRepository extends BaseRepository
             ->first();
     }
 
-    public function findParentBookingBySageIdKtoSollAndKtoHaben(
+    public function findParentBookingBySageIdKtoSollAndKtoHabenTraeger(
         string $sageId,
         string $ktoSoll,
-        string $ktoHaben
+        string $ktoHaben,
+        string $kstTraeger
     ): SageNotAssignedData|null {
         return $this->getNewModelQuery()
             ->where('sage_id', '=', $sageId)
             ->where('kto_soll', '=', $ktoSoll)
             ->where('kto_haben', '=', $ktoHaben)
+            ->where('kst_traeger', '=', $kstTraeger)
             ->where('is_collective_booking', '=', true)
+            ->first();
+    }
+
+    public function findBookingBySageIdKtoSollAndKtoHabenTraeger(
+        string $sageId,
+        string $ktoSoll,
+        string $ktoHaben,
+        string $kstTraeger
+    ): SageNotAssignedData|null {
+        return $this->getNewModelQuery()
+            ->where('sage_id', '=', $sageId)
+            ->where('kto_soll', '=', $ktoSoll)
+            ->where('kto_haben', '=', $ktoHaben)
+            ->where('kst_traeger', '=', $kstTraeger)
+            ->where('is_collective_booking', '=', false)
             ->first();
     }
 

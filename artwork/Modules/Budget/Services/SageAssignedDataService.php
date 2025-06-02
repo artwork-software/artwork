@@ -131,13 +131,33 @@ class SageAssignedDataService implements CollectiveBookingService
         [
             $sageId,
             $ktoSoll,
-            $ktoHaben
+            $ktoHaben,
+            $kstTraeger
         ] = $identifiers;
 
-        return $this->sageAssignedDataRepository->findParentBookingBySageIdKtoSollAndKtoHaben(
+        return $this->sageAssignedDataRepository->findParentBookingBySageIdKtoSollAndKtoHabenTraeger(
             $sageId,
             $ktoSoll,
-            $ktoHaben
+            $ktoHaben,
+            $kstTraeger
+        );
+    }
+
+    public function findBookingByIdentifiers(
+        ...$identifiers
+    ): SageAssignedData|null {
+        [
+            $sageId,
+            $ktoSoll,
+            $ktoHaben,
+            $kstTraeger
+        ] = $identifiers;
+
+        return $this->sageAssignedDataRepository->findParentBookingBySageIdKtoSollAndKtoHabenTraeger(
+            $sageId,
+            $ktoSoll,
+            $ktoHaben,
+            $kstTraeger
         );
     }
 

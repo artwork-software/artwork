@@ -18,7 +18,7 @@
       ]"
         />
 
-        <div v-if="model?.length > 0 && type !== 'date' && type !== 'time' && !showLoading" class="absolute right-1 top-0 bottom-0 flex items-center pr-2">
+        <div v-if="model?.length > 0 && type !== 'date' && type !== 'time' && type !== 'number' && !showLoading" class="absolute right-1 top-0 bottom-0 flex items-center pr-2">
             <button
                 type="button"
                 @click="model = ''"
@@ -28,7 +28,7 @@
             </button>
         </div>
 
-        <div v-if="model?.length > 0 && type !== 'date' && type !== 'time' && showLoading" class="absolute right-1 top-0 bottom-0 flex items-center pr-2">
+        <div v-if="model?.length > 0 && type !== 'date' && type !== 'time' && type !== 'number' && showLoading" class="absolute right-1 top-0 bottom-0 flex items-center pr-2">
             <div class="animate-spin">
                 <component is="IconLoader" class="size-4 text-gray-500" />
             </div>

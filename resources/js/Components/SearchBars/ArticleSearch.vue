@@ -66,7 +66,7 @@ export default {
         searchArticles() {
             if (this.article_search_query.length > 2) {
                 axios.post(route('inventory.articles.search'),{
-                    project_search: this.article_search_query,
+                    article_search: this.article_search_query,
                     wantsJson: true,
                 }).then(response => {
                     this.showLoading = false;

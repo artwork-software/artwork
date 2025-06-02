@@ -487,28 +487,28 @@
 
             <!-- Detailed quantity -->
             <div class="px-6" v-if="articleForm.is_detailed_quantity">
-                <div class="flow-root py-4">
+                <div class="flow-root py-4 overflow-y-auto">
                     <div class="-my-2">
                         <div class="inline-block min-w-full py-2 align-middle">
                             <table class="min-w-full divide-y divide-gray-300">
                                 <thead>
                                 <tr class="divide-x divide-gray-200">
                                     <th scope="col"
-                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0 truncate">
                                         Name
                                     </th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900 truncate">
                                         {{ $t('Description') }}
                                     </th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900 truncate">
                                         {{ $t('Status') }}
                                     </th>
                                     <th scope="col"
-                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
+                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 truncate">
                                         {{ $t('Quantity') }}
                                     </th>
                                     <th scope="col"
-                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0"
+                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0 truncate"
                                         v-for="property in articleForm.detailed_article_quantities?.[0]?.properties">
                                         {{ property.name }}<span v-if="property.is_required">*</span></th>
                                     <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0 w-10">

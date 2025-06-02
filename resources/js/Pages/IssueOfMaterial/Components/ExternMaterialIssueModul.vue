@@ -173,6 +173,13 @@
                             </div>
                         </div>
                     </div>
+                    <!-- checkbox for special_items_done -->
+                    <div class="mt-4">
+                        <label class="flex items-center gap-x-2">
+                            <input type="checkbox" v-model="externMaterialIssueForm.special_items_done" class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                            <span class="text-sm">{{ $t('Special items done') }}</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -233,6 +240,7 @@ const props = defineProps({
             files: [],
             articles: [],
             special_items: [],
+            special_items_done: false
         })
     },
 })
@@ -250,7 +258,8 @@ const externMaterialIssueForm = useForm({
     external_phone: props.externMaterialIssue.external_phone,
     files: [],
     articles: props.externMaterialIssue?.articles || [],
-    special_items: props.externMaterialIssue?.special_items || []
+    special_items: props.externMaterialIssue?.special_items || [],
+    special_items_done: props.externMaterialIssue?.special_items_done || false,
 })
 
 const showArticleFilterModal = ref(false)

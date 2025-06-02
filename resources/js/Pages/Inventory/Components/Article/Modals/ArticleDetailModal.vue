@@ -15,8 +15,9 @@
                                  class="relative grow group rounded-lg border border-gray-200 bg-white shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 <span class="sr-only">{{ image.image }}</span>
                                 <span class="block aspect-square">
-                                    <img :src="'/storage/' + image.image" alt=""
-                                         class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"/>
+                                   <img :src="'/storage/' + image.image" alt=""
+                                        class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                        @error="(e) => e.target.src = usePage().props.big_logo"/>
                                 </span>
                                 <span
                                     :class="[selected ? 'ring-2 ring-indigo-500 ring-offset-2' : '', 'pointer-events-none absolute inset-0 rounded-lg']"
@@ -31,13 +32,15 @@
                                   class="flex justify-center items-center rounded-lg py-4 pl-2 sm:py-6">
                             <img :src="'/storage/' + image.image"
                                  :alt="image.alt"
+                                 @error="(e) => e.target.src = usePage().props.big_logo"
                                  class="max-h-[30vh] min-h-[30vh] w-full object-contain rounded-lg transition"
                             />
                         </TabPanel>
                     </TabPanels>
                 </TabGroup>
-                <div v-else class="flex justify-center items-center max-w-xl mx-auto p-1">
-                    <component is="IconPhoto" class="max-h-[30vh] min-h-[30vh] w-full text-gray-400" aria-hidden="true" />
+                <div v-else class="flex flex-row-reverse max-w-xl mx-auto p-1">
+                    <img :src="usePage().props.big_logo" alt=""
+                         class="aspect-square w-full object-contain sm:rounded-lg"/>
                 </div>
             </div>
             <!-- Product info -->
@@ -290,10 +293,6 @@ const emit = defineEmits([
 ])
 
 const showConfirmDelete = ref(false);
-
-const hasImages = computed(() => {
-    return props.article.images && props.article.images.length > 0;
-});
 
 
 const confirmDelete = () => {

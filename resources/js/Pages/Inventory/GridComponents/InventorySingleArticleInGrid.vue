@@ -1,8 +1,7 @@
 <template>
     <div class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden font-lexend" @click="showArticleDetail = true">
         <div class="flex items-center justify-center">
-            <img v-if="hasImage" :src="getMainImageInImage.image" alt="" class="w-44 h-44 object-contain rounded-lg">
-            <component v-else is="IconPhoto" class="w-44 h-44 text-gray-400" aria-hidden="true" />
+            <img  :src="getMainImageInImage.image" alt="" class="w-12 h-12 object-fill rounded-lg">
         </div>
         <div class="mt-4">
             <div class="flex items-center">
@@ -96,7 +95,7 @@ const getMainImageInImage = computed(() => {
 
     // 3. Wenn keine Bilder vorhanden sind, gib ein leeres Objekt zurück
     return {
-        image: '',
+        image: usePage().props.big_logo, // Passe den Pfad zu deinem Standardbild an
     };
 });
 

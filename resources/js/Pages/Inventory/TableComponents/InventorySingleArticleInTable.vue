@@ -1,7 +1,6 @@
 <template>
     <td class="py-3 pr-3 pl-3 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-        <img v-if="hasImage" :src="getMainImageInImage.image" alt="" class="w-12 h-12 object-fill rounded-lg">
-        <component v-else is="IconPhoto" class="w-12 h-12 text-gray-400" aria-hidden="true" />
+        <img :src="getMainImageInImage.image" alt="" class="w-12 h-12 object-fill rounded-lg">
     </td>
     <td class="p-3 text-sm whitespace-nowrap text-secondary font-semibold"><div class="flex items-center">{{ item?.name }}<IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-secondary font-semibold ml-2" /> </div></td>
     <td class="p-3 text-sm whitespace-nowrap" :class="item.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create'">{{ formatQuantity(item?.quantity) }}</td>
@@ -90,7 +89,7 @@ const getMainImageInImage = computed(() => {
 
     // 3. Wenn keine Bilder vorhanden sind, gib ein leeres Objekt zurück
     return {
-        image: '',
+        image: usePage().props.big_logo, // Passe den Pfad zu deinem Standardbild an
     };
 });
 

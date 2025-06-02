@@ -109,6 +109,52 @@ class UpdatePermissionsCommand extends Command
                 'tooltipKey' => "A user with this permission can edit, delete and confirm scheduled events",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::SET_CREATE_EDIT->value,
+                'name_de' => "Sets anlegen & bearbeiten",
+                'translation_key' => "Create & edit sets",
+                'group' => 'Inventory',
+                'tooltipText' => "Erlaubt das Erstellen und Bearbeiten von Sets",
+                'tooltipKey' => "Allows creating and editing sets",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::SET_DELETE->value,
+                'name_de' => "Sets löschen",
+                'translation_key' => "Delete sets",
+                'group' => 'Inventory',
+                'tooltipText' => "Erlaubt das Löschen von Sets",
+                'tooltipKey' => "Allows deleting sets",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::INVENTORY_CREATE_EDIT->value,
+                'name_de' => "Inventar anlegen & bearbeiten",
+                'translation_key' => "Create & edit inventory",
+                'group' => 'Inventory',
+                'tooltipText' => "Erlaubt das Anlegen und Bearbeiten von Inventar",
+                'tooltipKey' => "Allows creating and editing inventory",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::INVENTORY_DELETE->value,
+                'name_de' => "Inventar löschen",
+                'translation_key' => "Delete inventory",
+                'group' => 'Inventory',
+                'tooltipText' => "Erlaubt das Löschen von Inventar",
+                'tooltipKey' => "Allows deleting inventory",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::INVENTORY_DISPOSITION->value,
+                'name_de' => "Inventardisposition",
+                'translation_key' => "Inventory disposition",
+                'group' => 'Inventory',
+                'tooltipText' => "Erlaubt die Disposition und Verwaltung des Inventars",
+                'tooltipKey' => "Allows disposition and management of inventory",
+                'checked' => false
+            ],
+
         ];
 
         foreach ($permissions as $permission) {

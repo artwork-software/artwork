@@ -16,6 +16,8 @@ enum NotificationGroupEnum: string
 
     case SHIFTS = 'SHIFTS';
 
+    case INVENTORY = 'INVENTORY';
+
     public function title(): string
     {
         return match ($this) {
@@ -25,6 +27,7 @@ enum NotificationGroupEnum: string
             self::TASKS => "Tasks & Checklists",
             self::PROJECTS => "Projects & Teams",
             self::SHIFTS => "Shift Planning",
+            self::INVENTORY => "Inventory & Material Issues",
         };
     }
 
@@ -38,6 +41,7 @@ enum NotificationGroupEnum: string
             self::TASKS => "Find out if there are new tasks for you and your team. Also, receive reminders to complete urgent tasks, and more.",
             self::PROJECTS => "Find out if there are changes to your projects, if you have been added to a new project or team, and more.",
             self::SHIFTS => "Find out if shifts have been changed, if there were conflicts in shift scheduling, if employees need to be replaced, and more.",
+            self::INVENTORY => "Get notified about changes or overbooking of inventory articles and material issues.",
         };
     }
     // @codingStandardsIgnoreEnd

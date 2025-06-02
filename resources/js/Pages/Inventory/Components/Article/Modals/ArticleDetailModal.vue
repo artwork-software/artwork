@@ -15,9 +15,9 @@
                                  class="relative grow group rounded-lg border border-gray-200 bg-white shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 <span class="sr-only">{{ image.image }}</span>
                                 <span class="block aspect-square">
-                                    <img :src="'/storage/' + image.image" alt=""
-                                         class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                                         @error="(e) => e.target.src = usePage().props.big_logo"/>
+                                   <img :src="'/storage/' + image.image" alt=""
+                                        class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                        @error="(e) => e.target.src = usePage().props.big_logo"/>
                                 </span>
                                 <span
                                     :class="[selected ? 'ring-2 ring-indigo-500 ring-offset-2' : '', 'pointer-events-none absolute inset-0 rounded-lg']"
@@ -32,8 +32,8 @@
                                   class="flex justify-center items-center rounded-lg py-4 pl-2 sm:py-6">
                             <img :src="'/storage/' + image.image"
                                  :alt="image.alt"
-                                 class="max-h-[30vh] min-h-[30vh] w-full object-contain rounded-lg transition"
                                  @error="(e) => e.target.src = usePage().props.big_logo"
+                                 class="max-h-[30vh] min-h-[30vh] w-full object-contain rounded-lg transition"
                             />
                         </TabPanel>
                     </TabPanels>
@@ -60,9 +60,9 @@
                         </div>
                         <div class="flex gap-x-2 px-2">
                             <component is="IconEdit" class="w-5 h-5 rounded-full cursor-pointer hover:text-artwork-buttons-create duration-200 ease-in-out"
-                                      @click="openArticleEditModal" />
+                                      @click="openArticleEditModal" v-if="can('inventory.create_edit') || is('artwork admin')" />
                             <component is="IconTrash" class="w-5 h-5 rounded-full cursor-pointer hover:text-red-500 duration-200 ease-in-out"
-                                      @click="showConfirmDelete = true" />
+                                      @click="showConfirmDelete = true" v-if="can('inventory.delete') || is('artwork admin')" />
                         </div>
                     </div>
                     <div class="flex w-full">
@@ -273,9 +273,10 @@ import {
 import {router, usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
 import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
-import {nextTick, ref} from "vue";
-import {IconEdit} from "@tabler/icons-vue";
+import {nextTick, ref, computed} from "vue";
+import {IconEdit, IconPhoto} from "@tabler/icons-vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {can, is} from "laravel-permission-to-vuejs";
 
 const $t = useTranslation()
 

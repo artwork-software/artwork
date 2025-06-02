@@ -3,7 +3,7 @@
         :class="[
       'inline-flex items-center justify-center rounded-md font-medium transition duration-200 ease-in-out font-lexend',
       'border shadow-glass backdrop-blur-md',
-      'hover:bg-white/20 disabled:opacity-50',
+      'disabled:opacity-50',
       variantClass[variant],
       sizeClass[size]
     ]"

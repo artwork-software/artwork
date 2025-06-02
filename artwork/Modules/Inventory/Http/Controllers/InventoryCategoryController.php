@@ -33,18 +33,42 @@ class InventoryCategoryController extends Controller
         ?InventoryCategory $inventoryCategory = null,
         ?InventorySubCategory $inventorySubCategory = null
     ): \Inertia\Response {
-        $inventoryCategory?->load(['subcategories', 'properties']);
-        $inventorySubCategory?->load(['properties']);
+        // Optimiere durch gezieltes Eager Loading
+        $inventoryCategory?->load([
+            'subcategories' => function ($query) {
+                $query->orderBy('name');
+            },
+            'subcategories.articles' => function ($query) {
+                $query->orderBy('name');
+            },
+            'properties' => function ($query) {
+                $query->orderBy('name');
+            }
+        ]);
+        
+        $inventorySubCategory?->load(['properties' => function ($query) {
+            $query->orderBy('name');
+        }, 'articles' => function ($query) {
+            $query->orderBy('name');
+        }]);
 
         $filterableProperties = collect();
 
         if ($inventoryCategory) {
-            $filterableProperties = $inventoryCategory->properties()->filterable()->get();
+            $filterableProperties = $inventoryCategory->properties()
+                ->filterable()
+                ->orderBy('name')
+                ->get();
         }
 
         if ($inventorySubCategory) {
+            $subProperties = $inventorySubCategory->properties()
+                ->filterable()
+                ->orderBy('name')
+                ->get();
+                
             $filterableProperties = $filterableProperties
-                ->merge($inventorySubCategory->properties()->filterable()->get())
+                ->merge($subProperties)
                 ->unique('id');
         }
 
@@ -58,11 +82,11 @@ class InventoryCategoryController extends Controller
             'currentSubCategory' => $inventorySubCategory,
             'articles' => $this->articleService->getArticleList($inventoryCategory, $inventorySubCategory, request('search')),
             'articlesCount' => $this->articleService->count(),
-            'filterableProperties' => $filterableProperties,
+            'filterableProperties' => $filterableProperties->values(), // Reset keys
             'properties' => $this->propertyRepository->all(),
-            'rooms' => Room::all(),
-            'manufacturers' => Manufacturer::all(),
-            'statuses' => InventoryArticleStatus::all(),
+            'rooms' => Room::select('id', 'name')->orderBy('name')->get(),
+            'manufacturers' => Manufacturer::select('id', 'name')->orderBy('name')->get(),
+            'statuses' => InventoryArticleStatus::select('id', 'name')->orderBy('name')->get(),
         ]);
     }
 
@@ -113,5 +137,23 @@ class InventoryCategoryController extends Controller
         });
 
         $inventoryCategory->delete();
+    }
+
+    public function getAllCategories()
+    {
+        // Optimiere durch spezifisches Select und Eager Loading
+        $categories = InventoryCategory::with([
+            'subcategories:id,inventory_category_id,name',
+            'articles:id,name,inventory_category_id,inventory_sub_category_id',
+            'articles.category:id,name',
+            'articles.subCategory:id,name'
+        ])
+        ->select('id', 'name')
+        ->orderBy('name')
+        ->get();
+
+        return response()->json([
+            'categories' => $categories,
+        ]);
     }
 }

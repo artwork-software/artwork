@@ -123,6 +123,21 @@
                                                           :first_project_calendar_tab_id="first_project_calendar_tab_id"
                                                           :event-statuses="eventStatuses"
                             />
+                            <!-- Inventory and Issues -->
+                            <NotificationSectionComponent :readNotifications="readNotifications['INVENTORY']"
+                                                          :name="$t('Inventory & Material Issues')" :rooms="rooms" :projects="projects"
+                                                          :event-types="eventTypes"
+                                                          :notifications="notifications['INVENTORY']"
+                                                          :history-objects="historyObjects"
+                                                          :event="event"
+                                                          :wanted-split="wantedSplit"
+                                                          :project="project"
+                                                          :room-collisions="roomCollisions"
+                                                          :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                          :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                          :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                          :event-statuses="eventStatuses"
+                                                          />
                         </div>
                         <div  class="col-span-4 pr-8">
                             <div v-if="globalNotification.image_url || globalNotification.title">

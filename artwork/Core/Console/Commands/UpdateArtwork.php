@@ -2,21 +2,15 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Modules\Budget\Models\MainPosition;
-use Artwork\Modules\Budget\Models\SubPosition;
-use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Models\NotificationSetting;
-use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
-use Artwork\Modules\ServiceProviderContacts\Models\ServiceProviderContacts;
 use Artwork\Modules\User\Models\User;
 use Database\Seeders\ProjectManagementBuilderSeed;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 use Laravel\Passport\Passport;
 
 class UpdateArtwork extends Command
@@ -24,6 +18,7 @@ class UpdateArtwork extends Command
     public function __construct(
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
         private readonly ColumnService $columnService,
+        private readonly CraftItemMigrationService $craftItemMigrationService,
     ) {
         parent::__construct();
     }
@@ -84,6 +79,22 @@ class UpdateArtwork extends Command
                 'enabled_email' => true,
                 'enabled_push' => true,
             ]);
+            // Neue Notification-Typen für Inventory
+            foreach ([
+                NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
+                NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
+            ] as $enum) {
+                $user->notificationSettings()->updateOrCreate([
+                    'type' => $enum->value,
+                ], [
+                    'frequency' => NotificationFrequencyEnum::DAILY->value,
+                    'group_type' => $enum->groupType(),
+                    'title' => $enum->title(),
+                    'description' => $enum->description(),
+                    'enabled_email' => true,
+                    'enabled_push' => true,
+                ]);
+            }
         });
 
         $this->info('----------------------------------------------------------');
@@ -101,6 +112,30 @@ class UpdateArtwork extends Command
         // add to all project Groups the new column with type project_relevant_column
         $this->info('add basic inventory article status');
         $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder', '--force' => true]);
+
+        $this->info('----------------------------------------------------------');
+        // add inventory article plan filter to all users from today + 1 month
+        $this->info('add inventory article plan filter to all users');
+        $users = User::all();
+        $users->each(function ($user) {
+            // if allready exists, skip
+            if ($user->inventoryArticlePlanFilter) {
+                return;
+            }
+            $user->inventoryArticlePlanFilter()->create([
+                'start_date' => now(),
+                'end_date' => now()->addMonth(),
+            ]);
+        });
+
+        $this->info('----------------------------------------------------------');
+        $this->info('Migrating craft inventory items to inventory articles');
+        $result = $this->craftItemMigrationService->migrateCraftItemsToInventoryArticles();
+        $this->info("Migration completed!");
+        $this->info("Successfully migrated: {$result['success_count']} items");
+        if (isset($result['skipped_count']) && $result['skipped_count'] > 0) {
+            $this->info("Skipped: {$result['skipped_count']} items (already migrated)");
+        }
 
         $this->info('----------------------------------------------------------');
         $this->info('Artwork Update Command has finished');

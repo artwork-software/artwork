@@ -8,7 +8,7 @@ additional_hostnames: []
 additional_fqdns: []
 database:
     type: mariadb
-    version: "10.6"
+    version: "10.11"
 use_dns_when_possible: true
 composer_version: "2"
 web_environment: []
@@ -79,7 +79,7 @@ ddev_version_constraint: '>=v1.23.0'
 
 # host_xhgui_port: 8142
 # Can be used to change the host binding port of the xhgui
-# application. Rarely used; only when port conflict and 
+# application. Rarely used; only when port conflict and
 # bind_all_ports is used (normally with router disabled)
 
 # xhprof_enabled: false  # Set to true to enable Xhprof and "ddev start" or "ddev restart"

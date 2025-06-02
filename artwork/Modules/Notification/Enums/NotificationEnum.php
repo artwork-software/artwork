@@ -68,6 +68,9 @@ enum NotificationEnum: string
 
     case NOTIFICATION_SHIFT_CONFLICT = 'NOTICATION_SHIFT_CONFLICT';
 
+    case NOTIFICATION_INVENTORY_ARTICLE_CHANGED = 'NOTIFICATION_INVENTORY_ARTICLE_CHANGED';
+    case NOTIFICATION_INVENTORY_OVERBOOKED = 'NOTIFICATION_INVENTORY_OVERBOOKED';
+
     case NOTIFICATION_REMINDER_ROOM_REQUEST = 'NOTIFICATION_REMINDER_ROOM_REQUEST';
 
     case NOTIFICATION_EVENT_VERIFICATION_REQUESTS = 'NOTIFICATION_EVENT_VERIFICATION_REQUESTS';
@@ -108,6 +111,8 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_AVAILABLE,
             self::NOTIFICATION_SHIFT_OPEN_DEMAND,
             self::NOTIFICATION_SHIFT_CONFLICT => "SHIFTS",
+            self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
+            self::NOTIFICATION_INVENTORY_OVERBOOKED => "INVENTORY",
         };
     }
 
@@ -181,6 +186,9 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_CONFLICT => "Availabilities & Conflicts",
             self::NOTIFICATION_REMINDER_ROOM_REQUEST => "Room request reminder",
 
+            self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED => 'Inventory article changed',
+            self::NOTIFICATION_INVENTORY_OVERBOOKED => 'Inventory article overbooked',
+
             self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Event verification requests"
         };
     }
@@ -219,6 +227,8 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_CONFLICT => "Find out if an employee has a new availability or you need to fill someone new.",
             self::NOTIFICATION_SHIFT_OPEN_DEMAND => "Find out if there are any open demands for your shifts.",
             self::NOTIFICATION_REMINDER_ROOM_REQUEST => "Find out if there are any room requests that need to be confirmed or declined.",
+            self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED => 'An inventory article or one of its status values has changed.',
+            self::NOTIFICATION_INVENTORY_OVERBOOKED => 'The article in your material issue is now overbooked.',
             self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Find out if there are any event verification requests.",
         };
     }

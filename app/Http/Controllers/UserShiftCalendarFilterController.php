@@ -33,6 +33,14 @@ class UserShiftCalendarFilterController extends Controller
         ]);
     }
 
+    public function updateInventoryArticlePlanFilters(Request $request, User $user): void
+    {
+        $user->inventoryArticlePlanFilter()->update([
+            'start_date' => $request->date('start_date')->format('Y-m-d'),
+            'end_date' => $request->date('end_date')->format('Y-m-d')
+        ]);
+    }
+
     public function singleValueUpdate(Request $request, User $user): void
     {
         $user->shift_calendar_filter()->update([

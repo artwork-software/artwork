@@ -271,7 +271,7 @@ readonly class CalendarDataService
 
     public function getFilteredRooms($filter, $userCalendarSettings, $startDate, $endDate) {
         $userCalendarFilter = $filter;
-        $rooms = Room::select(['id', 'name'])
+        $rooms = Room::select(['id', 'name', 'temporary', 'start_date', 'end_date'])
             ->where('relevant_for_disposition', true)
             ->unlessRoomIds($userCalendarFilter?->rooms)
             ->unlessRoomAttributeIds($userCalendarFilter?->room_attributes)
@@ -305,7 +305,18 @@ readonly class CalendarDataService
             ->orderBy('order')
             ->get();
 
-        return $rooms->map(fn($room) => new RoomDTO(
+        // Filter out temporary rooms that don't overlap with the displayed time period
+        $filteredRooms = $rooms->filter(function ($room) use ($startDate, $endDate) {
+            // If the room is not temporary, include it
+            if (!$room->temporary) {
+                return true;
+            }
+
+            // If the room is temporary, check if its time period overlaps with the displayed time period
+            return $this->datesOverlap($room->start_date, $room->end_date, $startDate, $endDate);
+        });
+
+        return $filteredRooms->map(fn($room) => new RoomDTO(
             id: $room->id,
             name: $room->name,
             has_events: $room->events->isNotEmpty(),
@@ -347,5 +358,26 @@ readonly class CalendarDataService
             $firstEvent ? $firstEvent->getAttribute('start_time')->startOfDay() : $today->startOfDay(),
             $endDate,
         ];
+    }
+
+    /**
+     * Check if two date ranges overlap
+     *
+     * @param \Carbon\Carbon|null $start1 Start date of first range
+     * @param \Carbon\Carbon|null $end1 End date of first range
+     * @param \Carbon\Carbon|null $start2 Start date of second range
+     * @param \Carbon\Carbon|null $end2 End date of second range
+     * @return bool True if the ranges overlap, false otherwise
+     */
+    private function datesOverlap($start1, $end1, $start2, $end2): bool
+    {
+        // If any date is null, we can't determine overlap
+        if ($start1 === null || $end1 === null || $start2 === null || $end2 === null) {
+            return true; // Default to showing the room if dates are missing
+        }
+
+        // Check if the ranges overlap
+        // Range 1 starts before Range 2 ends AND Range 2 starts before Range 1 ends
+        return $start1 <= $end2 && $start2 <= $end1;
     }
 }

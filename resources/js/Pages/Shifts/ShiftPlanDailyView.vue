@@ -49,9 +49,9 @@
                                                     <div class="text-gray-700 font-semibold">{{ shift.craft.abbreviation }}: {{ shift.craft.name }}</div>
                                                 </div>
                                                 <div class="flex justify-between items-center w-full px-3">
-                                                    <div class="flex items-center gap-x-3">
+                                                    <div class="flex items-center gap-x-2">
                                                         <div v-for="qualification in shift.shifts_qualifications">
-                                                            <div class="text-gray-500 text-[10px] flex items-center gap-x-1">
+                                                            <div class="text-gray-500 text-[10px] flex items-center gap-x-1 group hover:bg-gray-50 p-1 rounded-lg transition-all duration-150 ease-in-out cursor-pointer hover:text-artwork-buttons-create">
                                                                 <component :is="findShiftQualification(qualification.shift_qualification_id)?.icon" class="size-3" />
                                                                 <div>
                                                                     0/{{ qualification.value }}

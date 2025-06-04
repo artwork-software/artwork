@@ -75,8 +75,8 @@ readonly class UserCalendarAboService
                 ->description($event->description ?? '')
                 ->uniqueIdentifier($event->id)
                 ->createdAt(Carbon::parse($event->created_at))
-                ->startsAt(Carbon::parse($event->start_date))
-                ->endsAt(Carbon::parse($event->end_date));
+                ->startsAt(Carbon::parse($event->start_time))
+                ->endsAt(Carbon::parse($event->end_time));
 
 
             if ($event->room && $event->project) {

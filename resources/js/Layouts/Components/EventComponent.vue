@@ -703,7 +703,7 @@
                     </transition>
                 </Menu>
                 <!--    Properties    -->
-                <div v-if="event_properties.filter((eventProperty) => eventProperty.checked)?.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-2">
+                <div v-if="event_properties?.filter((eventProperty) => eventProperty.checked)?.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-2">
                     <div v-for="(eventProperty, index) in event_properties.filter((eventProperty) => eventProperty.checked)" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
                         <div class="flex items-center">
                             <div class="rounded-full p-1 size-8 flex items-center justify-center">

@@ -28,6 +28,7 @@ class ShiftCalendarService
         $startDate,
         $endDate,
         ?UserCalendarSettings $userCalendarSettings = null,
+        ?bool $addTimeline = false
     ): Collection {
         $roomIds = $rooms->pluck('id');
 
@@ -41,6 +42,12 @@ class ShiftCalendarService
             'creator:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
             'shifts'
         ];
+
+        if ($addTimeline) {
+            $eventWith['timelines'] = function ($query) {
+                $query->orderBy('start');
+            };
+        }
 
 
         $events = Event::select([
@@ -90,6 +97,7 @@ class ShiftCalendarService
             $event,
             $eventTypes,
             $users,
+            $addTimeline
         ))->groupBy('roomId');
 
         $shiftDTOs = $shifts->map(fn($shift) => ShiftDTO::fromModel(

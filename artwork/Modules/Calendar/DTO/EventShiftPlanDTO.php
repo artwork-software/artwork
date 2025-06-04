@@ -39,6 +39,7 @@ class EventShiftPlanDTO extends Data
         public ?string $option_string,
         public ?bool $isPlanning,
         public ?bool $hasVerification = false,
+        public ?Collection $timelines = null
     ) {
     }
 
@@ -46,6 +47,7 @@ class EventShiftPlanDTO extends Data
         Event $event,
         Collection $eventTypes,
         Collection $users,
+        ?bool $addTimeline = false,
     ): EventShiftPlanDTO
     {
         return new self(
@@ -69,6 +71,7 @@ class EventShiftPlanDTO extends Data
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
             hasVerification: $event->getAttribute('has_verification') ?? false,
+            timelines: $addTimeline ? $event->getAttribute('timelines') : collect([]),
         );
     }
 }

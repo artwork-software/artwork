@@ -1,5 +1,5 @@
 <template>
-    <div class="w-[98%] flex justify-between items-center mt-2 mb-2">
+    <div class="w-[98%] flex justify-between items-center mt-2 mb-2 px-5">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
             <div class="flex items-center mx-4 gap-x-1 select-none">
@@ -164,7 +164,7 @@
                         </MenuItems>
                     </transition>
                 </Menu>
-                <ToolTipComponent v-if="this.$can('can commit shifts') || this.hasAdminRole()" direction="bottom" :tooltip-text="$t('Lock all shifts')" icon="IconCalendarCheck" icon-size="h-7 w-7" @click="openHistoryModal()"/>
+                <ToolTipComponent v-if="this.$can('can commit shifts') || this.hasAdminRole()" direction="bottom" :tooltip-text="$t('Lock all shifts')" icon="IconCalendarCheck" icon-size="h-7 w-7" @click="commitAllShifts()"/>
                 <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory" icon-size="h-7 w-7" @click="openHistoryModal()"/>
                 <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal" icon-size="h-7 w-7" v-if="!isFullscreen" @click="enterFullscreenMode"/>
                 <ShiftPlanFilter

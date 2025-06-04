@@ -362,6 +362,7 @@ class EventController extends Controller
             ]);
         }
 
+
         if ($startDate->diffInDays($endDate) > (365 * 2)) {
             $endDate = $startDate->copy()->addYears(2);
             $calendarWarningText = __('calendar.calendar_limit_two_years');
@@ -459,11 +460,24 @@ class EventController extends Controller
         $user = $this->authManager->user();
         $userCalendarFilter = $user->getAttribute('shift_calendar_filter');
         $userCalendarSettings = $user->getAttribute('calendar_settings');
-
+        $renderViewName = 'Shifts/ShiftPlan';
         $this->userService->shareCalendarAbo('shiftCalendar');
+
+
 
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter);
+
+        if ($user->getAttribute('daily_view') && $startDate->diffInDays($endDate) > 7) {
+            $endDate = $startDate->copy()->addDays(7);
+            $user->shift_calendar_filter->update([
+                'end_date' => $endDate->format('Y-m-d')
+            ]);
+        }
+
+        if ($user->getAttribute('daily_view')){
+            $renderViewName = 'Shifts/ShiftPlanDailyView';
+        }
 
         $period = $this->calendarDataService->createCalendarPeriodDto(
             $startDate,
@@ -483,7 +497,8 @@ class EventController extends Controller
             $userCalendarFilter,
             $startDate,
             $endDate,
-            $userCalendarSettings
+            $userCalendarSettings,
+            $user->getAttribute('daily_view')
         );
 
 
@@ -499,13 +514,21 @@ class EventController extends Controller
             $endDate ? $endDate->format('Y-m-d') : null
         ];
 
-        return Inertia::render('Shifts/ShiftPlan', [
+
+
+        return Inertia::render($renderViewName, [
             'history' => $this->shiftCalendarService->getEventShiftsHistoryChanges(),
             'crafts' => $this->craftService->getAll([
                 'managingUsers',
                 'managingFreelancers',
                 'managingServiceProviders'
             ]),
+            'rooms' => $rooms,
+            'eventTypes' => EventType::all(),
+            'eventStatuses' => EventStatus::orderBy('order')->get(),
+            'event_properties' => EventProperty::all(),
+            'first_project_calendar_tab_id' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
             'days' => $period,
             'shiftPlan' => $calendarData->rooms,
             'personalFilters' => $this->filterService->getPersonalFilter(),

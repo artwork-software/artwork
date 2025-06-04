@@ -1,7 +1,7 @@
 <template>
     <div class="w-full flex flex-col">
         <ShiftHeader>
-            <div class="ml-5 bg-white flex-grow">
+            <div class=" bg-white flex-grow">
                 <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
                                       @next-time-range="nextTimeRange"
                                       :date-value="dateValue"
@@ -47,6 +47,26 @@
                         </div>
                     </template>
                     <template #moreButtons>
+                        <Switch @click="changeDailyViewMode" v-model="dailyViewMode" :class="[dailyViewMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                            <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent
+                                        icon="IconCalendarWeek"
+                                        icon-size="h-4 w-4"
+                                        :tooltip-text="$t('Daily view')"
+                                        direction="left"
+                                    />
+                                </span>
+                                <span :class="[dailyViewMode ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent
+                                        icon="IconCalendarWeek"
+                                        icon-size="h-4 w-4"
+                                        :tooltip-text="$t('Daily view')"
+                                        direction="left"
+                                    />
+                                </span>
+                            </span>
+                        </Switch>
                         <Switch @click="toggleMultiEditModeCalendar" v-model="multiEditModeCalendar" :class="[multiEditModeCalendar ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                             <span :class="[multiEditModeCalendar ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                 <span :class="[multiEditModeCalendar ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
@@ -868,7 +888,8 @@ export default {
             showAddShiftModal: false,
             shiftToEdit: null,
             newShiftPlanData: ref(this.shiftPlan),
-            openCellMultiEditCalendarDelete: false
+            openCellMultiEditCalendarDelete: false,
+            dailyViewMode: usePage().props.auth.user.daily_view ?? false,
         }
     },
     mounted() {
@@ -1012,7 +1033,17 @@ export default {
         },
     },
     methods: {
+
         usePage,
+        changeDailyViewMode(){
+            this.dailyViewMode = !this.dailyViewMode;
+            router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
+                daily_view: this.dailyViewMode
+            }, {
+                preserveScroll: false,
+                preserveState: false
+            })
+        },
         getAllProjectGroupsInEventsByDay(events){
             let projectGroups = [];
 

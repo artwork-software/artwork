@@ -521,7 +521,8 @@ class EventController extends Controller
             'crafts' => $this->craftService->getAll([
                 'managingUsers',
                 'managingFreelancers',
-                'managingServiceProviders'
+                'managingServiceProviders',
+                'users', 'freelancers', 'serviceProviders'
             ]),
             'rooms' => $rooms,
             'eventTypes' => EventType::all(),

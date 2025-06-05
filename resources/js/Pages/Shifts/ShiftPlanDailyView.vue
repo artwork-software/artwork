@@ -4,8 +4,29 @@
 
             <!-- topbar with date range selector -->
             <div class="card glassy p-4 w-full sticky top-0 z-40 !rounded-t-none">
-                <div class="flex items-center px-5">
-                    <date-picker-component :date-value-array="dateValue"/>
+                <div class="flex items-center px-5 gap-x-5">
+                    <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
+
+                    <Switch @click="changeDailyViewMode" v-model="dailyViewMode" :class="[dailyViewMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                        <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                            <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                <ToolTipComponent
+                                    icon="IconCalendarWeek"
+                                    icon-size="h-4 w-4"
+                                    :tooltip-text="$t('Daily view')"
+                                    direction="bottom"
+                                />
+                            </span>
+                            <span :class="[dailyViewMode ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                <ToolTipComponent
+                                    icon="IconCalendarWeek"
+                                    icon-size="h-4 w-4"
+                                    :tooltip-text="$t('Daily view')"
+                                    direction="bottom"
+                                />
+                            </span>
+                        </span>
+                    </Switch>
                 </div>
             </div>
 
@@ -43,29 +64,7 @@
                                 <div class="card white p-5 text-xs font-lexend">
                                     <div class="space-y-2" v-if="room.content[day.fullDay]?.shifts?.length > 0">
                                         <div v-for="shift in room.content[day.fullDay]?.shifts" :key="shift.id">
-                                            <div class="grid grid-cols-1 md:grid-cols-2 mb-2 bg-gray-100 w-full rounded-lg">
-                                                <div class="flex items-center gap-x-2">
-                                                    <div class="bg-gray-500 py-1.5 px-2 rounded-l-lg text-white">{{ shift.start }} - {{ shift.end }}</div>
-                                                    <div class="text-gray-700 font-semibold">{{ shift.craft.abbreviation }}: {{ shift.craft.name }}</div>
-                                                </div>
-                                                <div class="flex justify-between items-center w-full px-3">
-                                                    <div class="flex items-center gap-x-2">
-                                                        <div v-for="qualification in shift.shifts_qualifications">
-                                                            <div class="text-gray-500 text-[10px] flex items-center gap-x-1 group hover:bg-gray-50 p-1 rounded-lg transition-all duration-150 ease-in-out cursor-pointer hover:text-artwork-buttons-create">
-                                                                <component :is="findShiftQualification(qualification.shift_qualification_id)?.icon" class="size-3" />
-                                                                <div>
-                                                                    0/{{ qualification.value }}
-                                                                </div>
-                                                                {{ findShiftQualification(qualification.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex items-center justify-end px-3">
-                                                        <component is="IconChevronDown" class="size-5 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-150 ease-in-out" />
-                                                    </div>
-                                                </div>
-
-                                            </div>
+                                            <SingleShiftInDailyShiftView :shift="shift" :shift-qualifications="shiftQualifications" :crafts="crafts"/>
                                         </div>
                                     </div>
                                     <div v-else>
@@ -134,9 +133,12 @@ import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import SingleEventInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleEventInDailyShiftView.vue";
 import {ref, provide} from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
-import {usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {can} from "laravel-permission-to-vuejs";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {Switch} from "@headlessui/vue";
+import SingleShiftInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue";
 
 const props = defineProps({
     days: {
@@ -196,11 +198,8 @@ const wantedDate = ref(null);
 const showEventComponent = ref(false);
 const isPlanning = ref(false);
 const roomCollisions = ref([]);
+const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
 provide('event_properties', props.event_properties)
-const findShiftQualification = (qualificationId) => {
-    return props.shiftQualifications.find(q => q.id === qualificationId);
-}
-
 const openAddShiftForRoomAndDay = (day, roomId) => {
     shiftToEdit.value = null;
     roomForShiftAdd.value = roomId;
@@ -227,6 +226,16 @@ const eventComponentClosed = () => {
     eventToEdit.value = false;
     wantedRoom.value = null;
     wantedDate.value = null;
+};
+
+const  changeDailyViewMode = () => {
+    dailyViewMode.value = !dailyViewMode.value;
+    router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
+        daily_view: dailyViewMode.value
+    }, {
+        preserveScroll: false,
+        preserveState: false
+    })
 };
 
 </script>

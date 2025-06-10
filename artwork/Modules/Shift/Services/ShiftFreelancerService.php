@@ -50,7 +50,8 @@ readonly class ShiftFreelancerService
             $shift->id,
             $freelancerId,
             $shiftQualificationId,
-            $craftAbbreviation
+            $craftAbbreviation,
+            $shift
         );
 
         $this->shiftsQualificationsService->increaseValueOrCreateWithOne(

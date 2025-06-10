@@ -104,4 +104,23 @@
             @apply shadow-glass bg-white rounded-lg border border-gray-100 w-full;
         }
     }
+
+    .button {
+        @apply relative;
+        &.glassy {
+            @apply flex h-fit w-fit items-center rounded-full p-1 bg-gradient-to-br from-slate-50/70 to-sky-100/20 text-left shadow-glass backdrop-blur-2xl border border-gray-100 cursor-pointer;
+        }
+        span {
+            @apply shadow-glass bg-white rounded-full border border-gray-100 w-fit p-2 relative z-30;
+
+            svg {
+                @apply text-gray-500;
+            }
+        }
+
+        p {
+            @apply text-gray-500 text-xs font-lexend font-semibold relative z-20;
+        }
+
+    }
 }

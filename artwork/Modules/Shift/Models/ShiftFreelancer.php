@@ -20,7 +20,12 @@ class ShiftFreelancer extends Pivot
         'freelancer_id',
         'shift_qualification_id',
         'shift_count',
-        'craft_abbreviation'
+        'craft_abbreviation',
+        'short_description',
+        'start_date',
+        'end_date',
+        'start_time',
+        'end_time',
     ];
 
     public function shift(): BelongsTo

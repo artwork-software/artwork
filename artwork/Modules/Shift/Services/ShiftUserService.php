@@ -59,6 +59,7 @@ class ShiftUserService
             $userId,
             $shiftQualificationId,
             $craftAbbreviation,
+            $shift
         );
 
         $this->shiftsQualificationsService->increaseValueOrCreateWithOne(

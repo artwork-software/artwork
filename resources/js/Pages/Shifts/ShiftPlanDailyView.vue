@@ -57,8 +57,8 @@
                                     <div v-else>
                                         <div class="text-gray-300 text-center">Keine Veranstaltungen für diesen Tag</div>
                                     </div>
-                                    <div class="mt-5 border rounded-lg w-fit p-1 bg-gray-50 group hover:bg-gray-100 transition-all duration-150 ease-in-out cursor-pointer" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)">
-                                        <component is="IconCalendarPlus" class="size-5 text-gray-500 group-hover:text-gray-700" />
+                                    <div class="mt-5">
+                                        <GlassyIconButton text="Add Event" icon="IconCalendarPlus" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)" />
                                     </div>
                                 </div>
                                 <div class="card white p-5 text-xs font-lexend">
@@ -70,8 +70,8 @@
                                     <div v-else>
                                         <div class="text-gray-300 text-center">Keine Schichten für diesen Tag</div>
                                     </div>
-                                    <div class="mt-5 border rounded-lg w-fit p-1 bg-gray-50 group hover:bg-gray-100 transition-all duration-150 ease-in-out cursor-pointer" @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)">
-                                        <component is="IconCalendarUser" class="size-5 text-gray-500 group-hover:text-gray-700" />
+                                    <div class="mt-5">
+                                        <GlassyIconButton text="Add Shift" icon="IconCalendarUser" @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)" />
                                     </div>
                                 </div>
                             </div>
@@ -139,6 +139,7 @@ import {can} from "laravel-permission-to-vuejs";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {Switch} from "@headlessui/vue";
 import SingleShiftInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 const props = defineProps({
     days: {

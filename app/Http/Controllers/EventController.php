@@ -640,7 +640,7 @@ class EventController extends Controller
         $shiftsOfDay = $user
             ->shifts()
             ->whereDate(
-                'start_date',
+                'shifts.start_date',
                 $now->format('Y-m-d')
             )->with(['event','event.project','event.room', 'event.event_type'])->get();
 

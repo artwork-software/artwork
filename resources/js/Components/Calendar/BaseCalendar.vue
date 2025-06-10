@@ -35,7 +35,7 @@
                         <div class="w-fit events-by-days-container mt-16" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '',]" ref="calendarToCalculate">
                             <div v-for="day in days"
                                  :key="day.fullDay"
-                                 :style="{ height: usePage().props.auth.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                                 :style="{ height: usePage().props.auth.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px', minHeight: usePage().props.auth.user.calendar_settings.expand_days ? zoom_factor * 115 + 'px' : '' }"
                                  class="flex gap-0.5 day-container"
                                  :class="day.isWeekend ? 'bg-gray-50' : ''"
                                  :data-day="day.fullDay"
@@ -45,7 +45,7 @@
                                     <div v-if="room.content[day.fullDay]?.events.length > 1 && !usePage().props.auth.user.calendar_settings.expand_days" class="absolute bottom-2 right-4 z-10">
                                         <component is="IconChevronDown" @click="scrollToNextEventInDay(day.withoutFormat, room.content[day.fullDay].events.length,room.roomId)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
                                     </div>
-                                    <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.auth.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                                    <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.auth.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px', minHeight: usePage().props.auth.user.calendar_settings.expand_days ? zoom_factor * 115 + 'px' : '' }"
                                          :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                                          class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.withoutFormat">
                                         <div v-if="usePage().props.auth.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
@@ -78,7 +78,7 @@
                                                 />
                                             </div>
                                         </div>
-                                        <div class="absolute right-2 bottom-10 hidden group-hover/container:block">
+                                        <div class="absolute right-2 top-10 hidden group-hover/container:block">
                                             <ToolTipComponent
                                                 :tooltip-text="isPlanning ? $t('Add new planned event') : $t('Add new event on this day')"
                                                 icon="IconCircleDashedPlus"

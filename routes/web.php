@@ -237,6 +237,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [AppController::class, 'toggleCalendarSettingsUseProjectPeriod']
     )->name('user.calendar_settings.toggle_calendar_settings_use_project_period');
 
+    Route::patch(
+        '/toggle_calendar_settings_use_project_period_shift_plan',
+        [AppController::class, 'toggleCalendarSettingsUseProjectPeriodShiftPlan']
+    )->name('user.calendar_settings.toggle_calendar_settings_use_project_period_shift_plan');
+
     Route::get('/dashboard', [EventController::class, 'showDashboardPage'])->name('dashboard');
     Route::get('/checklist/templates', function () {
         return Inertia::render('ChecklistTemplates/Edit');

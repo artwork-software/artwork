@@ -13,6 +13,8 @@
                                       @openHistoryModal="openHistoryModal"
                                       :user_filters="user_filters"
                                       :crafts="crafts"
+                                      :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                                      :firstProjectShiftTabId="firstProjectShiftTabId"
                                       @select-go-to-next-mode="selectGoToNextMode"
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 >
@@ -890,6 +892,7 @@ export default {
             newShiftPlanData: ref(this.shiftPlan),
             openCellMultiEditCalendarDelete: false,
             dailyViewMode: usePage().props.auth.user.daily_view ?? false,
+            projectNameUsedForProjectTimePeriod: '',
         }
     },
     mounted() {
@@ -1995,6 +1998,19 @@ export default {
                 }
             );
         },
+        fetchProjectName(projectId) {
+            axios.get(route('projects.get', { project: projectId }))
+                .then(response => {
+                    console.log(response)
+                    if (response.data && response.data.name) {
+                        this.projectNameUsedForProjectTimePeriod = response.data.name;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching project name:', error);
+                    this.projectNameUsedForProjectTimePeriod = '';
+                });
+        },
     },
     beforeUnmount() {
         window.removeEventListener('resize', this.updateHeight);
@@ -2015,6 +2031,16 @@ export default {
                 this.updateHeight();
             },
             deep: true
+        },
+        'usePage().props.auth.user.calendar_settings.time_period_project_id': {
+            handler(newProjectId) {
+                if (newProjectId > 0) {
+                    this.fetchProjectName(newProjectId);
+                } else {
+                    this.projectNameUsedForProjectTimePeriod = '';
+                }
+            },
+            immediate: true
         }
     }
 }

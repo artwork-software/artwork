@@ -145,6 +145,22 @@ class AppController extends Controller
         return $this->redirector->route('events');
     }
 
+    public function toggleCalendarSettingsUseProjectPeriodShiftPlan(
+        ToggleUseProjectTimePeriodRequest $request
+    ): RedirectResponse|bool {
+        $user = $this->userService->getAuthUser();
+        $user->calendar_settings()->update([
+            'use_project_time_period' => $request->boolean('use_project_time_period'),
+            'time_period_project_id' => $request->integer('project_id')
+        ]);
+
+        if ($request->boolean('is_axios')) {
+            return true;
+        }
+
+        return $this->redirector->route('shifts.plan');
+    }
+
     public function index(GeneralSettings $settings): RedirectResponse
     {
         //setup process finished

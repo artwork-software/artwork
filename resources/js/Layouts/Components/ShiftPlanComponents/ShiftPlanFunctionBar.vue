@@ -1,72 +1,121 @@
 <template>
     <div class="w-[98%] flex justify-between items-center mt-2 mb-2 px-5">
         <div class="inline-flex items-center">
-            <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
-            <div class="flex items-center mx-4 gap-x-1 select-none">
-                <IconChevronLeftPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="previousTimeRange"/>
-                <IconChevronLeft stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToPreviousDay"/>
-                <Menu as="div" class="relative inline-block text-left">
+            <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">
+                <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
+                <div class="flex items-center mx-4 gap-x-1 select-none">
+                    <IconChevronLeftPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="previousTimeRange"/>
+                    <IconChevronLeft stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToPreviousDay"/>
+                    <Menu as="div" class="relative inline-block text-left">
+                        <div class="flex items-center">
+                            <MenuButton class="">
+                                <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'month'"/>
+                                <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'week'"/>
+                                <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'day'"/>
+                            </MenuButton>
+                        </div>
+
+                        <transition enter-active-class="transition-enter-active"
+                                    enter-from-class="transition-enter-from"
+                                    enter-to-class="transition-enter-to"
+                                    leave-active-class="transition-leave-active"
+                                    leave-from-class="transition-leave-from"
+                                    leave-to-class="transition-leave-to">
+                            <MenuItems class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                <div class="py-1">
+                                    <MenuItem v-slot="{ active }">
+                                        <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                            <ToolTipComponent
+                                                direction="right"
+                                                :tooltip-text="$t('Jump around') + ' ' + $t('Day')"
+                                                icon="IconCalendar"
+                                                icon-size="h-5 w-5 text-white" />
+                                        </div>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }">
+                                        <div @click="changeUserSelectedGoTo('week')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                            <ToolTipComponent
+                                                direction="right"
+                                                :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')"
+                                                icon="IconCalendarWeek"
+                                                icon-size="h-5 w-5 text-white" />
+                                        </div>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }">
+                                        <div @click="changeUserSelectedGoTo('month')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                            <ToolTipComponent
+                                                direction="right"
+                                                :tooltip-text="$t('Jump around') + ' ' + $t('Month')"
+                                                icon="IconCalendarMonth"
+                                                icon-size="h-5 w-5 text-white" />
+                                        </div>
+                                    </MenuItem>
+                                </div>
+                            </MenuItems>
+                        </transition>
+                    </Menu>
+                    <IconChevronRight stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToNextDay"/>
+
+                    <IconChevronRightPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"  @click="nextTimeRange"/>
+                </div>
+                <div class="items-center hidden">
                     <div class="flex items-center">
-                        <MenuButton class="">
-                            <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'month'"/>
-                            <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'week'"/>
-                            <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'day'"/>
-                        </MenuButton>
+                        <button  class="ml-2 text-black" @click="previousTimeRange">
+                            <IconChevronLeft stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
+                        </button>
+                        <button class="ml-2  text-black" @click="nextTimeRange">
+                            <IconChevronRight stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
+                        </button>
                     </div>
-
-                    <transition enter-active-class="transition-enter-active"
-                                enter-from-class="transition-enter-from"
-                                enter-to-class="transition-enter-to"
-                                leave-active-class="transition-leave-active"
-                                leave-from-class="transition-leave-from"
-                                leave-to-class="transition-leave-to">
-                        <MenuItems class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            <div class="py-1">
-                                <MenuItem v-slot="{ active }">
-                                    <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
-                                        <ToolTipComponent
-                                            direction="right"
-                                            :tooltip-text="$t('Jump around') + ' ' + $t('Day')"
-                                            icon="IconCalendar"
-                                            icon-size="h-5 w-5 text-white" />
-                                    </div>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <div @click="changeUserSelectedGoTo('week')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
-                                        <ToolTipComponent
-                                            direction="right"
-                                            :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')"
-                                            icon="IconCalendarWeek"
-                                            icon-size="h-5 w-5 text-white" />
-                                    </div>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <div @click="changeUserSelectedGoTo('month')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
-                                        <ToolTipComponent
-                                            direction="right"
-                                            :tooltip-text="$t('Jump around') + ' ' + $t('Month')"
-                                            icon="IconCalendarMonth"
-                                            icon-size="h-5 w-5 text-white" />
-                                    </div>
-                                </MenuItem>
-                            </div>
-                        </MenuItems>
-                    </transition>
-                </Menu>
-                <IconChevronRight stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToNextDay"/>
-
-                <IconChevronRightPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"  @click="nextTimeRange"/>
-            </div>
-            <div class="items-center hidden">
-                <div class="flex items-center">
-                    <button  class="ml-2 text-black" @click="previousTimeRange">
-                        <IconChevronLeft stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
-                    </button>
-                    <button class="ml-2  text-black" @click="nextTimeRange">
-                        <IconChevronRight stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
-                    </button>
                 </div>
             </div>
+
+            <div v-else class="relative">
+                <BaseInput
+                    id="shiftPlanProjectSearch"
+                    v-model="projectSearch"
+                    :no-margin-top="true"
+                    :is-small="true"
+                    ref="projectSearchInput"
+                    is-small
+                    label="Search project"
+                />
+                <div v-if="projectSearchResults.length > 0"
+                     class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg z-50">
+                    <div v-for="(project, index) in projectSearchResults"
+                         :key="index"
+                         @click="toggleProjectTimePeriodAndRedirect(project.id, true)"
+                         class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                        {{ project.name }}
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0" class="text-sm ml-4">
+                {{ $t('Project period')}}:
+                <Link :href="route('projects.tab', {projectTab: firstProjectShiftTabId, project: getTimePeriodProjectId()})"
+                      class="font-bold">
+                    {{ projectNameUsedForProjectTimePeriod }}
+                </Link>
+                <template v-if="dateValue[0] && dateValue[1]">
+                    &nbsp;- {{ formatDateStringToGermanFormat(dateValue[0]) }} - {{ formatDateStringToGermanFormat(dateValue[1]) }}
+                </template>
+            </div>
+
+            <Switch
+                v-model="usePage().props.auth.user.calendar_settings.use_project_time_period"
+                @update:model-value="handleUseTimePeriodChange"
+                :class="[isCalendarUsingProjectTimePeriod ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none ml-4']">
+                <span class="sr-only">Use project time period toggle</span>
+                <span :class="[isCalendarUsingProjectTimePeriod ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                    <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                        <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
+                    </span>
+                    <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                        <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
+                    </span>
+                </span>
+            </Switch>
         </div>
 
         <slot name="multiEditCalendar" />
@@ -217,19 +266,20 @@ import Permissions from "@/Mixins/Permissions.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {router, useForm, usePage} from "@inertiajs/vue3";
+import {router, useForm,Link, usePage} from "@inertiajs/vue3";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import Input from "@/Jetstream/Input.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import projectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 
 export default {
     name: "ShiftPlanFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
-        Input,
+        BaseInput,
         ToolTipComponent,
         BaseButton,
         AddButtonSmall,
@@ -255,7 +305,37 @@ export default {
         ComboboxLabel,
         ComboboxOption,
         ComboboxOptions,
-        Menu, MenuButton, MenuItem, MenuItems
+        Menu, MenuButton, MenuItem, MenuItems,
+        Link
+    },
+    watch: {
+        projectSearch: {
+            handler(searchValue) {
+                if (searchValue.length === 0) {
+                    this.projectSearchResults = [];
+                    return;
+                }
+                axios.get(
+                    route('projects.search'),
+                    {
+                        params: {query: searchValue}
+                    }
+                ).then(
+                    (response) => {
+                        this.projectSearchResults = response.data;
+                    }
+                );
+            }
+        },
+        'usePage().props.auth.user.calendar_settings.use_project_time_period': {
+            handler(newValue) {
+                if (newValue) {
+                    this.$nextTick(() => {
+                        document.getElementById('shiftPlanProjectSearch')?.focus();
+                    });
+                }
+            }
+        }
     },
     props: [
         'dateValue',
@@ -265,7 +345,9 @@ export default {
         'personalFilters',
         'rooms',
         'user_filters',
-        'crafts'
+        'crafts',
+        'projectNameUsedForProjectTimePeriod',
+        'firstProjectShiftTabId'
     ],
     emits: ['enterFullscreenMode', 'previousTimeRange', 'nextTimeRange', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode'],
     data() {
@@ -273,6 +355,8 @@ export default {
             //activeFilters: [],
             showConfirmCommitModal: false,
             scrollDays: 1,
+            projectSearch: '',
+            projectSearchResults: [],
             userCalendarSettings: useForm({
                 show_qualifications: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_qualifications : false,
                 shift_notes: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.shift_notes : false,
@@ -298,6 +382,9 @@ export default {
                 }
             })
             return activeFiltersArray
+        },
+        isCalendarUsingProjectTimePeriod() {
+            return usePage().props.auth.user.calendar_settings.use_project_time_period;
         }
     },
     methods: {
@@ -306,6 +393,31 @@ export default {
                 preserveScroll: true
             })
             document.getElementById('displaySettings').click();
+        },
+        getTimePeriodProjectId() {
+            return usePage().props.auth.user.calendar_settings.time_period_project_id;
+        },
+        toggleProjectTimePeriodAndRedirect(projectId, enabled) {
+            this.projectSearch = '';
+            router.patch(
+                route('user.calendar_settings.toggle_calendar_settings_use_project_period_shift_plan'),
+                {
+                    use_project_time_period: enabled,
+                    project_id: projectId
+                },
+                {
+                    preserveState: true
+                }
+            );
+        },
+        handleUseTimePeriodChange(enabled) {
+            if (!enabled && this.isCalendarUsingProjectTimePeriod && this.getTimePeriodProjectId() > 0) {
+                this.toggleProjectTimePeriodAndRedirect(0, false);
+            }
+        },
+        formatDateStringToGermanFormat(dateString) {
+            let parts = dateString.split('-');
+            return parts[2] + '.' + parts[1] + '.' + parts[0];
         },
         usePage,
         changeUserSelectedGoTo(type) {

@@ -97,7 +97,7 @@
 
     .card {
         &.glassy {
-            @apply flex h-fit grow flex-col rounded-lg bg-gradient-to-br from-slate-50/70 to-sky-100/20 text-left shadow-glass backdrop-blur-sm border border-gray-100;
+            @apply flex h-fit grow flex-col rounded-lg bg-gradient-to-bl from-white/40 to-sky-100/30 text-left shadow-glass backdrop-blur-sm border border-white/50;
         }
 
         &.white {

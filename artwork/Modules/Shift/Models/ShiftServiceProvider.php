@@ -20,7 +20,19 @@ class ShiftServiceProvider extends Pivot
         'service_provider_id',
         'shift_qualification_id',
         'shift_count',
-        'craft_abbreviation'
+        'craft_abbreviation',
+        'short_description',
+        'start_date',
+        'end_date',
+        'start_time',
+        'end_time',
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'start_time' => 'datetime:H:i',
+        'end_time' => 'datetime:H:i',
     ];
 
     public function shift(): BelongsTo

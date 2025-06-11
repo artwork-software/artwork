@@ -51,28 +51,30 @@ use Random\RandomException;
 class ShiftController extends Controller
 {
     public function __construct(
-        private readonly NotificationService $notificationService,
-        private readonly ChangeService $changeService,
+        private readonly NotificationService         $notificationService,
+        private readonly ChangeService               $changeService,
         private readonly AvailabilityConflictService $availabilityConflictService,
-        private readonly VacationConflictService $vacationConflictService,
-        private readonly ShiftService $shiftService,
-        private readonly Redirector $redirector,
-        private readonly IndividualTimeService $individualTimeService,
-        private readonly ShiftPlanCommentService $shiftPlanCommentService,
-        private readonly VacationService $vacationService,
-        private readonly EventTimelineService $eventTimelineService,
-        private readonly EventService $eventService,
-    ) {
+        private readonly VacationConflictService     $vacationConflictService,
+        private readonly ShiftService                $shiftService,
+        private readonly Redirector                  $redirector,
+        private readonly IndividualTimeService       $individualTimeService,
+        private readonly ShiftPlanCommentService     $shiftPlanCommentService,
+        private readonly VacationService             $vacationService,
+        private readonly EventTimelineService        $eventTimelineService,
+        private readonly EventService                $eventService,
+    )
+    {
     }
 
     /**
      * @throws RandomException
      */
     public function store(
-        Request $request,
-        Event $event,
+        Request                     $request,
+        Event                       $event,
         ShiftsQualificationsService $shiftsQualificationsService
-    ): void {
+    ): void
+    {
 
         $shift = $this->shiftService->createAutomatic(
             event: $event,
@@ -198,12 +200,13 @@ class ShiftController extends Controller
     }
 
     public function updateShift(
-        Request $request,
-        Shift $shift,
+        Request                     $request,
+        Shift                       $shift,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ProjectTabService $projectTabService
-    ): RedirectResponse {
-        $projectId =  $shift->event()->first()?->project()?->first()->id;
+        ProjectTabService           $projectTabService
+    ): RedirectResponse
+    {
+        $projectId = $shift->event()->first()?->project()?->first()->id;
         if ($shift->is_committed) {
             $event = $shift->event;
 
@@ -304,7 +307,6 @@ class ShiftController extends Controller
         $this->shiftService->save($shift);
 
 
-
         foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
             $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
         }
@@ -321,7 +323,6 @@ class ShiftController extends Controller
         if ($projectTab && $projectId && !$request->boolean('updateOrCreateInShiftPlan')) {
             return $this->redirector->route('projects.tab', [$projectId, $projectTab->id]);
         }
-
 
 
         return $this->redirector->back();
@@ -714,7 +715,7 @@ class ShiftController extends Controller
                 $conflict->delete();
             });
         }
-        if ($shift->event_id){
+        if ($shift->event_id) {
             broadcast(new DestroyShift(
                 $shift,
                 $shift->event->room_id
@@ -730,17 +731,18 @@ class ShiftController extends Controller
 
     //phpcs:ignore
     public function saveMultiEdit(
-        Request $request,
-        ShiftService $shiftService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
+        Request                     $request,
+        ShiftService                $shiftService,
+        ShiftUserService            $shiftUserService,
+        ShiftFreelancerService      $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService,
-        NotificationService $notificationService,
-        ShiftCountService $shiftCountService,
-        VacationConflictService $vacationConflictService,
+        NotificationService         $notificationService,
+        ShiftCountService           $shiftCountService,
+        VacationConflictService     $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
-        ChangeService $changeService
-    ): bool {
+        ChangeService               $changeService
+    ): bool
+    {
         $shiftsToHandle = $request->get('shiftsToHandle', ['assignToShift' => [], 'removeFromShift' => []]);
         if (empty($shiftsToHandle['assignToShift']) && empty($shiftsToHandle['removeFromShift'])) {
             return false;
@@ -845,17 +847,18 @@ class ShiftController extends Controller
     }
 
     public function assignToShift(
-        Shift $shift,
-        Request $request,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
+        Shift                       $shift,
+        Request                     $request,
+        ShiftUserService            $shiftUserService,
+        ShiftFreelancerService      $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService,
-        NotificationService $notificationService,
-        ShiftCountService $shiftCountService,
-        VacationConflictService $vacationConflictService,
+        NotificationService         $notificationService,
+        ShiftCountService           $shiftCountService,
+        VacationConflictService     $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
-        ChangeService $changeService,
-    ): bool|RedirectResponse {
+        ChangeService               $changeService,
+    ): bool|RedirectResponse
+    {
 
         $isShiftTab = $request->boolean('isShiftTab');
         $serviceToUse = match ($request->get('userType')) {
@@ -929,18 +932,19 @@ class ShiftController extends Controller
     }
 
     public function removeFromShift(
-        int $usersPivotId,
-        int $userType,
-        Request $request,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
+        int                         $usersPivotId,
+        int                         $userType,
+        Request                     $request,
+        ShiftUserService            $shiftUserService,
+        ShiftFreelancerService      $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService,
-        NotificationService $notificationService,
-        ShiftCountService $shiftCountService,
-        VacationConflictService $vacationConflictService,
+        NotificationService         $notificationService,
+        ShiftCountService           $shiftCountService,
+        VacationConflictService     $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
-        ChangeService $changeService
-    ): bool|RedirectResponse|null {
+        ChangeService               $changeService
+    ): bool|RedirectResponse|null
+    {
         $isShiftTab = $request->boolean('isShiftTab');
         $serviceToUse = match ($userType) {
             0 => $shiftUserService,
@@ -1012,17 +1016,18 @@ class ShiftController extends Controller
     }
 
     public function removeAllShiftUsers(
-        Shift $shift,
-        ShiftService $shiftService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
+        Shift                       $shift,
+        ShiftService                $shiftService,
+        ShiftUserService            $shiftUserService,
+        ShiftFreelancerService      $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService,
-        NotificationService $notificationService,
-        ShiftCountService $shiftCountService,
-        VacationConflictService $vacationConflictService,
+        NotificationService         $notificationService,
+        ShiftCountService           $shiftCountService,
+        VacationConflictService     $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
-        ChangeService $changeService
-    ): RedirectResponse {
+        ChangeService               $changeService
+    ): RedirectResponse
+    {
         $shiftUserService->removeAllUsersFromShift(
             $shift,
             $notificationService,
@@ -1163,9 +1168,10 @@ class ShiftController extends Controller
     }
 
     public function storeShiftWithoutEvent(
-        Request $request,
+        Request                     $request,
         ShiftsQualificationsService $shiftsQualificationsService
-    ): void {
+    ): void
+    {
         $shift = $this->shiftService->createShiftWithoutEventAutomatic(
             craftId: $request->craft_id,
             data: $request->all(),
@@ -1219,16 +1225,16 @@ class ShiftController extends Controller
      */
     public function checkCollisions(Request $request)
     {
-        $people       = $request->input('people', []);
-        $shiftId      = $request->input('shift_id');
+        $people = $request->input('people', []);
+        $shiftId = $request->input('shift_id');
         $startDateRaw = $request->input('start_date');
-        $endDateRaw   = $request->input('end_date');
-        $startRaw     = $request->input('start');
-        $endRaw       = $request->input('end');
+        $endDateRaw = $request->input('end_date');
+        $startRaw = $request->input('start');
+        $endRaw = $request->input('end');
 
         // Aktuelle Schicht Zeiten
-        $currentStart = Carbon::parse(Carbon::parse($startDateRaw)->toDateString().' '.$startRaw);
-        $currentEnd   = Carbon::parse(Carbon::parse($endDateRaw)->toDateString().' '.$endRaw);
+        $currentStart = Carbon::parse(Carbon::parse($startDateRaw)->toDateString() . ' ' . $startRaw);
+        $currentEnd = Carbon::parse(Carbon::parse($endDateRaw)->toDateString() . ' ' . $endRaw);
         if ($currentEnd <= $currentStart) {
             $currentEnd->addDay();
         }
@@ -1237,16 +1243,16 @@ class ShiftController extends Controller
 
         foreach ($people as $person) {
             $type = $person['type'];
-            $id   = $person['id'];
-            $hasCollision   = false;
-            $collisionShifts= [];
+            $id = $person['id'];
+            $hasCollision = false;
+            $collisionShifts = [];
 
             // Pivot holen
             $query = match ($type) {
-                'user'             => ShiftUser::where('user_id', $id),
-                'freelancer'       => ShiftFreelancer::where('freelancer_id', $id),
-                'service_provider'=> ShiftServiceProvider::where('service_provider_id', $id),
-                default            => null
+                'user' => ShiftUser::where('user_id', $id),
+                'freelancer' => ShiftFreelancer::where('freelancer_id', $id),
+                'service_provider' => ShiftServiceProvider::where('service_provider_id', $id),
+                default => null
             };
             if (!$query) continue;
 
@@ -1255,46 +1261,46 @@ class ShiftController extends Controller
                 ->get();
 
             foreach ($query as $pivot) {
-                if (! $shift = $pivot->shift) continue;
+                if (!$shift = $pivot->shift) continue;
 
                 // Datum + Zeit - korrekt zusammensetzen
                 $startDate = Carbon::parse($pivot->start_date ?? $shift->start_date)->toDateString();
                 $startTime = $pivot->start_time ?? $shift->start;
 
-                $endDate   = Carbon::parse($pivot->end_date   ?? $shift->end_date)->toDateString();
-                $endTime   = $pivot->end_time   ?? $shift->end;
+                $endDate = Carbon::parse($pivot->end_date ?? $shift->end_date)->toDateString();
+                $endTime = $pivot->end_time ?? $shift->end;
 
                 $shiftStart = Carbon::parse($startDate . ' ' . $startTime);
-                $shiftEnd   = Carbon::parse($endDate . ' ' . $endTime);
+                $shiftEnd = Carbon::parse($endDate . ' ' . $endTime);
                 if ($shiftEnd <= $shiftStart) {
                     $shiftEnd->addDay();
                 }
 
                 Log::debug("$type #$id shiftStart/End", [
-                    'shiftStart'=>$shiftStart->toDateTimeString(),
-                    'shiftEnd'=> $shiftEnd->toDateTimeString(),
-                    'currentStart'=>$currentStart->toDateTimeString(),
-                    'currentEnd'=>$currentEnd->toDateTimeString(),
+                    'shiftStart' => $shiftStart->toDateTimeString(),
+                    'shiftEnd' => $shiftEnd->toDateTimeString(),
+                    'currentStart' => $currentStart->toDateTimeString(),
+                    'currentEnd' => $currentEnd->toDateTimeString(),
                 ]);
 
                 // Kollisionslogik
                 if ($currentStart < $shiftEnd && $currentEnd > $shiftStart) {
                     $hasCollision = true;
                     $collisionShifts[] = [
-                        'id'=> $shift->id,
-                        'start'=> $shiftStart->format('Y-m-d H:i'),
-                        'end'=> $shiftEnd->format('Y-m-d H:i'),
-                        'description'=> $shift->description,
-                        'craftAbbreviation'=> $shift->craft?->abbreviation ?? '',
+                        'id' => $shift->id,
+                        'start' => $shiftStart->format('Y-m-d H:i'),
+                        'end' => $shiftEnd->format('Y-m-d H:i'),
+                        'description' => $shift->description,
+                        'craftAbbreviation' => $shift->craft?->abbreviation ?? '',
                     ];
                 }
             }
 
             $results[] = [
-                'id'=> $id,
-                'type'=> $type,
-                'hasCollision'=> $hasCollision,
-                'collisionShifts'=> $collisionShifts,
+                'id' => $id,
+                'type' => $type,
+                'hasCollision' => $hasCollision,
+                'collisionShifts' => $collisionShifts,
             ];
         }
 
@@ -1302,13 +1308,11 @@ class ShiftController extends Controller
     }
 
 
-
-
-
     public function storeShiftMultiAdd(
-        Request $request,
+        Request                     $request,
         ShiftsQualificationsService $shiftsQualificationsService
-    ): void {
+    ): void
+    {
         $roomsAndDatesForMultiEdit = $request->get('roomsAndDatesForMultiEdit');
         $createdShifts = collect();
         foreach ($roomsAndDatesForMultiEdit as $roomAndDate) {
@@ -1338,5 +1342,95 @@ class ShiftController extends Controller
             }
         }
         broadcast(new MultiShiftCreateInShiftPlan($createdShifts));
+    }
+
+    public function updateIndividualShiftTime(Request $request)
+    {
+        $shiftId = $request->get('shiftPivotId');
+        $entity = $request->get('entity');
+        $startTime = $request->get('start_time');
+        $endTime = $request->get('end_time');
+
+
+        //dd($entity, $startTime, $endTime);
+        // Find the shift by ID
+
+        // Pivot holen
+        $query = match ($entity['type']) {
+            'user' => ShiftUser::find($shiftId),
+            'freelancer' => ShiftFreelancer::find($shiftId),
+            'service_provider' => ShiftServiceProvider::find($shiftId),
+            default => null
+        };
+
+        if (!$query) {
+            return response()->json(['error' => 'Invalid entity type'], 400);
+        }
+
+        $pivot = $query->first();
+
+        if (!$pivot) {
+            return response()->json(['error' => 'Shift pivot not found'], 404);
+        }
+
+        // calculate start and end date, if endtime before starttime, add one day to endtime
+        $startDate = Carbon::parse($pivot->start_date ?? $pivot->shift->start_date)->toDateString();
+        $endDate = Carbon::parse($pivot->end_date ?? $pivot->shift->end_date)->toDateString();
+        $startDateTime = Carbon::parse($startDate . ' ' . $startTime);
+        $endDateTime = Carbon::parse($endDate . ' ' . $endTime);
+
+        if ($endDateTime <= $startDateTime) {
+            $endDateTime->addDay();
+        }
+
+        // Update the pivot with new start and end times
+        $pivot->update([
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'start_date' => $startDateTime->format('Y-m-d'),
+            'end_date' => $endDateTime->format('Y-m-d'),
+        ]);
+
+        // Broadcast the updated shift
+        if (!$pivot->shift->event_id) {
+            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->room_id));
+        } else {
+            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event->room_id));
+        }
+    }
+
+    public function updateShortDescription(Request $request)
+    {
+        $shiftId = $request->get('shiftPivotId');
+        $entity = $request->get('entity');
+
+        //dd($entity, $startTime, $endTime);
+        // Find the shift by ID
+
+        // Pivot holen
+        $query = match ($entity['type']) {
+            'user' => ShiftUser::find($shiftId),
+            'freelancer' => ShiftFreelancer::find($shiftId),
+            'service_provider' => ShiftServiceProvider::find($shiftId),
+            default => null
+        };
+
+        $pivot = $query->first();
+
+        if (!$pivot) {
+            return response()->json(['error' => 'Shift pivot not found'], 404);
+        }
+
+        // Update the pivot with new short description
+        $pivot->update([
+            'short_description' => $request->get('short_description'),
+        ]);
+
+        // Broadcast the updated shift
+        if (!$pivot->shift->event_id) {
+            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->room_id));
+        } else {
+            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event->room_id));
+        }
     }
 }

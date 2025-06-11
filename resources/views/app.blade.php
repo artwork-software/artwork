@@ -23,7 +23,7 @@
             }
         </script>
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased artwork">
         @inertia
     </body>
 </html>

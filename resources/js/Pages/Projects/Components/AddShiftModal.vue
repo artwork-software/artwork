@@ -2,7 +2,7 @@
     <ArtworkBaseModal @close="closeModal" v-if="open" full-modal title="Organize shift" description="Determine how long your shift lasts and how many people should work in your shift.">
         <form @submit.prevent="saveShift" class="relative z-40 mb-5 artwork">
             <div class="">
-                <div class="card glassy px-5 py-3 mb-5">
+                <div class="px-5 py-3 mb-5">
                     <div class="flex items-center justify-end my-2">
                         <div class="flex items-center justify-end">
                             <button type="button" class="text-xs text-artwork-buttons-create underline cursor-pointer" @click="showPresetBox = !showPresetBox">

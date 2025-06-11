@@ -4,7 +4,7 @@
             <Dialog as="div" class="relative" :style="{ 'z-index': isInShiftPlan ? '999999': zIndex }" @close="$emit('close')">
                 <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
                                  leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                    <div class="fixed inset-0 bg-opacity-50 transition-opacity" :class="showBackdrop ? 'bg-gray-700' : ''"/>
+                    <div class="fixed inset-0 bg-opacity-50 transition-opacity" :class="showBackdrop ? 'bg-gray-950/30' : ''"/>
 
                 </TransitionChild>
                 <div class="fixed inset-0 z-50 w-screen overflow-y-auto">
@@ -25,17 +25,17 @@
                                         </p>
                                     </div>
                                     <div class="flex items-center gap-x-3">
-                                        <div class="text-gray-700 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
+                                        <div class="text-gray-800 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
                                             <div @click="showBackdrop = !showBackdrop">
                                                 <ToolTipDefault top show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
                                             </div>
                                         </div>
-                                        <div ref="dragHandleRef" class=" hover:text-yellow-600 transition-all duration-150 ease-in-out cursor-grab dragHandle">
+                                        <div ref="dragHandleRef" class="text-gray-800 hover:text-yellow-400 transition-all duration-150 ease-in-out cursor-grab dragHandle">
                                             <div>
                                                 <ToolTipDefault top show-draggable :tooltip-text="$t('Hold here to move')"/>
                                             </div>
                                         </div>
-                                        <div class="text-gray-700 hover:text-artwork-messages-error transition-all duration-150 ease-in-out cursor-pointer">
+                                        <div class="text-gray-800 hover:text-artwork-messages-error transition-all duration-150 ease-in-out cursor-pointer">
                                             <div @click="$emit('close')">
                                                 <ToolTipDefault top show-x-icon :tooltip-text="$t('Close Window')"/>
                                             </div>

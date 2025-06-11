@@ -588,6 +588,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // POST event.shift.store.without.event
         Route::post('/event/shift/store/without/event', [ShiftController::class, 'storeShiftWithoutEvent'])
             ->name('event.shift.store.without.event');
+
+
+        // POST:: shifts.updateIndividualShiftTime
+        Route::post('/update/individual/shift/time', [ShiftController::class, 'updateIndividualShiftTime'])
+            ->name('shifts.updateIndividualShiftTime');
+
+        // post shifts.updateShortDescription
+        Route::post('/update/short/description', [ShiftController::class, 'updateShortDescription'])
+            ->name('shifts.updateShortDescription');
     });
 
 

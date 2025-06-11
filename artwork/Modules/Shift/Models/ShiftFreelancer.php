@@ -28,6 +28,13 @@ class ShiftFreelancer extends Pivot
         'end_time',
     ];
 
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'start_time' => 'datetime:H:i',
+        'end_time' => 'datetime:H:i',
+    ];
+
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);

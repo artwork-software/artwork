@@ -7,13 +7,13 @@
                 {{ shift.start }} - {{ shift.end }}
             </div>
             <div class="text-gray-700 font-semibold">
-                {{ shift.craft.abbreviation }}: {{ shift.craft.name }}
+                [{{ shift.craft.abbreviation }}] {{ shift.craft.name }}
             </div>
         </div>
         <div class="flex justify-between items-center w-full px-3">
             <div class="flex items-center gap-x-4">
                 <div v-for="qualification in shift.shifts_qualifications" :key="qualification.shift_qualification_id">
-                    <div class="text-gray-500 text-[10px] flex items-center gap-x-1 group hover:bg-gray-50 ring-inset hover:ring-1 ring-artwork-buttons-create p-1 rounded-lg transition-all duration-150 ease-in-out cursor-pointer hover:text-artwork-buttons-create">
+                    <div class="text-gray-500 text-[10px] flex items-center gap-x-1 ">
                         <component :is="findShiftQualification(qualification.shift_qualification_id)?.icon" class="size-3" />
                         <div>
                             {{ qualification.value - getEmptyShiftQualification(qualification.shift_qualification_id)?.requiredDropElementsCount }}/{{ qualification.value }}
@@ -32,36 +32,20 @@
 
         <div v-if="showShiftDetails" class="mt-1 ml-4 space-y-1">
             <template v-for="group in shiftGroups" :key="group.label">
-                <div v-for="person in group.items" :key="person.id" class="flex items-center gap-x-2 font-lexend rounded-lg"
-                     :style="{ backgroundColor: `${shift.craft.color}20` }">
-                    <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}60` }">
-                        <p class="text-xs">{{ shift.start }} - {{ shift.end }}</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 w-full gap-x-2">
-                        <p class="text-xs">{{ person.name || person.full_name }}</p>
-
-                        <div class="flex items-center gap-x-1">
-                            <component :is="findShiftQualification(person.pivot.shift_qualification_id)?.icon" class="size-3" />
-                            {{ findShiftQualification(person.pivot.shift_qualification_id)?.name }}
-                        </div>
-                        <div>
-                            <component is="IconNote"
-                                       class="size-4 text-gray-500 hover:text-gray-700 transition-all duration-150 ease-in-out cursor-pointer"
-                                       @click.stop="toggleShiftDetails"/>
-                        </div>
-                    </div>
+                <div v-for="person in group.items" :key="person.id" class="flex items-center gap-x-2 font-lexend rounded-lg" :style="{ backgroundColor: `${shift.craft.color}20` }">
+                    <SingleEntityInShift :person="person" :shift="shift" :shift-qualifications="shiftQualifications" />
                 </div>
             </template>
 
-            <div v-for="drop in computedShiftQualificationDropElements" :key="drop.shift_qualification_id" class="flex items-center w-full gap-x-2 font-lexend rounded-lg " :style="{ backgroundColor: `${shift.craft.color}20` }">
+            <div v-for="drop in computedShiftQualificationDropElements" :key="drop.shift_qualification_id" class="flex items-center w-full gap-x-2 font-lexend rounded-lg bg-red-100">
                 <Menu as="div" class="relative w-full">
-                    <div v-if="loadingStates[drop.shift_qualification_id]" class="p-4 text-center">
-                        <p class="text-xs text-gray-500">Lade verfügbare Personen...</p>
-                    </div>
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                         <MenuButton class="flex items-center gap-x-2 font-lexend rounded-lg w-full" @click="checkShiftCollision(drop.shift_qualification_id)">
-                            <div class="py-1.5 px-3 min-w-28 w-28 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}60` }">
-                                <p class="text-xs text-left ">{{ shift.start }} - {{ shift.end }}</p>
+                            <div class="py-1.5 px-3 min-w-28 w-28 rounded-l-lg bg-red-200">
+                                <div class="text-xs text-left flex items-center gap-x-1">
+                                    <component is="IconInfoTriangle" class="size-4 text-red-600" />
+                                    {{ $t('Unoccupied') }}
+                                </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 w-full gap-x-2">
                                 <p class="text-xs text-left">{{ drop.requiredDropElementsCount }} {{ findShiftQualification(drop.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }} {{ $t('Unoccupied') }}</p>
@@ -135,7 +119,10 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {router} from "@inertiajs/vue3";
-import axios from "axios"; // Axios für API-Call
+import axios from "axios";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue"; // Axios für API-Call
 
 const props = defineProps({
     shift: Object,
@@ -186,7 +173,7 @@ const shiftGroups = computed(() => [
 ]);
 
 const checkShiftCollision = async (shiftQualificationId) => {
-    if (assignablePeopleCache.value[shiftQualificationId].length > 0) return;
+    if (assignablePeopleCache.value[shiftQualificationId]?.length > 0) return;
 
     loadingStates.value[shiftQualificationId] = true;
 

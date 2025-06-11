@@ -100,14 +100,6 @@
                                                 v-if="user.type === 'service_provider'"
                                                 use-translation
                                             />
-                                            <!--<ToolTipComponent
-                                                icon="IconAlertTriangle"
-                                                icon-size="w-4 h-4"
-                                                :tooltip-text="$t('User already assigned as {0}', [user.qualification])"
-                                                direction="top"
-                                                classes="text-red-500 w-fit"
-                                                v-if="user.alreadyAssigned"
-                                            />-->
                                             <ToolTipComponent
                                                 v-if="user.hasCollision"
                                                 icon="IconClock"

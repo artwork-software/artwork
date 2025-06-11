@@ -2761,5 +2761,6 @@
     "Event Planning": "Event Planning",
     "Add Shift": "Add Shift",
     "Add Event": "Add Event",
-    "Room name*": "Room name*"
+    "Room name*": "Room name*",
+    "User already assigned as {0}": "User already assigned as {0}"
 }

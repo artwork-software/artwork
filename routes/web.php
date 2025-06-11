@@ -2185,3 +2185,8 @@ Route::get(
     '/calendar/abo/{calendar_abo_id}',
     [UserCalenderAboController::class, 'show']
 )->name('user-calendar-abo.show');
+
+
+// /shift/check-collisions
+Route::post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
+    ->name('shift.check-collisions');

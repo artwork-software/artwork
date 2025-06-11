@@ -2764,5 +2764,6 @@
     "Event Planning": "Terminplanung",
     "Add Shift": "Schicht hinzufügen",
     "Add Event": "Termin hinzufügen",
-    "Room name*": "Raumname*"
+    "Room name*": "Raumname*",
+    "User already assigned as {0}": "Nutzer*in bereits als {0} zugewiesen"
 }

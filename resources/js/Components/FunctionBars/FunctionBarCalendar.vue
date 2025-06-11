@@ -1,5 +1,5 @@
 <template>
-    <div class="py-4" :class="[project ? 'bg-white -mx-16 pr-20' : 'bg-gray-50 pr-16', isFullscreen ? 'pl-8' : 'pl-5']">
+    <div class="py-4 card glassy" :class="[project ? ' -mx-16 pr-20' : 'pr-16', isFullscreen ? 'pl-8' : 'pl-5']" >
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
@@ -380,7 +380,7 @@
                             icon-size="h-7 w-7"
                         />
                     </div>
-                    <PlusButton @click="$emit('wantsToAddNewEvent');"/>
+                    <GlassyIconButton text="Add Event" icon="IconCirclePlus"  @click="$emit('wantsToAddNewEvent');" />
                 </div>
             </div>
         </div>
@@ -432,6 +432,7 @@ import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');

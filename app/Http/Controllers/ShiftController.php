@@ -22,6 +22,9 @@ use Artwork\Modules\Shift\Events\MultiShiftCreateInShiftPlan;
 use Artwork\Modules\Shift\Events\RemoveEntityFormShiftEvent;
 use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
+use Artwork\Modules\Shift\Models\ShiftUser;
+use Artwork\Modules\Shift\Models\ShiftFreelancer;
+use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -41,6 +44,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Random\RandomException;
 
@@ -1205,6 +1209,101 @@ class ShiftController extends Controller
             });
         }
     }
+
+
+    /**
+     * Check for collisions in shifts for given people and time range.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkCollisions(Request $request)
+    {
+        $people       = $request->input('people', []);
+        $shiftId      = $request->input('shift_id');
+        $startDateRaw = $request->input('start_date');
+        $endDateRaw   = $request->input('end_date');
+        $startRaw     = $request->input('start');
+        $endRaw       = $request->input('end');
+
+        // Aktuelle Schicht Zeiten
+        $currentStart = Carbon::parse(Carbon::parse($startDateRaw)->toDateString().' '.$startRaw);
+        $currentEnd   = Carbon::parse(Carbon::parse($endDateRaw)->toDateString().' '.$endRaw);
+        if ($currentEnd <= $currentStart) {
+            $currentEnd->addDay();
+        }
+
+        $results = [];
+
+        foreach ($people as $person) {
+            $type = $person['type'];
+            $id   = $person['id'];
+            $hasCollision   = false;
+            $collisionShifts= [];
+
+            // Pivot holen
+            $query = match ($type) {
+                'user'             => ShiftUser::where('user_id', $id),
+                'freelancer'       => ShiftFreelancer::where('freelancer_id', $id),
+                'service_provider'=> ShiftServiceProvider::where('service_provider_id', $id),
+                default            => null
+            };
+            if (!$query) continue;
+
+            $query = $query
+                ->with('shift.craft')
+                ->get();
+
+            foreach ($query as $pivot) {
+                if (! $shift = $pivot->shift) continue;
+
+                // Datum + Zeit - korrekt zusammensetzen
+                $startDate = Carbon::parse($pivot->start_date ?? $shift->start_date)->toDateString();
+                $startTime = $pivot->start_time ?? $shift->start;
+
+                $endDate   = Carbon::parse($pivot->end_date   ?? $shift->end_date)->toDateString();
+                $endTime   = $pivot->end_time   ?? $shift->end;
+
+                $shiftStart = Carbon::parse($startDate . ' ' . $startTime);
+                $shiftEnd   = Carbon::parse($endDate . ' ' . $endTime);
+                if ($shiftEnd <= $shiftStart) {
+                    $shiftEnd->addDay();
+                }
+
+                Log::debug("$type #$id shiftStart/End", [
+                    'shiftStart'=>$shiftStart->toDateTimeString(),
+                    'shiftEnd'=> $shiftEnd->toDateTimeString(),
+                    'currentStart'=>$currentStart->toDateTimeString(),
+                    'currentEnd'=>$currentEnd->toDateTimeString(),
+                ]);
+
+                // Kollisionslogik
+                if ($currentStart < $shiftEnd && $currentEnd > $shiftStart) {
+                    $hasCollision = true;
+                    $collisionShifts[] = [
+                        'id'=> $shift->id,
+                        'start'=> $shiftStart->format('Y-m-d H:i'),
+                        'end'=> $shiftEnd->format('Y-m-d H:i'),
+                        'description'=> $shift->description,
+                        'craftAbbreviation'=> $shift->craft?->abbreviation ?? '',
+                    ];
+                }
+            }
+
+            $results[] = [
+                'id'=> $id,
+                'type'=> $type,
+                'hasCollision'=> $hasCollision,
+                'collisionShifts'=> $collisionShifts,
+            ];
+        }
+
+        return response()->json($results);
+    }
+
+
+
+
 
     public function storeShiftMultiAdd(
         Request $request,

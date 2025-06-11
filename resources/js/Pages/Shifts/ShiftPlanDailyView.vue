@@ -3,7 +3,7 @@
         <ShiftHeader>
 
             <!-- topbar with date range selector -->
-            <div class="card glassy p-4 w-full sticky top-0 z-40 !rounded-t-none">
+            <div class="card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none">
                 <div class="flex items-center px-5 gap-x-5">
                     <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
 
@@ -81,10 +81,6 @@
                 </div>
             </div>
 
-
-            <pre>
-                {{ shiftPlan }}
-            </pre>
 
             <AddShiftModal
                 v-if="showAddShiftModal"

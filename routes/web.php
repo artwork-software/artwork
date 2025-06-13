@@ -637,6 +637,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('holiday.delete');
         Route::patch('/holiday/{holiday}', [HolidayController::class, 'update'])
             ->name('holiday.update');
+        Route::post('/holiday/batch-update', [HolidayController::class, 'batchUpdateTreatAsSpecialDay'])
+            ->name('holiday.batch-update');
 
 
         Route::group(['prefix' => 'event-status'], function (): void {

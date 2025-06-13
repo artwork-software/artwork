@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentPermissionEnum;
-use Artwork\Modules\ProjectTab\Models\Component;
-use Artwork\Modules\ProjectTab\Models\ProjectTab;
-use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentPermissionEnum;
+use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
 use Illuminate\Database\Seeder;
 
 class DefaultComponentSeeder extends Seeder

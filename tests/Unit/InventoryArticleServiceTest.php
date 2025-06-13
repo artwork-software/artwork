@@ -15,23 +15,23 @@ class InventoryArticleServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_store_creates_article()
+    public function test_store_creates_article(): void
     {
         $repo = Mockery::mock(InventoryArticleRepository::class);
         $createdArticle = new InventoryArticle(['name' => 'Artikel']);
         $repo->shouldReceive('create')->once()->andReturn($createdArticle);
-        $repo->shouldReceive('addImages')->andReturnUsing(function($article) {
+        $repo->shouldReceive('addImages')->andReturnUsing(function ($article) {
             // Simuliere das Verhalten von addImages, gebe das Article-Objekt zurück
             return $article;
         });
-        $repo->shouldReceive('attachProperties')->withArgs(function($article, $properties) use ($createdArticle) {
+        $repo->shouldReceive('attachProperties')->withArgs(function ($article) use ($createdArticle) {
             return $article instanceof InventoryArticle && $article->name === $createdArticle->name;
         });
         $repo->shouldReceive('addDetailedArticles');
         $repo->shouldReceive('attachStatusValues');
 
         $service = new InventoryArticleService($repo);
-        $request = StoreInventoryArticleRequest::create('/','POST', [
+        $request = StoreInventoryArticleRequest::create('/', 'POST', [
             'name' => 'Artikel',
             'description' => 'Beschreibung',
             'inventory_category_id' => 1,
@@ -43,7 +43,7 @@ class InventoryArticleServiceTest extends TestCase
         $this->assertEquals('Artikel', $result->name);
     }
 
-    public function test_get_available_stock_returns_array()
+    public function test_get_available_stock_returns_array(): void
     {
         $repo = Mockery::mock(InventoryArticleRepository::class);
         $article = Mockery::mock(InventoryArticle::class);
@@ -54,4 +54,3 @@ class InventoryArticleServiceTest extends TestCase
         $this->assertArrayHasKey('available', $result);
     }
 }
-

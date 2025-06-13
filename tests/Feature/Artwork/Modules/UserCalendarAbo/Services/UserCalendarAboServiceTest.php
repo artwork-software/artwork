@@ -3,8 +3,8 @@
 namespace Tests\Feature\Artwork\Modules\UserCalendarAbo\Services;
 
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
-use Artwork\Modules\UserCalendarAbo\Services\UserCalendarAboService;
+use Artwork\Modules\User\Models\UserCalendarAbo;
+use Artwork\Modules\User\Services\UserCalendarAboService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Tests\TestCase;

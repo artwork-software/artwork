@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
-use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
+use Artwork\Modules\Shift\Models\ShiftPreset;
+use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
 use Illuminate\Http\Request;
 
 class PresetTimeLineController extends Controller

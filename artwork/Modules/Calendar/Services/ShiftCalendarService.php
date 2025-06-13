@@ -14,9 +14,9 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
-use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
-use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
+use Artwork\Modules\User\Models\UserCalendarFilter;
+use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
 

@@ -1,7 +1,7 @@
 <?php
 
 use Artwork\Modules\User\Services\UserService;
-use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSettingService;
+use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

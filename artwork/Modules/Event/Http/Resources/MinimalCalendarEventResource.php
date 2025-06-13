@@ -4,9 +4,9 @@ namespace Artwork\Modules\Event\Http\Resources;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
+use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\Shift\Models\Shift;
-use Artwork\Modules\SubEvent\Http\Resources\SubEventResource;
+use Artwork\Modules\Event\Http\Resources\SubEventResource;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Throwable;

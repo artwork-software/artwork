@@ -17,8 +17,8 @@ use Artwork\Modules\InventoryManagement\Services\InventoryManagementUserFilterSe
 use Artwork\Modules\InventoryScheduling\Http\Requests\DropItemOnInventoryRequest;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
+use Artwork\Modules\Room\Services\RoomAttributeService;
+use Artwork\Modules\Room\Services\RoomCategoryService;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\AuthManager;
 use Inertia\Inertia;

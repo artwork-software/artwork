@@ -2769,5 +2769,6 @@
     "Save Changes": "Änderungen speichern",
     "Special Day": "Sondertag",
     "Treat as special day": "Als Sondertag behandeln",
-    "A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.": "Ein Feiertag, der als Sondertag behandelt wird, wird nicht als normaler Arbeitstag für die Schichten gezählt. Das bedeutet, dass Artwork die benötigten Arbeitsstunden für diesen Tag auf 0 setzt, unabhängig vom Arbeitsvertrag. Somit wird jede gearbeitete Stunde an diesem Tag als Überstunde gezählt."
+    "A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.": "Ein Feiertag, der als Sondertag behandelt wird, wird nicht als normaler Arbeitstag für die Schichten gezählt. Das bedeutet, dass Artwork die benötigten Arbeitsstunden für diesen Tag auf 0 setzt, unabhängig vom Arbeitsvertrag. Somit wird jede gearbeitete Stunde an diesem Tag als Überstunde gezählt.",
+    "User already assigned as {0}": "Nutzer*in bereits als {0} zugewiesen"
 }

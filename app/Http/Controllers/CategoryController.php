@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\CompanyType\Models\CompanyType;
-use Artwork\Modules\ContractType\Models\ContractType;
+use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;

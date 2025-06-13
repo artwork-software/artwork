@@ -3,7 +3,7 @@
         <ShiftHeader>
 
             <!-- topbar with date range selector -->
-            <div class="card glassy p-4 w-full sticky top-0 z-40 !rounded-t-none">
+            <div class="card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none">
                 <div class="flex items-center px-5 gap-x-5">
                     <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
 
@@ -47,8 +47,8 @@
                     </div>
                     <div class="flex items-stretch px-4 py-2">
                         <div class="card glassy p-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5">
-                                <div class="card white p-5 text-xs">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-x-5">
+                                <div class="card white p-5 text-xs col-span-1">
                                     <div class="space-y-2" v-if="room.content[day.fullDay]?.events?.length > 0">
                                         <div v-for="event in room.content[day.fullDay]?.events" :key="event.id">
                                             <SingleEventInDailyShiftView :event="event" />
@@ -61,7 +61,7 @@
                                         <GlassyIconButton text="Add Event" icon="IconCalendarPlus" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)" />
                                     </div>
                                 </div>
-                                <div class="card white p-5 text-xs font-lexend">
+                                <div class="card white p-5 text-xs font-lexend col-span-2">
                                     <div class="space-y-2" v-if="room.content[day.fullDay]?.shifts?.length > 0">
                                         <div v-for="shift in room.content[day.fullDay]?.shifts" :key="shift.id">
                                             <SingleShiftInDailyShiftView :shift="shift" :shift-qualifications="shiftQualifications" :crafts="crafts"/>
@@ -81,10 +81,6 @@
                 </div>
             </div>
 
-
-            <pre>
-                {{ shiftPlan }}
-            </pre>
 
             <AddShiftModal
                 v-if="showAddShiftModal"

@@ -97,7 +97,7 @@
 
     .card {
         &.glassy {
-            @apply flex h-fit grow flex-col rounded-lg bg-gradient-to-br from-slate-50/70 to-sky-100/20 text-left shadow-glass backdrop-blur-2xl border border-gray-100;
+            @apply flex h-fit grow flex-col rounded-lg bg-gradient-to-bl from-white/40 to-sky-100/30 text-left shadow-glass backdrop-blur-sm border border-white/50;
         }
 
         &.white {
@@ -108,10 +108,10 @@
     .button {
         @apply relative;
         &.glassy {
-            @apply flex h-fit w-fit items-center rounded-full p-1 bg-gradient-to-br from-slate-50/70 to-sky-100/20 text-left shadow-glass backdrop-blur-2xl border border-gray-100 cursor-pointer;
+            @apply flex h-fit w-fit items-center rounded-lg p-1.5 bg-gradient-to-br from-slate-50/70 to-sky-100/20 text-left shadow-glassSmall backdrop-blur-sm border border-gray-100 cursor-pointer;
         }
         span {
-            @apply shadow-glass bg-white rounded-full border border-gray-100 w-fit p-2 relative z-30;
+            @apply shadow-glassSmall bg-white rounded-xl border border-gray-100 w-fit p-1.5 relative z-30;
 
             svg {
                 @apply text-gray-500;

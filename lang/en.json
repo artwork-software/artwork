@@ -2766,5 +2766,6 @@
     "Save Changes": "Save Changes",
     "Special Day": "Special Day",
     "Treat as special day": "Treat as special day",
-    "A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.": "A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime."
+    "A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.": "A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.",
+    "User already assigned as {0}": "User already assigned as {0}"
 }

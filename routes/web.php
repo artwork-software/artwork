@@ -97,7 +97,7 @@ use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
-use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
+use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
 use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
@@ -593,6 +593,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // POST event.shift.store.without.event
         Route::post('/event/shift/store/without/event', [ShiftController::class, 'storeShiftWithoutEvent'])
             ->name('event.shift.store.without.event');
+
+
+        // POST:: shifts.updateIndividualShiftTime
+        Route::post('/update/individual/shift/time', [ShiftController::class, 'updateIndividualShiftTime'])
+            ->name('shifts.updateIndividualShiftTime');
+
+        // post shifts.updateShortDescription
+        Route::post('/update/short/description', [ShiftController::class, 'updateShortDescription'])
+            ->name('shifts.updateShortDescription');
     });
 
 
@@ -2192,3 +2201,8 @@ Route::get(
     '/calendar/abo/{calendar_abo_id}',
     [UserCalenderAboController::class, 'show']
 )->name('user-calendar-abo.show');
+
+
+// /shift/check-collisions
+Route::post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
+    ->name('shift.check-collisions');

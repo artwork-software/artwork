@@ -118,16 +118,16 @@
             </Switch>
         </div>
 
-        <slot name="multiEditCalendar" />
+            <slot name="multiEditCalendar" />
 
-        <div class="flex items-center">
-            <div class="flex items-center gap-x-3">
-                <slot name="moreButtons">
+            <div class="flex items-center">
+                <div class="flex items-center gap-x-3">
+                    <slot name="moreButtons">
 
-                </slot>
-                <Menu as="div" class="relative inline-block items-center text-left">
-                    <div class="flex items-center">
-                        <MenuButton id="displaySettings">
+                    </slot>
+                    <Menu as="div" class="relative inline-block items-center text-left">
+                        <div class="flex items-center">
+                            <MenuButton id="displaySettings">
                             <span class="items-center flex">
                                 <button type="button"
                                         class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
@@ -139,70 +139,76 @@
                                     />
                                 </button>
                             </span>
-                        </MenuButton>
-                    </div>
-                    <transition
-                        enter-active-class="transition duration-50 ease-out"
-                        enter-from-class="transform scale-100 opacity-100"
-                        enter-to-class="transform scale-100 opacity-100"
-                        leave-active-class="transition duration-75 ease-in"
-                        leave-from-class="transform scale-100 opacity-100"
-                        leave-to-class="transform scale-95 opacity-0">
-                        <MenuItems
-                            class="w-80 absolute right-0 top-12 origin-top-right shadow-lg bg-artwork-navigation-background rounded-lg ring-1 ring-black p-2 text-white opacity-100 z-50">
-                            <div class="w-76 p-6">
-                                <div class="flex items-center py-1">
-                                    <input id="cb-high-contrast"
-                                           v-model="userCalendarSettings.high_contrast"
-                                           type="checkbox"
-                                           class="input-checklist"/>
-                                    <label for="cb-high-contrast"
-                                           :class="userCalendarSettings.high_contrast ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class="ml-4 my-auto text-secondary cursor-pointer">
-                                        {{ $t('High contrast') }}
-                                    </label>
+                            </MenuButton>
+                        </div>
+                        <transition
+                            enter-active-class="transition duration-50 ease-out"
+                            enter-from-class="transform scale-100 opacity-100"
+                            enter-to-class="transform scale-100 opacity-100"
+                            leave-active-class="transition duration-75 ease-in"
+                            leave-from-class="transform scale-100 opacity-100"
+                            leave-to-class="transform scale-95 opacity-0">
+                            <MenuItems
+                                class="w-80 absolute right-0 top-12 origin-top-right shadow-lg bg-artwork-navigation-background rounded-lg ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                <div class="w-76 p-6">
+                                    <div class="flex items-center py-1">
+                                        <input id="cb-high-contrast"
+                                               v-model="userCalendarSettings.high_contrast"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-high-contrast"
+                                               :class="userCalendarSettings.high_contrast ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('High contrast') }}
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center py-1">
+                                        <input id="cb-project-artists"
+                                               v-model="userCalendarSettings.show_qualifications"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-project-artists"
+                                               :class="userCalendarSettings.show_qualifications ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Show qualifications') }}
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center py-1">
+                                        <input id="cb-project-status"
+                                               v-model="userCalendarSettings.shift_notes"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-project-status"
+                                               :class="userCalendarSettings.shift_notes ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Show notes') }}
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center py-1">
+                                        <input id="cb-expand-days" v-model="userCalendarSettings.expand_days"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-expand-days"
+                                               :class="userCalendarSettings.expand_days ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Expand days') }}
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center py-1">
+                                        <input id="cb-expand-days" v-model="userCalendarSettings.display_project_groups"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-expand-days"
+                                               :class="userCalendarSettings.display_project_groups ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Show project group') }}
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="flex items-center py-1">
-                                    <input id="cb-project-artists"
-                                           v-model="userCalendarSettings.show_qualifications"
-                                           type="checkbox"
-                                           class="input-checklist"/>
-                                    <label for="cb-project-artists"
-                                           :class="userCalendarSettings.show_qualifications ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class="ml-4 my-auto text-secondary cursor-pointer">
-                                        {{ $t('Show qualifications') }}
-                                    </label>
-                                </div>
-                                <div class="flex items-center py-1">
-                                    <input id="cb-project-status"
-                                           v-model="userCalendarSettings.shift_notes"
-                                           type="checkbox"
-                                           class="input-checklist"/>
-                                    <label for="cb-project-status"
-                                           :class="userCalendarSettings.shift_notes ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class="ml-4 my-auto text-secondary cursor-pointer">
-                                        {{ $t('Show notes') }}
-                                    </label>
-                                </div>
-                                <div class="flex items-center py-1">
-                                    <input id="cb-expand-days" v-model="userCalendarSettings.expand_days"
-                                           type="checkbox"
-                                           class="input-checklist"/>
-                                    <label for="cb-expand-days"
-                                           :class="userCalendarSettings.expand_days ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class="ml-4 my-auto text-secondary cursor-pointer">
-                                        {{ $t('Expand days') }}
-                                    </label>
-                                </div>
-                                <div class="flex items-center py-1">
-                                    <input id="cb-expand-days" v-model="userCalendarSettings.display_project_groups"
-                                           type="checkbox"
-                                           class="input-checklist"/>
-                                    <label for="cb-expand-days"
-                                           :class="userCalendarSettings.display_project_groups ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class="ml-4 my-auto text-secondary cursor-pointer">
-                                        {{ $t('Show project group') }}
-                                    </label>
+                                <div class="flex justify-end">
+                                    <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">
+                                        {{ $t('Save') }}
+                                    </button>
                                 </div>
                             </div>
                             <div class="flex justify-end">
@@ -222,10 +228,24 @@
                     :user_filters="user_filters"
                     :crafts="crafts"
                 />
+                            </MenuItems>
+                        </transition>
+                    </Menu>
+                    <ToolTipComponent v-if="this.$can('can commit shifts') || this.hasAdminRole()" direction="bottom" :tooltip-text="$t('Lock all shifts')" icon="IconCalendarCheck" icon-size="h-7 w-7" @click="commitAllShifts()"/>
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory" icon-size="h-7 w-7" @click="openHistoryModal()"/>
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal" icon-size="h-7 w-7" v-if="!isFullscreen" @click="enterFullscreenMode"/>
+                    <ShiftPlanFilter
+                        :filter-options="filterOptions"
+                        :personal-filters="personalFilters"
+                        :user_filters="user_filters"
+                        :crafts="crafts"
+                    />
 
+                </div>
             </div>
         </div>
     </div>
+
     <div class="mb-1 ml-4 flex items-center w-full">
         <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter" />
     </div>

@@ -13,7 +13,8 @@ class ProjectStatesController extends Controller
     {
         ProjectState::create([
             'name' => $request->name,
-            'color' => $request->color
+            'color' => $request->color,
+            'is_planning' => $request->is_planning ?? false
         ]);
     }
 
@@ -40,6 +41,6 @@ class ProjectStatesController extends Controller
 
     public function update(Request $request, ProjectState $projectStates): void
     {
-        $projectStates->update($request->only(['name', 'color']));
+        $projectStates->update($request->only(['name', 'color', 'is_planning']));
     }
 }

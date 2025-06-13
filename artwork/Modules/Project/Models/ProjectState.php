@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property string $name
  * @property string $color
+ * @property bool $is_planning
  * @property string $created_at
  * @property string $updated_at
  * @property string $deleted_at
@@ -22,7 +23,8 @@ class ProjectState extends Model
 
     protected $fillable = [
         'name',
-        'color'
+        'color',
+        'is_planning'
     ];
 
     public function projects(): HasMany

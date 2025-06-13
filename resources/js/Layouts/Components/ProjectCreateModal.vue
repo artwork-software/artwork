@@ -1,24 +1,24 @@
 <template>
-    <BaseModal @closed="this.$emit('closeCreateProjectModal')" full-modal modal-size="max-w-3xl">
+    <BaseModal @closed="$emit('closeCreateProjectModal')" full-modal modal-size="max-w-3xl">
             <div class="">
 
                 <div class="px-6 mt-5 modal-header"  v-if="!project">
                     <SwitchGroup as="div" class="flex items-center">
                         <SwitchLabel as="span" class="mr-3 model-title cursor-pointer" :class="!createProjectGroup ? '' : '!text-gray-300'">
-                            {{ $t('Project') }}
+                            {{ t('Project') }}
                         </SwitchLabel>
                         <Switch v-model="createProjectGroup" :class="[createProjectGroup ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-5 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
                             <span aria-hidden="true" :class="[createProjectGroup  ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                         </Switch>
                         <SwitchLabel as="span" class="ml-3 model-title cursor-pointer" :class="createProjectGroup ? '' : '!text-gray-300'">
-                            {{ $t('Project group') }}
+                            {{ t('Project group') }}
                         </SwitchLabel>
                     </SwitchGroup>
                 </div>
                 <div v-else>
                     <ModalHeader
-                        :title="project ? $t('Edit basic data') : isCreateProjectTab ? $t('New project') : $t('New project group')"
-                        :description="$t('Please fill in the following fields to create a new project.')"
+                        :title="project ? t('Edit basic data') : isCreateProjectTab ? t('New project') : t('New project group')"
+                        :description="t('Please fill in the following fields to create a new project.')"
                         full-modal
                     />
                 </div>
@@ -44,14 +44,14 @@
                                     />
                                 </div>
                                 <div v-if="showInvalidProjectNameHelpText" class="text-error text-xs mt-1">
-                                    {{ $t('Project name is a required field.')}}
+                                    {{ t('Project name is a required field.')}}
                                 </div>
                             </div>
                             <div class="px-6 pt-4" v-if="createSettings.attributes">
                                 <Menu as="div" class="inline-block text-left w-full relative">
                                     <div>
                                         <MenuButton class="menu-button">
-                                            <span>{{ $t('Select properties') }}</span>
+                                            <span>{{ t('Select properties') }}</span>
                                             <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"
                                             />
                                         </MenuButton>
@@ -71,7 +71,7 @@
                                                     >
                                                         <span
                                                             :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
-                                                            {{ $t('Category') }}
+                                                            {{ t('Category') }}
                                                         </span>
                                                         <ChevronDownIcon
                                                             :class="open ? 'rotate-180 transform' : ''"
@@ -94,7 +94,7 @@
                                                             </p>
                                                         </div>
                                                         <div v-else class="text-secondary">
-                                                            {{ $t('No categories created yet') }}
+                                                            {{ t('No categories created yet') }}
                                                         </div>
                                                     </DisclosurePanel>
                                                 </Disclosure>
@@ -105,7 +105,7 @@
                                                     >
                                                         <span
                                                             :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
-                                                            {{ $t('Genre') }}
+                                                            {{ t('Genre') }}
                                                         </span>
                                                         <ChevronDownIcon
                                                             :class="open ? 'rotate-180 transform' : ''"
@@ -128,7 +128,7 @@
                                                             </p>
                                                         </div>
                                                         <div v-else class="text-secondary">
-                                                            {{ $t('No genres created yet') }}
+                                                            {{ t('No genres created yet') }}
                                                         </div>
                                                     </DisclosurePanel>
                                                 </Disclosure>
@@ -139,7 +139,7 @@
                                                     >
                                                         <span
                                                             :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
-                                                            {{ $t('Area') }}
+                                                            {{ t('Area') }}
                                                         </span>
                                                         <ChevronDownIcon
                                                             :class="open ? 'rotate-180 transform' : ''"
@@ -162,7 +162,7 @@
                                                             </p>
                                                         </div>
                                                         <div v-else class="text-secondary">
-                                                            {{ $t('No areas created yet') }}
+                                                            {{ t('No areas created yet') }}
                                                         </div>
                                                     </DisclosurePanel>
                                                 </Disclosure>
@@ -172,28 +172,77 @@
                                 </Menu>
                                 <div :class="createProjectForm.assignedCategoryIds || createProjectForm.assignedGenreIds || createProjectForm.assignedSectorIds ? 'mt-2' : ''">
                                     <TagComponent v-for="categoryId in createProjectForm.assignedCategoryIds" hide-x="true"
-                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name"
-                                                  :property="this.categories.find(category => category.id === categoryId)"
+                                                  :displayed-text="categories.find(category => category.id === categoryId).name"
+                                                  :property="categories.find(category => category.id === categoryId)"
                                     />
                                     <TagComponent v-for="genreId in createProjectForm.assignedGenreIds" hide-x="true"
-                                                  :displayed-text="this.genres.find(genre => genre.id === genreId).name"
-                                                  :property="this.genres.find(genre => genre.id === genreId)"
+                                                  :displayed-text="genres.find(genre => genre.id === genreId).name"
+                                                  :property="genres.find(genre => genre.id === genreId)"
                                     />
                                     <TagComponent hide-x="true" v-for="sectorId in createProjectForm.assignedSectorIds"
-                                                      :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
-                                                      :property="this.sectors.find(sector => sector.id === sectorId)"
+                                                      :displayed-text="sectors.find(sector => sector.id === sectorId).name"
+                                                      :property="sectors.find(sector => sector.id === sectorId)"
                                     />
                                 </div>
                             </div>
-
-                            <div class="flex px-6 pb-5 pt-4 w-full" v-if="createSettings.state">
-                                <ProjectStateListbox :projectStates="states"
-                                                     :selectedProjectState="selectedState"
-                                                     @update:selectedProjectState="selectedState = $event"/>
+                            <div class="px-6 pb-5 pt-4 w-full" v-if="createSettings.state">
+                                <Listbox as="div" class="w-full relative" v-model="selectedState" @update:model-value="handleStateChange($event)">
+                                    <ListboxButton class="menu-button-no-padding relative">
+                                        <div class="truncate">
+                                            <div class="top-2 left-4 absolute text-gray-500 text-xs">
+                                                {{ t('Project status') }}
+                                            </div>
+                                            <div class="pt-6 pb-2 flex items-center gap-x-2">
+                                                <div v-if="selectedState">
+                                                    <div class="block w-4 h-4 rounded-full" :style="{'backgroundColor' : states?.find(state => state.id === selectedState.id)?.color }"/>
+                                                </div>
+                                                <div class="truncate">
+                                                    <span v-if="selectedState" class="flex items-center gap-x-1">
+                                                        {{ states?.find(state => state.id === selectedState.id)?.name }}
+                                                        <IconCalendarMonth v-if="states?.find(state => state.id === selectedState.id)?.is_planning === true || states?.find(state => state.id === selectedState.id)?.is_planning === 1" class="w-4 h-4" />
+                                                    </span>
+                                                    <span v-else>
+                                                        {{ t('Select project status') }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    </ListboxButton>
+                                    <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions class="absolute w-full z-10 bg-primary shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                            <ListboxOption as="template" class="max-h-8"
+                                                v-for="state in states"
+                                                :key="state.id"
+                                                :value="state"
+                                                v-slot="{ active, selected }">
+                                                <li :class="[active ? 'text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <div class="flex items-center">
+                                                        <div>
+                                                            <div class="block w-3 h-3 rounded-full"
+                                                                :style="{'backgroundColor' : state?.color }"/>
+                                                        </div>
+                                                        <span
+                                                            :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 flex items-center gap-x-1 truncate']">
+                                                            {{ state.name }}
+                                                            <IconCalendarMonth v-if="state.is_planning === true || state.is_planning === 1" class="w-4 h-4" />
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        :class="[active ? 'text-white' : 'text-secondary', 'group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                        <CheckIcon v-if="selected"
+                                                            class="h-5 w-5 flex text-success"
+                                                            aria-hidden="true"/>
+                                                    </span>
+                                                </li>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </Listbox>
                             </div>
 
                             <div class="px-6 py-6 bg-lightBackgroundGray" v-if="createSettings.managers">
-                                <div class="font-semibold text-sm pb-2">{{ $t('Project management')}}</div>
+                                <div class="font-semibold text-sm pb-2">{{ t('Project management')}}</div>
                                 <UserSearch @user-selected="addUserToProject" only-manager />
 
                                 <div v-if="assignedUsers?.length > 0" class="flex items-center gap-4 mt-3">
@@ -226,16 +275,16 @@
                             <div class="px-6 py-2" v-if="!project?.is_group || !project">
 
                                 <div class="flex items-center ">
-                                    <input id="addToProjectGroup" type="checkbox" v-model="this.addToProjectGroup"
+                                    <input id="addToProjectGroup" type="checkbox" v-model="addToProjectGroup"
                                            class="input-checklist"/>
                                     <label for="addToProjectGroup"
-                                           :class="this.addToProjectGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                           :class="addToProjectGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                            class="ml-2">
-                                        {{ $t('Belongs to project group') }}
+                                        {{ t('Belongs to project group') }}
                                     </label>
                                 </div>
-                                <div v-if="this.addToProjectGroup" class="pt-5">
-                                    <ProjectSearch @project-selected="createProjectForm.selectedGroup = $event" only-project-groups label="Search project group" v-if="!createProjectForm.selectedGroup"/>
+                                <div v-if="addToProjectGroup" class="pt-5">
+                                    <ProjectSearch id="2" @project-selected="createProjectForm.selectedGroup = $event" only-project-groups label="Search project group" v-if="!createProjectForm.selectedGroup"/>
 
                                     <div v-else class="flex items-center gap-x-2 justify-between">
                                         <div>
@@ -258,9 +307,9 @@
                         </div>
                         <div class="w-full flex items-center justify-end gap-x-4 pb-6 px-6">
                             <BaseButton
-                                v-if="!project && $can('can create events when creating a project')"
+                                v-if="!project && can('can create events when creating a project')"
                                 @click="addProject(true)"
-                                :text="$t('Set up events')"
+                                :text="t('Set up events')"
                                 class="mt-8 inline-flex items-center"
                                 classes="!w-fit gap-x-2 h-12 bg-artwork-buttons-create">
                                 <IconCalendarMonth class="w-5 h-5" />
@@ -268,7 +317,7 @@
                             <BaseButton
                                 type="submit"
                                 @click="addProject(false)"
-                                :text="project ? $t('Save') : $t('Create')"
+                                :text="project ? t('Save') : t('Create')"
                                 class="mt-8 inline-flex items-center "
                                 classes="!w-fit gap-x-2 h-12"
                             >
@@ -316,7 +365,7 @@
                                 <div>
                                     <MenuButton class="menu-button">
                                             <span>
-                                                {{ $t('Select properties') }}
+                                                {{ t('Select properties') }}
                                             </span>
                                         <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"/>
                                     </MenuButton>
@@ -332,7 +381,7 @@
                                         <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
                                             <Disclosure v-slot="{ open }">
                                                 <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Category') }}</span>
+                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ t('Category') }}</span>
                                                     <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''" class="h-4 w-4 mt-0.5 text-white"/>
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
@@ -351,7 +400,7 @@
                                                         </p>
                                                     </div>
                                                     <div v-else class="text-secondary">
-                                                        {{ $t('No categories created yet') }}
+                                                        {{ t('No categories created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
@@ -361,7 +410,7 @@
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
                                                     <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Genre') }}</span>
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ t('Genre') }}</span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
@@ -383,7 +432,7 @@
                                                         </p>
                                                     </div>
                                                     <div v-else class="text-secondary">
-                                                        {{ $t('No genres created yet') }}
+                                                        {{ t('No genres created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
@@ -393,7 +442,7 @@
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
                                                     <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Area') }}</span>
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ t('Area') }}</span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
@@ -415,7 +464,7 @@
                                                         </p>
                                                     </div>
                                                     <div v-else class="text-secondary">
-                                                        {{ $t('No areas created yet') }}
+                                                        {{ t('No areas created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
@@ -427,18 +476,18 @@
                         <div class="flex">
                             <div v-for="categoryId in createProjectForm.assignedCategoryIds">
                                 <TagComponent hide-x="true"
-                                              :displayed-text="this.categories.find(category => category.id === categoryId).name"
-                                              :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
+                                              :displayed-text="categories.find(category => category.id === categoryId).name"
+                                              :property="categories.find(category => category.id === categoryId)"></TagComponent>
                             </div>
                             <div v-for="genreId in createProjectForm.assignedGenreIds">
                                 <TagComponent hide-x="true"
-                                              :displayed-text="this.genres.find(genre => genre.id === genreId).name"
-                                              :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
+                                              :displayed-text="genres.find(genre => genre.id === genreId).name"
+                                              :property="genres.find(genre => genre.id === genreId)"></TagComponent>
                             </div>
                             <div v-for="sectorId in createProjectForm.assignedSectorIds">
                                 <TagComponent hide-x="true"
-                                              :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
-                                              :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
+                                              :displayed-text="sectors.find(sector => sector.id === sectorId).name"
+                                              :property="sectors.find(sector => sector.id === sectorId)"></TagComponent>
                             </div>
                         </div>
                         <div class="mb-2">
@@ -467,7 +516,7 @@
                             <BaseButton
                                 v-if="!project"
                                 @click="addProject(true)"
-                                :text="$t('Set up events')"
+                                :text="t('Set up events')"
                                 class="mt-8 inline-flex items-center"
                                 classes="!w-fit gap-x-2 h-12 bg-artwork-buttons-create">
                                 <IconCalendarMonth class="w-5 h-5" />
@@ -475,7 +524,7 @@
                             <BaseButton
                                 type="submit"
                                 @click="addProject(false)"
-                                :text="project ? $t('Save') : $t('Create')"
+                                :text="project ? t('Save') : t('Create')"
                                 class="mt-8 inline-flex items-center "
                                 classes="!w-fit gap-x-2 h-12"
                             >
@@ -490,7 +539,7 @@
     </BaseModal>
 </template>
 
-<script>
+<script setup>
 import Input from "@/Layouts/Components/InputComponent.vue";
 import Button from "@/Jetstream/Button.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
@@ -520,7 +569,6 @@ import IconLib from "@/Mixins/IconLib.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
-import ProjectStateListbox from "@/Components/Listboxes/ProjectStateListbox.vue";
 import ProjectGroupListbox from "@/Components/Listboxes/ProjectGroupListbox.vue";
 import KeyVisual from "@/Components/Uploads/KeyVisual.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
@@ -534,182 +582,199 @@ import IconSelector from "@/Components/Icon/IconSelector.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import ProjectStateChangeModal from "@/Layouts/Components/ProjectStateChangeModal.vue";
+import { ref, reactive, computed, defineProps, defineEmits } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import { usePermission } from '@/Composeables/Permission.js';
+import { useTranslation } from '@/Composeables/Translation.js';
 
-export default {
-    name: 'ProjectCreateModal',
-    mixins: [IconLib, ColorHelper, Permissions],
-    components: {
-        BaseInput,
-        TinyPageHeadline,
-        ColorPickerComponent,
-        IconSelector,
-        TextareaComponent,
-        BaseButton,
-        Switch,
-        SwitchLabel,
-        SwitchGroup,
-        ProjectSearch,
-        BaseTabs,
-        ModalHeader,
-        DateInputComponent,
-        KeyVisual,
-        ProjectGroupListbox,
-        ProjectStateListbox,
-        JetInputError,
-        TextInputComponent,
-        UserSearch,
-        BaseModal,
-        FormButton,
-        ListboxOption,
-        ListboxOptions,
-        ListboxButton,
-        Listbox,
-        DisclosurePanel,
-        DisclosureButton,
-        Disclosure,
-        Menu,
-        MenuItems,
-        MenuButton,
-        XIcon,
-        ChevronDownIcon,
-        CheckIcon,
-        JetDialogModal,
-        TagComponent,
-        Button,
-        Input
-    },
-    emits: ['closeCreateProjectModal', 'dropFeedback'],
-    props: [
-        'show',
-        'categories',
-        'genres',
-        'sectors',
-        'projectGroups',
-        'states',
-        'createSettings',
-        'project'
-    ],
-    data() {
-        return {
-            isCreateProjectTab: true,
-            isCreateProjectGroupTab: false,
-            addToProjectGroup: this.project ? !!this.project?.groups[0] : false,
-            createProjectForm: useForm({
-                name: this.project ? this.project.name : '',
-                artists: this.project ? this.project.artists : '',
-                assignedSectorIds: this.project ? this.project?.sectors?.map(sector => sector.id) : [],
-                assignedCategoryIds: this.project ? this.project?.categories?.map(category => category.id) : [],
-                assignedGenreIds: this.project ? this.project?.genres?.map(genre => genre.id) : [],
-                isGroup: this.project ? this.project.is_group : false,
-                projects: [],
-                selectedGroup: this.project ? this.project?.groups[0] : null,
-                budget_deadline: this.project ? this.project.budget_deadline : '',
-                state: null,
-                assignedUsers: [],
-                cost_center: this.project ? this.project?.cost_center?.name : '',
-                icon: this.project ? this.project.icon : 'IconPhotoCircle',
-                color: this.project ? this.project.color : null,
-            }),
-            projectGroupProjects: [],
-            projectGroupSearchResults: [],
-            projectGroupQuery: '',
-            selectedState: this.project ? this.project?.state?.id : null,
-            assignedUsers: this.project ? this.project.manager_users ? this.project.manager_users : [] : [],
-            keyVisualForm: useForm({
-                keyVisual: null,
-            }),
-            uploadKeyVisualFeedback: "",
-            createProjectGroup: false,
-            showInvalidProjectNameHelpText: false,
+// Define props
+const props = defineProps({
+    show: Boolean,
+    categories: Array,
+    genres: Array,
+    sectors: Array,
+    projectGroups: Array,
+    states: Array,
+    createSettings: Object,
+    project: Object
+});
 
-        }
-    },
-    computed: {
-        tabs() {
-            return [
-                {
-                    name: this.$t('Projects'),
-                    current: this.isCreateProjectTab
-                },
-                {
-                    name: this.$t('Project group'),
-                    current: this.isCreateProjectGroupTab
-                },
-            ]
-        },
-    },
-    methods: {
-        addUserToProject(user) {
-            // check if user is already in the list
-            if (!this.assignedUsers.find(assignedUser => assignedUser.id === user.id)) {
-                this.assignedUsers.push(user);
-            }
-        },
-        removeUserFromProject(index) {
-            this.assignedUsers.splice(index, 1);
-        },
-        changeTab(selectedTab) {
-            if (selectedTab.name === this.$t('Projects')) {
-                this.isCreateProjectTab = true;
-                this.isCreateProjectGroupTab = false;
-                this.createProjectForm.isGroup = false;
-            } else {
-                this.isCreateProjectGroupTab = true;
-                this.isCreateProjectTab = false;
-                this.createProjectForm.isGroup = true;
-            }
-        },
-        addIconToForm(icon){
-            this.createProjectForm.icon = icon;
-        },
-        addColorToProject(color){
-            this.createProjectForm.color = color;
-        },
-        addProject(bool) {
-            if (this.createProjectForm.name === '') {
-                this.showInvalidProjectNameHelpText = true;
-                return;
-            }
+// Define emits
+const emit = defineEmits(['closeCreateProjectModal', 'dropFeedback','openProjectStateChangeModal']);
 
-            this.projectGroupProjects.forEach((projectToAdd) => {
-                this.createProjectForm.projects.push(projectToAdd.id);
-            });
+// Setup composables
+const page = usePage();
+const { can } = usePermission(page.props);
+const t = useTranslation();
 
-            this.createProjectForm.assignedUsers = this.assignedUsers?.map(user => user.id);
-            this.createProjectForm.state = this.selectedState;
+// Color helper functions
+const backgroundColorWithOpacity = (color, percent = 15) => {
+    if (!color) return `rgba(255, 255, 255, ${percent / 100})`;
+    return `rgba(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, ${percent / 100})`;
+};
 
-            if ( this.createProjectGroup ){
-                this.createProjectForm.isGroup = true;
-            }
-
-            if (this.project) {
-                this.createProjectForm.patch(
-                    route('projects.update', this.project.id), {
-                        onSuccess: () => {
-                            this.$emit('closeCreateProjectModal', bool);
-                        }
-                    }
-                );
-            } else {
-                this.createProjectForm.post(
-                    route('projects.store'), {
-                        onSuccess: () => {
-                            this.$emit('closeCreateProjectModal', bool);
-                            this.$emit('dropFeedback');
-                        }
-                    }
-                );
-            }
-        },
-        addProjectToProjectGroup(project) {
-            if(!this.projectGroupProjects.includes(project)){
-                this.projectGroupProjects.push(project);
-            }
-        },
-        deleteProjectFromProjectGroup(index) {
-            this.projectGroupProjects.splice(index, 1);
-        },
-
+const calculateLuminance = (color) => {
+    let rgb;
+    if (color.startsWith('rgb')) {
+        // Convert "rgb(r, g, b)" or "rgba(r, g, b, a)" to hex format
+        rgb = color.match(/\d+/g).slice(0, 3).map(Number);
+    } else {
+        rgb = [
+            parseInt(color.slice(1, 3), 16),
+            parseInt(color.slice(3, 5), 16),
+            parseInt(color.slice(5, 7), 16),
+        ];
     }
-}
+    const [r, g, b] = rgb.map(v => v / 255);
+    const a = [r, g, b].map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+    return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+};
+
+const isDarkColor = (color) => {
+    return calculateLuminance(color) < 0.5;
+};
+
+const TextColorWithDarken = (color, percent = 75) => {
+    if (!color) return 'rgb(180, 180, 180)';
+    return `rgb(${Math.max(0, parseInt(color.slice(-6, -4), 16) - percent)}, ${Math.max(0, parseInt(color.slice(-4, -2), 16) - percent)}, ${Math.max(0, parseInt(color.slice(-2), 16) - percent)})`;
+};
+
+// Reactive state
+const isCreateProjectTab = ref(true);
+const isCreateProjectGroupTab = ref(false);
+const addToProjectGroup = ref(props.project ? !!props.project?.groups[0] : false);
+const createProjectForm = useForm({
+    name: props.project ? props.project.name : '',
+    artists: props.project ? props.project.artists : '',
+    assignedSectorIds: props.project ? props.project?.sectors?.map(sector => sector.id) : [],
+    assignedCategoryIds: props.project ? props.project?.categories?.map(category => category.id) : [],
+    assignedGenreIds: props.project ? props.project?.genres?.map(genre => genre.id) : [],
+    isGroup: props.project ? props.project.is_group : false,
+    projects: [],
+    selectedGroup: props.project ? props.project?.groups[0] : null,
+    budget_deadline: props.project ? props.project.budget_deadline : '',
+    state: null,
+    assignedUsers: [],
+    cost_center: props.project ? props.project?.cost_center?.name : '',
+    icon: props.project ? props.project.icon : 'IconPhotoCircle',
+    color: props.project ? props.project.color : null,
+});
+const projectGroupProjects = ref([]);
+const projectGroupSearchResults = ref([]);
+const projectGroupQuery = ref('');
+const selectedState = ref(props.project ? props.states.find(state => state.id === props.project?.state) : null);
+const selectedStateObject = ref(props.project ? props.project?.state : null);
+const initialStatePlanning = ref(props.project && props.project.state ? props.states.find(state => state.id === props.project.state).is_planning : null);
+const assignedUsers = ref(props.project ? props.project.manager_users ? props.project.manager_users : [] : []);
+const keyVisualForm = useForm({
+    keyVisual: null,
+});
+const uploadKeyVisualFeedback = ref("");
+const createProjectGroup = ref(false);
+const showInvalidProjectNameHelpText = ref(false);
+
+// Computed properties
+const tabs = computed(() => {
+    return [
+        {
+            name: t('Projects'),
+            current: isCreateProjectTab.value
+        },
+        {
+            name: t('Project group'),
+            current: isCreateProjectGroupTab.value
+        },
+    ];
+});
+
+// Methods
+const addUserToProject = (user) => {
+    // check if user is already in the list
+    if (!assignedUsers.value.find(assignedUser => assignedUser.id === user.id)) {
+        assignedUsers.value.push(user);
+    }
+};
+
+const removeUserFromProject = (index) => {
+    assignedUsers.value.splice(index, 1);
+};
+
+const changeTab = (selectedTab) => {
+    if (selectedTab.name === t('Projects')) {
+        isCreateProjectTab.value = true;
+        isCreateProjectGroupTab.value = false;
+        createProjectForm.isGroup = false;
+    } else {
+        isCreateProjectGroupTab.value = true;
+        isCreateProjectTab.value = false;
+        createProjectForm.isGroup = true;
+    }
+};
+
+const addIconToForm = (icon) => {
+    createProjectForm.icon = icon;
+};
+
+const addColorToProject = (color) => {
+    createProjectForm.color = color;
+};
+
+const addProject = (bool) => {
+    if (createProjectForm.name === '') {
+        showInvalidProjectNameHelpText.value = true;
+        return;
+    }
+
+    projectGroupProjects.value.forEach((projectToAdd) => {
+        createProjectForm.projects.push(projectToAdd.id);
+    });
+
+    createProjectForm.assignedUsers = assignedUsers.value?.map(user => user.id);
+    createProjectForm.state = selectedState.value.id;
+
+    if (createProjectGroup.value) {
+        createProjectForm.isGroup = true;
+    }
+
+    if (props.project) {
+        createProjectForm.patch(
+            route('projects.update', props.project.id), {
+                onSuccess: () => {
+                    console.log(initialStatePlanning.value)
+                    console.log(selectedState.value.is_planning)
+                    if(initialStatePlanning.value === 1 && selectedState.value.is_planning === 0) {
+                        emit('openProjectStateChangeModal', props.project);
+                    }
+                    emit('closeCreateProjectModal', bool);
+
+                }
+            }
+        );
+    } else {
+        createProjectForm.post(
+            route('projects.store'), {
+                onSuccess: () => {
+                    emit('closeCreateProjectModal', bool);
+                    emit('dropFeedback');
+                }
+            }
+        );
+    }
+};
+
+const addProjectToProjectGroup = (project) => {
+    if (!projectGroupProjects.value.includes(project)) {
+        projectGroupProjects.value.push(project);
+    }
+};
+
+const deleteProjectFromProjectGroup = (index) => {
+    projectGroupProjects.value.splice(index, 1);
+};
+
+const handleStateChange = (stateId) => {
+    // Find the state object by ID and update selectedStateObject
+    selectedStateObject.value = props.states.find(state => state.id === stateId) || null;
+};
 </script>

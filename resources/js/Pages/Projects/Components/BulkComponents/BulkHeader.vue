@@ -37,8 +37,6 @@
                 <ToolTipComponent icon="IconExclamationCircle" icon-size="h-5 w-5" direction="bottom" :tooltip-text="$t('If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.')" tooltipCssClass="w-64"/>
             </div>
         </div>
-        <div class="font-bold print:hidden">
-        </div>
     </div>
 </template>
 

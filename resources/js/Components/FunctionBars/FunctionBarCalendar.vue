@@ -33,6 +33,7 @@
                         ref="projectSearchInput"
                         is-small
                         label="Search project"
+                        class="w-9 h-9"
                     />
                     <div v-if="projectSearchResults.length > 0"
                          class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg z-50">

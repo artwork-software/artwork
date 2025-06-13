@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Core\Carbon\Service\CarbonService;
-use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
+use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;

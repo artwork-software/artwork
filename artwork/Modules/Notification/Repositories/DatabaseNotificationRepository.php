@@ -1,6 +1,6 @@
 <?php
 
-namespace Artwork\Modules\DatabaseNotification\Repositories;
+namespace Artwork\Modules\Notification\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Carbon\Carbon;

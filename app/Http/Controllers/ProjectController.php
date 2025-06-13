@@ -55,7 +55,7 @@ use Artwork\Modules\CostCenter\Services\CostCenterService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
-use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
+use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;

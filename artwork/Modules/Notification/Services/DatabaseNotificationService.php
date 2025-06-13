@@ -1,9 +1,9 @@
 <?php
 
-namespace Artwork\Modules\DatabaseNotification\Services;
+namespace Artwork\Modules\Notification\Services;
 
 use Artwork\Core\Carbon\Service\CarbonService;
-use Artwork\Modules\DatabaseNotification\Repositories\DatabaseNotificationRepository;
+use Artwork\Modules\Notification\Repositories\DatabaseNotificationRepository;
 use Illuminate\Notifications\DatabaseNotification;
 use Throwable;
 

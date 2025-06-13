@@ -1,8 +1,8 @@
 <template>
     <div class="print:w-full flex relative"
          :class="[event?.isNew ? 'border-2 rounded-lg border-pink-500 border-dashed w-max py-2 px-1' : '']">
-        <div class="flex items-center gap-4 relative">
-            <div class="flex items-center justify-center pr-2" v-if="multiEdit">
+        <div class="flex items-center gap-4 relative" >
+            <div class="flex items-center justify-center pr-2 pl-1" v-if="multiEdit">
                 <input
                     v-model="event.isSelectedForMultiEdit"
                     aria-describedby="candidates-description"
@@ -12,8 +12,10 @@
                 />
             </div>
             <div v-if="event.isSelectedForMultiEdit && multiEdit"
-                 class="absolute pointer-events-none top-0 left-0 w-full h-full bg-green-100/20 z-50"/>
-            <div class="" :style="getColumnSize(1)" v-if="usePage().props.event_status_module">
+                 class="absolute pointer-events-none top-0 left-0 w-full h-full bg-green-100/20 z-50" />
+            <div v-if="event.is_planning"
+                 class="absolute pointer-events-none top-0 left-0 w-full h-full bg-blue-500/10 rounded-r-lg -z-10" />
+            <div :style="getColumnSize(1)" v-if="usePage().props.event_status_module">
                 <Listbox v-model="event.status"
                          @update:model-value="updateEventInDatabase"
                          :id="'status-' + index"
@@ -57,7 +59,7 @@
                     </Float>
                 </Listbox>
             </div>
-            <div class="" :style="getColumnSize(2)">
+            <div :style="getColumnSize(2)">
                 <Listbox v-model="event.type"
                          @update:model-value="updateEventInDatabase"
                          :id="'type-'+ index"
@@ -72,10 +74,9 @@
                                 </span>
                                 <span class="truncate print:w-full flex items-center" :style="getColumnTextSize(2)">
                                     {{ event.type?.name }}
-                                    <span v-if="event.is_planning" class="ml-1 text-blue-500" title="Planning Event">
-                                        <IconCalendarCog class="h-4 w-4" />
-                                    </span>
                                 </span>
+                                <ToolTipComponent icon="IconCalendarCog" v-if="event.is_planning" class="-ml-8" :tooltip-text="'Dies ist ein geplanter Termin'">
+                </ToolTipComponent>
                             </span>
                             <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden"
                                              aria-hidden="true"/>
@@ -102,6 +103,7 @@
                         </ListboxOptions>
                     </Float>
                 </Listbox>
+
             </div>
             <div :style="getColumnSize(3)">
                 <BaseInput v-model="event.name"

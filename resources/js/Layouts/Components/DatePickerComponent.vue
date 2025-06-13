@@ -88,7 +88,7 @@ export default {
     mixins: [Permissions, IconLib],
     name: "DatePickerComponent",
     components: {ToolTipComponent, VueTailwindDatepicker},
-    props: ['dateValueArray', 'project', 'is_shift_plan', 'is_user_shift_plan'],
+    props: ['dateValueArray', 'project', 'is_shift_plan', 'is_user_shift_plan', 'is_inventory_article_planning'],
     data() {
         return {
             dateValue: this.dateValueArray ? this.dateValueArray : [],
@@ -272,6 +272,14 @@ export default {
                     });
                 } else if (this.is_user_shift_plan) {
                     router.patch(route('update.user.worker.shift-plan.filters.update', this.$page.props.auth.user.id), {
+                        start_date: startDate,
+                        end_date: endDate,
+                    }, {
+                        preserveState: true,
+                        preserveScroll: true,
+                    });
+                } else if (this.is_inventory_article_planning) {
+                    router.patch(route('update.user.inventory.article-plan.filters.update', this.$page.props.auth.user.id), {
                         start_date: startDate,
                         end_date: endDate,
                     }, {

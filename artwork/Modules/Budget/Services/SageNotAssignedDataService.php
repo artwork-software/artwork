@@ -199,11 +199,24 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
     public function findParentBookingByIdentifiers(
         ...$identifiers
     ): CollectiveBooking|null {
-        [$sageId, $ktoSoll, $ktoHaben] = $identifiers;
-        return $this->sageNotAssignedDataRepository->findParentBookingBySageIdKtoSollAndKtoHaben(
+        [$sageId, $ktoSoll, $ktoHaben, $kstTraeger] = $identifiers;
+        return $this->sageNotAssignedDataRepository->findParentBookingBySageIdKtoSollAndKtoHabenTraeger(
             $sageId,
             $ktoSoll,
-            $ktoHaben
+            $ktoHaben,
+            $kstTraeger
+        );
+    }
+
+    public function findBookingByIdentifiers(
+        ...$identifiers
+    ): CollectiveBooking|null {
+        [$sageId, $ktoSoll, $ktoHaben, $kstTraeger] = $identifiers;
+        return $this->sageNotAssignedDataRepository->findBookingBySageIdKtoSollAndKtoHabenTraeger(
+            $sageId,
+            $ktoSoll,
+            $ktoHaben,
+            $kstTraeger
         );
     }
 

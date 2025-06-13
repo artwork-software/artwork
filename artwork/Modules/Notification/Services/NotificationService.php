@@ -8,6 +8,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Notifications\ConflictNotification;
 use Artwork\Modules\Event\Notifications\EventNotification;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Inventory\Notifications\InventoryArticleNotification;
 use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Events\NewNotificationBroadcast;
@@ -478,6 +479,15 @@ class NotificationService
                     );
                 }
                 break;
+            case NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED:
+            case NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED:
+            if ($this->getNotificationTo()->id !== Auth::id()) {
+                Notification::send(
+                    $this->getNotificationTo(),
+                    new InventoryArticleNotification($body, $this->getBroadcastMessage())
+                );
+            }
+            break;
         }
 
         $this->sendBroadcastMessage($this->getNotificationTo());

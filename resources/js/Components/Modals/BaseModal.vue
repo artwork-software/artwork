@@ -102,7 +102,8 @@ export default {
         },
         makeContainerDraggable(){
             const container = this.$refs.containerRef?.$el || this.$refs.containerRef
-            const dragHandle = this.$refs.dragHandleRef;
+
+            const dragHandle = this.$refs.dragHandleRef?.$el || this.$refs.dragHandleRef;
 
             let isDragging = false;
             let offsetX = 0;

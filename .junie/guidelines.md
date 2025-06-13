@@ -6,7 +6,7 @@ Artwork is a project organization tool for scheduling projects with events, task
 ## Tech Stack
 - **Backend**: Laravel 10 (PHP 8.2+)
 - **Frontend**: Vue.js 3 with Inertia.js
-- **CSS Framework**: Tailwind CSS
+- **CSS Framework**: Tailwind CSS 3.4
 - **Database**: MySQL/MariaDB
 - **Search**: Meilisearch
 - **Real-time**: Soketi (WebSockets), Pusher, Laravel Echo
@@ -22,49 +22,51 @@ Artwork is a project organization tool for scheduling projects with events, task
 - `/routes` - API and web routes
 - `/tests` - Test files (Unit and Feature)
 
-## Development Setup
+## Development Setup (DDEV)
 1. **Installation**:
-   - Use Laravel Sail (Docker): `./vendor/bin/sail up`
-   - Install dependencies: `sail composer install` and `sail npm install`
-   - Generate app key: `sail artisan key:generate`
-   - Migrate database: `sail artisan migrate:fresh --seed`
+   - Stelle sicher, dass [DDEV](https://ddev.readthedocs.io) installiert ist.
+   - Projekt initialisieren (einmalig): `ddev config`
+   - Projekt starten: `ddev start`
+   - Abhängigkeiten installieren: `ddev composer install` und `ddev npm install`
+   - App Key generieren: `ddev artisan key:generate`
+   - Datenbank migrieren: `ddev artisan migrate:fresh --seed`
 
 2. **Running the Application**:
-   - Start backend: `sail up`
-   - Start frontend: `sail npm run dev`
-   - Start queue worker: `sail artisan queue:work`
-   - Link storage: `sail artisan storage:link`
+   - Backend starten: `ddev start`
+   - Frontend entwickeln: `ddev npm run dev`
+   - Queue-Worker starten: `ddev artisan queue:work`
+   - Storage verlinken: `ddev artisan storage:link`
 
 ## Running Tests
-- Run all tests: `sail artisan test` or `sail pest`
-- Run specific test suite: `sail artisan test --testsuite=Unit`
+- Alle Tests ausführen: `ddev artisan test` oder `ddev pest`
+- Spezifisches Testsuite ausführen: `ddev artisan test --testsuite=Unit`
 
 ## Code Quality Tools
-- Static analysis: `composer phpstan`
-- Code style checking: `composer phpcs`
-- Automatic code style fixing: `composer phpcbf`
+- Statische Analyse: `ddev composer phpstan`
+- Code Style Prüfung: `ddev composer phpcs`
+- Automatische Code Style Korrektur: `ddev composer phpcbf`
 
 ## Common Commands
-- Create migration: `sail artisan make:migration create_table_name`
-- Create model: `sail artisan make:model ModelName`
-- Create controller: `sail artisan make:controller ControllerName`
-- Create test: `sail artisan make:test TestName`
+- Migration erstellen: `ddev artisan make:migration create_table_name`
+- Model erstellen: `ddev artisan make:model ModelName`
+- Controller erstellen: `ddev artisan make:controller ControllerName`
+- Test erstellen: `ddev artisan make:test TestName`
 
 ## Maintenance
-- Update permissions: `sail artisan artwork:update-permissions`
-- Add new components: `sail artisan artwork:add-new-components`
+- Berechtigungen aktualisieren: `ddev artisan artwork:update-permissions`
+- Neue Komponenten hinzufügen: `ddev artisan artwork:add-new-components`
 
 ## Deployment
-- Branch structure: `dev` → `staging` → `main`
-- Production branch: `main` (most stable version)
-- Staging branch: `staging` (pre-release testing)
-- Development branch: `dev` (feature integration)
+- Branch-Struktur: `dev` → `staging` → `main`
+- Produktions-Branch: `main` (stabilste Version)
+- Staging-Branch: `staging` (Pre-Release Testing)
+- Entwicklungs-Branch: `dev` (Feature-Integration)
 
 ## Best Practices
-1. Follow Laravel conventions for naming and structure
-2. Write tests for new features
-3. Use type hints and docblocks
-4. Keep controllers thin, move business logic to services
-5. Use Laravel's built-in validation
-6. Follow Vue.js component structure in resources/js
-7. Use Tailwind utility classes for styling
+1. Halte dich an Laravel-Konventionen für Struktur und Benennung
+2. Schreibe Tests für neue Features
+3. Nutze Type-Hints und DocBlocks
+4. Halte Controller schlank, nutze Services für Business-Logik
+5. Verwende Laravel's integrierte Validierung
+6. Folge der Vue.js-Komponentenstruktur in `resources/js`
+7. Nutze Tailwind Utility-Klassen für das Styling

@@ -2,7 +2,7 @@
     <div class="relative">
         <div class="my-auto w-full relative">
             <BaseInput
-                id="userSearch"
+                id="project_search"
                 v-model="project_search_query"
                 :label="label"
                 class="w-full"

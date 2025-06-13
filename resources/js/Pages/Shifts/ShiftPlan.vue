@@ -131,6 +131,7 @@
                                 </TableHead>
                             </div>
                         </template>
+
                         <template #body>
                             <TableBody class="eventByDaysContainer">
                                 <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId" class="w-full table-row"
@@ -157,13 +158,13 @@
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-else style="width: 200px" class="cell group " :class="$page.props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
-                                            <div v-if="usePage().props.auth.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
+                                            <div v-if="usePage().props.auth.user.calendar_settings.display_project_groups && room.content[day.fullDay]?.events" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
                                                 <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"  class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
                                                     <component :is="group.icon" class="size-4" aria-hidden="true"/>
                                                     <span>{{ group.name }}</span>
                                                 </Link>
                                             </div>
-                                            <div v-for="event in room.content[day.fullDay].events" class="mb-1">
+                                            <div v-if="room.content[day.fullDay]?.events" v-for="event in room.content[day.fullDay].events" class="mb-1"  >
                                                 <SingleShiftPlanEvent
                                                     v-if="checkIfEventHasShiftsToDisplay(event)"
                                                     :multiEditMode="multiEditMode"
@@ -186,7 +187,7 @@
                                                                         :firstProjectShiftTabId="firstProjectShiftTabId"/>
                                             </div>
                                             <div class="space-y-0.5">
-                                                <div v-for="shift in room.content[day.fullDay].shifts">
+                                                <div v-if="room.content[day.fullDay]?.shifts" v-for="shift in room.content[day.fullDay].shifts">
                                                     <div class="bg-gray-50 rounded-lg border border-gray-100 py-0.5"
                                                          v-if="shift.daysOfShift.includes(day.fullDay)">
                                                         <SingleShiftInRoom
@@ -838,6 +839,7 @@ export default {
         'shiftPlanWorkerSortEnums',
         'useFirstNameForSort',
         'userShiftPlanShiftQualificationFilters',
+        'projectNameUsedForProjectTimePeriod',
     ],
     data() {
         return {
@@ -892,7 +894,6 @@ export default {
             newShiftPlanData: ref(this.shiftPlan),
             openCellMultiEditCalendarDelete: false,
             dailyViewMode: usePage().props.auth.user.daily_view ?? false,
-            projectNameUsedForProjectTimePeriod: '',
         }
     },
     mounted() {
@@ -1998,19 +1999,6 @@ export default {
                 }
             );
         },
-        fetchProjectName(projectId) {
-            axios.get(route('projects.get', { project: projectId }))
-                .then(response => {
-                    console.log(response)
-                    if (response.data && response.data.name) {
-                        this.projectNameUsedForProjectTimePeriod = response.data.name;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching project name:', error);
-                    this.projectNameUsedForProjectTimePeriod = '';
-                });
-        },
     },
     beforeUnmount() {
         window.removeEventListener('resize', this.updateHeight);
@@ -2032,16 +2020,6 @@ export default {
             },
             deep: true
         },
-        'usePage().props.auth.user.calendar_settings.time_period_project_id': {
-            handler(newProjectId) {
-                if (newProjectId > 0) {
-                    this.fetchProjectName(newProjectId);
-                } else {
-                    this.projectNameUsedForProjectTimePeriod = '';
-                }
-            },
-            immediate: true
-        }
     }
 }
 </script>

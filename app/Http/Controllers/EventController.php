@@ -185,7 +185,8 @@ class EventController extends Controller
     /**
      * @throws Throwable
      */
-    public function viewEventIndex(Request $request, ?Project $project = null): Response|JsonResponse {
+    public function viewEventIndex(Request $request, ?Project $project = null): Response|JsonResponse
+    {
         /** @var User $user */
         $user = $this->authManager->user();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
@@ -206,7 +207,7 @@ class EventController extends Controller
 
         $calendarWarningText = '';
 
-        if($user->daily_view && $startDate->diffInDays($endDate) > 7) {
+        if ($user->daily_view && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
             $user->calendar_filter->update([
@@ -321,8 +322,7 @@ class EventController extends Controller
             'personalFilters' => Inertia::always(fn() => $this->filterService->getPersonalFilter()),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(true),
             'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
-                EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)
-            ),
+                EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)),
             'areas' => $this->areaService->getAll(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
@@ -341,7 +341,8 @@ class EventController extends Controller
         ]);
     }
 
-    public function viewPlanningCalendar(?Project $project = null): Response {
+    public function viewPlanningCalendar(?Project $project = null): Response
+    {
         /** @var User $user */
         $user = $this->authManager->user();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
@@ -354,7 +355,7 @@ class EventController extends Controller
 
         $calendarWarningText = '';
 
-        if($user->daily_view && $startDate->diffInDays($endDate) > 7) {
+        if ($user->daily_view && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
             $user->calendar_filter->update([
@@ -434,8 +435,7 @@ class EventController extends Controller
             'personalFilters' => Inertia::always(fn() => $this->filterService->getPersonalFilter()),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(true),
             'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
-                EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)
-            ),
+                EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)),
             'areas' => $this->areaService->getAll(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
@@ -455,7 +455,8 @@ class EventController extends Controller
         ]);
     }
 
-    public function viewShiftPlan(): Response {
+    public function viewShiftPlan(?Project $project = null): Response
+    {
         /** @var User $user */
         $user = $this->authManager->user();
         $userCalendarFilter = $user->getAttribute('shift_calendar_filter');
@@ -464,9 +465,8 @@ class EventController extends Controller
         $this->userService->shareCalendarAbo('shiftCalendar');
 
 
-
         [$startDate, $endDate] = $this->calendarDataService
-            ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter);
+            ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
 
         if ($user->getAttribute('daily_view') && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
@@ -475,7 +475,7 @@ class EventController extends Controller
             ]);
         }
 
-        if ($user->getAttribute('daily_view')){
+        if ($user->getAttribute('daily_view')) {
             $renderViewName = 'Shifts/ShiftPlanDailyView';
         }
 
@@ -540,6 +540,8 @@ class EventController extends Controller
             'dayServices' => $this->dayServicesService->getAll(),
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'projectNameUsedForProjectTimePeriod' => $userCalendarSettings->getAttribute('time_period_project_id') ?
+                $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'))->name : null,
             'shiftPlanWorkerSortEnums' => array_map(
                 static function (ShiftPlanWorkerSortEnum $enum): string {
                     return $enum->name;
@@ -3153,6 +3155,4 @@ class EventController extends Controller
     {
         $this->eventService->bulkDeleteEvent($request->collect('eventIds'));
     }
-
-
 }

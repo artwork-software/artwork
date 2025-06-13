@@ -332,9 +332,14 @@ readonly class CalendarDataService
         $today = Carbon::now();
         $useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period');
 
-        if (!$useProjectTimePeriod && !$project) {
+        // If project mode is turned off, always use the user's calendar filter dates
+        if (!$useProjectTimePeriod) {
+            // Clear the project parameter to ensure no filtering by project happens
+            $project = null;
             return $this->userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         }
+
+        // Only use project time period if project mode is enabled
         if (!$project && $useProjectTimePeriod) {
             $project = $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
         }

@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div :class="[usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id ? 'border-[3px] border-dashed !border-pink-500' : '']">
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center rounded-t-lg"
                  :style="{backgroundColor: backgroundColorWithOpacity(event.eventType.hex_code ?? eventType?.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventType.hex_code ?? eventType?.hex_code, usePage().props.high_contrast_percent))}">

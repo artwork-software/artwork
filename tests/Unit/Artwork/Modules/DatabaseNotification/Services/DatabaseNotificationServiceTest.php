@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Artwork\Modules\DatabaseNotification\Services;
 
-use Artwork\Modules\DatabaseNotification\Repositories\DatabaseNotificationRepository;
-use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
+use Artwork\Modules\Notification\Repositories\DatabaseNotificationRepository;
+use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Illuminate\Notifications\DatabaseNotification;
 use PHPUnit\Framework\TestCase;
 use Throwable;

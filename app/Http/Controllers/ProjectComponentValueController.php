@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Project\Events\UpdateProjectComponentData;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\ProjectTab\Models\Component;
-use Artwork\Modules\ProjectTab\Models\ProjectComponentValue;
+use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Illuminate\Http\Request;
 
 class ProjectComponentValueController extends Controller

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
+use Artwork\Modules\User\Models\UserCommentedBudgetItemsSetting;
 use Illuminate\Http\Request;
 
 class UserCommentedBudgetItemsSettingController extends Controller

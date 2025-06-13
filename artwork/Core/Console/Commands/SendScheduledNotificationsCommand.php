@@ -3,7 +3,7 @@
 namespace Artwork\Core\Console\Commands;
 
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Command\Command as CommandAlias;

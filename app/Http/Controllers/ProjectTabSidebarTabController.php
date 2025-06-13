@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\ProjectTab\Models\ComponentInTab;
-use Artwork\Modules\ProjectTab\Models\ProjectTab;
-use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
-use Artwork\Modules\ProjectTab\Models\SidebarTabComponent;
+use Artwork\Modules\Project\Models\ComponentInTab;
+use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
+use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Illuminate\Http\Request;
 
 class ProjectTabSidebarTabController extends Controller

@@ -34,6 +34,7 @@ class Holiday extends Model
         'from_api',
         'yearly',
         'color',
+        'treatAsSpecialDay',
     ];
 
     protected $guarded = [];
@@ -43,6 +44,7 @@ class Holiday extends Model
         'end_date' => 'date:Y-m-d',
         'from_api' => 'boolean',
         'yearly' => 'boolean',
+        'treatAsSpecialDay' => 'boolean',
     ];
 
     protected $appends = [

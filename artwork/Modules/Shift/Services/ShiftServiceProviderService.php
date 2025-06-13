@@ -48,7 +48,8 @@ readonly class ShiftServiceProviderService
             $shift->id,
             $serviceProviderId,
             $shiftQualificationId,
-            $craftAbbreviation
+            $craftAbbreviation,
+            $shift
         );
 
         $this->shiftsQualificationsService->increaseValueOrCreateWithOne(

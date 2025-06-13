@@ -1,7 +1,7 @@
 <?php
 
 use Artwork\Modules\User\Services\UserService;
-use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
+use Artwork\Modules\User\Services\UserProjectManagementSettingService;
 use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration

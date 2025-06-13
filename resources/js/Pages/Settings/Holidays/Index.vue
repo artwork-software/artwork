@@ -197,6 +197,27 @@
                                 </SwitchLabel>
                             </SwitchGroup>
                         </div>
+                        <div class="col-span-2">
+                            <div class="relative flex items-start mt-4">
+                                <div class="flex h-6 items-center">
+                                    <input
+                                        id="treatAsSpecialDay"
+                                        v-model="customHolidayForm.treatAsSpecialDay"
+                                        type="checkbox"
+                                        class="input-checklist"
+                                    />
+                                </div>
+                                <div class="ml-3 text-sm/6 flex">
+                                    <label for="treatAsSpecialDay" class="text-sm font-medium">{{ $t('Treat as special day') }}</label>
+                                    <ToolTipComponent
+                                        icon="IconInfoCircle"
+                                        icon-size="h-4 w-4 ml-2"
+                                        :tooltip-text="$t('A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.')"
+                                        direction="bottom"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                         <div class="col-span-2 flex items-center justify-end">
                             <AddButtonBig :text="$t('Add holiday')" class="w-fit" @click="storeCustomHoliday" />
                         </div>
@@ -206,18 +227,25 @@
 
             <div class="my-10">
                 <div class="px-4 sm:px-6 lg:px-8">
-                    <transition
-                        enter-active-class="duration-300 ease-out"
-                        enter-from-class="transform opacity-0"
-                        enter-to-class="opacity-100"
-                        leave-active-class="duration-200 ease-in"
-                        leave-from-class="opacity-100"
-                        leave-to-class="transform opacity-0"
-                    >
-                        <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg w-1/3" v-show="showHolidayUpdatedSuccess">
-                            {{ $t('Saved. The changes have been successfully applied.') }}
+                    <div class="flex items-center justify-between mb-4">
+                        <transition
+                            enter-active-class="duration-300 ease-out"
+                            enter-from-class="transform opacity-0"
+                            enter-to-class="opacity-100"
+                            leave-active-class="duration-200 ease-in"
+                            leave-from-class="opacity-100"
+                            leave-to-class="transform opacity-0"
+                        >
+                            <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg w-1/3" v-show="showHolidayUpdatedSuccess">
+                                {{ $t('Saved. The changes have been successfully applied.') }}
+                            </div>
+                        </transition>
+
+                        <div v-if="Object.keys(changedHolidays).length > 0" class="flex items-center space-x-2">
+                            <span class="text-sm text-red-500">{{ $t('You have unsaved changes') }}</span>
+                            <AddButtonBig :text="$t('Save Changes')" class="w-fit" @click="saveChanges" />
                         </div>
-                    </transition>
+                    </div>
                     <div class="mt-8 flow-root">
                         <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -230,6 +258,14 @@
                                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Federal states') }}</th>
                                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('About interface') }}</th>
                                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Repeat annually')}}</th>
+                                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 flex">{{ $t('Special Day')}}
+                                            <ToolTipComponent
+                                            icon="IconInfoCircle"
+                                            icon-size="h-4 w-4 ml-2"
+                                            :tooltip-text="$t('A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.')"
+                                            direction="bottom"
+                                            />
+                                        </th>
                                         <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0"></th>
                                     </tr>
                                     </thead>
@@ -248,6 +284,14 @@
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ holiday.from_api ? $t('Yes') : $t('No') }}</td>
                                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ holiday.yearly ? $t('Yes') : $t('No') }}</td>
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                            <input
+                                                type="checkbox"
+                                                :checked="getHolidayTreatAsSpecialDay(holiday)"
+                                                @change="updateTreatAsSpecialDay(holiday.id, $event.target.checked)"
+                                                class="input-checklist"
+                                            />
+                                        </td>
                                         <td class="relative whitespace-nowrap py-4 pl-3 text-right text-sm font-medium pr-3 flex items-center justify-end space-x-4">
                                             <ToolTipComponent
                                                 v-if="!holiday.from_api"
@@ -371,6 +415,7 @@ const holidayToEdit = ref(null);
 
 const showHolidayUpdatedSuccess = ref(false);
 const showErrorMessageDate = ref(false);
+const changedHolidays = ref({});
 
 const holidayForm = useForm({
     color: '#1c77d7',
@@ -387,6 +432,7 @@ const customHolidayForm = useForm({
     end_date: '',
     from_api: false,
     yearly: false,
+    treatAsSpecialDay: false,
 })
 
 
@@ -531,6 +577,48 @@ const closeEditHolidayModal = (bool) => {
 const editHoliday = (holiday) => {
     holidayToEdit.value = holiday;
     showEditHolidayModal.value = true;
+}
+
+const getHolidayTreatAsSpecialDay = (holiday) => {
+    // If the holiday has been changed, return the changed value
+    if (changedHolidays.value.hasOwnProperty(holiday.id)) {
+        return changedHolidays.value[holiday.id];
+    }
+    // Otherwise return the original value
+    return holiday.treatAsSpecialDay;
+}
+
+const updateTreatAsSpecialDay = (id, checked) => {
+    // Store the change locally
+    changedHolidays.value[id] = checked;
+}
+
+const saveChanges = () => {
+    // Only send if there are changes
+    if (Object.keys(changedHolidays.value).length === 0) {
+        return;
+    }
+
+    // Send the changes to the server
+    router.post(route('holiday.batch-update'), {
+        holidays: changedHolidays.value
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            // Clear the changes
+            changedHolidays.value = {};
+
+            // Show success message
+            showHolidayUpdatedSuccess.value = true;
+            setTimeout(() => {
+                showHolidayUpdatedSuccess.value = false;
+            }, 5000);
+
+            // Refresh the data
+            applyFiltersAndSort(false);
+        }
+    });
 }
 </script>
 

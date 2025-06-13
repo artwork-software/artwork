@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Artwork\Modules\ShiftTimePreset\Models;
 
-use Artwork\Modules\ShiftTimePreset\Models\ShiftTimePreset;
+use Artwork\Modules\Shift\Models\ShiftTimePreset;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Random\RandomException;

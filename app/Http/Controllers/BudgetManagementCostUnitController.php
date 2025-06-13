@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Budget\Services\ColumnCellService;
-use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\StoreBudgetManagementCostUnitRequest;
-use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\UpdateBudgetManagementCostUnitRequest;
-use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
-use Artwork\Modules\BudgetManagementCostUnit\Services\BudgetManagementCostUnitService;
+use Artwork\Modules\Budget\Http\Requests\StoreBudgetManagementCostUnitRequest;
+use Artwork\Modules\Budget\Http\Requests\UpdateBudgetManagementCostUnitRequest;
+use Artwork\Modules\Budget\Models\BudgetManagementCostUnit;
+use Artwork\Modules\Budget\Services\BudgetManagementCostUnitService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;

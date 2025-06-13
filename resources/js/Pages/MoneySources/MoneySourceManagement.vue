@@ -203,7 +203,7 @@
                                 </Menu>
                                 <div class="flex ml-3"
                                      v-if="$can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                    <AddButtonSmall @click="openAddMoneySourceModal" :text="$t('New')"/>
+                                    <GlassyIconButton text="New" icon="IconPlus" @click="openAddMoneySourceModal" />
                                 </div>
                             </div>
                         </div>
@@ -414,11 +414,13 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 
 export default defineComponent({
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+        GlassyIconButton,
         BaseModal,
         BaseMenu,
         FormButton,

@@ -26,9 +26,8 @@
             <slot name="sort">
 
             </slot>
-            <div class="flex items-center w-max"
-                 v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id)) || can('can use checklists') && isInOwnTaskManagement">
-                <AddButtonSmall @click="openAddChecklistModal = true" :text="$t('New checklist')" class="w-max" />
+            <div class="flex items-center w-max" v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id)) || can('can use checklists') && isInOwnTaskManagement">
+                <GlassyIconButton text="New checklist" icon="IconPlus" @click="openAddChecklistModal = true" />
             </div>
         </div>
     </div>
@@ -54,6 +53,7 @@ import {ref} from "vue";
 import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";
 
 import {usePermission} from "@/Composeables/Permission.js";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 const { can, canAny } = usePermission(usePage().props)
 
 const props = defineProps({

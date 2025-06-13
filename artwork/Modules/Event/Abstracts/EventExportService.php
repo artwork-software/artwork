@@ -6,7 +6,7 @@ use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Services\CacheService;
 use Artwork\Core\Services\CollectionService;
 use Artwork\Modules\Event\Repositories\EventRepository;
-use Artwork\Modules\EventSettings\Services\EventSettingsService;
+use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
 use Illuminate\Support\Collection;
 use Illuminate\Translation\Translator;

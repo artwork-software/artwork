@@ -7,7 +7,7 @@ use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Models\NotificationSetting;
-use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
+use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\User\Models\User;
 use Database\Seeders\ProjectManagementBuilderSeed;
 use Illuminate\Console\Command;

@@ -3,7 +3,7 @@
 namespace Artwork\Modules\TaskTemplate\Models;
 
 use Artwork\Core\Database\Models\Model;
-use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
+use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\ProjectTab\Models\ComponentInTab;
+use Artwork\Modules\Project\Models\ComponentInTab;
 use Illuminate\Http\Request;
 
 class ComponentInTabController extends Controller

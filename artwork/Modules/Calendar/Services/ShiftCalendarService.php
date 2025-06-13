@@ -14,9 +14,9 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
-use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
-use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
+use Artwork\Modules\User\Models\UserCalendarFilter;
+use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
 
@@ -28,6 +28,7 @@ class ShiftCalendarService
         $startDate,
         $endDate,
         ?UserCalendarSettings $userCalendarSettings = null,
+        ?bool $addTimeline = false
     ): Collection {
         $roomIds = $rooms->pluck('id');
 
@@ -41,6 +42,12 @@ class ShiftCalendarService
             'creator:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
             'shifts'
         ];
+
+        if ($addTimeline) {
+            $eventWith['timelines'] = function ($query) {
+                $query->orderBy('start');
+            };
+        }
 
 
         $events = Event::select([
@@ -90,6 +97,7 @@ class ShiftCalendarService
             $event,
             $eventTypes,
             $users,
+            $addTimeline
         ))->groupBy('roomId');
 
         $shiftDTOs = $shifts->map(fn($shift) => ShiftDTO::fromModel(

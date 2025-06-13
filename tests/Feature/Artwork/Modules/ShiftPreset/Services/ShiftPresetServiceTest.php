@@ -3,8 +3,8 @@
 namespace Tests\Feature\Artwork\Modules\ShiftPreset\Services;
 
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\PresetShift\Services\PresetShiftService;
-use Artwork\Modules\PresetShift\Services\PresetShiftsShiftsQualificationsService;
+use Artwork\Modules\Shift\Services\PresetShiftService;
+use Artwork\Modules\Shift\Services\PresetShiftsShiftsQualificationsService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftPreset\Services\ShiftPresetService;
 use Artwork\Modules\ShiftPresetTimeline\Services\ShiftPresetTimelineService;

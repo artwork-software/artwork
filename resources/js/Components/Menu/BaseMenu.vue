@@ -3,7 +3,7 @@
         <Float auto-placement portal :offset="{ mainAxis: hasNoOffset ? 5 : -10, crossAxis: hasNoOffset ? 25 : 75}">
             <div class="font-semibold  flex items-center justify-center w-full" ref="menuButtonRef" :class="[whiteIcon ? 'text-white' : 'text-artwork-buttons-context', dotsColor]">
                 <MenuButton :id="buttonId" class="w-full">
-                   <div class="flex items-center gap-x-3 w-full">
+                   <div class="flex items-center gap-x-1 w-full">
                        <div v-if="showIcon">
                            <IconDotsVertical
                                v-if="!showSortIcon && !showCustomIcon"
@@ -37,7 +37,7 @@
                            />
                        </div>
 
-                       <div v-if="menuButtonText && showMenuButtonText">
+                       <div v-if="menuButtonText && showMenuButtonText" :class="[textWithMarginLeft ? 'ml-2' : '']">
                             {{ $t(menuButtonText) }}
                        </div>
                    </div>
@@ -165,6 +165,11 @@ export default defineComponent({
             default: false,
         },
         needsMaxHeight: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        textWithMarginLeft: {
             type: Boolean,
             required: false,
             default: false,

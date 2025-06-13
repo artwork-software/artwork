@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\MoneySource\Models\MoneySource;
-use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
+use Artwork\Modules\MoneySource\Models\MoneySourceReminder;
 use Illuminate\Http\Request;
 
 class MoneySourceReminderController extends Controller

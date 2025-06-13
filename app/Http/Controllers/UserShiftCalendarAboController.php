@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
-use Artwork\Modules\UserShiftCalendarAbo\Services\UserShiftCalendarAboService;
+use Artwork\Modules\User\Models\UserShiftCalendarAbo;
+use Artwork\Modules\User\Services\UserShiftCalendarAboService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

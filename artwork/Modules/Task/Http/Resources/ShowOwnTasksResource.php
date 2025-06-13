@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Task\Http\Resources;
 
-use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Task\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Http\Request;

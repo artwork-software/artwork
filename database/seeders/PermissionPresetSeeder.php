@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Repositories\PermissionRepository;
-use Artwork\Modules\PermissionPresets\Models\PermissionPreset;
-use Artwork\Modules\PermissionPresets\Repositories\PermissionPresetRepository;
+use Artwork\Modules\Permission\Models\PermissionPreset;
+use Artwork\Modules\Permission\Repositories\PermissionPresetRepository;
 use Illuminate\Database\Seeder;
 
 class PermissionPresetSeeder extends Seeder

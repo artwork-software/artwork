@@ -4,7 +4,7 @@ namespace Artwork\Modules\Contract\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\CompanyType\Models\CompanyType;
-use Artwork\Modules\ContractType\Models\ContractType;
+use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;

@@ -1,7 +1,7 @@
 <?php
 
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentPermissionEnum;
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentPermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

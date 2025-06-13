@@ -4,7 +4,7 @@ namespace Artwork\Modules\Room\DTOs;
 
 use Artwork\Core\Abstracts\BaseDto;
 use Artwork\Modules\Room\Http\Resources\RoomCalendarResource;
-use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\User\Models\UserCalendarFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 

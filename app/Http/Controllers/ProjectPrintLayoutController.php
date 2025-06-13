@@ -11,15 +11,14 @@ use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectState;
-use Artwork\Modules\ProjectPrintLayout\Http\Requests\StoreProjectPrintLayoutRequest;
-use Artwork\Modules\ProjectPrintLayout\Http\Requests\UpdateProjectPrintLayoutRequest;
-use Artwork\Modules\ProjectPrintLayout\Models\PrintLayoutComponents;
-use Artwork\Modules\ProjectPrintLayout\Models\ProjectPrintLayout;
-use Artwork\Modules\ProjectPrintLayout\Services\ProjectPrintLayoutService;
-
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
-use Artwork\Modules\ProjectTab\Models\Component;
-use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Project\Http\Requests\StoreProjectPrintLayoutRequest;
+use Artwork\Modules\Project\Http\Requests\UpdateProjectPrintLayoutRequest;
+use Artwork\Modules\Project\Models\PrintLayoutComponents;
+use Artwork\Modules\Project\Models\ProjectPrintLayout;
+use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Enums\ServiceProviderTypes;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
@@ -35,8 +34,7 @@ class ProjectPrintLayoutController extends Controller
     public function __construct(
         private readonly ProjectPrintLayoutService $projectService,
         private readonly ProjectTabService $projectTabService,
-        private readonly UserService $userService,
-        private readonly ChecklistService $checklistService
+        private readonly UserService $userService
     )
     {
     }

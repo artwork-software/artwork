@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\MoneySourceCategory\Models\MoneySourceCategory;
-use Artwork\Modules\MoneySourceCategoryMapping\Models\MoneySourceCategoryMapping;
+use Artwork\Modules\MoneySource\Models\MoneySourceCategory;
+use Artwork\Modules\MoneySource\Models\MoneySourceCategoryMapping;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;

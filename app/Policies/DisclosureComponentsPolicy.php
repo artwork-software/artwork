@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use Artwork\Modules\ProjectTab\Models\DisclosureComponents;
+use Artwork\Modules\Project\Models\DisclosureComponents;
 use Artwork\Modules\User\Models\User;
 
 class DisclosureComponentsPolicy

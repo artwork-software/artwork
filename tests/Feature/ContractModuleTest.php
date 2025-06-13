@@ -1,6 +1,6 @@
 <?php
 
-use Artwork\Modules\ContractModule\Models\ContractModule;
+use Artwork\Modules\Contract\Models\ContractModule;
 use Illuminate\Http\UploadedFile;
 
 beforeEach(function() {

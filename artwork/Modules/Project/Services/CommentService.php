@@ -4,7 +4,7 @@ namespace Artwork\Modules\Project\Services;
 
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Contract\Models\Contract;
-use Artwork\Modules\MoneySourceFile\Models\MoneySourceFile;
+use Artwork\Modules\MoneySource\Models\MoneySourceFile;
 use Artwork\Modules\Project\Events\DeleteCommendInProject;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;

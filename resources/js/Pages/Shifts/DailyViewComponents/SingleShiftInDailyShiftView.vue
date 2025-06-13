@@ -16,7 +16,10 @@
                     <div class="text-gray-500 text-[10px] flex items-center gap-x-1 ">
                         <component :is="findShiftQualification(qualification.shift_qualification_id)?.icon" class="size-3" />
                         <div>
-                            {{ qualification.value - getEmptyShiftQualification(qualification.shift_qualification_id)?.requiredDropElementsCount }}/{{ qualification.value }}
+                            {{
+                                qualification.value -
+                                (getEmptyShiftQualification(qualification.shift_qualification_id)?.requiredDropElementsCount ?? 0)
+                            }}/{{ qualification.value }}
                         </div>
                         {{ findShiftQualification(qualification.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }}
                     </div>

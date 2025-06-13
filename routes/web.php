@@ -97,7 +97,7 @@ use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
-use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
+use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
 use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;

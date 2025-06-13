@@ -4,7 +4,7 @@ namespace Artwork\Modules\Shift\Models;
 
 use Artwork\Core\Database\Models\Pivot;
 use Artwork\Modules\Freelancer\Models\Freelancer;
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;

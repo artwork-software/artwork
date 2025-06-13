@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\ProjectManagementBuilder\Models\ProjectManagementBuilder;
-use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
-use Artwork\Modules\ProjectTab\Models\Component;
+use Artwork\Modules\Project\Models\ProjectManagementBuilder;
+use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
+use Artwork\Modules\Project\Models\Component;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 

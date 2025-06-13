@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Http\Requests\Column;
 
-use Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum;
+use Artwork\Modules\Inventory\Enums\CraftsInventoryColumnTypeEnum;
 use Artwork\Modules\InventoryManagement\Http\Requests\Column\CreateCraftsInventoryColumnRequest;
 use Closure;
 use Illuminate\Http\Request;

@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Artwork\Modules\ChecklistTemplate\Models;
 
-use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
+use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

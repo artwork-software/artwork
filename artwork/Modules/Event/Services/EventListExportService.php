@@ -9,7 +9,7 @@ use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Event\Abstracts\EventExportService;
 use Artwork\Modules\Event\Exports\EventListXlsxExport;
 use Artwork\Modules\Event\Repositories\EventRepository;
-use Artwork\Modules\EventSettings\Services\EventSettingsService;
+use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\Project;

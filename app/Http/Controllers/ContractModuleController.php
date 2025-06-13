@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
 use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Modules\Change\Services\ChangeService;
-use Artwork\Modules\ContractModule\Models\ContractModule;
+use Artwork\Modules\Contract\Models\ContractModule;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

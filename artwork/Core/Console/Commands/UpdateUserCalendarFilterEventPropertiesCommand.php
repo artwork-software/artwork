@@ -2,9 +2,9 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Modules\EventProperty\Services\EventPropertyService;
-use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
-use Artwork\Modules\UserCalendarFilter\Services\UserCalendarFilterService;
+use Artwork\Modules\Event\Services\EventPropertyService;
+use Artwork\Modules\User\Models\UserCalendarFilter;
+use Artwork\Modules\User\Services\UserCalendarFilterService;
 use Illuminate\Console\Command;
 use Psr\Log\LoggerInterface;
 use Throwable;

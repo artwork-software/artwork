@@ -37,7 +37,7 @@
                            />
                        </div>
 
-                       <div v-if="menuButtonText && showMenuButtonText">
+                       <div v-if="menuButtonText && showMenuButtonText" :class="[textWithMarginLeft ? 'ml-2' : '']">
                             {{ $t(menuButtonText) }}
                        </div>
                    </div>
@@ -165,6 +165,11 @@ export default defineComponent({
             default: false,
         },
         needsMaxHeight: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        textWithMarginLeft: {
             type: Boolean,
             required: false,
             default: false,

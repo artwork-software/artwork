@@ -2,6 +2,7 @@
     <div>
         <div>
             <div class="text-secondaryHover xsWhiteBold px-2 py-1 rounded-lg"
+                 :class="[usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id && usePage().props.auth.user.calendar_settings.use_project_time_period ? 'border-[3px] border-dashed !border-pink-500' : '']"
                  :style="{backgroundColor: backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent)),
                  borderColor: event.eventType.hex_code}">
                 <div class="px-1.5 py-1 border-l-4 max-w-40 w-40" :style="{borderColor: event.eventType.hex_code}">

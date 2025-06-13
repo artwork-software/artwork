@@ -20,7 +20,8 @@ class HolidayRepository extends BaseRepository
         ?int $rota = 0,
         ?string $remote_identifier = null,
         ?bool $from_api = false,
-        ?string $color = null
+        ?string $color = null,
+        ?bool $treatAsSpecialDay = false
     ): Holiday {
         $holiday = new Holiday();
         $holiday->fill([
@@ -33,6 +34,7 @@ class HolidayRepository extends BaseRepository
             'remote_identifier' => $remote_identifier,
             'from_api' => $from_api,
             'color' => $color,
+            'treatAsSpecialDay' => $treatAsSpecialDay,
         ]);
 
         $holiday->save();

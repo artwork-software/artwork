@@ -140,19 +140,6 @@ onMounted(() => {
         })
     }
 })
-
-onUnmounted(() => {
-    if ( route().current('events') !== true ){
-        let desiredRoute = route('user.calendar_settings.toggle_calendar_settings_use_project_period');
-        let payload = {
-            use_project_time_period: false,
-            project_id: 0,
-            is_axios: true
-        };
-
-        axios.patch(desiredRoute, payload);
-    }
-})
 </script>
 
 <style scoped>

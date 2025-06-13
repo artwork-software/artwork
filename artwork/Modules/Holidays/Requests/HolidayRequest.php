@@ -20,6 +20,7 @@ class HolidayRequest extends FormRequest
             'selectedSubdivisions.*.id' => ['integer', 'exists:subdivisions,id'],
             'color' => ['nullable', 'string'],
             'yearly' => ['required', 'boolean'],
+            'treatAsSpecialDay' => ['nullable', 'boolean'],
         ];
     }
 }

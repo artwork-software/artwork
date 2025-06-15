@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\DatabaseNotification\Services;
 
+use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\DatabaseNotification\Repositories\DatabaseNotificationRepository;
 use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
 use Illuminate\Notifications\DatabaseNotification;
@@ -11,6 +12,7 @@ use Throwable;
 class DatabaseNotificationServiceTest extends TestCase
 {
     private DatabaseNotificationRepository $databaseNotificationRepository;
+    private CarbonService $carbonService;
 
     protected function setUp(): void
     {
@@ -19,11 +21,13 @@ class DatabaseNotificationServiceTest extends TestCase
             ->onlyMethods(['updateOrFail'])
             ->disableOriginalConstructor()
             ->getMock();
+
+        $this->carbonService = $this->createMock(CarbonService::class);
     }
 
     public function getService(): DatabaseNotificationService
     {
-        return new DatabaseNotificationService($this->databaseNotificationRepository);
+        return new DatabaseNotificationService($this->databaseNotificationRepository, $this->carbonService);
     }
 
     /**

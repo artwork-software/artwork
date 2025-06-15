@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Cache\EventTypeArrayCache;
 use Artwork\Modules\ProjectTab\Cache\ProjectTabArrayCache;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -24,5 +25,9 @@ abstract class TestCase extends BaseTestCase
         EventTypeArrayCache::forgetAll();
         ProjectTabArrayCache::forgetAll();
         $this->withoutVite();
+
+        \Illuminate\Support\Facades\App::setLocale('en');
+        \Illuminate\Support\Facades\Session::put('locale', 'en');
+        \Carbon\CarbonPeriod::setLocale('en');
     }
 }

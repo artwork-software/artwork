@@ -37,6 +37,7 @@ class SeriesEvents extends Model
 
     public function prunable(): bool
     {
-        return $this->events()->count() === 0;
+        // Automatically prune series events that have no associated events
+        return $this->events()->doesntExist();
     }
 }

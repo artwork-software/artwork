@@ -84,12 +84,12 @@ use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
-use App\Http\Controllers\UserCalendarFilterController;
-use App\Http\Controllers\UserCalenderAboController;
-use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\UserShiftCalendarAboController;
-use App\Http\Controllers\UserShiftCalendarFilterController;
+use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
+use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
+use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
+use Artwork\Modules\User\Http\Controllers\UserController;
+use Artwork\Modules\User\Http\Controllers\UserShiftCalendarAboController;
+use Artwork\Modules\User\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
@@ -152,7 +152,7 @@ Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('r
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
-    Route::group(['prefix' => 'updates'], function() {
+    Route::group(['prefix' => 'updates'], function (): void {
         Route::get('/', [\App\Http\Controllers\NotionController::class, 'index'])
             ->name('notion.index');
     });
@@ -267,6 +267,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('user.edit.permissions');
     Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can manage workers')
         ->name('user.edit.workProfile');
+    Route::get('/users/{user}/work-time-pattern', [UserController::class, 'editUserWorkTime'])->can('can manage workers')
+        ->name('user.edit.work-time-pattern');
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
     Route::patch(
         '/users/{user}/permissions',
@@ -1628,7 +1630,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('sidebar.tab.reorder');
         });
 
-        Route::group(['prefix' => 'calendar'], function () {
+        Route::group(['prefix' => 'calendar'], function (): void {
             Route::get('/', [CalendarController::class, 'settingIndex'])->name('calendar.settings');
 
             // post: calendar-settings.store
@@ -2058,7 +2060,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project-management-builder.destroy');
     });
 
-    Route::group(['prefix' => 'project-print-layout'], function(): void {
+    Route::group(['prefix' => 'project-print-layout'], function (): void {
         Route::get('/', [ProjectPrintLayoutController::class, 'index'])
             ->name('project-print-layout.index');
 
@@ -2091,7 +2093,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
 
-    Route::group(['prefix' => 'event-verifications'], function(){
+    Route::group(['prefix' => 'event-verifications'], function (): void {
         // POST events.sendToVerification
         Route::post('/event/{event}/sendToVerification', [EventVerificationController::class, 'store'])
             ->name('events.sendToVerification');
@@ -2135,7 +2137,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('events-verifications.request-verification');
     });
 
-    Route::group(['prefix' => 'accommodation'], function (){
+    Route::group(['prefix' => 'accommodation'], function (): void {
         Route::get('/', [AccommodationController::class, 'index'])->name('accommodation.index');
         Route::get('/show/{accommodation}', [AccommodationController::class, 'show'])->name('accommodation.show');
         Route::post('/store', [AccommodationController::class, 'store'])->name('accommodation.store');
@@ -2143,13 +2145,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/destroy/{accommodation}', [AccommodationController::class, 'destroy'])->name('accommodation.destroy');
     });
 
-    Route::group(['prefix' => 'contact'], function(){
+    Route::group(['prefix' => 'contact'], function (): void {
         Route::post('/store/{model}/{modelId}', [ContactController::class, 'store'])->name('contact.store');
         Route::patch('/update/{contact}', [ContactController::class, 'update'])->name('contact.update');
         Route::delete('/destroy/{contact}', [ContactController::class, 'destroy'])->name('contact.destroy');
     });
 
-    Route::controller(InternalIssueController::class)->prefix('issue-of-material')->group(function() {
+    Route::controller(InternalIssueController::class)->prefix('issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('issue-of-material.index');
         Route::post('/store', 'store')->name('issue-of-material.store');
         Route::patch('/{internalIssue}/update', 'update')->name('issue-of-material.update');
@@ -2158,7 +2160,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/{internalIssue}/set-special-items-done', 'setSpecialItemsDone')->name('issue-of-material.set-special-items-done');
     });
 
-    Route::controller(ExternalIssueController::class)->prefix('extern-issue-of-material')->group(function() {
+    Route::controller(ExternalIssueController::class)->prefix('extern-issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('extern-issue-of-material.index');
         Route::post('/store', 'store')->name('extern-issue-of-material.store');
         Route::patch('/{externalIssue}/update', 'update')->name('extern-issue-of-material.update');
@@ -2177,7 +2179,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::prefix('material-sets')
         ->as('material-sets.')
         ->controller(MaterialSetController::class)
-        ->group(function () {
+        ->group(function (): void {
             Route::get('/', 'index')->name('index');     // material-sets.index
             Route::post('/', 'store')->name('store');    // material-sets.store
             Route::patch('{set}', 'update')->name('update');  // material-sets.update
@@ -2190,6 +2192,33 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::post('inventory/articles/available-stock-batch', [InventoryArticleController::class, 'availableStockBatch'])
         ->name('inventory.articles.available-stock.batch');
+
+
+    Route::group(['prefix' => 'shift'], function (): void {
+        // shift.work-time-pattern
+        Route::get(
+            '/work-time-pattern/',
+            [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'index']
+        )->name('shift.work-time-pattern');
+
+        // shift.work-time-pattern.store
+        Route::post(
+            '/work-time-pattern/store',
+            [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'store']
+        )->name('shift.work-time-pattern.store');
+
+        // shift.work-time-pattern.update
+        Route::patch(
+            '/work-time-pattern/{userWorkTimePattern}/update',
+            [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'update']
+        )->name('shift.work-time-pattern.update');
+
+        // work-time-patterns.destroy
+        Route::delete(
+            '/work-time-pattern/{userWorkTimePattern}/destroy',
+            [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'destroy']
+        )->name('shift.work-time-pattern.destroy');
+    });
 });
 
 Route::get(

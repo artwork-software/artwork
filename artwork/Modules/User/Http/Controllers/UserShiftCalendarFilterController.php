@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Artwork\Modules\User\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;

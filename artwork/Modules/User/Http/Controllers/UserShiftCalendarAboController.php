@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Artwork\Modules\User\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Models\UserShiftCalendarAbo;
 use Artwork\Modules\User\Services\UserShiftCalendarAboService;
 use Carbon\Carbon;

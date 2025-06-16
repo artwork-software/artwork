@@ -4,15 +4,9 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateUserWorkTimePatternRequest extends FormRequest
+class UpdateUserWorkTimePatternRequest extends StoreUserWorkTimePatternRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return false;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -22,7 +16,8 @@ class UpdateUserWorkTimePatternRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'id' => 'required|integer|exists:user_work_time_patterns,id',
+            ...parent::rules()
         ];
     }
 }

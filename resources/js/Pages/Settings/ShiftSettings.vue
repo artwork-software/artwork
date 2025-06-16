@@ -14,15 +14,16 @@
                     {{}}
                 </p>
             </div>
-            <div class="flex items-center justify-between gap-x-3">
-                <TinyPageHeadline
-                    :title="$t('Crafts')"
-                    :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
-                />
-               <div class="w-72">
-                   <AddButtonSmall :text="$t('New Craft')" class="mt-5" @click="openAddCraftsModal = true" />
-               </div>
-            </div>
+            <div class="card white p-5">
+                <div class="flex items-center justify-between gap-x-3">
+                    <TinyPageHeadline
+                        :title="$t('Crafts')"
+                        :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
+                    />
+                    <div class="w-72">
+                        <AddButtonSmall :text="$t('New Craft')" class="mt-5" @click="openAddCraftsModal = true" />
+                    </div>
+                </div>
                 <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="crafts" @start="dragging=true" @end="dragging=false" @change="reorderCrafts(crafts)">
                     <template #item="{element}" :key="element.id">
                         <div :key="element" class="flex justify-between gap-x-6 py-5" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
@@ -92,7 +93,8 @@
 
                     </template>
                 </draggable>
-            <div class="mt-10">
+            </div>
+            <div class="mt-10 card white p-5">
                 <TinyPageHeadline
                     :title="$t('Shift-relevant Event Types')"
                     :description="$t('Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the \'shifts\' tab of the project. You can also define additional events as shift-relevant for each project.')"
@@ -126,7 +128,7 @@
                     <TagComponent v-for="type in relevantEventTypes" :method="removeRelevantEventType" :displayed-text="type.name" :property="type" />
                 </div>
             </div>
-            <div>
+            <div class="card white p-5 mt-10">
                 <div class="flex items-center justify-between">
                     <TinyPageHeadline class="mt-10"
                         :title="$t('Qualifications')"
@@ -165,7 +167,7 @@
                     </ul>
                 </div>
             </div>
-            <div>
+            <div class="card white p-5 mt-10">
                 <div class="flex items-center justify-between">
                     <TinyPageHeadline
                         class="mt-14"
@@ -204,7 +206,7 @@
                     </ul>
                 </div>
             </div>
-            <div class="flex flex-col my-10 gap-2">
+            <div class="flex flex-col my-10 gap-2 card white p-5">
                 <TinyPageHeadline :title="$t('Sort settings')"
                                   :description="$t('Configure the behaviour of shift plans sort opportunity.')"/>
                 <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer">
@@ -368,6 +370,12 @@ export default defineComponent({
                     current: route().current('day-service.index'),
                     show: true
                 },
+                {
+                    name: this.$t('Work Time Pattern'),
+                    href: route('shift.work-time-pattern'),
+                    current: route().current('shift.work-time-pattern'),
+                    show: true
+                }
             ]
         }
     },

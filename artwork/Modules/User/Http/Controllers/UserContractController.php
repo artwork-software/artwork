@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Artwork\Modules\User\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserContractRequest;
 use App\Http\Requests\UpdateUserContractRequest;
 use Artwork\Modules\User\Models\UserContract;

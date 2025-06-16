@@ -1,12 +1,12 @@
 <template>
-    <div>
+    <div class="card white p-5">
         <div class="">
             <h2 class="headline2 my-2">{{ title }}</h2>
             <div class="xsLight">
                 {{ description }}
             </div>
         </div>
-        <div class="mt-8 flex w-full flex-wrap gap-x-1">
+        <div class="mt-8 flex items-center w-full flex-wrap gap-x-2">
             <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none">
                 <ColorPickerComponent @update-color="UpdateColor"  />
             </div>
@@ -16,11 +16,7 @@
 
             </div>
             <div class="">
-                <button
-                    :class="[input === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
-                    @click="add" :disabled="!input">
-                    <CheckIcon class="h-5 w-5"></CheckIcon>
-                </button>
+                <GlassyIconButton text="Save" icon="IconCheck" @click="add" :disabled="!input"/>
             </div>
 
         </div>
@@ -42,10 +38,12 @@ import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue"
 import EditableTagComponent from "@/Components/Tags/EditableTagComponent.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 export default {
     name: "ProjectSettingsItem",
     components: {
+        GlassyIconButton,
         BaseInput,
         TextInputComponent,
         EditableTagComponent,

@@ -24,9 +24,11 @@
             </div>
         </div>
 
-        <slot>
+        <div class="card white p-5">
+            <slot>
 
-        </slot>
+            </slot>
+        </div>
 
     </div>
 </template>

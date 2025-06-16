@@ -1,7 +1,7 @@
 <template>
     <InventorySettingsHeader>
 
-        <div class="">
+        <div class="card white p-5">
             <div class="sm:flex sm:items-center">
                 <div class="sm:flex-auto">
                     <h1 class="text-base font-semibold text-gray-900">

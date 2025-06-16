@@ -10,7 +10,7 @@
 
             <ProjectTabs />
 
-            <div class="space-y-10 pb-8">
+            <div class="space-y-10 pb-8 ">
                 <ProjectSettingsItem
                     :title="$t('Genres')"
                     :description="$t('Define genres that projects can be assigned to later.')"
@@ -110,7 +110,7 @@
                 </div>
             </transition>
 
-            <div class="grid gird-cols-1 md:grid-cols-3 gap-6 my-4">
+            <div class="grid gird-cols-1 md:grid-cols-3 gap-6 my-4 card white p-5">
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
                         <input @change="updateCreateSettings" v-model="createSettingsForm.attributes" id="attributes" aria-describedby="attributes-description" name="attributes" type="checkbox" class="input-checklist" />

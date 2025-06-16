@@ -1,14 +1,19 @@
 <template>
-    <div class="w-full">
+    <div class="font-lexend">
         <div class="mb-3">
             <div class="hidden sm:block">
                 <div class="border-gray-200">
-                    <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
+                    <nav class="-mb-px text-sm tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                         <Link v-for="tab in tabs" :key="tab?.name"
                               :href="tab.href"
                               :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap pt-4 pb-2 px-1 border-b-2 font-semibold']"
                               :aria-current="tab.current ? 'page' : undefined" v-show="tab.show">
-                            {{ tab.name }}
+                            <span v-if="useTranslation">
+                                {{ $t(tab.name) }}
+                            </span>
+                            <span v-else>
+                                {{ tab.name }}
+                            </span>
                         </Link>
                     </nav>
                 </div>
@@ -28,6 +33,10 @@ export default {
         tabs: {
             type: Array,
             required: true
+        },
+        useTranslation: {
+            type: Boolean,
+            default: false
         }
     }
 }

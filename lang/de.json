@@ -2770,5 +2770,22 @@
     "Special Day": "Sondertag",
     "Treat as special day": "Als Sondertag behandeln",
     "A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.": "Ein Feiertag, der als Sondertag behandelt wird, wird nicht als normaler Arbeitstag für die Schichten gezählt. Das bedeutet, dass Artwork die benötigten Arbeitsstunden für diesen Tag auf 0 setzt, unabhängig vom Arbeitsvertrag. Somit wird jede gearbeitete Stunde an diesem Tag als Überstunde gezählt.",
-    "User already assigned as {0}": "Nutzer*in bereits als {0} zugewiesen"
+    "User already assigned as {0}": "Nutzer*in bereits als {0} zugewiesen",
+    "Work Time Pattern": "Arbeitszeitmuster",
+    "Add Work Time Pattern": "Arbeitszeitmuster hinzufügen",
+    "Edit Work Time Pattern": "Arbeitszeitmuster bearbeiten",
+    "Create Work Time Pattern": "Arbeitszeitmuster erstellen",
+    "Edit the work time pattern details.": "Arbeitszeitmuster-Details bearbeiten",
+    "Create a new work time pattern.": "Erstelle ein neues Arbeitszeitmuster.",
+    "Monday": "Montag",
+    "Tuesday": "Dienstag",
+    "Wednesday": "Mittwoch",
+    "Thursday": "Donnerstag",
+    "Friday": "Freitag",
+    "Saturday": "Samstag",
+    "Sunday": "Sonntag",
+    "Delete Work Time Pattern": "Arbeitszeitmuster löschen",
+    "Are you sure you want to delete this work time pattern? This action cannot be undone.": "Möchtest du dieses Arbeitszeitmuster wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "Work Time Patterns are used to define the working hours and shifts for employees. You can create, edit, and delete work time patterns here.": "Arbeitszeitmuster werden verwendet, um die Arbeitszeiten und Schichten für Mitarbeiter*innen zu definieren. Du kannst hier Arbeitszeitmuster erstellen, bearbeiten und löschen.",
+    "No print layouts found. Create a new print layout to get started.": "Keine Drucklayouts gefunden. Erstelle ein neues Drucklayout, um zu beginnen."
 }

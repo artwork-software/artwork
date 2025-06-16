@@ -8,7 +8,7 @@
                 </div>
             </div>
 
-            <div class="my-10">
+            <div class="my-10 card white p-5">
 
 
                 <div>

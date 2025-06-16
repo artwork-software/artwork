@@ -2,10 +2,10 @@
     <app-layout :title="$t('Event Settings')">
 
            <EventSettingHeader>
-               <div class="">
+               <div>
                    <div class="flex items-center justify-between mb-5">
                        <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
-                       <AddButtonBig @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
+                       <GlassyIconButton icon="IconPlus" @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
                        <div v-if="this.$page.props.show_hints" class="flex mt-1">
                            <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                            <span class="hind ml-1 my-auto">{{$t('Create new Event Types')}}</span>
@@ -142,6 +142,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSettingHeader.vue";
 import {ColorPicker} from "vue3-colorpicker";
 import AddEditEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/AddEditEventTypModal.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 export default {
     mixins: [Permissions],
     computed: {
@@ -181,6 +182,7 @@ export default {
         }
     },
     components: {
+        GlassyIconButton,
         ColorPicker,
         EventSettingHeader,
         TextInputComponent,

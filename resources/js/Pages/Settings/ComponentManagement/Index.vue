@@ -12,7 +12,7 @@
                 <div class="flex items-center justify-end w-full mb-3">
                     <div class="flex items-center gap-x-5">
                         <div>
-                            <PlusButton @click="showAddNewComponentModal = true" :button-text="$t('Create a new component')"/>
+                            <GlassyIconButton icon="IconPlus" @click="showAddNewComponentModal = true" :text="$t('Create a new component')"/>
                         </div>
                         <div class="w-44 md:w-56 lg:w-72">
                             <div>
@@ -27,24 +27,26 @@
                         </div>
                     </div>
                 </div>
-                <div v-for="(componentsArray, index) in filteredComponents">
-                    <h2 class="text-md font-bold mb-3">{{ $t(index) }}</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 3xl:grid-cols-12 gap-3 w-full">
-                        <DropComponentsToolTip  v-for="component in componentsArray" :top="true" :tooltip-text="component.special ? $t(component.name) : component.name">
-                            <div class="p-3 rounded-lg border mb-3 flex flex-col h-28 min-w-28 justify-center items-center group relative truncate break-all">
-                                <SingleComponent :component="component" />
-                            </div>
-                        </DropComponentsToolTip>
+                <div class="card white p-5">
+                    <div v-for="(componentsArray, index) in filteredComponents">
+                        <h2 class="text-md font-bold mb-3">{{ $t(index) }}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 3xl:grid-cols-12 gap-3 w-full">
+                            <DropComponentsToolTip  v-for="component in componentsArray" :top="true" :tooltip-text="component.special ? $t(component.name) : component.name">
+                                <div class="p-3 rounded-lg border mb-3 flex flex-col h-28 min-w-28 justify-center items-center group relative truncate break-all">
+                                    <SingleComponent :component="component" />
+                                </div>
+                            </DropComponentsToolTip>
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <h2 class="text-md font-bold mb-3">{{ $t('Special components') }}</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-12 gap-3">
-                        <DropComponentsToolTip  v-for="component in filteredSpecialComponents" :top="true" :tooltip-text="component.special ? $t(component.name) : component.name">
-                            <div class="p-3 rounded-lg border mb-3 flex flex-col h-28 justify-center items-center group relative truncate break-all">
-                                <SingleComponent :component="component" />
-                            </div>
-                        </DropComponentsToolTip>
+                    <div>
+                        <h2 class="text-md font-bold mb-3">{{ $t('Special components') }}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-12 gap-3">
+                            <DropComponentsToolTip  v-for="component in filteredSpecialComponents" :top="true" :tooltip-text="component.special ? $t(component.name) : component.name">
+                                <div class="p-3 rounded-lg border mb-3 flex flex-col h-28 justify-center items-center group relative truncate break-all">
+                                    <SingleComponent :component="component" />
+                                </div>
+                            </DropComponentsToolTip>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -68,10 +70,12 @@ import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import SingleComponent from "@/Pages/Settings/ComponentManagement/Components/SingleComponent.vue";
 import ComponentModal from "@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue";
 import DropComponentsToolTip from "@/Components/ToolTips/DropComponentsToolTip.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 export default {
     name: "Index",
     components: {
+        GlassyIconButton,
         DropComponentsToolTip,
         SingleComponent,
         PlusButton,

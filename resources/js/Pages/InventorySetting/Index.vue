@@ -1,6 +1,6 @@
 <template>
     <InventorySettingsHeader>
-        <div>
+        <div class="card white p-5">
             <TinyPageHeadline
                 :title="$t('Inventory-relevant Event Types')"
                 :description="$t('Specify which appointment types are displayed as relevant to stock by default. Stock can only be posted to these appointment types.')"

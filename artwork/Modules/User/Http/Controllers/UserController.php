@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Artwork\Modules\User\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
@@ -326,6 +327,15 @@ class UserController extends Controller
             "departments" => Department::all(),
             "password_reset_status" => session('status'),
             'calendar_settings' => $user->calendar_settings,
+        ]);
+    }
+
+    public function editUserWorkTime(User $user): Response|ResponseFactory
+    {
+        return inertia('Users/UserWorkTimePatternPage', [
+            'userToEdit' => new UserShowResource($user),
+            'currentTab' => 'workTimePattern',
+            'workTimePattern' => $user->work_time_pattern,
         ]);
     }
 

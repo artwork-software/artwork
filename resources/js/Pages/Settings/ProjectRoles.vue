@@ -8,8 +8,8 @@
                 </div>
             </div>
             <ProjectTabs />
-            <div class="flex items-center justify-end mb-10">
-                <PlusButton @click="showAddProjectRoleModal = true" :button-text="$t('Add Project Role')"/>
+            <div class="flex items-center justify-end mb-5">
+                <GlassyIconButton @click="showAddProjectRoleModal = true" icon="IconPlus" :text="$t('Add Project Role')"/>
             </div>
             <div v-for="role in projectRoles">
                 <div class="rounded-lg bg-gray-50 px-4 py-5 mb-3">
@@ -52,10 +52,12 @@ import IconLib from "@/Mixins/IconLib.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 export default {
     name: "ProjectRoles",
     components: {
+        GlassyIconButton,
         BaseInput,
         TextInputComponent, ModalHeader, FormButton, Input, BaseModal, PlusButton, AppLayout, ProjectTabs},
     mixins: [IconLib],

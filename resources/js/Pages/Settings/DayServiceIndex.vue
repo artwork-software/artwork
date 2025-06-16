@@ -27,6 +27,12 @@ export default {
                     current: route().current('day-service.index'),
                     show: true
                 },
+                {
+                    name: this.$t('Work Time Pattern'),
+                    href: route('shift.work-time-pattern'),
+                    current: route().current('shift.work-time-pattern'),
+                    show: true
+                }
             ],
             iconList: [
                 {iconName: 'IconAbacus'},
@@ -75,11 +81,13 @@ export default {
                 </div>
             </div>
 
-            <TabComponent :tabs="tabs" />
+           <div class="flex items-center justify-between">
+               <TabComponent :tabs="tabs" />
 
-            <AddButtonSmall :text="$t('New Day Service')" class="mt-5" @click="showAddEditDayServiceModal = true" />
+               <AddButtonSmall :text="$t('New Day Service')" class="" @click="showAddEditDayServiceModal = true" />
+           </div>
 
-            <div class="my-5" >
+            <div class="my-5 card white p-5" >
                 <div v-for="dayService in dayServices">
                     <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-8 mb-3">
                         <div class="col-span-full md:col-span-2 xl:col-span-7">

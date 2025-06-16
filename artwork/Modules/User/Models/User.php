@@ -645,4 +645,9 @@ class User extends Model implements
     {
         return $this->morphMany(EventVerification::class, 'verifier');
     }
+
+    public function workTimePattern(): HasOne
+    {
+        return $this->hasOne(UserWorkTimePattern::class, 'user_id', 'id');
+    }
 }

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Artwork\Modules\User\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\User\Models\UserCalendarAbo;
 use Artwork\Modules\User\Services\UserCalendarAboService;

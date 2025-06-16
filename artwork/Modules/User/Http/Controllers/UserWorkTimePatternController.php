@@ -3,8 +3,8 @@
 namespace Artwork\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreUserWorkTimePatternRequest;
-use App\Http\Requests\UpdateUserWorkTimePatternRequest;
+use Artwork\Modules\User\Http\Requests\StoreUserWorkTimePatternRequest;
+use Artwork\Modules\User\Http\Requests\UpdateUserWorkTimePatternRequest;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\UserWorkTimePatternService;
 use Inertia\Inertia;

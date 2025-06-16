@@ -1,6 +1,6 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
-        <div class="w-full top-0 left-4 py-4  z-40 -mx-10 -my-4" :class="project ? [checkIfScrolledToCalendarRef] : isFullscreen ? 'fixed' : 'fixed ml-10'">
+        <div class="w-full top-0 left-4 px-5 sticky z-40" >
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
@@ -29,10 +29,10 @@
         </div>
         <div>
             <div v-if="!usePage().props.auth.user.daily_view && !usePage().props.auth.user.at_a_glance">
-                <div class="w-max -mx-5" :class="eventsWithoutRoom.length > 0 ? 'mt-8' : ''">
+                <div class="w-max" :class="eventsWithoutRoom.length > 0 ? '' : ''">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white px-5'">
                         <CalendarHeader :rooms="rooms" :filtered-events-length="eventsWithoutRoom.length"/>
-                        <div class="w-fit events-by-days-container mt-16" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '',]" ref="calendarToCalculate">
+                        <div class="w-fit events-by-days-container" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '',]" ref="calendarToCalculate">
                             <div v-for="day in days"
                                  :key="day.fullDay"
                                  :style="{ height: usePage().props.auth.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
@@ -78,11 +78,11 @@
                                                 />
                                             </div>
                                         </div>
-                                        <div class="absolute right-2 bottom-10 hidden group-hover/container:block">
+                                        <div class="absolute right-2 bottom-3 hidden group-hover/container:block">
                                             <ToolTipComponent
                                                 :tooltip-text="isPlanning ? $t('Add new planned event') : $t('Add new event on this day')"
                                                 icon="IconCircleDashedPlus"
-                                                classes="cursor-pointer bg-artwork-buttons-create text-white h-8 w-8 flex items-center justify-center rounded-full"
+                                                classes="cursor-pointer card glassy text-artwork-buttons-create h-8 w-8 flex items-center justify-center rounded-full"
                                                 @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)"
                                             />
                                         </div>
@@ -324,6 +324,7 @@ import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {can} from "laravel-permission-to-vuejs";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 const props = defineProps({
     rooms: {

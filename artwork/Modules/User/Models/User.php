@@ -37,14 +37,6 @@ use Artwork\Modules\Shift\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\User\Services\WorkingHourService;
-use Artwork\Modules\User\Models\UserCalendarAbo;
-use Artwork\Modules\User\Models\UserCalendarFilter;
-use Artwork\Modules\User\Models\UserCalendarSettings;
-use Artwork\Modules\User\Models\UserCommentedBudgetItemsSetting;
-use Artwork\Modules\User\Models\UserShiftCalendarAbo;
-use Artwork\Modules\User\Models\UserShiftCalendarFilter;
-use Artwork\Modules\User\Models\UserUserManagementSetting;
-use Artwork\Modules\User\Models\UserWorkerShiftPlanFilter;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
@@ -66,7 +58,6 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Passport\HasApiTokens;
 use Laravel\Scout\Searchable;
 use LaravelAndVueJS\Traits\LaravelPermissionToVueJS;
@@ -127,6 +118,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
  * @property Collection<UserCalendarAbo> $calendarAbo
  * @property Collection<UserShiftCalendarAbo> $shiftCalendarAbo
+ * @property Collection<UserWorkTime> $workTime
  * @property Collection<string> $allPermissions
  * @property array $notification_enums_last_sent_dates
  * @property int $bulk_sort_id
@@ -646,8 +638,8 @@ class User extends Model implements
         return $this->morphMany(EventVerification::class, 'verifier');
     }
 
-    public function workTimePattern(): HasOne
+    public function workTime(): HasOne
     {
-        return $this->hasOne(UserWorkTimePattern::class, 'user_id', 'id');
+        return $this->hasOne(UserWorkTime::class, 'user_id', 'id');
     }
 }

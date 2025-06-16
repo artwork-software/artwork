@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Requests;
+namespace Artwork\Modules\User\Http\Requests;
 
+use Artwork\Modules\User\Http\Requests\StoreUserWorkTimePatternRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateUserWorkTimePatternRequest extends StoreUserWorkTimePatternRequest

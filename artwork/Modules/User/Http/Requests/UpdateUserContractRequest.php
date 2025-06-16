@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace Artwork\Modules\User\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreUserContractRequest extends FormRequest
+class UpdateUserContractRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

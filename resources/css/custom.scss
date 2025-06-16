@@ -97,11 +97,11 @@
 
     .card {
         &.glassy {
-            @apply flex h-fit grow flex-col rounded-lg bg-gradient-to-bl from-white/40 to-sky-100/30 text-left shadow-glass backdrop-blur-sm border border-white/50;
+            @apply flex h-fit grow flex-col rounded-3xl bg-gradient-to-bl from-white/40 to-sky-100/30 text-left shadow-glass backdrop-blur-sm border border-white/50;
         }
 
         &.white {
-            @apply shadow-glass bg-white rounded-lg border border-gray-100 w-full;
+            @apply shadow-glass bg-white rounded-3xl border border-gray-100 w-full;
         }
     }
 

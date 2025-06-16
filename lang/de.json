@@ -2787,5 +2787,6 @@
     "Delete Work Time Pattern": "Arbeitszeitmuster löschen",
     "Are you sure you want to delete this work time pattern? This action cannot be undone.": "Möchtest du dieses Arbeitszeitmuster wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     "Work Time Patterns are used to define the working hours and shifts for employees. You can create, edit, and delete work time patterns here.": "Arbeitszeitmuster werden verwendet, um die Arbeitszeiten und Schichten für Mitarbeiter*innen zu definieren. Du kannst hier Arbeitszeitmuster erstellen, bearbeiten und löschen.",
-    "No print layouts found. Create a new print layout to get started.": "Keine Drucklayouts gefunden. Erstelle ein neues Drucklayout, um zu beginnen."
+    "No print layouts found. Create a new print layout to get started.": "Keine Drucklayouts gefunden. Erstelle ein neues Drucklayout, um zu beginnen.",
+    "Select Work Time Pattern": "Arbeitszeitmuster auswählen"
 }

@@ -22,7 +22,7 @@
                     <div class="my-10">
                         <div class="hidden sm:block">
                             <div class="">
-                                <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
+                                <nav class="-mb-px flex space-x-8 font-lexend text-sm" aria-label="Tabs">
                                     <a v-for="tab in tabs" v-show="tab.has_permission" :href="tab.href" :key="tab.name"
                                          :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']"
                                          :aria-current="tab.current ? 'page' : undefined">{{ $t(tab.name) }}

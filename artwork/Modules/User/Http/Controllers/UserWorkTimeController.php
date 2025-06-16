@@ -3,11 +3,11 @@
 namespace Artwork\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Artwork\Modules\User\Http\Requests\StoreUserContractRequest;
-use Artwork\Modules\User\Http\Requests\UpdateUserContractRequest;
-use Artwork\Modules\User\Models\UserContract;
+use Artwork\Modules\User\Http\Requests\StoreUserWorkTimeRequest;
+use Artwork\Modules\User\Http\Requests\UpdateUserWorkTimeRequest;
+use Artwork\Modules\User\Models\UserWorkTime;
 
-class UserContractController extends Controller
+class UserWorkTimeController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -28,7 +28,7 @@ class UserContractController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreUserContractRequest $request)
+    public function store(StoreUserWorkTimeRequest $request)
     {
         //
     }
@@ -36,7 +36,7 @@ class UserContractController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(UserContract $userContract)
+    public function show(UserWorkTime $userWorkTime)
     {
         //
     }
@@ -44,7 +44,7 @@ class UserContractController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(UserContract $userContract)
+    public function edit(UserWorkTime $userWorkTime)
     {
         //
     }
@@ -52,7 +52,7 @@ class UserContractController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateUserContractRequest $request, UserContract $userContract)
+    public function update(UpdateUserWorkTimeRequest $request, UserWorkTime $userWorkTime)
     {
         //
     }
@@ -60,7 +60,7 @@ class UserContractController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(UserContract $userContract)
+    public function destroy(UserWorkTime $userWorkTime)
     {
         //
     }

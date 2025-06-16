@@ -2784,5 +2784,6 @@
     "Delete Work Time Pattern": "Delete Work Time Pattern",
     "Are you sure you want to delete this work time pattern? This action cannot be undone.": "Are you sure you want to delete this work time pattern? This action cannot be undone.",
     "Work Time Patterns are used to define the working hours and shifts for employees. You can create, edit, and delete work time patterns here.": "Work Time Patterns are used to define the working hours and shifts for employees. You can create, edit, and delete work time patterns here.",
-    "No print layouts found. Create a new print layout to get started.": "No print layouts found. Create a new print layout to get started."
+    "No print layouts found. Create a new print layout to get started.": "No print layouts found. Create a new print layout to get started.",
+    "Select Work Time Pattern": "Select Work Time Pattern"
 }

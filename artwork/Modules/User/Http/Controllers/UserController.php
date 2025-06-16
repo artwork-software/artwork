@@ -335,7 +335,7 @@ class UserController extends Controller
         return inertia('Users/UserWorkTimePatternPage', [
             'userToEdit' => new UserShowResource($user),
             'currentTab' => 'workTimePattern',
-            'workTimePattern' => $user->work_time_pattern,
+            'workTime' => $user->workTime,
         ]);
     }
 

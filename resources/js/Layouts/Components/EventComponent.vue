@@ -253,7 +253,7 @@
                 </div>
 
                 <!-- Event properties section (if available) -->
-                <div v-if="event_properties.filter((eventProperty) => eventProperty.checked)?.length > 0" class="mt-6 border-t border-gray-200 pt-4">
+                <div v-if="event_properties?.filter((eventProperty) => eventProperty.checked)?.length > 0" class="mt-6 border-t border-gray-200 pt-4">
                     <h3 class="text-sm font-medium text-gray-500 mb-2">{{ $t('Properties') }}</h3>
                     <div class="flex flex-wrap gap-2 mt-2">
                         <div v-for="(eventProperty, index) in event_properties.filter((eventProperty) => eventProperty.checked)"
@@ -703,7 +703,7 @@
                     </transition>
                 </Menu>
                 <!--    Properties    -->
-                <div v-if="event_properties.filter((eventProperty) => eventProperty.checked)?.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-2">
+                <div v-if="event_properties?.filter((eventProperty) => eventProperty.checked)?.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-2">
                     <div v-for="(eventProperty, index) in event_properties.filter((eventProperty) => eventProperty.checked)" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
                         <div class="flex items-center">
                             <div class="rounded-full p-1 size-8 flex items-center justify-center">
@@ -747,14 +747,14 @@
             <div v-if="canEdit">
                 <div class="flex justify-center w-full py-4" v-if="hasAdminRole() || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.auth.user.id) || $can('create events without request')">
                     <FormButton
-                        :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
+                        :disabled="!this.selectedRoom || this.selectedRoom === '' || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
                         @click="updateOrCreateEvent()"
                         :text="this.event?.occupancy_option ? this.accept ? $t('Commitments') : this.optionAccept ? $t('Optional commitment') : this.adminComment !== '' ? $t('Send message') : $t('Save') : $t('Save')"
                     />
                 </div>
                 <div class="flex justify-center w-full py-4" v-else>
                     <FormButton
-                        :disabled="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || !this.$can('request room occupancy')"
+                        :disabled="!this.selectedRoom || this.selectedRoom === '' || !submit || endDate > seriesEndDate || series && !seriesEndDate || !this.$can('request room occupancy')"
                         @click="updateOrCreateEvent(true)"
                         :text="$t('Request occupancy')"
                     />
@@ -1165,6 +1165,8 @@ export default {
             this.selectedRoom = this.rooms.find(room => room.id === this.event.roomId);
             this.description = this.event.description;
 
+            console.log(this.event);
+
             this.event_properties?.forEach((event_property) => {
                 event_property.checked = this.event?.eventProperties.some(
                     (event_event_properties) => event_event_properties.id === event_property.id
@@ -1513,9 +1515,9 @@ export default {
                 allDay: this.allDayEvent,
                 usedInBulkComponent: this.usedInBulkComponent,
                 showProjectPeriodInCalendar: this.calendarProjectPeriod,
-                event_properties: this.event_properties
+                event_properties: this.event_properties ?this.event_properties
                     .filter((eventProperty) => eventProperty.checked)
-                    .map((eventProperty) => eventProperty.id),
+                    .map((eventProperty) => eventProperty.id) : [],
                 isPlanning: this.event ? this.event.isPlanning : this.isPlanning,
             };
         },

@@ -73,8 +73,8 @@ class InventoryArticleControllerTest extends TestCase
 
         $response = $this->post(route('inventory-management.articles.store'), $data);
         $response->assertSessionHasNoErrors();
-        // The controller doesn't return anything, so we should expect a 204 No Content status
-        $response->assertStatus(204);
+        // The controller returns a 200 OK status by default
+        $response->assertStatus(200);
     }
 
     public function test_available_stock_returns_json()

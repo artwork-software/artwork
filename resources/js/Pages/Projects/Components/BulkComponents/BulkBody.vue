@@ -5,7 +5,7 @@
                 {{ $t('Data is currently loaded. Please wait') }}
             </div>
         </div>
-        <div class="flex items-center justify-end gap-x-4 print:hidden" v-if="!isInModal">
+        <div class="flex items-center justify-end gap-x-4 print:hidden w-68" v-if="!isInModal">
             <MultiEditSwitch :multi-edit="multiEdit"
                              :room-mode="false"
                              @update:multi-edit="UpdateMultiEditEmits"/>
@@ -307,6 +307,7 @@ const {hasAdminRole} = usePermission(usePage().props),
         showMultiEditModal.value = true;
     },
     showIndividualColumnSizeConfigModal = ref(false),
+    lastUsedCopyCount = ref(1),
     getExportModalConfiguration = () => {
         const cfg = {};
 
@@ -437,6 +438,9 @@ const {hasAdminRole} = usePermission(usePage().props),
     },
     createCopyByEventWithData = (event) => {
         isLoading.value = true;
+        // Store the selected copyCount for later use
+        console.log(event.copyCount + 'event');
+        lastUsedCopyCount.value = event.copyCount;
         let newDate = new Date(event.day);
         let createdEvents = [];
         for (let i = 0; i < event.copyCount; i++) {
@@ -582,10 +586,21 @@ onMounted(() => {
             });
         });
 
-        // Nur das letzte Event als "neu" markieren
+        // Die letzten {copyCount} Events als "neu" markieren
         if (events.length > 0) {
             events.forEach(event => event.isNew = false);
-            events[events.length - 1].isNew = true;
+
+            console.log(lastUsedCopyCount);
+            // Use the lastUsedCopyCount variable instead of reading from the event
+            const copyCount = lastUsedCopyCount.value;
+
+            // Mark the last {copyCount} events as new
+            for (let i = 0; i < copyCount; i++) {
+                const index = events.length - 1 - i;
+                if (index >= 0) {
+                    events[index].isNew = true;
+                }
+            }
         }
 
         isLoading.value = false;

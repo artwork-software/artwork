@@ -5,7 +5,7 @@
                 {{ $t('Data is currently loaded. Please wait') }}
             </div>
         </div>
-        <div class="flex items-center justify-end gap-x-4 print:hidden w-68" v-if="!isInModal">
+        <div class="flex items-center justify-end gap-x-4 print:hidden w-64 ml-4" v-if="!isInModal">
             <MultiEditSwitch :multi-edit="multiEdit"
                              :room-mode="false"
                              @update:multi-edit="UpdateMultiEditEmits"/>

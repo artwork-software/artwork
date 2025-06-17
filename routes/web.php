@@ -114,7 +114,6 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellC
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
-use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
@@ -1264,6 +1263,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/state', [ProjectStatesController::class, 'store'])->name('state.store');
     Route::patch('/project/{project}/state', [ProjectController::class, 'updateProjectState'])
         ->name('update.project.state');
+
+    Route::post('/projects/{project}/request-verification', [EventVerificationController::class, 'requestVerificationForProject'])
+        ->name('projects.request-verification');
     Route::delete('/state/{projectStates}', [ProjectStatesController::class, 'destroy'])->name('state.delete');
     Route::patch('/states/{state}/restore', [ProjectStatesController::class, 'restore'])->name('state.restore');
     Route::patch('/states/{projectStates}/update', [ProjectStatesController::class, 'update'])->name('state.update');
@@ -1612,7 +1614,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('sidebar.tab.reorder');
         });
 
-        Route::group(['prefix' => 'calendar'], function () {
+        Route::group(['prefix' => 'calendar'], function (): void {
             Route::get('/', [CalendarController::class, 'settingIndex'])->name('calendar.settings');
 
             // post: calendar-settings.store
@@ -1773,8 +1775,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('inventory-management.inventory');
 
         Route::group(['prefix' => 'settings'], function (): void {
-            Route::get('/index', [InventorySettingsController::class, 'index'])
-                ->name('inventory-management.settings.index');
 
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');
@@ -2042,7 +2042,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project-management-builder.destroy');
     });
 
-    Route::group(['prefix' => 'project-print-layout'], function(): void {
+    Route::group(['prefix' => 'project-print-layout'], function (): void {
         Route::get('/', [ProjectPrintLayoutController::class, 'index'])
             ->name('project-print-layout.index');
 
@@ -2075,7 +2075,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
 
-    Route::group(['prefix' => 'event-verifications'], function(){
+    Route::group(['prefix' => 'event-verifications'], function (): void {
         // POST events.sendToVerification
         Route::post('/event/{event}/sendToVerification', [EventVerificationController::class, 'store'])
             ->name('events.sendToVerification');
@@ -2119,7 +2119,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('events-verifications.request-verification');
     });
 
-    Route::group(['prefix' => 'accommodation'], function (){
+    Route::group(['prefix' => 'accommodation'], function (): void {
         Route::get('/', [AccommodationController::class, 'index'])->name('accommodation.index');
         Route::get('/show/{accommodation}', [AccommodationController::class, 'show'])->name('accommodation.show');
         Route::post('/store', [AccommodationController::class, 'store'])->name('accommodation.store');
@@ -2127,7 +2127,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/destroy/{accommodation}', [AccommodationController::class, 'destroy'])->name('accommodation.destroy');
     });
 
-    Route::group(['prefix' => 'contact'], function(){
+    Route::group(['prefix' => 'contact'], function (): void {
         Route::post('/store/{model}/{modelId}', [ContactController::class, 'store'])->name('contact.store');
         Route::patch('/update/{contact}', [ContactController::class, 'update'])->name('contact.update');
         Route::delete('/destroy/{contact}', [ContactController::class, 'destroy'])->name('contact.destroy');

@@ -1702,6 +1702,7 @@ readonly class EventService
             'allDay' => $allDay,
             'event_type_id' => $event['type']['id'],
             'room_id' => $event['room']['id'],
+            'is_planning' => $event['is_planning'] ?? false,
         ]);
 
         $eventStatusSetting = app(EventSettings::class);
@@ -1734,6 +1735,7 @@ readonly class EventService
             'allDay' => $allDay,
             'event_type_id' => $data['type']['id'],
             'room_id' => $data['room']['id'],
+            'is_planning' => $data['is_planning'] ?? $event->is_planning,
         ]);
 
 
@@ -1783,6 +1785,7 @@ readonly class EventService
             'event_type_id' => $data['selectedEventType']['id'] ?? null,
             'event_status_id' => $data['selectedEventStatus']['id'] ?? null,
             'eventName' => $data['eventName'] ?? null,
+            'is_planning' => $data['is_planning'] ?? null,
         ]);
 
         $selectedDay = $data['selectedDay'] ?? null;

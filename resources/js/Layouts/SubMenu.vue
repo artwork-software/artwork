@@ -373,9 +373,9 @@ const navigation = ref([
             },
             {
                 name: 'Inventory',
-                href: route('inventory-management.settings.index'),
+                href: route('inventory-management.settings.category'),
                 icon: 'IconBuildingWarehouse',
-                current: route().current('inventory-management.settings.index'),
+                current: route().current('inventory-management.settings.category'),
                 has_permission: is('artwork admin')
             },
             {

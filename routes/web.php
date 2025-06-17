@@ -98,7 +98,9 @@ use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
+use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
+use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
@@ -112,9 +114,9 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellC
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
-use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
+use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
@@ -773,6 +775,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/user/{user}/worker/shift-plan/filters/update',
         [UserShiftCalendarFilterController::class, 'updateUserWorkerShiftPlanFilters']
     )->name('update.user.worker.shift-plan.filters.update');
+    Route::patch(
+        '/user/{user}/inventory/article-plan/filters/update',
+        [UserShiftCalendarFilterController::class, 'updateInventoryArticlePlanFilters']
+    )->name('update.user.inventory.article-plan.filters.update');
 
     //user.update.zoom_factor
     Route::patch('/user/{user}/update/zoom_factor', [UserController::class, 'updateZoomFactor'])
@@ -1257,6 +1263,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/state', [ProjectStatesController::class, 'store'])->name('state.store');
     Route::patch('/project/{project}/state', [ProjectController::class, 'updateProjectState'])
         ->name('update.project.state');
+
+    Route::post('/projects/{project}/request-verification', [EventVerificationController::class, 'requestVerificationForProject'])
+        ->name('projects.request-verification');
     Route::delete('/state/{projectStates}', [ProjectStatesController::class, 'destroy'])->name('state.delete');
     Route::patch('/states/{state}/restore', [ProjectStatesController::class, 'restore'])->name('state.restore');
     Route::patch('/states/{projectStates}/update', [ProjectStatesController::class, 'update'])->name('state.update');
@@ -1605,7 +1614,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('sidebar.tab.reorder');
         });
 
-        Route::group(['prefix' => 'calendar'], function () {
+        Route::group(['prefix' => 'calendar'], function (): void {
             Route::get('/', [CalendarController::class, 'settingIndex'])->name('calendar.settings');
 
             // post: calendar-settings.store
@@ -1758,12 +1767,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('remove.day.service.from.user');
 
     Route::group(['prefix' => 'inventory-management'], function (): void {
+
+        Route::get('/article/planning', [InventoryArticleController::class, 'index'])
+            ->name('inventory-management.article.planning');
+
         Route::get('/', [InventoryController::class, 'inventory'])
             ->name('inventory-management.inventory');
 
         Route::group(['prefix' => 'settings'], function (): void {
-            Route::get('/index', [InventorySettingsController::class, 'index'])
-                ->name('inventory-management.settings.index');
 
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');
@@ -2031,7 +2042,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project-management-builder.destroy');
     });
 
-    Route::group(['prefix' => 'project-print-layout'], function(): void {
+    Route::group(['prefix' => 'project-print-layout'], function (): void {
         Route::get('/', [ProjectPrintLayoutController::class, 'index'])
             ->name('project-print-layout.index');
 
@@ -2064,7 +2075,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
 
-    Route::group(['prefix' => 'event-verifications'], function(){
+    Route::group(['prefix' => 'event-verifications'], function (): void {
         // POST events.sendToVerification
         Route::post('/event/{event}/sendToVerification', [EventVerificationController::class, 'store'])
             ->name('events.sendToVerification');
@@ -2108,7 +2119,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('events-verifications.request-verification');
     });
 
-    Route::group(['prefix' => 'accommodation'], function (){
+    Route::group(['prefix' => 'accommodation'], function (): void {
         Route::get('/', [AccommodationController::class, 'index'])->name('accommodation.index');
         Route::get('/show/{accommodation}', [AccommodationController::class, 'show'])->name('accommodation.show');
         Route::post('/store', [AccommodationController::class, 'store'])->name('accommodation.store');
@@ -2116,11 +2127,53 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/destroy/{accommodation}', [AccommodationController::class, 'destroy'])->name('accommodation.destroy');
     });
 
-    Route::group(['prefix' => 'contact'], function(){
+    Route::group(['prefix' => 'contact'], function (): void {
         Route::post('/store/{model}/{modelId}', [ContactController::class, 'store'])->name('contact.store');
         Route::patch('/update/{contact}', [ContactController::class, 'update'])->name('contact.update');
         Route::delete('/destroy/{contact}', [ContactController::class, 'destroy'])->name('contact.destroy');
     });
+
+    Route::controller(InternalIssueController::class)->prefix('issue-of-material')->group(function() {
+        Route::get('/', 'index')->name('issue-of-material.index');
+        Route::post('/store', 'store')->name('issue-of-material.store');
+        Route::patch('/{internalIssue}/update', 'update')->name('issue-of-material.update');
+        Route::delete('/{internalIssue}/destroy', 'destroy')->name('issue-of-material.destroy');
+        // issue-of-material.set-special-items-done
+        Route::post('/{internalIssue}/set-special-items-done', 'setSpecialItemsDone')->name('issue-of-material.set-special-items-done');
+    });
+
+    Route::controller(ExternalIssueController::class)->prefix('extern-issue-of-material')->group(function() {
+        Route::get('/', 'index')->name('extern-issue-of-material.index');
+        Route::post('/store', 'store')->name('extern-issue-of-material.store');
+        Route::patch('/{externalIssue}/update', 'update')->name('extern-issue-of-material.update');
+        Route::delete('/{externalIssue}/destroy', 'destroy')->name('extern-issue-of-material.destroy');
+        //extern-issue-of-material.return
+        Route::post('/{externalIssue}/return', 'returnExternal')->name('extern-issue-of-material.return');
+        // extern-issue-of-material.set-special-items-done
+        Route::post('/{externalIssue}/set-special-items-done', 'setSpecialItemsDone')->name('extern-issue-of-material.set-special-items-done');
+        // extern-issue-of-material.print
+        Route::get('/print/{externalIssue}', 'print')->name('extern-issue-of-material.print');
+    });
+
+    Route::delete('/issue-of-material/file/{internalIssueFile}/delete', [InternalIssueController::class, 'fileDelete'])->name('issue-of-material.file.delete');
+    Route::delete('/extern-issue-of-material/file/{externalIssueFile}/delete', [ExternalIssueController::class, 'fileDelete'])->name('extern-issue-of-material.file.delete');
+
+    Route::prefix('material-sets')
+        ->as('material-sets.')
+        ->controller(MaterialSetController::class)
+        ->group(function () {
+            Route::get('/', 'index')->name('index');     // material-sets.index
+            Route::post('/', 'store')->name('store');    // material-sets.store
+            Route::patch('{set}', 'update')->name('update');  // material-sets.update
+            Route::delete('{set}', 'destroy')->name('destroy');
+        });
+
+    // get inventory.articles.available-stock article.id, start_date, end_date
+    Route::get('/articles/available-stock/{inventoryArticle}/{startDate}/{endDate}', [InventoryArticleController::class, 'availableStock'])
+        ->name('inventory.articles.available-stock');
+
+    Route::post('inventory/articles/available-stock-batch', [InventoryArticleController::class, 'availableStockBatch'])
+        ->name('inventory.articles.available-stock.batch');
 });
 
 Route::get(

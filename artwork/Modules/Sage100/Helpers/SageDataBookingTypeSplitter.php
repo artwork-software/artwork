@@ -6,7 +6,7 @@ class SageDataBookingTypeSplitter
 {
     public function splitDataIntoRegularAndCollectiveBookings(array $items): array
     {
-        $grouped = collect($items)->groupBy(fn($item) => $item['ID'].'-'.$item['KtoSoll'].'-'.$item['KtoHaben']);
+        $grouped = collect($items)->groupBy(fn($item) => $item['ID'].'-'.$item['KtoSoll'].'-'.$item['KtoHaben'].'-'.$item['KstTraeger']);
 
         $collectiveBookings = $grouped->filter(function ($group) {
             return $group->count() > 1;

@@ -11,7 +11,7 @@
             <div class="grid grid-cols-6 grid-rows-5 gap-10">
                 <div class="col-span-4">
                     <div v-if="eventVerifications.data.length > 0">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 gap-4">
                             <div v-for="eventVerification in eventVerifications.data" :key="eventVerification.id">
                                 <SingleEventVerificationRequest :event-verification="eventVerification" />
                             </div>

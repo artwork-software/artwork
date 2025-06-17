@@ -45,7 +45,7 @@
     <!-- Static sidebar for desktop -->
     <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col" :class="isFullSideBar ? 'lg:w-72' : 'lg:w-16'">
         <!-- Sidebar component, swap this element with another sidebar if you like -->
-        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-auto border-r border-gray-200 bg-artwork-navigation-background">
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-auto bg-artwork-navigation-background">
             <div class="flex h-16 shrink-0 items-center justify-center">
                 <div :class="isFullSideBar ? 'w-full flex mx-6' : ''" class="mt-5">
                     <div class="group relative">
@@ -76,7 +76,7 @@
                                     </Link>
                                     <div v-else>
                                         <div v-if="item.has_permission" class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 font-semibold p-2">
-                                            <BaseMenu white-menu-background needs-max-height :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
+                                            <BaseMenu white-menu-background  :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
                                                 <div v-for="subMenu in item.subMenus" :key="subMenu.name">
                                                     <BaseMenuItem white-menu-background as-link v-if="subMenu.has_permission" :href="subMenu.href" :icon="subMenu.icon" :title="subMenu.name" />
                                                 </div>
@@ -247,24 +247,6 @@ const navigation = ref([
         has_permission: moduleIsVisible('room_assignment'),
     },
     {
-        name: 'Planning Calendar',
-        href: route('planning-event-calendar.index'),
-        icon: 'IconCalendarCog',
-        current: route().current('planning-event-calendar.index'),
-        isMenu: false,
-        showToolTipForItem: false,
-        has_permission: can('can see planning calendar') || is('artwork admin'),
-    },
-    {
-        name: 'Event Verifications',
-        href: route('event-verifications.index'),
-        icon: 'IconCalendarCheck',
-        current: route().current('event-verifications.index'),
-        isMenu: false,
-        showToolTipForItem: false,
-        has_permission: can('can see planning calendar | can edit planning calendar') || is('artwork admin'),
-    },
-    {
         name: 'Shift plan',
         href: route('shifts.plan'),
         icon: 'IconCalendarUser',
@@ -274,13 +256,61 @@ const navigation = ref([
         has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
     },
     {
-        name: 'Inventory',
-        href: route('inventory.index'),
+        name: 'Event Planning',
+        href: '#',
+        icon: 'IconCalendarCog',
+        current: true,
+        isMenu: true,
+        showToolTipForItem: false,
+        has_permission: can('can see planning calendar | can edit planning calendar') || is('artwork admin'),
+        subMenus: [
+            {
+                name: 'Planning Calendar',
+                href: route('planning-event-calendar.index'),
+                icon: 'IconCalendarCog',
+                current: route().current('planning-event-calendar.index'),
+                has_permission: can('can see planning calendar') || is('artwork admin'),
+            },
+            {
+                name: 'Event Verifications',
+                href: route('event-verifications.index'),
+                icon: 'IconCalendarCheck',
+                current: route().current('event-verifications.index'),
+                has_permission: can('can see planning calendar | can edit planning calendar') || is('artwork admin'),
+            },
+        ]
+    },
+    {
+        name: 'Inventory System',
+        href: '#',
         icon: 'IconBuildingWarehouse',
-        current: route().current('inventory.index'),
-        isMenu: false,
+        current: true,
+        isMenu: true,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('inventory'),
+        subMenus: [
+            {
+                name: 'Inventory',
+                href: route('inventory.index'),
+                icon: 'IconBuildingWarehouse',
+                current: route().current('inventory.index'),
+                has_permission: moduleIsVisible('inventory')
+            },
+            {
+                name: 'Article Planning',
+                href: route('inventory-management.article.planning'),
+                icon: 'IconCalendarExclamation',
+                current: route().current('inventory-management.article.planning'),
+                has_permission: is('artwork admin') || can('inventory.disposition'),
+            },
+            {
+                name: 'Material Issues',
+                href: route('issue-of-material.index'),
+                icon: 'IconBrowserShare',
+                current: route().current('issue-of-material.index'),
+                has_permission: is('artwork admin') || can('inventory.disposition'),
+            },
+        ]
     },
     {
         name: 'To-dos',
@@ -325,7 +355,7 @@ const navigation = ref([
         current: true,
         isMenu: true,
         showToolTipForItem: false,
-        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates') || is('artwork admin'),
+        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete') || is('artwork admin'),
         subMenus: [
             {
                 name: 'Tool Settings',
@@ -343,10 +373,17 @@ const navigation = ref([
             },
             {
                 name: 'Inventory',
-                href: route('inventory-management.settings.index'),
+                href: route('inventory-management.settings.category'),
                 icon: 'IconBuildingWarehouse',
-                current: route().current('inventory-management.settings.index'),
+                current: route().current('inventory-management.settings.category'),
                 has_permission: is('artwork admin')
+            },
+            {
+                name: 'Material Sets',
+                href: route('material-sets.index'),
+                icon: 'IconParentheses',
+                current: route().current('material-sets.index'),
+                has_permission: is('artwork admin') || can('set.create_edit | set.delete')
             },
             {
                 name: 'Rooms',

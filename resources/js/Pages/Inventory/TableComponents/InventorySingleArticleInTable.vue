@@ -1,6 +1,6 @@
 <template>
     <td class="py-3 pr-3 pl-3 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-        <img :src="getMainImageInImage.image" alt="" class="w-12 h-12 object-fill rounded-lg">
+        <img :src="getMainImageInImage.image" @error="(e) => e.target.src = usePage().props.big_logo"  alt="" class="w-12 h-12 object-fill rounded-lg">
     </td>
     <td class="p-3 text-sm whitespace-nowrap text-secondary font-semibold"><div class="flex items-center">{{ item?.name }}<IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-secondary font-semibold ml-2" /> </div></td>
     <td class="p-3 text-sm whitespace-nowrap" :class="item.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create'">{{ formatQuantity(item?.quantity) }}</td>
@@ -30,7 +30,7 @@
 import {computed, defineAsyncComponent, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
-import {IconIdBadge} from "@tabler/icons-vue";
+import {IconIdBadge, IconPhoto} from "@tabler/icons-vue";
 const $t = useTranslation()
 
 const props = defineProps({
@@ -68,6 +68,11 @@ const openEditArticleModal = () => {
     showEditArticleModal.value = true;
 }
 
+const hasImage = computed(() => {
+    const images = props.item.images || [];
+    return images.length > 0;
+});
+
 const getMainImageInImage = computed(() => {
     const images = props.item.images || [];
 
@@ -82,7 +87,7 @@ const getMainImageInImage = computed(() => {
         image: '/storage/' + images[0].image,
     };
 
-    // 3. Wenn keine Bilder vorhanden sind, gib ein Standardbild zurück
+    // 3. Wenn keine Bilder vorhanden sind, gib ein leeres Objekt zurück
     return {
         image: usePage().props.big_logo, // Passe den Pfad zu deinem Standardbild an
     };

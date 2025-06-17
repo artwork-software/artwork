@@ -4,7 +4,7 @@
             <Dialog as="div" class="relative" :style="{ 'z-index': isInShiftPlan ? '999999': zIndex }" @close="$emit('close')">
                 <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
                                  leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                    <div class="fixed inset-0 bg-opacity-50 transition-opacity" :class="showBackdrop ? 'bg-gray-950/30' : ''"/>
+                    <div class="fixed inset-0 bg-opacity-50 transition-opacity" :class="showBackdrop ? 'bg-gray-950/50' : ''"/>
                 </TransitionChild>
                 <div class="fixed inset-0 z-50 w-screen overflow-y-auto">
                     <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
@@ -14,7 +14,7 @@
                                          leave-from="opacity-100 translate-y-0 sm:scale-100"
                                          @after-enter="initDraggable"
                                          leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                            <DialogPanel class="flex h-fit w-full grow flex-col rounded-3xl bg-gradient-to-br text-left shadow-glass backdrop-blur-sm p-gap-3xl border draggableModal" :class="[modalSize, showBackdrop ? 'border-gray-300 from-slate-50/80 to-sky-100/50' : 'border-gray-100 from-slate-50/70 to-sky-100/20']"  ref="containerRef">
+                            <DialogPanel class="flex h-fit w-full grow flex-col rounded-3xl bg-gradient-to-br from-white/40 to-sky-100/20 text-left shadow-glass ring-1 ring-white/30 backdrop-blur-sm p-gap-3xl border draggableModal" :class="[modalSize]"  ref="containerRef">
                                 <div class="flex items-center justify-between px-5 pt-5 pb-2">
                                     <div class="text-left">
                                         <h3 class="font-lexend font-bold">{{ $t(props.title) }}</h3>

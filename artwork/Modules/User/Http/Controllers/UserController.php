@@ -36,6 +36,7 @@ use Artwork\Modules\User\Http\Resources\UserIndexResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Carbon\Carbon;
@@ -335,7 +336,8 @@ class UserController extends Controller
         return inertia('Users/UserWorkTimePatternPage', [
             'userToEdit' => new UserShowResource($user),
             'currentTab' => 'workTimePattern',
-            'workTime' => $user->workTime,
+            'workTime' => $user->load('workTime')->workTime,
+            'workTimePatterns' => UserWorkTimePattern::all(),
         ]);
     }
 

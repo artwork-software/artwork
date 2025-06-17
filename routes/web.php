@@ -2218,6 +2218,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/work-time-pattern/{userWorkTimePattern}/destroy',
             [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'destroy']
         )->name('shift.work-time-pattern.destroy');
+
+        // user.work-time-pattern.update
+        Route::patch(
+            '/work-time-pattern/{user}/update-user',
+            [\Artwork\Modules\User\Http\Controllers\UserWorkTimeController::class, 'store']
+        )->name('shift.work-time-pattern.update-user');
     });
 });
 

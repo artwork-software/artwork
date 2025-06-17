@@ -446,10 +446,8 @@
                                         {{ $t('Reset') }}
                                     </span>
                                     </div>
-                                    <MenuItem v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums"
-                                              v-slot="{ active }">
-                                        <div @click="this.applySort(computedShiftPlanWorkerSortEnum)"
-                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                    <MenuItem v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums" v-slot="{ active }">
+                                        <div @click="this.applySort(computedShiftPlanWorkerSortEnum)" :class="[active ? 'text-gray-500' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                             <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
                                                     <span :class="this.$page.props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                         {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
@@ -766,12 +764,14 @@ import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import DeleteCalendarMultiEditEntities from "@/Pages/Shifts/Components/DeleteCalendarMultiEditEntities.vue";
 import DeleteCalendarRoomShiftEntriesModal from "@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        BaseMenuItem,
         DeleteCalendarRoomShiftEntriesModal,
         DeleteCalendarMultiEditEntities,
         AddShiftModal,

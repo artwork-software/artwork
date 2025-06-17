@@ -11,7 +11,7 @@ class StoreUserWorkTimeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,14 @@ class StoreUserWorkTimeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'work_time_pattern_id' => 'nullable|integer|exists:user_work_time_patterns,id',
+            'monday' => 'nullable|date_format:H:i',
+            'tuesday' => 'nullable|date_format:H:i',
+            'wednesday' => 'nullable|date_format:H:i',
+            'thursday' => 'nullable|date_format:H:i',
+            'friday' => 'nullable|date_format:H:i',
+            'saturday' => 'nullable|date_format:H:i',
+            'sunday' => 'nullable|date_format:H:i',
         ];
     }
 }

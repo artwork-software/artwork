@@ -62,6 +62,12 @@ Artwork is a project organization tool for scheduling projects with events, task
 - Staging-Branch: `staging` (Pre-Release Testing)
 - Entwicklungs-Branch: `dev` (Feature-Integration)
 
+## Tests
+- Verwende beim Schreiben von Unittests PHPUnit, schreibe *KEINE* Pest Tests.
+- Verwende *NIEMALS* den RefreshDatabase Trait in Tests.
+- Alle BasisTests sind schon so konfiguriert, dass sie den "DatabaseTransactions" Trait verwenden, um die Datenbank nach jedem Test zu bereinigen.
+
+
 ## Best Practices
 1. Halte dich an Laravel-Konventionen für Struktur und Benennung
 2. Schreibe Tests für neue Features

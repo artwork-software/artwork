@@ -138,7 +138,7 @@
 <script>
 import NotificationButtons from "@/Layouts/Components/NotificationComponents/NotificationButtons.vue";
 import {ChevronRightIcon} from "@heroicons/vue/solid";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
@@ -150,6 +150,7 @@ import EventHistoryModal from "@/Pages/Notifications/Components/EventHistoryModa
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import { provide } from 'vue';
 
 export default {
     name: "NotificationBlock",
@@ -183,6 +184,15 @@ export default {
         'eventStatuses',
         'isDashboard',
     ],
+    setup() {
+        // Get event_properties from page props
+        const event_properties = usePage().props.event_properties;
+
+        // Provide event_properties to child components
+        provide('event_properties', event_properties);
+
+        return {};
+    },
     data() {
         return {
             showDeclineModal: false,

@@ -15,7 +15,7 @@
                 <span class="pl-2"><b>{{ $t('Friday')}}</b>: {{ workTimePattern.friday }} Std.</span>
                 <span class="pl-2"><b>{{ $t('Saturday')}}</b>: {{ workTimePattern.saturday }} Std.</span>
                 <span class="pl-2"><b>{{ $t('Sunday')}}</b>: {{ workTimePattern.sunday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Sum')}}</b>: {{ workTimePattern.full_work_time_in_hours }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Total hours')}}</b>: {{ workTimePattern.full_work_time_in_hours }} Std.</span>
             </p>
         </div>
     </div>

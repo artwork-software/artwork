@@ -2795,5 +2795,10 @@
     "No work time patterns found. Please create a new one.": "Keine Arbeitszeitmuster gefunden. Bitte erstelle ein neues.",
     "Select a work time pattern for the user or enter custom working times.": "Wähle ein Arbeitszeitmuster für den Nutzer oder gib benutzerdefinierte Arbeitszeiten ein.",
     "Click here to remove the current work time pattern.": "Klicke hier, um das aktuelle Arbeitszeitmuster zu entfernen.",
-    "The working time pattern “{0}” is currently selected. This means that working times cannot be edited.": "Das Arbeitszeitmuster „{0}“ ist derzeit ausgewählt. Das bedeutet, dass Arbeitszeiten nicht bearbeitet werden können."
+    "The working time pattern “{0}” is currently selected. This means that working times cannot be edited.": "Das Arbeitszeitmuster „{0}“ ist derzeit ausgewählt. Das bedeutet, dass Arbeitszeiten nicht bearbeitet werden können.",
+    "Total hours": "Gesamtstunden",
+    "Remove Work Time Pattern": "Arbeitszeitmuster entfernen",
+    "Are you sure you want to remove the current work time pattern? This will allow you to enter custom working times.": "Willst du das aktuelle Arbeitszeitmuster wirklich entfernen? Dadurch kannst du benutzerdefinierte Arbeitszeiten eingeben.",
+    "You are currently editing a working time pattern. If this pattern is assigned to users, the users' working time will also be edited.": "Du bearbeitest derzeit ein Arbeitszeitmuster. Wenn dieses Muster Nutzer*innen zugewiesen ist, wird auch die Arbeitszeit der Nutzer*innen bearbeitet.",
+    "Choose a work time pattern for the user.": "Wähle ein Arbeitszeitmuster für den Nutzer*in aus."
 }

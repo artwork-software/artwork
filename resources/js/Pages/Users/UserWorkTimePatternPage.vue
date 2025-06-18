@@ -12,7 +12,7 @@
                     <p class="text-sm font-lexend text-gray-500">
                         {{ $t('The working time pattern “{0}” is currently selected. This means that working times cannot be edited. Remove the working time pattern to enter your own times.', [selectedWorkTimePattern.name]) }}
                     </p>
-                    <div class="mt-2 cursor-pointer text-artwork-buttons-create hover:text-artwork-buttons-default flex items-center gap-x-1 text-sm font-lexend" @click="removePattern">
+                    <div class="mt-2 cursor-pointer text-artwork-buttons-create hover:text-artwork-buttons-default flex items-center gap-x-1 text-sm font-lexend" @click="showConfirmRemovePatternModal = true">
                         <component is="IconRepeat" class="size-5 text-gray-500"/>
                         {{ $t('Click here to remove the current work time pattern.') }}
                     </div>
@@ -115,7 +115,7 @@
                     {{ $t('The working time pattern “{0}” is currently selected. This means that working times cannot be edited.', [selectedWorkTimePattern.name]) }}
                 </p>
             </div>
-            <p class="mt-1 flex text-sm text-gray-500 space-x-2 divide-x divide-gray-200 font-lexend">
+            <!--<p class="mt-1 flex text-sm text-gray-500 space-x-2 divide-x divide-gray-200 font-lexend hidden">
                 <span><b>{{ $t('Monday')}}</b>: {{ workTime.monday }} Std.</span>
                 <span class="pl-2"><b>{{ $t('Tuesday')}}</b>: {{ workTime.tuesday }} Std.</span>
                 <span class="pl-2"><b>{{ $t('Wednesday')}}</b>: {{ workTime.wednesday }} Std.</span>
@@ -123,8 +123,59 @@
                 <span class="pl-2"><b>{{ $t('Friday')}}</b>: {{ workTime.friday }} Std.</span>
                 <span class="pl-2"><b>{{ $t('Saturday')}}</b>: {{ workTime.saturday }} Std.</span>
                 <span class="pl-2"><b>{{ $t('Sunday')}}</b>: {{ workTime.sunday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Sum')}}</b>: {{ workTime.full_work_time_in_hours }} Std.</span>
-            </p>
+                <span class="pl-2"><b>{{ $t('Total hours')}}</b>: {{ workTime.full_work_time_in_hours }} Std.</span>
+            </p>-->
+
+            <div class="grid grid-cols-1 md:grid-cols-8 gap-4 my-10">
+                <div class="card glassy p-10">
+                    <div class="flex items-center justify-center flex-col font-lexend">
+                        <h2 class="text-md">{{ $t('Monday')}}</h2>
+                        <p class="text-sm text-gray-500">{{ workTime.monday }} Std</p>
+                    </div>
+                </div>
+                <div class="card glassy p-10">
+                    <div class="flex items-center justify-center flex-col font-lexend">
+                        <h2 class="text-md">{{ $t('Tuesday')}}</h2>
+                        <p class="text-sm text-gray-500">{{ workTime.tuesday }} Std</p>
+                    </div>
+                </div>
+                <div class="card glassy p-10">
+                    <div class="flex items-center justify-center flex-col font-lexend">
+                        <h2 class="text-md">{{ $t('Wednesday')}}</h2>
+                        <p class="text-sm text-gray-500">{{ workTime.wednesday }} Std</p>
+                    </div>
+                </div>
+                <div class="card glassy p-10">
+                    <div class="flex items-center justify-center flex-col font-lexend">
+                        <h2 class="text-md">{{ $t('Thursday')}}</h2>
+                        <p class="text-sm text-gray-500">{{ workTime.thursday }} Std</p>
+                    </div>
+                </div>
+                <div class="card glassy p-10">
+                    <div class="flex items-center justify-center flex-col font-lexend">
+                        <h2 class="text-md">{{ $t('Friday')}}</h2>
+                        <p class="text-sm text-gray-500">{{ workTime.friday }} Std</p>
+                    </div>
+                </div>
+                <div class="card glassy p-10">
+                    <div class="flex items-center justify-center flex-col font-lexend">
+                        <h2 class="text-md">{{ $t('Saturday')}}</h2>
+                        <p class="text-sm text-gray-500">{{ workTime.saturday }} Std</p>
+                    </div>
+                </div>
+                <div class="card glassy p-10">
+                    <div class="flex items-center justify-center flex-col font-lexend">
+                        <h2 class="text-md">{{ $t('Sunday')}}</h2>
+                        <p class="text-sm text-gray-500">{{ workTime.sunday }} Std</p>
+                    </div>
+                </div>
+                <div class="card glassy p-10">
+                    <div class="flex items-center justify-center flex-col font-lexend">
+                        <h2 class="text-md">{{ $t('Total hours')}}</h2>
+                        <p class="text-sm text-gray-500">{{ workTime.full_work_time_in_hours }} Std.</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <SelectWorkTimePatternModal
@@ -133,6 +184,15 @@
             @close="showSelectWorkTimePatternModal = false"
             @select-pattern="selectPattern"
         />
+
+
+        <ConfirmDeleteModal
+            :title="$t('Remove Work Time Pattern')"
+            :description="$t('Are you sure you want to remove the current work time pattern? This will allow you to enter custom working times.')"
+            v-if="showConfirmRemovePatternModal"
+            @closed="showConfirmRemovePatternModal = false"
+            @delete="removePattern"
+            />
     </UserEditHeader>
 </template>
 
@@ -147,6 +207,7 @@ import {computed, ref} from "vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 const props = defineProps({
     userToEdit: {
@@ -175,7 +236,7 @@ const props = defineProps({
     workTimePatterns: {
         type: Object,
         required: true
-    }
+    },
 })
 
 const workTimeForm = useForm({
@@ -191,6 +252,7 @@ const workTimeForm = useForm({
 })
 
 const showSelectWorkTimePatternModal = ref(false)
+const showConfirmRemovePatternModal = ref(false)
 
 const selectPattern = (workTimePattern) => {
     workTimeForm.work_time_pattern_id = workTimePattern.id;
@@ -216,6 +278,8 @@ const removePattern = () => {
     workTimeForm.friday = '00:00';
     workTimeForm.saturday = '00:00';
     workTimeForm.sunday = '00:00';
+
+    showConfirmRemovePatternModal.value = false;
 
     submit();
 }

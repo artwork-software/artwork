@@ -333,6 +333,7 @@ class UserController extends Controller
 
     public function editUserWorkTime(User $user): Response|ResponseFactory
     {
+
         return inertia('Users/UserWorkTimePatternPage', [
             'userToEdit' => new UserShowResource($user),
             'currentTab' => 'workTimePattern',
@@ -340,6 +341,7 @@ class UserController extends Controller
             'workTimePatterns' => UserWorkTimePattern::all(),
         ]);
     }
+
 
     /**
      * @throws ContainerExceptionInterface

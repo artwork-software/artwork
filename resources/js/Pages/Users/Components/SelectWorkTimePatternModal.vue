@@ -33,6 +33,7 @@
                                     <span><b>{{ $t('Friday')}}</b>: {{ workTime.friday }} Std.</span>
                                     <span class="pl-2"><b>{{ $t('Saturday')}}</b>: {{ workTime.saturday }} Std.</span>
                                     <span class="pl-2"><b>{{ $t('Sunday')}}</b>: {{ workTime.sunday }} Std.</span>
+                                    <span class="pl-2"><b>{{ $t('Total hours')}}</b>: {{ workTime.full_work_time_in_hours }} Std.</span>
                                 </p>
                             </div>
                         </div>

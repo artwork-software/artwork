@@ -94,7 +94,7 @@ class UserWorkTimePattern extends Model
         return $this->hasMany(UserWorkTime::class, 'work_time_pattern_id', 'id');
     }
 
-    public function getFullWorkTimeInHoursAttribute(): int
+    public function getFullWorkTimeInHoursAttribute(): float
     {
         $totalMinutes = 0;
 
@@ -105,6 +105,6 @@ class UserWorkTimePattern extends Model
             }
         }
 
-        return (int) ($totalMinutes / 60);
+        return round($totalMinutes / 60, 2);
     }
 }

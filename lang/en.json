@@ -2792,5 +2792,10 @@
     "No work time patterns found. Please create a new one.": "No work time patterns found. Please create a new one.",
     "Select a work time pattern for the user or enter custom working times.": "Select a work time pattern for the user or enter custom working times.",
     "Click here to remove the current work time pattern.": "Click here to remove the current work time pattern.",
-    "The working time pattern “{0}” is currently selected. This means that working times cannot be edited.": "The working time pattern “{0}” is currently selected. This means that working times cannot be edited."
+    "The working time pattern “{0}” is currently selected. This means that working times cannot be edited.": "The working time pattern “{0}” is currently selected. This means that working times cannot be edited.",
+    "Total hours": "Total hours",
+    "Remove Work Time Pattern": "Remove Work Time Pattern",
+    "Are you sure you want to remove the current work time pattern? This will allow you to enter custom working times.": "Are you sure you want to remove the current work time pattern? This will allow you to enter custom working times.",
+    "You are currently editing a working time pattern. If this pattern is assigned to users, the users' working time will also be edited.": "You are currently editing a working time pattern. If this pattern is assigned to users, the users' working time will also be edited.",
+    "Choose a work time pattern for the user.": "Choose a work time pattern for the user."
 }

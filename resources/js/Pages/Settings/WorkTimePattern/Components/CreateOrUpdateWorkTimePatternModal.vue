@@ -5,6 +5,10 @@
         @close="$emit('close')">
 
 
+        <div v-if="workTimePattern.id">
+            <BaseAlertComponent message="You are currently editing a working time pattern. If this pattern is assigned to users, the users' working time will also be edited." use-translation type="warning" />
+        </div>
+
         <form @submit.prevent="submit">
             <div class="space-y-4">
                  <div>
@@ -117,6 +121,7 @@ import {useForm} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 
 const props = defineProps({
     workTimePattern: {

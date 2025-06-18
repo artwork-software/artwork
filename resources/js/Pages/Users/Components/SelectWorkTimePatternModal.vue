@@ -24,16 +24,15 @@
                                     {{ workTime.description }}
                                 </p>
                                 <p class="mt-1 flex text-xs/5 text-gray-500 space-x-2 divide-x divide-gray-200">
-                                    <span><b>{{ $t('Monday')}}</b>: {{ workTime.monday }}</span>
-                                    <span class="pl-2"><b>{{ $t('Tuesday')}}</b>: {{ workTime.tuesday }}</span>
-                                    <span class="pl-2"><b>{{ $t('Wednesday')}}</b>: {{ workTime.wednesday }}</span>
-                                    <span class="pl-2"><b>{{ $t('Thursday')}}</b>: {{ workTime.thursday }}</span>
-                                    <span class="pl-2"><b>{{ $t('Friday')}}</b>: {{ workTime.friday }}</span>
-
+                                    <span><b>{{ $t('Monday')}}</b>: {{ workTime.monday }} Std.</span>
+                                    <span class="pl-2"><b>{{ $t('Tuesday')}}</b>: {{ workTime.tuesday }} Std.</span>
+                                    <span class="pl-2"><b>{{ $t('Wednesday')}}</b>: {{ workTime.wednesday }} Std.</span>
+                                    <span class="pl-2"><b>{{ $t('Thursday')}}</b>: {{ workTime.thursday }} Std.</span>
                                 </p>
                                 <p class="mt-1 flex text-xs/5 text-gray-500 space-x-2 divide-x divide-gray-200">
-                                    <span><b>{{ $t('Saturday')}}</b>: {{ workTime.saturday }}</span>
-                                    <span class="pl-2"><b>{{ $t('Sunday')}}</b>: {{ workTime.sunday }}</span>
+                                    <span><b>{{ $t('Friday')}}</b>: {{ workTime.friday }} Std.</span>
+                                    <span class="pl-2"><b>{{ $t('Saturday')}}</b>: {{ workTime.saturday }} Std.</span>
+                                    <span class="pl-2"><b>{{ $t('Sunday')}}</b>: {{ workTime.sunday }} Std.</span>
                                 </p>
                             </div>
                         </div>

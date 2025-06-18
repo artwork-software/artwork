@@ -1,23 +1,29 @@
 <template>
     <UserEditHeader :current-tab="currentTab" :user_to_edit="userToEdit">
 
-        <div class="flex items-center justify-end">
-            <GlassyIconButton text="Select Work Time Pattern" icon="IconClockSearch" @click.stop="showSelectWorkTimePatternModal = true"/>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <div>
+                <TinyPageHeadline
+                    :title="$t('Work Time Pattern')"
+                    :description="$t('Select a work time pattern for the user or enter custom working times.')"
+                />
+
+                <div v-if="selectedWorkTimePattern" class="mt-1">
+                    <p class="text-sm font-lexend text-gray-500">
+                        {{ $t('The working time pattern “{0}” is currently selected. This means that working times cannot be edited. Remove the working time pattern to enter your own times.', [selectedWorkTimePattern.name]) }}
+                    </p>
+                    <div class="mt-2 cursor-pointer text-artwork-buttons-create hover:text-artwork-buttons-default flex items-center gap-x-1 text-sm font-lexend" @click="removePattern">
+                        <component is="IconRepeat" class="size-5 text-gray-500"/>
+                        {{ $t('Click here to remove the current work time pattern.') }}
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2">
+                <GlassyIconButton text="Select Work Time Pattern" icon="IconClockSearch" @click.stop="showSelectWorkTimePatternModal = true"/>
+            </div>
         </div>
 
-        <div class="mt-5">
-
-            <div v-if="isSelectingPattern">
-
-                <BaseAlertComponent
-                    :message="$t('The working time pattern “{0}” is currently selected. This means that working times cannot be edited. Remove the working time pattern to enter your own times. Click here to remove.', [selectedWorkTimePattern.name])"
-                    type="info"
-                    class="mb-4 cursor-pointer"
-                    @click="workTimeForm.work_time_pattern_id = null"
-                />
-            </div>
-
-
+        <div class="mt-5" v-if="!isSelectingPattern">
             <form @submit.prevent="submit">
                 <div class="space-y-4">
                     <div>
@@ -103,6 +109,24 @@
             </form>
         </div>
 
+        <div v-else class="mt-5">
+            <div>
+                <p class="text-sm font-lexend text-gray-500">
+                    {{ $t('The working time pattern “{0}” is currently selected. This means that working times cannot be edited.', [selectedWorkTimePattern.name]) }}
+                </p>
+            </div>
+            <p class="mt-1 flex text-sm text-gray-500 space-x-2 divide-x divide-gray-200 font-lexend">
+                <span><b>{{ $t('Monday')}}</b>: {{ workTime.monday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Tuesday')}}</b>: {{ workTime.tuesday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Wednesday')}}</b>: {{ workTime.wednesday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Thursday')}}</b>: {{ workTime.thursday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Friday')}}</b>: {{ workTime.friday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Saturday')}}</b>: {{ workTime.saturday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Sunday')}}</b>: {{ workTime.sunday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Sum')}}</b>: {{ workTime.full_work_time_in_hours }} Std.</span>
+            </p>
+        </div>
+
         <SelectWorkTimePatternModal
             :work-time-patterns="workTimePatterns"
             v-if="showSelectWorkTimePatternModal"
@@ -122,6 +146,7 @@ import SelectWorkTimePatternModal from "@/Pages/Users/Components/SelectWorkTimeP
 import {computed, ref} from "vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 
 const props = defineProps({
     userToEdit: {
@@ -178,6 +203,21 @@ const selectPattern = (workTimePattern) => {
     workTimeForm.sunday = workTimePattern.sunday;
 
     showSelectWorkTimePatternModal.value = false;
+
+    submit();
+}
+
+const removePattern = () => {
+    workTimeForm.work_time_pattern_id = null;
+    workTimeForm.monday = '00:00';
+    workTimeForm.tuesday = '00:00';
+    workTimeForm.wednesday = '00:00';
+    workTimeForm.thursday = '00:00';
+    workTimeForm.friday = '00:00';
+    workTimeForm.saturday = '00:00';
+    workTimeForm.sunday = '00:00';
+
+    submit();
 }
 
 const selectedWorkTimePattern = computed(() => {

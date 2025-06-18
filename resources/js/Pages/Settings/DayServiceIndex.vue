@@ -19,19 +19,22 @@ export default {
                     name: this.$t('Shift Settings'),
                     href: route('shift.settings'),
                     current: route().current('shift.settings'),
-                    show: true
+                    show: true,
+                    icon: 'IconCalendarUser'
                 },
                 {
                     name: this.$t('Day Services'),
                     href: route('day-service.index'),
                     current: route().current('day-service.index'),
-                    show: true
+                    show: true,
+                    icon: 'IconHours24'
                 },
                 {
                     name: this.$t('Work Time Pattern'),
                     href: route('shift.work-time-pattern'),
                     current: route().current('shift.work-time-pattern'),
-                    show: true
+                    show: true,
+                    icon: 'IconClockCog'
                 }
             ],
             iconList: [

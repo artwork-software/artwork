@@ -57,6 +57,10 @@ class UserWorkTimePattern extends Model
         'sunday' => 'datetime:H:i'
     ];
 
+    protected $appends = [
+        'full_work_time_in_hours'
+    ];
+
     /**
      * The "booted" method of the model.
      */
@@ -84,5 +88,23 @@ class UserWorkTimePattern extends Model
             'sunday' => $this->sunday->format('H:i')
         ];
     }
-}
 
+    public function userWorkTime(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserWorkTime::class, 'work_time_pattern_id', 'id');
+    }
+
+    public function getFullWorkTimeInHoursAttribute(): int
+    {
+        $totalMinutes = 0;
+
+        foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
+            $time = $this->{$day};
+            if ($time) {
+                $totalMinutes += $time->hour * 60 + $time->minute;
+            }
+        }
+
+        return (int) ($totalMinutes / 60);
+    }
+}

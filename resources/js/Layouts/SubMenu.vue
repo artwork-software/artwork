@@ -128,9 +128,9 @@
                                         </PopoverButton>
 
                                         <transition enter-active-class="transition ease-out duration-200" enter-from-class="opacity-0 translate-y-1" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-150" leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 translate-y-1">
-                                            <PopoverPanel class="absolute left-1/2 z-10 mt-5 flex w-screen max-w-max -translate-x-1/2 px-4">
-                                                <div class="w-screen max-w-md flex-auto overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-gray-900/5">
-                                                    <div class="flex w-full items-center justify-between space-x-6 p-6">
+                                            <PopoverPanel class="absolute left-1/2 z-10 flex w-screen max-w-max card glassy -translate-x-1/2 p-3">
+                                                <div class="w-screen max-w-md flex-auto overflow-hidden card white p-3">
+                                                    <div class="flex w-full items-center justify-between space-x-6 p-2">
                                                         <div class="flex-1 truncate ">
                                                             <div class="flex items-center space-x-3">
                                                                 <div class="font-bold headline h2">{{ usePage().props.auth.user.full_name }}</div>
@@ -141,15 +141,15 @@
                                                         <img class="size-14 shrink-0 rounded-full object-cover bg-gray-300" :src="usePage().props.auth.user.profile_photo_url" alt="" />
                                                     </div>
                                                     <div>
-                                                        <div class="-mt-px flex divide-x divide-gray-200 divide-dashed border-t border-gray-200 border-dashed">
+                                                        <div class="py-2 divide-x divide-gray-200 divide-dashed border-t border-gray-200 border-dashed flex items-center justify-between">
                                                             <div class="flex w-0 flex-1">
-                                                                <div @click="logout" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 group hover:text-red-500 transition ease-in-out duration-200 cursor-pointer">
+                                                                <div @click="logout" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent text-sm font-semibold text-gray-900 group hover:text-red-500 transition ease-in-out duration-200 cursor-pointer">
                                                                     <component is="IconLogout" class="size-5 text-gray-400 group-hover:text-red-500 transition ease-in-out duration-200" aria-hidden="true" />
                                                                     {{ $t('Logout') }}
                                                                 </div>
                                                             </div>
                                                             <Link :href="route('user.edit.info', {user: usePage().props.auth.user.id})" class="-ml-px flex w-0 flex-1">
-                                                                <div class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 group hover:text-artwork-buttons-create transition ease-in-out duration-200 cursor-pointer">
+                                                                <div class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent text-sm font-semibold text-gray-900 group hover:text-artwork-buttons-create transition ease-in-out duration-200 cursor-pointer">
                                                                     <component is="IconUserCircle" class="size-5 text-gray-400 group-hover:text-artwork-buttons-create transition ease-in-out duration-200" aria-hidden="true" />
                                                                     {{ $t('Your account') }}
                                                                 </div>

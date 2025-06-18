@@ -2790,6 +2790,10 @@
     "No print layouts found. Create a new print layout to get started.": "Keine Drucklayouts gefunden. Erstelle ein neues Drucklayout, um zu beginnen.",
     "Select Work Time Pattern": "Arbeitszeitmuster auswählen",
     "Search patterns...": "Arbeitszeitmuster suchen...",
-    "The working time pattern “{0}” is currently selected. This means that working times cannot be edited. Remove the working time pattern to enter your own times. Click here to remove.": "Das Arbeitszeitmuster „{0}“ ist derzeit ausgewählt. Das bedeutet, dass Arbeitszeiten nicht bearbeitet werden können. Entferne das Arbeitszeitmuster, um deine eigenen Zeiten einzugeben. Klicke hier, um es zu entfernen.",
-    "Saving...": "Speichern..."
+    "The working time pattern “{0}” is currently selected. This means that working times cannot be edited. Remove the working time pattern to enter your own times.": "Das Arbeitszeitmuster „{0}“ ist derzeit ausgewählt. Das bedeutet, dass Arbeitszeiten nicht bearbeitet werden können. Entferne das Arbeitszeitmuster, um deine eigenen Zeiten einzugeben.",
+    "Saving...": "Speichern...",
+    "No work time patterns found. Please create a new one.": "Keine Arbeitszeitmuster gefunden. Bitte erstelle ein neues.",
+    "Select a work time pattern for the user or enter custom working times.": "Wähle ein Arbeitszeitmuster für den Nutzer oder gib benutzerdefinierte Arbeitszeiten ein.",
+    "Click here to remove the current work time pattern.": "Klicke hier, um das aktuelle Arbeitszeitmuster zu entfernen.",
+    "The working time pattern “{0}” is currently selected. This means that working times cannot be edited.": "Das Arbeitszeitmuster „{0}“ ist derzeit ausgewählt. Das bedeutet, dass Arbeitszeiten nicht bearbeitet werden können."
 }

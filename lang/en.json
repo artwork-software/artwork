@@ -2787,6 +2787,10 @@
     "No print layouts found. Create a new print layout to get started.": "No print layouts found. Create a new print layout to get started.",
     "Select Work Time Pattern": "Select Work Time Pattern",
     "Search patterns...": "Search patterns...",
-    "The working time pattern “{0}” is currently selected. This means that working times cannot be edited. Remove the working time pattern to enter your own times. Click here to remove.": "The working time pattern “{0}” is currently selected. This means that working times cannot be edited. Remove the working time pattern to enter your own times. Click here to remove.",
-    "Saving...": "Saving..."
+    "The working time pattern “{0}” is currently selected. This means that working times cannot be edited. Remove the working time pattern to enter your own times.": "The working time pattern “{0}” is currently selected. This means that working times cannot be edited. Remove the working time pattern to enter your own times.",
+    "Saving...": "Saving...",
+    "No work time patterns found. Please create a new one.": "No work time patterns found. Please create a new one.",
+    "Select a work time pattern for the user or enter custom working times.": "Select a work time pattern for the user or enter custom working times.",
+    "Click here to remove the current work time pattern.": "Click here to remove the current work time pattern.",
+    "The working time pattern “{0}” is currently selected. This means that working times cannot be edited.": "The working time pattern “{0}” is currently selected. This means that working times cannot be edited."
 }

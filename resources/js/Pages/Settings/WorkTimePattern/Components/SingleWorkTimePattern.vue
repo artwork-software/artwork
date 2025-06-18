@@ -8,13 +8,14 @@
                 {{ workTimePattern.description }}
             </p>
             <p class="mt-1 flex text-xs/5 text-gray-500 space-x-2 divide-x divide-gray-200">
-                <span><b>{{ $t('Monday')}}</b>: {{ workTimePattern.monday }}</span>
-                <span class="pl-2"><b>{{ $t('Tuesday')}}</b>: {{ workTimePattern.tuesday }}</span>
-                <span class="pl-2"><b>{{ $t('Wednesday')}}</b>: {{ workTimePattern.wednesday }}</span>
-                <span class="pl-2"><b>{{ $t('Thursday')}}</b>: {{ workTimePattern.thursday }}</span>
-                <span class="pl-2"><b>{{ $t('Friday')}}</b>: {{ workTimePattern.friday }}</span>
-                <span class="pl-2"><b>{{ $t('Saturday')}}</b>: {{ workTimePattern.saturday }}</span>
-                <span class="pl-2"><b>{{ $t('Sunday')}}</b>: {{ workTimePattern.sunday }}</span>
+                <span><b>{{ $t('Monday')}}</b>: {{ workTimePattern.monday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Tuesday')}}</b>: {{ workTimePattern.tuesday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Wednesday')}}</b>: {{ workTimePattern.wednesday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Thursday')}}</b>: {{ workTimePattern.thursday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Friday')}}</b>: {{ workTimePattern.friday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Saturday')}}</b>: {{ workTimePattern.saturday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Sunday')}}</b>: {{ workTimePattern.sunday }} Std.</span>
+                <span class="pl-2"><b>{{ $t('Sum')}}</b>: {{ workTimePattern.full_work_time_in_hours }} Std.</span>
             </p>
         </div>
     </div>
@@ -79,7 +80,7 @@ const ConfirmDeleteModal = defineAsyncComponent({
 })
 
 const deleteWorkTimePattern = () => {
-    router.delete(route('shift.work-time-pattern.destroy', {workTimePattern: props.workTimePattern.id}), {
+    router.delete(route('shift.work-time-pattern.destroy', {userWorkTimePattern: props.workTimePattern.id}), {
         preserveScroll: true,
         onSuccess: () => {
             showDeleteModal.value = false;

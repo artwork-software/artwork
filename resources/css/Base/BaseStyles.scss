@@ -96,19 +96,19 @@
     }
 
     .btn-group-hover {
-        @apply group-hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out
+        @apply group-hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out;
     }
 
     .btn-hover {
-        @apply hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out
+        @apply hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out;
     }
 
     .btn-border-hover {
-        @apply hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out
+        @apply hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out;
     }
 
     .btn-group-border-hover {
-        @apply group-hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out
+        @apply group-hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out;
     }
 }
 

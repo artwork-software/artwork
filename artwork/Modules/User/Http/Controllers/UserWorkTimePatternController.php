@@ -55,6 +55,11 @@ class UserWorkTimePatternController extends Controller
      */
     public function destroy(UserWorkTimePattern $userWorkTimePattern): \Illuminate\Http\RedirectResponse
     {
+        // Check if the work time pattern is in use by any user
+        $userWorkTimePattern->userWorkTime()->update([
+            'work_time_pattern_id' => null,
+        ]);
+
         $userWorkTimePattern->delete();
 
         return redirect()->route('shift.work-time-pattern')

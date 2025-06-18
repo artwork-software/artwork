@@ -18,11 +18,14 @@
 
 
             <div class="card white p-5 mt-5">
-                <ul role="list" class="divide-y divide-gray-100">
+                <ul role="list" class="divide-y divide-gray-100" v-if="workTimePatterns.length > 0">
                     <li v-for="workTime in workTimePatterns" :key="workTime.id" class="flex justify-between gap-x-6 py-5">
                         <SingleWorkTimePattern :work-time-pattern="workTime" />
                     </li>
                 </ul>
+                <div v-else>
+                    <BaseAlertComponent message="No work time patterns found. Please create a new one." type="error" use-translation />
+                </div>
             </div>
         </div>
 
@@ -46,6 +49,7 @@ import CreateOrUpdateWorkTimePatternModal
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SingleWorkTimePattern from "@/Pages/Settings/WorkTimePattern/Components/SingleWorkTimePattern.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 
 const props = defineProps({
     workTimePatterns: {
@@ -61,19 +65,22 @@ const tabs = ref([
         name: 'Shift Settings',
         href: route('shift.settings'),
         current: route().current('shift.settings'),
-        show: true
+        show: true,
+        icon: 'IconCalendarUser'
     },
     {
         name: 'Day Services',
         href: route('day-service.index'),
         current: route().current('day-service.index'),
-        show: true
+        show: true,
+        icon: 'IconHours24'
     },
     {
         name: 'Work Time Pattern',
         href: route('shift.work-time-pattern'),
         current: route().current('shift.work-time-pattern'),
-        show: true
+        show: true,
+        icon: 'IconClockCog'
     }
 ])
 </script>

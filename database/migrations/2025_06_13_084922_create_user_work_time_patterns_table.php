@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('user_work_time_patterns', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('description')->nullable();
+            $table->text('description')->nullable();
             $table->time('monday')->default('00:00:00');
             $table->time('tuesday')->default('00:00:00');
             $table->time('wednesday')->default('00:00:00');

@@ -31,6 +31,10 @@ class UserWorkTime extends Model
         'sunday' => 'datetime:H:i'
     ];
 
+    protected $appends = [
+        'full_work_time_in_hours'
+    ];
+
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user_work_times');
@@ -46,4 +50,17 @@ class UserWorkTime extends Model
         );
     }
 
+    public function getFullWorkTimeInHoursAttribute(): float
+    {
+        $totalMinutes = 0;
+
+        foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
+            $time = $this->{$day};
+            if ($time) {
+                $totalMinutes += $time->hour * 60 + $time->minute;
+            }
+        }
+
+        return round($totalMinutes / 60, 2);
+    }
 }

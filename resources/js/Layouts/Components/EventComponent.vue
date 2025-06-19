@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal @closed="closeModal" v-if="true" :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : this.event?.isPlanning ? $t('Planned Event') : $t('Event') : isPlanning ? $t('Create planned Event') : $t('New room allocation')"
+    <ArtworkBaseModal @close="closeModal" v-if="true" :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : this.event?.isPlanning ? $t('Planned Event') : $t('Event') : isPlanning ? $t('Create planned Event') : $t('New room allocation')"
                       :description="$t('Please make sure that you allow for preparation and follow-up time.')">
         <div class="mx-4">
             <!--   Heading   -->

@@ -9,6 +9,7 @@
                     name="candidates" type="checkbox"
                     :id="event.id"
                     class="input-checklist"
+                    :disabled="!hasPermission"
                 />
             </div>
             <div v-if="event.isSelectedForMultiEdit && multiEdit"
@@ -186,7 +187,7 @@
                     />
                 </div>
             </div>
-            <div v-if="canEditComponent" class="flex items-center col-span-1 print:hidden">
+            <div v-if="canEditComponent && hasPermission" class="flex items-center col-span-1 print:hidden">
                 <div class="flex items-center gap-x-3">
                     <ToolTipComponent icon="IconNote" v-if="!isInModal" :tooltip-text="$t('Edit the description')"
                                       stroke="1.5" @click="openNoteModal = true"/>
@@ -338,6 +339,11 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: false
+    },
+    hasPermission: {
+        type: Boolean,
+        required: false,
+        default: true
     }
 });
 

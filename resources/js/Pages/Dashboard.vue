@@ -43,7 +43,7 @@
                                     </WhiteInnerCard>
                                 </div>
                             </div>
-                            
+
                             <div v-else class="px-5">
                                 <BaseAlertComponent message="No events found" type="info" use-translation />
                             </div>
@@ -66,8 +66,8 @@
                                             <SingleUserEventShift type='user'
                                                                   :event="shift.event"
                                                                   :shift="shift"
-                                                                  :project="this.findProjectById(shift.event.project_id)"
-                                                                  :event-type="this.findEventTypeById(shift.event.event_type_id)"
+                                                                  :project="this.findProjectById(shift.event?.project_id)"
+                                                                  :event-type="shift.event ? this.findEventTypeById(shift.event?.event_type_id) : null"
                                                                   :user-to-edit-id="this.$page.props.auth.user.id"
                                                                   :first-project-shift-tab-id="this.first_project_shift_tab_id"/>
                                         </div>

@@ -179,7 +179,6 @@ const addOrUpdateEventType = () => {
             onSuccess: () => {
                 eventTypeForm.reset()
                 emits('close')
-                window.location.reload()
             }
         })
     } else {
@@ -187,7 +186,6 @@ const addOrUpdateEventType = () => {
             onSuccess: () => {
                 eventTypeForm.reset()
                 emits('close')
-                window.location.reload()
             }
         })
     }

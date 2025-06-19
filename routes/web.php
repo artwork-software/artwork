@@ -114,7 +114,6 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellC
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
-use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
@@ -1776,8 +1775,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('inventory-management.inventory');
 
         Route::group(['prefix' => 'settings'], function (): void {
-            Route::get('/index', [InventorySettingsController::class, 'index'])
-                ->name('inventory-management.settings.index');
 
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');

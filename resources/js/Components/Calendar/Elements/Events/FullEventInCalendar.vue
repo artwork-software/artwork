@@ -1,6 +1,6 @@
 <template>
     <div :style="{ minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
-         class="rounded-lg group/singleEvent"
+         class="rounded-lg group/singleEvent h-full"
          :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id || isHighlighted ? 'border-[3px] border-dashed border-pink-500' : '', isHeightFull ? 'h-full' : '', usePage().props.auth.user.daily_view ? 'overflow-y-scroll' : '', multiEdit ? 'relative' : '']">
         <div v-if="checkIfMultiEditIsEnabled" @click="clickOnCheckBox"
              class="absolute w-full h-full z-10 rounded-lg group-hover/singleEvent:block flex justify-center align-middle items-center"

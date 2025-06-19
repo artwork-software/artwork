@@ -5,20 +5,28 @@
                 {{ $t('Data is currently loaded. Please wait') }}
             </div>
         </div>
-        <div class="flex items-center justify-end gap-x-4 print:hidden" v-if="!isInModal">
+        <div v-if="!hasCreateEventsPermission" class="mb-4 w-full">
+            <AlertComponent :text="$t('You do not have the permission to plan events without a request')" type="warning"
+                           show-icon icon-size="h-5 w-5"
+                           classes="!items-center"/>
+        </div>
+        <div class="flex items-center justify-end gap-x-4 print:hidden w-64 ml-4" v-if="!isInModal">
             <MultiEditSwitch :multi-edit="multiEdit"
                              :room-mode="false"
-                             @update:multi-edit="UpdateMultiEditEmits"/>
+                             @update:multi-edit="UpdateMultiEditEmits"
+                             :disabled="!hasCreateEventsPermission"/>
             <div class="flex items-center gap-x-2">
                 <PlanningSwitch :planning="isPlanningEvent"
-                               @update:planning="isPlanningEvent = $event"/>
+                               @update:planning="isPlanningEvent = $event"
+                               :disabled="!hasCreateEventsPermission"/>
             </div>
             <ToolTipComponent
                 icon="IconCircuitCapacitorPolarized"
                 icon-size="h-7 w-7"
                 :tooltip-text="$t('Customize column size')"
                 direction="bottom"
-                @click="showIndividualColumnSizeConfigModal = true"
+                @click="hasCreateEventsPermission ? showIndividualColumnSizeConfigModal = true : null"
+                :class="!hasCreateEventsPermission ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
             />
             <ToolTipComponent icon="IconFileExport"
                               icon-size="h-7 w-7"
@@ -30,31 +38,31 @@
                               :tooltip-text="$t('Show project period in calendar')"
                               direction="bottom"
                               @click="useProjectTimePeriodAndRedirect()"/>
-            <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
+            <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72" :disabled="!hasCreateEventsPermission">
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateUserSortId(1)"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                    <div @click="hasCreateEventsPermission ? updateUserSortId(1) : null"
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Sort by room') }}
                         <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 1"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateUserSortId(2)"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                    <div @click="hasCreateEventsPermission ? updateUserSortId(2) : null"
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Sort by appointment type') }}
                         <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 2"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateUserSortId(3)"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                    <div @click="hasCreateEventsPermission ? updateUserSortId(3) : null"
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Sort by day') }}
                         <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 3"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateUserSortId(0)"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                    <div @click="hasCreateEventsPermission ? updateUserSortId(0) : null"
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Reset sorting') }}
                     </div>
                 </MenuItem>
@@ -68,7 +76,7 @@
                 <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
                     <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.auth.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
                         <BulkSingleEvent
-                            :can-edit-component="canEditComponent"
+                            :can-edit-component="canEditComponent && hasCreateEventsPermission"
                             :rooms="rooms"
                             :event_types="eventTypes"
                             :time-array="timeArray"
@@ -81,6 +89,7 @@
                             @create-copy-by-event-with-data="createCopyByEventWithData"
                             :event-statuses="eventStatuses"
                             :multi-edit="multiEdit"
+                            :has-permission="hasCreateEventsPermission"
                         />
                     </div>
                 </div>
@@ -92,7 +101,7 @@
             </div>
         </div>
         <div class="flex items-center justify-between pointer-events-none print:hidden" v-if="!multiEdit">
-            <IconCirclePlus v-if="canEditComponent"
+            <IconCirclePlus v-if="canEditComponent && hasCreateEventsPermission"
                             @click="addEmptyEvent"
                             class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out pointer-events-auto"
                             stroke-width="2"/>
@@ -103,8 +112,8 @@
                 </div>
                 <BaseButton
                     v-if="isInModal"
-                    @click="submit"
-                    class="bg-artwork-buttons-create text-white h-12 pointer-events-auto"
+                    @click="hasCreateEventsPermission ? submit : null"
+                    :class="['h-12 pointer-events-auto', hasCreateEventsPermission ? 'bg-artwork-buttons-create text-white' : 'bg-gray-400 text-white cursor-not-allowed']"
                     :text="$t('Create')">
                     <IconCirclePlus class="w-5 h-5 text-white mr-2"/>
                 </BaseButton>
@@ -114,15 +123,15 @@
             <div class="flex items-center justify-center gap-x-4 w-full h-full">
                 <div>
                     <FormButton
-                        @click="showConfirmDeleteModal = true"
-                        :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0"
+                        @click="hasCreateEventsPermission ? showConfirmDeleteModal = true : null"
+                        :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
                         class="bg-red-500 hover:bg-red-600 text-white h-12"
                         :text="$t('Delete')" />
                 </div>
                 <div>
                     <FormButton
-                        @click="openMultiEditModal"
-                        :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0"
+                        @click="hasCreateEventsPermission ? openMultiEditModal : null"
+                        :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
                         class="bg-artwork-buttons-create text-white h-12"
                         :text="$t('Edit')" />
                 </div>
@@ -201,7 +210,8 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import IndividualColumnSizeConfigModal
     from "@/Pages/Projects/Components/BulkComponents/IndividualColumnSizeConfigModal.vue";
 const exportTabEnums = useExportTabEnums();
-const {hasAdminRole} = usePermission(usePage().props),
+const {hasAdminRole, can} = usePermission(usePage().props),
+    hasCreateEventsPermission = ref(can('create events without request')),
     $t = useTranslation(),
     props = defineProps({
         project: {
@@ -307,6 +317,7 @@ const {hasAdminRole} = usePermission(usePage().props),
         showMultiEditModal.value = true;
     },
     showIndividualColumnSizeConfigModal = ref(false),
+    lastUsedCopyCount = ref(1),
     getExportModalConfiguration = () => {
         const cfg = {};
 
@@ -336,7 +347,7 @@ const {hasAdminRole} = usePermission(usePage().props),
     },
     addEmptyEvent = () => {
         isLoading.value = true;
-
+        events.forEach(event => { event.isNew = false; });
         let newDate = new Date();
         if (events.length > 0) {
             let lastEvent = events[events.length - 1];
@@ -358,6 +369,7 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copyCount: 1,
                 copyType: copyTypes.value[0],
                 description: '',
+                isNew: true,
                 is_planning: isPlanningEvent.value,
             });
             isLoading.value = false;
@@ -380,6 +392,7 @@ const {hasAdminRole} = usePermission(usePage().props),
                         copyCount: 1,
                         copyType: copyTypes.value[0],
                         description: '',
+                        isNew: true,
                         is_planning: isPlanningEvent.value
                     }
                 }, {
@@ -404,6 +417,7 @@ const {hasAdminRole} = usePermission(usePage().props),
                         copyCount: 1,
                         copyType: copyTypes.value[0],
                         description: '',
+                        isNew: true,
                         is_planning: isPlanningEvent.value
                     }
                 }, {
@@ -434,6 +448,9 @@ const {hasAdminRole} = usePermission(usePage().props),
     },
     createCopyByEventWithData = (event) => {
         isLoading.value = true;
+        // Store the selected copyCount for later use
+        console.log(event.copyCount + 'event');
+        lastUsedCopyCount.value = event.copyCount;
         let newDate = new Date(event.day);
         let createdEvents = [];
         for (let i = 0; i < event.copyCount; i++) {
@@ -460,6 +477,7 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copyCount: 1,
                 copyType: copyTypes.value[0],
                 description: event.description,
+                isNew: true,
                 is_planning: isPlanningEvent.value,
             });
 
@@ -475,6 +493,7 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copyCount: 1,
                 copyType: copyTypes.value[0],
                 description: event.description,
+                isNew: true,
                 is_planning: isPlanningEvent.value
             });
         }
@@ -571,18 +590,34 @@ onMounted(() => {
                 copyType: copyTypes.value[0],
                 index: events.length + 1,
                 description: event.description,
-                // if created_at is not older than 5 minutes, the event is new
-                isNew: new Date(event.created_at) > new Date(new Date().getTime() - 5 * 60000),
+                isNew: false, // Standardmäßig false setzen
                 // Set the is_planning property from the event data
                 is_planning: event.is_planning
             });
         });
+
+        // Die letzten {copyCount} Events als "neu" markieren
+        if (events.length > 0) {
+            events.forEach(event => event.isNew = false);
+
+            console.log(lastUsedCopyCount);
+            // Use the lastUsedCopyCount variable instead of reading from the event
+            const copyCount = lastUsedCopyCount.value;
+
+            // Mark the last {copyCount} events as new
+            for (let i = 0; i < copyCount; i++) {
+                const index = events.length - 1 - i;
+                if (index >= 0) {
+                    events[index].isNew = true;
+                }
+            }
+        }
+
         isLoading.value = false;
     } else {
         isLoading.value = false;
     }
 
-    // if usePage().props.auth.user.bulk_sort_id === 3 order events by day and start_time and room.position
     if (usePage().props.auth.user.bulk_sort_id === 3) {
         events.sort((a, b) => {
             if (a.day === b.day) {
@@ -594,7 +629,6 @@ onMounted(() => {
             return a.day.localeCompare(b.day);
         });
     }
-
 
     if (props.isInModal) {
         addEmptyEvent();

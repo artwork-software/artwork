@@ -18,8 +18,6 @@ Consult the [official documentation](https://laravel.com/docs/10.x/sail) for mor
 - ``php artisan migrate``
 - ``php artisan artwork:update``
 
-```bash
-
 # Maintenance
 
 For artwork-instances that are already in usage, we will add commands here in the readme, that need to be used to add new permissions or components to the existing db. Dont worry, these commands cant harm your db, they only fill in things if they arent in the db already.

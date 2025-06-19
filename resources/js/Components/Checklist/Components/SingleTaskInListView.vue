@@ -1,7 +1,7 @@
 <template>
     <div  :id="task.id" class="py-2.5 cursor-grab bg-transparent" draggable="true" @dragstart="onDragStart" @dragend="onDragEnd" :key="task.id">
         <div >
-            <div class="grid grid-cols-12 grid-rows-1 gap-x-4 py-1 group">
+            <div class="grid grid-cols-12 grid-rows-1 gap-x-4 py-1 group items-center">
                 <div class="col-span-6">
                     <div class="flex items-start">
                         <div class="mr-3">
@@ -26,18 +26,24 @@
                         <IconCalendar class="h-4 w-4 mr-1 text-gray-400"  :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-red-500' : ''"/>
                         <div class="text-[9px]" :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'bg-red-500 px-1 py-0.5 rounded-lg text-white subpixel-antialiased' : ''">{{ task.formatted_dates.deadline }}</div>
                     </div>
-                    <span v-if="task.done && task.done_by_user" class="ml-2 flex text-sm text-secondary">
-                    <span class="mr-2">
-                        <UserPopoverTooltip v-if="task.done_by_user" height="7" width="7" :user="task.done_by_user" :id="task.id"/>
-                    </span>
-                    {{ task.formatted_dates?.done_at_with_day }}
+                    <span v-if="task.done && task.done_by_user" class="flex text-sm text-secondary">
+                        <span class="mr-2">
+                            <UserPopoverTooltip v-if="task.done_by_user" height="7" width="7" :user="task.done_by_user" :id="task.id"/>
+                        </span>
+                        <span class="flex items-center">
+                            {{ task.formatted_dates?.done_at_with_day }}
+                        </span>
                 </span>
                 </div>
-                <div class="col-span-3 col-start-10 flex justify-between">
+                <div class="col-span-3 col-start-10 flex justify-between items-center">
                     <div class="mx-3 flex">
-                    <span class="flex -mr-2" v-for="(user, index) in filteredUsers">
-                        <UserPopoverTooltip :id="task.id + 'user' + user.id" :user="user" height="8" width="8" :classes="index > 0 ? '!ring-1 !ring-white' : ''"/>
-                    </span>
+                        <div class="">
+                            <div class="flex">
+                                <span class="flex -mr-3" v-for="(user, index) in task.users">
+                                    <UserPopoverTooltip :id="task.id + 'user' + user.id" :user="user" height="8" width="8" :classes="index > 0 ? '!ring-1 !ring-white' : ''"/>
+                                </span>
+                            </div>
+                        </div>
                     </div>
                     <BaseMenu has-no-offset class="ml-3" v-if="(canEditComponent && (projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds?.includes($page.props.auth.user.id) || isAdmin)) || isInOwnTaskManagement">
                         <MenuItem v-slot="{ active }">
@@ -139,10 +145,6 @@ const props = defineProps({
         required: false,
         default: false
     }
-})
-
-const filteredUsers = computed(() => {
-    return props.task.task_users?.filter(user => user.id !== usePage().props.auth.user.id);
 })
 
 const openEditTaskModal = ref(false)

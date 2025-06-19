@@ -54,22 +54,22 @@
                        <div class="flex items-center">
                            <BaseMenu has-no-offset>
                                <MenuItem v-slot="{ active }">
-                                   <a href="#" @click="openEditEventTypeModal(eventType)"
+                                   <div @click="openEditEventTypeModal(eventType)"
                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                        <PencilAltIcon
                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                            aria-hidden="true"/>
                                        {{$t('Edit event type')}}
-                                   </a>
+                                   </div>
                                </MenuItem>
                                <MenuItem v-if="index !== 0" v-slot="{ active }">
-                                   <a href="#" @click="openDeleteEventTypeModal(eventType)"
+                                   <div @click="openDeleteEventTypeModal(eventType)"
                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                        <TrashIcon
                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                            aria-hidden="true"/>
                                        {{$t('Delete event type')}}
-                                   </a>
+                                   </div>
                                </MenuItem>
                            </BaseMenu>
                        </div>

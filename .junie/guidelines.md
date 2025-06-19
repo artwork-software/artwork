@@ -4,7 +4,7 @@
 Artwork is a project organization tool for scheduling projects with events, tasks, and responsibilities. It helps teams track essential project components.
 
 ## Tech Stack
-- **Backend**: Laravel 11 (PHP 8.2+)
+- **Backend**: Laravel 12 (PHP 8.2+)
 - **Frontend**: Vue.js 3 with Inertia.js
 - **CSS Framework**: Tailwind CSS 3.4
 - **Database**: MySQL/MariaDB

@@ -1,12 +1,9 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true">
+    <ArtworkBaseModal @close="closeModal" v-if="true" :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : this.event?.isPlanning ? $t('Planned Event') : $t('Event') : isPlanning ? $t('Create planned Event') : $t('New room allocation')"
+                      :description="$t('Please make sure that you allow for preparation and follow-up time.')">
         <div class="mx-4">
             <!--   Heading   -->
             <div v-if="this.isRoomAdmin || this.hasAdminRole()">
-                <ModalHeader
-                    :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : this.event?.isPlanning ? $t('Planned Event') : $t('Event') : isPlanning ? $t('Create planned Event') : $t('New room allocation')"
-                    :description="$t('Please make sure that you allow for preparation and follow-up time.')"
-                />
                 <div v-if="event?.id" class="flex items-center mb-4">
                     {{ $t('Created by') }}
                     <div>
@@ -253,7 +250,7 @@
                 </div>
 
                 <!-- Event properties section (if available) -->
-                <div v-if="event_properties.filter((eventProperty) => eventProperty.checked)?.length > 0" class="mt-6 border-t border-gray-200 pt-4">
+                <div v-if="event_properties?.filter((eventProperty) => eventProperty.checked)?.length > 0" class="mt-6 border-t border-gray-200 pt-4">
                     <h3 class="text-sm font-medium text-gray-500 mb-2">{{ $t('Properties') }}</h3>
                     <div class="flex flex-wrap gap-2 mt-2">
                         <div v-for="(eventProperty, index) in event_properties.filter((eventProperty) => eventProperty.checked)"
@@ -747,14 +744,14 @@
             <div v-if="canEdit">
                 <div class="flex justify-center w-full py-4" v-if="hasAdminRole() || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.auth.user.id) || $can('create events without request')">
                     <FormButton
-                        :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
+                        :disabled="!this.selectedRoom || this.selectedRoom === '' || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
                         @click="updateOrCreateEvent()"
                         :text="this.event?.occupancy_option ? this.accept ? $t('Commitments') : this.optionAccept ? $t('Optional commitment') : this.adminComment !== '' ? $t('Send message') : $t('Save') : $t('Save')"
                     />
                 </div>
                 <div class="flex justify-center w-full py-4" v-else>
                     <FormButton
-                        :disabled="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || !this.$can('request room occupancy')"
+                        :disabled="!this.selectedRoom || this.selectedRoom === '' || !submit || endDate > seriesEndDate || series && !seriesEndDate || !this.$can('request room occupancy')"
                         @click="updateOrCreateEvent(true)"
                         :text="$t('Request occupancy')"
                     />
@@ -768,7 +765,8 @@
                 />
             </div>
         </div>
-    </BaseModal>
+
+    </ArtworkBaseModal>
 
     <!-- Event löschen Modal -->
     <confirmation-component
@@ -827,6 +825,7 @@ import {inject} from "vue";
 import Button from "@/Jetstream/Button.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const {getDaysOfEvent} = useEvent();
 
@@ -852,6 +851,7 @@ export default {
         Permissions, IconLib
     ],
     components: {
+        ArtworkBaseModal,
         BaseTextarea,
         BaseInput,
         Button,
@@ -944,7 +944,7 @@ export default {
             eventStatus: null,
             eventTypeName: null,
             selectedEventType: this.eventTypes[0],
-            selectedEventStatus: this.eventStatuses?.find(status => status.default),
+            selectedEventStatus: this.eventStatuses?.find(status => status.default) ?? this.eventStatuses[0],
             showProjectInfo: this.project ? true : this.calendarProjectPeriod && this.$page.props.auth.user.calendar_settings.time_period_project_id ? true :false,
             allDayEvent: false,
             selectedProject: null,
@@ -1120,7 +1120,11 @@ export default {
             this.oldEndTime = this.endTime;
             this.title = this.event.title;
             this.eventName = this.event.eventName;
-            this.selectedEventStatus = this.eventStatuses.find(status => status.id === this.event?.eventStatus?.id ?? this.event?.eventStatusId);
+            const eventStatusId = this.event?.eventStatus?.id
+                ?? this.event?.eventStatusId
+                ?? this.event?.event_status_id;
+
+            this.selectedEventStatus = this.eventStatuses.find(status => status.id === eventStatusId);
             this.allDayEvent = this.event.allDay ? this.event.allDay : false;
             if (!this.event.eventType?.id) {
                 this.selectedEventType = this.eventTypes[0];
@@ -1164,6 +1168,8 @@ export default {
             this.initialRoomId = this.selectedRoom?.id;
             this.selectedRoom = this.rooms.find(room => room.id === this.event.roomId);
             this.description = this.event.description;
+
+            console.log(this.event);
 
             this.event_properties?.forEach((event_property) => {
                 event_property.checked = this.event?.eventProperties.some(
@@ -1513,9 +1519,9 @@ export default {
                 allDay: this.allDayEvent,
                 usedInBulkComponent: this.usedInBulkComponent,
                 showProjectPeriodInCalendar: this.calendarProjectPeriod,
-                event_properties: this.event_properties
+                event_properties: this.event_properties ?this.event_properties
                     .filter((eventProperty) => eventProperty.checked)
-                    .map((eventProperty) => eventProperty.id),
+                    .map((eventProperty) => eventProperty.id) : [],
                 isPlanning: this.event ? this.event.isPlanning : this.isPlanning,
             };
         },

@@ -30,6 +30,7 @@ class InventoryPlanningService
     public function getAvailabilityData(User $user): array
     {
         $filter = $user->inventoryArticlePlanFilter;
+
         if (!$filter) {
             $filter = (object)[
                 'start_date' => null,
@@ -38,6 +39,7 @@ class InventoryPlanningService
         }
         $start = $filter->start_date ? Carbon::parse($filter->start_date) : Carbon::now()->startOfMonth();
         $end = $filter->end_date ? Carbon::parse($filter->end_date) : Carbon::now()->endOfMonth();
+
 
         $dates = $this->generateDateRange($start, $end);
 

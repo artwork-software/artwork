@@ -41,15 +41,30 @@
                     @openEditModal="openEditSectorModal"
                 />
 
-                <ProjectSettingsItem
-                    :title="$t('Project Status')"
-                    :description="$t('Define project statuses to indicate the progress of a project. Users can then adjust their notifications based on these statuses.')"
-                    :input-label="$t('Enter Status')"
-                    :items="states"
-                    @add="addState"
-                    @openDeleteModal="openDeleteStateModal"
-                    @openEditModal="openEditStateModal"
-                />
+                <div>
+                    <div class="">
+                        <h2 class="headline2 my-2">{{ $t('Project Status') }}</h2>
+                        <div class="xsLight">
+                            {{ $t('Define project statuses to indicate the progress of a project. Users can then adjust their notifications based on these statuses.') }}
+                        </div>
+                    </div>
+                    <div class="mt-8 flex">
+                        <BaseCardButton text="Add Status" @click="openAddStateModal">
+                        </BaseCardButton>
+
+                    </div>
+                    <div class="flex flex-wrap w-full max-w-xl mt-2">
+                        <div class="flex flex-wrap w-full">
+                            <ProjectStateTagComponent
+                                v-for="item in states"
+                                :key="item.id"
+                                :item="item"
+                                @update="updateState"
+                                @delete="deleteState"
+                            />
+                        </div>
+                    </div>
+                </div>
 
                 <ProjectSettingsItem
                     :title="$t('Contract Types')"
@@ -255,6 +270,14 @@
             @delete="deleteCurrency"
             @closeModal="closeDeleteCurrencyModal"
         />
+
+        <ProjectStateModal
+            :show="showStateModal"
+            :title="stateToEdit ? $t('Edit Status') : $t('Add Status')"
+            :state="stateToEdit"
+            @close="closeStateModal"
+            @submit="submitState"
+        />
     </app-layout>
 </template>
 
@@ -267,18 +290,22 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ProjectSettingsItem from "@/Layouts/Components/ProjectSettingsItem.vue";
 import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDeleteModal.vue";
-import ProjectSettingState from "@/Layouts/Components/ProjectSettingState.vue";
+import ProjectStateModal from "@/Layouts/Components/ProjectStateModal.vue";
+import ProjectStateTagComponent from "@/Layouts/Components/ProjectStateTagComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {useForm} from "@inertiajs/vue3";
+import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
 
 export default {
     mixins: [Permissions],
     components: {
+        BaseCardButton,
         TinyPageHeadline,
         ProjectTabs,
-        ProjectSettingState,
+        ProjectStateModal,
+        ProjectStateTagComponent,
         ProjectSettingsDeleteModal,
         ProjectSettingsItem,
         AppLayout,
@@ -326,6 +353,8 @@ export default {
             currencyToDelete: null,
             deletingState: false,
             stateToDelete: null,
+            showStateModal: false,
+            stateToEdit: null,
             createSettingsForm: useForm({
                 attributes: this.createSettings.attributes,
                 state: this.createSettings.state,
@@ -359,8 +388,57 @@ export default {
         openEditCurrencyModal(currency) {
             this.$inertia.patch(route('currencies.update', currency.id), {name: currency.name, color: currency.color}, { preserveScroll: true});
         },
+        openAddStateModal() {
+            this.stateToEdit = null;
+            this.showStateModal = true;
+        },
+
         openEditStateModal(state) {
-            this.$inertia.patch(route('state.update', {projectStates: state.id}), {name: state.name, color: state.color}, { preserveScroll: true});
+            this.stateToEdit = state;
+            this.showStateModal = true;
+        },
+
+        closeStateModal() {
+            this.showStateModal = false;
+            this.stateToEdit = null;
+        },
+
+        submitState(formData) {
+            if (this.stateToEdit) {
+                // Update existing state
+                this.$inertia.patch(
+                    route('state.update', {projectStates: this.stateToEdit.id}),
+                    {
+                        name: formData.name,
+                        color: formData.color,
+                        is_planning: formData.is_planning
+                    },
+                    { preserveScroll: true }
+                );
+            } else {
+                // Create new state
+                this.$inertia.post(
+                    route('state.store'),
+                    {
+                        name: formData.name,
+                        color: formData.color,
+                        is_planning: formData.is_planning
+                    },
+                    { preserveScroll: true }
+                );
+            }
+        },
+
+        updateState(updatedState) {
+            this.$inertia.patch(
+                route('state.update', {projectStates: updatedState.id}),
+                {
+                    name: updatedState.name,
+                    color: updatedState.color,
+                    is_planning: updatedState.is_planning
+                },
+                { preserveScroll: true }
+            );
         },
 
         addGenre(genreInput, color) {
@@ -487,17 +565,8 @@ export default {
             this.$inertia.delete(`/currencies/${this.currencyToDelete.id}`, { preserveScroll: true});
             this.closeDeleteCurrencyModal();
         },
-        addState(stateInput, stateColor){
-            this.$inertia.post(route('state.store'), {
-                name: stateInput,
-                color: stateColor
-            }, { preserveScroll: true})
-        },
-        openDeleteStateModal(state){
+        deleteState(state){
             this.stateToDelete = state;
-            this.deletingState = true
-        },
-        deleteState(){
             this.$inertia.delete(route('state.delete', this.stateToDelete.id), { preserveScroll: true})
             this.closeDeleteStateModal()
         },

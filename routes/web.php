@@ -114,7 +114,6 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellC
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
-use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
@@ -1282,6 +1281,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/state', [ProjectStatesController::class, 'store'])->name('state.store');
     Route::patch('/project/{project}/state', [ProjectController::class, 'updateProjectState'])
         ->name('update.project.state');
+
+    Route::post('/projects/{project}/request-verification', [EventVerificationController::class, 'requestVerificationForProject'])
+        ->name('projects.request-verification');
     Route::delete('/state/{projectStates}', [ProjectStatesController::class, 'destroy'])->name('state.delete');
     Route::patch('/states/{state}/restore', [ProjectStatesController::class, 'restore'])->name('state.restore');
     Route::patch('/states/{projectStates}/update', [ProjectStatesController::class, 'update'])->name('state.update');
@@ -1791,8 +1793,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('inventory-management.inventory');
 
         Route::group(['prefix' => 'settings'], function (): void {
-            Route::get('/index', [InventorySettingsController::class, 'index'])
-                ->name('inventory-management.settings.index');
 
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');

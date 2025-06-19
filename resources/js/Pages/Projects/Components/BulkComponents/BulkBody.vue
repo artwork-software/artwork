@@ -5,10 +5,14 @@
                 {{ $t('Data is currently loaded. Please wait') }}
             </div>
         </div>
-        <div class="flex items-center justify-end gap-x-4 w-56 print:hidden" v-if="!isInModal">
+        <div class="flex items-center justify-end gap-x-4 print:hidden w-64 ml-4" v-if="!isInModal">
             <MultiEditSwitch :multi-edit="multiEdit"
                              :room-mode="false"
                              @update:multi-edit="UpdateMultiEditEmits"/>
+            <div class="flex items-center gap-x-2">
+                <PlanningSwitch :planning="isPlanningEvent"
+                               @update:planning="isPlanningEvent = $event"/>
+            </div>
             <ToolTipComponent
                 icon="IconCircuitCapacitorPolarized"
                 icon-size="h-7 w-7"
@@ -180,7 +184,8 @@ import BulkHeader from "@/Pages/Projects/Components/BulkComponents/BulkHeader.vu
 import {onMounted, reactive, ref, watch} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {MenuItem, Switch} from "@headlessui/vue";
+import {MenuItem} from "@headlessui/vue";
+import PlanningSwitch from "@/Components/Calendar/Elements/PlanningSwitch.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -240,6 +245,12 @@ const {hasAdminRole} = usePermission(usePage().props),
     }),
     roomCollisions = ref([]),
     timeArray = ref(!props.isInModal),
+    isPlanningEvent = ref((() => {
+        // Try to get the stored value from localStorage
+        const storedValue = localStorage.getItem(`isPlanningEvent_${props.project.id}`);
+        // If there's a stored value, use it; otherwise, use the project's state.is_planning value
+        return storedValue !== null ? storedValue === 'true' : (props.project?.state?.is_planning || false);
+    })()),
     invalidEvents = ref([]),
     emits = defineEmits(['closed']),
     multiEdit = ref(false),
@@ -296,6 +307,7 @@ const {hasAdminRole} = usePermission(usePage().props),
         showMultiEditModal.value = true;
     },
     showIndividualColumnSizeConfigModal = ref(false),
+    lastUsedCopyCount = ref(1),
     getExportModalConfiguration = () => {
         const cfg = {};
 
@@ -325,7 +337,7 @@ const {hasAdminRole} = usePermission(usePage().props),
     },
     addEmptyEvent = () => {
         isLoading.value = true;
-
+        events.forEach(event => { event.isNew = false; });
         let newDate = new Date();
         if (events.length > 0) {
             let lastEvent = events[events.length - 1];
@@ -347,6 +359,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copyCount: 1,
                 copyType: copyTypes.value[0],
                 description: '',
+                isNew: true,
+                is_planning: isPlanningEvent.value,
             });
             isLoading.value = false;
         } else {
@@ -367,7 +381,9 @@ const {hasAdminRole} = usePermission(usePage().props),
                         copy: false,
                         copyCount: 1,
                         copyType: copyTypes.value[0],
-                        description: ''
+                        description: '',
+                        isNew: true,
+                        is_planning: isPlanningEvent.value
                     }
                 }, {
                     preserveState: false,
@@ -390,7 +406,9 @@ const {hasAdminRole} = usePermission(usePage().props),
                         copy: false,
                         copyCount: 1,
                         copyType: copyTypes.value[0],
-                        description: ''
+                        description: '',
+                        isNew: true,
+                        is_planning: isPlanningEvent.value
                     }
                 }, {
                     preserveState: false,
@@ -420,6 +438,9 @@ const {hasAdminRole} = usePermission(usePage().props),
     },
     createCopyByEventWithData = (event) => {
         isLoading.value = true;
+        // Store the selected copyCount for later use
+        console.log(event.copyCount + 'event');
+        lastUsedCopyCount.value = event.copyCount;
         let newDate = new Date(event.day);
         let createdEvents = [];
         for (let i = 0; i < event.copyCount; i++) {
@@ -446,6 +467,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copyCount: 1,
                 copyType: copyTypes.value[0],
                 description: event.description,
+                isNew: true,
+                is_planning: isPlanningEvent.value,
             });
 
             createdEvents.push({
@@ -459,7 +482,9 @@ const {hasAdminRole} = usePermission(usePage().props),
                 copy: false,
                 copyCount: 1,
                 copyType: copyTypes.value[0],
-                description: event.description
+                description: event.description,
+                isNew: true,
+                is_planning: isPlanningEvent.value
             });
         }
 
@@ -484,6 +509,11 @@ const {hasAdminRole} = usePermission(usePage().props),
     submit = () => {
         events.forEach(event => {
             event.nameError = false;
+            // Ensure newly created events (those without an id) have the is_planning property set
+            // This ensures the planning switch only affects newly created events
+            if (!event.id && event.is_planning === undefined) {
+                event.is_planning = isPlanningEvent;
+            }
         });
 
         invalidEvents.value = events.filter(event => event.type.individual_name && !event.name);
@@ -550,16 +580,34 @@ onMounted(() => {
                 copyType: copyTypes.value[0],
                 index: events.length + 1,
                 description: event.description,
-                // if created_at is not older than 5 minutes, the event is new
-                isNew: new Date(event.created_at) > new Date(new Date().getTime() - 5 * 60000)
+                isNew: false, // Standardmäßig false setzen
+                // Set the is_planning property from the event data
+                is_planning: event.is_planning
             });
         });
+
+        // Die letzten {copyCount} Events als "neu" markieren
+        if (events.length > 0) {
+            events.forEach(event => event.isNew = false);
+
+            console.log(lastUsedCopyCount);
+            // Use the lastUsedCopyCount variable instead of reading from the event
+            const copyCount = lastUsedCopyCount.value;
+
+            // Mark the last {copyCount} events as new
+            for (let i = 0; i < copyCount; i++) {
+                const index = events.length - 1 - i;
+                if (index >= 0) {
+                    events[index].isNew = true;
+                }
+            }
+        }
+
         isLoading.value = false;
     } else {
         isLoading.value = false;
     }
 
-    // if usePage().props.auth.user.bulk_sort_id === 3 order events by day and start_time and room.position
     if (usePage().props.auth.user.bulk_sort_id === 3) {
         events.sort((a, b) => {
             if (a.day === b.day) {
@@ -571,7 +619,6 @@ onMounted(() => {
             return a.day.localeCompare(b.day);
         });
     }
-
 
     if (props.isInModal) {
         addEmptyEvent();
@@ -587,4 +634,9 @@ watch(events, (newEvents) => {
         }
     });
 }, {deep: true});
+
+// Watch for changes to isPlanningEvent and store in localStorage
+watch(isPlanningEvent, (newValue) => {
+    localStorage.setItem(`isPlanningEvent_${props.project.id}`, newValue.toString());
+});
 </script>

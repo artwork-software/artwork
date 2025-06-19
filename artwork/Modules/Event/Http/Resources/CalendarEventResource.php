@@ -72,7 +72,7 @@ class CalendarEventResource extends JsonResource
             'comments' => $this->comments,
             'shifts' => $this->shifts,
             'eventTypeColorBackground' => $this->event_type->hex_code . '33',
-            'eventProperties' => $this->getAttribute('eventProperties'),
+            'eventProperties' => $this->eventProperties,
         ];
 
         return $this->handleNoUserCalendarWorkShifts($output);

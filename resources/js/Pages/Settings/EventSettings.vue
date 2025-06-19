@@ -54,22 +54,22 @@
                        <div class="flex items-center">
                            <BaseMenu has-no-offset>
                                <MenuItem v-slot="{ active }">
-                                   <a href="#" @click="openEditEventTypeModal(eventType)"
+                                   <div @click="openEditEventTypeModal(eventType)"
                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                        <PencilAltIcon
                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                            aria-hidden="true"/>
                                        {{$t('Edit event type')}}
-                                   </a>
+                                   </div>
                                </MenuItem>
                                <MenuItem v-if="index !== 0" v-slot="{ active }">
-                                   <a href="#" @click="openDeleteEventTypeModal(eventType)"
+                                   <div @click="openDeleteEventTypeModal(eventType)"
                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                        <TrashIcon
                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                            aria-hidden="true"/>
                                        {{$t('Delete event type')}}
-                                   </a>
+                                   </div>
                                </MenuItem>
                            </BaseMenu>
                        </div>
@@ -83,44 +83,17 @@
             @close="closeAddEventTypeModal"
         />
 
-
-        <BaseModal @closed="closeDeleteEventTypeModal" v-if="deletingEventType" modal-image="/Svgs/Overlays/illu_appointment_edit.svg" :show-image="false">
-                <div class="mx-4">
-                    <div class="headline1 my-2">
-                        {{$t('Delete event type')}}
-                    </div>
-                    <div class="errorText">
-                        {{$t('Are you sure you want to delete the event type {eventType} from the system? All events that are currently assigned to this type will be reassigned to the first event type.', {eventType: eventTypeToDelete.name})}}
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-white"
-                                @click="deleteEventType">
-                            {{$t('Delete')}}
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteEventTypeModal"
-                                  class="xsLight cursor-pointer">{{$t('No, actually not')}}</span>
-                        </div>
-                    </div>
-                </div>
-        </BaseModal>
-        <BaseModal @closed="closeDeletingUndefined" v-if="deletingUndefined" modal-image="/Svgs/Overlays/illu_appointment_edit.svg" :show-image="false">
-                <div class="mx-4">
-                    <div class="headline1">
-                        {{$t('Delete event type')}}
-                    </div>
-                    <div class="errorText">
-                        {{$t('The event type {eventType} cannot be deleted because it is the standard event type.', {eventType: eventTypeToDelete.name})}}
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <div class="flex my-auto">
-                            <span @click="closeDeletingUndefined"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">{{$t('Ok')}}</span>
-                        </div>
-                    </div>
-                </div>
-        </BaseModal>
+        <DeleteEventTypeConfirmationModal
+            v-if="deletingEventType"
+            :event-type="eventTypeToDelete"
+            @closed="closeDeleteEventTypeModal"
+            @delete="deleteEventType"
+        />
+        <DeleteStandardEventTypeModal
+            v-if="deletingUndefined"
+            :event-type="eventTypeToDelete"
+            @closed="closeDeletingUndefined"
+        />
     </app-layout>
 </template>
 
@@ -143,6 +116,8 @@ import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSet
 import {ColorPicker} from "vue3-colorpicker";
 import AddEditEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/AddEditEventTypModal.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import DeleteEventTypeConfirmationModal from "@/Pages/Settings/EventType/Components/Modals/DeleteEventTypeConfirmationModal.vue";
+import DeleteStandardEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/DeleteStandardEventTypeModal.vue";
 export default {
     mixins: [Permissions],
     computed: {
@@ -207,7 +182,9 @@ export default {
         TrashIcon,
         PencilAltIcon,
         XIcon,
-        AddEditEventTypeModal
+        AddEditEventTypeModal,
+        DeleteEventTypeConfirmationModal,
+        DeleteStandardEventTypeModal
     },
     props: ['event_types'],
     data() {
@@ -294,7 +271,6 @@ export default {
             this.$inertia.delete(`../event_types/${this.eventTypeToDelete.id}`, {
                 onSuccess: () => {
                     this.closeDeleteEventTypeModal();
-                    window.location.reload();
                 }
             });
         }

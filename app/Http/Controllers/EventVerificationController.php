@@ -170,4 +170,25 @@ class EventVerificationController extends Controller
             $this->store($event);
         }
     }
+
+    /**
+     * Request verification for all planning events in a project
+     */
+    public function requestVerificationForProject(Request $request, $project): void
+    {
+        // Get the authenticated user
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        // Find all planning events for the project
+        $planningEvents = Event::where('project_id', $project)
+            ->where('is_planning', true)
+            ->get();
+
+        // Request verification for each planning event
+        foreach ($planningEvents as $event) {
+            $this->eventVerificationService->requestVerification($event, $user);
+            broadcast(new EventCreated($event->fresh(), $event->room_id));
+        }
+    }
 }

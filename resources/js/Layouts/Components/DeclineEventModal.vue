@@ -21,27 +21,27 @@
                                          -
                                         </span>
                                     {{ requestToDecline?.eventName }}
-                                    <IconAdjustmentsAlt stroke-width="1.5" v-if="requestToDecline.occupancy_option"
+                                    <IconAdjustmentsAlt stroke-width="1.5" v-if="requestToDecline?.occupancy_option"
                                                         class="h-5 w-5 ml-2 my-auto"/>
-                                    <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience"
+                                    <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline?.audience"
                                          class="h-5 w-5 ml-2 my-auto"/>
-                                    <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToDecline.is_loud"
+                                    <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToDecline?.is_loud"
                                          class="h-5 w-5 ml-2 my-auto"/>
                                 </div>
                             </div>
                             <div class="flex items-start text-xs">
                                 {{ $t('Created by') }}
-                                <UserPopoverTooltip class="ml-2" :user="requestToDecline.created_by"
-                                                    :id="requestToDecline.created_by.id" height="4" width="4"/>
+                                <UserPopoverTooltip class="ml-2" :user="requestToDecline?.created_by"
+                                                    :id="requestToDecline?.created_by?.id ?? 'deletedUserTooltip'" height="4" width="4"/>
                             </div>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <div v-if="requestToDecline.project">
+                        <div v-if="requestToDecline?.project">
                             <div class="xxsLight flex items-center">
                                 {{ $t('assigned to') }}
                                 <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
-                                    {{ requestToDecline.project?.name }}
+                                    {{ requestToDecline?.project?.name }}
                                 </div>
                             </div>
                             <!--
@@ -59,11 +59,11 @@
                         </div>
                     </div>
                     <div class="mb-3 xsDark">
-                        {{ requestToDecline.roomName }} - {{ dayjs(requestToDecline.start).format('DD.MM.YYYY HH:mm') }}
-                        - {{ dayjs(requestToDecline.end).format('DD.MM.YYYY HH:mm') }}
+                        {{ requestToDecline?.roomName }} - {{ dayjs(requestToDecline?.start).format('DD.MM.YYYY HH:mm') }}
+                        - {{ dayjs(requestToDecline?.end).format('DD.MM.YYYY HH:mm') }}
                     </div>
                     <div class="mb-3 xsDark">
-                        {{ $t('Event info') }} {{ requestToDecline.description }}
+                        {{ $t('Event info') }} {{ requestToDecline?.description }}
                     </div>
 
                     <div class="pt-2">
@@ -132,7 +132,7 @@ export default {
     data() {
         return {
             declineEvent: useForm({
-                eventId: this.requestToDecline.id,
+                eventId: this.requestToDecline?.id,
                 comment: ''
             })
         }
@@ -142,7 +142,7 @@ export default {
             this.$emit('closed', bool)
         },
         declineRequest() {
-            router.put(route('events.decline', this.requestToDecline.id), {
+            router.put(route('events.decline', this.requestToDecline?.id), {
                 comment: this.declineEvent.comment
             }, {
                 preserveScroll: true,
@@ -153,12 +153,13 @@ export default {
                 },
                 onFinish: () => {
                     this.closeDeclineRequestModal()
+                    this.$emit('declined')
                 }
             });
 
 
             /*axios.put(
-                route('events.decline', this.requestToDecline.id),
+                route('events.decline', this.requestToDecline?.id),
                 {
                     comment: this.declineEvent.comment
                 }
@@ -166,9 +167,9 @@ export default {
                     this.closeDeclineRequestModal();
                     this.$emit(
                         'declined',
-                        this.requestToDecline.roomId,
-                        this.requestToDecline.start,
-                        this.requestToDecline.end
+                        this.requestToDecline?.roomId,
+                        this.requestToDecline?.start,
+                        this.requestToDecline?.end
                     );
                 }
             );*/

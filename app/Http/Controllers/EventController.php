@@ -619,7 +619,8 @@ class EventController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function showDashboardPage(
         GlobalNotificationService $globalNotificationService,
-        CarbonService $carbonService
+        CarbonService $carbonService,
+        EventPropertyService $eventPropertyService
     ): Response {
         $event = null;
         $tasks = Task::query()
@@ -736,7 +737,8 @@ class EventController extends Controller
             'first_project_budget_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
             'first_project_calendar_tab_id' => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
+            'event_properties' => $eventPropertyService->getAll()
         ]);
     }
 
@@ -2118,8 +2120,8 @@ class EventController extends Controller
             $notificationDescription = [
                 1 => [
                     'type' => 'link',
-                    'title' => $room->name,
-                    'href' => route('rooms.show', $room->id)
+                    'title' => $room ? $room->name : 'Without Room',
+                    'href' => $room ? route('rooms.show', $room->id) : '#'
                 ],
                 2 => [
                     'type' => 'string',
@@ -2167,7 +2169,10 @@ class EventController extends Controller
                 ->setTranslationKey('Room declined')
         );
 
-        $room = Room::find($roomId);
+        // Make sure $room is not null before using it
+        if (!$room) {
+            $room = Room::find($roomId);
+        }
         $project = Project::find($event->project_id);
 
         $this->notificationService->setIcon('blue');
@@ -2192,8 +2197,8 @@ class EventController extends Controller
             $notificationDescription = [
                 1 => [
                     'type' => 'link',
-                    'title' => $room->name,
-                    'href' => route('rooms.show', $room->id)
+                    'title' => $room ? $room->name : 'Without Room',
+                    'href' => $room ? route('rooms.show', $room->id) : '#'
                 ],
                 2 => [
                     'type' => 'string',
@@ -2241,8 +2246,8 @@ class EventController extends Controller
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => $room->name,
-                'href' => route('rooms.show', $room->id)
+                'title' => $room ? $room->name : 'Without Room',
+                'href' => $room ? route('rooms.show', $room->id) : '#'
             ],
             2 => [
                 'type' => 'string',
@@ -3104,6 +3109,9 @@ class EventController extends Controller
         Project $project
     ): RedirectResponse {
         $data =  $request->input('event', []);
+
+
+
         $event = $this->eventService->createBulkEvent(
             $data,
             $project,

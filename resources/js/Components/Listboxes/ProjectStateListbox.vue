@@ -4,15 +4,21 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui
 import {ChevronDownIcon} from "@heroicons/vue/outline";
 import Button from "@/Jetstream/Button.vue";
 import {CheckIcon} from "@heroicons/vue/solid";
-import {ref} from "vue";
+import {ref, watch, onMounted} from "vue";
+import {useTranslation} from '@/Composeables/Translation.js';
 
+const t = useTranslation();
 const props = defineProps({
     projectStates: {
         type: Object,
         required: true
     },
-    selectedProjectState: {
+    selectedProjectStateId: {
         type: Number,
+        required: false
+    },
+    selectedProjectState: {
+        type: Object,
         required: false
     }
 })
@@ -26,7 +32,31 @@ const textColorWithDarken = (color, percent = 75) => {
     return `rgb(${parseInt(color.slice(-6, -4), 16) - percent}, ${parseInt(color.slice(-4, -2), 16) - percent}, ${parseInt(color.slice(-2), 16) - percent})`;
 }
 
-const currentState = ref(props.selectedProjectState ? props.selectedProjectState : null)
+// Initialize currentState based on available props
+const currentState = ref(null)
+
+// Set currentState when component mounts
+onMounted(() => {
+    if (props.selectedProjectState) {
+        currentState.value = props.selectedProjectState.id;
+    } else if (props.selectedProjectStateId !== undefined) {
+        currentState.value = props.selectedProjectStateId;
+    }
+})
+
+// Watch for changes in the selectedProjectState prop and update currentState accordingly
+watch(() => props.selectedProjectState, (newValue) => {
+    if (newValue) {
+        currentState.value = newValue.id;
+    }
+}, { deep: true })
+
+// Watch for changes in the selectedProjectStateId prop and update currentState accordingly
+watch(() => props.selectedProjectStateId, (newValue) => {
+    if (newValue !== undefined && !props.selectedProjectState) {
+        currentState.value = newValue;
+    }
+})
 
 const emit = defineEmits(['update:selectedProjectState'])
 
@@ -34,11 +64,12 @@ const emit = defineEmits(['update:selectedProjectState'])
 </script>
 
 <template>
+    {{selectedProjectStateId}}
     <Listbox as="div" class="w-full relative" v-model="currentState" :on-update:model-value="$emit('update:selectedProjectState', currentState)">
         <ListboxButton class="w-full text-left">
             <button class="menu-button">
-                <span v-if="!selectedProjectState">
-                    {{ $t('Select project status') }}
+                <span v-if="!currentState">
+                    {{ t('Select project status') }}
                 </span>
                 <span v-else class="items-center inline-flex border px-3 py-0.5 rounded-full"
                       :style="{backgroundColor: backgroundColorWithOpacity(projectStates?.find(state => state.id === currentState)?.color),

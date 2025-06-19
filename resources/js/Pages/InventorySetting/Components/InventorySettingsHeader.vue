@@ -37,7 +37,6 @@ const props = defineProps({})
 
 
 const tabs = [
-    { name: 'Event Types', href: route('inventory-management.settings.index'), current: route().current('inventory-management.settings.index') },
     { name: 'Categories & Sub-Categories', href: route('inventory-management.settings.category'), current: route().current('inventory-management.settings.category') },
     { name: 'Properties', href: route('inventory-management.settings.properties'), current: route().current('inventory-management.settings.properties') },
 ]

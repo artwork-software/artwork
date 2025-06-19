@@ -406,7 +406,7 @@
 
                                         <div v-if="property.type === 'selection'" class="">
                                             <div class="mt-2 grid grid-cols-1">
-                                                <select id="location" name="location" v-model="property.value" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                <select id="location" name="location" v-model="property.value" :required="property.is_required" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
                                                     <option v-if="property.is_required" value="" disabled selected>{{ $t('Please select') }}*</option>
                                                     <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
                                                 </select>
@@ -535,7 +535,8 @@
                                     <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
                                         <div class="">
                                             <div class="mt-2 grid grid-cols-1">
-                                                <select id="location" name="location" v-model="detailedArticle.status" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                <select id="location" name="location" v-model="detailedArticle.status" required class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                    <option value="" disabled selected>{{ $t('Please select a status') }}*</option>
                                                     <option v-for="status in statuses" :value="status" :key="status">{{ status.name }}</option>
                                                 </select>
                                             </div>
@@ -656,7 +657,7 @@
 
                                         <div v-if="property.type === 'selection'" class="">
                                             <div class="mt-2 grid grid-cols-1">
-                                                <select id="location" name="location" v-model="property.value" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                <select id="location" name="location" v-model="property.value" :required="property.is_required" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
                                                     <option v-if="property.is_required" value="" disabled selected>{{ $t('Please select') }}*</option>
                                                     <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
                                                 </select>
@@ -798,6 +799,10 @@ const filteredManufacturers = computed(() =>
         }),
 )
 const getValue = (prop) => {
+    // For selection type properties, empty string should be treated as no value
+    if (prop.type === 'selection' && (prop.value === '' || prop.value === null || prop.value === undefined)) {
+        return '';
+    }
     return prop.value ?? prop.pivot?.value ?? '';
 }
 
@@ -883,6 +888,10 @@ const articleForm = useForm({
 const checkIfEveryPropertyWhereAreRequiredIsFilled = computed(() => {
     if (articleForm.is_detailed_quantity) {
         return articleForm.detailed_article_quantities?.every(detailedArticle => {
+            // Check if status is set
+            if (!detailedArticle.status) {
+                return false;
+            }
             return detailedArticle.properties?.every(property => {
                 return !property.is_required || getValue(property);
             });
@@ -910,6 +919,12 @@ const submit = () => {
     articleForm.main_image_index = currentMainImage.value;
     articleForm.inventory_sub_category_id = selectedSubCategory?.value ? selectedSubCategory.value.id : null;
 
+    // If is_detailed_quantity is false, clear the stored detailed quantities
+    // This ensures they are permanently deleted when saving with is_detailed_quantity = false
+    if (!articleForm.is_detailed_quantity) {
+        storedDetailedArticleQuantities.value = [];
+    }
+
     if (props.article) {
         articleForm.transform((data) => {
             data._method = 'PATCH';
@@ -931,6 +946,7 @@ const submit = () => {
                 selectedCategory.value = null;
                 selectedSubCategory.value = null;
                 articleImageInput.value = 0;
+                storedDetailedArticleQuantities.value = []; // Clear stored quantities on successful creation
                 emits('close');
             }
         });
@@ -954,7 +970,7 @@ const addNewDetailedArticle = () => {
         })) ?? [],
         status: statuses.filter(status => {
             return status.default
-        })[0] ?? null
+        })[0] ?? (statuses.length > 0 ? statuses[2] : null)
     });
 }
 
@@ -995,6 +1011,7 @@ const updateSelectedSubCategory = (newSubCategory) => {
 };
 
 watch(selectedCategory, (value) => {
+
     const updateProps = (newProps) => {
         if (articleForm.is_detailed_quantity && articleForm.detailed_article_quantities.length) {
             articleForm.detailed_article_quantities.forEach((detailedArticle) => {
@@ -1049,7 +1066,15 @@ watch(selectedCategory, (value) => {
         const existing = props.find(p => p.id === prop.id);
         if (existing) {
             existing.categoryProperty = true;
+            // Update select_values for selection type properties
+            if (prop.type === 'selection') {
+                existing.select_values = prop.select_values;
+            }
         } else {
+            if(prop.type === 'selection' && !prop.select_values) {
+                const wantedProperty = properties.find(p => p.id === prop.id);
+                prop.select_values = wantedProperty?.select_values || [];
+            }
             props.push({
                 id: prop.id,
                 name: prop.name,
@@ -1062,7 +1087,6 @@ watch(selectedCategory, (value) => {
             });
         }
     });
-
     updateProps(props);
 });
 
@@ -1130,6 +1154,10 @@ watch(selectedSubCategory, (value) => {
         const existing = props.find(p => p.id === prop.id);
         if (existing) {
             existing.categoryProperty = true;
+            // Update select_values for selection type properties
+            if (prop.type === 'selection') {
+                existing.select_values = prop.select_values;
+            }
         } else {
             props.push({
                 id: prop.id,
@@ -1147,30 +1175,42 @@ watch(selectedSubCategory, (value) => {
     updateProps(props);
 });
 
+// Store detailed article quantities when toggling
+const storedDetailedArticleQuantities = ref([]);
+
 watch(() => articleForm.is_detailed_quantity, (value) => {
     if (value) {
-        articleForm.detailed_article_quantities = [{
-            name: articleForm.name,
-            description: articleForm.description,
-            quantity: '',
-            properties: articleForm.properties.map(prop => {
-                return ({
-                    id: prop.id,
-                    name: prop.name,
-                    tooltip_text: prop.tooltip_text,
-                    type: prop.type,
-                    value: prop.value || prop.pivot?.value || '',
-                    is_required: prop.is_required,
-                    categoryProperty: getIsDeletable(prop.id),
-                    select_values: prop.select_values
-                })
-            }),
-            status: statuses.filter(status => {
-                return status.default
-            })[0] ?? null
-        }];
+        // If we have stored quantities, use them
+        if (storedDetailedArticleQuantities.value.length > 0) {
+            articleForm.detailed_article_quantities = storedDetailedArticleQuantities.value;
+        } else {
+            // Otherwise create a new default entry
+            articleForm.detailed_article_quantities = [{
+                name: articleForm.name,
+                description: articleForm.description,
+                quantity: '',
+                properties: articleForm.properties.map(prop => {
+                    return ({
+                        id: prop.id,
+                        name: prop.name,
+                        tooltip_text: prop.tooltip_text,
+                        type: prop.type,
+                        value: prop.value || prop.pivot?.value || '',
+                        is_required: prop.is_required,
+                        categoryProperty: getIsDeletable(prop.id),
+                        select_values: prop.select_values
+                    })
+                }),
+                status: statuses.filter(status => {
+                    return status.default
+                })[0] ?? (statuses.length > 0 ? statuses[2] : null)
+            }];
+        }
         articleForm.properties = [];
     } else {
+        // Store the current detailed quantities before switching
+        storedDetailedArticleQuantities.value = [...articleForm.detailed_article_quantities];
+
         articleForm.properties = articleForm.detailed_article_quantities[0].properties.map(prop => {
             return ({
                 id: prop.id,
@@ -1251,7 +1291,7 @@ onMounted(() => {
                     properties: [...categoryProps],
                     status: statuses.filter(status => {
                         return status.default
-                    })[0] ?? null
+                    })[0] ?? (statuses.length > 0 ? statuses[2] : null)
                 }];
             } else {
                 articleForm.detailed_article_quantities = props.article.detailed_article_quantities.map(da => ({
@@ -1270,7 +1310,7 @@ onMounted(() => {
                     })),
                     status: da.status ?? statuses.filter(status => {
                         return status.default
-                    })[0]
+                    })[0] ?? (statuses.length > 0 ? statuses[2] : null)
                 }));
             }
             articleForm.properties = [];

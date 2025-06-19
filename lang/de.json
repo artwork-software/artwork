@@ -2771,5 +2771,6 @@
     "Special items done": "Sonderartikel abgeschlossen",
     "Inventory System": "Inventarsystem",
     "Event Planning": "Terminplanung",
-    "Room name*": "Raumname*"
+    "Room name*": "Raumname*",
+    "You do not have the permission to plan events without a request": "Du hast nicht die Berechtigung 'Termine ohne Anfrage planen'"
 }

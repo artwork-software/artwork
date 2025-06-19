@@ -5,20 +5,28 @@
                 {{ $t('Data is currently loaded. Please wait') }}
             </div>
         </div>
+        <div v-if="!hasCreateEventsPermission" class="mb-4 w-full">
+            <AlertComponent :text="$t('You do not have the permission to plan events without a request')" type="warning"
+                           show-icon icon-size="h-5 w-5"
+                           classes="!items-center"/>
+        </div>
         <div class="flex items-center justify-end gap-x-4 print:hidden w-64 ml-4" v-if="!isInModal">
             <MultiEditSwitch :multi-edit="multiEdit"
                              :room-mode="false"
-                             @update:multi-edit="UpdateMultiEditEmits"/>
+                             @update:multi-edit="UpdateMultiEditEmits"
+                             :disabled="!hasCreateEventsPermission"/>
             <div class="flex items-center gap-x-2">
                 <PlanningSwitch :planning="isPlanningEvent"
-                               @update:planning="isPlanningEvent = $event"/>
+                               @update:planning="isPlanningEvent = $event"
+                               :disabled="!hasCreateEventsPermission"/>
             </div>
             <ToolTipComponent
                 icon="IconCircuitCapacitorPolarized"
                 icon-size="h-7 w-7"
                 :tooltip-text="$t('Customize column size')"
                 direction="bottom"
-                @click="showIndividualColumnSizeConfigModal = true"
+                @click="hasCreateEventsPermission ? showIndividualColumnSizeConfigModal = true : null"
+                :class="!hasCreateEventsPermission ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
             />
             <ToolTipComponent icon="IconFileExport"
                               icon-size="h-7 w-7"
@@ -30,31 +38,31 @@
                               :tooltip-text="$t('Show project period in calendar')"
                               direction="bottom"
                               @click="useProjectTimePeriodAndRedirect()"/>
-            <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
+            <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72" :disabled="!hasCreateEventsPermission">
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateUserSortId(1)"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                    <div @click="hasCreateEventsPermission ? updateUserSortId(1) : null"
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Sort by room') }}
                         <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 1"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateUserSortId(2)"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                    <div @click="hasCreateEventsPermission ? updateUserSortId(2) : null"
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Sort by appointment type') }}
                         <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 2"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateUserSortId(3)"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                    <div @click="hasCreateEventsPermission ? updateUserSortId(3) : null"
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Sort by day') }}
                         <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 3"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateUserSortId(0)"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                    <div @click="hasCreateEventsPermission ? updateUserSortId(0) : null"
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Reset sorting') }}
                     </div>
                 </MenuItem>
@@ -68,7 +76,7 @@
                 <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
                     <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.auth.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
                         <BulkSingleEvent
-                            :can-edit-component="canEditComponent"
+                            :can-edit-component="canEditComponent && hasCreateEventsPermission"
                             :rooms="rooms"
                             :event_types="eventTypes"
                             :time-array="timeArray"
@@ -81,6 +89,7 @@
                             @create-copy-by-event-with-data="createCopyByEventWithData"
                             :event-statuses="eventStatuses"
                             :multi-edit="multiEdit"
+                            :has-permission="hasCreateEventsPermission"
                         />
                     </div>
                 </div>
@@ -92,7 +101,7 @@
             </div>
         </div>
         <div class="flex items-center justify-between pointer-events-none print:hidden" v-if="!multiEdit">
-            <IconCirclePlus v-if="canEditComponent"
+            <IconCirclePlus v-if="canEditComponent && hasCreateEventsPermission"
                             @click="addEmptyEvent"
                             class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out pointer-events-auto"
                             stroke-width="2"/>
@@ -103,8 +112,8 @@
                 </div>
                 <BaseButton
                     v-if="isInModal"
-                    @click="submit"
-                    class="bg-artwork-buttons-create text-white h-12 pointer-events-auto"
+                    @click="hasCreateEventsPermission ? submit : null"
+                    :class="['h-12 pointer-events-auto', hasCreateEventsPermission ? 'bg-artwork-buttons-create text-white' : 'bg-gray-400 text-white cursor-not-allowed']"
                     :text="$t('Create')">
                     <IconCirclePlus class="w-5 h-5 text-white mr-2"/>
                 </BaseButton>
@@ -114,15 +123,15 @@
             <div class="flex items-center justify-center gap-x-4 w-full h-full">
                 <div>
                     <FormButton
-                        @click="showConfirmDeleteModal = true"
-                        :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0"
+                        @click="hasCreateEventsPermission ? showConfirmDeleteModal = true : null"
+                        :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
                         class="bg-red-500 hover:bg-red-600 text-white h-12"
                         :text="$t('Delete')" />
                 </div>
                 <div>
                     <FormButton
-                        @click="openMultiEditModal"
-                        :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0"
+                        @click="hasCreateEventsPermission ? openMultiEditModal : null"
+                        :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
                         class="bg-artwork-buttons-create text-white h-12"
                         :text="$t('Edit')" />
                 </div>
@@ -201,7 +210,8 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import IndividualColumnSizeConfigModal
     from "@/Pages/Projects/Components/BulkComponents/IndividualColumnSizeConfigModal.vue";
 const exportTabEnums = useExportTabEnums();
-const {hasAdminRole} = usePermission(usePage().props),
+const {hasAdminRole, can} = usePermission(usePage().props),
+    hasCreateEventsPermission = ref(can('create events without request')),
     $t = useTranslation(),
     props = defineProps({
         project: {

@@ -48,7 +48,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div class="">
                 <div class="flex">
-                    <span class="flex -mr-3" v-for="(user, index) in filteredUsers">
+                    <span class="flex -mr-3" v-for="(user, index) in task.users">
                         <UserPopoverTooltip :id="task.id + 'user' + user.id" :user="user" height="8" width="8" :classes="index > 0 ? '!ring-1 !ring-white' : ''"/>
                     </span>
                 </div>
@@ -170,10 +170,6 @@ const onDragEnd = () => {
     // Dispatch ein globales Event zum Beenden
     dispatchEventEnd()
 };
-
-const filteredUsers = computed(() => {
-    return props.task.users.filter(user => user.id !== usePage().props.auth.user.id);
-})
 
 const deleteTask = () => {
     router.delete(route('tasks.destroy', {task: props.task.id}), {

@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\UserCalendarFilter\Models;
 
-use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\User\Models\UserCalendarFilter;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 

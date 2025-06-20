@@ -1,6 +1,6 @@
 <template>
     <InventorySettingsHeader>
-        <div class="mb-10">
+        <div class="mb-10 card white p-5">
             <div class="sm:flex sm:items-center">
                 <div class="sm:flex-auto">
                     <TinyPageHeadline

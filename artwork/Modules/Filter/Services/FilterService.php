@@ -3,13 +3,13 @@
 namespace Artwork\Modules\Filter\Services;
 
 use Artwork\Modules\Area\Repositories\AreaRepository;
-use Artwork\Modules\EventProperty\Repositories\EventPropertyRepository;
+use Artwork\Modules\Event\Repositories\EventPropertyRepository;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Repositories\FilterRepository;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
-use Artwork\Modules\RoomAttribute\Repositories\RoomAttributeRepository;
-use Artwork\Modules\RoomCategory\Repositories\RoomCategoryRepository;
+use Artwork\Modules\Room\Repositories\RoomAttributeRepository;
+use Artwork\Modules\Room\Repositories\RoomCategoryRepository;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;

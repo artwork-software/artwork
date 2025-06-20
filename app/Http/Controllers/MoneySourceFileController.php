@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\MoneySource\Models\MoneySource;
-use Artwork\Modules\MoneySourceFile\Models\MoneySourceFile;
+use Artwork\Modules\MoneySource\Models\MoneySourceFile;
 use Artwork\Modules\Project\Models\Comment;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;

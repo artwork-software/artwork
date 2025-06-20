@@ -2,7 +2,7 @@
     <AppLayout title="Projektübersicht">
         <div class="mx-auto container pt-10">
             <div class="">
-                <div class="flex flex-1 flex-wrap">
+                <div class="">
                     <div class="w-full flex items-center justify-end">
                         <div class="w-full flex items-center">
                             <div class="w-full flex items-center">
@@ -105,7 +105,7 @@
                                         </div>
                                     </div>
                                 </BaseFilter>
-                                <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
+                                <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72" >
                                     <div class="flex items-center justify-end py-1">
                                     <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="resetSort()">
                                         {{ $t('Reset') }}
@@ -124,26 +124,23 @@
                                                   :tooltip-text="$t('Export project list')"
                                                   direction="bottom"
                                                   @click="openExportModal"/>
-                                <div v-if="$page.props.show_hints" class="flex mt-1 absolute w-40 right-20">
-                                    <span class="hind ml-1 my-auto">{{ $t('Create new projects') }}</span>
-                                    <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
-                                </div>
-                                <PlusButton v-if="can('create and edit own project') || role('artwork admin')" :button-text="$t('New project')"
-                                            @click="openCreateProjectModal"/>
+
                             </div>
                         </div>
-
-
                     </div>
-                    <div class="mt-4 gap-x-1 flex items-center pb-4" v-if="lastProject?.id">
-                        <div class="xsLight">
-                            {{ $t('Last visited project') }}:
+                    <div class="flex items-center justify-between my-4">
+                        <div class="mt-4 gap-x-1 flex items-center pb-4" v-if="lastProject?.id">
+                            <div class="xsLight">
+                                {{ $t('Last visited project') }}:
+                            </div>
+                            <a class="text-artwork-buttons-create text-sm font-bold flex items-center gap-x-1" :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })">
+                                <component is="IconGeometry" class="size-4 text-artwork-buttons-create" />
+                                <span>{{ lastProject.name }}</span>
+                            </a>
                         </div>
-                        <a class="text-artwork-buttons-create text-sm font-bold flex items-center gap-x-1" :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })">
-                            <component is="IconGeometry" class="size-4 text-artwork-buttons-create" />
-                            <span>{{ lastProject.name }}</span>
-                        </a>
+                        <GlassyIconButton text="New project" icon="IconPlus" v-if="can('create and edit own project') || role('artwork admin')" @click="openCreateProjectModal" />
                     </div>
+
                 </div>
             </div>
 
@@ -296,6 +293,7 @@ import BaseCard from "@/Artwork/Cards/BaseCard.vue";
 import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
 import CardHeadline from "@/Artwork/Cards/CardHeadline.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 
 const {can, hasAdminRole, role, canSeeComponent, canEditComponent} = usePermission(usePage().props);

@@ -11,7 +11,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\RoomAttribute\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;

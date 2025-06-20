@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Checklist\Models\Checklist;
-use Artwork\Modules\ChecklistTemplate\Http\Resources\ChecklistTemplateIndexResource;
-use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
-use Artwork\Modules\ChecklistTemplate\Services\ChecklistTemplateService;
+use Artwork\Modules\Checklist\Http\Resources\ChecklistTemplateIndexResource;
+use Artwork\Modules\Checklist\Models\ChecklistTemplate;
+use Artwork\Modules\Checklist\Services\ChecklistTemplateService;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Artwork\Modules\TaskTemplate\Services\TaskTemplateService;
 use Illuminate\Auth\AuthManager;

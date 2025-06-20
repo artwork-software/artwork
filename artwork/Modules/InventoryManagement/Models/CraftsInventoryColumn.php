@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\InventoryManagement\Models;
 
-use Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum;
+use Artwork\Modules\Inventory\Enums\CraftsInventoryColumnTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;

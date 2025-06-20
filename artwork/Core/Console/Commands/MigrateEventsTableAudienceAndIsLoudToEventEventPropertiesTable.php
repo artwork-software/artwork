@@ -4,7 +4,7 @@ namespace Artwork\Core\Console\Commands;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
-use Artwork\Modules\EventProperty\Services\EventPropertyService;
+use Artwork\Modules\Event\Services\EventPropertyService;
 use Illuminate\Console\Command;
 use Throwable;
 

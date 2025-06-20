@@ -19,8 +19,8 @@ use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
 use Artwork\Modules\MoneySource\Models\MoneySource;
-use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
-use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
+use Artwork\Modules\MoneySource\Models\MoneySourceTask;
+use Artwork\Modules\MoneySource\Models\MoneySourceUserPivot;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
@@ -31,20 +31,12 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
-use Artwork\Modules\ShiftPlanComment\Models\Traits\HasShiftPlanComments;
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
-use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
+use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
+use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\User\Services\WorkingHourService;
-use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
-use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
-use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
-use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
-use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
-use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
-use Artwork\Modules\UserUserManagementSetting\Models\UserUserManagementSetting;
-use Artwork\Modules\UserWorkerShiftPlanFilter\Models\UserWorkerShiftPlanFilter;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
@@ -66,7 +58,6 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Passport\HasApiTokens;
 use Laravel\Scout\Searchable;
 use LaravelAndVueJS\Traits\LaravelPermissionToVueJS;
@@ -127,6 +118,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
  * @property Collection<UserCalendarAbo> $calendarAbo
  * @property Collection<UserShiftCalendarAbo> $shiftCalendarAbo
+ * @property Collection<UserWorkTime> $workTime
  * @property Collection<string> $allPermissions
  * @property array $notification_enums_last_sent_dates
  * @property int $bulk_sort_id
@@ -644,5 +636,10 @@ class User extends Model implements
     public function eventVerifications(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(EventVerification::class, 'verifier');
+    }
+
+    public function workTime(): HasOne
+    {
+        return $this->hasOne(UserWorkTime::class, 'user_id', 'id');
     }
 }

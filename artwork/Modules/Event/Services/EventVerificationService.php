@@ -8,7 +8,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Support\Carbon;

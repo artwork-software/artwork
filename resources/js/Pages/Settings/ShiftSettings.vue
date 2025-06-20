@@ -14,15 +14,18 @@
                     {{}}
                 </p>
             </div>
-            <div class="flex items-center justify-between gap-x-3">
-                <TinyPageHeadline
-                    :title="$t('Crafts')"
-                    :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
-                />
-               <div class="w-72">
-                   <AddButtonSmall :text="$t('New Craft')" class="mt-5" @click="openAddCraftsModal = true" />
-               </div>
-            </div>
+            <div class="card white p-5">
+                <div class="flex items-center justify-between gap-x-3">
+                    <div class="w-1/2">
+                        <TinyPageHeadline
+                            :title="$t('Crafts')"
+                            :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
+                        />
+                    </div>
+                    <div class="flex items-center justify-end">
+                        <GlassyIconButton text="New Craft" icon="IconPlus" @click="openAddCraftsModal = true" />
+                    </div>
+                </div>
                 <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="crafts" @start="dragging=true" @end="dragging=false" @change="reorderCrafts(crafts)">
                     <template #item="{element}" :key="element.id">
                         <div :key="element" class="flex justify-between gap-x-6 py-5" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
@@ -92,7 +95,8 @@
 
                     </template>
                 </draggable>
-            <div class="mt-10">
+            </div>
+            <div class="mt-10 card white p-5">
                 <TinyPageHeadline
                     :title="$t('Shift-relevant Event Types')"
                     :description="$t('Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the \'shifts\' tab of the project. You can also define additional events as shift-relevant for each project.')"
@@ -126,13 +130,13 @@
                     <TagComponent v-for="type in relevantEventTypes" :method="removeRelevantEventType" :displayed-text="type.name" :property="type" />
                 </div>
             </div>
-            <div>
+            <div class="card white p-5 mt-10">
                 <div class="flex items-center justify-between">
-                    <TinyPageHeadline class="mt-10"
+                    <TinyPageHeadline class=""
                         :title="$t('Qualifications')"
                         :description="$t('Create or edit qualifications')"
                     />
-                    <AddButtonSmall text="Neue Qualifikation" class="mt-5" @click="this.openShiftQualificationModal('create')" />
+                    <GlassyIconButton text="Neue Qualifikation" icon="IconPlus" @click="this.openShiftQualificationModal('create')" />
                 </div>
                 <div class="mt-5">
                     <div class="mb-5 xsLight" v-if="shiftQualifications.length === 0">
@@ -165,14 +169,14 @@
                     </ul>
                 </div>
             </div>
-            <div>
+            <div class="card white p-5 mt-10">
                 <div class="flex items-center justify-between">
                     <TinyPageHeadline
-                        class="mt-14"
+                        class=""
                         :title="$t('Time presets for shifts')"
                         :description="$t('Create time presets for layers to be able to assign them quickly and easily later.')"
                     />
-                    <AddButtonSmall :text="$t('New time preset')" class="mt-5" @click="showAddShiftPresetModal = true" />
+                    <GlassyIconButton text="New time preset" icon="IconPlus" @click="showAddShiftPresetModal = true" />
                 </div>
                 <div class="mt-5">
                     <AlertComponent
@@ -204,7 +208,7 @@
                     </ul>
                 </div>
             </div>
-            <div class="flex flex-col my-10 gap-2">
+            <div class="flex flex-col my-10 gap-2 card white p-5">
                 <TinyPageHeadline :title="$t('Sort settings')"
                                   :description="$t('Configure the behaviour of shift plans sort opportunity.')"/>
                 <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer">
@@ -289,11 +293,13 @@ import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import draggable from "vuedraggable";
 import {router} from "@inertiajs/vue3";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
+        GlassyIconButton,
         ShiftQualificationIconCollection,
         SwitchLabel,
         Switch,
@@ -360,14 +366,30 @@ export default defineComponent({
                     name: this.$t('Shift Settings'),
                     href: route('shift.settings'),
                     current: route().current('shift.settings'),
-                    show: true
+                    show: true,
+                    icon: 'IconCalendarUser'
                 },
                 {
                     name: this.$t('Day Services'),
                     href: route('day-service.index'),
                     current: route().current('day-service.index'),
-                    show: true
+                    show: true,
+                    icon: 'IconHours24'
                 },
+                {
+                    name: this.$t('Work Time Pattern'),
+                    href: route('shift.work-time-pattern'),
+                    current: route().current('shift.work-time-pattern'),
+                    show: true,
+                    icon: 'IconClockCog'
+                },
+                {
+                    name: this.$t('User Contracts'),
+                    href: route('user-contract-settings.index'),
+                    current: route().current('user-contract-settings.index'),
+                    show: true,
+                    icon: 'IconContract'
+                }
             ]
         }
     },

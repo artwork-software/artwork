@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\InventoryManagement\Services;
 
-use Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum;
+use Artwork\Modules\Inventory\Enums\CraftsInventoryColumnTypeEnum;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemCellRepository;

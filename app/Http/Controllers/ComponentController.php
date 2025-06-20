@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
-use Artwork\Modules\ProjectTab\Models\Component;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Models\Component;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

@@ -3,7 +3,7 @@
 namespace Artwork\Modules\InventoryManagement\Services;
 
 use Artwork\Core\Services\CacheService;
-use Artwork\Modules\InventoryManagement\Exports\InventoryManagementExport;
+use Artwork\Modules\Inventory\Exports\InventoryManagementExport;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Throwable;

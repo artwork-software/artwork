@@ -8,7 +8,7 @@ use Artwork\Core\Services\CollectionService;
 use Artwork\Modules\Event\Abstracts\EventExportService;
 use Artwork\Modules\Event\Exports\EventCalendarXlsxExport;
 use Artwork\Modules\Event\Repositories\EventRepository;
-use Artwork\Modules\EventSettings\Services\EventSettingsService;
+use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\User\Services\UserService;

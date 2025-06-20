@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\ProjectTab\Models\Component;
-use Artwork\Modules\ProjectTab\Models\ComponentInTab;
-use Artwork\Modules\ProjectTab\Models\DisclosureComponents;
-use Artwork\Modules\ProjectTab\Models\ProjectComponentValue;
-use Artwork\Modules\ProjectTab\Models\ProjectTab;
-use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
-use Artwork\Modules\ProjectTab\Models\SidebarTabComponent;
+use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ComponentInTab;
+use Artwork\Modules\Project\Models\DisclosureComponents;
+use Artwork\Modules\Project\Models\ProjectComponentValue;
+use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
+use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\ResponseFactory;

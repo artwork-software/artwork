@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Enums;
 
-use Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum;
+use Artwork\Modules\Inventory\Enums\CraftsInventoryColumnTypeEnum;
 use PHPUnit\Framework\TestCase;
 
 class CraftsInventoryColumnTypeEnumTest extends TestCase

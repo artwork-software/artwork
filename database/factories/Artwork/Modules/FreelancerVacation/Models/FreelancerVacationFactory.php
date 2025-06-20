@@ -3,7 +3,7 @@
 namespace Database\Factories\Artwork\Modules\FreelancerVacation\Models;
 
 use Artwork\Modules\Freelancer\Models\Freelancer;
-use Artwork\Modules\FreelancerVacation\Models\FreelancerVacation;
+use Artwork\Modules\Freelancer\Models\FreelancerVacation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class FreelancerVacationFactory extends Factory

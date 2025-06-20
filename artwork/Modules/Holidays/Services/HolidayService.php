@@ -28,7 +28,8 @@ class HolidayService
         ?int $rota = 0,
         ?string $remote_identifier = null,
         ?bool $from_api = false,
-        ?string $color = null
+        ?string $color = null,
+        ?bool $treatAsSpecialDay = false
     ): Holiday {
         return $this->holidayRepository->create(
             name: $name,
@@ -40,7 +41,8 @@ class HolidayService
             rota: $rota,
             remote_identifier: $remote_identifier,
             from_api: $from_api,
-            color: $color
+            color: $color,
+            treatAsSpecialDay: $treatAsSpecialDay
         );
     }
 

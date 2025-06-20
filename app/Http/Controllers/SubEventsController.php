@@ -6,15 +6,14 @@ use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\SubEvent\Models\SubEvent;
+use Artwork\Modules\Event\Models\SubEvent;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
 
 class SubEventsController extends Controller
 {
     public function __construct(
-        private readonly NotificationService $notificationService,
-        private readonly AuthManager $auth
+        private readonly NotificationService $notificationService
     ) {
     }
 

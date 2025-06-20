@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\InventoryManagement\Production;
 
-use Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum;
+use Artwork\Modules\Inventory\Enums\CraftsInventoryColumnTypeEnum;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Illuminate\Database\Seeder;
 use Throwable;

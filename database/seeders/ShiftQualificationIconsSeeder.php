@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 

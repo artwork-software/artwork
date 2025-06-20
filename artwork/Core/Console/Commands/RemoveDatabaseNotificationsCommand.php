@@ -2,7 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
+use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Illuminate\Console\Command;
 use Psr\Log\LoggerInterface;
 use Throwable;

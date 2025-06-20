@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Artwork\Modules\ProjectManagementBuilder\Models\ProjectManagementBuilder;
-use Artwork\Modules\ProjectTab\Models\Component;
+use Artwork\Modules\Project\Models\ProjectManagementBuilder;
+use Artwork\Modules\Project\Models\Component;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 

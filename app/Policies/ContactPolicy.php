@@ -12,7 +12,8 @@ class ContactPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class ContactPolicy
      */
     public function view(User $user, Contact $contact): bool
     {
-        //
+        // Check if the user is authenticated and has access to the contact
+        return $user->exists && $contact->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class ContactPolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,7 @@ class ContactPolicy
      */
     public function update(User $user, Contact $contact): bool
     {
-        //
+        return $user->exists && $contact->exists;
     }
 
     /**
@@ -44,7 +47,7 @@ class ContactPolicy
      */
     public function delete(User $user, Contact $contact): bool
     {
-        //
+        return $user->exists && $contact->exists;
     }
 
     /**
@@ -52,7 +55,7 @@ class ContactPolicy
      */
     public function restore(User $user, Contact $contact): bool
     {
-        //
+        return $user->exists && $contact->exists;
     }
 
     /**
@@ -60,6 +63,6 @@ class ContactPolicy
      */
     public function forceDelete(User $user, Contact $contact): bool
     {
-        //
+        return $user->exists && $contact->exists;
     }
 }

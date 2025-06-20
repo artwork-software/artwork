@@ -53,6 +53,7 @@ class UserWorkProfileResource extends JsonResource
             )->toArray(),
             'shiftQualifications' => $this->getAttribute('shiftQualifications'),
             'is_freelancer' => $this->getAttribute('is_freelancer'),
+            'email' => $this->getAttribute('email'),
         ];
     }
 }

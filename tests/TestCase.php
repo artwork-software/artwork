@@ -4,7 +4,7 @@ namespace Tests;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Cache\EventTypeArrayCache;
-use Artwork\Modules\ProjectTab\Cache\ProjectTabArrayCache;
+use Artwork\Modules\Project\Cache\ProjectTabArrayCache;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;

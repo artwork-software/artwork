@@ -84,12 +84,13 @@ use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
-use App\Http\Controllers\UserCalendarFilterController;
-use App\Http\Controllers\UserCalenderAboController;
-use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\UserShiftCalendarAboController;
-use App\Http\Controllers\UserShiftCalendarFilterController;
+use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
+use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
+use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
+use Artwork\Modules\User\Http\Controllers\UserContractController;
+use Artwork\Modules\User\Http\Controllers\UserController;
+use Artwork\Modules\User\Http\Controllers\UserShiftCalendarAboController;
+use Artwork\Modules\User\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
@@ -97,7 +98,7 @@ use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
-use Artwork\Modules\EventProperty\Http\Controller\EventPropertyController;
+use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
 use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
@@ -150,11 +151,6 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
-
-    Route::group(['prefix' => 'updates'], function() {
-        Route::get('/', [\App\Http\Controllers\NotionController::class, 'index'])
-            ->name('notion.index');
-    });
 
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
@@ -236,6 +232,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [AppController::class, 'toggleCalendarSettingsUseProjectPeriod']
     )->name('user.calendar_settings.toggle_calendar_settings_use_project_period');
 
+    Route::patch(
+        '/toggle_calendar_settings_use_project_period_shift_plan',
+        [AppController::class, 'toggleCalendarSettingsUseProjectPeriodShiftPlan']
+    )->name('user.calendar_settings.toggle_calendar_settings_use_project_period_shift_plan');
+
     Route::get('/dashboard', [EventController::class, 'showDashboardPage'])->name('dashboard');
     Route::get('/checklist/templates', function () {
         return Inertia::render('ChecklistTemplates/Edit');
@@ -261,6 +262,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('user.edit.permissions');
     Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can manage workers')
         ->name('user.edit.workProfile');
+    Route::get('/users/{user}/work-time-pattern', [UserController::class, 'editUserWorkTime'])->can('can manage workers')
+        ->name('user.edit.work-time-pattern');
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
     Route::patch(
         '/users/{user}/permissions',
@@ -587,6 +590,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // POST event.shift.store.without.event
         Route::post('/event/shift/store/without/event', [ShiftController::class, 'storeShiftWithoutEvent'])
             ->name('event.shift.store.without.event');
+
+
+        // POST:: shifts.updateIndividualShiftTime
+        Route::post('/update/individual/shift/time', [ShiftController::class, 'updateIndividualShiftTime'])
+            ->name('shifts.updateIndividualShiftTime');
+
+        // post shifts.updateShortDescription
+        Route::post('/update/short/description', [ShiftController::class, 'updateShortDescription'])
+            ->name('shifts.updateShortDescription');
     });
 
 
@@ -631,6 +643,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('holiday.delete');
         Route::patch('/holiday/{holiday}', [HolidayController::class, 'update'])
             ->name('holiday.update');
+        Route::post('/holiday/batch-update', [HolidayController::class, 'batchUpdateTreatAsSpecialDay'])
+            ->name('holiday.batch-update');
 
 
         Route::group(['prefix' => 'event-status'], function (): void {
@@ -2133,7 +2147,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/destroy/{contact}', [ContactController::class, 'destroy'])->name('contact.destroy');
     });
 
-    Route::controller(InternalIssueController::class)->prefix('issue-of-material')->group(function() {
+    Route::controller(InternalIssueController::class)->prefix('issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('issue-of-material.index');
         Route::post('/store', 'store')->name('issue-of-material.store');
         Route::patch('/{internalIssue}/update', 'update')->name('issue-of-material.update');
@@ -2142,7 +2156,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/{internalIssue}/set-special-items-done', 'setSpecialItemsDone')->name('issue-of-material.set-special-items-done');
     });
 
-    Route::controller(ExternalIssueController::class)->prefix('extern-issue-of-material')->group(function() {
+    Route::controller(ExternalIssueController::class)->prefix('extern-issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('extern-issue-of-material.index');
         Route::post('/store', 'store')->name('extern-issue-of-material.store');
         Route::patch('/{externalIssue}/update', 'update')->name('extern-issue-of-material.update');
@@ -2161,7 +2175,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::prefix('material-sets')
         ->as('material-sets.')
         ->controller(MaterialSetController::class)
-        ->group(function () {
+        ->group(function (): void {
             Route::get('/', 'index')->name('index');     // material-sets.index
             Route::post('/', 'store')->name('store');    // material-sets.store
             Route::patch('{set}', 'update')->name('update');  // material-sets.update
@@ -2174,6 +2188,54 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::post('inventory/articles/available-stock-batch', [InventoryArticleController::class, 'availableStockBatch'])
         ->name('inventory.articles.available-stock.batch');
+
+
+    Route::group(['prefix' => 'shift'], function (): void {
+        // shift.work-time-pattern
+        Route::get(
+            '/work-time-pattern/',
+            [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'index']
+        )->name('shift.work-time-pattern');
+
+        // shift.work-time-pattern.store
+        Route::post(
+            '/work-time-pattern/store',
+            [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'store']
+        )->name('shift.work-time-pattern.store');
+
+        // shift.work-time-pattern.update
+        Route::patch(
+            '/work-time-pattern/{userWorkTimePattern}/update',
+            [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'update']
+        )->name('shift.work-time-pattern.update');
+
+        // work-time-patterns.destroy
+        Route::delete(
+            '/work-time-pattern/{userWorkTimePattern}/destroy',
+            [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'destroy']
+        )->name('shift.work-time-pattern.destroy');
+
+        // user.work-time-pattern.update
+        Route::patch(
+            '/work-time-pattern/{user}/update-user',
+            [\Artwork\Modules\User\Http\Controllers\UserWorkTimeController::class, 'store']
+        )->name('shift.work-time-pattern.update-user');
+    });
+
+    // group user contracts
+    Route::group(['prefix' => 'user-contracts'], function (): void {
+        // user-contract-settings.index
+        Route::get('/', [UserContractController::class, 'index'])->name('user-contract-settings.index');
+
+        // user-contract-settings.store
+        Route::post('/store', [UserContractController::class, 'store'])->name('user-contract-settings.store');
+
+        // user-contract-settings.update
+        Route::patch('/{userContract}/update', [UserContractController::class, 'update'])->name('user-contract-settings.update');
+
+        // user-contract-settings.destroy
+        Route::delete('/{userContract}/destroy', [UserContractController::class, 'destroy'])->name('user-contract-settings.destroy');
+    });
 });
 
 Route::get(
@@ -2185,3 +2247,8 @@ Route::get(
     '/calendar/abo/{calendar_abo_id}',
     [UserCalenderAboController::class, 'show']
 )->name('user-calendar-abo.show');
+
+
+// /shift/check-collisions
+Route::post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
+    ->name('shift.check-collisions');

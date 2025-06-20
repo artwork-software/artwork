@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\MoneySource\Models\MoneySource;
-use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
-use Artwork\Modules\MoneySourceTask\Services\MoneySourceTaskService;
+use Artwork\Modules\MoneySource\Models\MoneySourceTask;
+use Artwork\Modules\MoneySource\Services\MoneySourceTaskService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

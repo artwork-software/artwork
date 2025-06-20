@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\ContractType\Models\ContractType;
+use Artwork\Modules\Contract\Models\ContractType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -36,7 +36,7 @@ class ContractTypeController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \Artwork\Modules\ContractType\Models\ContractType  $contractType
+     * @param  \Artwork\Modules\Contract\Models\ContractType  $contractType
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(ContractType $contractType): \Illuminate\Http\RedirectResponse

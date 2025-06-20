@@ -12,7 +12,8 @@ class SpecialItemPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class SpecialItemPolicy
      */
     public function view(User $user, SpecialItem $specialItem): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the special item exists
+        return $user->exists && $specialItem->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class SpecialItemPolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,8 @@ class SpecialItemPolicy
      */
     public function update(User $user, SpecialItem $specialItem): bool
     {
-        //
+        // Allow update if the user is authenticated and the special item exists
+        return $user->exists && $specialItem->exists;
     }
 
     /**
@@ -44,7 +48,8 @@ class SpecialItemPolicy
      */
     public function delete(User $user, SpecialItem $specialItem): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the special item exists
+        return $user->exists && $specialItem->exists;
     }
 
     /**
@@ -52,7 +57,8 @@ class SpecialItemPolicy
      */
     public function restore(User $user, SpecialItem $specialItem): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the special item exists
+        return $user->exists && $specialItem->exists;
     }
 
     /**
@@ -60,6 +66,7 @@ class SpecialItemPolicy
      */
     public function forceDelete(User $user, SpecialItem $specialItem): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the special item exists
+        return $user->exists && $specialItem->exists;
     }
 }

@@ -12,7 +12,7 @@ class ChatMessagePolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return $user->exists;
     }
 
     /**
@@ -20,7 +20,7 @@ class ChatMessagePolicy
      */
     public function view(User $user, ChatMessage $chatMessage): bool
     {
-        //
+        return $user->exists && $chatMessage->exists;
     }
 
     /**
@@ -28,7 +28,7 @@ class ChatMessagePolicy
      */
     public function create(User $user): bool
     {
-        //
+        return $user->exists;
     }
 
     /**
@@ -36,7 +36,7 @@ class ChatMessagePolicy
      */
     public function update(User $user, ChatMessage $chatMessage): bool
     {
-        //
+        return $user->exists && $chatMessage->exists;
     }
 
     /**
@@ -44,7 +44,7 @@ class ChatMessagePolicy
      */
     public function delete(User $user, ChatMessage $chatMessage): bool
     {
-        //
+        return $user->exists && $chatMessage->exists;
     }
 
     /**
@@ -52,7 +52,7 @@ class ChatMessagePolicy
      */
     public function restore(User $user, ChatMessage $chatMessage): bool
     {
-        //
+        return $user->exists && $chatMessage->exists;
     }
 
     /**
@@ -60,6 +60,6 @@ class ChatMessagePolicy
      */
     public function forceDelete(User $user, ChatMessage $chatMessage): bool
     {
-        //
+        return $user->exists && $chatMessage->exists;
     }
 }

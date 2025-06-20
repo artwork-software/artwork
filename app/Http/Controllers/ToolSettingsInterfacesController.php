@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
 use Artwork\Modules\Budget\Services\TableColumnOrderService;
-use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
@@ -12,7 +11,6 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,14 +22,14 @@ class ToolSettingsInterfacesController extends Controller
     public function __construct(
         private readonly SageApiSettingsService $sageApiSettingsService,
         private readonly TableColumnOrderService $tableColumnOrderService
-    )
-    {
+    ) {
     }
 
     /**
      * @throws AuthorizationException
      */
-    public function index(): Response {
+    public function index(): Response
+    {
         $this->authorize('view', Token::class);
 
         $tokens = Token::with(['apiAccessToken'])
@@ -45,7 +43,7 @@ class ToolSettingsInterfacesController extends Controller
                     'created_at' => $token->created_at,
                     'expires_at' => $token->expires_at,
                     'last_used_at' => $token->last_used_at,
-                    'access_token' => $token->apiAccessToken?->access_token ?? null,
+                    'access_token' => $token?->apiAccessToken?->access_token ?? null,
                 ];
             });
 
@@ -71,7 +69,6 @@ class ToolSettingsInterfacesController extends Controller
         try {
             $this->sageApiSettingsService->createOrUpdateFromRequest($createOrUpdateSageApiSettingsRequest);
         } catch (Throwable $t) {
-
             return Redirect::back()->with(
                 'error',
                 __('flash-messages.interfaces.failed_to_save')

@@ -12,7 +12,8 @@ class ManufacturerPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class ManufacturerPolicy
      */
     public function view(User $user, Manufacturer $manufacturer): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the manufacturer exists
+        return $user->exists && $manufacturer->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class ManufacturerPolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,8 @@ class ManufacturerPolicy
      */
     public function update(User $user, Manufacturer $manufacturer): bool
     {
-        //
+        // Allow update if the user is authenticated and the manufacturer exists
+        return $user->exists && $manufacturer->exists;
     }
 
     /**
@@ -44,7 +48,8 @@ class ManufacturerPolicy
      */
     public function delete(User $user, Manufacturer $manufacturer): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the manufacturer exists
+        return $user->exists && $manufacturer->exists;
     }
 
     /**
@@ -52,7 +57,8 @@ class ManufacturerPolicy
      */
     public function restore(User $user, Manufacturer $manufacturer): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the manufacturer exists
+        return $user->exists && $manufacturer->exists;
     }
 
     /**
@@ -60,6 +66,7 @@ class ManufacturerPolicy
      */
     public function forceDelete(User $user, Manufacturer $manufacturer): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the manufacturer exists
+        return $user->exists && $manufacturer->exists;
     }
 }

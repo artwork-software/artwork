@@ -15,7 +15,10 @@ uses(
     // Illuminate\Foundation\Testing\DatabaseMigrations::class,
 )->in('Browser');
 
+use Carbon\CarbonPeriod;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Session;
 use Tests\TestCase;
 
 /*
@@ -35,5 +38,8 @@ uses(
     \Tests\CreateAdminUser::class
 )->beforeEach(
     function (): void {
+        App::setLocale('en');
+        Session::put('locale', 'en');
+        CarbonPeriod::setLocale('en');
     }
 )->in('Feature', 'Unit');

@@ -15,11 +15,15 @@ class ContractUpdateRequest extends FormRequest
     }
 
     /**
-     * @return array<string, mixed>
+     * Retrieve data from the request.
+     *
+     * @param  string|null  $key
+     * @param  mixed  $default
+     * @return mixed
      */
-    public function data(): array
+    public function data($key = null, $default = null)
     {
-        return $this->only([
+        $contractData = $this->only([
             'contract_partner',
             'amount',
             'project_id',
@@ -34,5 +38,11 @@ class ContractUpdateRequest extends FormRequest
             'tasks',
             'accessibleUsers',
         ]);
+
+        if ($key === null) {
+            return $contractData;
+        }
+
+        return $contractData[$key] ?? $default;
     }
 }

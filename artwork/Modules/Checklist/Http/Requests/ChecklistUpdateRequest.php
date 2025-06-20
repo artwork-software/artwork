@@ -30,10 +30,20 @@ class ChecklistUpdateRequest extends EventStoreOrUpdateRequest
     }
 
     /**
-     * @return array<string, mixed>
+     * Get the request data.
+     *
+     * @param string|null $key
+     * @param mixed|null $default
+     * @return mixed
      */
-    public function data(): array
+    public function data($key = null, $default = null)
     {
-        return $this->only(['user_id', 'name']);
+        $data = $this->only(['user_id', 'name']);
+
+        if ($key === null) {
+            return $data;
+        }
+
+        return $data[$key] ?? $default;
     }
 }

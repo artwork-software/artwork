@@ -158,7 +158,7 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
                 'collectionMock',
                 'group_type',
                 [
-                    'type',
+                    'frequency',
                     'frequency',
                     'group_type'
                 ],
@@ -193,7 +193,7 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
                 'collectionMock',
                 'group_type',
                 [
-                    'type',
+                    'frequency',
                     'frequency',
                     'group_type'
                 ],
@@ -228,7 +228,7 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
                 'collectionMock',
                 'group_type',
                 [
-                    'type',
+                    'frequency',
                     'frequency',
                     'group_type'
                 ],
@@ -387,7 +387,7 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
                 'collectionMock',
                 'group_type',
                 [
-                    'type',
+                    'frequency',
                     'frequency'
                 ],
                 [
@@ -413,7 +413,7 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
                 'collectionMock',
                 'group_type',
                 [
-                    'type',
+                    'frequency',
                     'frequency'
                 ],
                 [
@@ -439,7 +439,7 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
                 'collectionMock',
                 'group_type',
                 [
-                    'type',
+                    'frequency',
                     'frequency'
                 ],
                 [

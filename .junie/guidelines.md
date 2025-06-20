@@ -4,7 +4,7 @@
 Artwork is a project organization tool for scheduling projects with events, tasks, and responsibilities. It helps teams track essential project components.
 
 ## Tech Stack
-- **Backend**: Laravel 10 (PHP 8.2+)
+- **Backend**: Laravel 12 (PHP 8.2+)
 - **Frontend**: Vue.js 3 with Inertia.js
 - **CSS Framework**: Tailwind CSS 3.4
 - **Database**: MySQL/MariaDB
@@ -61,6 +61,12 @@ Artwork is a project organization tool for scheduling projects with events, task
 - Produktions-Branch: `main` (stabilste Version)
 - Staging-Branch: `staging` (Pre-Release Testing)
 - Entwicklungs-Branch: `dev` (Feature-Integration)
+
+## Tests
+- Verwende beim Schreiben von Unittests PHPUnit, schreibe *KEINE* Pest Tests.
+- Verwende *NIEMALS* den RefreshDatabase Trait in Tests.
+- Alle BasisTests sind schon so konfiguriert, dass sie den "DatabaseTransactions" Trait verwenden, um die Datenbank nach jedem Test zu bereinigen.
+
 
 ## Best Practices
 1. Halte dich an Laravel-Konventionen für Struktur und Benennung

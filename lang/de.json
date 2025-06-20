@@ -2809,5 +2809,21 @@
     "Remove Work Time Pattern": "Arbeitszeitmuster entfernen",
     "Are you sure you want to remove the current work time pattern? This will allow you to enter custom working times.": "Willst du das aktuelle Arbeitszeitmuster wirklich entfernen? Dadurch kannst du benutzerdefinierte Arbeitszeiten eingeben.",
     "You are currently editing a working time pattern. If this pattern is assigned to users, the users' working time will also be edited.": "Du bearbeitest derzeit ein Arbeitszeitmuster. Wenn dieses Muster Nutzer*innen zugewiesen ist, wird auch die Arbeitszeit der Nutzer*innen bearbeitet.",
-    "Choose a work time pattern for the user.": "Wähle ein Arbeitszeitmuster für den Nutzer*in aus."
+    "Choose a work time pattern for the user.": "Wähle ein Arbeitszeitmuster für den Nutzer*in aus.",
+    "User Contracts": "Nutzerverträge",
+    "Add User Contracts": "Nutzerverträge hinzufügen",
+    "Edit User Contract": "Nutzervertrag bearbeiten",
+    "Create User Contract": "Nutzervertrag erstellen",
+    "Edit the user contract details.": "Bearbeite die Details des Nutzervertrags.",
+    "Create a new user contract.": "Erstelle einen neuen Nutzervertrag.",
+    "This is an existing user contract. Editing it will update the contract for all users associated with it.": "Dies ist ein bestehender Nutzervertrag. Das Bearbeiten aktualisiert den Vertrag für alle damit verbundenen Nutzer*innen.",
+    "Free Full Days Per Week": "Freie volle Tage pro Woche",
+    "Free Half Days Per Week": "Freie halbe Tage pro Woche",
+    "Special Day Rule Active": "Sondertag-Regel aktiv",
+    "Compensation Period (in days)": "Ausgleichszeitraum (in Tagen)",
+    "Free Sundays Per Season": "Freie Sonntage pro Spielzeit",
+    "Days Off First 26 Weeks": "Freie Tage in den ersten 26 Wochen",
+    "If this is active, the special day rule will be applied to this contract. This means that on special days, the rules for free days may differ from the regular rules.": "Wenn dies aktiviert ist, wird die Sondertag-Regel auf diesen Vertrag angewendet. Das bedeutet, dass an Sondertagen die Regeln für freie Tage von den regulären Regeln abweichen können.",
+    "Delete User Contract": "Nutzervertrag löschen",
+    "Are you sure you want to delete this user contract? This action cannot be undone.": "Möchtest du diesen Nutzervertrag wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 }

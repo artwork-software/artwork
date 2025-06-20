@@ -33,7 +33,7 @@
             </div>
         </template>
         <template #default>
-            <div class="">
+            <div class="card white p-5">
                 <div class="flex flex-row w-full">
                     <div class="flex flex-1 flex-wrap justify-end w-full">
 

@@ -87,6 +87,7 @@ use App\Http\Controllers\ToolSettingsInterfacesController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
 use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
 use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
+use Artwork\Modules\User\Http\Controllers\UserContractController;
 use Artwork\Modules\User\Http\Controllers\UserController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarAboController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarFilterController;
@@ -2224,6 +2225,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/work-time-pattern/{user}/update-user',
             [\Artwork\Modules\User\Http\Controllers\UserWorkTimeController::class, 'store']
         )->name('shift.work-time-pattern.update-user');
+    });
+
+    // group user contracts
+    Route::group(['prefix' => 'user-contracts'], function (): void {
+        // user-contract-settings.index
+        Route::get('/', [UserContractController::class, 'index'])->name('user-contract-settings.index');
+
+        // user-contract-settings.store
+        Route::post('/store', [UserContractController::class, 'store'])->name('user-contract-settings.store');
+
+        // user-contract-settings.update
+        Route::patch('/{userContract}/update', [UserContractController::class, 'update'])->name('user-contract-settings.update');
+
+        // user-contract-settings.destroy
+        Route::delete('/{userContract}/destroy', [UserContractController::class, 'destroy'])->name('user-contract-settings.destroy');
     });
 });
 

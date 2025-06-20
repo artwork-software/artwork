@@ -1,8 +1,8 @@
 <template>
-    <AppLayout :title="$t('Work Time Pattern')">
+    <AppLayout :title="$t('User Contracts')">
         <div class="artwork-container">
             <div class="">
-                <h2 class="headline1">{{$t('Work Time Pattern')}}</h2>
+                <h2 class="headline1">{{$t('User Contracts')}}</h2>
                 <div class="xsLight mt-2">
                     {{$t('Work Time Patterns are used to define the working hours and shifts for employees. You can create, edit, and delete work time patterns here.')}}
                 </div>
@@ -12,15 +12,14 @@
 
             <div class="flex items-center justify-between">
                 <TabComponent :tabs="tabs" use-translation/>
-                <GlassyIconButton text="Add Work Time Pattern" icon="IconPlus" @click="showCreateOrUpdateWorkTimePatternModal  = true" />
+                <GlassyIconButton text="Add User Contracts" icon="IconPlus" @click="showCreateOrUpdateUserContractModal  = true" />
             </div>
 
 
-
             <div class="card white p-5 mt-5">
-                <ul role="list" class="divide-y divide-gray-100" v-if="workTimePatterns.length > 0">
-                    <li v-for="workTime in workTimePatterns" :key="workTime.id" class="flex justify-between gap-x-6 py-5">
-                        <SingleWorkTimePattern :work-time-pattern="workTime" />
+                <ul role="list" class="divide-y divide-gray-100" v-if="contracts.length > 0">
+                    <li v-for="contract in contracts" :key="contract.id" class="flex justify-between gap-x-6 py-5">
+                        <SingleUserContractTemplate :contract="contract" />
                     </li>
                 </ul>
                 <div v-else>
@@ -30,9 +29,9 @@
         </div>
 
 
-        <CreateOrUpdateWorkTimePatternModal
-            v-if="showCreateOrUpdateWorkTimePatternModal"
-            @close="showCreateOrUpdateWorkTimePatternModal = false"
+        <CreateOrUpdateUserContractModal
+            v-if="showCreateOrUpdateUserContractModal"
+            @close="showCreateOrUpdateUserContractModal = false"
         />
 
     </AppLayout>
@@ -50,15 +49,19 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SingleWorkTimePattern from "@/Pages/Settings/WorkTimePattern/Components/SingleWorkTimePattern.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import CreateOrUpdateUserContractModal
+    from "@/Pages/Settings/UserContractSettings/Components/CreateOrUpdateUserContractModal.vue";
+import SingleUserContractTemplate
+    from "@/Pages/Settings/UserContractSettings/Components/SingleUserContractTemplate.vue";
 
 const props = defineProps({
-    workTimePatterns: {
+    contracts: {
         type: Object,
         default: () => ([])
     }
 })
 
-const showCreateOrUpdateWorkTimePatternModal = ref(false)
+const showCreateOrUpdateUserContractModal = ref(false)
 
 const tabs = ref([
     {

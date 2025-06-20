@@ -4,14 +4,14 @@ namespace Artwork\Modules\User\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateUserContractRequest extends FormRequest
+class UpdateUserContractRequest extends StoreUserContractRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,8 @@ class UpdateUserContractRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'id' => 'required|exists:user_contracts,id',
+            ...parent::rules(),
         ];
     }
 }

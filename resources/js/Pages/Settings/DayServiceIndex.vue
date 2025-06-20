@@ -4,11 +4,12 @@ import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import AddEditDayServiceModal from "@/Pages/Settings/Components/AddEditDayServiceModal.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 export default {
     name: "DayServiceIndex",
     mixins: [IconLib],
-    components: {AddEditDayServiceModal, AddButtonSmall, TabComponent, AppLayout},
+    components: {GlassyIconButton, AddEditDayServiceModal, AddButtonSmall, TabComponent, AppLayout},
     props: [
         'dayServices'
     ],
@@ -35,6 +36,13 @@ export default {
                     current: route().current('shift.work-time-pattern'),
                     show: true,
                     icon: 'IconClockCog'
+                },
+                {
+                    name: this.$t('User Contracts'),
+                    href: route('user-contract-settings.index'),
+                    current: route().current('user-contract-settings.index'),
+                    show: true,
+                    icon: 'IconContract'
                 }
             ],
             iconList: [
@@ -87,7 +95,7 @@ export default {
            <div class="flex items-center justify-between">
                <TabComponent :tabs="tabs" />
 
-               <AddButtonSmall :text="$t('New Day Service')" class="" @click="showAddEditDayServiceModal = true" />
+               <GlassyIconButton text="New Day Service" icon="IconPlus"@click="showAddEditDayServiceModal = true" />
            </div>
 
             <div class="my-5 card white p-5" >

@@ -34,7 +34,7 @@
 
     <ConfirmDeleteModal
         v-if="showDeleteModal"
-        @close="showDeleteModal = false"
+        @closed="showDeleteModal = false"
         :title="$t('Delete Work Time Pattern')"
         :description="$t('Are you sure you want to delete this work time pattern? This action cannot be undone.')"
         @delete="deleteWorkTimePattern"

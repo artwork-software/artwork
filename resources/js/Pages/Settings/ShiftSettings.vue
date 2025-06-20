@@ -16,12 +16,14 @@
             </div>
             <div class="card white p-5">
                 <div class="flex items-center justify-between gap-x-3">
-                    <TinyPageHeadline
-                        :title="$t('Crafts')"
-                        :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
-                    />
-                    <div class="w-72">
-                        <AddButtonSmall :text="$t('New Craft')" class="mt-5" @click="openAddCraftsModal = true" />
+                    <div class="w-1/2">
+                        <TinyPageHeadline
+                            :title="$t('Crafts')"
+                            :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
+                        />
+                    </div>
+                    <div class="flex items-center justify-end">
+                        <GlassyIconButton text="New Craft" icon="IconPlus" @click="openAddCraftsModal = true" />
                     </div>
                 </div>
                 <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="crafts" @start="dragging=true" @end="dragging=false" @change="reorderCrafts(crafts)">
@@ -130,11 +132,11 @@
             </div>
             <div class="card white p-5 mt-10">
                 <div class="flex items-center justify-between">
-                    <TinyPageHeadline class="mt-10"
+                    <TinyPageHeadline class=""
                         :title="$t('Qualifications')"
                         :description="$t('Create or edit qualifications')"
                     />
-                    <AddButtonSmall text="Neue Qualifikation" class="mt-5" @click="this.openShiftQualificationModal('create')" />
+                    <GlassyIconButton text="Neue Qualifikation" icon="IconPlus" @click="this.openShiftQualificationModal('create')" />
                 </div>
                 <div class="mt-5">
                     <div class="mb-5 xsLight" v-if="shiftQualifications.length === 0">
@@ -170,11 +172,11 @@
             <div class="card white p-5 mt-10">
                 <div class="flex items-center justify-between">
                     <TinyPageHeadline
-                        class="mt-14"
+                        class=""
                         :title="$t('Time presets for shifts')"
                         :description="$t('Create time presets for layers to be able to assign them quickly and easily later.')"
                     />
-                    <AddButtonSmall :text="$t('New time preset')" class="mt-5" @click="showAddShiftPresetModal = true" />
+                    <GlassyIconButton text="New time preset" icon="IconPlus" @click="showAddShiftPresetModal = true" />
                 </div>
                 <div class="mt-5">
                     <AlertComponent
@@ -291,11 +293,13 @@ import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import draggable from "vuedraggable";
 import {router} from "@inertiajs/vue3";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
+        GlassyIconButton,
         ShiftQualificationIconCollection,
         SwitchLabel,
         Switch,
@@ -378,6 +382,13 @@ export default defineComponent({
                     current: route().current('shift.work-time-pattern'),
                     show: true,
                     icon: 'IconClockCog'
+                },
+                {
+                    name: this.$t('User Contracts'),
+                    href: route('user-contract-settings.index'),
+                    current: route().current('user-contract-settings.index'),
+                    show: true,
+                    icon: 'IconContract'
                 }
             ]
         }

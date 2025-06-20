@@ -152,11 +152,6 @@ Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('r
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
-    Route::group(['prefix' => 'updates'], function (): void {
-        Route::get('/', [\App\Http\Controllers\NotionController::class, 'index'])
-            ->name('notion.index');
-    });
-
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
         Route::get('/branding', [ToolSettingsBrandingController::class, 'index'])

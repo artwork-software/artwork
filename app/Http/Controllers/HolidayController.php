@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Settings\HolidaySettings;
 use Carbon\Carbon;
-use NoahNxT\LaravelOpenHolidaysApi\OpenHolidaysApi as VendorApi;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Holidays\Models\Subdivision;
 use Artwork\Modules\Holidays\Requests\HolidayRequest;
@@ -14,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
+
 
 class HolidayController extends Controller
 {

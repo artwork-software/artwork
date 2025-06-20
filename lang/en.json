@@ -2822,5 +2822,7 @@
     "Days Off First 26 Weeks": "Days Off First 26 Weeks",
     "If this is active, the special day rule will be applied to this contract. This means that on special days, the rules for free days may differ from the regular rules.": "If this is active, the special day rule will be applied to this contract. This means that on special days, the rules for free days may differ from the regular rules.",
     "Are you sure you want to delete this user contract? This action cannot be undone.": "Are you sure you want to delete this user contract? This action cannot be undone.",
-    "You do not have the permission to plan events without a request": "You do not have the permission to plan events without a request"
+    "You do not have the permission to plan events without a request": "You do not have the permission to plan events without a request",
+    "Next 7 days": "Next 7 days",
+    "Next 14 days": "Next 14 days"
 }

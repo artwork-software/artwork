@@ -12,7 +12,8 @@ class InventoryArticleStatusPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class InventoryArticleStatusPolicy
      */
     public function view(User $user, InventoryArticleStatus $inventoryArticleStatus): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the inventory article status exists
+        return $user->exists && $inventoryArticleStatus->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class InventoryArticleStatusPolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,8 @@ class InventoryArticleStatusPolicy
      */
     public function update(User $user, InventoryArticleStatus $inventoryArticleStatus): bool
     {
-        //
+        // Allow update if the user is authenticated and the inventory article status exists
+        return $user->exists && $inventoryArticleStatus->exists;
     }
 
     /**
@@ -44,7 +48,8 @@ class InventoryArticleStatusPolicy
      */
     public function delete(User $user, InventoryArticleStatus $inventoryArticleStatus): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the inventory article status exists
+        return $user->exists && $inventoryArticleStatus->exists;
     }
 
     /**
@@ -52,7 +57,8 @@ class InventoryArticleStatusPolicy
      */
     public function restore(User $user, InventoryArticleStatus $inventoryArticleStatus): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the inventory article status exists
+        return $user->exists && $inventoryArticleStatus->exists;
     }
 
     /**
@@ -60,6 +66,7 @@ class InventoryArticleStatusPolicy
      */
     public function forceDelete(User $user, InventoryArticleStatus $inventoryArticleStatus): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the inventory article status exists
+        return $user->exists && $inventoryArticleStatus->exists;
     }
 }

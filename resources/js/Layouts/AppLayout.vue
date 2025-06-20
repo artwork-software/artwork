@@ -57,7 +57,7 @@ const props = defineProps({
 
 watchEffect(() => {
     window.Laravel = window.Laravel || {}
-    if (usePage().props.permissions) {
+    if (usePage().props?.permissions) {
         window.Laravel.jsPermissions = usePage().props.permissions;
     }
 })

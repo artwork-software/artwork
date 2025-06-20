@@ -2,9 +2,8 @@
 
 namespace App\Policies;
 
-use App\MaterialSetItem;
+use Artwork\Modules\MaterialSet\Models\MaterialSetItem;
 use Artwork\Modules\User\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class MaterialSetItemPolicy
 {
@@ -13,7 +12,8 @@ class MaterialSetItemPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -21,7 +21,8 @@ class MaterialSetItemPolicy
      */
     public function view(User $user, MaterialSetItem $materialSetItem): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the material set item exists
+        return $user->exists && $materialSetItem->exists;
     }
 
     /**
@@ -29,7 +30,8 @@ class MaterialSetItemPolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -37,7 +39,8 @@ class MaterialSetItemPolicy
      */
     public function update(User $user, MaterialSetItem $materialSetItem): bool
     {
-        //
+        // Allow update if the user is authenticated and the material set item exists
+        return $user->exists && $materialSetItem->exists;
     }
 
     /**
@@ -45,7 +48,8 @@ class MaterialSetItemPolicy
      */
     public function delete(User $user, MaterialSetItem $materialSetItem): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the material set item exists
+        return $user->exists && $materialSetItem->exists;
     }
 
     /**
@@ -53,7 +57,8 @@ class MaterialSetItemPolicy
      */
     public function restore(User $user, MaterialSetItem $materialSetItem): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the material set item exists
+        return $user->exists && $materialSetItem->exists;
     }
 
     /**
@@ -61,6 +66,7 @@ class MaterialSetItemPolicy
      */
     public function forceDelete(User $user, MaterialSetItem $materialSetItem): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the material set item exists
+        return $user->exists && $materialSetItem->exists;
     }
 }

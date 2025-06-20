@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Accommodation;
+use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\Response;
 
@@ -13,7 +13,8 @@ class AccommodationPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -21,7 +22,7 @@ class AccommodationPolicy
      */
     public function view(User $user, Accommodation $accommodation): bool
     {
-        //
+        return $user->exists && $accommodation->exists;
     }
 
     /**
@@ -29,7 +30,7 @@ class AccommodationPolicy
      */
     public function create(User $user): bool
     {
-        //
+        return $user->exists;
     }
 
     /**
@@ -37,7 +38,7 @@ class AccommodationPolicy
      */
     public function update(User $user, Accommodation $accommodation): bool
     {
-        //
+        return $user->exists && $accommodation->exists;
     }
 
     /**
@@ -45,7 +46,7 @@ class AccommodationPolicy
      */
     public function delete(User $user, Accommodation $accommodation): bool
     {
-        //
+        return $user->exists && $accommodation->exists;
     }
 
     /**
@@ -53,7 +54,7 @@ class AccommodationPolicy
      */
     public function restore(User $user, Accommodation $accommodation): bool
     {
-        //
+        return $user->exists && $accommodation->exists;
     }
 
     /**
@@ -61,6 +62,6 @@ class AccommodationPolicy
      */
     public function forceDelete(User $user, Accommodation $accommodation): bool
     {
-        //
+        return $user->exists && $accommodation->exists;
     }
 }

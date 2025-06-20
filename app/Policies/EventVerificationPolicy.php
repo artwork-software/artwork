@@ -12,7 +12,8 @@ class EventVerificationPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class EventVerificationPolicy
      */
     public function view(User $user, EventVerification $eventVerification): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the event verification exists
+        return $user->exists && $eventVerification->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class EventVerificationPolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,8 @@ class EventVerificationPolicy
      */
     public function update(User $user, EventVerification $eventVerification): bool
     {
-        //
+        // Allow update if the user is authenticated and the event verification exists
+        return $user->exists && $eventVerification->exists;
     }
 
     /**
@@ -44,7 +48,8 @@ class EventVerificationPolicy
      */
     public function delete(User $user, EventVerification $eventVerification): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the event verification exists
+        return $user->exists && $eventVerification->exists;
     }
 
     /**
@@ -52,7 +57,8 @@ class EventVerificationPolicy
      */
     public function restore(User $user, EventVerification $eventVerification): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the event verification exists
+        return $user->exists && $eventVerification->exists;
     }
 
     /**
@@ -60,6 +66,7 @@ class EventVerificationPolicy
      */
     public function forceDelete(User $user, EventVerification $eventVerification): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the event verification exists
+        return $user->exists && $eventVerification->exists;
     }
 }

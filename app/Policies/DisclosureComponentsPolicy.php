@@ -12,7 +12,8 @@ class DisclosureComponentsPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class DisclosureComponentsPolicy
      */
     public function view(User $user, DisclosureComponents $disclosureComponents): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the disclosure component exists
+        return $user->exists && $disclosureComponents->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class DisclosureComponentsPolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,8 @@ class DisclosureComponentsPolicy
      */
     public function update(User $user, DisclosureComponents $disclosureComponents): bool
     {
-        //
+        // Allow update if the user is authenticated and the disclosure component exists
+        return $user->exists && $disclosureComponents->exists;
     }
 
     /**
@@ -44,7 +48,8 @@ class DisclosureComponentsPolicy
      */
     public function delete(User $user, DisclosureComponents $disclosureComponents): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the disclosure component exists
+        return $user->exists && $disclosureComponents->exists;
     }
 
     /**
@@ -52,7 +57,8 @@ class DisclosureComponentsPolicy
      */
     public function restore(User $user, DisclosureComponents $disclosureComponents): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the disclosure component exists
+        return $user->exists && $disclosureComponents->exists;
     }
 
     /**
@@ -60,6 +66,7 @@ class DisclosureComponentsPolicy
      */
     public function forceDelete(User $user, DisclosureComponents $disclosureComponents): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the disclosure component exists
+        return $user->exists && $disclosureComponents->exists;
     }
 }

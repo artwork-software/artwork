@@ -1,17 +1,125 @@
-@use "Base/BaseStyles";
-@use "Timeline/Timeline";
-@use "Inventory/Inventory";
-@use "Inventory/InventoryManagement";
-@use "Inventory/InventoryScheduling";
-@use "Checklist/ChecklistListView";
-@use "Checklist/ChecklistGridView";
-@use "Export/Modals/ExportModal";
-@use "Base/BaseUtilities";
-@use "custom";
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+@theme {
+    /* Farben */
+    --color-primary: #222;
+    --color-primary-hover: #372F60;
+    --color-success: #1FC687;
+    --color-error: #FD6D73;
+    --color-secondary: #A7A6B1;
+    --color-calendar-text: #333;
+    --color-secondary-hover: #FCFCFB;
+    --color-dark-input-bg: rgba(252,252,251,0.15);
+    --color-dark-input-text: #D8D7DE;
+    --color-help: #93929D;
+    --color-dark-gray: #616069;
+    --color-dark-gray-bg: rgba(255,255,255,0.15);
+    --color-background-gray: #F5F5F3;
+    --color-background-gray2: #e3e3e3;
+    --color-button-blue: #3017AD;
+    --color-button-hover: #2D1FDE;
+    --color-tag-bg: rgba(48,23,173,0.1);
+    --color-tag-bg-gray: rgba(94,92,102,1);
+    --color-tag-bg-green: rgba(48,217,0,0.1);
+    --color-tag: rgba(48,23,173,0.3);
+    --color-tag-text: rgba(48,23,173,1);
+    --color-tag-text-green: rgba(48,80,0,1);
+    --color-background-blue: #3017AD34;
+    --color-light-background-gray: #F4F4F3;
+    --color-checkbox-bg: #474459;
+    --color-silver-gray: #CECDD8;
+    --color-user-bg: #EDEDEC;
+    --color-action: #e4eef5;
+    --color-menu-button-blue: #3017AD;
+    --color-shift-text: #82818A;
+    --color-link-on-dark: #BDB6F0;
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+    /* Artwork Farben */
+    --color-artwork-navigation-bg: #222;
+    --color-artwork-navigation-color: #eee;
+    --color-artwork-success: #25cd0e;
+    --color-artwork-warning: #ecce00;
+    --color-artwork-error: #ef4444;
+    --color-artwork-info: #a7a6b1;
+    --color-artwork-button-context: #6f6f6f;
+    --color-artwork-button-create: #3073ae;
+    --color-artwork-button-default: #2a3d75;
+    --color-artwork-button-hover: #1c77d7;
+    --color-artwork-button-update: #2a3d75;
+    --color-artwork-context-light: #e8e8e8;
+    --color-artwork-context-dark: #6f6f6f;
+    --color-artwork-project-bg: #eee;
+    --color-icon-default-bg: rgba(48,115,174,0.1);
+    --color-icon-default-color: #3073ae;
+    --color-icon-darkgreen-bg: rgba(56,173,23,0.1);
+    --color-icon-darkgreen-color: #21ad17;
+
+    /* Schrift */
+    --font-size-header: 30px;
+    --font-family-sans: Inter, system-ui, sans-serif;
+    --font-family-nanum: "Nanum Pen Script";
+    --font-family-lexend: "Lexend";
+    --font-weight-header: 900;
+
+    /* Schatten */
+    --shadow-button-blue: 0 35px 60px -15px #2D1FDE;
+    --shadow-card: 0px 4px 25px #27233c47;
+    --shadow-artwork-card: 0 3px 10px rgba(0,0,0,0.2);
+    --shadow-glass: inset 0px 0.5px 0px hsla(0, 0%, 100%, 0.2),
+    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
+    0px 0.5px 2px rgba(0, 0, 0, 0.08),
+    0px 2px 16px -4px rgba(0, 0, 0, 0.1);
+    --shadow-elevation-two: inset 0px 0.5px 0px hsla(0, 0%, 100%, 0.2),
+    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
+    0px 0.5px 2px rgba(0, 0, 0, 0.08),
+    0px 2px 16px -4px rgba(0, 0, 0, 0.1);
+    --shadow-button-glow-light: 0 0 6px 2px rgba(255, 255, 255, 0.6);
+
+    /* Flex / Z-Index / Blur */
+    --flex-tags: 1 1 30%;
+    --z-100: 100;
+    --blur-27: 27px;
+    --blur-2xl: 40px;
+}
+
+:root {
+    /*General*/
+    --dp-font-family: 'lexend', sans-serif; /*Font family for the date picker*/
+    --dp-border-radius: 5px; /*Configurable border-radius*/
+    --dp-cell-border-radius: 4px; /*Specific border radius for the calendar cell*/
+    --dp-common-transition: all 0.1s ease-in; /*Generic transition applied on buttons and calendar cells*/
+
+    /*Sizing*/
+    --dp-button-height: 35px; /*Size for buttons in overlays*/
+    --dp-month-year-row-height: 35px; /*Height of the month-year select row*/
+    --dp-month-year-row-button-size: 35px; /*Specific height for the next/previous buttons*/
+    --dp-button-icon-height: 20px; /*Icon sizing in buttons*/
+    --dp-cell-size: 35px; /*Width and height of calendar cell*/
+    --dp-cell-padding: 5px; /*Padding in the cell*/
+    --dp-common-padding: 10px; /*Common padding used*/
+    --dp-input-icon-padding: 35px; /*Padding on the left side of the input if icon is present*/
+    --dp-input-padding: 6px 30px 6px 12px; /*Padding in the input*/
+    --dp-menu-min-width: 260px; /*Adjust the min width of the menu*/
+    --dp-action-buttons-padding: 2px 5px; /*Adjust padding for the action buttons in action row*/
+    --dp-row-margin:  5px 0; /*Adjust the spacing between rows in the calendar*/
+    --dp-calendar-header-cell-padding:  0.5rem; /*Adjust padding in calendar header cells*/
+    --dp-two-calendars-spacing:  10px; /*Space between multiple calendars*/
+    --dp-overlay-col-padding:  3px; /*Padding in the overlay column*/
+    --dp-time-inc-dec-button-size:  32px; /*Sizing for arrow buttons in the time picker*/
+    --dp-menu-padding: 6px 8px; /*Menu padding*/
+
+    /*Font sizes*/
+    --dp-font-size: 1rem; /*Default font-size*/
+    --dp-preview-font-size: 0.8rem; /*Font size of the date preview in the action row*/
+    --dp-time-font-size: 0.8rem; /*Font size in the time picker*/
+
+    /*Transitions*/
+    --dp-animation-duration: 0.1s; /*Transition duration*/
+    --dp-menu-appear-transition-timing: cubic-bezier(.4, 0, 1, 1); /*Timing on menu appear animation*/
+    --dp-transition-timing: ease-out; /*Timing on slide animations*/
+}
+
+
 
 
 @font-face {
@@ -29,7 +137,6 @@
     src: local('Lexend-Regular'), url('../fonts/Lexend-Regular.ttf') format('truetype');
 }
 
-@layer base {
     body {
         scrollbar-width: thin; /* Für Firefox */
         scrollbar-color: rgba(210, 210, 213, 0.44) transparent; /* Für Firefox */
@@ -60,12 +167,6 @@
         background-color: #a8bbbf;
     }
 
-
-
-
-}
-
-@layer utilities {
     .base-menu-link {
         .base-menu-icon {
             @apply text-secondary;
@@ -576,7 +677,6 @@
     .event-disabled {
         background: repeating-linear-gradient( -45deg, transparent, transparent 13px, rgba(189, 189, 189, 0.3) 10px, rgba(189, 189, 189, 0.3) 30px);
     }
-}
 
 .tooltip {
     @apply invisible absolute;
@@ -586,4 +686,321 @@
     margin-top: -1rem;
     margin-left: 1.5rem;
     @apply visible z-50;
+}
+
+.artwork {
+
+    .artwork-container {
+        @apply mx-auto container px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 mt-5 min-h-screen pb-20;
+    }
+
+    .background-color {
+        @apply bg-white;
+
+        &.soft-green {
+            @apply bg-gradient-to-br from-[#fcfefd] to-[#f6fbf8];
+        }
+
+        &.soft-red {
+            @apply bg-gradient-to-br from-[#fefcfc] to-[#fbf3f3];
+        }
+
+        &.soft-yellow {
+            @apply bg-gradient-to-br from-[#fffef9] to-[#fefcf2];
+        }
+    }
+
+    .border-color {
+        &.soft-green {
+            @apply border-[#edf5ef];
+        }
+
+        &.soft-red {
+            @apply border-[#f6eaea];
+        }
+
+        &.soft-yellow {
+            @apply border-[#f8f3dd];
+        }
+    }
+
+    .text-color {
+        color: #27233C;
+
+        &.light {
+            color: #A7A6B1;
+        }
+
+        &.success {
+            @apply text-green-500;
+        }
+
+        &.danger {
+            @apply text-red-500;
+        }
+
+        &.warning {
+            @apply text-yellow-500;
+        }
+    }
+
+    .headline {
+        &.h1 {
+            font: normal normal 900 30px/34px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h2 {
+            font: normal normal 900 24px/28px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h3 {
+            font: normal normal 900 20px/24px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h4 {
+            font: normal normal 900 16px/20px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h5 {
+            font: normal normal 900 14px/18px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+    }
+
+    .sub-line {
+        &.light {
+            font: normal normal bold 14px/20px Inter;
+            letter-spacing: -0.07px;
+            opacity: 1;
+            @apply mt-1;
+        }
+    }
+
+    .card {
+        &.glassy {
+            @apply flex h-fit grow flex-col rounded-lg bg-gradient-to-br from-slate-50/70 to-sky-100/20 text-left shadow-glass backdrop-blur-2xl border border-gray-100;
+        }
+
+        &.white {
+            @apply shadow-glass bg-white rounded-lg border border-gray-100 w-full;
+        }
+    }
+}
+
+.timeline-container {
+    @apply flex flex-col gap-2 w-full;
+
+    .timeline-dates-container,
+    .timeline-times-container {
+        @apply flex flex-row gap-2;
+
+        .timeline-date-input,
+        .timeline-time-input {
+            @apply h-10 placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border w-full border-gray-300;
+        }
+    }
+
+    .timeline-error-text {
+        @apply text-error text-xs;
+    }
+
+    .timeline-textarea {
+        @apply block w-full placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border border-gray-300;
+    }
+}
+
+.delete-icon {
+    @apply hidden h-5 w-5 hover:text-error cursor-pointer;
+}
+
+
+.text-hover {
+    @apply cursor-pointer transition-all ease-in-out duration-300 hover:bg-white hover:rounded-full p-0.5
+}
+
+.base-menu-link {
+    @apply cursor-pointer flex items-center px-4 py-2 text-sm subpixel-antialiased;
+
+    .base-menu-icon {
+        @apply mr-3 h-5 w-5;
+    }
+}
+
+.btn {
+    @apply rounded-lg;
+
+    &:hover {
+        @apply bg-gray-200;
+    }
+}
+
+.input {
+    @apply rounded-md px-2.5 w-full text-sm border border-gray-300 focus:ring-0 text-primary placeholder-gray-500 placeholder-transparent transition-all duration-150 ease-in-out;
+
+    &:disabled {
+        @apply bg-gray-100 text-gray-600;
+    }
+
+}
+
+.input-label {
+    @apply cursor-text px-1 absolute left-0 -top-6 peer-placeholder-shown:text-xs transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-secondary peer-placeholder-shown:left-2 pointer-events-none;
+}
+
+.input-checklist {
+    @apply border border-gray-300 rounded-lg p-2.5 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0 shadow-sm;
+}
+
+.input-checklist-small {
+    @apply border border-gray-300 rounded-md p-0.5 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0;
+}
+
+.input-checklist-dark {
+    @apply rounded-lg p-2 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0;
+}
+
+.menu-button {
+    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-button-create;
+
+    span {
+        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+    }
+}
+
+.menu-button-no-padding {
+    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create;
+
+    span {
+        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+    }
+}
+
+.menu-button-no-flex {
+    @apply w-full block shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create;
+
+    span {
+        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+    }
+}
+
+
+
+.modal {
+    @apply relative transform bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full rounded-lg;
+}
+
+.modal-header {
+    @apply mb-6;
+
+    .full-modal {
+        @apply px-6 pt-4 pb-2;
+    }
+
+    .not-full-modal {
+        @apply pt-4 pb-2;
+    }
+
+    .model-title {
+        @apply font-black font-lexend text-primary mb-2;
+    }
+
+    .modal-description {
+        @apply text-gray-400 font-lexend font-light;
+    }
+}
+
+.btn-group-hover {
+    @apply group-hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out
+}
+
+.btn-hover {
+    @apply hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out
+}
+
+.btn-border-hover {
+    @apply hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out
+}
+
+.btn-group-border-hover {
+    @apply group-hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out
+}
+
+
+.checklist-card {
+    @apply w-72 min-w-72 rounded-lg;
+
+    .checklist-card-header {
+        @apply  px-4 py-2 bg-artwork-buttons-create flex items-center justify-between text-white truncate rounded-t-lg;
+    }
+
+    .checklist-card-body {
+        @apply bg-gray-100 rounded-b-lg;
+
+        .checklist-card-body-project {
+            @apply w-full text-xs mb-2 flex items-start gap-x-2 px-4 py-2;
+        }
+
+        .checklist-body-add-task {
+            @apply px-5 py-2.5 cursor-pointer flex items-center text-center justify-center;
+        }
+    }
+}
+
+
+.checklist-listview-head-bar {
+    @apply bg-gray-50 px-5 py-2.5 rounded-lg;
+
+    .head-bar-grid {
+        @apply grid grid-cols-12 grid-rows-1 gap-6;
+    }
+}
+
+.checklist-listview-container {
+    @apply space-y-5 mt-5 min-h-screen;
+}
+
+
+.export-modal-container {
+    @apply flex flex-col gap-y-4;
+
+    .tab-container {
+        @apply flex flex-row gap-x-1 mt-4;
+
+        .tab {
+            @apply px-1 py-1.5 text-xs border-b-2 cursor-pointer hover:text-blue-500 hover:border-blue-500;
+        }
+
+        .active {
+            @apply text-blue-500 border-blue-500 hover:text-gray-500 hover:border-gray-500;
+        }
+    }
+}
+
+.dp__btn {
+    @apply !font-lexend !text-xs;
+}
+
+.dp__menu {
+    @apply !rounded-b-3xl !rounded-tr-3xl !font-lexend;
+}
+
+.dp__action_row {
+    @apply !px-4 !py-3;
+}
+
+.dp__action_cancel {
+    @apply !font-lexend !px-4 !py-4
+}
+
+.dp__action_select {
+    @apply !font-lexend !px-4 !py-4
 }

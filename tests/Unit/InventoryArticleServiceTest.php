@@ -6,27 +6,42 @@ use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Repositories\InventoryArticleRepository;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Request;
 use Mockery;
 use Tests\TestCase;
 
 class InventoryArticleServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
-    public function test_store_creates_article(): void
+    public function test_store_creates_article(
     {
         $repo = Mockery::mock(InventoryArticleRepository::class);
-        $createdArticle = new InventoryArticle(['name' => 'Artikel']);
+
+        // Create a proper mock for the InventoryArticle class
+        $createdArticle = Mockery::mock(InventoryArticle::class);
+        $createdArticle->shouldReceive('getAttribute')->with('name')->andReturn('Artikel');
+
+        // Set up the load method to return the article itself
+        $createdArticle->shouldReceive('load')->with(['properties', 'images', 'statusValues'])->andReturn($createdArticle);
+
+        // Mock DB transaction
+        \Illuminate\Support\Facades\DB::shouldReceive('transaction')
+            ->once()
+            ->andReturnUsing(function ($callback) {
+                return $callback();
+            });
+
         $repo->shouldReceive('create')->once()->andReturn($createdArticle);
-        $repo->shouldReceive('addImages')->andReturnUsing(function ($article) {
-            // Simuliere das Verhalten von addImages, gebe das Article-Objekt zurück
+
+
+        // Mock repository methods that are called by the service's helper methods
+        $repo->shouldReceive('addImages')->andReturnUsing(function($article, $images, $mainImageIndex) {
             return $article;
         });
-        $repo->shouldReceive('attachProperties')->withArgs(function ($article) use ($createdArticle) {
-            return $article instanceof InventoryArticle && $article->name === $createdArticle->name;
+
+        $repo->shouldReceive('attachProperties')->withArgs(function($article, $properties) use ($createdArticle) {
+            return $article === $createdArticle;
         });
+
         $repo->shouldReceive('addDetailedArticles');
         $repo->shouldReceive('attachStatusValues');
 
@@ -37,10 +52,14 @@ class InventoryArticleServiceTest extends TestCase
             'inventory_category_id' => 1,
             'quantity' => 5,
             'is_detailed_quantity' => false,
+            'statusValues' => [],
+            'newImages' => [], // Add empty newImages array to match what the service expects
+            'properties' => [], // Add empty properties array to match what the service expects
+            'detailed_article_quantities' => [], // Add empty detailed_article_quantities array to match what the service expects
         ]);
+
         $result = $service->store($request);
-        $this->assertInstanceOf(InventoryArticle::class, $result);
-        $this->assertEquals('Artikel', $result->name);
+        $this->assertSame($createdArticle, $result);
     }
 
     public function test_get_available_stock_returns_array(): void

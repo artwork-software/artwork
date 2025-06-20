@@ -2,7 +2,6 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
@@ -11,13 +10,13 @@ use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\User\Models\User;
 use Database\Seeders\ProjectManagementBuilderSeed;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Laravel\Passport\Passport;
 
 class UpdateArtwork extends Command
 {
     public function __construct(
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
-        private readonly ColumnService $columnService,
         private readonly CraftItemMigrationService $craftItemMigrationService,
     ) {
         parent::__construct();
@@ -145,6 +144,13 @@ class UpdateArtwork extends Command
         if (!is_readable(Passport::keyPath('oauth-public.key'))) {
             $this->info('Laravel Passport is not set up, creating');
             $this->call('passport:keys', ['--force' => true]);
+        }
+
+        if (DB::table('oauth_clients')->count() === 0) {
+            $provider = array_key_exists('users', config('auth.providers')) ? 'users' : null;
+
+            $this->call('passport:client', ['--personal' => true, '--name' => config('app.name').' Personal Access Client']);
+            $this->call('passport:client', ['--password' => true, '--name' => config('app.name').' Password Grant Client', '--provider' => $provider]);
         }
     }
 }

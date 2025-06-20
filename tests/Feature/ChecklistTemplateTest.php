@@ -6,9 +6,15 @@ use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Artwork\Modules\User\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Permission;
 
 beforeEach(function () {
+    // Ensure permissions exist before assigning them
+    if (!Permission::where('name', \Artwork\Modules\Permission\Enums\PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value)->exists()) {
+        $this->artisan('db:seed', ['--class' => RolesAndPermissionsSeeder::class]);
+    }
 
     $this->auth_user = User::factory()->create();
     $this->permissionless_user = User::factory()->create();
@@ -30,6 +36,7 @@ beforeEach(function () {
 });
 
 test('users with the permission can create template checklists from scratch and without tasks', function () {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->post(route('checklist_templates.store'), [
         'name' => 'TestTemplateChecklist',
@@ -44,6 +51,7 @@ test('users with the permission can create template checklists from scratch and 
 });
 
 test('users with the permission can create template checklists from scratch and with tasks', function () {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->post(route('checklist_templates.store'), [
         'name' => 'TestTemplateChecklist',
@@ -72,6 +80,7 @@ test('users with the permission can create template checklists from scratch and 
 });
 
 test('users with the permission can create template checklists from a checklist', function () {
+    \Illuminate\Support\Facades\Event::fake();
 
     Task::factory()->create([
         'name' => 'TestTask',
@@ -100,6 +109,7 @@ test('users with the permission can create template checklists from a checklist'
 
 
 test('users without the permission cant create checklist templates', function () {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->actingAs($this->permissionless_user);
     $name = fake()->company();
@@ -117,6 +127,7 @@ test('users without the permission cant create checklist templates', function ()
 });
 
 test('users with the permission can see all checklist_templates', function () {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->auth_user->can('view checklist_templates');
     $this->checklist_template->user()->associate($this->auth_user);
@@ -135,6 +146,7 @@ test('users with the permission can see all checklist_templates', function () {
 });
 
 test('users with the permission can update checklist_templates', function () {
+    \Illuminate\Support\Facades\Event::fake();
 
     $task_template = TaskTemplate::factory()->create(
         [
@@ -180,6 +192,7 @@ test('users with the permission can update checklist_templates', function () {
 });
 
 test('users with the permission can delete checklist_templates', function () {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->delete("/checklist_templates/{$this->checklist_template->id}");
 
@@ -187,7 +200,3 @@ test('users with the permission can delete checklist_templates', function () {
         'id' => $this->checklist_template->id
     ]);
 });
-
-
-
-

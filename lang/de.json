@@ -2825,5 +2825,6 @@
     "Days Off First 26 Weeks": "Freie Tage in den ersten 26 Wochen",
     "If this is active, the special day rule will be applied to this contract. This means that on special days, the rules for free days may differ from the regular rules.": "Wenn dies aktiviert ist, wird die Sondertag-Regel auf diesen Vertrag angewendet. Das bedeutet, dass an Sondertagen die Regeln für freie Tage von den regulären Regeln abweichen können.",
     "Delete User Contract": "Nutzervertrag löschen",
-    "Are you sure you want to delete this user contract? This action cannot be undone.": "Möchtest du diesen Nutzervertrag wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    "Are you sure you want to delete this user contract? This action cannot be undone.": "Möchtest du diesen Nutzervertrag wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "You do not have the permission to plan events without a request": "Du hast nicht die Berechtigung 'Termine ohne Anfrage planen'"
 }

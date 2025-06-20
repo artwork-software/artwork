@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiController;
 
-
 /*
 |--------------------------------------------------------------------------
 | API Routes

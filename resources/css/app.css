@@ -69,6 +69,10 @@
     inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
     0px 0.5px 2px rgba(0, 0, 0, 0.08),
     0px 2px 16px -4px rgba(0, 0, 0, 0.1);
+    --shadow-glass-small: inset 0px 0.5px 0px 0px hsla(0, 0%, 100%, 0.2),
+    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
+    0px 0.5px 2px 0px rgba(0, 0, 0, 0.08),
+    0px 2px 12px -4px rgba(0, 0, 0, 0.1);
     --shadow-elevation-two: inset 0px 0.5px 0px hsla(0, 0%, 100%, 0.2),
     inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
     0px 0.5px 2px rgba(0, 0, 0, 0.08),
@@ -689,7 +693,6 @@
 }
 
 .artwork {
-
     .artwork-container {
         @apply mx-auto container px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 mt-5 min-h-screen pb-20;
     }
@@ -787,12 +790,35 @@
 
     .card {
         &.glassy {
-            @apply flex h-fit grow flex-col rounded-lg bg-gradient-to-br from-slate-50/70 to-sky-100/20 text-left shadow-glass backdrop-blur-2xl border border-gray-100;
+            box-shadow: var(--shadow-glass);
+            @apply flex h-fit grow flex-col rounded-3xl bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50;
         }
 
         &.white {
-            @apply shadow-glass bg-white rounded-lg border border-gray-100 w-full;
+            box-shadow: var(--shadow-glass);
+            @apply bg-white rounded-3xl border border-gray-100 w-full;
         }
+    }
+
+    .button {
+        @apply relative;
+        &.glassy {
+            box-shadow: var(--shadow-glass-small);
+            @apply flex h-fit w-fit items-center rounded-lg p-1.5 bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-gray-100 cursor-pointer;
+        }
+        span {
+            box-shadow: var(--shadow-glass-small);
+            @apply bg-white rounded-xl border border-gray-100 w-fit p-1.5 relative z-30;
+
+            svg {
+                @apply text-gray-500;
+            }
+        }
+
+        p {
+            @apply text-gray-500 text-xs font-lexend font-semibold relative z-20;
+        }
+
     }
 }
 

@@ -269,9 +269,9 @@
                     :rooms="rooms"
                     @closed="closeMultiEditModal"/>
     <MultiDuplicateModal v-if="showMultiDuplicateModal"
-                    :checked-events="editEvents"
-                    :rooms="rooms"
-                    @closed="closeMultiDuplicateModal"/>
+                         :checked-events="editEvents"
+                         :rooms="rooms"
+                         @closed="closeMultiDuplicateModal"/>
     <ConfirmDeleteModal
         v-if="openDeleteSelectedEventsModal"
         :title="$t('Delete assignments')"
@@ -647,18 +647,22 @@ const eventComponentClosed = (closedOnPurpose) => {
         //@todo: temporary see ARTWORK-300
         if (calendar_settings.use_project_time_period) {
             router.patch(route('user.calendar_settings.toggle_calendar_settings_use_project_period'), {
-                use_project_time_period: true,
-                project_id: calendar_settings.time_period_project_id,
-            }, {
-                preserveState: false,
-                preserveScroll: true
+                    use_project_time_period: true,
+                    project_id: calendar_settings.time_period_project_id,
+                }, {
+                    preserveState: false,
+                    preserveScroll: true
                 }
             );
             return;
         }
     }
 
+    // Reset event data to prevent stale data when reopening the component
     showEventComponent.value = false;
+    eventToEdit.value = null;
+    wantedRoom.value = null;
+    wantedDate.value = null;
 }
 const deleteEvent = () => {
     if (deleteType.value === 'main') {
@@ -798,7 +802,7 @@ const splitByMonth = () => {
 
 <style scoped>
 .cell {
-    overflow: overlay;
+    overflow: auto;
 
     /* Standard-Scrollbar für Firefox */
     scrollbar-color: #d4d4d4 #f3f3f3;

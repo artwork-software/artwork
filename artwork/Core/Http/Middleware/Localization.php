@@ -16,7 +16,7 @@ class Localization
         // Prüfen, ob ein Benutzer angemeldet ist
         if (Auth::check()) {
             // Die Sprache des angemeldeten Benutzers anwenden
-            $userLocale = Auth::user()->language;
+            $userLocale = Auth::user()->language ?? 'en';
             App::setLocale($userLocale);
             CarbonPeriod::setLocale($userLocale);
             Session::put('locale', $userLocale);

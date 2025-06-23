@@ -1205,10 +1205,40 @@ export default {
                 this.$emit('closed', closedOnPurpose);
             }
 
+            // Reset all form data to prevent stale data when reopening the component
             this.startDate = null;
             this.startTime = null;
             this.endDate = null;
             this.endTime = null;
+            this.oldStartDate = null;
+            this.oldStartTime = null;
+            this.oldEndDate = null;
+            this.oldEndTime = null;
+            this.eventName = null;
+            this.description = null;
+            this.selectedProject = null;
+            this.selectedRoom = null;
+            this.selectedEventType = this.eventTypes[0];
+            this.selectedEventStatus = this.eventStatuses?.find(status => status.default) ?? this.eventStatuses[0];
+            this.allDayEvent = false;
+            this.series = false;
+            this.seriesEndDate = null;
+            this.showProjectInfo = this.project ? true : this.calendarProjectPeriod && this.$page.props.auth.user.calendar_settings.time_period_project_id ? true : false;
+            this.creatingProject = false;
+            this.projectName = null;
+            this.projectSearchResults = [];
+            this.adminComment = '';
+            this.accept = true;
+            this.optionAccept = false;
+            this.optionString = null;
+            this.error = null;
+
+            // Reset event properties if they exist
+            if (this.event_properties) {
+                this.event_properties.forEach(property => {
+                    property.checked = false;
+                });
+            }
             this.selectedRoom = null;
             this.selectedProject = null;
             this.initialRoomId = null;
@@ -1306,9 +1336,23 @@ export default {
             if (this.startDate && this.endDate && this.startTime && this.endTime) {
                 this.setCombinedTimeString(this.startDate, this.startTime, 'start');
                 this.setCombinedTimeString(this.endDate, this.endTime, 'end');
-                return await axios
-                    .post('/events', {start: this.startFull, end: this.endFull}, {headers: {'X-Dry-Run': true}})
-                    .catch(error => this.error = error.response.data.errors);
+
+                // Only validate start and end times, don't set error for other fields
+                try {
+                    await axios.post('/events', {start: this.startFull, end: this.endFull}, {headers: {'X-Dry-Run': true}});
+                } catch (error) {
+                    // Only set errors related to start and end times
+                    if (error.response && error.response.data && error.response.data.errors) {
+                        const errors = {};
+                        if (error.response.data.errors.start) {
+                            errors.start = error.response.data.errors.start;
+                        }
+                        if (error.response.data.errors.end) {
+                            errors.end = error.response.data.errors.end;
+                        }
+                        this.error = Object.keys(errors).length > 0 ? errors : null;
+                    }
+                }
             }
         },
         addMinutes(date, minutes) {
@@ -1501,11 +1545,11 @@ export default {
                 roomId: this.selectedRoom?.id,
                 description: this.description,
                 isOption: this.isOption,
-                eventNameMandatory: this.selectedEventType?.individual_name,
+                eventNameMandatory: this.selectedEventType?.individual_name ? true : false,
                 projectId: this.showProjectInfo ? this.selectedProject?.id : null,
                 projectName: this.showProjectInfo ? this.creatingProject ? this.projectName : '' : '',
                 eventTypeId: this.selectedEventType?.id,
-                projectIdMandatory: this.selectedEventType?.project_mandatory && !this.creatingProject,
+                projectIdMandatory: this.selectedEventType?.project_mandatory && !this.creatingProject ? true : false,
                 creatingProject: this.showProjectInfo ? this.creatingProject : false,
                 declinedRoomId: this.declinedRoomId,
                 is_series: this.series ? this.series : false,

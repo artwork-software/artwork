@@ -5,7 +5,9 @@ namespace Tests\Unit\Artwork\Modules\Calendar\Services;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Filter\Services\FilterService;
+use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Repositories\RoomRepository;
+use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use PHPUnit\Framework\TestCase;
 
@@ -15,6 +17,8 @@ class CalendarDataServiceTest extends TestCase
     private $roomRepositoryMock;
     private $eventCollectionServiceMock;
     private $filterServiceMock;
+    private $userServiceMock;
+    private $projectServiceMock;
 
     protected function setUp(): void
     {
@@ -23,11 +27,15 @@ class CalendarDataServiceTest extends TestCase
         $this->roomRepositoryMock = $this->createMock(RoomRepository::class);
         $this->eventCollectionServiceMock = $this->createMock(EventCollectionService::class);
         $this->filterServiceMock = $this->createMock(FilterService::class);
+        $this->userServiceMock = $this->createMock(UserService::class);
+        $this->projectServiceMock = $this->createMock(ProjectService::class);
 
         $this->calendarDataService = new CalendarDataService(
             $this->roomRepositoryMock,
             $this->eventCollectionServiceMock,
-            $this->filterServiceMock
+            $this->filterServiceMock,
+            $this->userServiceMock,
+            $this->projectServiceMock
         );
     }
 

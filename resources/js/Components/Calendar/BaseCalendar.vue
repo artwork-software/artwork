@@ -658,7 +658,11 @@ const eventComponentClosed = (closedOnPurpose) => {
         }
     }
 
+    // Reset event data to prevent stale data when reopening the component
     showEventComponent.value = false;
+    eventToEdit.value = null;
+    wantedRoom.value = null;
+    wantedDate.value = null;
 }
 const deleteEvent = () => {
     if (deleteType.value === 'main') {
@@ -798,7 +802,7 @@ const splitByMonth = () => {
 
 <style scoped>
 .cell {
-    overflow: overlay;
+    overflow: auto;
 
     /* Standard-Scrollbar für Firefox */
     scrollbar-color: #d4d4d4 #f3f3f3;

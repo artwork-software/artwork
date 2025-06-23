@@ -128,6 +128,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Schema Dump Path
+    |--------------------------------------------------------------------------
+    |
+    | In Laravel 11, migrations use a schema-based approach. This setting
+    | defines the path where the schema dump file is stored. This file
+    | serves as the source of truth for your database schema.
+    |
+    */
+
+    'schema' => [
+        'path' => database_path('schema'),
+        'dump' => [
+            'mysql' => [
+                'binary' => env('DB_MYSQLDUMP_BINARY', 'mysqldump'),
+                'timeout' => env('DB_MYSQLDUMP_TIMEOUT', 60),
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Redis Databases
     |--------------------------------------------------------------------------
     |

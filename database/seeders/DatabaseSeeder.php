@@ -28,6 +28,9 @@ class DatabaseSeeder extends Seeder
             InventoryArticlePropertiesSeeder::class,
             ManufacturerSeeder::class,
             InventoryArticleStatusSeeder::class,
+            EventStatusSeeder::class,
+            BudgetColumnSettingSeeder::class,
+            DatabaseSettingsSeeder::class,
         ]);
     }
 }

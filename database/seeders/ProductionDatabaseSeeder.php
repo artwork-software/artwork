@@ -18,6 +18,7 @@ class ProductionDatabaseSeeder extends Seeder
             DefaultComponentSeeder::class,
             InventoryManagementDefaultColumnsSeeder::class,
             SubdivisionSeeder::class,
+            DatabaseSettingsSeeder::class,
         ]);
 
         DB::table('event_types')->insert([

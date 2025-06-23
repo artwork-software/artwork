@@ -9,7 +9,7 @@ use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\EventProperty\Models\EventProperty;
+use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;

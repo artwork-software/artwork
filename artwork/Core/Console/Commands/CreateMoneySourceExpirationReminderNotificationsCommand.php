@@ -3,7 +3,7 @@
 namespace Artwork\Core\Console\Commands;
 
 use Artwork\Modules\MoneySource\Models\MoneySource;
-use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
+use Artwork\Modules\MoneySource\Models\MoneySourceReminder;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Carbon\Carbon;

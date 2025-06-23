@@ -9,10 +9,12 @@ import DragComponentElement from "@/Pages/Settings/Components/DragComponentEleme
 import IconLib from "@/Mixins/IconLib.vue";
 import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 export default {
     name: "Index",
     components: {
+        GlassyIconButton,
         PlusButton,
         AddEditTabModal,
         DragComponentElement, SingleTabComponent, draggable, Link, IconDragDrop, ProjectTabs, AppLayout
@@ -99,53 +101,57 @@ export default {
                 <!-- Tab components -->
                <div class="w-full col-span-1">
                    <div class="flex justify-end mb-5">
-                       <PlusButton @click="showAddEditModal = true" :button-text="$t('Create tab')" />
+                       <GlassyIconButton icon="IconPlus" @click="showAddEditModal = true" :text="$t('Create tab')" />
                    </div>
 
 
-                   <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="tabs" @start="dragging=true" @end="dragging=false" @change="updateComponentOrder(tabs)">
-                       <template #item="{element}" :key="element.id">
-                           <div class="mb-2">
-                               <div class="" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                   <SingleTabComponent :all-tabs="tabs" :tab="element" />
+                   <div class="card white p-5">
+                       <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="tabs" @start="dragging=true" @end="dragging=false" @change="updateComponentOrder(tabs)">
+                           <template #item="{element}" :key="element.id">
+                               <div class="mb-2">
+                                   <div class="" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                                       <SingleTabComponent :all-tabs="tabs" :tab="element" />
+                                   </div>
                                </div>
-                           </div>
-                        </template>
-                    </draggable>
+                           </template>
+                       </draggable>
+                   </div>
                </div>
 
                 <!-- Components List -->
 
-                <div class="col-span-1">
-                    <div class="flex items-center justify-end w-full mb-3">
-                        <div class="w-44 md:w-56 lg:w-72">
-                            <div>
-                                <div class="relative rounded-md shadow-sm">
-                                    <input type="text" name="search" v-model="searchComponent" :placeholder="$t('Search')" id="account-number" class="block w-full rounded-md border-0 py-1.5 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                                    <div class=" absolute inset-y-0 right-0 flex items-center pr-3">
-                                        <IconSearch class="h-5 w-5 text-gray-400 pointer-events-none" aria-hidden="true" v-if="searchComponent.length === 0" />
-                                        <IconCircleX class="h-5 w-5 text-gray-400 cursor-pointer hover:text-red-400" aria-hidden="true" v-else @click="searchComponent = ''" />
+                <div class="col-span-1 card glassy p-5">
+                    <div class="card white p-5">
+                        <div class="flex items-center justify-end w-full mb-3">
+                            <div class="w-44 md:w-56 lg:w-72">
+                                <div>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <input type="text" name="search" v-model="searchComponent" :placeholder="$t('Search')" id="account-number" class="block w-full rounded-md border-0 py-1.5 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                        <div class=" absolute inset-y-0 right-0 flex items-center pr-3">
+                                            <IconSearch class="h-5 w-5 text-gray-400 pointer-events-none" aria-hidden="true" v-if="searchComponent.length === 0" />
+                                            <IconCircleX class="h-5 w-5 text-gray-400 cursor-pointer hover:text-red-400" aria-hidden="true" v-else @click="searchComponent = ''" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div v-for="componentsArray in filteredComponents">
-                        <div>
-                            <div class="flex items-center gap-x-4 cursor-pointer">
-                                <h2 class="text-md font-bold mb-2">{{ $t(componentsArray.name) }}</h2>
-                            </div>
-                            <div class="grid grid-cols-1 2xl:grid-cols-3 gap-2">
-                                <DragComponentElement v-for="component in componentsArray.components" :component="component" />
+                        <div v-for="componentsArray in filteredComponents">
+                            <div>
+                                <div class="flex items-center gap-x-4 cursor-pointer">
+                                    <h2 class="text-md font-bold mb-2">{{ $t(componentsArray.name) }}</h2>
+                                </div>
+                                <div class="grid grid-cols-1 2xl:grid-cols-3 gap-2">
+                                    <DragComponentElement v-for="component in componentsArray.components" :component="component" />
+                                </div>
                             </div>
                         </div>
-                   </div>
-                   <div>
-                       <h2 class="text-md font-bold mb-2">{{ $t('Special components') }}</h2>
-                       <div class="grid grid-cols-1 2xl:grid-cols-3 gap-2">
-                           <DragComponentElement v-for="component in filteredSpecialComponents" :component="component" />
-                       </div>
-                   </div>
+                        <div>
+                            <h2 class="text-md font-bold mb-2">{{ $t('Special components') }}</h2>
+                            <div class="grid grid-cols-1 2xl:grid-cols-3 gap-2">
+                                <DragComponentElement v-for="component in filteredSpecialComponents" :component="component" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

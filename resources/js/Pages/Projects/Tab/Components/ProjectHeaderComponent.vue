@@ -310,10 +310,10 @@ export default {
 
             <!-- tabs -->
             <div class="w-full h-full border-b-2 border-dashed pb-5 border-gray-100">
-                <div class="">
+                <div class="font-lexend">
                     <div class="hidden sm:block">
                         <div class="border-gray-200">
-                            <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-12" aria-label="Tabs">
+                            <nav class="-mb-px text-sm tracking-wide pt-4 flex space-x-12" aria-label="Tabs">
                                 <Link v-for="tab in headerObject.tabs" :key="tab?.name"
                                       :href="route('projects.tab', {project: headerObject.project.id, projectTab: tab.id})"
                                       :class="[tab.id === headerObject.currentTabId ? 'border-artwork-buttons-hover text-artwork-buttons-hover' : 'border-transparent hover:text-gray-600 hover:border-gray-300 text-artwork-context-dark', 'whitespace-nowrap py-2 px-1 border-b-2 font-black duration-300 ease-in-out']"

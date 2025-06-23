@@ -3,7 +3,7 @@
 namespace Database\Factories\Artwork\Modules\UserCalendarAbo\Models;
 
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
+use Artwork\Modules\User\Models\UserCalendarAbo;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UserCalendarAboFactory extends Factory

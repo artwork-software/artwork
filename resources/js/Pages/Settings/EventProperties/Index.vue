@@ -6,7 +6,7 @@
                     <TinyPageHeadline title="Event Eigenschaften"
                                       description="Hier kannst du die Event Eigenschaften verwalten."/>
                     <div>
-                        <AddButtonSmall @click="showEventPropertyModal = true;" text="Event Eigenschaft hinzufügen"/>
+                        <GlassyIconButton icon="IconPlus" @click="showEventPropertyModal = true;" text="Event Eigenschaft hinzufügen"/>
                     </div>
                 </div>
                 <ul role="list" class="flex flex-col gap-y-3">
@@ -76,6 +76,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import {provide} from "vue";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 const props = defineProps({
         event_properties: {

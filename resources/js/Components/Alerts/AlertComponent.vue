@@ -55,17 +55,17 @@ const icon = computed(() => {
 const textColor = computed(() => {
     switch (props.type) {
         case 'info':
-            return 'text-artwork-messages-info';
+            return 'text-artwork-info';
         case 'warning':
-            return 'text-artwork-messages-warning';
+            return 'text-artwork-warning';
         case 'error':
-            return 'text-artwork-messages-error';
+            return 'text-artwork-error';
         case 'success':
-            return 'text-artwork-messages-success';
+            return 'text-artwork-success';
         case 'dashboard':
             return 'text-gray-500';
         case 'plus':
-            return 'text-artwork-messages-info cursor-pointer !items-center';
+            return 'text-artwork-info cursor-pointer !items-center';
         default:
             return 'text-artwork-buttons-create';
     }

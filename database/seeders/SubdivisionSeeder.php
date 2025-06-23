@@ -14,7 +14,7 @@ class SubdivisionSeeder extends Seeder
      */
     public function run(): void
     {
-        if (Subdivision::where('code', Subdivision::BERLIN)->first()) {
+        if (Subdivision::where('code', Subdivision::BRANDENBURG)->first()) {
             return;
         }
 

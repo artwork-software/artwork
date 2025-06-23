@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Artwork\Modules\BudgetColumnSetting\Models\BudgetColumnSetting;
+use Artwork\Modules\Budget\Models\BudgetColumnSetting;
 use Illuminate\Database\Seeder;
 
 class BudgetColumnSettingSeeder extends Seeder

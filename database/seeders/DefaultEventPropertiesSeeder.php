@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Artwork\Modules\EventProperty\Services\EventPropertyService;
+use Artwork\Modules\Event\Services\EventPropertyService;
 use Illuminate\Database\Seeder;
 use Throwable;
 

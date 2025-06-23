@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\PresetShift\Models\PresetShift;
-use Artwork\Modules\PresetShift\Services\PresetShiftService;
-use Artwork\Modules\PresetShift\Services\PresetShiftsShiftsQualificationsService;
+use Artwork\Modules\Shift\Models\PresetShift;
+use Artwork\Modules\Shift\Services\PresetShiftService;
+use Artwork\Modules\Shift\Services\PresetShiftsShiftsQualificationsService;
 use Illuminate\Http\Request;
 
 class PresetShiftController extends Controller

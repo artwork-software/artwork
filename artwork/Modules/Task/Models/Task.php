@@ -6,7 +6,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Models\BelongsToChecklist;
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Department\Models\Department;
-use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
+use Artwork\Modules\MoneySource\Models\MoneySourceTask;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

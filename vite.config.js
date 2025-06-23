@@ -1,11 +1,19 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
-
+import tailwindcss from "@tailwindcss/vite";
 const port = 5173;
 const origin = `${process.env.DDEV_PRIMARY_URL}:${port}`;
 
 export default defineConfig({
+    build: {
+        // for modern browsers / node versions — ESNext includes top-level await
+        target: 'esnext',
+    },
+    // you can also tweak esbuildOptions directly:
+    esbuild: {
+        target: 'esnext',
+    },
     server: {
         // respond to all network requests
         host: '0.0.0.0',
@@ -33,5 +41,6 @@ export default defineConfig({
                 },
             },
         }),
+        tailwindcss(),
     ],
 });

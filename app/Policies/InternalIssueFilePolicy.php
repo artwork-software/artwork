@@ -12,7 +12,8 @@ class InternalIssueFilePolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class InternalIssueFilePolicy
      */
     public function view(User $user, InternalIssueFile $internalIssueFile): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the internal issue file exists
+        return $user->exists && $internalIssueFile->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class InternalIssueFilePolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,8 @@ class InternalIssueFilePolicy
      */
     public function update(User $user, InternalIssueFile $internalIssueFile): bool
     {
-        //
+        // Allow update if the user is authenticated and the internal issue file exists
+        return $user->exists && $internalIssueFile->exists;
     }
 
     /**
@@ -44,7 +48,8 @@ class InternalIssueFilePolicy
      */
     public function delete(User $user, InternalIssueFile $internalIssueFile): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the internal issue file exists
+        return $user->exists && $internalIssueFile->exists;
     }
 
     /**
@@ -52,7 +57,8 @@ class InternalIssueFilePolicy
      */
     public function restore(User $user, InternalIssueFile $internalIssueFile): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the internal issue file exists
+        return $user->exists && $internalIssueFile->exists;
     }
 
     /**
@@ -60,6 +66,7 @@ class InternalIssueFilePolicy
      */
     public function forceDelete(User $user, InternalIssueFile $internalIssueFile): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the internal issue file exists
+        return $user->exists && $internalIssueFile->exists;
     }
 }

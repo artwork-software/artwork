@@ -4,7 +4,7 @@ namespace Artwork\Modules\Project\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Contract\Models\Traits\BelongsToContract;
-use Artwork\Modules\MoneySourceFile\Models\MoneySourceFile;
+use Artwork\Modules\MoneySource\Models\MoneySourceFile;
 use Artwork\Modules\Project\Models\Traits\BelongsToProject;
 use Artwork\Modules\User\Models\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

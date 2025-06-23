@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\BudgetManagementAccount\Http\Requests;
 
-use Artwork\Modules\BudgetManagementAccount\Http\Requests\UpdateBudgetManagementAccountRequest;
+use Artwork\Modules\Budget\Http\Requests\UpdateBudgetManagementAccountRequest;
 use PHPUnit\Framework\TestCase;
 
 class UpdateBudgetManagementAccountRequestTest extends TestCase

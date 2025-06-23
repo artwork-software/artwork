@@ -4,8 +4,8 @@ namespace Artwork\Modules\Event\Http\Resources;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Http\Resources\ProjectInCalendarResource;
-use Artwork\Modules\SubEvent\Http\Resources\SubEventResource;
-use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
+use Artwork\Modules\Event\Http\Resources\SubEventResource;
+use Artwork\Modules\User\Models\UserCalendarSettings;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 

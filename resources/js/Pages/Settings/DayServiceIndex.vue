@@ -4,11 +4,12 @@ import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import AddEditDayServiceModal from "@/Pages/Settings/Components/AddEditDayServiceModal.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 export default {
     name: "DayServiceIndex",
     mixins: [IconLib],
-    components: {AddEditDayServiceModal, AddButtonSmall, TabComponent, AppLayout},
+    components: {GlassyIconButton, AddEditDayServiceModal, AddButtonSmall, TabComponent, AppLayout},
     props: [
         'dayServices'
     ],
@@ -19,14 +20,30 @@ export default {
                     name: this.$t('Shift Settings'),
                     href: route('shift.settings'),
                     current: route().current('shift.settings'),
-                    show: true
+                    show: true,
+                    icon: 'IconCalendarUser'
                 },
                 {
                     name: this.$t('Day Services'),
                     href: route('day-service.index'),
                     current: route().current('day-service.index'),
-                    show: true
+                    show: true,
+                    icon: 'IconHours24'
                 },
+                {
+                    name: this.$t('Work Time Pattern'),
+                    href: route('shift.work-time-pattern'),
+                    current: route().current('shift.work-time-pattern'),
+                    show: true,
+                    icon: 'IconClockCog'
+                },
+                {
+                    name: this.$t('User Contracts'),
+                    href: route('user-contract-settings.index'),
+                    current: route().current('user-contract-settings.index'),
+                    show: true,
+                    icon: 'IconContract'
+                }
             ],
             iconList: [
                 {iconName: 'IconAbacus'},
@@ -75,11 +92,13 @@ export default {
                 </div>
             </div>
 
-            <TabComponent :tabs="tabs" />
+           <div class="flex items-center justify-between">
+               <TabComponent :tabs="tabs" />
 
-            <AddButtonSmall :text="$t('New Day Service')" class="mt-5" @click="showAddEditDayServiceModal = true" />
+               <GlassyIconButton text="New Day Service" icon="IconPlus"@click="showAddEditDayServiceModal = true" />
+           </div>
 
-            <div class="my-5" >
+            <div class="my-5 card white p-5" >
                 <div v-for="dayService in dayServices">
                     <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-8 mb-3">
                         <div class="col-span-full md:col-span-2 xl:col-span-7">

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\ShiftPlanComment\Models\ShiftPlanComment;
+use Artwork\Modules\Shift\Models\ShiftPlanComment;
 use Illuminate\Http\Request;
 
 class ShiftPlanCommentController extends Controller

@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Event\DTOs;
 
 use Artwork\Core\Abstracts\BaseDto;
-use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
+use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 

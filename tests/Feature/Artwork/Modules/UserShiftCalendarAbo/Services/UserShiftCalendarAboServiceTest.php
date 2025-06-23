@@ -3,8 +3,8 @@
 namespace Tests\Feature\Artwork\Modules\UserShiftCalendarAbo\Services;
 
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
-use Artwork\Modules\UserShiftCalendarAbo\Services\UserShiftCalendarAboService;
+use Artwork\Modules\User\Models\UserShiftCalendarAbo;
+use Artwork\Modules\User\Services\UserShiftCalendarAboService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Tests\TestCase;

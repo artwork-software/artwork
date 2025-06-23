@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\BudgetManagementAccount\Models\BudgetManagementAccount;
-use Artwork\Modules\BudgetManagementAccount\Services\BudgetManagementAccountService;
-use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
-use Artwork\Modules\BudgetManagementCostUnit\Services\BudgetManagementCostUnitService;
+use Artwork\Modules\Budget\Models\BudgetManagementAccount;
+use Artwork\Modules\Budget\Services\BudgetManagementAccountService;
+use Artwork\Modules\Budget\Models\BudgetManagementCostUnit;
+use Artwork\Modules\Budget\Services\BudgetManagementCostUnitService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Inertia\Inertia;
 use Inertia\Response;

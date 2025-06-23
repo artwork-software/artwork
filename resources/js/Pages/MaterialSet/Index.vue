@@ -3,13 +3,10 @@
         <div class="space-y-6 artwork-container">
             <div class="flex justify-between items-center">
                 <h1 class="text-xl font-semibold text-gray-800">{{ $t('Material Sets') }}</h1>
-
-                <BaseButton v-if="can('set.create_edit') || is('artwork admin')" :text="$t('New Material Set')" @click="showCreateOrUpdateMaterialSetModal = true">
-                    <component is="IconCopyPlus" class="size-5 mr-2" />
-                </BaseButton>
+                <GlassyIconButton icon="IconCopyPlus" v-if="can('set.create_edit') || is('artwork admin')" :text="$t('New Material Set')" @click="showCreateOrUpdateMaterialSetModal = true" />
             </div>
 
-            <div class="mt-8 flow-root">
+            <div class="mt-8 flow-root card white p-5">
                 <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                     <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                         <table class="min-w-full divide-y divide-gray-300">
@@ -62,6 +59,7 @@ import CreateOrUpdateMaterialSetModal from "@/Pages/MaterialSet/Components/Creat
 import {ref} from "vue";
 import SingleMaterialSet from "@/Pages/MaterialSet/Components/SingleMaterialSet.vue";
 import {can, is} from "laravel-permission-to-vuejs";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 const props = defineProps({
     materialSets: {

@@ -13,7 +13,6 @@ use Artwork\Modules\Room\Services\RoomFrontendModelService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\User\Services\UserService;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
@@ -52,7 +51,6 @@ class RoomController extends Controller
         $roomIds = [];
 
         foreach ($dates as $date) {
-            Debugbar::info($date);
             $events = Event::query()->occursAt(Carbon::parse($date))->get();
             foreach ($events as $event) {
                 $roomIds[] = $event->room_id;

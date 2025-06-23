@@ -3,7 +3,7 @@
 namespace Database\Factories\Artwork\Modules\UserCalendarFilter\Models;
 
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\User\Models\UserCalendarFilter;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UserCalendarFilterFactory extends Factory

@@ -12,7 +12,8 @@ class InternalIssuePolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class InternalIssuePolicy
      */
     public function view(User $user, InternalIssue $internalIssue): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the internal issue exists
+        return $user->exists && $internalIssue->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class InternalIssuePolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,8 @@ class InternalIssuePolicy
      */
     public function update(User $user, InternalIssue $internalIssue): bool
     {
-        //
+        // Allow update if the user is authenticated and the internal issue exists
+        return $user->exists && $internalIssue->exists;
     }
 
     /**
@@ -44,7 +48,8 @@ class InternalIssuePolicy
      */
     public function delete(User $user, InternalIssue $internalIssue): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the internal issue exists
+        return $user->exists && $internalIssue->exists;
     }
 
     /**
@@ -52,7 +57,8 @@ class InternalIssuePolicy
      */
     public function restore(User $user, InternalIssue $internalIssue): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the internal issue exists
+        return $user->exists && $internalIssue->exists;
     }
 
     /**
@@ -60,6 +66,7 @@ class InternalIssuePolicy
      */
     public function forceDelete(User $user, InternalIssue $internalIssue): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the internal issue exists
+        return $user->exists && $internalIssue->exists;
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Exports;
 
-use Artwork\Modules\InventoryManagement\Exports\InventoryManagementExport;
+use Artwork\Modules\Inventory\Exports\InventoryManagementExport;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\View\Factory;

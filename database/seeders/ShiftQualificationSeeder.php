@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
-use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Illuminate\Database\Seeder;
 
 class ShiftQualificationSeeder extends Seeder

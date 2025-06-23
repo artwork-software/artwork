@@ -12,7 +12,8 @@ class InventoryArticleImagePolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class InventoryArticleImagePolicy
      */
     public function view(User $user, InventoryArticleImage $inventoryArticleImage): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the inventory article image exists
+        return $user->exists && $inventoryArticleImage->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class InventoryArticleImagePolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,8 @@ class InventoryArticleImagePolicy
      */
     public function update(User $user, InventoryArticleImage $inventoryArticleImage): bool
     {
-        //
+        // Allow update if the user is authenticated and the inventory article image exists
+        return $user->exists && $inventoryArticleImage->exists;
     }
 
     /**
@@ -44,7 +48,8 @@ class InventoryArticleImagePolicy
      */
     public function delete(User $user, InventoryArticleImage $inventoryArticleImage): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the inventory article image exists
+        return $user->exists && $inventoryArticleImage->exists;
     }
 
     /**
@@ -52,7 +57,8 @@ class InventoryArticleImagePolicy
      */
     public function restore(User $user, InventoryArticleImage $inventoryArticleImage): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the inventory article image exists
+        return $user->exists && $inventoryArticleImage->exists;
     }
 
     /**
@@ -60,6 +66,7 @@ class InventoryArticleImagePolicy
      */
     public function forceDelete(User $user, InventoryArticleImage $inventoryArticleImage): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the inventory article image exists
+        return $user->exists && $inventoryArticleImage->exists;
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Project\Http\Resources;
 
-use Artwork\Modules\SubEvent\Http\Resources\SubEventResource;
+use Artwork\Modules\Event\Http\Resources\SubEventResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 

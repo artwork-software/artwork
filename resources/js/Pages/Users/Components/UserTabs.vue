@@ -22,37 +22,43 @@ export default defineComponent({
                     name: 'Users',
                     href: route('users'),
                     current: route().current('users'),
-                    permission: true
+                    permission: true,
+                    icon: 'IconUsers'
                 },
                 {
                     name: 'Freelancers & Service Providers',
                     href: route('users.addresses'),
                     current: route().current('users.addresses'),
-                    permission: true
+                    permission: true,
+                    icon: 'IconCompass'
                 },
                 {
                     name: 'Manufacturers',
                     href: route('manufacturers.index'),
                     current: route().current('manufacturers.index'),
-                    permission: true
+                    permission: true,
+                    icon: 'IconBuildingWarehouse'
                 },
                 {
                     name: 'Accommodations',
                     href: route('accommodation.index'),
                     current: route().current('accommodation.index'),
-                    permission: true
+                    permission: true,
+                    icon: 'IconHome'
                 },
                 {
                     name: 'Teams',
                     href: route('departments'),
                     current: route().current('departments'),
-                    permission: this.$can('teammanagement') || this.hasAdminRole()
+                    permission: this.$can('teammanagement') || this.hasAdminRole(),
+                    icon: 'IconUsersGroup'
                 },
                 {
                     name: 'Permission presets',
                     href: route('permission-presets.index'),
                     current: route().current('permission-presets.index'),
-                    permission: this.hasAdminRole()
+                    permission: this.hasAdminRole(),
+                    icon: 'IconLicense'
                 }
             ]
         }

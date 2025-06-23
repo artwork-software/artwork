@@ -80,6 +80,21 @@
                         </SwitchLabel>
                     </SwitchGroup>
                 </div>
+                <div class="col-span-2">
+                    <div class="relative flex items-start mt-4">
+                        <div class="flex h-6 items-center">
+                            <input
+                                id="treatAsSpecialDay"
+                                v-model="customHolidayForm.treatAsSpecialDay"
+                                type="checkbox"
+                                class="input-checklist"
+                            />
+                        </div>
+                        <div class="ml-3 text-sm/6">
+                            <label for="treatAsSpecialDay" class="text-sm font-medium">{{ $t('Treat as special day') }}</label>
+                        </div>
+                    </div>
+                </div>
                 <div class="col-span-2 flex items-center justify-end">
                     <AddButtonBig :text="$t('Save')" class="w-fit" @click="storeCustomHoliday" />
                 </div>
@@ -120,6 +135,7 @@ const customHolidayForm = useForm({
     end_date: props.holidayToEdit.end_date,
     color: props.holidayToEdit.color,
     yearly: props.holidayToEdit.yearly,
+    treatAsSpecialDay: props.holidayToEdit.treatAsSpecialDay || false,
     selectedSubdivisions: props.holidayToEdit.subdivisions,
 })
 

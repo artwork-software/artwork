@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\App\Policies;
 
-use Artwork\Modules\ChecklistTemplate\Policies\ChecklistTemplatePolicy;
+use Artwork\Modules\Checklist\Policies\ChecklistTemplatePolicy;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Tests\TestCase;

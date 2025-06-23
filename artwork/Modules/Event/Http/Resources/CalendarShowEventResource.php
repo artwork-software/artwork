@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Event\Http\Resources;
 
 use Artwork\Modules\EventType\Services\EventTypeService;
-use Artwork\Modules\SubEvent\Http\Resources\SubEventResource;
+use Artwork\Modules\Event\Http\Resources\SubEventResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class CalendarShowEventResource extends JsonResource

@@ -7,8 +7,8 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\ShiftPlanComment\Models\ShiftPlanComment;
-use Artwork\Modules\ShiftPlanComment\Services\ShiftPlanCommentService;
+use Artwork\Modules\Shift\Models\ShiftPlanComment;
+use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Request;
 

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\ServiceProviderContacts\Models\ServiceProviderContacts;
+use Artwork\Modules\ServiceProvider\Models\ServiceProviderContacts;
 use Illuminate\Http\Request;
 
 class ServiceProviderContactsController extends Controller

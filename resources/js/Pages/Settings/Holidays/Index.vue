@@ -36,7 +36,7 @@
                                     <component is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                                    <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-gray-300 ring-opacity-5 focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" v-for="subdivision in computedSubDivisions" :key="subdivision.id">
                                             <li @click="addSubDivisionToForm(subdivision)" :class="['relative cursor-default select-none py-2 pl-3 pr-9']">
                                                 <span :class="['block truncate']">{{ subdivision.name }}</span>
@@ -60,7 +60,7 @@
                         </div>
                     </div>
 
-                    <div class="w-2/3">
+                    <div class="w-2/3 mt-5">
                         <h3 class="headline3">
                             {{ $t('What data would you like to import?') }}
                         </h3>
@@ -141,7 +141,7 @@
                                     <component is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                                    <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-gray-300 ring-opacity-5 focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" v-for="subdivision in subdivisions" :key="subdivision.id" :value="subdivision" v-slot="{ active, selected }">
                                             <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                 <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ subdivision.name }}</span>

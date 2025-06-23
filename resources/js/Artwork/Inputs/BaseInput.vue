@@ -36,7 +36,7 @@
         <label v-if="label"
             :for="id"
             :class="[
-        'absolute text-gray-500 text-xs transition-all duration-300 font-lexend peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-500 peer-focus:text-xs peer-focus:text-artwork-buttons-create',
+        'absolute text-gray-500 text-[9px] transition-all duration-300 font-lexend peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-500 peer-focus:text-[9px] peer-focus:text-artwork-buttons-create',
         isSmall
           ? 'top-0 left-2 peer-placeholder-shown:top-[7px] peer-focus:top-0'
           : 'top-1.5 peer-focus:top-1.5 left-4 peer-placeholder-shown:top-[17px]'

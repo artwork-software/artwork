@@ -13,7 +13,7 @@
                             <img :src="$page.props.big_logo" class="max-w-lg h-fit" alt="Big artwork logo"/>
                         </div>
                         <div class="flex items-center">
-                            <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">{{ $t('Login') }}</h2>
+                            <h2 class="mt-6 text-3xl font-bold text-primary">{{ $t('Login') }}</h2>
                             <SvgCollection svgName="arrowRight"/>
                         </div>
                     </div>
@@ -29,7 +29,7 @@
                             </div>
                             <div class="text-sm">
                                 <Link v-if="canResetPassword" :href="route('password.request')"
-                                      class="!text-xs xsLight !font-lexend subpixel-antialiased hover:font-semibold hover:text-primary">
+                                      class="!text-xs subpixel-antialiased hover:font-semibold hover:text-primary">
                                     {{ $t('Forgot your password?') }}
                                 </Link>
                             </div>
@@ -45,7 +45,7 @@
                 </div>
 
             </div>
-            <div class="flex gap-x-4 mt-5 xsLight !font-lexend subpixel-antialiased text-sm tracking-wide">
+            <div class="flex gap-x-4 mt-5 subpixel-antialiased text-sm tracking-wide">
                 <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
                     {{ $t('Imprint') }}
                 </a>

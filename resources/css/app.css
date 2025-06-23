@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@config "../../tailwind.config.js";
 @theme {
     /* Farben */
     --color-primary: #222;
@@ -26,6 +25,7 @@
     --color-tag-text-green: rgba(48,80,0,1);
     --color-background-blue: #3017AD34;
     --color-light-background-gray: #F4F4F3;
+    --color-lightBackgroundGray: #F4F4F3;
     --color-checkbox-bg: #474459;
     --color-silver-gray: #CECDD8;
     --color-user-bg: #EDEDEC;
@@ -35,17 +35,17 @@
     --color-link-on-dark: #BDB6F0;
 
     /* Artwork Farben */
-    --color-artwork-navigation-bg: #222;
+    --color-artwork-navigation-background: #222;
     --color-artwork-navigation-color: #eee;
     --color-artwork-success: #25cd0e;
     --color-artwork-warning: #ecce00;
     --color-artwork-error: #ef4444;
     --color-artwork-info: #a7a6b1;
-    --color-artwork-button-context: #6f6f6f;
-    --color-artwork-button-create: #3073ae;
-    --color-artwork-button-default: #2a3d75;
-    --color-artwork-button-hover: #1c77d7;
-    --color-artwork-button-update: #2a3d75;
+    --color-artwork-buttons-context: #6f6f6f;
+    --color-artwork-buttons-create: #3073ae;
+    --color-artwork-buttons-default: #2a3d75;
+    --color-artwork-buttons-hover: #1c77d7;
+    --color-artwork-buttons-update: #2a3d75;
     --color-artwork-context-light: #e8e8e8;
     --color-artwork-context-dark: #6f6f6f;
     --color-artwork-project-bg: #eee;
@@ -60,6 +60,7 @@
     --font-family-nanum: "Nanum Pen Script";
     --font-family-lexend: "Lexend";
     --font-weight-header: 900;
+    --font-lexend: "Lexend", sans-serif;
 
     /* Schatten */
     --shadow-button-blue: 0 35px 60px -15px #2D1FDE;
@@ -883,19 +884,22 @@
 }
 
 .input-checklist {
-    @apply border border-gray-300 rounded-lg p-2.5 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0 shadow-sm;
+    color: var(--color-artwork-success);
+    @apply border border-gray-300 rounded-lg p-2.5 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0 shadow-sm;
 }
 
 .input-checklist-small {
-    @apply border border-gray-300 rounded-md p-0.5 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0;
+    color: var(--color-artwork-success);
+    @apply border border-gray-300 rounded-md p-0.5 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0;
 }
 
 .input-checklist-dark {
-    @apply rounded-lg p-2 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0;
+    color: var(--color-artwork-success);
+    @apply rounded-lg p-2 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0;
 }
 
 .menu-button {
-    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-button-create;
+    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1;
 
     span {
         @apply text-left float-left text-sm placeholder-transparent text-gray-500;
@@ -903,7 +907,7 @@
 }
 
 .menu-button-no-padding {
-    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create;
+    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 text-sm placeholder-transparent focus:outline-none focus:ring-1;
 
     span {
         @apply text-left float-left text-sm placeholder-transparent text-gray-500;
@@ -911,7 +915,7 @@
 }
 
 .menu-button-no-flex {
-    @apply w-full block shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create;
+    @apply w-full block shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1;
 
     span {
         @apply text-left float-left text-sm placeholder-transparent text-gray-500;
@@ -945,19 +949,19 @@
 }
 
 .btn-group-hover {
-    @apply group-hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out
+    @apply transition-colors duration-300 ease-in-out
 }
 
 .btn-hover {
-    @apply hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out
+    @apply transition-colors duration-300 ease-in-out
 }
 
 .btn-border-hover {
-    @apply hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out
+    @apply transition-colors duration-300 ease-in-out
 }
 
 .btn-group-border-hover {
-    @apply group-hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out
+    @apply transition-colors duration-300 ease-in-out
 }
 
 
@@ -965,7 +969,7 @@
     @apply w-72 min-w-72 rounded-lg;
 
     .checklist-card-header {
-        @apply  px-4 py-2 bg-artwork-buttons-create flex items-center justify-between text-white truncate rounded-t-lg;
+        @apply  px-4 py-2 flex items-center justify-between text-white truncate rounded-t-lg;
     }
 
     .checklist-card-body {

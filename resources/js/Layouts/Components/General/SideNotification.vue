@@ -13,7 +13,7 @@
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
                                 <IconCircleX stroke-width="1.5" class="h-6 w-6 text-red-500" aria-hidden="true" v-if="type === 'error'" />
-                                <IconGeometry stroke-width="1.5" class="text-artwork-messages-success w-8 h-8 border bg-gray-100 rounded-full p-0.5" v-if="type === 'project_create_success'"/>
+                                <IconGeometry stroke-width="1.5" class=" w-8 h-8 border bg-gray-100 rounded-full p-0.5" v-if="type === 'project_create_success'"/>
                             </div>
                             <div class="ml-3 w-0 flex-1 pt-0.5 text-sm">
                                 <template v-if="type === 'project_create_success'">

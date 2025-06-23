@@ -101,7 +101,7 @@
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
                                     <th  v-for="day in days" :id="day.isExtraRow ? 'extra_row_' + day.weekNumber : day.fullDay" style="max-width: 204px"
-                                         class="z-20 h-8 py-2 border-r-2 border-artwork-navigation-background truncate text-white">
+                                         class="z-20 h-8 py-2 px-[1px] border-r-2 border-artwork-navigation-background truncate text-white">
                                         <div v-if="day.isExtraRow" style="width:37px">
                                             <span class="text-[9px] font-bold">KW{{day.weekNumber }}</span>
                                         </div>
@@ -144,7 +144,7 @@
                                         </div>
                                     </th>
                                     <td :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : 'border-dashed', multiEditModeCalendar ? '' : 'border-r-2 ', $page.props.auth.user.calendar_settings.expand_days ? '' : 'h-28']"
-                                        class="border-gray-400 day-container relative table-cell align-top"
+                                        class="border-gray-400 day-container relative table-cell align-top px-[1px]"
                                         v-for="day in days" :data-day="day.fullDay">
                                         <div
                                             v-if="!day.isExtraRow && multiEditModeCalendar"
@@ -492,7 +492,7 @@
                                     </tr>
                                     <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users"
                                         class="w-full flex ">
-                                        <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right"
+                                        <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right pb-[1px]"
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
                                                          :item="user.element"
@@ -528,7 +528,7 @@
                                                                :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
                                             />
                                         </th>
-                                        <td v-for="day in days" class="flex gap-x-0.5 relative">
+                                        <td v-for="day in days" class="flex gap-x-0.5 relative px-[1px] pb-[1px]">
                                             <div v-if="!day.isExtraRow" :class="[
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     $page.props.auth.user.compact_mode ? 'h-8' : '',
@@ -575,7 +575,7 @@
                                     </tr>
                                     <tr v-if="!closedCrafts.includes('noCraft')"
                                         v-for="(user,index) in workersWithoutCraft" class="w-full flex">
-                                        <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right"
+                                        <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right pb-[1px]"
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
                                                          :item="user.element"
@@ -608,7 +608,7 @@
                                                                @highlightShiftsOfUser="highlightShiftsOfUser"
                                                                :color="null"/>
                                         </th>
-                                        <td v-for="day in days" class="flex gap-x-0.5 relative">
+                                        <td v-for="day in days" class="flex gap-x-0.5 relative px-[1px] pb-[1px]">
                                             <div v-if="!day.isExtraRow"
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '',

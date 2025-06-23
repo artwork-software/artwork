@@ -33,7 +33,7 @@
                                                 <ToolTipDefault top show-draggable :tooltip-text="$t('Hold here to move')"/>
                                             </div>
                                         </div>
-                                        <div class="text-gray-800 hover:text-artwork-messages-error transition-all duration-150 ease-in-out cursor-pointer">
+                                        <div class="text-gray-800 hover:text-artwork-error transition-all duration-150 ease-in-out cursor-pointer">
                                             <div @click="$emit('close')">
                                                 <ToolTipDefault top show-x-icon :tooltip-text="$t('Close Window')"/>
                                             </div>

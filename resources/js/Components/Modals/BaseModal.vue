@@ -3,7 +3,7 @@
         <Dialog as="div" class="relative" :style="{ 'z-index': isInShiftPlan ? '999999': zIndex }" @close="closeModal">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
                              leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-opacity-75 transition-opacity" :class="showBackdrop ? 'bg-gray-500' : ''"/>
+                <div class="fixed inset-0 bg-opacity-75 transition-opacity" :class="showBackdrop ? 'bg-gray-500/40' : ''"/>
 
             </TransitionChild>
             <div class="fixed inset-0 z-50 w-screen overflow-y-auto">
@@ -14,7 +14,7 @@
                                      leave-from="opacity-100 translate-y-0 sm:scale-100"
                                      leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                                      @after-enter="makeContainerDraggable">
-                        <DialogPanel class="flex h-fit w-full grow flex-col rounded-3xl bg-gradient-to-br from-white/40 to-sky-100/20 text-left shadow-glass backdrop-blur-sm ring-1 ring-white/30 p-gap-3xl border draggableModal" :class="[modalSize]"  ref="containerRef">
+                        <DialogPanel class="flex h-fit w-full grow flex-col rounded-3xl bg-gradient-to-br from-white/40 to-sky-100/20 text-left shadow-glass backdrop-blur-sm ring-1 ring-white/30 p-gap-3xl border border-gray-200 draggableModal" :class="[modalSize]"  ref="containerRef">
                             <div class="flex items-center justify-end px-5 pt-5 pb-2">
                                 <div class="flex items-center gap-x-3">
                                     <div class="text-gray-700 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
@@ -27,7 +27,7 @@
                                             <ToolTipDefault bottom show-draggable :tooltip-text="$t('Hold here to move')"/>
                                         </div>
                                     </div>
-                                    <div class="text-gray-700 hover:text-artwork-messages-error transition-all duration-150 ease-in-out cursor-pointer">
+                                    <div class="text-gray-700 hover:text-artwork-error transition-all duration-150 ease-in-out cursor-pointer">
                                         <div @click="closeModal">
                                             <ToolTipDefault bottom show-x-icon :tooltip-text="$t('Close Window')"/>
                                         </div>

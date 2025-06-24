@@ -354,6 +354,92 @@ class UserController extends Controller
         ]);
     }
 
+    public function showUserWorkTimes(User $user): Response|ResponseFactory
+    {
+        $start = request()->input('start') ?? Carbon::now()->startOfMonth();
+        $end = request()->input('end') ?? Carbon::now()->endOfMonth();
+
+        return inertia('Users/UserWorkTimes', [
+            'userToEdit' => new UserShowResource($user),
+            'workTimes' => $this->getPlannedWorkSchedule($start, $end, $user),
+        ]);
+    }
+    /**
+     * @param Carbon $start
+     * @param Carbon $end
+     * @param User $user
+     * @return array<string, array<string, mixed>>
+     */
+    private function getPlannedWorkSchedule(Carbon $start, Carbon $end, User $user): array
+    {
+        $schedule = [];
+        $workTime = $user->workTime;
+
+        if (!$workTime) {
+            return $schedule;
+        }
+
+        // Alle relevanten Bookings vorladen
+        $bookings = $user->workTimeBookings()
+            ->whereBetween('booking_day', [$start->toDateString(), $end->toDateString()])
+            ->get()
+            ->keyBy(fn($b) => $b->booking_day->toDateString());
+
+        $current = $start->copy();
+
+        while ($current->lte($end)) {
+            $dateKey = $current->toDateString();
+            $weekday = strtolower($current->format('l'));
+            $plannedStart = $workTime->{$weekday}; // Carbon|null
+
+            $entry = [
+                'weekday' => $weekday,
+                'date' => $dateKey,
+                'formatted_date' => $current->locale(
+                    session()?->get('locale') ?? config('app.fallback_locale')
+                )->isoFormat('dddd, D. MMMM YYYY'),
+                'planned_start' => $plannedStart?->format('H:i'),
+                'planned_minutes' => $plannedStart ? ($plannedStart->hour * 60 + $plannedStart->minute) : 0,
+                'planned_hours' => $plannedStart ? round(
+                    ($plannedStart->hour * 60 + $plannedStart->minute) / 60,
+                    2
+                ) : 0,
+            ];
+
+            if (isset($bookings[$dateKey])) {
+                $booking = $bookings[$dateKey];
+                $entry['wantedHours'] = $booking->wanted_working_hours;
+                $entry['wantedHoursFormatted'] = $this->convertMinutesToHoursAndMinutes($booking->wanted_working_hours);
+                $entry['worked_hours'] = $booking->worked_hours;
+                $entry['worked_hours_formatted'] = $this->convertMinutesToHoursAndMinutes($booking->worked_hours);
+                $entry['nightly_working_hours'] = $booking->nightly_working_hours;
+                $entry['nightly_working_hours_formatted'] = $this->convertMinutesToHoursAndMinutes(
+                    $booking->nightly_working_hours
+                );
+                $entry['is_special_day'] = $booking->is_special_day;
+                $entry['work_time_balance_change'] = $booking->work_time_balance_change;
+                $entry['work_time_balance_change_formatted'] = $this->convertMinutesToHoursAndMinutes(
+                    $booking->work_time_balance_change
+                );
+                $entry['comment'] = $booking->comment;
+            }
+
+            $schedule[$dateKey] = $entry;
+            $current->addDay();
+        }
+
+        return $schedule;
+    }
+
+    private function convertMinutesToHoursAndMinutes(int $inputMinutes): string
+    {
+        // convert work_time_balance to hours and minutes
+        $hours = floor($inputMinutes / 60);
+        $minutes = $inputMinutes % 60;
+
+        // format as "HH:MM"
+        return sprintf('%02d:%02d', $hours, $minutes);
+    }
 
     /**
      * @throws ContainerExceptionInterface

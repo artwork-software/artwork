@@ -83,6 +83,7 @@ export default {
                 {id: 5, name: 'Work profile', href: route('user.edit.workProfile', {user: this.user_to_edit.id}), current: route().current('user.edit.workProfile'), has_permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconBriefcase'},
                 {id: 5, name: 'Work Time Pattern', href: route('user.edit.work-time-pattern', {user: this.user_to_edit.id}), current: route().current('user.edit.work-time-pattern'), has_permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconClockHour10'},
                 {id: 5, name: 'Employment contract', href: route('user.edit.contract', {user: this.user_to_edit.id}), current: route().current('user.edit.contract'), has_permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconContract'},
+                {id: 5, name: 'Work Time', href: route('user.edit.worktimes', {user: this.user_to_edit.id}), current: route().current('user.edit.worktimes'), has_permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconContract'},
             ],
             title: this.user_to_edit.id === this.$page.props.auth.user.id ? 'My account' : 'User account' + ' - ' + this.user_to_edit.first_name + ' ' + this.user_to_edit.last_name
         }

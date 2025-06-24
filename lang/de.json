@@ -2836,5 +2836,10 @@
     "Click here to remove the current employment contract.": "Klicke hier, um den aktuellen Arbeitsvertrag zu entfernen.",
     "The employment contract “{0}” is currently selected. This means that employment contract rules cannot be edited.": "Der Arbeitsvertrag „{0}“ ist derzeit ausgewählt. Das bedeutet, dass die Regeln des Arbeitsvertrags nicht bearbeitet werden können.",
     "Remove employment contract": "Arbeitsvertrag entfernen",
-    "Are you sure you want to remove the current employment contract? This action cannot be undone.": "Möchtest du den aktuellen Arbeitsvertrag wirklich entfernen? Diese Aktion kann nicht rückgängig gemacht werden."
+    "Are you sure you want to remove the current employment contract? This action cannot be undone.": "Möchtest du den aktuellen Arbeitsvertrag wirklich entfernen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "Worked": "Gearbeitet",
+    "Night": "Nacht",
+    "Balance": "Saldo",
+    "Work Times": "Arbeitszeiten",
+    "Overview of work times for the user": "Übersicht der Arbeitszeiten für den Nutzer"
 }

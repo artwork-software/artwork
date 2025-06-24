@@ -2832,5 +2832,10 @@
     "Click here to remove the current employment contract.": "Click here to remove the current employment contract.",
     "The employment contract “{0}” is currently selected. This means that employment contract rules cannot be edited.": "The employment contract “{0}” is currently selected. This means that employment contract rules cannot be edited.",
     "Remove employment contract": "Remove employment contract",
-    "Are you sure you want to remove the current employment contract? This action cannot be undone.": "Are you sure you want to remove the current employment contract? This action cannot be undone."
+    "Are you sure you want to remove the current employment contract? This action cannot be undone.": "Are you sure you want to remove the current employment contract? This action cannot be undone.",
+    "Worked": "Worked",
+    "Night": "Night",
+    "Balance": "Balance",
+    "Work Times": "Work Times",
+    "Overview of work times for the user": "Overview of work times for the user"
 }

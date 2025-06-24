@@ -268,6 +268,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/contract', [UserController::class, 'editUserContract'])
         ->can('can manage workers')
         ->name('user.edit.contract');
+    Route::get('/users/{user}/worktimes', [UserController::class, 'showUserWorktimes'])
+        ->can('can manage workers')
+        ->name('user.edit.worktimes');
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
     Route::patch(
         '/users/{user}/permissions',

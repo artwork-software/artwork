@@ -82,6 +82,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $toggle_hints
  * @property string $remember_token
  * @property int $current_team_id
+ * @property int $work_time_balance
  * @property string $profile_photo_path
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -278,6 +279,7 @@ class User extends Model implements
         'profile_photo_url',
         'full_name',
         'type',
+        'formated_work_time_balance',
         //'assigned_craft_ids',
     ];
 
@@ -310,7 +312,17 @@ class User extends Model implements
     {
         return $this->belongsToMany(Shift::class, 'shift_user')
             ->using(ShiftUser::class)
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time']);
+            ->withPivot([
+                'id',
+                'shift_qualification_id',
+                'shift_count',
+                'craft_abbreviation',
+                'short_description',
+                'start_date',
+                'end_date',
+                'start_time',
+                'end_time'
+            ]);
     }
 
     public function getFullNameAttribute(): string
@@ -511,7 +523,7 @@ class User extends Model implements
      */
     public function allPermissions(): array
     {
-        if (!$this->exists){
+        if (!$this->exists) {
             return [];
         }
         return $this->getAllPermissions()->pluck('name')->toArray();
@@ -654,5 +666,15 @@ class User extends Model implements
     public function workTimeBookings(): HasMany
     {
         return $this->hasMany(WorkTimeBooking::class, 'user_id', 'id');
+    }
+
+    public function getFormatedWorkTimeBalanceAttribute(): string
+    {
+        // convert work_time_balance to hours and minutes
+        $hours = floor($this->work_time_balance / 60);
+        $minutes = $this->work_time_balance % 60;
+
+        // format as "HH:MM"
+        return sprintf('%02d:%02d', $hours, $minutes);
     }
 }

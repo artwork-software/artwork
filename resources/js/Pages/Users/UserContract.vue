@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <div class="mt-5" v-if="!isContractSelected">
+        <div class="mt-5" v-if="isContractSelected">
             <form @submit.prevent="submit">
                 <div class="space-y-4">
                     <div>
@@ -102,7 +102,7 @@
         <div v-else class="mt-5">
             <div>
                 <p class="text-sm font-lexend text-gray-500">
-                    {{ $t('The employment contract “{0}” is currently selected. This means that employment contract rules cannot be edited.', [selectedContract.name]) }}
+                    {{ $t('The employment contract “{0}” is currently selected. This means that employment contract rules cannot be edited.', [selectedContract?.name]) }}
                 </p>
             </div>
 

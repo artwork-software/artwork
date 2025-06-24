@@ -39,6 +39,7 @@ use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
+use Artwork\Modules\WorkTimeBooking\Models\WorkTimeBooking;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\Authenticatable;
@@ -233,6 +234,7 @@ class User extends Model implements
         'bulk_column_size',
         'chat_public_key',
         'use_chat',
+        'work_time_balance'
     ];
 
     protected $casts = [
@@ -308,7 +310,7 @@ class User extends Model implements
     {
         return $this->belongsToMany(Shift::class, 'shift_user')
             ->using(ShiftUser::class)
-            ->withPivot('id', 'shift_qualification_id', 'craft_abbreviation');
+            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time']);
     }
 
     public function getFullNameAttribute(): string
@@ -647,5 +649,10 @@ class User extends Model implements
     public function contract(): HasOne
     {
         return $this->hasOne(UserContractAssign::class, 'user_id', 'id');
+    }
+
+    public function workTimeBookings(): HasMany
+    {
+        return $this->hasMany(WorkTimeBooking::class, 'user_id', 'id');
     }
 }

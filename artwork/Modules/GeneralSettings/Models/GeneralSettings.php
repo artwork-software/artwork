@@ -41,6 +41,9 @@ class GeneralSettings extends Settings
     public int $allowed_branding_file_size;
     public int $allowed_contract_file_size;
 
+    public string $start_night_time;
+    public string $end_night_time;
+
     public static function group(): string
     {
         return 'general';

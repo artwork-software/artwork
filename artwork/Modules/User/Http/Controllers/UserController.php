@@ -36,6 +36,7 @@ use Artwork\Modules\User\Http\Resources\UserIndexResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
@@ -339,6 +340,17 @@ class UserController extends Controller
             'currentTab' => 'workTimePattern',
             'workTime' => $user->load('workTime')->workTime,
             'workTimePatterns' => UserWorkTimePattern::all(),
+        ]);
+    }
+
+    public function editUserContract(User $user): Response|ResponseFactory
+    {
+
+        return inertia('Users/UserContract', [
+            'userToEdit' => new UserShowResource($user),
+            'currentTab' => 'workTimePattern',
+            'contract' => $user->load('contract')->contract,
+            'userContracts' => UserContract::all(),
         ]);
     }
 

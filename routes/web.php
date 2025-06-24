@@ -262,8 +262,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('user.edit.permissions');
     Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can manage workers')
         ->name('user.edit.workProfile');
-    Route::get('/users/{user}/work-time-pattern', [UserController::class, 'editUserWorkTime'])->can('can manage workers')
+    Route::get('/users/{user}/work-time-pattern', [UserController::class, 'editUserWorkTime'])
+        ->can('can manage workers')
         ->name('user.edit.work-time-pattern');
+    Route::get('/users/{user}/contract', [UserController::class, 'editUserContract'])
+        ->can('can manage workers')
+        ->name('user.edit.contract');
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
     Route::patch(
         '/users/{user}/permissions',
@@ -2231,10 +2235,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/store', [UserContractController::class, 'store'])->name('user-contract-settings.store');
 
         // user-contract-settings.update
-        Route::patch('/{userContract}/update', [UserContractController::class, 'update'])->name('user-contract-settings.update');
+        Route::patch('/{userContract}/update', [UserContractController::class, 'update'])
+            ->name('user-contract-settings.update');
 
         // user-contract-settings.destroy
-        Route::delete('/{userContract}/destroy', [UserContractController::class, 'destroy'])->name('user-contract-settings.destroy');
+        Route::delete('/{userContract}/destroy', [UserContractController::class, 'destroy'])
+            ->name('user-contract-settings.destroy');
+
+        Route::patch(
+            '/contract/{user}/update-user',
+            [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
+        )->name('user-contract-settings.update-user');
     });
 });
 

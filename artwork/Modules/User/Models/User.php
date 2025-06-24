@@ -119,6 +119,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<UserCalendarAbo> $calendarAbo
  * @property Collection<UserShiftCalendarAbo> $shiftCalendarAbo
  * @property Collection<UserWorkTime> $workTime
+ * @property Collection<UserContractAssign> $contract
  * @property Collection<string> $allPermissions
  * @property array $notification_enums_last_sent_dates
  * @property int $bulk_sort_id
@@ -641,5 +642,10 @@ class User extends Model implements
     public function workTime(): HasOne
     {
         return $this->hasOne(UserWorkTime::class, 'user_id', 'id');
+    }
+
+    public function contract(): HasOne
+    {
+        return $this->hasOne(UserContractAssign::class, 'user_id', 'id');
     }
 }

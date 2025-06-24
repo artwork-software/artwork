@@ -25,10 +25,10 @@
                     </div>
                     <div class="mt-5">
                         <div class="hidden sm:block">
-                            <div class="">
+                            <div class="artwork">
                                 <nav class="-mb-px flex space-x-8 font-lexend text-sm" aria-label="Tabs">
                                     <Link v-for="tab in tabs" v-show="tab.has_permission" :href="tab.href" :key="tab.name" :preserve-state="false"
-                                         :class="[tab.current ? 'card glassy !flex !flex-row !w-fit !flex-grow-0 px-3' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer flex items-center gap-x-2']"
+                                         :class="[tab.current ? 'card glassy !flex !flex-row !w-fit !flex-grow-0 px-3 !border-gray-200' : 'border-transparent', 'py-2 px-1 cursor-pointer flex items-center gap-x-2']"
                                          :aria-current="tab.current ? 'page' : undefined">
                                         <component :is="tab.icon" class="inline-block h-5 w-5 text-artwork-buttons-create" aria-hidden="true"/>
                                         {{ $t(tab.name) }}
@@ -82,6 +82,7 @@ export default {
                 {id: 4, name: 'User permissions', href: route('user.edit.permissions', {user: this.user_to_edit.id}), current: route().current('user.edit.permissions'), has_permission: this.hasAdminRole(), icon: 'IconLicense'},
                 {id: 5, name: 'Work profile', href: route('user.edit.workProfile', {user: this.user_to_edit.id}), current: route().current('user.edit.workProfile'), has_permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconBriefcase'},
                 {id: 5, name: 'Work Time Pattern', href: route('user.edit.work-time-pattern', {user: this.user_to_edit.id}), current: route().current('user.edit.work-time-pattern'), has_permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconClockHour10'},
+                {id: 5, name: 'Employment contract', href: route('user.edit.contract', {user: this.user_to_edit.id}), current: route().current('user.edit.contract'), has_permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconContract'},
             ],
             title: this.user_to_edit.id === this.$page.props.auth.user.id ? 'My account' : 'User account' + ' - ' + this.user_to_edit.first_name + ' ' + this.user_to_edit.last_name
         }

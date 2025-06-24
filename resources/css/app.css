@@ -792,7 +792,7 @@
     .card {
         &.glassy {
             box-shadow: var(--shadow-glass);
-            @apply flex h-fit grow flex-col rounded-3xl bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50;
+            @apply flex h-fit grow flex-col rounded-3xl bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50 ring-1 ring-white/50;
         }
 
         &.white {

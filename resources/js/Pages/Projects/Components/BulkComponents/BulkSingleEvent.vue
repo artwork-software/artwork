@@ -391,7 +391,9 @@ const onCloseDeleteEventConfirmModal = (closedOnPurpose) => {
 };
 
 const updateEventInDatabase = async () => {
-    if (props.event.id) {
+    if (props.event.id && !isUpdating.value) {
+        isUpdating.value = true;
+
         if (props.event.start_time && !props.event.end_time) {
             const startTime = new Date(`01/01/2000 ${props.event.start_time}`);
             startTime.setMinutes(startTime.getMinutes() + 30);
@@ -406,6 +408,7 @@ const updateEventInDatabase = async () => {
 
         if (props.event.type?.individual_name && !props.event.name) {
             props.event.nameError = true;
+            isUpdating.value = false;
             return;
         }
 
@@ -425,17 +428,21 @@ const updateEventInDatabase = async () => {
                                 }else{
                                     field.focus();
                                 }
-
                             }
                         }
-                    }, 400);
+                        isUpdating.value = false;
+                    }, 300);
                 })
+            },
+            onError: () => {
+                isUpdating.value = false;
             }
         });
     }
 }
 
 const lastFocusedField = ref(null);
+const isUpdating = ref(false);
 const storeFocus = (fieldId, type) => {
     console.log(fieldId, type);
     lastFocusedField.value = fieldId;
@@ -455,7 +462,9 @@ const sortedEventTypes = computed(() => {
 const removeTime = () => {
     props.event.start_time = null;
     props.event.end_time = null;
-    updateEventInDatabase();
+    if (!isUpdating.value) {
+        updateEventInDatabase();
+    }
 }
 
 const getDayOfWeek = (date) => {

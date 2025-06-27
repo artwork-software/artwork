@@ -449,7 +449,6 @@ const {hasAdminRole, can} = usePermission(usePage().props),
     createCopyByEventWithData = (event) => {
         isLoading.value = true;
         // Store the selected copyCount for later use
-        console.log(event.copyCount + 'event');
         lastUsedCopyCount.value = event.copyCount;
         let newDate = new Date(event.day);
         let createdEvents = [];

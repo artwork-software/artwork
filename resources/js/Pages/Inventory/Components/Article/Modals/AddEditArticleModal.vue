@@ -537,7 +537,7 @@
                                             <div class="mt-2 grid grid-cols-1">
                                                 <select id="location" name="location" v-model="detailedArticle.status" required class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
                                                     <option value="" disabled selected>{{ $t('Please select a status') }}*</option>
-                                                    <option v-for="status in statuses" :value="status" :key="status">{{ status.name }}</option>
+                                                    <option v-for="status in statuses" :value="status" :key="status.id">{{ status.name }}</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -876,7 +876,7 @@ const articleForm = useForm({
                 }
             }) ?? [],
             // add status form statuses where are default
-            status: detailedArticle.status ?? statuses.filter(status => {
+            status: detailedArticle.status ? statuses.find(s => s.id === detailedArticle.status.id) ?? detailedArticle.status : statuses.filter(status => {
                 return status.default
             })[0]
         }
@@ -1308,7 +1308,7 @@ onMounted(() => {
                         categoryProperty: getIsDeletable(prop.id),
                         select_values: prop.select_values
                     })),
-                    status: da.status ?? statuses.filter(status => {
+                    status: da.status ? statuses.find(s => s.id === da.status.id) ?? da.status : statuses.filter(status => {
                         return status.default
                     })[0] ?? (statuses.length > 0 ? statuses[2] : null)
                 }));

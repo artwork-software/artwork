@@ -2,7 +2,7 @@
     <div class="relative">
         <div class="my-auto w-full relative">
             <BaseInput
-                id="room_search"
+                id="room_search_input"
                 v-model="room_search_query"
                 :label="label"
                 class="w-full"
@@ -60,7 +60,7 @@ export default {
         room_search_query: {
             handler() {
                 axios.post(route('room.search'),{
-                    project_search: this.room_search_query,
+                    search: this.room_search_query,
                     wantsJson: true,
                 }).then(response => {
                     this.rooms = response.data;

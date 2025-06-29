@@ -195,7 +195,7 @@
                                     </span>
                                     <span class="ml-6 flex items-center gap-x-3">
                                         <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-lexend font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset">
-                                            {{ detailedArticle.status.name }} - {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
+                                            {{ detailedArticle.status?.name }} - {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
                                         </span>
                                         <component is="IconPlus" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
                                         <component is="IconMinus" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>

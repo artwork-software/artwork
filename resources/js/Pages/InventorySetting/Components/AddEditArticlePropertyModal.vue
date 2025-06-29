@@ -24,7 +24,7 @@
                         />
                     </div>
 
-                    <div class="col-span-full" v-if="(property?.type !== 'room') || (property?.type !== 'manufacturer')">
+                    <div class="col-span-full" v-if="(property?.type !== 'room') && (property?.type !== 'manufacturer')">
                         <Listbox as="div" v-model="selectedType" v-slot="{ open }">
                             <ListboxLabel class="block text-sm/6 font-medium text-gray-900">
                                 {{ $t('Select a data type') }}
@@ -159,7 +159,7 @@ const types = [
     //{ name: 'Upload', type: 'file' },
 ]
 
-const selectedType = ref(props.property ? types.find(type => type.type === props.property.type) : types[0])
+const selectedType = ref(props.property ? (types.find(type => type.type === props.property.type) || { type: props.property.type, name: props.property.type }) : types[0])
 
 const propertyForm = useForm({
     id: props.property ? props.property.id : null,
@@ -173,7 +173,12 @@ const propertyForm = useForm({
 })
 
 const addEditProperty = () => {
-    propertyForm.type = selectedType?.value?.type
+    // For special properties like 'room' and 'manufacturer', preserve the original type
+    if (props.property && (props.property.type === 'room' || props.property.type === 'manufacturer')) {
+        propertyForm.type = props.property.type
+    } else {
+        propertyForm.type = selectedType?.value?.type
+    }
 
     if (props.property) {
         propertyForm.patch(route('inventory-management.settings.properties.update', {inventoryArticleProperty: props.property.id}), {
@@ -193,8 +198,14 @@ const addEditProperty = () => {
 }
 
 const checkIfPropertyHasValues = computed(() => {
+    // Skip validation for special types
+    if (props.property && (props.property.type === 'room' || props.property.type === 'manufacturer')) {
+        // Only check if name is set for special properties
+        return propertyForm.name === ''
+    }
+
     // if type is selection and select_values is empty return true
-    if (selectedType.value.type === 'selection' && propertyForm.select_values.length === 0 || propertyForm.select_values[0] === '') {
+    if (selectedType.value?.type === 'selection' && (propertyForm.select_values.length === 0 || propertyForm.select_values[0] === '')) {
         return true
     }
 
@@ -202,6 +213,8 @@ const checkIfPropertyHasValues = computed(() => {
     if (propertyForm.name === '') {
         return true
     }
+
+    return false
 })
 </script>
 

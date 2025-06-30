@@ -297,6 +297,9 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Float} from "@headlessui-float/vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
+const focusRegistry  = inject('focusRegistry');      // { id, type }
+const storeFocus     = inject('storeFocusGlobal');
+
 const props = defineProps({
     event: {
         type: Object,
@@ -411,7 +414,8 @@ const updateEventInDatabase = async () => {
             isUpdating.value = false;
             return;
         }
-
+        if (!window.__bulkSaveRunning) {
+            window.__bulkSaveRunning = true;
         router.patch(route('event.update.single.bulk', {event: props.event.id}), {
             data: props.event
         }, {
@@ -420,36 +424,28 @@ const updateEventInDatabase = async () => {
             onFinish: () => {
                 nextTick(() => {
                     setTimeout(() => {
-                        if (lastFocusedField.value) {
-                            const field = document.getElementById(lastFocusedField.value);
-                            if (field) {
-                                if(lastFocusedField.type === 'listbox') {
-                                    field.click()
-                                }else{
-                                    field.focus();
-                                }
-                            }
+                        const { id, type } = focusRegistry;
+                        if(id) {
+                            const field = document.getElementById(id);
+                            if (field) type === 'listbox' ? field.click() : field.focus();
                         }
                         isUpdating.value = false;
+                        window.__bulkSaveRunning = false;
                     }, 300);
                 })
             },
             onError: () => {
                 isUpdating.value = false;
+                window.__bulkSaveRunning = false;
             }
         });
+        }
     }
 }
 
 const lastFocusedField = ref(null);
 const isUpdating = ref(false);
-const storeFocus = (fieldId, type) => {
-    console.log(fieldId, type);
-    lastFocusedField.value = fieldId;
-    if(type){
-        lastFocusedField.type = type;
-    }
-};
+
 
 const sortedRooms = computed(() => {
     return props.rooms.sort((a, b) => a.name.localeCompare(b.name));

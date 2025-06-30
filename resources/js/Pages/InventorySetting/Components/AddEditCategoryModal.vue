@@ -453,7 +453,10 @@ const addPropertyToCategory = (property) => {
 
     if (!categoryForm.properties.some(p => p.id === property.id)) {
         categoryForm.properties.push({
-            ...property,
+            id: property.id,
+            name: property.name,
+            type: property.type,
+            select_values: property.select_values,
             defaultValue: ''
         });
     }
@@ -466,7 +469,10 @@ const addPropertyToSubCategory = (property, subCategory) => {
 
     if (!subCategory.properties.some(p => p.id === property.id)) {
         subCategory.properties.push({
-            ...property,
+            id: property.id,
+            name: property.name,
+            type: property.type,
+            select_values: property.select_values,
             defaultValue: ''
         });
     }
@@ -489,7 +495,7 @@ onMounted(() => {
             return {
                 id: subCategory.id,
                 name: subCategory.name,
-                properties: subCategory.properties.map(property => {
+                properties: subCategory.properties ? subCategory.properties.map(property => {
                     return {
                         id: property.id,
                         name: property.name,
@@ -497,7 +503,7 @@ onMounted(() => {
                         select_values: property.select_values,
                         defaultValue: property.pivot.value ?? ''
                     }
-                })
+                }) : []
             }
         });
     }

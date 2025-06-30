@@ -2,8 +2,14 @@
 
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\User\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function() {
+    // Ensure the role exists before assigning it
+    if (!Role::where('name', \Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value)->exists()) {
+        $this->artisan('db:seed', ['--class' => RolesAndPermissionsSeeder::class]);
+    }
 
     $this->auth_user = User::factory()->create();
     $this->auth_user->assignRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value);

@@ -7,11 +7,15 @@ use Carbon\Carbon;
 class EventUpdateRequest extends EventStoreOrUpdateRequest
 {
     /**
-     * @return array<string, mixed>
+     * Retrieve data from the request.
+     *
+     * @param  string|null  $key
+     * @param  mixed  $default
+     * @return mixed
      */
-    public function data(): array
+    public function data($key = null, $default = null)
     {
-        return [
+        $eventData = [
             'start_time' => Carbon::create($this->get('start'))->setTimezone(config('app.timezone')),
             'end_time' => Carbon::create($this->get('end'))->setTimezone(config('app.timezone')),
             'room_id' => $this->get('roomId'),
@@ -39,5 +43,11 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
             'allDay' => $this->get('allDay'),
             'event_properties' => $this->get('event_properties'),
         ];
+
+        if ($key === null) {
+            return $eventData;
+        }
+
+        return $eventData[$key] ?? $default;
     }
 }

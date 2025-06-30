@@ -2,12 +2,10 @@
 
 namespace Artwork\Modules\Event\Http\Requests;
 
-use Dive\DryRequests\DryRunnable;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreOrUpdateEvent extends FormRequest
 {
-    use DryRunnable;
 
     /**
      * @return string[]

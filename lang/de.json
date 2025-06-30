@@ -2749,6 +2749,13 @@
     "Article Planning": "Artikelplanung",
     "Article Usage Overview": "Artikelverwendungsübersicht",
     "Overview of internal and external usage for the selected article.": "Übersicht über die interne und externe Nutzung des ausgewählten Artikels.",
+    "article_usage_on": "Artikelverwendung am",
+    "total_quantity": "Gesamtmenge",
+    "available_quantity": "Verfügbare Menge",
+    "total": "Gesamt",
+    "available": "Verfügbar",
+    "total_quantity_by_status": "Gesamtmenge nach Status",
+    "usage_on_by": "Verwendung am",
     "Create & edit sets": "Sets anlegen & bearbeiten",
     "Allows creating and editing sets": "Erlaubt das Erstellen und Bearbeiten von Sets",
     "Delete sets": "Sets löschen",
@@ -2772,5 +2779,6 @@
     "Inventory System": "Inventarsystem",
     "Event Planning": "Terminplanung",
     "Room name*": "Raumname*",
-    "You do not have the permission to plan events without a request": "Du hast nicht die Berechtigung 'Termine ohne Anfrage planen'"
+    "You do not have the permission to plan events without a request": "Du hast nicht die Berechtigung 'Termine ohne Anfrage planen'",
+    "Edit and create categories for your inventory.": "Bearbeite und erstelle Kategorien für dein Inventar."
 }

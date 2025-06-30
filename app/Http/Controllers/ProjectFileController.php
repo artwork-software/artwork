@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ProjectFileController extends Controller
 {
     use HandlesFileUpload;
-    
+
     public function __construct(
         private readonly ChangeService $changeService,
         private readonly NotificationService $notificationService,
@@ -42,7 +42,7 @@ class ProjectFileController extends Controller
      */
     public function store(FileUpload $request, Project $project, ProjectController $projectController): void
     {
-        $this->authorize('view', $project);
+        $this->authorize('create', [ProjectFile::class, $project]);
 
         if (!Storage::exists("project_files")) {
             Storage::makeDirectory("project_files");
@@ -144,13 +144,14 @@ class ProjectFileController extends Controller
 
     public function download(ProjectFile $projectFile): StreamedResponse
     {
-        $this->authorize('view', $projectFile->project);
+        $this->authorize('view', $projectFile);
 
         return Storage::download('project_files/' . $projectFile->basename, $projectFile->name);
     }
 
     public function update(Request $request, ProjectFile $projectFile): RedirectResponse
     {
+        $this->authorize('update', $projectFile);
         $original_name = '';
 
         if ($request->get('accessibleUsers')) {
@@ -228,7 +229,7 @@ class ProjectFileController extends Controller
 
     public function destroy(ProjectFile $projectFile, ProjectController $projectController): void
     {
-        $this->authorize('view', $projectFile->project);
+        $this->authorize('delete', $projectFile);
         $project = $projectFile->project()->first();
 
         $this->changeService->saveFromBuilder(
@@ -295,7 +296,7 @@ class ProjectFileController extends Controller
     public function forceDelete(int $id): RedirectResponse
     {
         $projectFile = ProjectFile::onlyTrashed()->findOrFail($id);
-        $this->authorize('view', $projectFile->project);
+        $this->authorize('forceDelete', $projectFile);
 
         Storage::delete('project_files/' . $projectFile->basename);
 

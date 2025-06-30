@@ -5,6 +5,19 @@
 Artwork is a project organization tool that allows you to schedule projects with multiple events, tasks, and responsibilities. It helps you keep track of all the essential components of your projects. The project can be run using Laravel Sail. A light-weight command-line interface for interacting with Laravel's default Docker development environment.
 Consult the [official documentation](https://laravel.com/docs/10.x/sail) for more information.
 
+# Update from v1.3.0 to v1.4.0
+
+- Checkout the v1.3.0 version 
+- Make sure you backup your database and run all database migrations ``php artisan migrate``
+- Update all the dependencies by running ``composer update``
+
+- ** Backup your database **
+- Checkout the v1.4.0 version
+- Run the following commands to update your database and components:
+- ``composer install``
+- ``php artisan migrate``
+- ``php artisan artwork:update``
+
 # Maintenance
 
 For artwork-instances that are already in usage, we will add commands here in the readme, that need to be used to add new permissions or components to the existing db. Dont worry, these commands cant harm your db, they only fill in things if they arent in the db already.

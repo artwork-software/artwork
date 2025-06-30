@@ -7,9 +7,16 @@ use Illuminate\Support\Facades\Auth;
 
 class EventStoreRequest extends EventStoreOrUpdateRequest
 {
-    public function data()
+    /**
+     * Get the request data.
+     *
+     * @param string|null $key
+     * @param mixed|null $default
+     * @return mixed
+     */
+    public function data($key = null, $default = null)
     {
-        return [
+        $data = [
             'start_time' => Carbon::parse($this->get('start'))->setTimezone(config('app.timezone')),
             'end_time' => Carbon::parse($this->get('end'))->setTimezone(config('app.timezone')),
             'room_id' => $this->get('roomId'),
@@ -33,5 +40,11 @@ class EventStoreRequest extends EventStoreOrUpdateRequest
             'event_properties' => $this->get('event_properties'),
             'is_planning' => $this->get('isPlanning'),
         ];
+
+        if ($key === null) {
+            return $data;
+        }
+
+        return $data[$key] ?? $default;
     }
 }

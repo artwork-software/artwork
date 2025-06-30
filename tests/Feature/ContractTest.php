@@ -3,9 +3,16 @@
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\UploadedFile;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function (): void {
+    // Ensure the role exists before assigning it
+    if (!Role::where('name', \Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value)->exists()) {
+        $this->artisan('db:seed', ['--class' => RolesAndPermissionsSeeder::class]);
+    }
+
     $this->user = User::factory()->create();
     $this->project = Project::factory()->create();
     $this->contract = Contract::factory()->create();

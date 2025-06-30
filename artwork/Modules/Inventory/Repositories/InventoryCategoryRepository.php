@@ -37,8 +37,9 @@ readonly class InventoryCategoryRepository
                         ->orderBy('name');
                 },
                 'subcategories.articles',
+                'subcategories.properties:id,name,type,select_values',
                 'properties' => function ($query) {
-                    $query->select('inventory_article_properties.id', 'name', 'type')
+                    $query->select('inventory_article_properties.id', 'name', 'type', 'select_values')
                         ->orderBy('name');
                 },
                 'articles' => function ($query) {
@@ -65,7 +66,8 @@ readonly class InventoryCategoryRepository
         return $this->getNewModelQuery()
             ->with([
                 'subcategories:id,inventory_category_id,name',
-                'properties:id,name,type'
+                'subcategories.properties:id,name,type,select_values',
+                'properties:id,name,type,select_values'
             ])
             ->select('id', 'name')
             ->orderBy('name')
@@ -95,8 +97,11 @@ readonly class InventoryCategoryRepository
      */
     public function attachProperties(InventoryCategory $category, SupportCollection $properties): void
     {
-        $propertyIds = $properties->pluck('id')->filter()->toArray();
-        $category->properties()->syncWithoutDetaching($propertyIds);
+        $propertyData = $properties->mapWithKeys(function ($property) {
+            return [$property['id'] => ['value' => $property['defaultValue'] ?? '']];
+        });
+
+        $category->properties()->syncWithoutDetaching($propertyData);
     }
 
     /**
@@ -104,7 +109,10 @@ readonly class InventoryCategoryRepository
      */
     public function syncProperties(InventoryCategory $category, SupportCollection $properties): void
     {
-        $propertyIds = $properties->pluck('id')->filter()->toArray();
-        $category->properties()->sync($propertyIds);
+        $propertyData = $properties->mapWithKeys(function ($property) {
+            return [$property['id'] => ['value' => $property['defaultValue'] ?? '']];
+        });
+
+        $category->properties()->sync($propertyData);
     }
 }

@@ -28,6 +28,7 @@ beforeEach(function (): void {
 });
 
 test('aborts invalid requests', function (): void {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->actingAs($this->auth_user);
 
@@ -72,6 +73,7 @@ test('aborts invalid requests', function (): void {
 //});
 
 test('users without the permission cant create projects', function (): void {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->actingAs($this->auth_user);
 
@@ -124,6 +126,7 @@ test('users without the permission cant create projects', function (): void {
 //});
 
 test('users with the permission can update projects and change the role of assigned users', function (): void {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->auth_user->givePermissionTo(\Artwork\Modules\Permission\Enums\PermissionEnum::PROJECT_MANAGEMENT->value);
     $this->actingAs($this->auth_user);
@@ -146,6 +149,7 @@ test('users with the permission can update projects and change the role of assig
 });
 
 test('users with the permission can duplicate projects', function (): void {
+    \Illuminate\Support\Facades\Event::fake();
 
     $old_project = Project::factory()->create([
         'name' => 'TestProject',
@@ -183,6 +187,7 @@ test('users with the permission can duplicate projects', function (): void {
 });
 
 test('users with the permission can delete projects', function (): void {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->auth_user->givePermissionTo('delete projects');
     $this->project->users()->attach($this->auth_user);

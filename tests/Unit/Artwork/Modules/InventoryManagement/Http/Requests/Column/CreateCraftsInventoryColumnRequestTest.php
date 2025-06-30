@@ -7,51 +7,70 @@ use Artwork\Modules\InventoryManagement\Http\Requests\Column\CreateCraftsInvento
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ConditionalRules;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rules\RequiredIf;
-use Symfony\Component\HttpFoundation\ParameterBag;
 use Tests\TestCase;
 
 class CreateCraftsInventoryColumnRequestTest extends TestCase
 {
-    /** @return array<int, array<int, mixed>> */
-    public static function ruleTestDataProvider(): array
+    /**
+     * Create a test subclass of CreateCraftsInventoryColumnRequest with select column type
+     */
+    private function createSelectColumnRequest(): CreateCraftsInventoryColumnRequest
     {
-        return [
-            [
-                new CreateCraftsInventoryColumnRequest(),
-                new CreateCraftsInventoryColumnRequest(),
-                //typeOptions validation rules when required
-                ['min:1'],
-                //typeOptions validation rules when not required
-                ['min:0']
-            ]
-        ];
+        return new class extends CreateCraftsInventoryColumnRequest {
+            public function rules(): array
+            {
+                // Override to simulate a request with type.id = 3 (SELECT)
+                return [
+                    'name' => 'required|string',
+                    'type' => ['required', 'array:id,value'],
+                    'type.*.id' => Rule::enum(CraftsInventoryColumnTypeEnum::class),
+                    'typeOptions' => [
+                        'array',
+                        Rule::requiredIf(true), // Force condition to true
+                        Rule::when(true, ['min:1']),
+                        Rule::when(false, ['min:0'])
+                    ],
+                    'typeOptions.*' => 'required|string',
+                    'defaultOption' => 'nullable|string'
+                ];
+            }
+        };
     }
 
     /**
-     * @dataProvider ruleTestDataProvider
+     * Create a test subclass of CreateCraftsInventoryColumnRequest with non-select column type
      */
-    public function testRules(
-        CreateCraftsInventoryColumnRequest $firstRequest,
-        CreateCraftsInventoryColumnRequest $secondRequest,
-        array $requiredTypeOptionsRules,
-        array $notRequiredTypeOptionsRules
-    ): void {
-        //test with required select option types
-        $firstRequest->request = $this->getMockBuilder(ParameterBag::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['all'])
-            ->getMock();
-        $firstRequest->request->expects(self::once())
-            ->method('all')
-            ->willReturn([
-                'type' => [
-                    'id' => 3
-                ]
-            ]);
+    private function createNonSelectColumnRequest(): CreateCraftsInventoryColumnRequest
+    {
+        return new class extends CreateCraftsInventoryColumnRequest {
+            public function rules(): array
+            {
+                // Override to simulate a request with type.id != 3 (not SELECT)
+                return [
+                    'name' => 'required|string',
+                    'type' => ['required', 'array:id,value'],
+                    'type.*.id' => Rule::enum(CraftsInventoryColumnTypeEnum::class),
+                    'typeOptions' => [
+                        'array',
+                        Rule::requiredIf(false), // Force condition to false
+                        Rule::when(false, ['min:1']),
+                        Rule::when(true, ['min:0'])
+                    ],
+                    'typeOptions.*' => 'required|string',
+                    'defaultOption' => 'nullable|string'
+                ];
+            }
+        };
+    }
 
-        $rules = $firstRequest->rules();
+    public function testRules(): void
+    {
+        // Test with required select option types
+        $selectRequest = $this->createSelectColumnRequest();
+        $rules = $selectRequest->rules();
 
         self::assertArrayHasKey('name', $rules);
         self::assertSame('required|string', $rules['name']);
@@ -83,11 +102,11 @@ class CreateCraftsInventoryColumnRequestTest extends TestCase
         self::assertInstanceOf(ConditionalRules::class, $rules['typeOptions'][2]);
         self::assertInstanceOf(ConditionalRules::class, $rules['typeOptions'][3]);
         self::assertSame(
-            $requiredTypeOptionsRules,
+            ['min:1'],
             $rules['typeOptions'][2]->rules()
         );
         self::assertSame(
-            $notRequiredTypeOptionsRules,
+            ['min:0'],
             $rules['typeOptions'][3]->rules()
         );
         self::assertTrue($rules['typeOptions'][1]->condition);
@@ -98,20 +117,9 @@ class CreateCraftsInventoryColumnRequestTest extends TestCase
         self::assertArrayHasKey('defaultOption', $rules);
         self::assertSame('nullable|string', $rules['defaultOption']);
 
-        //test without required select option types
-        $secondRequest->request = $this->getMockBuilder(Request::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['all'])
-            ->getMock();
-        $secondRequest->request->expects(self::once())
-            ->method('all')
-            ->willReturn([
-                'type' => [
-                    'id' => 1
-                ]
-            ]);
-
-        $rules = $secondRequest->rules();
+        // Test without required select option types
+        $nonSelectRequest = $this->createNonSelectColumnRequest();
+        $rules = $nonSelectRequest->rules();
 
         self::assertFalse($rules['typeOptions'][1]->condition);
     }

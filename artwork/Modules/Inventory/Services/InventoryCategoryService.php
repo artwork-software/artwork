@@ -38,17 +38,17 @@ class InventoryCategoryService
     {
         return DB::transaction(function () use ($data, $properties, $subcategories) {
             $category = $this->categoryRepository->create($data);
-            
+
             // Attach properties
             if ($properties->isNotEmpty()) {
                 $this->categoryRepository->attachProperties($category, $properties);
             }
-            
+
             // Create subcategories
             if ($subcategories->isNotEmpty()) {
                 $this->createSubcategories($category, $subcategories);
             }
-            
+
             return $category->load(['properties', 'subcategories']);
         });
     }
@@ -64,13 +64,13 @@ class InventoryCategoryService
     ): InventoryCategory {
         return DB::transaction(function () use ($category, $data, $properties, $subcategories) {
             $this->categoryRepository->update($category, $data);
-            
+
             // Sync properties
             $this->categoryRepository->syncProperties($category, $properties);
-            
+
             // Update subcategories
             $this->updateSubcategories($category, $subcategories);
-            
+
             return $category->fresh(['properties', 'subcategories']);
         });
     }
@@ -80,18 +80,20 @@ class InventoryCategoryService
      */
     protected function createSubcategories(InventoryCategory $category, SupportCollection $subcategories): void
     {
-        $subcategoriesData = $subcategories->map(function ($subcategory) use ($category) {
-            return [
-                'name' => $subcategory['name'],
-                'inventory_category_id' => $category->id,
-                'created_at' => now(),
-                'updated_at' => now()
-            ];
-        })->toArray();
-        
-        // Bulk insert für bessere Performance
-        if (!empty($subcategoriesData)) {
-            $category->subcategories()->insert($subcategoriesData);
+        foreach ($subcategories as $subcategoryData) {
+            // Create the subcategory
+            $subcategory = $category->subcategories()->create([
+                'name' => $subcategoryData['name']
+            ]);
+
+            // Attach properties to the subcategory if they exist
+            if (isset($subcategoryData['properties']) && is_array($subcategoryData['properties'])) {
+                $propertyData = collect($subcategoryData['properties'])->mapWithKeys(function ($property) {
+                    return [$property['id'] => ['value' => $property['defaultValue'] ?? '']];
+                });
+
+                $subcategory->properties()->sync($propertyData);
+            }
         }
     }
 
@@ -101,22 +103,46 @@ class InventoryCategoryService
     protected function updateSubcategories(InventoryCategory $category, SupportCollection $subcategories): void
     {
         $existingIds = $subcategories->pluck('id')->filter()->toArray();
-        
+
         // Delete removed subcategories
         $category->subcategories()
             ->whereNotIn('id', $existingIds)
             ->delete();
-        
+
         // Update or create subcategories
         foreach ($subcategories as $subcategoryData) {
             if (isset($subcategoryData['id'])) {
-                $category->subcategories()
+                // Update existing subcategory
+                $subcategory = $category->subcategories()
                     ->where('id', $subcategoryData['id'])
-                    ->update(['name' => $subcategoryData['name']]);
+                    ->first();
+
+                if ($subcategory) {
+                    $subcategory->update(['name' => $subcategoryData['name']]);
+
+                    // Sync properties for the subcategory
+                    if (isset($subcategoryData['properties']) && is_array($subcategoryData['properties'])) {
+                        $propertyData = collect($subcategoryData['properties'])->mapWithKeys(function ($property) {
+                            return [$property['id'] => ['value' => $property['defaultValue'] ?? '']];
+                        });
+
+                        $subcategory->properties()->sync($propertyData);
+                    }
+                }
             } else {
-                $category->subcategories()->create([
+                // Create new subcategory
+                $subcategory = $category->subcategories()->create([
                     'name' => $subcategoryData['name']
                 ]);
+
+                // Attach properties to the new subcategory
+                if (isset($subcategoryData['properties']) && is_array($subcategoryData['properties'])) {
+                    $propertyData = collect($subcategoryData['properties'])->mapWithKeys(function ($property) {
+                        return [$property['id'] => ['value' => $property['defaultValue'] ?? '']];
+                    });
+
+                    $subcategory->properties()->sync($propertyData);
+                }
             }
         }
     }

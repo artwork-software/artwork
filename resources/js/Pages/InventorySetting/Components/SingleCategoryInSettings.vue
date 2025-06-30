@@ -1,22 +1,26 @@
 <template>
-    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">{{ category?.name }}</td>
-    <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize">
-        {{ category.subcategories.map((category) => category.name).join(', ') }}
-    </td>
-    <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize">
-        {{ category.properties.map((property) => property.name).join(', ') }}
-    </td>
-    <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0">
-        <div class="flex items-center gap-x-4">
-            <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover">
-                <component is="IconEdit" @click="showAddEditCategoryModal = true" class="h-5 w-5" aria-hidden="true" />
-            </button>
-            <button type="button" class="text-red-600 hover:text-red-900">
-                <component is="IconTrash" class="h-5 w-5" aria-hidden="true" @click="showDeleteConfirmation = true" />
-            </button>
+    <template v-if="!showOnlyActions">
+        <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">{{ category?.name }}</td>
+        <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize">
+            {{ category.subcategories.map((category) => category.name).join(', ') }}
+        </td>
+        <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize">
+            {{ category.properties.map((property) => property.name).join(', ') }}
+        </td>
+    </template>
 
-        </div>
-    </td>
+    <template v-if="showActions || showOnlyActions">
+        <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0 actions-column">
+            <div class="flex items-center gap-x-4">
+                <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover">
+                    <component is="IconEdit" @click="showAddEditCategoryModal = true" class="h-5 w-5" aria-hidden="true" />
+                </button>
+                <button type="button" class="text-red-600 hover:text-red-900">
+                    <component is="IconTrash" class="h-5 w-5" aria-hidden="true" @click="showDeleteConfirmation = true" />
+                </button>
+            </div>
+        </td>
+    </template>
 
     <AddEditCategoryModal
         :category="category"
@@ -59,6 +63,14 @@ const props = defineProps({
     manufacturers: {
         type: Object,
         required: true
+    },
+    showActions: {
+        type: Boolean,
+        default: true
+    },
+    showOnlyActions: {
+        type: Boolean,
+        default: false
     }
 })
 

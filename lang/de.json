@@ -2779,5 +2779,6 @@
     "Inventory System": "Inventarsystem",
     "Event Planning": "Terminplanung",
     "Room name*": "Raumname*",
-    "You do not have the permission to plan events without a request": "Du hast nicht die Berechtigung 'Termine ohne Anfrage planen'"
+    "You do not have the permission to plan events without a request": "Du hast nicht die Berechtigung 'Termine ohne Anfrage planen'",
+    "Edit and create categories for your inventory.": "Bearbeite und erstelle Kategorien für dein Inventar."
 }

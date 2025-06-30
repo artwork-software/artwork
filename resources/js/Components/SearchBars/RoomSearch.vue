@@ -6,7 +6,10 @@
                 v-model="room_search_query"
                 :label="label"
                 class="w-full"
-                @focus="room_search_query = ''"/>
+                @focus="room_search_query = ''"
+                @focusout="rooms = []"
+            />
+
         </div>
         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
             <div v-if="rooms.length > 0" class="absolute rounded-lg z-10 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">

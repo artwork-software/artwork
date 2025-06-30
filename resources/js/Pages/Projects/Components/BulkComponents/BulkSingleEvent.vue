@@ -423,12 +423,14 @@ const updateEventInDatabase = async () => {
                         if (lastFocusedField.value) {
                             const field = document.getElementById(lastFocusedField.value);
                             if (field) {
-                                if(lastFocusedField.type === 'listbox') {
-                                    field.click()
-                                }else{
+                                if (lastFocusedField.type === 'listbox') {
+                                    field.click();
+                                } else {
                                     field.focus();
                                 }
                             }
+                            localStorage.removeItem('lastFocusedField');
+                            localStorage.removeItem('lastFocusedFieldType');
                         }
                         isUpdating.value = false;
                     }, 300);
@@ -441,13 +443,18 @@ const updateEventInDatabase = async () => {
     }
 }
 
-const lastFocusedField = ref(null);
+const lastFocusedField = ref(localStorage.getItem('lastFocusedField') ?? null);
+lastFocusedField.type = localStorage.getItem('lastFocusedFieldType') ?? null;
 const isUpdating = ref(false);
 const storeFocus = (fieldId, type) => {
-    console.log(fieldId, type);
     lastFocusedField.value = fieldId;
-    if(type){
+    localStorage.setItem('lastFocusedField', fieldId);
+    if (type) {
         lastFocusedField.type = type;
+        localStorage.setItem('lastFocusedFieldType', type);
+    } else {
+        lastFocusedField.type = null;
+        localStorage.removeItem('lastFocusedFieldType');
     }
 };
 
@@ -474,5 +481,19 @@ const getDayOfWeek = (date) => {
 
 onMounted(() => {
     dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '')
+    if (lastFocusedField.value) {
+        nextTick(() => {
+            const field = document.getElementById(lastFocusedField.value);
+            if (field) {
+                if (lastFocusedField.type === 'listbox') {
+                    field.click();
+                } else {
+                    field.focus();
+                }
+            }
+            localStorage.removeItem('lastFocusedField');
+            localStorage.removeItem('lastFocusedFieldType');
+        });
+    }
 });
 </script>

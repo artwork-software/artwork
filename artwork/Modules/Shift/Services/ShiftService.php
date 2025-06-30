@@ -49,47 +49,55 @@ class ShiftService
         return $this->shiftRepository->getById($shiftId);
     }
 
-    private function convertStartEndTime(array $data, Event $event): stdClass
+    private function convertStartEndDate(array $data): object
     {
-        $convertedTime = new StdClass();
-        $convertedStartTime = Carbon::parse($data['start']);
-        $convertedEndTime = Carbon::parse($data['end']);
+        $start = Carbon::parse($data['start']);
+        $end = Carbon::parse($data['end']);
 
-        $convertedTime->start = Carbon::parse($event->start_time)->format('Y-m-d');
-        if ($convertedEndTime->isBefore($convertedStartTime)) {
-            $convertedTime->end = Carbon::parse($event->start_time)->addDay()->format('Y-m-d');
-        } else {
-            $convertedTime->end = Carbon::parse($event->start_time)->format('Y-m-d');
-        }
-        return $convertedTime;
+        return (object) [
+            'start' => $start->format('Y-m-d'),
+            'end' => $end->isBefore($start)
+                ? $start->copy()->addDay()->format('Y-m-d')
+                : $start->format('Y-m-d'),
+        ];
     }
 
     public function createShiftBySeriesEvent(Event $event, array $data, int $craftId): Shift|Model
     {
-        $shift = new Shift();
-        $shift->start_date = $this->convertStartEndTime($data, $event)->start;
-        $shift->end_date = $this->convertStartEndTime($data, $event)->end;
-        $shift->start = $data['start'];
-        $shift->end = $data['end'];
-        $shift->break_minutes = $data['break_minutes'];
-        $shift->description = $data['description'];
+        $dates = $this->convertStartEndDate($data);
+
+        $shift = new Shift([
+            'start_date' => $dates->start,
+            'end_date' => $dates->end,
+            'start' => $data['start'],
+            'end' => $data['end'],
+            'break_minutes' => $data['break_minutes'],
+            'description' => $data['description'],
+            'is_committed' => false,
+        ]);
+
         $shift->event()->associate($event);
         $shift->craft()->associate($craftId);
-        $shift->is_committed = false;
+
         return $this->save($shift);
     }
 
     public function createShift(Event $event, Craft $craft, array $data): Shift|Model
     {
-        $shift = new Shift();
-        $shift->start_date = $this->convertStartEndTime($data, $event)->start;
-        $shift->end_date = $this->convertStartEndTime($data, $event)->end;
-        $shift->start = $data['start'];
-        $shift->end = $data['end'];
-        $shift->break_minutes = $data['break_minutes'];
-        $shift->description = $data['description'];
+        $dates = $this->convertStartEndDate($data);
+
+        $shift = new Shift([
+            'start_date' => $dates->start,
+            'end_date' => $dates->end,
+            'start' => $data['start'],
+            'end' => $data['end'],
+            'break_minutes' => $data['break_minutes'],
+            'description' => $data['description'],
+        ]);
+
         $shift->event()->associate($event);
         $shift->craft()->associate($craft);
+
         return $this->save($shift);
     }
 
@@ -104,15 +112,20 @@ class ShiftService
 
     public function createAutomatic(Event $event, int $craftId, array $data): Shift|Model
     {
-        $shift = new Shift();
-        $shift->start_date = $this->convertStartEndTime($data, $event)->start;
-        $shift->end_date = $this->convertStartEndTime($data, $event)->end;
-        $shift->start = Carbon::parse($data['start'])->format('H:i');
-        $shift->end =  Carbon::parse($data['end'])->format('H:i');
-        $shift->break_minutes = $data['break_minutes'];
-        $shift->description = $data['description'];
+        $dates = $this->convertStartEndDate($data);
+
+        $shift = new Shift([
+            'start_date' => $dates->start,
+            'end_date' => $dates->end,
+            'start' => Carbon::parse($data['start'])->format('H:i'),
+            'end' => Carbon::parse($data['end'])->format('H:i'),
+            'break_minutes' => $data['break_minutes'],
+            'description' => $data['description'],
+        ]);
+
         $shift->event()->associate($event);
         $shift->craft()->associate($craftId);
+
         return $this->save($shift);
     }
 
@@ -134,31 +147,53 @@ class ShiftService
         return $shift;
     }
 
-    public function createShiftWithoutEventAutomatic(int $craftId, array $data, string $day)
+    public function createShiftWithoutEventAutomatic(int $craftId, array $data, string $day): Shift|Model
     {
-        $shift = new Shift();
-        $shift->start_date = $day;
-        $shift->end_date = $day;
-        $shift->start = Carbon::parse($data['start'])->format('H:i');
-        $shift->end =  Carbon::parse($data['end'])->format('H:i');
-        $shift->break_minutes = $data['break_minutes'];
-        $shift->description = $data['description'];
+        $start = Carbon::parse($data['start']);
+        $end = Carbon::parse($data['end']);
+
+        $startDate = Carbon::parse($day)->format('Y-m-d');
+        $endDate = $end->isBefore($start)
+            ? Carbon::parse($day)->copy()->addDay()->format('Y-m-d')
+            : $startDate;
+
+        $shift = new Shift([
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'start' => $start->format('H:i'),
+            'end' => $end->format('H:i'),
+            'break_minutes' => $data['break_minutes'],
+            'description' => $data['description'],
+            'room_id' => $data['room_id'],
+        ]);
+
         $shift->craft()->associate($craftId);
-        $shift->room_id = $data['room_id'];
+
         return $this->save($shift);
     }
 
-    public function createShiftWithoutEvent(int $craftId, array $data)
+    public function createShiftWithoutEvent(int $craftId, array $data): Shift|Model
     {
-        $shift = new Shift();
-        $shift->start_date = $data['start_date'];
-        $shift->end_date = $data['end_date'];
-        $shift->start = $data['start'];
-        $shift->end = $data['end'];
-        $shift->break_minutes = $data['break_minutes'];
-        $shift->description = $data['description'];
+        $start = Carbon::parse($data['start']);
+        $end = Carbon::parse($data['end']);
+        $startDate = Carbon::parse($data['start_date']);
+
+        $endDate = $end->isBefore($start)
+            ? $startDate->copy()->addDay()->format('Y-m-d')
+            : $startDate->format('Y-m-d');
+
+        $shift = new Shift([
+            'start_date' => $startDate->format('Y-m-d'),
+            'end_date' => $endDate,
+            'start' => $start->format('H:i'),
+            'end' => $end->format('H:i'),
+            'break_minutes' => $data['break_minutes'],
+            'description' => $data['description'],
+            'room_id' => $data['room_id'],
+        ]);
+
         $shift->craft()->associate($craftId);
-        $shift->room_id = $data['room_id'];
+
         return $this->save($shift);
     }
 

@@ -16,7 +16,7 @@
         </template>
 
         <!-- Empty -->
-        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="w-[175px] h-[144px] rounded-lg flex items-center justify-center border-2 border-dashed group btn-border-hover" @click="checkWhichModal">
+        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="w-[175px] h-[144px] rounded-lg flex items-center justify-center border border-dashed border-gray-300 group btn-border-hover" @click="checkWhichModal">
             <component is="IconCircleDashedPlus" class="h-6 w-6 text-artwork-buttons-context/30 cursor-pointer btn-group-hover" stroke-width="1.5" />
         </div>
     </div>

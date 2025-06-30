@@ -2841,5 +2841,9 @@
     "Night": "Nacht",
     "Balance": "Saldo",
     "Work Times": "Arbeitszeiten",
-    "Overview of work times for the user": "Übersicht der Arbeitszeiten für den Nutzer"
+    "Overview of work times for the user": "Übersicht der Arbeitszeiten für den Nutzer",
+    "User Book working hours": "Arbeitsstunden des Nutzer*in buchen",
+    "Hours": "Stunden",
+    "Select another user": "Anderen Nutzer*in auswählen",
+    "Of which night hours": "Von denen Nachtstunden"
 }

@@ -11,7 +11,7 @@ class StoreWorkTimeBookingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,12 @@ class StoreWorkTimeBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'user_id' => 'required|exists:users,id',
+            'date' => 'required|date',
+            'hours' => 'required',
+            'nightly_working_hours' => 'required',
+            'comment' => 'required|string|max:255',
+            'plus_minus' => 'required|in:+,-',
         ];
     }
 }

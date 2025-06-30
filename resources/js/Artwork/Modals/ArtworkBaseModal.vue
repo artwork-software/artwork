@@ -14,7 +14,7 @@
                                          leave-from="opacity-100 translate-y-0 sm:scale-100"
                                          @after-enter="initDraggable"
                                          leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                            <DialogPanel class="card glassy draggableModal" :class="[modalSize, showBackdrop ? '' : '!border-gray-200 shadow-glass']"  ref="containerRef">
+                            <DialogPanel class="card glassy draggableModal w-full" :class="[modalSize, showBackdrop ? '' : '!border-gray-200 shadow-glass']"  ref="containerRef">
                                 <div class="flex items-center justify-between px-5 pt-5 pb-2">
                                     <div class="text-left">
                                         <h3 class="font-lexend font-bold">{{ $t(props.title) }}</h3>

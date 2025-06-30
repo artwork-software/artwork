@@ -16,6 +16,10 @@ return new class extends Migration
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->onDelete('cascade');
+            $table->foreignId('booker_id')
+                ->nullable()
+                ->constrained('users')
+                ->onDelete('set null');
             $table->string('name')->nullable();
             $table->text('comment')->nullable();
             $table->date('booking_day')->nullable();

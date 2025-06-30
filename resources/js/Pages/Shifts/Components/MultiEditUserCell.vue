@@ -4,7 +4,7 @@
             <input :checked="computedCheckedForMultiEdit" @change="changeUserForMultiEdit" :disabled="Object.keys(multiEditCellByDayAndUser).length !== 0" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist-dark" :class="[$page.props.auth.user.compact_mode ? 'h-3 w-3 ' : 'h-5 w-5 ', Object.keys(multiEditCellByDayAndUser).length !== 0 ? 'cursor-not-allowed' : '']" />
         </div>
 
-        <div class="card glassy !rounded-lg">
+        <div class="card glassy-shiftplan !rounded-lg">
             <div :class="[$page.props.auth.user.compact_mode ? 'h-8 flex items-center justify-between' : 'h-12']" class="drag-item w-40 p-2 text-white text-xs !rounded-lg flex items-center gap-2" :style="{backgroundColor: backgroundColorWithOpacity(color)}">
                 <div class="text-white" v-if="!$page.props.auth.user.compact_mode">
                     <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6">

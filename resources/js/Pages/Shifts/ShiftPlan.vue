@@ -134,16 +134,16 @@
 
                         <template #body>
                             <TableBody class="eventByDaysContainer">
-                                <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId" class="w-full table-row"
+                                <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId" class="w-full table-row divide-x divide-gray-300"
                                     :class="$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
                                     <th :id="'roomNameContainer_' + index"
                                         class="xsDark w-48 table-cell align-middle"
-                                        :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
+                                        :class="[index % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                                         <div class="flex font-semibold items-center ml-4">
                                             {{ room.roomName }}
                                         </div>
                                     </th>
-                                    <td :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : 'border-dashed', multiEditModeCalendar ? '' : 'border-r-2 ', $page.props.auth.user.calendar_settings.expand_days ? '' : 'h-28']"
+                                    <td :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : '', multiEditModeCalendar ? '' : '', $page.props.auth.user.calendar_settings.expand_days ? '' : 'h-28']"
                                         class="border-gray-400 day-container relative table-cell align-top px-[1px]"
                                         v-for="day in days" :data-day="day.fullDay">
                                         <div
@@ -154,7 +154,7 @@
                                             class="absolute w-full h-full"
                                             @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)">
                                         </div>
-                                        <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.isExtraRow">
+                                        <div class="bg-background-gray2 h-full mb-3" style="width: 37px;" v-if="day.isExtraRow">
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-else style="width: 200px" class="cell group " :class="$page.props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
@@ -479,10 +479,9 @@
                         </div>
                         <div class="pt-14 z-10">
                             <table class="w-full text-white overflow-y-scroll z-10">
-                                <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                                 <div class="z-10">
                                     <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
-                                    <tr class="stickyYAxisNoMarginLeft pl-2 cursor-pointer w-48 xsLight flex justify-between pb-1"
+                                    <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight !font-lexend flex justify-between pb-1"
                                         @click="changeCraftVisibility(craft.id)">
                                         {{ craft.name }}
                                         <ChevronDownIcon
@@ -491,7 +490,7 @@
                                         />
                                     </tr>
                                     <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users"
-                                        class="w-full flex ">
+                                        class="w-full flex">
                                         <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right pb-[1px]"
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
@@ -528,7 +527,7 @@
                                                                :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
                                             />
                                         </th>
-                                        <td v-for="day in days" class="flex gap-x-0.5 relative px-[1px] pb-[1px]">
+                                        <td v-for="day in days" class="flex pr-[1px] relative pb-[1px]">
                                             <div v-if="!day.isExtraRow" :class="[
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     $page.props.auth.user.compact_mode ? 'h-8' : '',
@@ -565,7 +564,7 @@
                                     </tr>
                                     </tbody>
                                     <tbody>
-                                    <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 pl-2 xsLight flex justify-between pb-1"
+                                    <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 !font-lexend xsLight flex justify-between pb-1"
                                         @click="changeCraftVisibility('noCraft')">
                                         {{ $t('Without craft assignment') }}
                                         <ChevronDownIcon
@@ -608,7 +607,7 @@
                                                                @highlightShiftsOfUser="highlightShiftsOfUser"
                                                                :color="null"/>
                                         </th>
-                                        <td v-for="day in days" class="flex gap-x-0.5 relative px-[1px] pb-[1px]">
+                                        <td v-for="day in days" class="flex relative pr-[1px]">
                                             <div v-if="!day.isExtraRow"
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '',
@@ -1037,7 +1036,6 @@ export default {
         },
     },
     methods: {
-
         usePage,
         changeDailyViewMode(){
             this.dailyViewMode = !this.dailyViewMode;

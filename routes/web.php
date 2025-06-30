@@ -124,6 +124,7 @@ use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
+use Artwork\Modules\User\Http\Controllers\UserWorkTimeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -2250,6 +2251,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
         )->name('user-contract-settings.update-user');
     });
+
+    // users.worktimes.store
+    Route::post('/users/worktimes/store/{user}', [\Artwork\Modules\WorkTimeBooking\Http\Controllers\WorkTimeBookingController::class, 'store'])
+        ->name('users.worktimes.store');
 });
 
 Route::get(

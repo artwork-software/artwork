@@ -791,13 +791,15 @@
 
     .card {
         &.glassy {
-            box-shadow: var(--shadow-glass);
-            @apply flex h-fit grow flex-col rounded-3xl bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50 ring-1 ring-white/50;
+            @apply flex h-fit grow flex-col rounded-3xl bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50 ring-1 ring-white/50 shadow-glass;
+        }
+
+        &.glassy-shiftplan {
+            @apply flex h-fit grow flex-col rounded-3xl bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50 active:bg-artwork-navigation-background shadow-glass;
         }
 
         &.white {
-            box-shadow: var(--shadow-glass);
-            @apply bg-white rounded-3xl border border-gray-100 w-full;
+            @apply bg-white rounded-3xl border border-gray-100 w-full shadow-glass;
         }
     }
 
@@ -907,7 +909,7 @@
 }
 
 .menu-button-no-padding {
-    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 text-sm placeholder-transparent focus:outline-none focus:ring-1;
+    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create;
 
     span {
         @apply text-left float-left text-sm placeholder-transparent text-gray-500;

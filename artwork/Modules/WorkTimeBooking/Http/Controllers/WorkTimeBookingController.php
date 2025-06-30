@@ -3,6 +3,7 @@
 namespace Artwork\Modules\WorkTimeBooking\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\WorkTimeBooking\Http\Requests\StoreWorkTimeBookingRequest;
 use Artwork\Modules\WorkTimeBooking\Http\Requests\UpdateWorkTimeBookingRequest;
 use Artwork\Modules\WorkTimeBooking\Models\WorkTimeBooking;
@@ -28,9 +29,9 @@ class WorkTimeBookingController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreWorkTimeBookingRequest $request)
+    public function store(StoreWorkTimeBookingRequest $request, User $user)
     {
-        //
+        dd($request->all(), $user);
     }
 
     /**

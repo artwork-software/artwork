@@ -228,7 +228,9 @@
                 </div>
             </div>
             <div class="flex w-full items-center px-6" :class="!shift?.roomId ? 'justify-center' : 'justify-between'">
-                <FormButton :text="$t('Save')" type="submit" :disabled="shiftForm.processing"/>
+                <ArtworkBaseModalButton variant="primary" type="submit" :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !shiftForm.break_minutes || !selectedCraft">
+                    {{ $t('Save') }}
+                </ArtworkBaseModalButton>
 
                 <div @click="showComfirmDeleteModal = true" class="text-sm underline cursor-pointer hover:text-red-600 ease-in-out duration-300 transition-colors" v-if="shift?.roomId">
                     {{ $t('Delete shift without Event') }}
@@ -287,11 +289,13 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 
 export default defineComponent({
     name: "AddShiftModal",
     mixins: [Permissions, IconLib],
     components: {
+        ArtworkBaseModalButton,
         ArtworkBaseModal,
         BaseTextarea,
         BaseInput,

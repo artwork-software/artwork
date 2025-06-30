@@ -58,4 +58,14 @@ class WorkTimeBooking extends Model
             'work_time_bookings'
         );
     }
+
+    public function booker(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'booker_id',
+            'id',
+            'work_time_bookings'
+        );
+    }
 }

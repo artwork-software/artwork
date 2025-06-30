@@ -5,7 +5,8 @@
       'border shadow-glass backdrop-blur-md',
       'disabled:opacity-50',
       variantClass[variant],
-      sizeClass[size]
+      sizeClass[size],
+        disabled ? '!cursor-not-allowed !bg-gray-100 !border-gray-400 !text-gray-700' : 'cursor-pointer',
     ]"
         :type="type"
         :disabled="disabled"
@@ -30,8 +31,8 @@ const variantClass = {
 
 const sizeClass = {
     xs: 'text-xs px-4 py-1',
-    sm: 'px-8 py-2 text-sm',
-    md: 'px-10 py-3 text-sm',
-    lg: 'px-12 py-4 text-lg'
+    sm: 'px-8 py-2 text-xs',
+    md: 'px-10 py-3 text-xs',
+    lg: 'px-12 py-4 text-md'
 }
 </script>

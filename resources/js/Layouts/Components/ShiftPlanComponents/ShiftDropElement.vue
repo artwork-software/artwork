@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full group/shift bg-backgroundGray hover:bg-gray-50 duration-300 ease-in-out cursor-pointer">
+    <div class="w-full group/shift bg-background-gray hover:bg-gray-50 duration-300 ease-in-out cursor-pointer">
         <div
             :class="[!highlightMode || !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30 px-1' : 'bg-pink-500 !text-white px-1', multiEditMode ?'text-[10px]' : '']"
             class="flex items-center xsLight text-shiftText subpixel-antialiased"

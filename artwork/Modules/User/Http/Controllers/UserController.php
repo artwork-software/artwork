@@ -379,57 +379,70 @@ class UserController extends Controller
             return $schedule;
         }
 
-        // Alle relevanten Bookings vorladen
         $bookings = $user->workTimeBookings()
             ->whereBetween('booking_day', [$start->toDateString(), $end->toDateString()])
             ->get()
-            ->keyBy(fn($b) => $b->booking_day->toDateString());
+            ->groupBy(fn($b) => $b->booking_day->toDateString());
 
         $current = $start->copy();
 
         while ($current->lte($end)) {
             $dateKey = $current->toDateString();
             $weekday = strtolower($current->format('l'));
-            $plannedStart = $workTime->{$weekday}; // Carbon|null
+            $weekNumber = $current->isoWeek();
+            $weekYear = $current->isoWeekYear();
+            $weekKey = "KW{$weekNumber}";
+            $plannedStart = $workTime->{$weekday};
 
             $entry = [
                 'weekday' => $weekday,
                 'date' => $dateKey,
-                'formatted_date' => $current->locale(
-                    session()?->get('locale') ?? config('app.fallback_locale')
-                )->isoFormat('dddd, D. MMMM YYYY'),
+                'formatted_date' => $current->locale(session()?->get('locale') ?? config('app.fallback_locale'))
+                    ->isoFormat('dddd, D. MMMM YYYY'),
                 'planned_start' => $plannedStart?->format('H:i'),
                 'planned_minutes' => $plannedStart ? ($plannedStart->hour * 60 + $plannedStart->minute) : 0,
-                'planned_hours' => $plannedStart ? round(
-                    ($plannedStart->hour * 60 + $plannedStart->minute) / 60,
-                    2
-                ) : 0,
+                'planned_hours' => $plannedStart ? round(($plannedStart->hour * 60 + $plannedStart->minute) / 60, 2) : 0,
+                'wantedHours' => 0,
+                'worked_hours' => 0,
+                'nightly_working_hours' => 0,
+                'work_time_balance_change' => 0,
+                'is_special_day' => false,
+                'comment' => '',
             ];
 
             if (isset($bookings[$dateKey])) {
-                $booking = $bookings[$dateKey];
-                $entry['wantedHours'] = $booking->wanted_working_hours;
-                $entry['wantedHoursFormatted'] = $this->convertMinutesToHoursAndMinutes($booking->wanted_working_hours);
-                $entry['worked_hours'] = $booking->worked_hours;
-                $entry['worked_hours_formatted'] = $this->convertMinutesToHoursAndMinutes($booking->worked_hours);
-                $entry['nightly_working_hours'] = $booking->nightly_working_hours;
-                $entry['nightly_working_hours_formatted'] = $this->convertMinutesToHoursAndMinutes(
-                    $booking->nightly_working_hours
-                );
-                $entry['is_special_day'] = $booking->is_special_day;
-                $entry['work_time_balance_change'] = $booking->work_time_balance_change;
-                $entry['work_time_balance_change_formatted'] = $this->convertMinutesToHoursAndMinutes(
-                    $booking->work_time_balance_change
-                );
-                $entry['comment'] = $booking->comment;
+                foreach ($bookings[$dateKey] as $booking) {
+                    $entry['wantedHours'] += $booking->wanted_working_hours;
+                    $entry['worked_hours'] += $booking->worked_hours;
+                    $entry['nightly_working_hours'] += $booking->nightly_working_hours;
+                    $entry['work_time_balance_change'] += $booking->work_time_balance_change;
+                    $entry['is_special_day'] = $entry['is_special_day'] || $booking->is_special_day;
+
+                    // Kommentare anhängen, falls vorhanden
+                    if ($booking->comment) {
+                        $entry['comment'] .= ($entry['comment'] ? ' | ' : '') . $booking->comment;
+                    }
+                }
+
+                // Formatierungen
+                $entry['wantedHoursFormatted'] = $this->convertMinutesToHoursAndMinutes($entry['wantedHours']);
+                $entry['worked_hours_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['worked_hours']);
+                $entry['nightly_working_hours_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['nightly_working_hours']);
+                $entry['work_time_balance_change_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['work_time_balance_change']);
             }
 
-            $schedule[$dateKey] = $entry;
+            if (!isset($schedule[$weekKey])) {
+                $schedule[$weekKey] = [];
+            }
+
+            $schedule[$weekKey][$dateKey] = $entry;
             $current->addDay();
         }
 
         return $schedule;
     }
+
+
 
     private function convertMinutesToHoursAndMinutes(int $inputMinutes): string
     {

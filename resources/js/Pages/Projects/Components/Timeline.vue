@@ -35,7 +35,7 @@
             </template>
 
             <div>
-                <div class="flex items-center justify-center mt-1 py-5 rounded-lg cursor-pointer border-2 border-dashed group btn-border-hover" @click="addEmptyTimeline">
+                <div class="flex items-center justify-center mt-1 py-5 rounded-lg cursor-pointer border border-dashed border-gray-300 group btn-border-hover" @click="addEmptyTimeline">
                     <component is="IconCircleDashedPlus" class="h-6 w-6 text-artwork-buttons-context/30 btn-group-hover" stroke-width="1.5" />
                 </div>
             </div>

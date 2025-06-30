@@ -245,12 +245,14 @@ sudo php /var/www/html/artisan scout:index projects
 sudo php /var/www/html/artisan scout:index users
 sudo php /var/www/html/artisan scout:index freelancers
 sudo php /var/www/html/artisan scout:index serviceproviders
+sudo php /var/www/html/artisan scout:index inventoryarticles
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\User\\Models\\User
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\ShiftPreset\\Models\\ShiftPreset
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\Project\\Models\\Project
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\MoneySource\\Models\\MoneySource
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\Freelancer\\Models\\Freelancer
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\ServiceProvider\\Models\\ServiceProvider
+sudo php /var/www/html/artisan scout:import Artwork\\Modules\\Inventory\\Models\\InventoryArticle
 
 # Scheduler (cron)
 log "Richte Scheduler ein..."

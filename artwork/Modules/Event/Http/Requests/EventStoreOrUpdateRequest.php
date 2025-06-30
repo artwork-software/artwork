@@ -2,12 +2,10 @@
 
 namespace Artwork\Modules\Event\Http\Requests;
 
-use Dive\DryRequests\DryRunnable;
 use Illuminate\Foundation\Http\FormRequest;
 
 class EventStoreOrUpdateRequest extends FormRequest
 {
-    use DryRunnable;
 
     /**
      * Get the validation rules that apply to the request.

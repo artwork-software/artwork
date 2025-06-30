@@ -2,7 +2,7 @@
     <div class="relative">
         <div class="my-auto w-full relative">
             <BaseInput
-                id="room_search"
+                id="article_search_input"
                 v-model="article_search_query"
                 :label="label"
                 class="w-full"
@@ -64,7 +64,7 @@ export default {
             this.showLoading = false;
         },
         searchArticles() {
-            if (this.article_search_query.length > 2) {
+            if (this.article_search_query.length >= 2) {
                 axios.post(route('inventory.articles.search'),{
                     article_search: this.article_search_query,
                     wantsJson: true,
@@ -80,7 +80,7 @@ export default {
     watch: {
         article_search_query: {
             handler() {
-                this.showLoading = true;
+                this.article_search_query.length >= 2 ? this.showLoading = true : this.showLoading = false;
                 debounce(() => {
                     this.searchArticles();
                 }, 300)();

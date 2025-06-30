@@ -64,10 +64,12 @@ class CraftInventoryItemControllerTest extends TestCase
     {
         return [
             'test create' => [
+                'order',
+                0,
                 'groupId',
                 1,
-                'order',
-                0
+                'folderId',
+                null
             ]
         ];
     }
@@ -76,10 +78,12 @@ class CraftInventoryItemControllerTest extends TestCase
      * @dataProvider createTestDataProvider
      */
     public function testCreate(
+        string $expectedOrderKey,
+        int $expectedOrder,
         string $expectedGroupIdKey,
         int $expectedGroupId,
-        string $expectedOrderKey,
-        int $expectedOrder
+        string $expectedFolderIdKey,
+        ?int $expectedFolderId
     ): void {
         $requestMock = $this->getMockBuilder(CreateCraftInventoryItemRequest::class)
             ->onlyMethods(['integer'])
@@ -90,21 +94,26 @@ class CraftInventoryItemControllerTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $requestMock->expects($matcher = self::exactly(2))
+        $requestMock->expects($matcher = self::exactly(3))
             ->method('integer')
             ->willReturnCallback(
                 function (string $key) use (
                     $matcher,
+                    $expectedOrderKey,
+                    $expectedOrder,
                     $expectedGroupIdKey,
                     $expectedGroupId,
-                    $expectedOrderKey,
-                    $expectedOrder
-                ): int {
+                    $expectedFolderIdKey,
+                    $expectedFolderId
+                ): ?int {
                     switch ($matcher->numberOfInvocations()) {
                         case 1:
                             self::assertSame($expectedGroupIdKey, $key);
                             return $expectedGroupId;
                         case 2:
+                            self::assertSame($expectedFolderIdKey, $key);
+                            return $expectedFolderId;
+                        case 3:
                             self::assertSame($expectedOrderKey, $key);
                             return $expectedOrder;
                         default:
@@ -115,7 +124,7 @@ class CraftInventoryItemControllerTest extends TestCase
 
         $this->craftInventoryItemServiceMock->expects(self::once())
             ->method('create')
-            ->with($expectedGroupId, $expectedOrder);
+            ->with($expectedOrder, $expectedGroupId, $expectedFolderId);
 
         $this->redirectorMock->expects(self::once())
             ->method('back')
@@ -134,10 +143,12 @@ class CraftInventoryItemControllerTest extends TestCase
     {
         return [
             'test create exception' => [
-                'groupId',
-                1,
                 'order',
                 0,
+                'groupId',
+                1,
+                'folderId',
+                null,
                 'error',
                 'flash-messages.inventory-management.item.errors.create',
                 'translation',
@@ -148,10 +159,12 @@ class CraftInventoryItemControllerTest extends TestCase
 
     /** @dataProvider createExceptionTestDataProvider */
     public function testCreateException(
-        string $expectedGroupIdKey,
-        int $expectedGroupId,
         string $expectedOrderKey,
         int $expectedOrder,
+        string $expectedGroupIdKey,
+        int $expectedGroupId,
+        string $expectedFolderIdKey,
+        ?int $expectedFolderId,
         string $expectedWithKey,
         string $expectedTranslationKey,
         string $expectedTranslation,
@@ -167,21 +180,26 @@ class CraftInventoryItemControllerTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $requestMock->expects($matcher = self::exactly(2))
+        $requestMock->expects($matcher = self::exactly(3))
             ->method('integer')
             ->willReturnCallback(
                 function (string $key) use (
                     $matcher,
+                    $expectedOrderKey,
+                    $expectedOrder,
                     $expectedGroupIdKey,
                     $expectedGroupId,
-                    $expectedOrderKey,
-                    $expectedOrder
-                ): int {
+                    $expectedFolderIdKey,
+                    $expectedFolderId
+                ): ?int {
                     switch ($matcher->numberOfInvocations()) {
                         case 1:
                             self::assertSame($expectedGroupIdKey, $key);
                             return $expectedGroupId;
                         case 2:
+                            self::assertSame($expectedFolderIdKey, $key);
+                            return $expectedFolderId;
+                        case 3:
                             self::assertSame($expectedOrderKey, $key);
                             return $expectedOrder;
                         default:
@@ -192,7 +210,7 @@ class CraftInventoryItemControllerTest extends TestCase
 
         $this->craftInventoryItemServiceMock->expects(self::once())
             ->method('create')
-            ->with($expectedGroupId, $expectedOrder)
+            ->with($expectedOrder, $expectedGroupId, $expectedFolderId)
             ->willThrowException($thrownException);
 
         $this->loggerMock->expects(self::once())

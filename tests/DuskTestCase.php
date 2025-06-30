@@ -19,6 +19,15 @@ abstract class DuskTestCase extends BaseTestCase
 
     private User $user;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        \Illuminate\Support\Facades\App::setLocale('en');
+        \Illuminate\Support\Facades\Session::put('locale', 'en');
+        \Carbon\CarbonPeriod::setLocale('en');
+    }
+
     /**
      * Prepare for Dusk test execution.
      */

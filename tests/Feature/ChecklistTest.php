@@ -7,8 +7,14 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Artwork\Modules\User\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Spatie\Permission\Models\Permission;
 
 beforeEach(function () {
+    // Ensure permissions exist before assigning them
+    if (!Permission::where('name', \Artwork\Modules\Permission\Enums\PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value)->exists()) {
+        $this->artisan('db:seed', ['--class' => RolesAndPermissionsSeeder::class]);
+    }
 
     $this->auth_user = User::factory()->create();
 
@@ -39,6 +45,7 @@ beforeEach(function () {
 });
 
 test('users with the permission can create checklists without a template and assign departments to it', function () {
+    \Illuminate\Support\Facades\Event::fake();
 
     $name = fake()->company();
     $this->project->users()->attach($this->auth_user);
@@ -74,6 +81,7 @@ test('users with the permission can create checklists without a template and ass
 });
 
 test('users with the permission can create checklists with a template and assign departments to it', function () {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->project->users()->attach($this->auth_user->id);
     $this->post('/checklists', [
@@ -102,6 +110,7 @@ test('users with the permission can create checklists with a template and assign
 });
 
 test('users can only view checklists they are assigned to', function () {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->task->checklist()->associate($this->checklist);
     $this->task->save();
@@ -110,6 +119,7 @@ test('users can only view checklists they are assigned to', function () {
 });
 
 test('users with the permission can delete checklists', function () {
+    \Illuminate\Support\Facades\Event::fake();
 
     $this->delete("/checklists/{$this->checklist->id}");
 
@@ -117,7 +127,3 @@ test('users with the permission can delete checklists', function () {
         'id' => $this->checklist->id
     ]);
 });
-
-
-
-

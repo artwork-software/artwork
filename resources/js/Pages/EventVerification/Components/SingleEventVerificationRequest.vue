@@ -88,7 +88,7 @@
 <script setup>
 
 import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {defineAsyncComponent, ref} from "vue";
 import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
@@ -123,10 +123,43 @@ const approveRequest = () => {
 }
 
 const openPlanningCalendarWithEventId = () => {
-    router.visit(route('planning-event-calendar.index', {highlightEventId: props.eventVerification.event.id}), {
+    // Get the event's start date
+    const eventStartDate = new Date(props.eventVerification.event.start_time);
+
+    // Calculate the start of the week (Monday)
+    const startOfWeek = new Date(eventStartDate);
+    startOfWeek.setDate(eventStartDate.getDate() - eventStartDate.getDay() + (eventStartDate.getDay() === 0 ? -6 : 1));
+
+    // Calculate the end of the week (Sunday)
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    // Format dates as YYYY-MM-DD
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const startDate = formatDate(startOfWeek);
+    const endDate = formatDate(endOfWeek);
+
+    // Update the user's calendar filter to show the week containing the event
+    router.patch(route('update.user.calendar.filter.dates', usePage().props.auth.user.id), {
+        start_date: startDate,
+        end_date: endDate,
+    }, {
         preserveScroll: true,
         preserveState: false,
-    })
+        onSuccess: () => {
+            // After updating the filter, navigate to the calendar with the highlighted event
+            router.visit(route('planning-event-calendar.index', {highlightEventId: props.eventVerification.event.id}), {
+                preserveScroll: true,
+                preserveState: false,
+            });
+        }
+    });
 }
 
 

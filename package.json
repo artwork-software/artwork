@@ -33,6 +33,7 @@
         "dayjs": "^1.11.13",
         "interactjs": "^1.10.27",
         "laravel-permission-to-vuejs": "^3.0.8",
+        "laravel-precognition-vue": "^0.7.2",
         "linkify-it": "^5.0.0",
         "lodash.debounce": "^4.0.8",
         "mathjax": "4.0.0-beta.6",

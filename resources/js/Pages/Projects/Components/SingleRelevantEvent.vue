@@ -59,6 +59,7 @@
                                      :shift-qualifications="shiftQualifications"
                                      @dropFeedback="dropFeedback"
                                      :shift-time-presets="shiftTimePresets"
+                                     :can-edit-component="canEditComponent"
             />
         </div>
     </div>
@@ -91,6 +92,7 @@ export default defineComponent({
         'currentUserCrafts',
         'shiftQualifications',
         'shiftTimePresets',
+        'canEditComponent'
     ],
     emits: ['dropFeedback'],
     mixins: [IconLib, Permissions, ColorHelper],

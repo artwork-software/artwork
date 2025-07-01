@@ -53,7 +53,7 @@
                                 </div>
                             </MenuItem>
                         </BaseMenu>
-                        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" ref="userWindowButton"
+                        <div v-if="(this.$can('can plan shifts') || this.hasAdminRole())" ref="userWindowButton"
                              @click="openUserWindow()">
                             <ToolTipComponent
                                 icon="IconUsers"
@@ -178,6 +178,7 @@
                                                  :color="craft.color"
                                                  :craft="craft"
                                                  class="mb-1"
+                                                 :disabled="!can('can plan shifts') && !hasAdminRole()"
                                     />
                                 </div>
                             </div>
@@ -199,6 +200,7 @@
                                                  :color="null"
                                                  :craft="null"
                                                  class="mb-1"
+                                                 :disabled="!can('can plan shifts') && !hasAdminRole()"
                                     />
                                 </div>
                             </div>
@@ -218,6 +220,7 @@
                                      :shift-qualifications="loadedProjectInformation['ShiftTab'].shift_qualifications"
                                      @dropFeedback="showDropFeedback"
                                      :shift-time-presets="loadedProjectInformation['ShiftTab'].shift_time_presets"
+                                     :can-edit-component="can('can plan shifts') || hasAdminRole()"
                 />
             </div>
         </div>
@@ -244,6 +247,7 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
+import {can} from "laravel-permission-to-vuejs";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
 export default defineComponent({
@@ -474,6 +478,7 @@ export default defineComponent({
         }, 1000)
     },
     methods: {
+        can,
         applySort(sort_type_shift_tab) {
             this.$page.props.auth.user.sort_type_shift_tab = sort_type_shift_tab;
             router.patch(

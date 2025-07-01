@@ -2,6 +2,7 @@
     <div :id="'event-container-inner-' + event.id" class="flex flex-row items-start gap-2">
         <Timeline :time-line="timeLine"
                   :event="event"
+                  :canEditComponent="canEditComponent"
                   @wantsFreshPlacements="this.reinitializeEventContainerPlacements()"
         />
         <template v-for="shift in orderedShiftsByCraftPosition">
@@ -10,6 +11,7 @@
                          :shift="shift"
                          :crafts="crafts"
                          :event="event"
+                         :canEditComponent="canEditComponent"
                          :currentUserCrafts="currentUserCrafts"
                          :shift-qualifications="shiftQualifications"
                          :shift-time-presets="shiftTimePresets"/>
@@ -59,6 +61,7 @@ export default defineComponent({
         'currentUserCrafts',
         'shiftQualifications',
         'shiftTimePresets',
+        'canEditComponent'
     ],
     components: {
         SingleShift,

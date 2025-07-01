@@ -1,5 +1,5 @@
 <template>
-    <SelectUserForShiftMenu :crafts-with-entities="sortedCraftsWithEntities" @create-on-drop-element-and-save="createOnDropElementAndSave">
+    <SelectUserForShiftMenu :can-edit-component="canEditComponent" :crafts-with-entities="sortedCraftsWithEntities" @create-on-drop-element-and-save="createOnDropElementAndSave">
         <div class="flex items-center p-1 hover:bg-gray-50/40 rounded cursor-pointer w-full h-full"  @dragover="onDragOver" @drop="onDrop">
             <div class="flex gap-1 items-center justify-between w-full h-full">
                 <div class="h-full">
@@ -131,6 +131,10 @@ const props = defineProps({
     crafts: {
         type: Object,
         required: true
+    },
+    canEditComponent: {
+        type: Boolean,
+        default: false
     },
 })
 

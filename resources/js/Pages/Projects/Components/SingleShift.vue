@@ -120,6 +120,7 @@
                     is-small
                     @focusout="saveTimeChanges"
                     @change="validateShiftBreak"
+                    :disabled="!canEditComponent"
                     classes="h-8 peer-placeholder-shown:top-[8px] text-xs -top-5"
                 />
                 <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
@@ -175,6 +176,7 @@
                     :event-is-series="event.is_series"
                     :all-shift-qualification-drop-elements="this.computedShiftQualificationDropElements"
                     :crafts="crafts"
+                    :can-edit-component="canEditComponent"
                     @dropFeedback="dropFeedback"
                     :craft-with-entities="getUsersInCraftOfShiftAndUsersFromCraftsWhereUniversalApplicable"
                 />
@@ -192,6 +194,7 @@
                     :event-is-series="event.is_series"
                     :all-shift-qualification-drop-elements="this.computedShiftQualificationDropElements"
                     :crafts="crafts"
+                    :can-edit-component="canEditComponent"
                     @dropFeedback="dropFeedback"
                     :craft-with-entities="getUsersInCraftOfShiftAndUsersFromCraftsWhereUniversalApplicable"
                 />
@@ -209,6 +212,7 @@
                     :event-is-series="event.is_series"
                     :all-shift-qualification-drop-elements="this.computedShiftQualificationDropElements"
                     :crafts="crafts"
+                    :can-edit-component="canEditComponent"
                     @dropFeedback="dropFeedback"
                     :craft-with-entities="getUsersInCraftOfShiftAndUsersFromCraftsWhereUniversalApplicable"
                 />
@@ -224,10 +228,11 @@
                     :all-shift-qualification-drop-elements="this.computedShiftQualificationDropElements"
                     :shift-crafts-with-users="getUsersInCraftOfShiftAndUsersFromCraftsWhereUniversalApplicable"
                     :crafts="crafts"
+                    :can-edit-component="canEditComponent"
                     @dropFeedback="dropFeedback"
                 />
             </div>
-            <div class="my-3 mx-0.5">
+            <div class="my-3 mx-0.5" v-if="canEditComponent">
                 <component is="IconCirclePlus" @click="showAddShiftQualificationModal = true" class="h-5 w-5 xsLight cursor-pointer hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out" stroke-width="1.5" />
             </div>
         </div>
@@ -309,14 +314,18 @@ export default defineComponent({
         MenuItems
     },
     mixins: [IconLib, Permissions],
-    props: [
-        'shift',
-        'crafts',
-        'event',
-        'currentUserCrafts',
-        'shiftQualifications',
-        'shiftTimePresets'
-    ],
+    props: {
+        shift: Object,
+        crafts: Array,
+        event: Object,
+        currentUserCrafts: Array,
+        shiftQualifications: Array,
+        shiftTimePresets: Array,
+        canEditComponent: {
+            type: Boolean,
+            default: false
+        }
+    },
     emits: ['dropFeedback', 'wantsFreshPlacements'],
     data() {
         return {

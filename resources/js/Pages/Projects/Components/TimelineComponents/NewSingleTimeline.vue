@@ -19,7 +19,7 @@
                     </SwitchGroup>
                 </div>
                 <div class="cursor-pointer">
-                    <div v-if="!time.clicked" @click="openCloseTimeEditor(true)">
+                    <div v-if="!time.clicked" @click="canEditComponent ? openCloseTimeEditor(true) : ''">
                         <div v-if="time.start_or_end && time.start === time.end && time.start_date === time.end_date">
                             <p class="text-xs">{{ $t('From') }} {{ time.start }}</p>
                         </div>
@@ -74,7 +74,7 @@
 
             </div>
             <div class="invisible group-hover:visible" v-if="!time.clicked || editDescription">
-                <BaseMenu white-menu-background has-no-offset>
+                <BaseMenu v-if="canEditComponent" white-menu-background has-no-offset>
                     <BaseMenuItem white-menu-background title="Edit" @click="openCloseTimeEditor(true)" />
                     <BaseMenuItem white-menu-background title="Delete" icon="IconTrash" @click="deleteTime" />
                 </BaseMenu>
@@ -111,6 +111,11 @@ const props = defineProps({
     event: {
         type: Object,
         required: true
+    },
+    canEditComponent: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 

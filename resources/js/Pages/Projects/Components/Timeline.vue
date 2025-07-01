@@ -12,6 +12,8 @@
                     :tooltip-text="$t('Copy timeline to clipboard')"
                     @click="copyTimelineToClipboard"
                     direction="bottom"
+                    v-if="canEditComponent"
+
                 />
                 <ToolTipComponent
                     icon="IconWand"
@@ -20,8 +22,9 @@
                     :tooltip-text="$t('Create new timeline')"
                     @click="openTimelineModal(false)"
                     direction="bottom"
+                    v-if="canEditComponent"
                 />
-                <BaseMenu white-menu-background has-no-offset white-icon>
+                <BaseMenu white-menu-background has-no-offset white-icon v-if="canEditComponent">
                     <BaseMenuItem white-menu-background title="Read from template" icon="IconFileImport" @click="showSearchTimelinePresetModal = true" />
                     <BaseMenuItem white-menu-background title="Save as template" icon="IconFileExport" @click="showCreateTimelinePresetModal = true" />
                     <BaseMenuItem white-menu-background title="Edit" @click="openTimelineModal(true)" />
@@ -31,10 +34,10 @@
 
         <div>
             <template v-for="(time) in timeLine">
-                <NewSingleTimeline :time="time" :event="event" @wantsFreshPlacements="this.$emit('wantsFreshPlacements')"/>
+                <NewSingleTimeline :canEditComponent="canEditComponent" :time="time" :event="event" @wantsFreshPlacements="this.$emit('wantsFreshPlacements')"/>
             </template>
 
-            <div>
+            <div v-if="canEditComponent">
                 <div class="flex items-center justify-center mt-1 py-5 rounded-lg cursor-pointer border-2 border-dashed group btn-border-hover" @click="addEmptyTimeline">
                     <component is="IconCircleDashedPlus" class="h-6 w-6 text-artwork-buttons-context/30 btn-group-hover" stroke-width="1.5" />
                 </div>
@@ -112,10 +115,14 @@ export default defineComponent({
         NewSingleTimeline,
         AddTimeLineModal
     },
-    props: [
-        'timeLine',
-        'event'
-    ],
+    props: {
+        timeLine: Array,
+        event: Object,
+        canEditComponent: {
+            type: Boolean,
+            default: false
+        }
+    },
     emits: [
         'wantsFreshPlacements'
     ],

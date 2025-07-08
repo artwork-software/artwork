@@ -2253,8 +2253,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     // users.worktimes.store
-    Route::post('/users/worktimes/store/{user}', [\Artwork\Modules\WorkTimeBooking\Http\Controllers\WorkTimeBookingController::class, 'store'])
-        ->name('users.worktimes.store');
+    Route::post(
+        '/users/worktimes/store/{user}',
+        [\Artwork\Modules\WorkTimeBooking\Http\Controllers\WorkTimeBookingController::class, 'store']
+    )->name('users.worktimes.store');
 });
 
 Route::get(

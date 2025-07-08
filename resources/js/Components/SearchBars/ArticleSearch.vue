@@ -1,13 +1,10 @@
 <template>
     <div class="relative">
-        <div class="my-auto w-full relative">
+        <div class="my-auto w-full">
             <BaseInput
-                id="room_search"
+                :id="id"
                 v-model="article_search_query"
                 :label="label"
-                class="w-full"
-                @focus="article_search_query = ''"
-                :show-loading="showLoading"
             />
         </div>
         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -53,6 +50,10 @@ export default {
         label: {
             type: String,
             default: 'Search for Articles'
+        },
+        id: {
+            type: String,
+            default: 'article_search_input'
         }
     },
     emits: ['article-selected'],

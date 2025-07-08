@@ -356,8 +356,8 @@ class UserController extends Controller
 
     public function showUserWorkTimes(User $user): Response|ResponseFactory
     {
-        $start = request()->input('start') ?? Carbon::now()->startOfMonth();
-        $end = request()->input('end') ?? Carbon::now()->endOfMonth();
+        $start = Carbon::parse(request()->input('start')) ?? Carbon::now()->startOfMonth();
+        $end = Carbon::parse(request()->input('end')) ?? Carbon::now()->endOfMonth();
 
         return inertia('Users/UserWorkTimes', [
             'userToEdit' => new UserShowResource($user),
@@ -374,6 +374,7 @@ class UserController extends Controller
     {
         $schedule = [];
         $workTime = $user->workTime;
+
 
         if (!$workTime) {
             return $schedule;

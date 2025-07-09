@@ -1,5 +1,5 @@
 <template>
-    <th class="bg-silverGray xxsDark w-full">
+    <th class="bg-silver-gray xxsDark w-full">
         <div class="flex" @mouseover="showMenu = 'subPosition' + subPosition.id" @mouseout="showMenu = null">
             <div class="pl-2 xxsDark w-full flex items-center h-10" v-if="!subPosition.clicked">
                 <div @click="subPosition.clicked = !subPosition.clicked">
@@ -68,7 +68,7 @@
             </div>
         </div>
         <table class="w-full" v-if="!subPosition.closed">
-            <tbody class="bg-secondaryHover w-full">
+            <tbody class="bg-secondary-hover w-full">
             <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
                                  :sub-position-id="subPosition.id"/>
             <div v-if="subPosition.sub_position_rows?.length > 0"
@@ -76,14 +76,14 @@
                 <tr v-show="!(row.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
                     :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-artwork-buttons-update' : '']"
                     @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
-                    class="bg-secondaryHover flex justify-between items-center border-2 group">
+                    class="bg-secondary-hover flex justify-between items-center border border-gray-200 group">
                     <div class="flex items-center">
                         <td v-for="(cell,index) in row.cells"
                             v-show="!(cell.column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
                             :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
                             <div v-if="(index === 0 || index === 1) && this.$page.props.budgetAccountManagementGlobal">
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center"
                                     v-if="!cell.clicked">
                                     <div class=" flex items-center cell-button">
@@ -95,7 +95,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center" v-else>
                                     <div class="flex flex-row items-center relative">
                                         <input v-model="cell.searchValue"
@@ -161,7 +161,7 @@
                             <div v-else class="group">
                                 <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '',
                                     index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end',
-                                    cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
+                                    cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                      class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
                                     <div class=" flex items-center"
                                          v-if="cell.column.type !== 'project_relevant_column'">

@@ -1,11 +1,11 @@
 <?php
 
-namespace Artwork\Modules\WorkTimeBooking\Services;
+namespace Artwork\Modules\WorkTime\Services;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\WorkTimeBooking\Repositories\WorkTimeBookingRepository;
+use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
 
 class WorkTimeBookingService

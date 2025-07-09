@@ -1,7 +1,7 @@
 <template>
     <div class="font-lexend">
         <div class="mb-3">
-            <div class="hidden sm:block">
+            <div class="">
                 <div class="border-gray-200">
                     <nav class="-mb-px text-sm tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                         <Link v-for="tab in tabs" :key="tab?.name"

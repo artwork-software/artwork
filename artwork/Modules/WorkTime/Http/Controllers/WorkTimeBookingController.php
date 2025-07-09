@@ -1,13 +1,13 @@
 <?php
 
-namespace Artwork\Modules\WorkTimeBooking\Http\Controllers;
+namespace Artwork\Modules\WorkTime\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\WorkTimeBooking\Http\Requests\StoreWorkTimeBookingRequest;
-use Artwork\Modules\WorkTimeBooking\Http\Requests\UpdateWorkTimeBookingRequest;
-use Artwork\Modules\WorkTimeBooking\Models\WorkTimeBooking;
-use Artwork\Modules\WorkTimeBooking\Repositories\WorkTimeBookingRepository;
+use Artwork\Modules\WorkTime\Http\Requests\StoreWorkTimeBookingRequest;
+use Artwork\Modules\WorkTime\Http\Requests\UpdateWorkTimeBookingRequest;
+use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
+use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
 
 class WorkTimeBookingController extends Controller
@@ -15,7 +15,8 @@ class WorkTimeBookingController extends Controller
 
     public function __construct(
         protected WorkTimeBookingRepository $repository,
-    ) { }
+    ) {
+    }
 
     /**
      * Display a listing of the resource.

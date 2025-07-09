@@ -2846,5 +2846,12 @@
     "Hours": "Stunden",
     "Select another user": "Anderen Nutzer*in auswählen",
     "Of which night hours": "Von denen Nachtstunden",
-    "Submit Request": "Anfrage absenden"
+    "Submit Request": "Anfrage absenden",
+    "Work time change requests": "Arbeitszeitänderungsanfragen",
+    "Total Working Time": "Gesamtarbeitszeit",
+    "Request Work Time Change": "Arbeitszeitänderung anfordern",
+    "Submit a request to change work time for a user": "Arbeitszeitänderung für einen Nutzer anfordern",
+    "My work schedule adjustment requests": "Meine Arbeitszeitänderungsanfragen",
+    "Work time adjustment requests received": "Erhaltene Arbeitszeitänderungsanfragen",
+    "Decline": "Ablehnen"
 }

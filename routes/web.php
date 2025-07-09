@@ -2255,8 +2255,36 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // users.worktimes.store
     Route::post(
         '/users/worktimes/store/{user}',
-        [\Artwork\Modules\WorkTimeBooking\Http\Controllers\WorkTimeBookingController::class, 'store']
+        [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeBookingController::class, 'store']
     )->name('users.worktimes.store');
+
+    // shifts.requestWorkTimeChange
+    Route::post(
+        '/shifts/requestWorkTimeChange',
+        [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'store']
+    )->name('shifts.requestWorkTimeChange');
+
+    Route::group(['prefix' => 'work-time-request'], function (): void {
+        // work-time-request.index
+        Route::get('/', [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'index'])
+            ->name('work-time-request.index');
+
+        // Work time adjustment requests received
+        Route::get('/received', [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'received'])
+            ->name('work-time-request.received');
+
+        // worktime.change-request.approve
+        Route::post(
+            '/change-request/{workTimeChangeRequest}/approve',
+            [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'approve']
+        )->name('worktime.change-request.approve');
+
+        // worktime.change-request.decline
+        Route::post(
+            '/change-request/{workTimeChangeRequest}/decline',
+            [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'decline']
+        )->name('worktime.change-request.decline');
+    });
 });
 
 Route::get(

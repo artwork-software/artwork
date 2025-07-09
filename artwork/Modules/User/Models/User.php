@@ -39,7 +39,7 @@ use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
-use Artwork\Modules\WorkTimeBooking\Models\WorkTimeBooking;
+use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\Authenticatable;

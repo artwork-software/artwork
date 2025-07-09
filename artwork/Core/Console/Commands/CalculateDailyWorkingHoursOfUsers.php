@@ -2,7 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Modules\WorkTimeBooking\Services\WorkTimeBookingService;
+use Artwork\Modules\WorkTime\Services\WorkTimeBookingService;
 use Illuminate\Console\Command;
 
 class CalculateDailyWorkingHoursOfUsers extends Command

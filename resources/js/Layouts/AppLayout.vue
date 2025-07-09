@@ -29,11 +29,6 @@
 
         <main class="lg:pl-20 xl:pl-20 pb-20">
             <div class="artwork">
-                <div class="artwork-container pt-30 hidden">
-                    <pre>
-                        {{ usePage() }}
-                    </pre>
-                </div>
                 <slot></slot>
             </div>
         </main>

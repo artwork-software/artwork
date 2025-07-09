@@ -48,7 +48,7 @@
                             <p class="text-sm" v-if="shift.description">&bdquo;{{ shift.description }}&rdquo;</p>
                         </div>
                         <div class="invisible group-hover:visible cursor-pointer flex items-center gap-x-2">
-                            <button type="button" @click="openRequestWorkTimeChangeModal(shift)">
+                            <button type="button" @click="openRequestWorkTimeChangeModal(shift)" v-if="user.element.id === usePage().props.auth.user.id && user.type === 0">
                                 <Component is="IconClockEdit" class="h-5 w-5 hover:text-blue-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
                             </button>
                             <button type="button" @click="openConfirmDeleteModal(shift.id, shift.pivotId)">
@@ -167,6 +167,7 @@
         <ConfirmDeleteModal :title="$t('Delete user from shift')" :description="$t('Are you sure you want to delete the user from this shift?')" @closed="closeConfirmDeleteModal" @delete="submitDeleteUserFromShift" v-if="showConfirmDeleteModal" />
 
         <RequestWorkTimeChangeModal
+            :user="user"
             :shift="selectedShift"
             v-if="showRequestWorkTimeChangeModal"
             @close="showRequestWorkTimeChangeModal = false"
@@ -199,7 +200,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
@@ -268,6 +269,7 @@ export default defineComponent({
 
     },
     methods: {
+        usePage,
         blackColorIfColorIsWhite(color) {
             return color === '#ffffff' ? '#000000' : color;
         },

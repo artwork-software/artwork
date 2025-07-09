@@ -30,6 +30,7 @@
         "@tabler/icons-vue": "^3.34.0",
         "@tailwindcss/vite": "^4.1.10",
         "@vuepic/vue-datepicker": "^11.0.2",
+        "@vueuse/core": "^13.5.0",
         "animejs": "^4.0.1",
         "axios": "1.10.0",
         "dayjs": "^1.11.13",

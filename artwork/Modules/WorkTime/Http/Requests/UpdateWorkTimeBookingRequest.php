@@ -1,6 +1,6 @@
 <?php
 
-namespace Artwork\Modules\WorkTimeBooking\Http\Requests;
+namespace Artwork\Modules\WorkTime\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 

@@ -40,6 +40,7 @@ use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
+use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Config\Repository;
@@ -356,14 +357,34 @@ class UserController extends Controller
 
     public function showUserWorkTimes(User $user): Response|ResponseFactory
     {
-        $start = Carbon::parse(request()->input('start')) ?? Carbon::now()->startOfMonth();
-        $end = Carbon::parse(request()->input('end')) ?? Carbon::now()->endOfMonth();
+        $startInput = request()->input('start');
+        $endInput = request()->input('end');
+
+        $start = $startInput ? Carbon::parse($startInput) : Carbon::now()->startOfMonth();
+        $end = $endInput ? Carbon::parse($endInput) : Carbon::now()->endOfMonth();
+
+        $workTimes = $this->getPlannedWorkSchedule($start, $end, $user);
+
+        // Flach durch alle Tage iterieren
+        $flatDays = collect($workTimes)->flatten(1);
+
+        $totalWorkedMinutes = $flatDays->sum('worked_hours');
+        $totalWantedMinutes = $flatDays->sum('wantedHours');
 
         return inertia('Users/UserWorkTimes', [
             'userToEdit' => new UserShowResource($user),
-            'workTimes' => $this->getPlannedWorkSchedule($start, $end, $user),
+            'workTimes' => $workTimes,
+            'dateRange' => [
+                'start' => $start->toDateString(),
+                'end' => $end->toDateString(),
+            ],
+            'totals' => [
+                'worked' => $this->convertMinutesToHoursAndMinutes($totalWorkedMinutes),
+                'wanted' => $this->convertMinutesToHoursAndMinutes($totalWantedMinutes),
+            ],
         ]);
     }
+
     /**
      * @param Carbon $start
      * @param Carbon $end
@@ -373,14 +394,9 @@ class UserController extends Controller
     private function getPlannedWorkSchedule(Carbon $start, Carbon $end, User $user): array
     {
         $schedule = [];
-        $workTime = $user->workTime;
-
-
-        if (!$workTime) {
-            return $schedule;
-        }
 
         $bookings = $user->workTimeBookings()
+            ->with('booker') // Lade den Nutzer, der gebucht hat
             ->whereBetween('booking_day', [$start->toDateString(), $end->toDateString()])
             ->get()
             ->groupBy(fn($b) => $b->booking_day->toDateString());
@@ -391,49 +407,57 @@ class UserController extends Controller
             $dateKey = $current->toDateString();
             $weekday = strtolower($current->format('l'));
             $weekNumber = $current->isoWeek();
-            $weekYear = $current->isoWeekYear();
             $weekKey = "KW{$weekNumber}";
-            $plannedStart = $workTime->{$weekday};
 
             $entry = [
                 'weekday' => $weekday,
                 'date' => $dateKey,
-                'formatted_date' => $current->locale(session()?->get('locale') ?? config('app.fallback_locale'))
+                'formatted_date' => $current->locale(session('locale', config('app.fallback_locale')))
                     ->isoFormat('dddd, D. MMMM YYYY'),
-                'planned_start' => $plannedStart?->format('H:i'),
-                'planned_minutes' => $plannedStart ? ($plannedStart->hour * 60 + $plannedStart->minute) : 0,
-                'planned_hours' => $plannedStart ? round(($plannedStart->hour * 60 + $plannedStart->minute) / 60, 2) : 0,
+                'planned_start' => null,
+                'planned_minutes' => 0,
+                'planned_hours' => 0,
                 'wantedHours' => 0,
                 'worked_hours' => 0,
                 'nightly_working_hours' => 0,
                 'work_time_balance_change' => 0,
                 'is_special_day' => false,
-                'comment' => '',
+                'comments' => [],
             ];
 
             if (isset($bookings[$dateKey])) {
+                /** @var WorkTimeBooking $booking */
                 foreach ($bookings[$dateKey] as $booking) {
+                    $entry['planned_minutes'] += $booking->wanted_working_hours;
+                    $entry['planned_hours'] = round($entry['planned_minutes'] / 60, 2);
                     $entry['wantedHours'] += $booking->wanted_working_hours;
                     $entry['worked_hours'] += $booking->worked_hours;
                     $entry['nightly_working_hours'] += $booking->nightly_working_hours;
                     $entry['work_time_balance_change'] += $booking->work_time_balance_change;
                     $entry['is_special_day'] = $entry['is_special_day'] || $booking->is_special_day;
 
-                    // Kommentare anhängen, falls vorhanden
                     if ($booking->comment) {
-                        $entry['comment'] .= ($entry['comment'] ? ' | ' : '') . $booking->comment;
+                        $entry['comments'][] = [
+                            'text' => $booking->comment,
+                            'user' => $booking->booker,
+                            'date' => $booking->created_at->locale(session('locale', config('app.fallback_locale')))
+                                ->isoFormat('D. MMMM YYYY'),
+                            'work_time_change' => $this->convertMinutesToHoursAndMinutes(
+                                $booking->work_time_balance_change
+                            ),
+                        ];
                     }
                 }
 
                 // Formatierungen
                 $entry['wantedHoursFormatted'] = $this->convertMinutesToHoursAndMinutes($entry['wantedHours']);
                 $entry['worked_hours_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['worked_hours']);
-                $entry['nightly_working_hours_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['nightly_working_hours']);
-                $entry['work_time_balance_change_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['work_time_balance_change']);
-            }
-
-            if (!isset($schedule[$weekKey])) {
-                $schedule[$weekKey] = [];
+                $entry['nightly_working_hours_formatted'] = $this->convertMinutesToHoursAndMinutes(
+                    $entry['nightly_working_hours']
+                );
+                $entry['work_time_balance_change_formatted'] = $this->convertMinutesToHoursAndMinutes(
+                    $entry['work_time_balance_change']
+                );
             }
 
             $schedule[$weekKey][$dateKey] = $entry;
@@ -442,7 +466,6 @@ class UserController extends Controller
 
         return $schedule;
     }
-
 
 
     private function convertMinutesToHoursAndMinutes(int $inputMinutes): string

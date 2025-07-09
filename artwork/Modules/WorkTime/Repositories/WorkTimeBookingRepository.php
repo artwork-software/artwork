@@ -1,10 +1,10 @@
 <?php
 
-namespace Artwork\Modules\WorkTimeBooking\Repositories;
+namespace Artwork\Modules\WorkTime\Repositories;
 
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\WorkTimeBooking\Models\WorkTimeBooking;
+use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;

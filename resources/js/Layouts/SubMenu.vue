@@ -67,7 +67,7 @@
             <nav class="flex flex-1 flex-col px-6">
                 <ul role="list" class="flex flex-1 flex-col gap-y-7">
                     <li>
-                        <ul role="list" class="-mx-3 space-y-2">
+                        <ul role="list" class="-mx-3 space-y-3">
                             <li v-for="item in navigation" :key="item.name">
                                 <div @mouseover="showToolTipForItem(item)" @mouseleave="hideToolTipForItem(item)">
                                     <Link v-if="!item.isMenu && item.has_permission" :href="item.href" :class="[item.current ? 'bg-gray-50/10 text-white' : 'text-white hover:bg-gray-50/10 hover:text-artwork-buttons-hover', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
@@ -76,7 +76,7 @@
                                     </Link>
                                     <div v-else>
                                         <div v-if="item.has_permission" class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 font-semibold p-2">
-                                            <BaseMenu text-with-margin-left white-menu-background  :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
+                                            <BaseMenu text-with-margin-left white-menu-background menu-width="!w-fit"  :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
                                                 <div v-for="subMenu in item.subMenus" :key="subMenu.name">
                                                     <BaseMenuItem white-menu-background as-link v-if="subMenu.has_permission" :href="subMenu.href" :icon="subMenu.icon" :title="subMenu.name" />
                                                 </div>
@@ -101,7 +101,7 @@
                                         <span v-if="isFullSideBar">{{ $t(item.name) }}</span>
                                     </Link>
                                     <div v-else class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 font-semibold p-2">
-                                        <BaseMenu :no-tooltip="true" white-menu-background :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
+                                        <BaseMenu :no-tooltip="true" menu-width="!w-fit" white-menu-background :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
                                             <div v-for="subMenu in item.subMenus" :key="subMenu.name">
                                                 <BaseMenuItem white-menu-background as-link :href="subMenu.href" :icon="subMenu.icon" :title="subMenu.name" />
                                             </div>
@@ -273,12 +273,42 @@ const navigation = ref([
     },
     {
         name: 'Shift plan',
-        href: route('shifts.plan'),
+        href: '#',
         icon: 'IconCalendarUser',
-        current: route().current('shifts.plan'),
-        isMenu: false,
+        current: true,
+        isMenu: true,
         showToolTipForItem: false,
         has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
+        subMenus: [
+            {
+                name: 'Duty rosters',
+                href: route('shifts.plan'),
+                icon: 'IconCalendarUser',
+                current: route().current('shifts.plan'),
+                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
+            },
+            {
+                name: 'My Operational plan',
+                href: route('user.operationPlan', usePage().props.auth.user.id),
+                icon: 'IconCalendarUser',
+                current: route().current('user.operationPlan'),
+                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
+            },
+            {
+                name: 'Shift templates',
+                href: route('shifts.presets'),
+                icon: 'IconCalendarTime',
+                current: route().current('shifts.presets') || route().current('shifts.timeline-presets.index'),
+                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
+            },
+            {
+                name: 'Work time change requests',
+                href: route('work-time-request.index'),
+                icon: 'IconTimelineEventPlus',
+                current: route().current('work-time-request.index'),
+                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
+            },
+        ]
     },
     {
         name: 'Inventory System',

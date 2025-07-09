@@ -1,11 +1,28 @@
 <?php
 
-namespace Artwork\Modules\WorkTimeBooking\Models;
+namespace Artwork\Modules\WorkTime\Models;
 
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string|null $name
+ * @property string|null $comment
+ * @property \Illuminate\Support\Carbon|null $booking_day
+ * @property int|null $booking_weekday
+ * @property int $wanted_working_hours
+ * @property int $worked_hours
+ * @property bool $is_special_day
+ * @property int $nightly_working_hours
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int $work_time_balance_change
+ * @property-read \Artwork\Modules\User\Models\User $user
+ * @property-read \Artwork\Modules\User\Models\User|null $booker
+ */
 class WorkTimeBooking extends Model
 {
     /** @use HasFactory<\Database\Factories\WorkTimeBookingFactory> */
@@ -28,6 +45,7 @@ class WorkTimeBooking extends Model
      */
 
     protected $fillable = [
+        'booker_id',
         'user_id',
         'name',
         'comment',

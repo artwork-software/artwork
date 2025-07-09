@@ -4,7 +4,7 @@
             <Dialog as="div" class="relative" :style="{ 'z-index': isInShiftPlan ? '999999': zIndex }" @close="$emit('close')">
                 <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
                                  leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                    <div class="fixed inset-0 bg-opacity-50 transition-opacity" :class="showBackdrop ? 'bg-gray-950/50' : ''"/>
+                    <div class="fixed inset-0 bg-opacity-50 transition-opacity" :class="showBackdrop ? 'bg-gray-500/40 backdrop-blur-xs' : ''"/>
                 </TransitionChild>
                 <div class="fixed inset-0 z-50 w-screen overflow-y-auto">
                     <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">

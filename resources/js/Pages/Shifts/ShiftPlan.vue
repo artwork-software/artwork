@@ -648,7 +648,7 @@
             </div>
             <show-user-shifts-modal
                 v-if="showUserShifts"
-                @closed="showUserShifts = false"
+                @close="showUserShifts = false"
                 :user="userToShow"
                 :day="dayToShow"
                 @desires-reload="userShiftModalDesiresReload"

@@ -1,8 +1,8 @@
 <?php
 
-namespace Artwork\Modules\WorkTimeBooking\Policies;
+namespace Artwork\Modules\WorkTime\Policies;
 
-use Artwork\Modules\WorkTimeBooking\Models\WorkTimeBooking;
+use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\Response;
 

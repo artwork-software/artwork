@@ -2842,5 +2842,12 @@
     "Hours": "Hours",
     "Select another user": "Select another user",
     "Of which night hours": "Of which night hours",
-    "Submit Request": "Submit Request"
+    "Submit Request": "Submit Request",
+    "Work time change requests": "Work time change requests",
+    "Total Working Time": "Total Working Time",
+    "Request Work Time Change": "Request Work Time Change",
+    "Submit a request to change work time for a user": "Submit a request to change work time for a user",
+    "My work schedule adjustment requests": "My work schedule adjustment requests",
+    "Work time adjustment requests received": "Work time adjustment requests received",
+    "Decline": "Decline"
 }

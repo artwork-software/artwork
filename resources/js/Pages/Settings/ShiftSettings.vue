@@ -73,18 +73,18 @@
                                 <BaseMenu>
                                     <MenuItem @click="updateCraft(element)"
                                               v-slot="{ active }">
-                                        <a :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <a :class="[active ? '' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <IconEdit stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                      class="mr-3 h-5 w-5 text-primaryText "
                                                       aria-hidden="true"/>
                                             {{$t('Edit')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem @click="openDeleteCraftModal(element)"
                                               v-slot="{ active }">
-                                        <a :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <a :class="[active ? '' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <IconTrash stroke-width="1.5"
-                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                       class="mr-3 h-5 w-5 text-primaryText "
                                                        aria-hidden="true"/>
                                             {{$t('Delete')}}
                                         </a>

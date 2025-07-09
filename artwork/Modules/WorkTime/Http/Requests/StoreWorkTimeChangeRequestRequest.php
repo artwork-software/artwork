@@ -11,7 +11,7 @@ class StoreWorkTimeChangeRequestRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,13 @@ class StoreWorkTimeChangeRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'request_start_time' => 'required|string|date_format:H:i',
+            'request_end_time' => 'required|string|date_format:H:i|after:request_start_time',
+            'shift_id' => 'required|exists:shifts,id',
+            'craft_id' => 'required|exists:crafts,id',
+            'request_comment' => 'required|string|max:255',
+            'user_id' => 'required|exists:users,id',
+            'requested_by' => 'required|exists:users,id',
         ];
     }
 }

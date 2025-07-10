@@ -64,7 +64,7 @@
                                     leave-active-class="transition ease-in duration-75"
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none bg-white">
+                            <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-gray-200 ring-opacity-5 focus:outline-none bg-white">
                                 <MenuItem as="div" v-slot="{ active }" v-for="user in getAssignablePeopleWithCollision(drop.shift_qualification_id)" :key="user.id" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
                                     <div class="flex justify-between items-center gap-x-2 w-48" @click="createOnDropElementAndSave(user, user.originCraft, drop.shift_qualification_id) ">
                                         <span class="text-xs truncate w-36">{{ user.name || user.full_name }}</span>

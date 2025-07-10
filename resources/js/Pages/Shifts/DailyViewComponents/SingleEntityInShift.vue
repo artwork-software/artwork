@@ -1,5 +1,5 @@
 <template>
-    <Popover as="div" class="relative text-left artwork">
+    <Popover as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed">
         <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
             <PopoverButton class="gap-x-2 font-lexend rounded-lg">
                 <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}60` }">
@@ -36,6 +36,11 @@
             </transition>
         </Float>
     </Popover>
+    <div v-else class="gap-x-2 font-lexend rounded-lg" @click="showRequestWorkTimeChangeModal = true">
+        <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}60` }">
+            <p class="text-xs text-left font-lexend">{{ person.pivot.start_time ?? shift.start }} - {{ person.pivot.end_time ?? shift.end }}</p>
+        </div>
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-4 w-full gap-x-2">
         <p class="text-xs truncate col-span-1">
             <span v-if="person.pivot.craft_abbreviation !== shift.craft.abbreviation">
@@ -85,6 +90,8 @@
 
         </div>
     </div>
+
+    <RequestWorkTimeChangeModal :user="person" :shift="shift" v-if="showRequestWorkTimeChangeModal" @close="showRequestWorkTimeChangeModal = false" />
 </template>
 
 <script setup>
@@ -102,7 +109,9 @@ import {
 } from "@headlessui/vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {Float} from "@headlessui-float/vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
+import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
+import {computed, ref} from "vue";
 
 const props = defineProps({
     person: {
@@ -123,6 +132,7 @@ const props = defineProps({
 const findShiftQualification = (id) =>
     props.shiftQualifications.find(q => q.id === id);
 
+const showRequestWorkTimeChangeModal = ref(false);
 
 const saveIndividualShiftTime = () => {
     // Logic to save the individual shift time for the person, freelancer, or service provider
@@ -166,6 +176,10 @@ const saveShortDescription = () => {
         }
     });
 }
+
+const isCurrentUserPlannerOfShiftCraft = computed(() => {
+    return props.shift.craft.craft_shift_planer.some(planner => planner.id === usePage().props.auth.user.id);
+});
 </script>
 
 <style scoped>

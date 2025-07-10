@@ -15,17 +15,20 @@
                 </div>
                 <div class="relative justify-between flex items-center" v-if="showGlobalRoles" v-for="(role, index) in available_roles" :key=index>
                     <div class="flex items-center h-7">
-                        <input
-                            v-model="userForm.roles"
-                            :value="role.name"
-                            name="roles"
-                            type="checkbox"
-                            class="input-checklist"
-                            @change="this.editUser()"
-                        />
-
-                        <div class="ml-3 text-sm font-lexend capitalize">
-                            <label for="roles" :class="[userForm.roles.indexOf(role.name) > -1 ? 'text-gray-800' : 'text-gray-400']">{{$t(role.translation_key)}}</label>
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input v-model="userForm.roles" @change="this.editUser()" :value="role.name" id="comments" aria-describedby="comments-description" name="comments" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="comments" class="font-medium text-gray-900 capitalize font-lexend">{{$t(role.translation_key)}}</label>
+                                <p id="comments-description" class="text-gray-500 font-lexend text-xs">{{ $t(role.tooltipKey) }}</p>
+                            </div>
                         </div>
                     </div>
                     <div class="justify-end">
@@ -34,10 +37,10 @@
                 </div>
             </div>
         </div>
-        <div>
+        <div class="mt-4">
             <div v-if="showUserPermissions" class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="w-full mb-3" v-for="(group, groupName) in this.computedGroupedPermissions" v-show="group.shown">
-                    <div class="flex items-center justify-between select-none mb-2 mt-3">
+                    <div class="flex items-center justify-between select-none mb-4 mt-3">
                         <div class="flex items-center gap-x-2 xxsLight !font-bold uppercase" @click="group.show = typeof group.show === 'undefined' ? false : !group.show">
                             {{ $t(groupName) }}
                             <div class="flex items-center ml-2">
@@ -51,22 +54,21 @@
                             </div>
                         </div>
                     </div>
-                    <div class="space-y-2 divide-y divide-gray-200 divide-dashed">
-                        <div v-if="typeof group.show === 'undefined' || group.show" class="flex items-start justify-between pt-2" v-for="(permission, index) in group.permissions" :key=index>
-                            <div class="flex">
-                                <input
-                                    :key="permission.name"
-                                    v-model="userForm.permissions"
-                                    :value="permission.name"
-                                    name="permissions"
-                                    type="checkbox"
-                                    class="input-checklist"
-                                    @change="this.editUser()"
-                                />
-
-                                <div class="ml-3 text-sm font-lexend">
-                                    <label for="permissions"
-                                           :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'text-gray-800' : 'text-gray-400']">{{ $t(permission.translation_key) }}</label>
+                    <div class="space-y-3 divide-y divide-gray-200 divide-dashed">
+                        <div v-if="typeof group.show === 'undefined' || group.show" class="flex items-start justify-between pb-3" v-for="(permission, index) in group.permissions" :key=index>
+                            <div class="flex gap-3">
+                                <div class="flex h-6 shrink-0 items-center">
+                                    <div class="group grid size-4 grid-cols-1">
+                                        <input v-model="userForm.permissions" @change="this.editUser()" :value="permission.name" id="comments" aria-describedby="comments-description" name="comments" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                            <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="text-sm/6">
+                                    <label for="comments" class="font-medium capitalize font-lexend" :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'text-gray-900' : 'text-gray-500']">{{ $t(permission.translation_key) }}</label>
+                                    <p id="comments-description" class="text-gray-400 font-lexend text-xs">{{ $t(permission.tooltipKey) }}</p>
                                 </div>
                             </div>
                             <div>

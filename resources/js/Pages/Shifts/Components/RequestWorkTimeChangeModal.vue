@@ -8,7 +8,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                 <div>
                     <label class="block font-medium text-gray-700 font-lexend">Datum</label>
-                    <div class="mt-1 text-gray-900">{{ shift.start_of_shift }}</div>
+                    <div class="mt-1 text-gray-900">{{ shift.start_of_shift ?? shift?.formatted_dates?.start }}</div>
                 </div>
 
                 <div class="flex gap-6">
@@ -24,12 +24,12 @@
 
                 <div>
                     <label class="block font-medium text-gray-700 font-lexend">Raum</label>
-                    <div class="mt-1 text-gray-900">{{ shift.roomName }}</div>
+                    <div class="mt-1 text-gray-900">{{ shift.roomName ?? shift?.room?.name }}</div>
                 </div>
 
                 <div>
                     <label class="block font-medium text-gray-700 font-lexend">Firma</label>
-                    <div class="mt-1 text-gray-900">{{ shift.craft.name }} ({{ shift.craft.abbreviation }})</div>
+                    <div class="mt-1 text-gray-900">{{ shift.craft.name }} [{{ shift.craft.abbreviation }}]</div>
                 </div>
             </div>
 
@@ -105,7 +105,7 @@ const requestForm = useForm({
     shift_id: props.shift.id,
     craft_id: props.shift.craft.id,
     request_comment: '',
-    user_id: props.user.element.id,
+    user_id: props.user.id,
     requested_by: usePage().props.auth.user.id
 });
 

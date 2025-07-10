@@ -145,21 +145,17 @@ class WorkTimeChangeRequestController extends Controller
             abort(404, 'Pivot-Daten nicht gefunden.');
         }
 
-        // Zeiten extrahieren
         $oldStart = \Carbon\Carbon::parse($oldPivot->start_time);
         $oldEnd = \Carbon\Carbon::parse($oldPivot->end_time);
         $newStart = Carbon::parse($workTimeChangeRequest->request_start_time);
         $newEnd = Carbon::parse($workTimeChangeRequest->request_end_time);
 
-        $shiftDate = \Carbon\Carbon::parse($oldPivot->start_date); // oder shift->formatted_dates->start
+        $shiftDate = \Carbon\Carbon::parse($oldPivot->start_date);
         $now = now()->startOfDay();
 
-        // Dauer in Minuten
         $oldDuration = $oldStart->diffInMinutes($oldEnd);
         $newDuration = $newStart->diffInMinutes($newEnd);
         $balanceDelta = $newDuration - $oldDuration;
-
-        // Fall A: Schicht liegt in der Zukunft oder heute → Pivot anpassen
         if ($shiftDate->gte($now)) {
             $shift->users()->updateExistingPivot($user->id, [
                 'start_time' => $newStart->format('H:i:s'),
@@ -167,15 +163,12 @@ class WorkTimeChangeRequestController extends Controller
             ]);
         } else {
             $weekdayIndex = $shiftDate->dayOfWeek;
-
-            // Existierende Buchung holen
             $previousBooking = $repository->getPreviousBooking($user, $shiftDate, $weekdayIndex);
 
             if (!$previousBooking) {
                 abort(404, 'Es existiert keine ursprüngliche Buchung für diesen Tag.');
             }
 
-            // Nur Differenz verbuchen
             $repository->storeOrUpdateBooking($user, now(), now()->dayOfWeek, [
                 'name' => 'adjustment_work_time_change_request_' . $shift->id,
                 'comment' => 'Zeitkorrektur: ' . $oldDuration . 'min → ' . $newDuration . 'min',
@@ -190,7 +183,6 @@ class WorkTimeChangeRequestController extends Controller
                 'booker_id' => auth()->id(),
             ]);
 
-            // WorkTimeBalance korrigieren
             if ($balanceDelta !== 0) {
                 $repository->updateUserBalance($user, $balanceDelta);
             }
@@ -201,7 +193,6 @@ class WorkTimeChangeRequestController extends Controller
             ]);
         }
 
-        // Anfrage aktualisieren
         $workTimeChangeRequest->update([
             'status' => 'approved',
             'approved_by' => auth()->id(),

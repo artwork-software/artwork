@@ -167,7 +167,7 @@
         <ConfirmDeleteModal :title="$t('Delete user from shift')" :description="$t('Are you sure you want to delete the user from this shift?')" @closed="closeConfirmDeleteModal" @delete="submitDeleteUserFromShift" v-if="showConfirmDeleteModal" />
 
         <RequestWorkTimeChangeModal
-            :user="user"
+            :user="user.element"
             :shift="selectedShift"
             v-if="showRequestWorkTimeChangeModal"
             @close="showRequestWorkTimeChangeModal = false"

@@ -115,16 +115,6 @@
                     {{ $t('The working time pattern “{0}” is currently selected. This means that working times cannot be edited.', [selectedWorkTimePattern.name]) }}
                 </p>
             </div>
-            <!--<p class="mt-1 flex text-sm text-gray-500 space-x-2 divide-x divide-gray-200 font-lexend hidden">
-                <span><b>{{ $t('Monday')}}</b>: {{ workTime.monday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Tuesday')}}</b>: {{ workTime.tuesday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Wednesday')}}</b>: {{ workTime.wednesday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Thursday')}}</b>: {{ workTime.thursday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Friday')}}</b>: {{ workTime.friday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Saturday')}}</b>: {{ workTime.saturday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Sunday')}}</b>: {{ workTime.sunday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Total hours')}}</b>: {{ workTime.full_work_time_in_hours }} Std.</span>
-            </p>-->
 
             <div class="grid grid-cols-1 md:grid-cols-8 gap-4 my-10">
                 <div class="card glassy p-10">
@@ -248,7 +238,9 @@ const workTimeForm = useForm({
     thursday: props.workTime?.thursday || '00:00',
     friday: props.workTime?.friday || '00:00',
     saturday: props.workTime?.saturday || '00:00',
-    sunday: props.workTime?.sunday || '00:00'
+    sunday: props.workTime?.sunday || '00:00',
+    valid_from: props.workTime?.valid_from || '',
+    valid_until: props.workTime?.valid_until || ''
 })
 
 const showSelectWorkTimePatternModal = ref(false)

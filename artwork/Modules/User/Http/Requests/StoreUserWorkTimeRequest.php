@@ -30,6 +30,8 @@ class StoreUserWorkTimeRequest extends FormRequest
             'friday' => 'nullable|date_format:H:i',
             'saturday' => 'nullable|date_format:H:i',
             'sunday' => 'nullable|date_format:H:i',
+            'valid_from' => 'nullable|date',
+            'valid_until' => 'nullable|date|after_or_equal:valid_from'
         ];
     }
 }

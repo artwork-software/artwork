@@ -31,10 +31,10 @@ class UserWorkTimeController extends Controller
      */
     public function store(StoreUserWorkTimeRequest $request, User $user): void
     {
-        $user->workTime()->updateOrCreate(
-            ['user_id' => $user->id],
-            $request->validated()
-        );
+        $validated = $request->validated();
+        $validated['user_id'] = $user->id;
+
+        UserWorkTime::create($validated);
     }
 
     /**

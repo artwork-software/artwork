@@ -18,7 +18,7 @@ class UserWorkTime extends Model
         'thursday',
         'friday',
         'saturday',
-        'sunday'
+        'sunday', 'valid_from', 'valid_until',
     ];
 
     protected $casts = [
@@ -28,7 +28,9 @@ class UserWorkTime extends Model
         'thursday' => 'datetime:H:i',
         'friday' => 'datetime:H:i',
         'saturday' => 'datetime:H:i',
-        'sunday' => 'datetime:H:i'
+        'sunday' => 'datetime:H:i',
+        'valid_from' => 'date',
+        'valid_until' => 'date',
     ];
 
     protected $appends = [

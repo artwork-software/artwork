@@ -12,9 +12,24 @@
                 id="searchInput"/>
 
 
+            <div>
+                <BaseInput
+                    v-model="valid_from"
+                    label="Gültig ab"
+                    type="date"
+                    id="valid_from" />
+            </div>
+            <div>
+                <BaseInput
+                    v-model="valid_until"
+                    label="Gültig bis"
+                    type="date"
+                    id="valid_until" />
+            </div>
+
             <div class="mt-5">
                 <ul role="list" class="divide-y divide-gray-100">
-                    <li v-for="workTime in filteredPatterns" :key="workTime.id" @click="$emit('selectPattern', workTime)" class="flex justify-between gap-x-6 px-3 py-5 cursor-pointer hover:bg-gray-50">
+                    <li v-for="workTime in filteredPatterns" :key="workTime.id" @click="emitWorkTimePattern(workTime)" class="flex justify-between gap-x-6 px-3 py-5 cursor-pointer hover:bg-gray-50">
                         <div class="flex min-w-0 gap-x-4">
                             <div class="min-w-0 flex-auto">
                                 <p class="text-sm/6 font-semibold text-gray-900">
@@ -60,12 +75,23 @@ const props = defineProps({
 const emit = defineEmits(['close', 'selectPattern']);
 
 const searchInput = ref('');
+const valid_from = ref(null);
+const valid_until = ref(null);
 
 const filteredPatterns = computed(() => {
     return props.workTimePatterns.filter(pattern =>
         pattern.name.toLowerCase().includes(searchInput.value.toLowerCase())
     );
 });
+
+const emitWorkTimePattern = (workTime) => {
+    emit('selectPattern', {
+        workTimePattern: workTime,
+        valid_from: valid_from.value,
+        valid_until: valid_until.value
+    });
+    emit('close');
+}
 
 </script>
 

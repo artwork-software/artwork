@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::table('user_work_times', function (Blueprint $table) {
             $table->date('valid_from')->nullable();
             $table->date('valid_until')->nullable();
+            $table->boolean('is_active')->default(false);
         });
     }
 
@@ -23,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('user_work_times', function (Blueprint $table) {
-            $table->dropColumn(['valid_from', 'valid_until']);
+            $table->dropColumn(['valid_from', 'valid_until', 'is_active']);
         });
     }
 };

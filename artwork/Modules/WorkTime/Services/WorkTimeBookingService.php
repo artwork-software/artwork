@@ -5,6 +5,7 @@ namespace Artwork\Modules\WorkTime\Services;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
 
@@ -17,6 +18,62 @@ class WorkTimeBookingService
     }
 
     public function calculateDailyWorkingHours(): void
+    {
+        $this->refreshWorkTimeActivations();
+
+        $users = $this->repository->getWorkShiftUsers();
+        $today = now()->startOfDay();
+        $weekdayIndex = $today->dayOfWeek;
+        $weekdayName = $this->getWeekdayName($weekdayIndex);
+
+        foreach ($users as $user) {
+            $workTimeEntry = $this->getActiveUserWorkTime($user);
+
+            if (!$workTimeEntry) {
+                continue;
+            }
+
+            $pattern = $workTimeEntry->workTimePattern;
+            $plannedTime = $pattern
+                ? $pattern->{$weekdayName}
+                : $workTimeEntry->{$weekdayName};
+
+            $wantedMinutes = $plannedTime
+                ? $today->diffInMinutes($plannedTime)
+                : 0;
+
+            if ($this->repository->isHoliday($today)) {
+                $wantedMinutes = 0;
+            }
+
+            $workedTimes = $this->calculateShiftMinutes($today, $user);
+            $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange(
+                $workedTimes['total'],
+                $wantedMinutes
+            );
+
+            $previousBooking = $this->repository->getPreviousBooking($user, $today, $weekdayIndex);
+            $delta = $previousBooking
+                ? $workTimeBalanceChange - $previousBooking->work_time_balance_change
+                : $workTimeBalanceChange;
+
+            $this->repository->storeBookingAndUpdateBalanceInTransaction($user, $today, $weekdayIndex, [
+                'name' => "daily_work_time_booking_{$today->toDateString()}",
+                'wanted_working_hours' => $wantedMinutes,
+                'worked_hours' => $workedTimes['total'],
+                'nightly_working_hours' => $workedTimes['night'],
+                'is_special_day' => false,
+                'work_time_balance_change' => $workTimeBalanceChange,
+            ]);
+
+            if ($delta !== 0) {
+                $this->repository->updateUserBalance($user, $delta);
+            }
+        }
+    }
+
+
+    /*public function calculateDailyWorkingHours(): void
     {
         $users = $this->repository->getWorkShiftUsers();
         $today = now()->startOfDay();
@@ -54,7 +111,7 @@ class WorkTimeBookingService
                 $this->repository->updateUserBalance($user, $delta);
             }
         }
-    }
+    }*/
 
     private function getWeekdayName(int $day): string
     {
@@ -129,5 +186,26 @@ class WorkTimeBookingService
     private function calculateWorkTimeBalanceChange(int $workedHours, int $wantedWorkHours): int
     {
         return $workedHours - $wantedWorkHours;
+    }
+
+    private function getActiveUserWorkTime(User $user): ?UserWorkTime
+    {
+        return $user->getCurrentWorkTime(); // oder ->getValidWorkTime();
+    }
+
+    public function refreshWorkTimeActivations(): void
+    {
+        UserWorkTime::query()
+            ->whereDate('valid_from', '<=', now())
+            ->where(function ($q) {
+                $q->whereNull('valid_until')->orWhere('valid_until', '>=', now());
+            })
+            ->update(['is_active' => true]);
+
+        UserWorkTime::query()
+            ->where(function ($q) {
+                $q->whereDate('valid_from', '>', now())->orWhereDate('valid_until', '<', now());
+            })
+            ->update(['is_active' => false]);
     }
 }

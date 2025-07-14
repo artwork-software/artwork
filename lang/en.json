@@ -2849,5 +2849,9 @@
     "Submit a request to change work time for a user": "Submit a request to change work time for a user",
     "My work schedule adjustment requests": "My work schedule adjustment requests",
     "Work time adjustment requests received": "Work time adjustment requests received",
-    "Decline": "Decline"
+    "Decline": "Decline",
+    "Starts on": "Starts on",
+    "Next Work Time Pattern": "Next Work Time Pattern",
+    "Total weekly hours:": "Total weekly hours:",
+    "Starts in:": "Starts in:"
 }

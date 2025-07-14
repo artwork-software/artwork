@@ -22,6 +22,7 @@ class StoreUserWorkTimeRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'id' => 'nullable|integer|exists:user_work_times,id',
             'work_time_pattern_id' => 'nullable|integer|exists:user_work_time_patterns,id',
             'monday' => 'nullable|date_format:H:i',
             'tuesday' => 'nullable|date_format:H:i',

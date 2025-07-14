@@ -7,15 +7,15 @@
             <p class="mt-1 flex text-xs/5 text-gray-500">
                 {{ workTimePattern.description }}
             </p>
-            <p class="mt-1 flex text-xs/5 text-gray-500 space-x-2 divide-x divide-gray-200">
-                <span><b>{{ $t('Monday')}}</b>: {{ workTimePattern.monday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Tuesday')}}</b>: {{ workTimePattern.tuesday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Wednesday')}}</b>: {{ workTimePattern.wednesday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Thursday')}}</b>: {{ workTimePattern.thursday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Friday')}}</b>: {{ workTimePattern.friday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Saturday')}}</b>: {{ workTimePattern.saturday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Sunday')}}</b>: {{ workTimePattern.sunday }} Std.</span>
-                <span class="pl-2"><b>{{ $t('Total hours')}}</b>: {{ workTimePattern.full_work_time_in_hours }} Std.</span>
+            <p class="mt-1 flex text-xs/5 text-gray-500 divide-x divide-gray-200">
+                <span class="pr-2"><b>{{ $t('Monday')}}</b>: {{ workTimePattern.monday }} Std.</span>
+                <span class="px-2"><b>{{ $t('Tuesday')}}</b>: {{ workTimePattern.tuesday }} Std.</span>
+                <span class="px-2"><b>{{ $t('Wednesday')}}</b>: {{ workTimePattern.wednesday }} Std.</span>
+                <span class="px-2"><b>{{ $t('Thursday')}}</b>: {{ workTimePattern.thursday }} Std.</span>
+                <span class="px-2"><b>{{ $t('Friday')}}</b>: {{ workTimePattern.friday }} Std.</span>
+                <span class="px-2"><b>{{ $t('Saturday')}}</b>: {{ workTimePattern.saturday }} Std.</span>
+                <span class="px-2"><b>{{ $t('Sunday')}}</b>: {{ workTimePattern.sunday }} Std.</span>
+                <span class="px-2"><b>{{ $t('Total hours')}}</b>: {{ workTimePattern.full_work_time_in_hours }} Std.</span>
             </p>
         </div>
     </div>

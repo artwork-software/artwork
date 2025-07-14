@@ -2853,5 +2853,9 @@
     "Submit a request to change work time for a user": "Arbeitszeitänderung für einen Nutzer anfordern",
     "My work schedule adjustment requests": "Meine Arbeitszeitänderungsanfragen",
     "Work time adjustment requests received": "Erhaltene Arbeitszeitänderungsanfragen",
-    "Decline": "Ablehnen"
+    "Decline": "Ablehnen",
+    "Starts on": "Beginnt am",
+    "Next Work Time Pattern": "Nächstes Arbeitszeitmuster",
+    "Total weekly hours:": "Gesamtstunden pro Woche:",
+    "Starts in:": "Beginnt in:"
 }

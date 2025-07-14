@@ -658,6 +658,21 @@ class User extends Model implements
         return $this->hasMany(UserWorkTime::class, 'user_id', 'id');
     }
 
+    public function getNextWorkTime(): ?UserWorkTime
+    {
+        return $this->workTimes()
+            ->whereDate('valid_from', '>', now())
+            ->orderBy('valid_from')
+            ->first();
+    }
+
+    public function getCurrentWorkTime(): ?UserWorkTime
+    {
+        return $this->workTimes()
+            ->where('is_active', true)
+            ->first();
+    }
+
     public function contract(): HasOne
     {
         return $this->hasOne(UserContractAssign::class, 'user_id', 'id');

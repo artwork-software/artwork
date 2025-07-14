@@ -32,7 +32,28 @@ class UserWorkTimeController extends Controller
     public function store(StoreUserWorkTimeRequest $request, User $user): void
     {
         $validated = $request->validated();
+
+        // if in the request there is an id, we update the existing work time
+        if (isset($validated['id'])) {
+            $userWorkTime = UserWorkTime::findOrFail($validated['id']);
+            $userWorkTime->update($validated);
+            return;
+        }
+
+
         $validated['user_id'] = $user->id;
+
+        // Prüfen, ob gültig für heute
+        $today = now()->toDateString();
+
+        $validFrom = $validated['valid_from'] ?? null;
+        $validUntil = $validated['valid_until'] ?? null;
+
+        $isActive =
+            (!$validFrom || $validFrom <= $today) &&
+            (!$validUntil || $validUntil >= $today);
+
+        $validated['is_active'] = $isActive;
 
         UserWorkTime::create($validated);
     }

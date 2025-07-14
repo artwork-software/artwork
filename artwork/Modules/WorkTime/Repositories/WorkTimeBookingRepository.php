@@ -19,7 +19,7 @@ class WorkTimeBookingRepository
     public function getWorkShiftUsers(): Collection
     {
         return User::where('can_work_shifts', true)
-            ->with(['workTime', 'shifts'])
+            ->with(['workTimes', 'shifts'])
             ->get();
     }
 

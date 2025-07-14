@@ -23,6 +23,9 @@
             </div>
         </div>
 
+        <NextWorkTimeCountdown :next-work-time="nextWorkTime" />
+
+
         <div class="mt-5" v-if="!isSelectingPattern">
             <form @submit.prevent="submit">
                 <div class="space-y-4">
@@ -96,6 +99,22 @@
                             id="sunday" />
                         <p v-if="workTimeForm.errors.sunday" class="text-red-500 mt-0.5 text-xs"></p>
                     </div>
+                    <div>
+                        <BaseInput
+                            v-model="workTimeForm.valid_from"
+                            label="Gültig ab"
+                            type="date"
+                            id="valid_from" />
+                        <p v-if="workTimeForm.errors.valid_from" class="text-red-500 mt-0.5 text-xs"></p>
+                    </div>
+                    <div>
+                        <BaseInput
+                            v-model="workTimeForm.valid_until"
+                            label="Gültig bis"
+                            type="date"
+                            id="valid_until" />
+                        <p v-if="workTimeForm.errors.valid_until" class="text-red-500 mt-0.5 text-xs"></p>
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-between mt-5">
@@ -120,49 +139,49 @@
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Monday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ workTime.monday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime.monday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Tuesday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ workTime.tuesday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime.tuesday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Wednesday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ workTime.wednesday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime.wednesday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Thursday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ workTime.thursday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime.thursday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Friday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ workTime.friday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime.friday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Saturday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ workTime.saturday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime.saturday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Sunday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ workTime.sunday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime.sunday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Total hours')}}</h2>
-                        <p class="text-sm text-gray-500">{{ workTime.full_work_time_in_hours }} Std.</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime.full_work_time_in_hours }} Std.</p>
                     </div>
                 </div>
             </div>
@@ -198,13 +217,14 @@ import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import NextWorkTimeCountdown from "@/Pages/Users/Components/NextWorkTimeCountdown.vue";
 
 const props = defineProps({
     userToEdit: {
         type: Object,
         required: true
     },
-    workTime: {
+    workTimes: {
         type: Object,
         required: false,
         default: () => ({
@@ -216,8 +236,32 @@ const props = defineProps({
             thursday: null,
             friday: null,
             saturday: null,
-            sunday: null
+            sunday: null,
+            valid_from: '',
+            valid_until: ''
         })
+    },
+    currentWorkTime: {
+        type: Object,
+        required: false,
+        default: () => ({
+            id: null,
+            work_time_pattern_id: null,
+            monday: '00:00',
+            tuesday: '00:00',
+            wednesday: '00:00',
+            thursday: '00:00',
+            friday: '00:00',
+            saturday: '00:00',
+            sunday: '00:00',
+            valid_from: '',
+            valid_until: ''
+        })
+    },
+    nextWorkTime: {
+        type: Object,
+        required: false,
+        default: () => null
     },
     currentTab: {
         type: String,
@@ -230,31 +274,34 @@ const props = defineProps({
 })
 
 const workTimeForm = useForm({
-    id: props.workTime?.id || null,
-    work_time_pattern_id: props.workTime?.work_time_pattern_id || null,
-    monday: props.workTime?.monday || '00:00',
-    tuesday: props.workTime?.tuesday || '00:00',
-    wednesday: props.workTime?.wednesday || '00:00',
-    thursday: props.workTime?.thursday || '00:00',
-    friday: props.workTime?.friday || '00:00',
-    saturday: props.workTime?.saturday || '00:00',
-    sunday: props.workTime?.sunday || '00:00',
-    valid_from: props.workTime?.valid_from || '',
-    valid_until: props.workTime?.valid_until || ''
+    id: props.currentWorkTime?.id || null,
+    work_time_pattern_id: props.currentWorkTime?.work_time_pattern_id || null,
+    monday: props.currentWorkTime?.monday || '00:00',
+    tuesday: props.currentWorkTime?.tuesday || '00:00',
+    wednesday: props.currentWorkTime?.wednesday || '00:00',
+    thursday: props.currentWorkTime?.thursday || '00:00',
+    friday: props.currentWorkTime?.friday || '00:00',
+    saturday: props.currentWorkTime?.saturday || '00:00',
+    sunday: props.currentWorkTime?.sunday || '00:00',
+    valid_from: props.currentWorkTime?.valid_from || '',
+    valid_until: props.currentWorkTime?.valid_until || ''
 })
 
 const showSelectWorkTimePatternModal = ref(false)
 const showConfirmRemovePatternModal = ref(false)
 
-const selectPattern = (workTimePattern) => {
-    workTimeForm.work_time_pattern_id = workTimePattern.id;
-    workTimeForm.monday = workTimePattern.monday;
-    workTimeForm.tuesday = workTimePattern.tuesday;
-    workTimeForm.wednesday = workTimePattern.wednesday;
-    workTimeForm.thursday = workTimePattern.thursday;
-    workTimeForm.friday = workTimePattern.friday;
-    workTimeForm.saturday = workTimePattern.saturday;
-    workTimeForm.sunday = workTimePattern.sunday;
+const selectPattern = (data) => {
+
+    workTimeForm.work_time_pattern_id = data.workTimePattern.id;
+    workTimeForm.valid_from = data.valid_from;
+    workTimeForm.valid_until = data.valid_until;
+    workTimeForm.monday = data.workTimePattern.monday;
+    workTimeForm.tuesday = data.workTimePattern.tuesday;
+    workTimeForm.wednesday = data.workTimePattern.wednesday;
+    workTimeForm.thursday = data.workTimePattern.thursday;
+    workTimeForm.friday = data.workTimePattern.friday;
+    workTimeForm.saturday = data.workTimePattern.saturday;
+    workTimeForm.sunday = data.workTimePattern.sunday;
 
     showSelectWorkTimePatternModal.value = false;
 
@@ -263,14 +310,6 @@ const selectPattern = (workTimePattern) => {
 
 const removePattern = () => {
     workTimeForm.work_time_pattern_id = null;
-    workTimeForm.monday = '00:00';
-    workTimeForm.tuesday = '00:00';
-    workTimeForm.wednesday = '00:00';
-    workTimeForm.thursday = '00:00';
-    workTimeForm.friday = '00:00';
-    workTimeForm.saturday = '00:00';
-    workTimeForm.sunday = '00:00';
-
     showConfirmRemovePatternModal.value = false;
 
     submit();

@@ -25,6 +25,8 @@ use Psy\Util\Str;
 
 readonly class EventCalendarService
 {
+    use MapRoomsToContentForCalendar;
+
     public function filterRoomsEvents(
         Collection $rooms,
         UserCalendarFilter $filter,
@@ -183,35 +185,5 @@ readonly class EventCalendarService
             ->orderBy('start_time')
             ->get();
 
-    }
-
-    public function mapRoomsToContentForCalendar(Collection $rooms, $startDate, $endDate): CalendarFrontendDataDTO
-    {
-        $period = collect(CarbonPeriod::create($startDate, '1 day', $endDate))
-            ->mapWithKeys(fn($date) => [$date->format('d.m.Y') => ['events' => []]])
-            ->toArray();
-        $roomsData = $rooms->map(function ($room) use ($period) {
-            $content = $period;
-
-            $groupedEvents = $room->events->flatMap(
-                fn($eventDTO) => collect($eventDTO->daysOfEvent)->map(
-                    fn($date) => ['date' => $date, 'event' => $eventDTO]
-                )
-            )->groupBy('date');
-
-            foreach ($groupedEvents as $date => $eventsOnDate) {
-                if (isset($content[$date])) {
-                    $content[$date]['events'] = $eventsOnDate->pluck('event')->all();
-                }
-            }
-
-            return new CalendarRoomDTO(
-                roomId: $room->id,
-                roomName: $room->name,
-                content: $content
-            );
-        })->toArray();
-
-        return new CalendarFrontendDataDTO(rooms: $roomsData);
     }
 }

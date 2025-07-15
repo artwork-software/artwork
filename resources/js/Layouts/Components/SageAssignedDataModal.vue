@@ -12,6 +12,40 @@
                     {{ $t('No booking has been linked yet.') }}
                 </div>
                 <div v-else class="flex flex-col w-full">
+                    <!-- index change -->
+                    <nav class="w-full h-10 flex items-center border-t border-gray-200 mb-5">
+                        <div class="w-1/6 h-10 flex">
+                            <div v-show="currentIndex > 0"
+                                 @click="currentIndex--"
+                                 class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 cursor-pointer">
+                                <IconChevronLeft class="h-4 w-4 text-gray-400" aria-hidden="true" />
+                                <span>{{ $t('Previous') }}</span>
+                            </div>
+                        </div>
+                        <div v-if="this.cell.sage_assigned_data.length <= 9" class="w-4/6 h-10 flex justify-center">
+                                <span v-for="(index) in maxIndex"
+                                      @click="currentIndex = (index - 1)"
+                                      class="cursor-pointer inline-flex items-center justify-center border-t-2 px-4 text-sm  text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                                      :class="currentIndex === (index - 1) ? 'border-gray-300 text-gray-700 font-bold' : 'border-transparent text-gray-500 font-medium'">
+                                    {{ index }}
+                                </span>
+                        </div>
+                        <div v-else class="w-4/6 h-10 flex justify-center">
+                            <select v-model="currentIndex" class="h-10">
+                                <option v-for="(index) in maxIndex" :key="index" :value="(index - 1)">
+                                    {{ index }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="w-1/6 h-10 flex">
+                            <div v-show="currentIndex < (maxIndex - 1)"
+                                 @click="currentIndex++"
+                                 class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 cursor-pointer">
+                                <span>{{ $t('Next')}}</span>
+                                <IconChevronRight class="h-4 w-4 text-gray-400" aria-hidden="true"/>
+                            </div>
+                        </div>
+                    </nav>
                     <div v-if="currentSageAssignedData">
                         <BookingModalContents :booking="currentSageAssignedData"/>
                         <div

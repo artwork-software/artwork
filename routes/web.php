@@ -2168,7 +2168,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::controller(InternalIssueController::class)->prefix('issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('issue-of-material.index');
         Route::post('/store', 'store')->name('issue-of-material.store');
-        Route::patch('/{internalIssue}/update', 'update')->name('issue-of-material.update');
+        Route::match(['patch', 'post'], '/{internalIssue}/update', 'update')->name('issue-of-material.update');
         Route::delete('/{internalIssue}/destroy', 'destroy')->name('issue-of-material.destroy');
         // issue-of-material.set-special-items-done
         Route::post('/{internalIssue}/set-special-items-done', 'setSpecialItemsDone')->name('issue-of-material.set-special-items-done');
@@ -2177,7 +2177,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::controller(ExternalIssueController::class)->prefix('extern-issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('extern-issue-of-material.index');
         Route::post('/store', 'store')->name('extern-issue-of-material.store');
-        Route::patch('/{externalIssue}/update', 'update')->name('extern-issue-of-material.update');
+        Route::match(['patch', 'post'], '/{externalIssue}/update', 'update')->name('extern-issue-of-material.update');
         Route::delete('/{externalIssue}/destroy', 'destroy')->name('extern-issue-of-material.destroy');
         //extern-issue-of-material.return
         Route::post('/{externalIssue}/return', 'returnExternal')->name('extern-issue-of-material.return');

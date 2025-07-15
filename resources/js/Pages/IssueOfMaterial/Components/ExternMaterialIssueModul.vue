@@ -55,7 +55,7 @@
                         <div class="mt-4">
                             <div class="">
                                 <div class="divide-y divide-gray-200 divide-dashed">
-                                    <div class="py-2" v-for="(file, index) in externMaterialIssue.files" :key="index">
+                                     <div class="py-2" v-for="(file, index) in props.externMaterialIssue?.files" :key="index">
                                         <div class="flex items-center gap-x-4 justify-between">
                                             <div class="w-full">
                                                 <h2 class="text-sm font-bold">
@@ -256,7 +256,8 @@ const externMaterialIssueForm = useForm({
     external_address: props.externMaterialIssue.external_address,
     external_email: props.externMaterialIssue.external_email,
     external_phone: props.externMaterialIssue.external_phone,
-    files: [],
+    files: [], // New files to upload
+    existing_files: props.externMaterialIssue?.files || [], // Keep track of existing files
     articles: props.externMaterialIssue?.articles || [],
     special_items: props.externMaterialIssue?.special_items || [],
     special_items_done: props.externMaterialIssue?.special_items_done || false,
@@ -314,8 +315,15 @@ const emits = defineEmits(['close'])
 
 const submit = () => {
 
+    // Create a list of existing file IDs to preserve them during update
+    if (props.externMaterialIssue?.files) {
+        externMaterialIssueForm.existing_file_ids = props.externMaterialIssue.files.map(file => file.id)
+    }
+
     if(props.externMaterialIssue?.id){
-        externMaterialIssueForm.patch(route('extern-issue-of-material.update', props.externMaterialIssue.id), {
+        // Use post instead of patch for better file upload handling
+        externMaterialIssueForm._method = 'PATCH'
+        externMaterialIssueForm.post(route('extern-issue-of-material.update', props.externMaterialIssue.id), {
             onSuccess: () => {
                 emits('close')
             }
@@ -387,7 +395,10 @@ const upload = (event) => {
 const removeFile = (id) => {
     router.delete(route('extern-issue-of-material.file.delete', id), {
         onSuccess: () => {
-            externMaterialIssueForm.files = externMaterialIssueForm.files.filter(file => file.id !== id)
+            // Update both the form files and the original files array
+            if (props.externMaterialIssue && props.externMaterialIssue.files) {
+                props.externMaterialIssue.files = props.externMaterialIssue.files.filter(file => file.id !== id)
+            }
         }
     })
 }

@@ -205,7 +205,7 @@
                                         {{ toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroup(cell)) }}
                                     </div>
                                 </div>
-                                <div class="flex items-center relative"
+                                <div class="flex items-center relative group"
                                      :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'"
                                      v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                                     <input :ref="`cell-${cell.id}`"
@@ -215,13 +215,11 @@
                                            v-model="cell.value"
                                            @keyup="isNumber($event, index)"
                                            @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
-                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 "
-                                                    @click="openCellDetailModal(cell)"
-                                                    class="h-6 w-6 flex-shrink-0 -ml-3 absolute right-4 translate-x-1/2 z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
+
                                 </div>
                                 <div
                                     :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
-                                    class="my-4 h-6 flex items-center justify-end"
+                                    class="my-4 h-6 flex items-center justify-end group"
                                     @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                                     v-else>
                                     <img
@@ -232,11 +230,13 @@
                                     <img v-if="cell.linked_money_source_id !== null"
                                          src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
                                     {{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}
-                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked"
-                                                    @click="openCellDetailModal(cell)"
-                                                    class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
+
                                 </div>
+
                             </div>
+                            <IconCirclePlus stroke-width="1.5" v-if="index > 2 "
+                                            @click="openCellDetailModal(cell)"
+                                            class="hidden group-hover:block h-6 w-6 absolute -mt-10 ml-4 z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
                         </td>
                     </div>
                     <BaseMenu dots-color="text-artwork-buttons-context" class="invisible group-hover:visible"

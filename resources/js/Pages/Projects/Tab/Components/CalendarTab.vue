@@ -15,7 +15,8 @@
                     :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personalFilters"
                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                    :event-statuses="eventStatuses"/>
+                    :event-statuses="eventStatuses"
+                    :can-edit-component="canEditComponent"/>
             </div>
             <div v-else class="pl-16">
                 <BaseCalendar v-if="!atAGlance"
@@ -25,6 +26,7 @@
                               :calendar-data="calendar ?? loadedProjectInformation['CalendarTab'].calendar"
                               :event-statuses="eventStatuses"
                               :events-without-room="eventsWithoutRoom ?? loadedProjectInformation['CalendarTab'].eventsWithoutRoom"
+                              :can-edit-component="canEditComponent"
                 />
                 <IndividualCalendarAtGlanceComponent v-else
                                                      :event-statuses="eventStatuses"
@@ -39,7 +41,8 @@
                                                      :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
                                                      :first_project_tab_id="first_project_tab_id ?? loadedProjectInformation['CalendarTab'].first_project_tab_id"
                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id ?? loadedProjectInformation['CalendarTab'].first_project_calendar_tab_id"
-                                                     :isCalendarViewRoute="false"/>
+                                                     :isCalendarViewRoute="false"
+                                                     :can-edit-component="canEditComponent"/>
             </div>
         </div>
     </div>
@@ -74,7 +77,8 @@ const props = defineProps([
     'headerObject',
     'first_project_tab_id',
     'first_project_calendar_tab_id',
-    'eventStatuses'
+    'eventStatuses',
+    'canEditComponent'
 ]),
 atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
 

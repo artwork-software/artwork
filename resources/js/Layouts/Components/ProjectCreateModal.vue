@@ -665,7 +665,7 @@ const projectGroupSearchResults = ref([]);
 const projectGroupQuery = ref('');
 const selectedState = ref(props.project ? props.states.find(state => state.id === props.project?.state) : null);
 const selectedStateObject = ref(props.project ? props.project?.state : null);
-const initialStatePlanning = ref(props.project && props.project.state ? props.states.find(state => state.id === props.project.state).is_planning : null);
+const initialStatePlanning = ref(props.project && props.project.state ? props.states.find(state => state.id === props.project.state)?.is_planning : null);
 const assignedUsers = ref(props.project ? props.project.manager_users ? props.project.manager_users : [] : []);
 const keyVisualForm = useForm({
     keyVisual: null,
@@ -731,7 +731,7 @@ const addProject = (bool) => {
     });
 
     createProjectForm.assignedUsers = assignedUsers.value?.map(user => user.id);
-    createProjectForm.state = selectedState.value.id;
+    createProjectForm.state = selectedState.value?.id;
 
     if (createProjectGroup.value) {
         createProjectForm.isGroup = true;
@@ -741,9 +741,7 @@ const addProject = (bool) => {
         createProjectForm.patch(
             route('projects.update', props.project.id), {
                 onSuccess: () => {
-                    console.log(initialStatePlanning.value)
-                    console.log(selectedState.value.is_planning)
-                    if(initialStatePlanning.value === 1 && selectedState.value.is_planning === 0) {
+                    if(initialStatePlanning.value === 1 && selectedState.value?.is_planning === 0) {
                         emit('openProjectStateChangeModal', props.project);
                     }
                     emit('closeCreateProjectModal', bool);

@@ -204,9 +204,9 @@ sudo echo "PUSHER_APP_SECRET=$PUSHER_SECRET" >> /var/www/html/.env
 sudo echo "VITE_PUSHER_APP_KEY=$PUSHER_KEY" >> /var/www/html/.env
 sudo echo "VITE_PUSHER_APP_ID=$PUSHER_ID" >> /var/www/html/.env
 sudo echo "VITE_PUSHER_APP_SECRET=$PUSHER_SECRET" >> /var/www/html/.env
-sudo sed -i "s/__ID/$PUSHER_ID/g" /var/www/html/soketi.config.json
-sudo sed -i "s/__KEY/$PUSHER_KEY/g" /var/www/html/soketi.config.json
-sudo sed -i "s/__SECRET/$PUSHER_SECRET/g" /var/www/html/soketi.config.json
+sudo sed -i "s/app-id/$PUSHER_ID/g" /var/www/html/soketi.config.json
+sudo sed -i "s/app-key/$PUSHER_KEY/g" /var/www/html/soketi.config.json
+sudo sed -i "s/app-secret/$PUSHER_SECRET/g" /var/www/html/soketi.config.json
 
 #Set Redis Password
 sudo sed -i "s/REDIS_HOST=redis/REDIS_HOST=localhost/g" /var/www/html/.env
@@ -220,7 +220,7 @@ sudo php /var/www/html/artisan optimize
 sudo php /var/www/html/artisan migrate:fresh --force
 sudo php /var/www/html/artisan db:seed:production
 sudo php /var/www/html/artisan passport:keys --force
-
+sudo php /var/www/html/artisan artwork:update
 # Setup JS
 log "Installiere und baue JavaScript-Abhängigkeiten..."
 sudo npm --prefix /var/www/html install

@@ -14,6 +14,7 @@
                              :budget-access="project.access_budget ?? headerObject?.access_budget"
                              :project-manager="project.managerUsers ?? headerObject?.managerUsers"
                              :first_project_budget_tab_id="this.first_project_budget_tab_id"
+                             :can-edit-component="canEditComponent"
                              @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation"
             />
         </div>
@@ -49,7 +50,8 @@ export default{
         'sageNotAssigned',
         'loadedProjectInformation',
         'headerObject',
-        'first_project_budget_tab_id'
+        'first_project_budget_tab_id',
+        'canEditComponent'
     ],
     data(){
         return {

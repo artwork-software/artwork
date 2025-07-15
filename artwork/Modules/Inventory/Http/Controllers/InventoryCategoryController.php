@@ -41,11 +41,14 @@ class InventoryCategoryController extends Controller
             'subcategories.articles' => function ($query) {
                 $query->orderBy('name');
             },
+            'subcategories.properties' => function ($query) {
+                $query->orderBy('name');
+            },
             'properties' => function ($query) {
                 $query->orderBy('name');
             }
         ]);
-        
+
         $inventorySubCategory?->load(['properties' => function ($query) {
             $query->orderBy('name');
         }, 'articles' => function ($query) {
@@ -66,7 +69,7 @@ class InventoryCategoryController extends Controller
                 ->filterable()
                 ->orderBy('name')
                 ->get();
-                
+
             $filterableProperties = $filterableProperties
                 ->merge($subProperties)
                 ->unique('id');
@@ -144,6 +147,7 @@ class InventoryCategoryController extends Controller
         // Optimiere durch spezifisches Select und Eager Loading
         $categories = InventoryCategory::with([
             'subcategories:id,inventory_category_id,name',
+            'subcategories.properties:id,name,type,select_values',
             'articles:id,name,inventory_category_id,inventory_sub_category_id',
             'articles.category:id,name',
             'articles.subCategory:id,name'

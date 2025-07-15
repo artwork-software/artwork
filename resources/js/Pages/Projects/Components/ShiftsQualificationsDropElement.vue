@@ -1,6 +1,6 @@
 <template>
     <div class="flex items-center pl-1 py-1 hover:bg-gray-50/40 rounded cursor-pointer w-full h-6" @dragover="onDragOver" @drop="onDrop">
-        <SelectUserForShiftMenu :crafts-with-entities="craftsWithAllEntities" @create-on-drop-element-and-save="createOnDropElementAndSave">
+        <SelectUserForShiftMenu :can-edit-component="canEditComponent" :crafts-with-entities="craftsWithAllEntities" @create-on-drop-element-and-save="createOnDropElementAndSave">
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-2">
                     <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
@@ -55,16 +55,20 @@ export default defineComponent({
         ChooseUserSeriesShift,
         MenuButton, MenuItems, Menu
     },
-    props: [
-        'craftId',
-        'shiftId',
-        'shiftUserIds',
-        'eventIsSeries',
-        'shiftQualification',
-        'allShiftQualificationDropElements',
-        'shiftCraftsWithUsers',
-        'crafts'
-    ],
+    props: {
+        craftId: [String, Number],
+        shiftId: [String, Number],
+        shiftUserIds: Object,
+        eventIsSeries: Boolean,
+        shiftQualification: Object,
+        allShiftQualificationDropElements: Array,
+        shiftCraftsWithUsers: Array,
+        crafts: Array,
+        canEditComponent: {
+            type: Boolean,
+            default: false
+        }
+    },
     emits: ['dropFeedback'],
     data(){
         return {

@@ -210,6 +210,15 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import IndividualColumnSizeConfigModal
     from "@/Pages/Projects/Components/BulkComponents/IndividualColumnSizeConfigModal.vue";
 const exportTabEnums = useExportTabEnums();
+const focusRegistry = reactive({ id: null, type: null });
+
+const storeFocus = (id, type = null) => {
+    focusRegistry.id   = id;
+    focusRegistry.type = type;
+};
+
+provide('focusRegistry',     focusRegistry);
+provide('storeFocusGlobal',  storeFocus);
 const {hasAdminRole, can} = usePermission(usePage().props),
     hasCreateEventsPermission = ref(can('create events without request')),
     $t = useTranslation(),
@@ -449,7 +458,6 @@ const {hasAdminRole, can} = usePermission(usePage().props),
     createCopyByEventWithData = (event) => {
         isLoading.value = true;
         // Store the selected copyCount for later use
-        console.log(event.copyCount + 'event');
         lastUsedCopyCount.value = event.copyCount;
         let newDate = new Date(event.day);
         let createdEvents = [];

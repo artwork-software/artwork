@@ -13,7 +13,7 @@
                             leave-active-class="transition ease-in duration-75"
                             leave-from-class="transform opacity-100 scale-100"
                             leave-to-class="transform opacity-0 scale-95">
-                    <MenuItems class="rounded-lg absolute bg-artwork-navigation-background shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none w-64 h-fit overflow-y-scroll">
+                    <MenuItems v-show="canEditComponent" class="rounded-lg absolute bg-artwork-navigation-background shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none w-64 h-fit overflow-y-scroll">
                         <div class="text-white">
                             <div class="px-3 py-5">
                                 <div class="flex items-center justify-between">
@@ -129,6 +129,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    canEditComponent: {
+        type: Boolean,
+        default: false
+    }
 })
 
 

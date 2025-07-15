@@ -99,13 +99,15 @@
                         <div class="mt-4">
                             <div class="">
                                 <div class="divide-y divide-gray-200 divide-dashed">
-                                    <div class="py-2" v-for="(file, index) in issueOfMaterial?.files" :key="index">
+                                    <div class="py-2" v-for="(file, index) in props.issueOfMaterial?.files" :key="index">
                                         <div class="flex items-center gap-x-4 justify-between">
-                                            <div class="w-full">
-                                                <h2 class="text-sm font-bold">
-                                                    {{ file.original_name }}
-                                                </h2>
-                                            </div>
+                                            <ul class="list-disc list-inside space-y-1">
+                                                <li :key="file.id">
+                                                    <a :href="'/storage/' + file.file_path" target="_blank" download class="text-blue-600 hover:underline">
+                                                        {{ file.original_name }}
+                                                    </a>
+                                                </li>
+                                            </ul>
                                             <div>
                                                 <div class="flex items-center justify-end">
                                                     <button type="button" class="text-xs text-red-500" @click="removeFile(file.id)">
@@ -307,8 +309,16 @@ const internMaterialIssue = useForm({
     notes: props.issueOfMaterial?.notes || '',
     responsible_user_ids: props.issueOfMaterial?.responsible_user_ids || [],
     special_items_done: props.issueOfMaterial?.special_items_done || false,
-    files: [], // file[] input (no initial value)
-    articles: props.issueOfMaterial?.articles || [], // [{ id, quantity }]
+    files: [], // New files to upload
+    existing_files: props.issueOfMaterial?.files || [], // Keep track of existing files
+    articles: (props.issueOfMaterial?.articles || []).map(article => ({
+        id: article.id,
+        name: article.name,
+        description: article.description,
+        quantity: article.pivot?.quantity || article.quantity || 1,
+        availableStock: 0,
+        availableStockRequestIsLoading: true,
+    })), // [{ id, quantity }]
     special_items: props.issueOfMaterial?.special_items || [] // [{...}]
 })
 
@@ -347,23 +357,34 @@ const addSpecialItem = () => {
 }
 
 const addMaterialSetToIssue = (materialSet) => {
-    // check if any article from the material set is already in the issue
-    // the article details are in materialSet.items.article
-    const existingArticleIds = internMaterialIssue.articles.map(a => a.id)
-    const newArticles = materialSet.items.filter(item => !existingArticleIds.includes(item.article.id)).map(item => ({
-        id: item.article.id,
-        name: item.article.name,
-        description: item.article.description,
-        quantity: item.quantity || 1, // Default quantity to 1 if not specified
-        availableStock: 0,
-        availableStockRequestIsLoading: true,
-    }))
+    // Process each item in the material set
+    for (const item of materialSet.items) {
+        const article = item.article;
+        const existingArticleIndex = internMaterialIssue.articles.findIndex(a => a.id === article.id);
 
-    // add new articles to the issue
-    internMaterialIssue.articles.push(...newArticles)
+        if (existingArticleIndex === -1) {
+            // Article doesn't exist, add it with the quantity from the material set
+            internMaterialIssue.articles.push({
+                id: article.id,
+                name: article.name,
+                description: article.description,
+                quantity: item.quantity || 1, // Default quantity to 1 if not specified
+                availableStock: 0,
+                availableStockRequestIsLoading: true,
+            });
+        } else {
+            // Article exists, don't modify its quantity
+            // Just ensure it has the correct properties
+            const existingArticle = internMaterialIssue.articles[existingArticleIndex];
+            if (!existingArticle.availableStock) {
+                existingArticle.availableStock = 0;
+                existingArticle.availableStockRequestIsLoading = true;
+            }
+        }
+    }
 
     // after add check the available stock
-    checkAvailableStock()
+    checkAvailableStock();
 }
 
 const removeSpecialArticle = (index) => {
@@ -372,8 +393,9 @@ const removeSpecialArticle = (index) => {
 
 const addArticleToIssue = (article) => {
     // Check if the article is already in the array
-    const articleExists = internMaterialIssue.articles.find(a => a.id === article.id)
-    if (!articleExists) {
+    const existingArticleIndex = internMaterialIssue.articles.findIndex(a => a.id === article.id)
+    if (existingArticleIndex === -1) {
+        // Article doesn't exist, add it
         internMaterialIssue.articles.push({
             id: article.id,
             name: article.name,
@@ -382,6 +404,14 @@ const addArticleToIssue = (article) => {
             availableStock: 0,
             availableStockRequestIsLoading: true,
         })
+    } else {
+        // Article exists, don't modify its quantity
+        // Just ensure it has the correct properties
+        const existingArticle = internMaterialIssue.articles[existingArticleIndex]
+        if (!existingArticle.availableStock) {
+            existingArticle.availableStock = 0
+            existingArticle.availableStockRequestIsLoading = true
+        }
     }
 
     // after add check the available stock
@@ -413,8 +443,15 @@ const submit = () => {
         internMaterialIssue.responsible_user_ids = []
     }
 
+    // Create a list of existing file IDs to preserve them during update
+    if (props.issueOfMaterial?.files) {
+        internMaterialIssue.existing_file_ids = props.issueOfMaterial.files.map(file => file.id)
+    }
+
     if(props.issueOfMaterial?.id){
-        internMaterialIssue.patch(route('issue-of-material.update', props.issueOfMaterial.id), {
+        // Use post instead of patch for better file upload handling
+        internMaterialIssue._method = 'PATCH'
+        internMaterialIssue.post(route('issue-of-material.update', props.issueOfMaterial.id), {
             onSuccess: () => {
                 emits('close')
             }
@@ -488,7 +525,10 @@ const upload = (event) => {
 const removeFile = (id) => {
     router.delete(route('issue-of-material.file.delete', id), {
         onSuccess: () => {
-            internMaterialIssue.files = internMaterialIssue.files.filter(file => file.id !== id)
+            // Update both the form files and the original files array
+            if (props.issueOfMaterial && props.issueOfMaterial.files) {
+                props.issueOfMaterial.files = props.issueOfMaterial.files.filter(file => file.id !== id)
+            }
         }
     })
 }

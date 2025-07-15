@@ -32,6 +32,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Jetstream\Http\Middleware\AuthenticateSession;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
+
 class Kernel extends HttpKernel
 {
     protected $middleware = [

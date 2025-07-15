@@ -2,7 +2,7 @@
     <div v-if="nextWorkTime && nextWorkTime.valid_from" class="mt-6 p-4 border border-gray-200 rounded-lg shadow-sm bg-white">
         <div class="mb-2 text-sm text-gray-700 font-lexend">
             <strong>{{ $t('Next Work Time Pattern') }}</strong><br>
-            <span class="text-xs text-gray-500">{{ $t('Starts on') }} {{ dayjs(nextWorkTime.valid_from).format('DD.MM.YYYY') }}</span>
+            <span class="text-xs text-gray-500">{{ $t('Starts on') }} {{ dayjs(nextWorkTime?.valid_from).format('DD.MM.YYYY') }}</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-xs text-gray-600 font-mono">
@@ -43,7 +43,10 @@ const countdownText = ref(null)
 let interval = null
 
 const updateCountdown = () => {
-    const target = dayjs(props.nextWorkTime.valid_from).startOf('day')
+    if(!props.nextWorkTime?.valid_from)
+        return
+
+    const target = dayjs(props.nextWorkTime?.valid_from).startOf('day')
     const now = dayjs()
 
     const diff = target.diff(now)

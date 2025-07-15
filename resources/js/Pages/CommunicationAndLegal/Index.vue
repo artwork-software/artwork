@@ -68,6 +68,28 @@
                         id="emailFooter"/>
                 </div>
             </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="">
+                    <BaseInput
+                        :label="$t('Playing time window start')"
+                        v-model="mailForm.playingTimeWindowStart"
+                        @focusout="updateCommunicationAndLegal"
+                        rows="4"
+                        type="date"
+                        id="playingTimeWindowStart"/>
+                </div>
+                <div class="">
+                    <BaseInput
+                        :label="$t('Playing time window end')"
+                        v-model="mailForm.playingTimeWindowEnd"
+                        @focusout="updateCommunicationAndLegal"
+                        rows="4"
+                        type="date"
+                        id="playingTimeWindowEnd"/>
+                </div>
+
+            </div>
         </div>
     </ToolSettingsHeader>
 </template>
@@ -100,7 +122,9 @@ export default defineComponent({
                 privacyLink: this.$page.props.privacyLink,
                 emailFooter: this.$page.props.emailFooter,
                 invitationEmail: this.$page.props.invitationEmail,
-                businessEmail: this.$page.props.businessEmail
+                businessEmail: this.$page.props.businessEmail,
+                playingTimeWindowStart: this.$page.props.playingTimeWindowStart,
+                playingTimeWindowEnd: this.$page.props.playingTimeWindowEnd,
             }),
             showInvalidInvitationEmailAdressErrorText: false,
             showInvalidBusinessEmailAddressErrorText: false,

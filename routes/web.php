@@ -84,6 +84,7 @@ use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
 use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
 use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
@@ -163,6 +164,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.communication-and-legal');
         Route::patch('/communication-and-legal', [ToolSettingsCommunicationAndLegalController::class, 'update'])
             ->name('tool.communication-and-legal.update');
+
+        Route::patch('/shift/workflow/update', [ShiftController::class, 'updateWorkflowSettings'])
+            ->name('shift.settings.update.shift-commit-workflow');
+
+        Route::patch('/shift/workflow/update', [ShiftCommitWorkflowUserController::class, 'store'])
+            ->name('shift.settings.update.shift-commit-workflow-users');
+        Route::delete('/shift/workflow/{shiftCommitWorkflowUser}/remove', [ShiftCommitWorkflowUserController::class, 'destroy'])
+            ->name('shift.settings.remove.shift-commit-workflow-user');
+
         Route::get('/interfaces', [ToolSettingsInterfacesController::class, 'index'])
             ->name('tool.interfaces');
         Route::post('/interfaces', [ToolSettingsInterfacesController::class, 'createOrUpdate'])

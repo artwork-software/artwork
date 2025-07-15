@@ -263,6 +263,13 @@
         :description="$t('Are you sure you want to set the shift plan?')"
         :button="$t('Fixing')"
     />
+
+    <ShiftCommitDateSelectModal
+        :date-array="dateValue"
+        v-if="showShiftCommitDateSelectModal"
+        @close="showShiftCommitDateSelectModal = false"
+
+    />
 </template>
 
 <script setup>
@@ -308,6 +315,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {ref, computed, watch, nextTick} from 'vue';
 import axios from 'axios';
 import {usePermission} from "@/Composeables/Permission.js";
+import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
 
 const {hasAdminRole, can} = usePermission(usePage().props);
 
@@ -328,6 +336,7 @@ const emit = defineEmits(['enterFullscreenMode', 'previousTimeRange', 'nextTimeR
 
 // Data properties
 const showConfirmCommitModal = ref(false);
+const showShiftCommitDateSelectModal = ref(false);
 const scrollDays = ref(1);
 const projectSearch = ref('');
 const projectSearchResults = ref([]);
@@ -458,6 +467,7 @@ const openHistoryModal = () => {
 };
 
 const commitAllShifts = () => {
+    /*
     let filteredEvents = [];
 
     // Loop through each room in the shiftPlan array
@@ -479,6 +489,9 @@ const commitAllShifts = () => {
         preserveScroll: true,
         preserveState: true,
     });
+     */
+
+    showShiftCommitDateSelectModal.value = true;
 };
 
 // Watchers

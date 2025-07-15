@@ -31,7 +31,7 @@ class GeneralSettings extends Settings
     public string $business_email;
 
     public bool $budget_account_management_global;
-    
+
     public array $allowed_project_file_mimetypes;
     public array $allowed_room_file_mimetypes;
     public array $allowed_branding_file_mimetypes;
@@ -43,6 +43,11 @@ class GeneralSettings extends Settings
 
     public string $start_night_time;
     public string $end_night_time;
+
+    public string $playing_time_window_start;
+    public string $playing_time_window_end;
+
+    public bool $shift_commit_workflow_enabled = false;
 
     public static function group(): string
     {

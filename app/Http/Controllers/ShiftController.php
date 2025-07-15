@@ -9,6 +9,8 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Services\EventTimelineService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -62,6 +64,7 @@ class ShiftController extends Controller
         private readonly VacationService $vacationService,
         private readonly EventTimelineService $eventTimelineService,
         private readonly EventService $eventService,
+        private readonly GeneralSettings $generalSettings,
     ) {
     }
 
@@ -1402,5 +1405,13 @@ class ShiftController extends Controller
         } else {
             broadcast(new UpdateShiftInShiftPlan($query->shift, $query->shift->event->room_id));
         }
+    }
+
+    public function updateWorkflowSettings(Request $request): RedirectResponse
+    {
+        $this->generalSettings->shift_commit_workflow_enabled = $request->input('shift_commit_workflow');
+        $this->generalSettings->save();
+
+        return back();
     }
 }

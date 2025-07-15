@@ -6,6 +6,7 @@ use App\Settings\ShiftSettings;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Models\ShiftTimePreset;
 use Artwork\Modules\User\Models\User;
@@ -37,7 +38,10 @@ class ShiftSettingsController extends Controller
             'usersWithInventoryPermission' => User::permission(PermissionEnum::INVENTORY_PLANER->value)->get(),
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
             'shiftTimePresets' => ShiftTimePreset::all(),
-            'shiftSettings' => $shiftSettings
+            'shiftSettings' => $shiftSettings,
+            'shiftCommitWorkflowUsers' => ShiftCommitWorkflowUser::with('user')
+                ->orderBy('user_id')
+                ->get()
         ]);
     }
 

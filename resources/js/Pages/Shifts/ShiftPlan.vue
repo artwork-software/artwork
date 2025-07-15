@@ -713,6 +713,7 @@
         :multi-add-mode="multiEditModeCalendar"
         :rooms-and-dates-for-multi-edit="multiEditCalendarDays"
     />
+
 </template>
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -764,12 +765,14 @@ import DeleteCalendarMultiEditEntities from "@/Pages/Shifts/Components/DeleteCal
 import DeleteCalendarRoomShiftEntriesModal from "@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        ShiftCommitDateSelectModal,
         BaseMenuItem,
         DeleteCalendarRoomShiftEntriesModal,
         DeleteCalendarMultiEditEntities,

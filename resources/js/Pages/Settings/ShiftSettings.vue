@@ -8,12 +8,59 @@
                 </div>
             </div>
             <TabComponent :tabs="tabs" />
-            <div class="mt-10">
-                <h3 class="headline2 mb-2">{{}}</h3>
-                <p class="xsLight">
-                    {{}}
-                </p>
+
+            <div class="card glassy p-5 my-10">
+                <div class="card white p-5">
+
+                    <div class="flex items-center justify-between">
+                        <span class="flex grow flex-col">
+                            <label class="font-lexend font-bold mb-1 text-gray-900" id="availability-label">
+                                {{ $t('Duty roster release workflow') }}
+                            </label>
+                            <span class="text-sm text-gray-500 w-1/2" id="availability-description">
+                                {{ $t('Activates a two-stage approval process for schedules.If activated, authorized persons can send time periods (e.g. entire calendar weeks) to selected users for approval. They receive a notification and can approve or reject the schedule. If deactivated, authorized persons can approve schedules directly, without an additional approval process.') }}
+                            </span>
+                        </span>
+                        <div class="group relative inline-flex w-11 shrink-0 rounded-full bg-gray-200 p-0.5 inset-ring inset-ring-gray-900/5 outline-offset-2 outline-blue-600 transition-colors duration-200 ease-in-out has-checked:bg-blue-600 has-focus-visible:outline-2">
+                            <span class="size-5 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out group-has-checked:translate-x-5" />
+                            <input type="checkbox" v-model="shiftCommitWorkflow" @change="changeShiftCommitWorkflow" class="absolute inset-0 appearance-none focus:outline-hidden" id="availability" name="availability" aria-labelledby="availability-label" aria-describedby="availability-description" />
+                        </div>
+                    </div>
+
+                    <div v-if="shiftCommitWorkflow">
+                        <div class="mt-5 w-1/2">
+                            <UserSearch
+                                :label="$t('Select users who can confirm the shift commit requests')"
+                                @user-selected="addUserToWorkflow"
+                            />
+                        </div>
+
+
+                        <div>
+                            <div v-if="shiftCommitWorkflowUsers?.length > 0" class="flex items-center gap-4 mt-3">
+                                <div v-for="(object, index) in shiftCommitWorkflowUsers" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">
+                                    <div class="flex items-center">
+                                        <div>
+                                            <img class="inline-block size-9 rounded-full object-cover" :src="object.user.profile_photo_url" alt="" />
+                                        </div>
+                                        <div class="mx-2">
+                                            <p class="xsDark group-hover:text-gray-900">{{ object.user.full_name }}</p>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <button type="button" @click="removeUserFormShiftWorkFlow(object.id)">
+                                                <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
+
+
             <div class="card white p-5">
                 <div class="flex items-center justify-between gap-x-3">
                     <div class="w-1/2">
@@ -261,7 +308,7 @@
 import {defineComponent} from 'vue'
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {CheckIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
-import {ChevronDownIcon, DuplicateIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
+import {ChevronDownIcon, DuplicateIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {
     Listbox,
     ListboxButton,
@@ -291,14 +338,18 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import AddEditShiftTimePreset from "@/Pages/Settings/Components/AddEditShiftTimePreset.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import draggable from "vuedraggable";
-import {router} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import Button from "@/Jetstream/Button.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
+        Button, XIcon,
+        UserSearch,
         GlassyIconButton,
         ShiftQualificationIconCollection,
         SwitchLabel,
@@ -341,10 +392,12 @@ export default defineComponent({
         'shiftQualifications',
         'shiftTimePresets',
         'usersWithInventoryPermission',
-        'shiftSettings'
+        'shiftSettings',
+        'shiftCommitWorkflowUsers'
     ],
     data(){
         return {
+            shiftCommitWorkflow: usePage().props.shiftCommitWorkflow,
             selectedEventType: null,
             openAddCraftsModal: false,
             craftToEdit: null,
@@ -360,6 +413,10 @@ export default defineComponent({
             dragging: false,
             confirmDeleteTitle: '',
             confirmDeleteDescription: '',
+            userForWorkflowForm: useForm({
+                // users form this.shiftCommitWorkflowUsers but only id is needed
+                users: this.shiftCommitWorkflowUsers.map(user => user.id) || []
+            }),
             deleteType: '',
             tabs: [
                 {
@@ -414,6 +471,44 @@ export default defineComponent({
         }
     },
     methods: {
+        addUserToWorkflow(user) {
+            console.log('Adding user to workflow:', user);
+            if (this.userForWorkflowForm.processing || this.userForWorkflowForm.users.includes(user.id)) {
+                console.warn('User is already in the workflow or form is processing.');
+                return;
+            }
+
+            this.userForWorkflowForm.users.push(user.id);
+
+            this.userForWorkflowForm.patch(route('shift.settings.update.shift-commit-workflow-users'), {
+                preserveScroll: true,
+                preserveState: false,
+                onFinish: () => {
+                    // Optional: Benutzerfeedback oder Aufräumarbeiten
+                },
+                onError: () => {
+                    // Optional: Fehlerbehandlung z. B. Benutzer entfernen, wenn Fehler auftritt
+                    const index = this.userForWorkflowForm.users.indexOf(user.id);
+                    if (index !== -1) this.userForWorkflowForm.users.splice(index, 1);
+                }
+            });
+        },
+        removeUserFormShiftWorkFlow(objectId){
+            this.$inertia.delete(route('shift.settings.remove.shift-commit-workflow-user', objectId), {
+                preserveScroll: true,
+                preserveState: false,
+                onSuccess: () => {
+                }
+            });
+        },
+        changeShiftCommitWorkflow(){
+            this.$inertia.patch(route('shift.settings.update.shift-commit-workflow'), {
+                shift_commit_workflow: this.shiftCommitWorkflow
+            }, {
+                preserveScroll: true,
+                preserveState: true
+            });
+        },
         openAddEditShiftPresetModal(shiftTimePreset){
             this.presetToEdit = shiftTimePreset;
             this.showAddShiftPresetModal = true;

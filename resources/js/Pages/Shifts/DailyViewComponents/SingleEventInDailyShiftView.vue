@@ -11,7 +11,7 @@
                 {{ event.eventType.abbreviation }}: {{ event.eventName }}
             </div>
         </div>
-        <div class="flex items-center justify-end gap-x-2 font-lexend px-3">
+        <div class="flex items-center cursor-pointer justify-end gap-x-2 font-lexend px-3">
             <component is="IconEdit"
                        class="size-5 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-150 ease-in-out"
                        @click.stop="showEventComponent = true" v-if="can('can plan shifts') || is('artwork admin')" />

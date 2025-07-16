@@ -134,54 +134,57 @@
                     {{ $t('The working time pattern “{0}” is currently selected. This means that working times cannot be edited.', [selectedWorkTimePattern.name]) }}
                 </p>
             </div>
+            <div class="headline3 pt-4">
+                {{selectedWorkTimePattern.name}}
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-8 gap-4 my-10">
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Monday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime.monday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.monday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Tuesday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime.tuesday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.tuesday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Wednesday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime.wednesday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.wednesday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Thursday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime.thursday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.thursday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Friday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime.friday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.friday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Saturday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime.saturday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.saturday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Sunday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime.sunday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.sunday }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Total hours')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime.full_work_time_in_hours }} Std.</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.full_work_time_in_hours }} Std.</p>
                     </div>
                 </div>
             </div>

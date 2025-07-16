@@ -2818,6 +2818,7 @@
     "You are currently editing a working time pattern. If this pattern is assigned to users, the users' working time will also be edited.": "Du bearbeitest derzeit ein Arbeitszeitmuster. Wenn dieses Muster Nutzer*innen zugewiesen ist, wird auch die Arbeitszeit der Nutzer*innen bearbeitet.",
     "Choose a work time pattern for the user.": "Wähle ein Arbeitszeitmuster für den Nutzer*in aus.",
     "User Contracts": "Nutzerverträge",
+    "User Contract": "Nutzervertrag",
     "Add User Contracts": "Nutzerverträge hinzufügen",
     "Edit User Contract": "Nutzervertrag bearbeiten",
     "Create User Contract": "Nutzervertrag erstellen",

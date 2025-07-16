@@ -7,13 +7,13 @@
             <p class="mt-1 flex text-xs/5 text-gray-500">
                 {{ contract.description }}
             </p>
-            <p class="mt-1 flex text-xs/5 text-gray-500 space-x-2 divide-x divide-gray-200">
-                <span><b>{{ $t('Free Full Days Per Week') }}</b>: {{ contract.free_full_days_per_week }}</span>
-                <span class="pl-2"><b>{{ $t('Free Half Days Per Week') }}</b>: {{ contract.free_half_days_per_week }}</span>
-                <span class="pl-2"><b>{{ $t('Special Day Rule Active') }}</b>: {{ contract.special_day_rule_active ? $t('Yes') : $t('No') }}</span>
-                <span class="pl-2"><b>{{ $t('Compensation Period (in days)') }}</b>: {{ contract.compensation_period }}</span>
-                <span class="pl-2"><b>{{ $t('Free Sundays Per Season') }}</b>: {{ contract.free_sundays_per_season }}</span>
-                <span class="pl-2"><b>{{ $t('Days Off First 26 Weeks') }}</b>: {{ contract.days_off_first_26_weeks.toFixed(2) }}</span>
+            <p class="mt-1 flex text-xs/5 text-gray-500 space-x-2">
+                <span class="pr-2"><b>{{ $t('Free Full Days Per Week') }}</b>: {{ contract.free_full_days_per_week }}</span>
+                <span class="px-2"><b>{{ $t('Free Half Days Per Week') }}</b>: {{ contract.free_half_days_per_week }}</span>
+                <span class="px-2"><b>{{ $t('Special Day Rule Active') }}</b>: {{ contract.special_day_rule_active ? $t('Yes') : $t('No') }}</span>
+                <span class="px-2"><b>{{ $t('Compensation Period (in days)') }}</b>: {{ contract.compensation_period }}</span>
+                <span class="px-2"><b>{{ $t('Free Sundays Per Season') }}</b>: {{ contract.free_sundays_per_season }}</span>
+                <span class="px-2"><b>{{ $t('Days Off First 26 Weeks') }}</b>: {{ contract.days_off_first_26_weeks.toFixed(2) }}</span>
             </p>
         </div>
     </div>

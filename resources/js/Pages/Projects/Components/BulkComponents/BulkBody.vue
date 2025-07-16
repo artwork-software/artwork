@@ -112,7 +112,7 @@
                 </div>
                 <BaseButton
                     v-if="isInModal"
-                    @click="hasCreateEventsPermission ? submit : null"
+                    @click="submit"
                     :class="['h-12 pointer-events-auto', hasCreateEventsPermission ? 'bg-artwork-buttons-create text-white' : 'bg-gray-400 text-white cursor-not-allowed']"
                     :text="$t('Create')">
                     <IconCirclePlus class="w-5 h-5 text-white mr-2"/>
@@ -535,6 +535,7 @@ const {hasAdminRole, can} = usePermission(usePage().props),
         });
 
         invalidEvents.value = events.filter(event => event.type.individual_name && !event.name);
+
 
         if (invalidEvents.value.length > 0) {
             invalidEvents.value.forEach(event => {

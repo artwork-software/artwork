@@ -71,7 +71,7 @@
                                 <!-- Worked hours (blue) - up to daily target -->
                                 <div
                                     v-if="entry.worked_hours"
-                                    class="absolute top-0 left-0 h-full bg-blue-500"
+                                    class="absolute top-0 left-0 h-full bg-blue-500 border-1"
                                     :style="{ width: `${entry.worked_hours > Math.abs(entry.daily_target_minutes) ?
                                         (Math.abs(entry.daily_target_minutes) / entry.worked_hours) * 100 :
                                         (entry.worked_hours / Math.abs(entry.daily_target_minutes)) * 100}%` }"
@@ -79,7 +79,7 @@
                                 <!-- Planned hours (gray) - up to daily target when no worked hours -->
                                 <div
                                     v-if="entry.planned_minutes > 0 && !entry.worked_hours"
-                                    class="absolute top-0 left-0 h-full bg-gray-300"
+                                    class="absolute top-0 left-0 h-full bg-gray-300 border-1"
                                     :style="{
                                         width: `${Math.min((Math.abs(entry.daily_target_minutes) / Math.abs(entry.daily_target_minutes)) * 100, 100)}%`
                                     }"
@@ -87,7 +87,7 @@
                                 <!-- Missing hours (red-gray striped) - when planned < required and no worked hours -->
                                 <div
                                     v-if="entry.planned_minutes < Math.abs(entry.daily_target_minutes) && !entry.worked_hours"
-                                    class="absolute top-0 left-0 h-full bg-striped-red-gray"
+                                    class="absolute top-0 left-0 h-full bg-striped-red-gray border-1"
                                     :style="{
                                         left: `${(entry.planned_minutes / Math.abs(entry.daily_target_minutes)) * 100}%`,
                                         width: `${((Math.abs(entry.daily_target_minutes) - entry.planned_minutes) / Math.abs(entry.daily_target_minutes)) * 100}%`
@@ -96,7 +96,7 @@
                                 <!-- Overplanned hours (green-gray striped) - when planned > required and no worked hours -->
                                 <div
                                     v-if="entry.planned_minutes > Math.abs(entry.daily_target_minutes) && !entry.worked_hours"
-                                    class="absolute top-0 h-full bg-striped-green-gray"
+                                    class="absolute top-0 h-full bg-striped-green-gray border-1"
                                     :style="{
                                         left: `${(Math.abs(entry.daily_target_minutes) / entry.planned_minutes) * 100}%`,
                                         width: `${((entry.planned_minutes - Math.abs(entry.daily_target_minutes)) / Math.abs(entry.daily_target_minutes)) * 100}%`
@@ -106,7 +106,7 @@
                                 <!-- Overtime (dark green) - when worked > required -->
                                 <div
                                     v-if="entry.worked_hours > Math.abs(entry.daily_target_minutes)"
-                                    class="absolute top-0 h-full bg-green-700"
+                                    class="absolute top-0 h-full bg-green-700 border-1"
                                     :style="{
                                         left: `${Math.min((Math.abs(entry.daily_target_minutes) / entry.worked_hours) * 100, 100)}%`,
                                         width: `${((entry.worked_hours - Math.abs(entry.daily_target_minutes)) / entry.worked_hours) * 100}%`
@@ -116,7 +116,7 @@
                                 <!-- Undertime (red) - when worked < required -->
                                 <div
                                     v-if="entry.worked_hours && entry.worked_hours < Math.abs(entry.daily_target_minutes)"
-                                    class="absolute top-0 left-0 h-full bg-red-500"
+                                    class="absolute top-0 left-0 h-full bg-red-500 border-1"
                                     :style="{
                                         left: `${(entry.worked_hours / Math.abs(entry.daily_target_minutes)) * 100}%`,
                                         width: `${((Math.abs(entry.daily_target_minutes) - entry.worked_hours) / Math.abs(entry.daily_target_minutes)) * 100}%`
@@ -227,7 +227,7 @@ const updateWorkTimeDateRange = () => {
 .bg-striped-green-gray {
     background-image: repeating-linear-gradient(
         45deg,
-        rgb(34, 197, 94), /* green-500 */
+        rgb(22, 163, 74), /* green-700 */
         rgb(34, 197, 94) 10px,
         rgb(209, 213, 219) /* gray-300 */ 10px,
         rgb(209, 213, 219) 20px

@@ -2815,6 +2815,7 @@
     "You are currently editing a working time pattern. If this pattern is assigned to users, the users' working time will also be edited.": "You are currently editing a working time pattern. If this pattern is assigned to users, the users' working time will also be edited.",
     "Choose a work time pattern for the user.": "Choose a work time pattern for the user.",
     "User Contracts": "User Contracts",
+    "User Contract": "User Contract",
     "Add User Contracts": "Add User Contracts",
     "Edit User Contract": "Edit User Contract",
     "Create User Contract": "Create User Contract",

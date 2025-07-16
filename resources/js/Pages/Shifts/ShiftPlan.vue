@@ -938,7 +938,6 @@ export default {
 
 
         setTimeout(() => {
-            showCalendarWarning.value = ''
         }, 5000)
         /**
          * this code needs to be built in, when the observer is fixed and the observer is used

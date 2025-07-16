@@ -134,6 +134,9 @@
                     {{ $t('The working time pattern “{0}” is currently selected. This means that working times cannot be edited.', [selectedWorkTimePattern.name]) }}
                 </p>
             </div>
+            <div class="headline3 pt-4">
+                {{selectedWorkTimePattern.name}}
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-8 gap-4 my-10">
                 <div class="card glassy p-10">

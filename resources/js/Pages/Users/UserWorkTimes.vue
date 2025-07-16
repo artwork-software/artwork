@@ -65,24 +65,62 @@
                                 {{ $t('Special Day') }}
                             </div>
                         </div>
-
                         <!-- Rechte Spalte -->
                         <div class="w-full md:w-2/3">
                             <div class="relative h-4 bg-gray-100 rounded overflow-hidden mb-1">
-                                <div
-                                    v-if="entry.planned_minutes"
-                                    class="absolute top-0 left-0 h-full bg-green-300"
-                                    style="width: 100%"
-                                ></div>
+                                <!-- Worked hours (blue) - up to daily target -->
                                 <div
                                     v-if="entry.worked_hours"
-                                    class="absolute top-0 left-0 h-full bg-blue-400"
-                                    :style="{ width: `${Math.min((entry.worked_hours / entry.planned_minutes) * 100, 100)}%` }"
+                                    class="absolute top-0 left-0 h-full bg-blue-500"
+                                    :style="{ width: `${entry.worked_hours > Math.abs(entry.daily_target_minutes) ?
+                                        (Math.abs(entry.daily_target_minutes) / entry.worked_hours) * 100 :
+                                        (entry.worked_hours / Math.abs(entry.daily_target_minutes)) * 100}%` }"
                                 ></div>
+                                <!-- Planned hours (gray) - up to daily target when no worked hours -->
                                 <div
-                                    v-if="entry.nightly_working_hours"
-                                    class="absolute top-0 left-0 h-full bg-purple-500 opacity-40"
-                                    :style="{ width: `${Math.min((entry.nightly_working_hours / entry.planned_minutes) * 100, 100)}%` }"
+                                    v-if="entry.planned_minutes > 0 && !entry.worked_hours"
+                                    class="absolute top-0 left-0 h-full bg-gray-300"
+                                    :style="{
+                                        width: `${Math.min((Math.abs(entry.daily_target_minutes) / Math.abs(entry.daily_target_minutes)) * 100, 100)}%`
+                                    }"
+                                ></div>
+                                <!-- Missing hours (red-gray striped) - when planned < required and no worked hours -->
+                                <div
+                                    v-if="entry.planned_minutes < Math.abs(entry.daily_target_minutes) && !entry.worked_hours"
+                                    class="absolute top-0 left-0 h-full bg-striped-red-gray"
+                                    :style="{
+                                        left: `${(entry.planned_minutes / Math.abs(entry.daily_target_minutes)) * 100}%`,
+                                        width: `${((Math.abs(entry.daily_target_minutes) - entry.planned_minutes) / Math.abs(entry.daily_target_minutes)) * 100}%`
+                                    }"
+                                ></div>
+                                <!-- Overplanned hours (green-gray striped) - when planned > required and no worked hours -->
+                                <div
+                                    v-if="entry.planned_minutes > Math.abs(entry.daily_target_minutes) && !entry.worked_hours"
+                                    class="absolute top-0 h-full bg-striped-green-gray"
+                                    :style="{
+                                        left: `${(Math.abs(entry.daily_target_minutes) / entry.planned_minutes) * 100}%`,
+                                        width: `${((entry.planned_minutes - Math.abs(entry.daily_target_minutes)) / Math.abs(entry.daily_target_minutes)) * 100}%`
+                                    }"
+                                ></div>
+
+                                <!-- Overtime (dark green) - when worked > required -->
+                                <div
+                                    v-if="entry.worked_hours > Math.abs(entry.daily_target_minutes)"
+                                    class="absolute top-0 h-full bg-green-700"
+                                    :style="{
+                                        left: `${Math.min((Math.abs(entry.daily_target_minutes) / entry.worked_hours) * 100, 100)}%`,
+                                        width: `${((entry.worked_hours - Math.abs(entry.daily_target_minutes)) / entry.worked_hours) * 100}%`
+                                    }"
+                                ></div>
+
+                                <!-- Undertime (red) - when worked < required -->
+                                <div
+                                    v-if="entry.worked_hours && entry.worked_hours < Math.abs(entry.daily_target_minutes)"
+                                    class="absolute top-0 left-0 h-full bg-red-500"
+                                    :style="{
+                                        left: `${(entry.worked_hours / Math.abs(entry.daily_target_minutes)) * 100}%`,
+                                        width: `${((Math.abs(entry.daily_target_minutes) - entry.worked_hours) / Math.abs(entry.daily_target_minutes)) * 100}%`
+                                    }"
                                 ></div>
                             </div>
                             <div class="flex flex-wrap gap-3 text-xs text-gray-700 mt-1">
@@ -176,5 +214,23 @@ const updateWorkTimeDateRange = () => {
 </script>
 
 <style scoped>
+.bg-striped-red-gray {
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgb(239, 68, 68), /* red-500 */
+        rgb(239, 68, 68) 10px,
+        rgb(209, 213, 219) /* gray-300 */ 10px,
+        rgb(209, 213, 219) 20px
+    );
+}
 
+.bg-striped-green-gray {
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgb(34, 197, 94), /* green-500 */
+        rgb(34, 197, 94) 10px,
+        rgb(209, 213, 219) /* gray-300 */ 10px,
+        rgb(209, 213, 219) 20px
+    );
+}
 </style>

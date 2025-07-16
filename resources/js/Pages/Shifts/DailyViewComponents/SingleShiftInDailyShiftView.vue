@@ -46,7 +46,7 @@
             <div v-for="drop in computedShiftQualificationDropElements" :key="drop.shift_qualification_id" class="flex items-center w-full gap-x-2 font-lexend rounded-lg bg-red-100">
                 <Menu as="div" class="relative w-full">
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
-                        <MenuButton class="flex items-center gap-x-2 font-lexend rounded-lg w-full" @click="checkShiftCollision(drop.shift_qualification_id)">
+                        <MenuButton class="flex cursor-pointer items-center gap-x-2 font-lexend rounded-lg w-full" @click="checkShiftCollision(drop.shift_qualification_id)">
                             <div class="py-1.5 px-3 min-w-28 w-28 rounded-l-lg bg-red-200">
                                 <div class="text-xs text-left flex items-center gap-x-1">
                                     <component is="IconInfoTriangle" class="size-4 text-red-600" />

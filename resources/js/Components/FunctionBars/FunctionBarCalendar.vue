@@ -85,7 +85,7 @@
             </div>
 
             <div v-if="isPlanning">
-                <div class="font-lexend text-sm font-bold text-red-500 select-none pointer-events-none">
+                <div class="font-lexend absolute left-10 top-0 text-xs font-bold text-red-500 select-none pointer-events-none">
                     {{ $t('Attention! You are in the planning calendar')}}
                 </div>
             </div>

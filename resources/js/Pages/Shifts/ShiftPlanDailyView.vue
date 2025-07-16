@@ -53,15 +53,15 @@
             </div>
 
 
-            <div v-for="day in days" :key="day.withoutFormat" class="flex flex-col w-full h-full relative">
+            <div v-for="day in days" :key="day.withoutFormat" class="flex flex-col w-full h-full relative ml-1">
                 <!-- tages balken -->
-                <div class="flex items-center w-full bg-artwork-navigation-background text-white sticky top-[72px] z-30">
-                    <div class="px-16 font-lexend text-sm py-4">
+                <div class="flex items-center justify-center w-full bg-artwork-navigation-background text-white sticky ml-1 top-[72px] z-30">
+                    <div class="px-16 font-lexend text-sm font-bold py-4">
                         {{ day.dayString }}, {{ day.fullDay }}
                     </div>
                 </div>
-                <div class="grid grid-cols-[3rem_1fr]" v-for="room in shiftPlan">
-                    <div class="flex flex-col-reverse items-center justify-between bg-artwork-navigation-background text-white py-4">
+                <div class="grid grid-cols-[3rem_1fr] ml-1" v-for="room in shiftPlan">
+                    <div class="flex flex-col-reverse items-center justify-between bg-artwork-navigation-background text-white py-4 border-t-2 border-dashed">
                         <!-- Raumnamen von unten nach oben -->
                         <div :key="room.roomName" class="text-xs font-bold font-lexend -rotate-90 h-full flex items-center text-center justify-center py-4">
                             {{ room.roomName }}

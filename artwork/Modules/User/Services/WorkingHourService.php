@@ -255,7 +255,8 @@ class WorkingHourService
             $weeklyWorkingHours[ltrim($weekStart->format('W'), '0')] = [
                 'daily_target' => $this->convertMinutesInHours($totalExpectedMinutes, true),
                 'planned' => $this->convertMinutesInHours($totalPlannedMinutes, true),
-                'difference' => $this->convertMinutesInHours($differenceInMinutes)
+                'difference' => $this->convertMinutesInHours($differenceInMinutes),
+                'isMinus' => $differenceInMinutes < 0,
             ];
         }
 

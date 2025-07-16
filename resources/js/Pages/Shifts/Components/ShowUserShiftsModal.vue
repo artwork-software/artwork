@@ -23,7 +23,9 @@
             </div>
             <div class="space-y-2 divide-y divide-gray-100 divide-dashed">
                 <div v-for="shift in user.element.shifts" class="pb-1">
-                    <div v-if="shift.days_of_shift?.includes(day.fullDay)" class="flex items-center justify-between group" :id="'shift-' + shift.id">
+                    <div v-show="shift.days_of_shift?.includes(day.fullDay)" class="flex items-center justify-between group" :id="'shift-' + shift.id">
+                        <!--<SingleEntityInShift :shift="shift" :person="user.element" :shift-qualifications="shiftQualifications" />-->
+                        <!--
                         <div>
                             <div class="flex items-center text-sm gap-x-1">
                                 <div class="w-14">
@@ -45,6 +47,7 @@
                                     {{ shift.eventName }}
                                 </div>
                             </div>
+
                             <p class="text-sm" v-if="shift.description">&bdquo;{{ shift.description }}&rdquo;</p>
                         </div>
                         <div class="invisible group-hover:visible cursor-pointer flex items-center gap-x-2">
@@ -54,7 +57,7 @@
                             <button type="button" @click="openConfirmDeleteModal(shift.id, shift.pivotId)">
                                 <Component is="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
                             </button>
-                        </div>
+                        </div>-->
                     </div>
                 </div>
             </div>
@@ -205,10 +208,12 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
+import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
 
 export default defineComponent({
     name: "showUserShiftsModal",
     components: {
+        SingleEntityInShift,
         RequestWorkTimeChangeModal,
         ArtworkBaseModal,
         BaseTextarea,
@@ -249,7 +254,7 @@ export default defineComponent({
             shiftPlanComment: this.user.shift_comments[this.day.withoutFormat] ? this.user.shift_comments[this.day.withoutFormat][0] : {comment: '', date: this.day.withoutFormat},
         }
     },
-    props: ['user', 'day'],
+    props: ['user', 'day', 'shiftQualifications'],
     emits: ['closed', 'delete', 'desiresReload'],
     mounted() {
         const vacation = this.user.vacations?.find(v => v.date === this.day.withoutFormat);

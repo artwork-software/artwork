@@ -666,6 +666,7 @@
                 @close="showUserShifts = false"
                 :user="userToShow"
                 :day="dayToShow"
+                :shift-qualifications="shiftQualifications"
                 @desires-reload="userShiftModalDesiresReload"
             />
 

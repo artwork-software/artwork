@@ -46,6 +46,7 @@ class BroadcastEventDTOWithVerifications extends Data
         public ?bool $isPlanning = false,
         public ?bool $hasVerification = false,
         public ?Collection $verifications = null,
+        public ?Collection $timelines = null,
     ) {
     }
 
@@ -87,6 +88,7 @@ class BroadcastEventDTOWithVerifications extends Data
                 ->orderBy('created_at', 'desc')
                 ->with('verifier')
                 ->get(),
+            timelines: $event->timelines ?? new Collection(),
         );
     }
 }

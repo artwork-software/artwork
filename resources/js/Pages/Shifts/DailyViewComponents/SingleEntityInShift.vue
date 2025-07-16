@@ -3,7 +3,7 @@
         <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
             <PopoverButton class="gap-x-2 font-lexend rounded-lg">
                 <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}60` }">
-                    <p class="text-xs text-left font-lexend">{{ person.pivot.start_time ?? shift.start }} - {{ person.pivot.end_time ?? shift.end }}</p>
+                    <p class="text-xs text-left font-lexend">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
                 </div>
             </PopoverButton>
             <transition enter-active-class="transition ease-out duration-100"
@@ -38,19 +38,19 @@
     </Popover>
     <div v-else class="gap-x-2 font-lexend rounded-lg" @click="showRequestWorkTimeChangeModal = true">
         <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}60` }">
-            <p class="text-xs text-left font-lexend">{{ person.pivot.start_time ?? shift.start }} - {{ person.pivot.end_time ?? shift.end }}</p>
+            <p class="text-xs text-left font-lexend">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
         </div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-4 w-full gap-x-2">
         <p class="text-xs truncate col-span-1">
-            <span v-if="person.pivot.craft_abbreviation !== shift.craft.abbreviation">
-                [{{ person.pivot.craft_abbreviation }}]
+            <span v-if="person.pivot?.craft_abbreviation !== shift.craft?.abbreviation">
+                [{{ person.pivot?.craft_abbreviation }}]
             </span>
             {{ person.name || person.full_name }}</p>
 
         <div class="flex items-center gap-x-1 col-span-1">
-            <component :is="findShiftQualification(person.pivot.shift_qualification_id)?.icon" class="size-3" />
-            {{ findShiftQualification(person.pivot.shift_qualification_id)?.name }}
+            <component :is="findShiftQualification(person.pivot?.shift_qualification_id)?.icon" class="size-3" />
+            {{ findShiftQualification(person.pivot?.shift_qualification_id)?.name }}
         </div>
         <div class=" col-span-2">
             <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
@@ -59,7 +59,7 @@
                         <component is="IconNote"
                                    class="size-4 min-h-4 min-w-4 text-gray-500 hover:text-gray-700 transition-all duration-150 ease-in-out cursor-pointer"
                         />
-                        <span class="truncate">{{ person.pivot.short_description || 'Keine Beschreibung' }}</span>
+                        <span class="truncate">{{ person.pivot?.short_description || 'Keine Beschreibung' }}</span>
                     </PopoverButton>
 
                     <transition enter-active-class="transition ease-out duration-100"
@@ -90,6 +90,7 @@
 
         </div>
     </div>
+
 
     <RequestWorkTimeChangeModal :user="person" :shift="shift" v-if="showRequestWorkTimeChangeModal" @close="showRequestWorkTimeChangeModal = false" />
 </template>

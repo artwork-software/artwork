@@ -166,6 +166,7 @@ import SingleShiftInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/Sing
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import { IconAlertSquareRounded } from "@tabler/icons-vue";
+import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 
 const props = defineProps({
     days: {
@@ -247,6 +248,7 @@ const wantedDate = ref(null);
 const showEventComponent = ref(false);
 const isPlanning = ref(false);
 const roomCollisions = ref([]);
+const shiftPlanCopy = ref(props.shiftPlan ? props.shiftPlan : {});
 const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
 provide('event_properties', props.event_properties)
 const openAddShiftForRoomAndDay = (day, roomId) => {
@@ -292,6 +294,9 @@ onMounted(() => {
     setTimeout(() => {
         showCalendarWarning.value = ''
     }, 5000)
+
+    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy);
+    ShiftCalendarListener.init();
 })
 </script>
 

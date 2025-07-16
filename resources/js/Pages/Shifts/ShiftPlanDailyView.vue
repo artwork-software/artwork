@@ -4,10 +4,11 @@
 
             <!-- topbar with date range selector -->
             <div class="card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none">
-                <div class="flex items-center px-5 gap-x-5">
+                <div class="flex items-center px-5 gap-x-5 justify-between">
                     <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
 
-                    <Switch @click="changeDailyViewMode" v-model="dailyViewMode" :class="[dailyViewMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                    <div class="flex items-center gap-x-5 ">
+                        <Switch @click="changeDailyViewMode" v-model="dailyViewMode" :class="[dailyViewMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                         <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                             <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                 <ToolTipComponent
@@ -26,7 +27,15 @@
                                 />
                             </span>
                         </span>
-                    </Switch>
+                        </Switch>
+
+                        <ShiftPlanFilter
+                            :filter-options="filterOptions"
+                            :personal-filters="personalFilters"
+                            :user_filters="user_filters"
+                            :crafts="crafts"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -51,7 +60,13 @@
                                 <div class="card white p-5 text-xs col-span-1">
                                     <div class="space-y-2" v-if="room.content[day.fullDay]?.events?.length > 0">
                                         <div v-for="event in room.content[day.fullDay]?.events" :key="event.id">
-                                            <SingleEventInDailyShiftView :event="event" />
+                                            <SingleEventInDailyShiftView
+                                                :event="event"
+                                                :eventTypes="eventTypes"
+                                                :rooms="rooms"
+                                                :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                :event-statuses="eventStatuses"
+                                            />
                                         </div>
                                     </div>
                                     <div v-else>
@@ -117,7 +132,7 @@
                 :wanted-date="wantedDate"
 
             />
-            
+
         </ShiftHeader>
 
     </div>
@@ -136,6 +151,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {Switch} from "@headlessui/vue";
 import SingleShiftInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 
 const props = defineProps({
     days: {
@@ -183,6 +199,21 @@ const props = defineProps({
         type: Number,
         required: true
     },
+    filterOptions: {
+        type: Object,
+        required: true,
+        default: () => ({})
+    },
+    personalFilters: {
+        type: Object,
+        required: true,
+        default: () => ({})
+    },
+    user_filters: {
+        type: Object,
+        required: true,
+        default: () => ({})
+    }
 })
 
 const shiftToEdit = ref(null);

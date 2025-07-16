@@ -1,5 +1,5 @@
 <template>
-    <Popover as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed">
+    <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed">
         <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
             <PopoverButton class="gap-x-2 font-lexend rounded-lg">
                 <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}60` }">
@@ -29,7 +29,7 @@
                                 id="start" type="time" class="max-w-28 text-xs"
                                 v-model="person.pivot.end_time"
                             />
-                            <GlassyIconButton text="Save" icon="IconClockPlus" icon-size="size-4" @click.stop="saveIndividualShiftTime"/>
+                            <GlassyIconButton text="Save" icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
                         </div>
                     </div>
                 </PopoverPanel>
@@ -53,7 +53,7 @@
             {{ findShiftQualification(person.pivot.shift_qualification_id)?.name }}
         </div>
         <div class=" col-span-2">
-            <Popover as="div" class="relative text-left ring-0">
+            <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
                 <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                     <PopoverButton class="font-lexend rounded-lg flex items-center gap-x-1 truncate w-full text-gray-500 !ring-0 border-none">
                         <component is="IconNote"
@@ -80,7 +80,7 @@
                                         id="start" label="Short Description" type="text" class="max-w-56 text-xs"
                                         v-model="person.pivot.short_description"
                                     />
-                                    <GlassyIconButton text="Save" icon="IconClockPlus" icon-size="size-4" @click.stop="saveShortDescription"/>
+                                    <GlassyIconButton text="Save" icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveShortDescription(close)"/>
                                 </div>
                             </div>
                         </PopoverPanel>
@@ -134,7 +134,8 @@ const findShiftQualification = (id) =>
 
 const showRequestWorkTimeChangeModal = ref(false);
 
-const saveIndividualShiftTime = () => {
+
+const saveIndividualShiftTime = (closePopover) => {
     // Logic to save the individual shift time for the person, freelancer, or service provider
     // This could involve making an API call to update the shift time in the database
     router.post(route('shifts.updateIndividualShiftTime', {
@@ -148,6 +149,7 @@ const saveIndividualShiftTime = () => {
         onSuccess: () => {
             // Optionally, you can show a success message or perform any other action after saving
             console.log('Shift time saved successfully');
+            if (typeof closePopover === 'function') closePopover();
         },
         onError: (error) => {
             // Handle error if needed
@@ -156,7 +158,7 @@ const saveIndividualShiftTime = () => {
     });
 }
 
-const saveShortDescription = () => {
+const saveShortDescription = (closePopover) => {
     // Logic to save the short description for the person, freelancer, or service provider
     // This could involve making an API call to update the short description in the database
     router.post(route('shifts.updateShortDescription', {
@@ -169,6 +171,8 @@ const saveShortDescription = () => {
         onSuccess: () => {
             // Optionally, you can show a success message or perform any other action after saving
             console.log('Short description saved successfully');
+            // Close the popover after saving
+            if (typeof closePopover === 'function') closePopover();
         },
         onError: (error) => {
             // Handle error if needed

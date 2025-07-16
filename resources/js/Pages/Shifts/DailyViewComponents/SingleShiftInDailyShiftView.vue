@@ -1,7 +1,6 @@
 <template>
-    <div class="grid grid-cols-1 md:grid-cols-2 w-full rounded-lg cursor-pointer select-none"
-         :style="{ backgroundColor: `${shift.craft.color}50` }"
-         @click.stop="toggleShiftDetails">
+    <div class="grid grid-cols-1 md:grid-cols-2 w-full rounded-lg select-none"
+         :style="{ backgroundColor: `${shift.craft.color}50` }">
         <div class="flex items-center gap-x-2">
             <div class="bg-gray-500 py-1.5 px-2 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}90` }">
                 {{ shift.start }} - {{ shift.end }}
@@ -25,8 +24,12 @@
                     </div>
                 </div>
             </div>
-            <div class="flex items-center justify-end px-3">
+            <div class="flex items-center justify-end px-3 gap-x-4">
+                <component is="IconEdit"
+                           class="size-5 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-150 ease-in-out"
+                           @click.stop="showAddShiftModal = true" />
                 <component is="IconChevronDown"
+                           @click.stop="toggleShiftDetails"
                            class="size-5 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-150 ease-in-out"
                            :class="{ 'rotate-180': showShiftDetails }"/>
             </div>
@@ -114,18 +117,31 @@
 
             </div>
         </div>
+
+    <AddShiftModal
+        v-if="showAddShiftModal"
+        :crafts="crafts"
+        :event="null"
+        :shift="shift"
+        :currentUserCrafts="usePage().props.currentUserCrafts"
+        :buffer="null"
+        :shift-qualifications="usePage().props.shiftQualifications"
+        @closed="showAddShiftModal = false"
+        :shift-time-presets="usePage().props.shiftTimePresets"
+        :shift-plan-modal="true"
+        :edit="shift !== null"
+    />
 </template>
 
 <script setup>
-import {ref, computed, watch} from "vue";
+import {ref, computed, watch, defineAsyncComponent} from "vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
-import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue"; // Axios für API-Call
+import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
+import {can, is} from "laravel-permission-to-vuejs";
 
 const props = defineProps({
     shift: Object,
@@ -134,6 +150,7 @@ const props = defineProps({
 });
 
 const showShiftDetails = ref(true);
+const showAddShiftModal = ref(false);
 const droppedUser = ref({});
 const seriesShiftData = ref(null);
 // Initialisiere Cache mit leeren Arrays pro Qualifikation
@@ -329,6 +346,11 @@ const assignUser = (droppedUser, shiftQualificationId) => {
         },
     )
 }
+
+const AddShiftModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/AddShiftModal.vue'),
+    delay: 200,
+})
 
 watch(() => props.shift, () => {
     // Cache zurücksetzen wenn sich die Schichtdaten ändern

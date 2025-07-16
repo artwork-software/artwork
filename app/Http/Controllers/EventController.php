@@ -467,9 +467,10 @@ class EventController extends Controller
 
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
-
+        $calendarWarningText = '';
         if ($user->getAttribute('daily_view') && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
+            $calendarWarningText = __('calendar.daily_view_info');
             $user->shift_calendar_filter->update([
                 'end_date' => $endDate->format('Y-m-d')
             ]);
@@ -573,6 +574,7 @@ class EventController extends Controller
                 $this->craftService->getAssignableByAllCrafts()
             ),
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
+            'calendarWarningText' => $calendarWarningText,
         ]);
     }
 

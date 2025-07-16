@@ -1,6 +1,21 @@
 <template>
     <div class="w-full flex flex-col">
         <ShiftHeader>
+
+            <transition name="fade" appear>
+                <div class="pointer-events-none fixed z-50 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
+                    <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
+                        <component :is="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
+                        <p class="text-sm/6 text-white">
+                            {{ showCalendarWarning }}
+                        </p>
+                        <button type="button" class="-m-1.5 flex-none p-1.5">
+                            <span class="sr-only">Dismiss</span>
+                            <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
+                        </button>
+                    </div>
+                </div>
+            </transition>
             <div class=" bg-white flex-grow">
                 <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
                                       @next-time-range="nextTimeRange"
@@ -741,7 +756,15 @@ import {SelectorIcon} from "@heroicons/vue/solid";
 import ShiftsQualificationsAssignmentModal
     from "@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {IconArrowDown, IconArrowUp, IconChevronDown, IconFileText, IconPencil, IconX} from "@tabler/icons-vue";
+import {
+    IconAlertSquareRounded,
+    IconArrowDown,
+    IconArrowUp,
+    IconChevronDown,
+    IconFileText,
+    IconPencil,
+    IconX
+} from "@tabler/icons-vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -842,6 +865,7 @@ export default {
         'useFirstNameForSort',
         'userShiftPlanShiftQualificationFilters',
         'projectNameUsedForProjectTimePeriod',
+        'calendarWarningText'
     ],
     data() {
         return {
@@ -896,6 +920,7 @@ export default {
             newShiftPlanData: ref(this.shiftPlan),
             openCellMultiEditCalendarDelete: false,
             dailyViewMode: usePage().props.auth.user.daily_view ?? false,
+            showCalendarWarning: ref(this.calendarWarningText)
         }
     },
     mounted() {
@@ -911,6 +936,10 @@ export default {
 
         this.setupInertiaNavigationGuard();
 
+
+        setTimeout(() => {
+            showCalendarWarning.value = ''
+        }, 5000)
         /**
          * this code needs to be built in, when the observer is fixed and the observer is used
          *  const observer = new IntersectionObserver(
@@ -1039,6 +1068,7 @@ export default {
         },
     },
     methods: {
+        IconAlertSquareRounded,
         usePage,
         changeDailyViewMode(){
             this.dailyViewMode = !this.dailyViewMode;

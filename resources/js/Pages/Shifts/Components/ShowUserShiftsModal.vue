@@ -35,7 +35,7 @@
                                     </div>
                                 </div>
                                 <div class="pr-1">
-                                    {{ shift.start }} - {{ shift.end }}
+                                    {{ shift.startPivot }} - {{ shift.endPivot }}
                                 </div>
                                 <div class="pr-1">
                                     {{ shift.roomName }}

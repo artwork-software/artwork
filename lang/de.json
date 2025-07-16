@@ -2874,5 +2874,6 @@
     "Select the date for the commit.": "Wähle das Datum für den Commit aus.",
     "Request a firm commitment": "Festschreibung anfordern",
     "Direct approval is currently not possible as the approval workflow is active. Please send a release request to the responsible users.": "Direkte Genehmigung ist derzeit nicht möglich, da der Freigabe-Workflow aktiv ist. Bitte sende eine Freigabeanfrage an die verantwortlichen Nutzer*innen.",
-    "Shift commitment requests": "Schicht-Commit-Anfragen"
+    "Shift commitment requests": "Schicht-Commit-Anfragen",
+    "Daily target": "Tagessoll"
 }

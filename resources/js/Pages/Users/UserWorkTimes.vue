@@ -86,16 +86,25 @@
                                 ></div>
                             </div>
                             <div class="flex flex-wrap gap-3 text-xs text-gray-700 mt-1">
-                                <div><strong>{{ $t('Planned') }}:</strong> {{ entry.planned_hours }}h</div>
-                                <div v-if="entry.worked_hours"><strong>{{ $t('Worked') }}:</strong> {{ entry.worked_hours_formatted }}</div>
-                                <div v-if="entry.nightly_working_hours"><strong>{{ $t('Night') }}:</strong> {{ entry.nightly_working_hours_formatted }}</div>
-                                <div v-if="entry.work_time_balance_change"><strong>{{ $t('Balance') }}:</strong> {{ entry.work_time_balance_change_formatted }}</div>
+                                <div><strong>{{ $t('Daily target') }}: </strong>{{ entry.daily_target_hours }}h</div>
+                                <div><strong>{{ $t('Planned') }}: </strong>
+                                    <span v-if="!entry.worked_hours">{{ entry.planned_hours }}h</span>
+                                    <span v-else>{{ entry.worked_hours_formatted }}h</span>
+                                </div>
+                                <div v-if="entry.worked_hours"><strong>{{ $t('Worked') }}: </strong>{{ entry.worked_hours_formatted }}</div>
+                                <div v-if="entry.nightly_working_hours"><strong>{{ $t('Night') }}: </strong>{{ entry.nightly_working_hours_formatted }}</div>
+                                <div><strong>{{ $t('Balance') }}: </strong>
+                                    <span :class="[ entry.work_time_balance_change > 0 ? 'text-green-500' : entry.work_time_balance_change < 0 ? 'text-red-500' : 'text-gray-500']">
+                                        {{ entry.work_time_balance_change_formatted }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
 
         <WorkingTimePostEntryModal
             v-if="showWorkingTimePostEntryModal"

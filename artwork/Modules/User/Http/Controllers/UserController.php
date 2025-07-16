@@ -422,19 +422,30 @@ class UserController extends Controller
                 ->orderByDesc('valid_from')
                 ->first();
 
+            $patternTime = $userWorkTime?->{$weekday};
+
+            $dailyTargetMinutes = $patternTime
+                ? Carbon::parse($patternTime)->diffInMinutes(Carbon::parse($patternTime)->copy()->startOfDay())
+                : 0;
+
             $plannedTime = $userWorkTime?->{$weekday};
 
-            $plannedMinutes = $plannedTime ? Carbon::parse($plannedTime)->diffInMinutes($plannedTime->copy()->startOfDay()) : 0;
+            $hasBooking = isset($bookings[$dateKey]);
+
+            $plannedMinutes = !$hasBooking
+                ? $this->getPlannedShiftMinutesForDay($user, $current)
+                : 0;
             $convertedPlannedTime = $this->convertMinutesToHoursAndMinutes($plannedMinutes, true);
             $entry = [
                 'weekday' => $weekday,
                 'date' => $dateKey,
                 'formatted_date' => $current->locale(session('locale', config('app.fallback_locale')))
                     ->isoFormat('dddd, D. MMMM YYYY'),
-                'planned_start' => $plannedTime ? $plannedTime->format('H:i') : null,
                 'planned_minutes' => $plannedMinutes,
-                'planned_hours' => $convertedPlannedTime,
-                'wantedHours' => $plannedMinutes,
+                'planned_hours' => $this->convertMinutesToHoursAndMinutes($plannedMinutes, true),
+                'daily_target_minutes' => $dailyTargetMinutes,
+                'daily_target_hours' => $this->convertMinutesToHoursAndMinutes($dailyTargetMinutes, true),
+                'wantedHours' => $dailyTargetMinutes,
                 'worked_hours' => 0,
                 'nightly_working_hours' => 0,
                 'work_time_balance_change' => 0,
@@ -473,6 +484,38 @@ class UserController extends Controller
         }
 
         return $schedule;
+    }
+
+    private function getPlannedShiftMinutesForDay(User $user, Carbon $day): int
+    {
+        $total = 0;
+
+        $dayStart = $day->copy()->startOfDay();
+        $dayEnd = $day->copy()->endOfDay()->addSecond();
+
+        foreach ($user->shifts as $shift) {
+            $pivot = $shift->pivot;
+
+            $shiftStart = Carbon::parse($pivot->start_date)->setTimeFrom(Carbon::parse($pivot->start_time));
+            $shiftEnd = Carbon::parse($pivot->end_date)->setTimeFrom(Carbon::parse($pivot->end_time));
+
+            // Nur Schichten berücksichtigen, die an diesem Tag aktiv sind
+            if ($shiftStart->gt($dayEnd) || $shiftEnd->lt($dayStart)) {
+                continue;
+            }
+
+            $breakMinutes = (int)($shift->break_minutes ?? 0);
+
+            $workStart = max($shiftStart, $dayStart);
+            $workEnd = min($shiftEnd, $dayEnd);
+
+            if ($workStart->lt($workEnd)) {
+                $duration = $workStart->diffInMinutes($workEnd) - $breakMinutes;
+                $total += max(0, $duration);
+            }
+        }
+
+        return (int) round($total);
     }
 
 

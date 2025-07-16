@@ -1,9 +1,10 @@
 <template>
     <div :class="classes">
+
         <template v-if="!checkIfUserHasVacationOnDay(user, day.withoutFormat)">
             <div v-for="shift in user.element?.shifts" :key="shift.id">
                 <span v-if="shift.start_of_shift === day.fullDay">
-                    {{ shift.start }} - {{ shift.end }} {{ shift?.roomName }}
+                    {{ shift.startPivot }} - {{ shift.endPivot }} {{ shift?.roomName }}
                     <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser && shift.craftAbbreviationUser">
                         [{{ shift.craftAbbreviationUser }}]
                     </span>,

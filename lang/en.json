@@ -2870,5 +2870,6 @@
     "Select the date for the commit.": "Select the date for the commit.",
     "Request a firm commitment": "Request a firm commitment",
     "Direct approval is currently not possible as the approval workflow is active. Please send a release request to the responsible users.": "Direct approval is currently not possible as the approval workflow is active. Please send a release request to the responsible users.",
-    "Shift commitment requests": "Shift commitment requests"
+    "Shift commitment requests": "Shift commitment requests",
+    "Daily target": "Daily target"
 }

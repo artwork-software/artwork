@@ -555,13 +555,16 @@
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
-                                                 class="p-2 bg-gray-50/30 flex items-center justify-center text-white text-[8.25px] h-full rounded-lg shiftCell cursor-default overflow-hidden"
+                                                 class="p-2 bg-gray-50/30 text-center text-white text-[8.25px] h-full rounded-lg shiftCell cursor-default overflow-hidden"
                                                  :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '']">
-                                                <span v-if="user.type === 0">
+                                                <div>
+                                                    Arbeitszeit KW {{ day.weekNumber }}
+                                                </div>
+                                                <div>
                                                     {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
-                                                </span>
+                                                </div>
                                             </div>
                                             <div
                                                 v-if="user.dayServices"
@@ -633,12 +636,15 @@
                                                  :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-20' : '']"/>
                                             </div>
-                                            <div v-else class="p-2 bg-gray-50/30 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
+                                            <div v-else class="p-2 bg-gray-50/30 text-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']">
-                                                <span v-if="user.type === 0">
+                                                <div>
+                                                    Arbeitszeit KW {{ day.weekNumber }}
+                                                </div>
+                                                <div>
                                                     {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
-                                                </span>
+                                                </div>
                                             </div>
                                             <div
                                                 v-if="user.dayServices"
@@ -1389,7 +1395,8 @@ export default {
                         availabilities: freelancer.availabilities,
                         dayServices: freelancer.dayServices,
                         individual_times: freelancer.individual_times,
-                        shift_comments: freelancer.shift_comments
+                        shift_comments: freelancer.shift_comments,
+                        weeklyWorkingHours: freelancer.weeklyWorkingHours,
                     });
                 })
             }
@@ -1402,7 +1409,8 @@ export default {
                     assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
                     dayServices: service_provider.dayServices,
                     individual_times: service_provider.individual_times,
-                    shift_comments: service_provider.shift_comments
+                    shift_comments: service_provider.shift_comments,
+                    weeklyWorkingHours: service_provider.weeklyWorkingHours,
                 });
             })
             return users;

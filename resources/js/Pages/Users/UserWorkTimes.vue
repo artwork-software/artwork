@@ -97,9 +97,6 @@
             </div>
         </div>
 
-
-
-
         <WorkingTimePostEntryModal
             v-if="showWorkingTimePostEntryModal"
             :user="userToEdit"

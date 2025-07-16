@@ -2870,5 +2870,9 @@
     "Duty roster release workflow": "Dienstplanfreigabe-Workflow",
     "Activates a two-stage approval process for schedules.If activated, authorized persons can send time periods (e.g. entire calendar weeks) to selected users for approval. They receive a notification and can approve or reject the schedule. If deactivated, authorized persons can approve schedules directly, without an additional approval process.": "Aktiviert einen zweistufigen Freigabeprozess für Dienstpläne. Wenn aktiviert, können berechtigte Personen Zeiträume (z. B. ganze Kalenderwochen) zur Freigabe an ausgewählte Nutzer*innen senden. Diese erhalten eine Benachrichtigung und können den Dienstplan freigeben oder ablehnen. Wenn deaktiviert, können berechtigte Personen Dienstpläne direkt freigeben, ohne zusätzlichen Freigabeprozess.",
     "Select Commit Date": "Commit-Datum auswählen",
-    "Select users who can confirm the shift commit requests": "Wähle Nutzer*innen aus, die die Schicht-Commit-Anfragen bestätigen können"
+    "Select users who can confirm the shift commit requests": "Wähle Nutzer*innen aus, die die Schicht-Commit-Anfragen bestätigen können",
+    "Select the date for the commit.": "Wähle das Datum für den Commit aus.",
+    "Request a firm commitment": "Festschreibung anfordern",
+    "Direct approval is currently not possible as the approval workflow is active. Please send a release request to the responsible users.": "Direkte Genehmigung ist derzeit nicht möglich, da der Freigabe-Workflow aktiv ist. Bitte sende eine Freigabeanfrage an die verantwortlichen Nutzer*innen.",
+    "Shift commitment requests": "Schicht-Commit-Anfragen"
 }

@@ -112,7 +112,7 @@ const submit = () => {
             emit('close');
         },
         preserveScroll: true,
-        preserveState: true,
+        preserveState: false,
     });
 }
 </script>

@@ -57,7 +57,7 @@ export default {
 </script>
 
 <template>
-    <div class="relative flex items-center z-50">
+    <div class="relative flex items-center z-40">
         <!-- Button oder Icon, das den Tooltip triggert -->
         <button @mouseover="show = true" @mouseleave="show = false" class="focus:outline-none" :class="classes">
             <!-- Ihr SVG-Icon -->

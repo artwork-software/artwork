@@ -84,6 +84,7 @@ use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowRequestsController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
 use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
@@ -168,7 +169,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('/shift/workflow/update', [ShiftController::class, 'updateWorkflowSettings'])
             ->name('shift.settings.update.shift-commit-workflow');
 
-        Route::patch('/shift/workflow/update', [ShiftCommitWorkflowUserController::class, 'store'])
+        Route::patch('/shift/workflow/add/user', [ShiftCommitWorkflowUserController::class, 'store'])
             ->name('shift.settings.update.shift-commit-workflow-users');
         Route::delete('/shift/workflow/{shiftCommitWorkflowUser}/remove', [ShiftCommitWorkflowUserController::class, 'destroy'])
             ->name('shift.settings.remove.shift-commit-workflow-user');
@@ -628,6 +629,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/shift/{shiftPreset}/preset/store', [PresetShiftController::class, 'store'])
         ->name('shift.preset.store');
     Route::post('/shifts/commit', [EventController::class, 'commitShifts'])->name('shifts.commit');
+    Route::post('/shifts/commit/request', [ShiftCommitWorkflowRequestsController::class, 'store'])
+        ->name('shifts.requestCommit');
+
+    Route::group(['prefix' => 'shifts-commit-requests'], function (): void {
+        Route::get('/', [ShiftCommitWorkflowRequestsController::class, 'index'])
+            ->name('shifts.commit-requests.index');
+        Route::patch('/{shiftCommitRequest}/approve', [ShiftCommitWorkflowRequestsController::class, 'approve'])
+            ->name('shifts.commit-requests.approve');
+        Route::patch('/{shiftCommitRequest}/decline', [ShiftCommitWorkflowRequestsController::class, 'decline'])
+            ->name('shifts.commit-requests.decline');
+    });
 
     // patch shifts.qualifications.add
     Route::patch('/shifts/{shift}/qualifications/add', [ShiftQualificationController::class, 'updateValue'])
@@ -1521,8 +1533,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/shift/multiedit/save', [ShiftController::class, 'saveMultiEdit'])->name('shift.multi.edit.save');
 
     Route::resource('permission-presets', PermissionPresetController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->middleware('role:artwork admin');
+        ->only(['index', 'store', 'update', 'destroy']);
 
     Route::resource('shift-qualifications', ShiftQualificationController::class)->only(
         [

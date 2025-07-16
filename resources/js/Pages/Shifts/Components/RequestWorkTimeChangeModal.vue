@@ -63,6 +63,7 @@
                     rows="3"
                     label="Kommentar zur Anfrage"
                     id="description"
+                    required
                 />
             </div>
 

@@ -21,6 +21,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use stdClass;
 
 class ShiftService
@@ -381,5 +382,63 @@ class ShiftService
             };
         }
 
+    }
+
+    public function commitShiftsByDate(Carbon $startDate, Carbon $endDate): void
+    {
+        $shifts = Shift::whereBetween('start_date', [$startDate, $endDate])->get();
+
+        if ($shifts->isEmpty()) {
+            return;
+        }
+
+        $firstShift = $shifts->first();
+        $lastShift = $shifts->last();
+
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setPriority(3);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_LOCKED);
+
+        $userIdHasGetNotification = [];
+
+        foreach ($shifts as $shift) {
+            $shift->is_committed = true;
+            $shift->committing_user_id = Auth::id();
+            $shift->save();
+
+            foreach ($shift->users as $user) {
+                if (!in_array($user->id, $userIdHasGetNotification)) {
+                    $userIdHasGetNotification[] = $user->id;
+
+                    $notificationTitle = __('notification.shift.locked');
+                    $notificationDescription = [
+                        1 => [
+                            'type' => 'string',
+                            'title' => __(
+                                'notification.keyWords.concerns_time_period',
+                                [
+                                    'start' => $firstShift->start_date->format('d.m.Y H:i'),
+                                    'end' => $lastShift->end_date->format('d.m.Y H:i'),
+                                ],
+                                $user->language
+                            ),
+                            'href' => null
+                        ],
+                    ];
+
+                    $broadcastMessage = [
+                        'id' => random_int(1, 1000000),
+                        'type' => 'success',
+                        'message' => $notificationTitle
+                    ];
+
+                    $this->notificationService->setDescription($notificationDescription);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
+                }
+            }
+        }
     }
 }

@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <NextWorkTimeCountdown :next-work-time="nextWorkTime" />
+        <NextWorkTimeCountdown :next-work-time="nextWorkTime" v-if="nextWorkTime" />
 
 
         <div class="mt-5" v-if="!isSelectingPattern">
@@ -259,7 +259,7 @@ const props = defineProps({
         })
     },
     nextWorkTime: {
-        type: Object,
+        type: [Object, null],
         required: false,
         default: () => null
     },

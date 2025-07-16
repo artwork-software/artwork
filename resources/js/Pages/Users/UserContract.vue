@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <div class="mt-5" v-if="isContractSelected">
+        <div class="mt-5" v-if="!isContractSelected">
             <form @submit.prevent="submit">
                 <div class="space-y-4">
                     <div>
@@ -233,6 +233,7 @@ const selectedContract = computed(() => {
 const submit = () => {
     userContractForm.patch(route('user-contract-settings.update-user', usePage().props.auth.user), {
         preserveScroll: true,
+        preserveState: false,
         onSuccess: () => {
         },
         onError: () => {

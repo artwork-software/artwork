@@ -692,4 +692,5 @@ class User extends Model implements
         // format as "HH:MM"
         return sprintf('%02d:%02d', $hours, $minutes);
     }
+
 }

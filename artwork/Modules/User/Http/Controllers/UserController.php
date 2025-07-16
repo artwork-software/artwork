@@ -382,7 +382,7 @@ class UserController extends Controller
             ],
             'totals' => [
                 'worked' => $this->convertMinutesToHoursAndMinutes($totalWorkedMinutes),
-                'wanted' => $this->convertMinutesToHoursAndMinutes($totalWantedMinutes),
+                'wanted' => $this->convertMinutesToHoursAndMinutes($totalWantedMinutes, true),
             ],
         ]);
     }
@@ -411,15 +411,30 @@ class UserController extends Controller
             $weekNumber = $current->isoWeek();
             $weekKey = "KW{$weekNumber}";
 
+            // Aktive Arbeitszeit für diesen Tag
+            $userWorkTime = $user->workTimes()
+                ->where(function ($q) use ($current) {
+                    $q->whereNull('valid_from')->orWhere('valid_from', '<=', $current);
+                })
+                ->where(function ($q) use ($current) {
+                    $q->whereNull('valid_until')->orWhere('valid_until', '>=', $current);
+                })
+                ->orderByDesc('valid_from')
+                ->first();
+
+            $plannedTime = $userWorkTime?->{$weekday};
+
+            $plannedMinutes = $plannedTime ? Carbon::parse($plannedTime)->diffInMinutes($plannedTime->copy()->startOfDay()) : 0;
+            $convertedPlannedTime = $this->convertMinutesToHoursAndMinutes($plannedMinutes, true);
             $entry = [
                 'weekday' => $weekday,
                 'date' => $dateKey,
                 'formatted_date' => $current->locale(session('locale', config('app.fallback_locale')))
                     ->isoFormat('dddd, D. MMMM YYYY'),
-                'planned_start' => null,
-                'planned_minutes' => 0,
-                'planned_hours' => 0,
-                'wantedHours' => 0,
+                'planned_start' => $plannedTime ? $plannedTime->format('H:i') : null,
+                'planned_minutes' => $plannedMinutes,
+                'planned_hours' => $convertedPlannedTime,
+                'wantedHours' => $plannedMinutes,
                 'worked_hours' => 0,
                 'nightly_working_hours' => 0,
                 'work_time_balance_change' => 0,
@@ -428,11 +443,7 @@ class UserController extends Controller
             ];
 
             if (isset($bookings[$dateKey])) {
-                /** @var WorkTimeBooking $booking */
                 foreach ($bookings[$dateKey] as $booking) {
-                    $entry['planned_minutes'] += $booking->wanted_working_hours;
-                    $entry['planned_hours'] = round($entry['planned_minutes'] / 60, 2);
-                    $entry['wantedHours'] += $booking->wanted_working_hours;
                     $entry['worked_hours'] += $booking->worked_hours;
                     $entry['nightly_working_hours'] += $booking->nightly_working_hours;
                     $entry['work_time_balance_change'] += $booking->work_time_balance_change;
@@ -450,17 +461,12 @@ class UserController extends Controller
                         ];
                     }
                 }
-
-                // Formatierungen
-                $entry['wantedHoursFormatted'] = $this->convertMinutesToHoursAndMinutes($entry['wantedHours']);
-                $entry['worked_hours_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['worked_hours']);
-                $entry['nightly_working_hours_formatted'] = $this->convertMinutesToHoursAndMinutes(
-                    $entry['nightly_working_hours']
-                );
-                $entry['work_time_balance_change_formatted'] = $this->convertMinutesToHoursAndMinutes(
-                    $entry['work_time_balance_change']
-                );
             }
+
+            $entry['wantedHoursFormatted'] = $this->convertMinutesToHoursAndMinutes($entry['wantedHours'], true);
+            $entry['worked_hours_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['worked_hours']);
+            $entry['nightly_working_hours_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['nightly_working_hours']);
+            $entry['work_time_balance_change_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['work_time_balance_change']);
 
             $schedule[$weekKey][$dateKey] = $entry;
             $current->addDay();
@@ -470,15 +476,20 @@ class UserController extends Controller
     }
 
 
-    private function convertMinutesToHoursAndMinutes(int $inputMinutes): string
+    private function convertMinutesToHoursAndMinutes(int $inputMinutes, bool $forcePositive = false): string
     {
-        // convert work_time_balance to hours and minutes
-        $hours = floor($inputMinutes / 60);
-        $minutes = $inputMinutes % 60;
+        if ($forcePositive) {
+            $inputMinutes = abs($inputMinutes);
+        }
 
-        // format as "HH:MM"
-        return sprintf('%02d:%02d', $hours, $minutes);
+        $hours = floor($inputMinutes / 60);
+        $minutes = abs($inputMinutes % 60); // wichtig: immer positiv anzeigen
+
+        $sign = (!$forcePositive && $inputMinutes < 0) ? '-' : '';
+
+        return sprintf('%s%02d:%02d', $sign, abs($hours), $minutes);
     }
+
 
     /**
      * @throws ContainerExceptionInterface

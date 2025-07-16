@@ -2866,5 +2866,9 @@
     "Duty roster release workflow": "Duty roster release workflow",
     "Activates a two-stage approval process for schedules.If activated, authorized persons can send time periods (e.g. entire calendar weeks) to selected users for approval. They receive a notification and can approve or reject the schedule. If deactivated, authorized persons can approve schedules directly, without an additional approval process.": "Activates a two-stage approval process for schedules.If activated, authorized persons can send time periods (e.g. entire calendar weeks) to selected users for approval. They receive a notification and can approve or reject the schedule. If deactivated, authorized persons can approve schedules directly, without an additional approval process.",
     "Select Commit Date": "Select Commit Date",
-    "Select users who can confirm the shift commit requests": "Select users who can confirm the shift commit requests"
+    "Select users who can confirm the shift commit requests": "Select users who can confirm the shift commit requests",
+    "Select the date for the commit.": "Select the date for the commit.",
+    "Request a firm commitment": "Request a firm commitment",
+    "Direct approval is currently not possible as the approval workflow is active. Please send a release request to the responsible users.": "Direct approval is currently not possible as the approval workflow is active. Please send a release request to the responsible users.",
+    "Shift commitment requests": "Shift commitment requests"
 }

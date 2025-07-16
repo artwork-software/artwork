@@ -15,10 +15,12 @@
                        class="input-checklist mr-1"/>
             </div>
             <div class="flex items-center justify-between w-full">
-                <div class="flex items-center">
+                <div class="flex items-center gap-x-1.5">
+
                     <!--@click="this.showQualificationRowExpander = !this.showQualificationRowExpander"-->
                     <div>
-                        {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
+                        <span>{{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}</span>
+
                     </div>
                     <div v-if="!showRoom" class="ml-0.5 " :class="multiEditMode ? 'text-[10px]' : 'text-xs'">
                         ({{ this.computedUsedWorkerCount }}/{{ this.computedMaxWorkerCount }})
@@ -31,6 +33,7 @@
                     <div v-else-if="room" class="truncate">
                         , {{ room?.name }}
                     </div>
+                    <component is="IconLock" class="text-right h-3 w-3" v-if="shift.isCommitted" />
                 </div>
             </div>
         </div>
@@ -40,8 +43,8 @@
                     v-for="(computedShiftsQualificationWithWorkerCount) in this.computedShiftsQualificationsWithWorkerCount"
                     class="flex xsLight items-center">
                     {{ computedShiftsQualificationWithWorkerCount.workerCount }}/{{ computedShiftsQualificationWithWorkerCount.maxWorkerCount }}
-                    <component stroke-width="1.5"
-                        class="text-black mx-1" :classes="['h-4', 'w-4', 'text-black', 'mx-0.5']"
+                    <component stroke-width="1"
+                        class="text-black size-3.5 mx-1"
                         :is="this.getShiftQualificationById(computedShiftsQualificationWithWorkerCount.shift_qualification_id).icon"
                     />
                 </div>

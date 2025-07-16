@@ -910,82 +910,17 @@ class EventController extends Controller
 
     public function commitShifts(Request $request): void
     {
-        foreach ($request->events as $event) {
-            $shiftIds = [];
+        $request->validate([
+            'start' => 'required|date',
+            'end' => 'required|date|after_or_equal:start',
+        ]);
 
-            // Loop through each shift and collect the IDs
-            foreach ($event['shifts'] as $shift) {
-                $shiftIds[] = $shift['id'];
-            }
+        $startDate = Carbon::parse($request->start)->startOfDay();
+        $endDate = Carbon::parse($request->end)->endOfDay();
 
-            $shifts = Shift::whereIn('id', $shiftIds)->get();
-
-            // get first shift in shifts
-            $firstShift = $shifts->first();
-
-            // get last shift in Shifts
-            $lastShift = $shifts->last();
-
-            // notification.shift.locked
-
-            $this->notificationService->setIcon('green');
-            $this->notificationService->setPriority(3);
-            $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_LOCKED);
-
-            $userIdHasGetNotification = [];
-            // Loop over the shifts and set is_committed to true
-            /** @var Shift $shift */
-            foreach ($shifts as $shift) {
-                $shift->is_committed = true;
-                $shift->committing_user_id = Auth::id();
-                $shift->save();
-
-                foreach ($shift->users()->get() as $user) {
-                    if (!in_array($user->id, $userIdHasGetNotification)) {
-                        $userIdHasGetNotification[] = $user->id;
-                        $notificationTitle = __('notification.shift.locked');
-                        if (!empty($firstShift) && !empty($lastShift)) {
-                            $broadcastMessage = [
-                                'id' => random_int(1, 1000000),
-                                'type' => 'success',
-                                'message' => $notificationTitle
-                            ];
-
-                            $notificationDescription = [
-                                1 => [
-                                    'type' => 'string',
-                                    /*'title' => 'Betrifft Zeitraum: ' .
-                                        Carbon::parse($firstShift->event_start_day . ' ' . $firstShift->start)
-                                            ->format('d.m.Y H:i') . ' - ' .
-                                        Carbon::parse($lastShift->event_end_day . ' ' . $lastShift->end)
-                                            ->format('d.m.Y H:i'),*/
-                                    'title' => __(
-                                        'notification.keyWords.concerns_time_period',
-                                        [
-                                            'start' =>
-                                                Carbon::parse($firstShift->event_start_day . '
-                                                 ' . $firstShift->start)
-                                                    ->format('d.m.Y H:i'),
-                                            'end' =>
-                                                Carbon::parse($lastShift->event_end_day . '
-                                                ' . $lastShift->end)->format('d.m.Y H:i')
-                                        ],
-                                        $user->language
-                                    ),
-                                    'href' => null
-                                ],
-                            ];
-                            $this->notificationService->setDescription($notificationDescription);
-                            $this->notificationService->setBroadcastMessage($broadcastMessage);
-                        }
-                        $this->notificationService->setTitle($notificationTitle);
-                        $this->notificationService->setNotificationTo($user);
-                        $this->notificationService->createNotification();
-                    }
-                }
-            }
-        }
+        $this->shiftService->commitShiftsByDate($startDate, $endDate);
     }
+
 
     private function adjoiningRoomsCheck(EventStoreRequest $request, $event): void
     {

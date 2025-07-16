@@ -154,7 +154,7 @@ class WorkTimeBookingService
 
             $start = Carbon::parse($pivot->start_date)->setTimeFrom(Carbon::parse($pivot->start_time));
             $end = Carbon::parse($pivot->end_date)->setTimeFrom(Carbon::parse($pivot->end_time));
-            $break = (int)($pivot->break_minutes ?? 0);
+            $break = (int)($shift->break_minutes ?? 0);
 
             $workStart = max($start, $dayStart);
             $workEnd = min($end, $dayEnd);

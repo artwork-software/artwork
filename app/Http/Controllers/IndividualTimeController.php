@@ -42,7 +42,7 @@ class IndividualTimeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): void
+    public function store(Request $request): \Illuminate\Http\JsonResponse
     {
         $modelClass = match ($request->integer('modelType')) {
             1 => Freelancer::class,
@@ -93,6 +93,12 @@ class IndividualTimeController extends Controller
                 $shiftComment['id'] ?? null,
             );
         }
+
+        return response()->json([
+            'individual_times' => $modelInstance->individualTimes()->get(),
+            'shift_comment' => $modelInstance->shiftPlanComments()
+                ->where('date', $request->input('shift_comment.date'))->first(),
+        ]);
     }
 
     /**

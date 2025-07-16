@@ -243,7 +243,7 @@ export default defineComponent({
                 { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE'},
             ],
             vacationTypeBeforeUpdate: null,
-            copyOfUserIndividualTimes: [...this.user.individual_times],
+            copyOfUserIndividualTimes: this.user.individual_times ? this.user.individual_times : [],
             showRequestWorkTimeChangeModal: false,
             selectedShift: null,
             shiftPlanComment: this.user.shift_comments[this.day.withoutFormat] ? this.user.shift_comments[this.day.withoutFormat][0] : {comment: '', date: this.day.withoutFormat},
@@ -264,7 +264,7 @@ export default defineComponent({
     },
     computed: {
         getIndividualTimesByDate(){
-            return this.user.individual_times.filter(individual_time => individual_time.days_of_individual_time.includes(this.day.withoutFormat));
+            return this.copyOfUserIndividualTimes.filter(individual_time => individual_time.days_of_individual_time.includes(this.day.withoutFormat));
         },
 
     },
@@ -323,7 +323,28 @@ export default defineComponent({
             this.showConfirmDeleteModal = false;
         },
         sendIndividualTimes() {
-            router.post(route('add.update.individualTimesAndShiftPlanComment'), {
+            axios.post(route('add.update.individualTimesAndShiftPlanComment'), {
+                modelId: this.user.element.id,
+                modelType: this.user.type,
+                individualTimes: this.user.individual_times,
+                shift_comment: this.shiftPlanComment,
+            }).then(response => {
+                // Relevante Daten ersetzen
+                if (response.data.individual_times) {
+                    this.copyOfUserIndividualTimes = response.data.individual_times;
+                }
+
+                if (response.data.shift_comment) {
+                    this.shiftPlanComment = response.data.shift_comment;
+                }
+
+                this.sendCheckVacation(); // wichtig für Freigabe etc.
+            }).catch(() => {
+                return false;
+            });
+
+            return false;
+            /*router.post(route('add.update.individualTimesAndShiftPlanComment'), {
                 modelId: this.user.element.id,
                 modelType: this.user.type,
                 individualTimes: this.user.individual_times,
@@ -332,13 +353,21 @@ export default defineComponent({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    this.sendCheckVacation();
+                    router.reload({
+                        only: ['user'],
+                        preserveScroll: true,
+                        preserveState: true,
+                        replace: true,
+                        onSuccess: () => {
+                            this.sendCheckVacation(); // nachgeladen, jetzt sicher aktuell
+                        }
+                    });
                 },
                 onError: () => {
                     return false;
                 }
             });
-            return false;
+            return false;*/
         },
         sendCheckVacation() {
             if (this.user.type === 0) {

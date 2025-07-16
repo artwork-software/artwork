@@ -27,6 +27,8 @@
                         </div>
                     </div>
 
+
+
                     <div v-if="shiftCommitWorkflow">
                         <div class="mt-5 w-1/2">
                             <UserSearch
@@ -502,11 +504,12 @@ export default defineComponent({
             });
         },
         changeShiftCommitWorkflow(){
+            console.log(this.shiftCommitWorkflow)
             this.$inertia.patch(route('shift.settings.update.shift-commit-workflow'), {
                 shift_commit_workflow: this.shiftCommitWorkflow
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: false
             });
         },
         openAddEditShiftPresetModal(shiftTimePreset){

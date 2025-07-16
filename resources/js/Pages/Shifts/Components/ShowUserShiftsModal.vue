@@ -24,6 +24,7 @@
             <div class="space-y-2 divide-y divide-gray-100 divide-dashed">
                 <div v-for="shift in user.element.shifts" class="pb-1">
                     <div v-show="shift.days_of_shift?.includes(day.fullDay)" class="flex items-center justify-between group" :id="'shift-' + shift.id">
+                        <SingleShiftInShiftOverviewUser :user="user" :shift="shift" />
                         <!--<SingleEntityInShift :shift="shift" :person="user.element" :shift-qualifications="shiftQualifications" />-->
                         <!--
                         <div>
@@ -58,9 +59,12 @@
                                 <Component is="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
                             </button>
                         </div>-->
+
+
                     </div>
                 </div>
             </div>
+
 
             <div class="flex items-center my-5" v-if="this.user.type === 0 || this.user.type === 1">
                 <Listbox as="div" v-model="checked" class="w-full relative mt-2">
@@ -209,10 +213,12 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
 import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
+import SingleShiftInShiftOverviewUser from "@/Pages/Shifts/Components/SingleShiftInShiftOverviewUser.vue";
 
 export default defineComponent({
     name: "showUserShiftsModal",
     components: {
+        SingleShiftInShiftOverviewUser,
         SingleEntityInShift,
         RequestWorkTimeChangeModal,
         ArtworkBaseModal,

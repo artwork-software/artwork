@@ -1348,6 +1348,7 @@ class ShiftController extends Controller
         $startTime = $request->get('start_time');
         $endTime = $request->get('end_time');
 
+
         // Pivot holen
         $query = match ($entity['type']) {
             'user' => ShiftUser::find($shiftId),

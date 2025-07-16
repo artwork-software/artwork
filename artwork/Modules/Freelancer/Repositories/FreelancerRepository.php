@@ -32,7 +32,9 @@ class FreelancerRepository extends BaseRepository
             'dayServices',
             'shifts',
             'shifts.event',
-            'shifts.event.room'
+            'shifts.event.room',
+            'shifts.shiftsQualifications',
+            'shiftQualifications',
         )->get();
     }
 

@@ -93,7 +93,17 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         return $this
             ->belongsToMany(Shift::class, 'shifts_freelancers')
             ->using(ShiftFreelancer::class)
-            ->withPivot('id', 'shift_qualification_id', 'craft_abbreviation');
+            ->withPivot([
+                'id',
+                'shift_qualification_id',
+                'shift_count',
+                'craft_abbreviation',
+                'short_description',
+                'start_date',
+                'end_date',
+                'start_time',
+                'end_time'
+            ]);
     }
 
     public function getProfilePhotoUrlAttribute(): string

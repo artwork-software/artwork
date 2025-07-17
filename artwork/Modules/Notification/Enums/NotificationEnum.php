@@ -79,6 +79,8 @@ enum NotificationEnum: string
 
     case NOTIFICATION_EVENT_VERIFICATION_REQUESTS = 'NOTIFICATION_EVENT_VERIFICATION_REQUESTS';
 
+    case NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST = 'NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST';
+
     public function groupType(): string
     {
         return match ($this) {
@@ -117,6 +119,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
             self::NOTIFICATION_SHIFT_OPEN_DEMAND,
+            self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
             self::NOTIFICATION_SHIFT_CONFLICT => "SHIFTS",
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
             self::NOTIFICATION_INVENTORY_OVERBOOKED => "INVENTORY",
@@ -156,6 +159,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
+            self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
             self::NOTIFICATION_SHIFT_CONFLICT => ShiftNotification::class,
         };
     }
@@ -203,7 +207,8 @@ enum NotificationEnum: string
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED => 'Inventory article changed',
             self::NOTIFICATION_INVENTORY_OVERBOOKED => 'Inventory article overbooked',
 
-            self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Event verification requests"
+            self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Event verification requests",
+            self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST => "New shift commit workflow request",
         };
     }
 
@@ -248,6 +253,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED => "Find out if your worktime change request has been approved.",
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED => "Find out if your worktime change request has been declined.",
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST => "Find out if you have a new worktime change request.",
+            self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST => "Find out if there is a new shift commit workflow request.",
         };
     }
 

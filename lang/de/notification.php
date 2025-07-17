@@ -63,7 +63,10 @@ return [
             'old-new-time' =>
                 'Die angefragte Arbeitszeitänderung von :user: ' .
                 'von :start_time bis :end_time.',
-        ]
+        ],
+        'new_commit_request_title' => 'Neue Schicht-Commit-Anfrage',
+        'new_commit_request' => 'Neue Schicht-Commit-Anfrage :start_time - :end_time von :user',
+        'link_label_new_commit_request' => 'Gehe zu Schicht-Commit-Anfrage',
     ],
     'event' => [
         'with_adjoining_audience' => 'Termin mit Publikum im Nebenraum',

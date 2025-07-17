@@ -62,7 +62,10 @@ return [
             'old-new-time' =>
                 'The requested change to working hours for :user: ' .
                 'from :start_time to :end_time.',
-        ]
+        ],
+        'new_commit_request_title' => 'New shift commit request',
+        'new_commit_request' => 'New shift commit request :start_time - :end_time from :user',
+        'link_label_new_commit_request' => 'Go to shift commit request',
     ],
     'event' => [
         'with_adjoining_audience' => 'Event with audience in adjoining room',

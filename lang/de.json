@@ -2881,5 +2881,15 @@
     "Are you sure you want to decline this work time request?": "Möchtest du diese Arbeitszeit-Anfrage wirklich ablehnen?",
     "Decline Shift Commit Request": "Schicht-Commit-Anfrage ablehnen",
     "Are you sure you want to decline this shift commit request?": "Möchtest du diese Schicht-Commit-Anfrage wirklich ablehnen?",
-    "Decline Message": "Ablehnungsnachricht"
+    "Decline Message": "Ablehnungsnachricht",
+    "Find out whether shift schedules conflict with legal regulations,e.g. employees have been scheduled with too few breaks.": "Finde heraus, ob Schichtpläne mit gesetzlichen Vorschriften in Konflikt stehen, z.B. ob Mitarbeiter*innen mit zu wenigen Pausen eingeplant wurden.",
+    "Worktime change request approved": "Arbeitszeitänderungsanfrage genehmigt",
+    "Find out if your worktime change request has been approved.": "Finde heraus, ob deine Arbeitszeitänderungsanfrage genehmigt wurde.",
+    "Worktime change request declined": "Arbeitszeitänderungsanfrage abgelehnt",
+    "Find out if your worktime change request has been declined.": "Finde heraus, ob deine Arbeitszeitänderungsanfrage abgelehnt wurde.",
+    "New worktime change request": "Neue Arbeitszeitänderungsanfrage",
+    "Find out if you have a new worktime change request.": "Finde heraus, ob du eine neue Arbeitszeitänderungsanfrage hast.",
+    "Open demands": "Offene Anforderungen",
+    "Find out if there are any open demands for your shifts.": "Finde heraus, ob es offene Anforderungen für deine Schichten gibt."
 }
+

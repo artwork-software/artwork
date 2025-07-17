@@ -2877,5 +2877,14 @@
     "Are you sure you want to decline this work time request?": "Are you sure you want to decline this work time request?",
     "Decline Shift Commit Request": "Decline Shift Commit Request",
     "Are you sure you want to decline this shift commit request?": "Are you sure you want to decline this shift commit request?",
-    "Decline Message": "Decline Message"
+    "Decline Message": "Decline Message",
+    "Find out whether shift schedules conflict with legal regulations,e.g. employees have been scheduled with too few breaks.": "Find out whether shift schedules conflict with legal regulations,e.g. employees have been scheduled with too few breaks.",
+    "Worktime change request approved": "Worktime change request approved",
+    "Find out if your worktime change request has been approved.": "Find out if your worktime change request has been approved.",
+    "Worktime change request declined": "Worktime change request declined",
+    "Find out if your worktime change request has been declined.": "Find out if your worktime change request has been declined.",
+    "New worktime change request": "New worktime change request",
+    "Find out if you have a new worktime change request.": "Find out if you have a new worktime change request.",
+    "Open demands": "Open demands",
+    "Find out if there are any open demands for your shifts.": "Find out if there are any open demands for your shifts."
 }

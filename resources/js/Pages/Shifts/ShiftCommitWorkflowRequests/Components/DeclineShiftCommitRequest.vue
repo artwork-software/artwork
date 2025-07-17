@@ -46,7 +46,7 @@ const form = useForm({
 });
 
 const declineRequest = () => {
-    form.patch(route('shifts.commit-requests.decline', props.requestId), {
+    form.patch(route('shifts.commit-requests.decline', props.request.id), {
         onSuccess: () => {
             emit('close');
         },

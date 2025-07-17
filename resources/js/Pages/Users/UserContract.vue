@@ -23,6 +23,8 @@
             </div>
         </div>
 
+        <VisualFeedback :show-save-success="showVisualFeedback" />
+
         <div class="mt-5" v-if="!isContractSelected">
             <form @submit.prevent="submit">
                 <div class="space-y-4">
@@ -81,7 +83,7 @@
                             v-model="userContractForm.days_off_first_26_weeks"
                             label="Days Off First 26 Weeks"
                             type="number"
-                            id="days_off_first_26_weeks" step="0.01" />
+                            id="days_off_first_26_weeks" :step="0.01" />
                         <p v-if="userContractForm.errors.days_off_first_26_weeks" class="text-red-500 mt-0.5 text-xs"></p>
                     </div>
 
@@ -92,7 +94,7 @@
                     <ArtworkBaseModalButton
                         type="submit"
                         class="mt-4"
-                        :loading="userContractForm.processing">
+                        :disabled="userContractForm.processing">
                         {{ $t('Save') }}
                     </ArtworkBaseModalButton>
                 </div>
@@ -151,6 +153,7 @@ import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import SelectUserContractModal from "@/Pages/Users/Components/SelectUserContractModal.vue";
+import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 
 const props = defineProps({
     userToEdit: {
@@ -184,6 +187,8 @@ const props = defineProps({
 
 const showConfirmRemoveContractModal = ref(false)
 const showSelectUserContractModal = ref(false)
+const showVisualFeedback = ref(false)
+
 const removePattern = () => {
     userContractForm.user_contract_id = null;
     userContractForm.free_full_days_per_week = 0;
@@ -232,12 +237,13 @@ const selectedContract = computed(() => {
 
 const submit = () => {
     userContractForm.patch(route('user-contract-settings.update-user', usePage().props.auth.user), {
-        preserveScroll: true,
-        preserveState: false,
         onSuccess: () => {
+            showVisualFeedback.value = true;
+            setTimeout(() => {
+                showVisualFeedback.value = false;
+            }, 3000);
         },
         onError: () => {
-            // Handle error if needed
         }
     });
 }

@@ -1,7 +1,7 @@
 <template>
     <div>
-        <div class="flex items-center text-sm gap-x-1">
-            <div class="w-14">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
+            <div class="col-span-1 flex items-center justify-center">
                 <div class="px-2 py-0.5 border rounded-lg text-xs w-fit" :style="{ backgroundColor: shift.craft.color + '22', borderColor: blackColorIfColorIsWhite(shift.craft.color) + '55', color: blackColorIfColorIsWhite(shift.craft.color) }">
                     {{ shift.craftAbbreviation }}
                     <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser" class="mx-1">
@@ -9,13 +9,11 @@
                     </span>
                 </div>
             </div>
-            <div class="pr-1">
+            <div class="col-span-3 flex items-center">
                 <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed">
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
-                        <PopoverButton class="gap-x-2 font-lexend rounded-lg">
-                            <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}60` }">
-                                <p class="text-xs text-left font-lexend">{{ shift.startPivot }} - {{ shift.endPivot }}</p>
-                            </div>
+                        <PopoverButton class="font-lexend rounded-lg ring-0 focus:ring-0 focus:outline-none">
+                            <p class="text-xs text-left font-lexend">{{ shift.startPivot }} - {{ shift.endPivot }}</p>
                         </PopoverButton>
                         <transition enter-active-class="transition ease-out duration-100"
                                     enter-from-class="transform opacity-0 scale-95"
@@ -50,22 +48,26 @@
                         </transition>
                     </Float>
                 </Popover>
-                <div v-else class="gap-x-2 font-lexend rounded-lg" @click="showRequestWorkTimeChangeModal = true">
-                    <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}60` }">
+                <div v-else class="font-lexend rounded-lg" @click="showRequestWorkTimeChangeModal = true">
+                    <div class="rounded-l-lg">
                         <p class="text-xs text-left font-lexend">{{ shift.startPivot }} - {{ shift.endPivot  }}</p>
                     </div>
                 </div>
             </div>
-            <div class="pr-1">
+            <div class="col-span-3 text-xs">
+                <div>
+                    {{ $t('Room') }}:
+                </div>
                 {{ shift.roomName }}
             </div>
-            <div class="pl-1" v-if="shift.eventTypeAbbreviation">
+            <div class="col-span-3 text-xs flex items-center">
+                {{ $t('Qualification') }}: {{ shift.qualificationName }}
+            </div>
+            <div class="col-span-2 text-xs flex items-center" v-if="shift.eventTypeAbbreviation">
                 {{ shift.eventTypeAbbreviation }}:
                 {{ shift.eventName }}
             </div>
         </div>
-
-        <p class="text-sm" v-if="shift.description">&bdquo;{{ shift.description }}&rdquo;</p>
     </div>
     <div class="invisible group-hover:visible cursor-pointer flex items-center gap-x-2">
         <button type="button" @click="showRequestWorkTimeChangeModal = true" v-if="user.element.id === usePage().props.auth.user.id && user.type === 0">

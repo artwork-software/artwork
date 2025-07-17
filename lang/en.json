@@ -2872,5 +2872,10 @@
     "Request a firm commitment": "Request a firm commitment",
     "Direct approval is currently not possible as the approval workflow is active. Please send a release request to the responsible users.": "Direct approval is currently not possible as the approval workflow is active. Please send a release request to the responsible users.",
     "Shift commitment requests": "Shift commitment requests",
-    "Daily target": "Daily target"
+    "Daily target": "Daily target",
+    "Decline Work Time Request": "Decline Work Time Request",
+    "Are you sure you want to decline this work time request?": "Are you sure you want to decline this work time request?",
+    "Decline Shift Commit Request": "Decline Shift Commit Request",
+    "Are you sure you want to decline this shift commit request?": "Are you sure you want to decline this shift commit request?",
+    "Decline Message": "Decline Message"
 }

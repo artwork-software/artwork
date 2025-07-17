@@ -23,6 +23,8 @@
             </div>
         </div>
 
+        <VisualFeedback :show-save-success="showVisualFeedback" />
+
         <NextWorkTimeCountdown :next-work-time="nextWorkTime" v-if="nextWorkTime" />
 
 
@@ -221,6 +223,7 @@ import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import NextWorkTimeCountdown from "@/Pages/Users/Components/NextWorkTimeCountdown.vue";
+import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 
 const props = defineProps({
     userToEdit: {
@@ -292,6 +295,7 @@ const workTimeForm = useForm({
 
 const showSelectWorkTimePatternModal = ref(false)
 const showConfirmRemovePatternModal = ref(false)
+const showVisualFeedback = ref(false)
 
 const selectPattern = (data) => {
 
@@ -329,6 +333,10 @@ const isSelectingPattern = computed(() => {
 const submit = () => {
     workTimeForm.patch(route('shift.work-time-pattern.update-user', props.userToEdit.id), {
         onSuccess: () => {
+            showVisualFeedback.value = true;
+            setTimeout(() => {
+                showVisualFeedback.value = false;
+            }, 3000);
         },
         onError: (errors) => {
             console.error(errors);

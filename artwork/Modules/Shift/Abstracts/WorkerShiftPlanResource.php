@@ -62,6 +62,8 @@ class WorkerShiftPlanResource extends JsonResource
                     'endPivot' => Carbon::parse($shift->getRelation('pivot')->getAttribute('end_time'))->format('H:i'),
                     'shortDescription' => $shift->getRelation('pivot')->getAttribute('short_description'),
                     'craftAbbreviationUser' => $shift->getRelation('pivot')->getAttribute('craft_abbreviation'),
+                    'qualificationId' => $shift->getRelation('pivot')->getAttribute('shift_qualification_id'),
+                    'qualificationName' => $shift->getRelation('pivot')->getAttribute('shiftQualification')->getAttribute('name'),
                     'start' => $shift->getAttribute('start'),
                     'end' => $shift->getAttribute('end'),
                     'description' => $shift->getAttribute('description'),

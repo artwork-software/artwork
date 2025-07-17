@@ -9,6 +9,7 @@ use Artwork\Modules\Shift\Models\ShiftCommitWorkflowRequests;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Http\Request;
 
 class ShiftCommitWorkflowRequestsController extends Controller
 {
@@ -51,11 +52,12 @@ class ShiftCommitWorkflowRequestsController extends Controller
         return back()->with('success', 'Shift commit workflow request approved successfully.');
     }
 
-    public function decline(ShiftCommitWorkflowRequests $shiftCommitRequest)
+    public function decline(ShiftCommitWorkflowRequests $shiftCommitRequest, Request $request)
     {
         // Decline the request
         $shiftCommitRequest->update([
             'status' => 'rejected',
+            'reason' => $request->get('reason'),
             'declined_by_id' => $this->auth->id(),
         ]);
 

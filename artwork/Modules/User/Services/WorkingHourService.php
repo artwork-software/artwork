@@ -26,54 +26,52 @@ class WorkingHourService
         Carbon $startDate,
         Carbon $endDate
     ): int {
-        $shiftsInDateRange = array_filter(
-            $entity->getAttribute('shifts')->all(),
-            static function (Shift $shift) use ($startDate, $endDate): bool {
-                return (
-                    ($shift->getAttribute('start_date') >= $startDate &&
-                        $shift->getAttribute('start_date') <= $endDate) ||
-                    ($shift->getAttribute('end_date') >= $startDate &&
-                        $shift->getAttribute('start_date') <= $endDate) ||
-                    ($shift->getAttribute('start_date') < $startDate && $shift->getAttribute('end_date') > $endDate)
-                );
+        $totalMinutes = 0;
+
+        // Individuelle Zeiten sammeln
+        $individualTimes = $entity->individualTimes()
+            ->individualByDateRange($startDate->toDateString(), $endDate->toDateString())
+            ->get();
+
+        $individualMinutesPerDay = collect();
+        foreach ($individualTimes as $individualTime) {
+            foreach ($individualTime->days_of_individual_time as $day) {
+                $individualMinutesPerDay[$day] = $individualTime->working_time_minutes ?? 0;
             }
-        );
-
-        $intervals = [];
-
-        foreach ($shiftsInDateRange as $shift) {
-            $shiftStart = Carbon::parse($shift->start_date->format('Y-m-d') . ' ' . $shift->start);
-            $shiftEnd = Carbon::parse($shift->end_date->format('Y-m-d') . ' ' . $shift->end);
-
-            // Add the shift interval to the list
-            $intervals[] = [$shiftStart, $shiftEnd];
         }
 
-        // Merge overlapping intervals
-        usort($intervals, fn($a, $b) => $a[0]->lt($b[0]) ? -1 : 1);
-        $mergedIntervals = [];
-        foreach ($intervals as $interval) {
-            if (empty($mergedIntervals) || $mergedIntervals[count($mergedIntervals) - 1][1]->lt($interval[0])) {
-                $mergedIntervals[] = $interval;
+        $current = $startDate->copy();
+        while ($current->lte($endDate)) {
+            $dateStr = $current->toDateString();
+
+            // Immer individuelle Zeit draufrechnen (wenn vorhanden)
+            if ($individualMinutesPerDay->has($dateStr)) {
+                $totalMinutes += $individualMinutesPerDay[$dateStr];
+            }
+
+            // Dann entweder Booking oder Schichtzeit draufrechnen
+            if ($entity instanceof User) {
+                $bookings = $entity->workTimeBookings()
+                    ->where('booking_day', $dateStr)
+                    ->get();
+
+                if ($bookings->isNotEmpty()) {
+                    $totalMinutes += $bookings->sum('worked_hours');
+                } else {
+                    $totalMinutes += $this->getPlannedShiftMinutesForDay($entity, $current);
+                }
             } else {
-                $mergedIntervals[count($mergedIntervals) - 1][1]
-                    = $mergedIntervals[count($mergedIntervals) - 1][1]->max($interval[1]);
+                $totalMinutes += $this->getPlannedShiftMinutesForDay($entity, $current);
             }
+
+            $current->addDay();
         }
 
-        // Calculate total working time
-        $totalWorkingMinutes = 0;
-        foreach ($mergedIntervals as $interval) {
-            $totalWorkingMinutes += $interval[1]->diffInMinutes($interval[0]);
-        }
-
-        // Subtract break times
-        foreach ($shiftsInDateRange as $shift) {
-            $totalWorkingMinutes -= $shift->break_minutes;
-        }
-
-        return $totalWorkingMinutes;
+        return max(0, $totalMinutes);
     }
+
+
+
 
     public function convertMinutesInHours(int $minutes, bool $forcePositive = false): string
     {
@@ -232,12 +230,12 @@ class WorkingHourService
                     $totalPlannedMinutes += $individualMinutesPerDay[$dateStr];
                 } else {
                     if ($entity instanceof User) {
-                        $booking = $entity->workTimeBookings()
+                        $bookings = $entity->workTimeBookings()
                             ->where('booking_day', $dateStr)
-                            ->first();
+                            ->get();
 
-                        if ($booking) {
-                            $totalPlannedMinutes += $booking->worked_hours;
+                        if ($bookings->isNotEmpty()) {
+                            $totalPlannedMinutes += $bookings->sum('worked_hours');
                         } else {
                             $totalPlannedMinutes += $this->getPlannedShiftMinutesForDay($entity, $current);
                         }
@@ -266,13 +264,12 @@ class WorkingHourService
 
 
 
-
     private function getPlannedShiftMinutesForDay(User|Freelancer|ServiceProvider $user, Carbon $day): int
     {
         $total = 0;
 
         $dayStart = $day->copy()->startOfDay();
-        $dayEnd = $day->copy()->endOfDay()->addSecond();
+        $dayEnd = $day->copy()->endOfDay();
 
         foreach ($user->shifts as $shift) {
             $pivot = $shift->pivot;
@@ -280,7 +277,6 @@ class WorkingHourService
             $shiftStart = Carbon::parse($pivot->start_date)->setTimeFrom(Carbon::parse($pivot->start_time));
             $shiftEnd = Carbon::parse($pivot->end_date)->setTimeFrom(Carbon::parse($pivot->end_time));
 
-            // Nur Schichten berücksichtigen, die an diesem Tag aktiv sind
             if ($shiftStart->gt($dayEnd) || $shiftEnd->lt($dayStart)) {
                 continue;
             }
@@ -323,7 +319,6 @@ class WorkingHourService
                 $time = $activePattern->{$weekday};
                 $totalMinutes += $time->hour * 60 + $time->minute;
             } else {
-                // Fallback auf durchschnittliche Tagesarbeitszeit
                 $totalMinutes += $fallbackMinutesPerDay;
             }
 

@@ -21,9 +21,9 @@
                 </span>
                 </div>
             </div>
-            <div class="space-y-2 divide-y divide-gray-100 divide-dashed">
+            <div class="space-y-2">
                 <div v-for="shift in user.element.shifts" class="pb-1">
-                    <div v-show="shift.days_of_shift?.includes(day.fullDay)" class="flex items-center justify-between group" :id="'shift-' + shift.id">
+                    <div v-show="shift.days_of_shift?.includes(day.fullDay)" class="flex items-center justify-between group border-b border-dashed border-gray-300 py-2" :id="'shift-' + shift.id">
                         <SingleShiftInShiftOverviewUser :user="user" :shift="shift" />
                         <!--<SingleEntityInShift :shift="shift" :person="user.element" :shift-qualifications="shiftQualifications" />-->
                         <!--

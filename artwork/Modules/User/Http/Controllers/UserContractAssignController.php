@@ -29,12 +29,14 @@ class UserContractAssignController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreUserContractAssignRequest $request, User $user): void
+    public function store(StoreUserContractAssignRequest $request, User $user): \Illuminate\Http\RedirectResponse
     {
         $user->contract()->updateOrCreate(
             ['user_id' => $user->id],
             $request->validated()
         );
+
+        return back()->with('success', __('User contract assigned successfully.'));
     }
 
     /**

@@ -367,8 +367,10 @@ class UserController extends Controller
 
         $workTimes = $this->getPlannedWorkSchedule($start, $end, $user);
 
+
         // Flach durch alle Tage iterieren
         $flatDays = collect($workTimes)->flatten(1);
+
 
         $totalWorkedMinutes = $flatDays->sum('worked_hours');
         $totalWantedMinutes = $flatDays->sum('wantedHours');
@@ -398,20 +400,25 @@ class UserController extends Controller
         $schedule = [];
 
         $bookings = $user->workTimeBookings()
-            ->with('booker') // Lade den Nutzer, der gebucht hat
+            ->with('booker')
             ->whereBetween('booking_day', [$start->toDateString(), $end->toDateString()])
             ->get()
             ->groupBy(fn($b) => $b->booking_day->toDateString());
+
+        $individualTimes = $user->individualTimes()
+            ->individualByDateRange($start->toDateString(), $end->toDateString())
+            ->get()
+            ->flatMap(fn($t) => collect($t->days_of_individual_time)->mapWithKeys(
+                fn($day) => [$day => $t->working_time_minutes ?? 0]
+            ));
 
         $current = $start->copy();
 
         while ($current->lte($end)) {
             $dateKey = $current->toDateString();
             $weekday = strtolower($current->format('l'));
-            $weekNumber = $current->isoWeek();
-            $weekKey = "KW{$weekNumber}";
+            $weekKey = "KW" . $current->isoWeek();
 
-            // Aktive Arbeitszeit für diesen Tag
             $userWorkTime = $user->workTimes()
                 ->where(function ($q) use ($current) {
                     $q->whereNull('valid_from')->orWhere('valid_from', '<=', $current);
@@ -423,61 +430,62 @@ class UserController extends Controller
                 ->first();
 
             $patternTime = $userWorkTime?->{$weekday};
-
             $dailyTargetMinutes = $patternTime
                 ? Carbon::parse($patternTime)->diffInMinutes(Carbon::parse($patternTime)->copy()->startOfDay())
                 : 0;
 
-            $plannedTime = $userWorkTime?->{$weekday};
+            $workedMinutes = 0;
+            $nightlyMinutes = 0;
+            $balanceChange = 0;
+            $comments = [];
+            $isSpecialDay = false;
 
-            $hasBooking = isset($bookings[$dateKey]);
+            if (isset($bookings[$dateKey])) {
+                foreach ($bookings[$dateKey] as $booking) {
+                    $workedMinutes += $booking->worked_hours;
+                    $nightlyMinutes += $booking->nightly_working_hours;
+                    $balanceChange += $booking->work_time_balance_change;
+                    $isSpecialDay = $isSpecialDay || $booking->is_special_day;
 
-            $plannedMinutes = !$hasBooking
-                ? $this->getPlannedShiftMinutesForDay($user, $current)
-                : 0;
-            $convertedPlannedTime = $this->convertMinutesToHoursAndMinutes($plannedMinutes, true);
+                    if ($booking->comment) {
+                        $comments[] = [
+                            'text' => $booking->comment,
+                            'user' => $booking->booker,
+                            'date' => $booking->created_at->locale(session('locale', config('app.fallback_locale')))
+                                ->isoFormat('D. MMMM YYYY'),
+                            'work_time_change' => $this->convertMinutesToHoursAndMinutes($booking->work_time_balance_change),
+                        ];
+                    }
+                }
+            } else {
+                $workedMinutes += $this->getPlannedShiftMinutesForDay($user, $current);
+            }
+
+            // Add individual time (if exists)
+            if ($individualTimes->has($dateKey)) {
+                $workedMinutes += $individualTimes[$dateKey];
+            }
+
             $entry = [
                 'weekday' => $weekday,
                 'date' => $dateKey,
                 'formatted_date' => $current->locale(session('locale', config('app.fallback_locale')))
                     ->isoFormat('dddd, D. MMMM YYYY'),
-                'planned_minutes' => $plannedMinutes,
-                'planned_hours' => $this->convertMinutesToHoursAndMinutes($plannedMinutes, true),
+                'planned_minutes' => $workedMinutes,
+                'planned_hours' => $this->convertMinutesToHoursAndMinutes($workedMinutes, true),
                 'daily_target_minutes' => $dailyTargetMinutes,
                 'daily_target_hours' => $this->convertMinutesToHoursAndMinutes($dailyTargetMinutes, true),
                 'wantedHours' => $dailyTargetMinutes,
-                'worked_hours' => 0,
-                'nightly_working_hours' => 0,
-                'work_time_balance_change' => 0,
-                'is_special_day' => false,
-                'comments' => [],
+                'worked_hours' => $workedMinutes,
+                'nightly_working_hours' => $nightlyMinutes,
+                'work_time_balance_change' => $balanceChange,
+                'is_special_day' => $isSpecialDay,
+                'comments' => $comments,
+                'wantedHoursFormatted' => $this->convertMinutesToHoursAndMinutes($dailyTargetMinutes, true),
+                'worked_hours_formatted' => $this->convertMinutesToHoursAndMinutes($workedMinutes),
+                'nightly_working_hours_formatted' => $this->convertMinutesToHoursAndMinutes($nightlyMinutes),
+                'work_time_balance_change_formatted' => $this->convertMinutesToHoursAndMinutes($balanceChange),
             ];
-
-            if (isset($bookings[$dateKey])) {
-                foreach ($bookings[$dateKey] as $booking) {
-                    $entry['worked_hours'] += $booking->worked_hours;
-                    $entry['nightly_working_hours'] += $booking->nightly_working_hours;
-                    $entry['work_time_balance_change'] += $booking->work_time_balance_change;
-                    $entry['is_special_day'] = $entry['is_special_day'] || $booking->is_special_day;
-
-                    if ($booking->comment) {
-                        $entry['comments'][] = [
-                            'text' => $booking->comment,
-                            'user' => $booking->booker,
-                            'date' => $booking->created_at->locale(session('locale', config('app.fallback_locale')))
-                                ->isoFormat('D. MMMM YYYY'),
-                            'work_time_change' => $this->convertMinutesToHoursAndMinutes(
-                                $booking->work_time_balance_change
-                            ),
-                        ];
-                    }
-                }
-            }
-
-            $entry['wantedHoursFormatted'] = $this->convertMinutesToHoursAndMinutes($entry['wantedHours'], true);
-            $entry['worked_hours_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['worked_hours']);
-            $entry['nightly_working_hours_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['nightly_working_hours']);
-            $entry['work_time_balance_change_formatted'] = $this->convertMinutesToHoursAndMinutes($entry['work_time_balance_change']);
 
             $schedule[$weekKey][$dateKey] = $entry;
             $current->addDay();
@@ -486,12 +494,13 @@ class UserController extends Controller
         return $schedule;
     }
 
+
     private function getPlannedShiftMinutesForDay(User $user, Carbon $day): int
     {
         $total = 0;
 
         $dayStart = $day->copy()->startOfDay();
-        $dayEnd = $day->copy()->endOfDay()->addSecond();
+        $dayEnd = $day->copy()->endOfDay()->addMillisecond();
 
         foreach ($user->shifts as $shift) {
             $pivot = $shift->pivot;

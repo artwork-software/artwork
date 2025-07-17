@@ -2876,5 +2876,10 @@
     "Request a firm commitment": "Festschreibung anfordern",
     "Direct approval is currently not possible as the approval workflow is active. Please send a release request to the responsible users.": "Direkte Genehmigung ist derzeit nicht möglich, da der Freigabe-Workflow aktiv ist. Bitte sende eine Freigabeanfrage an die verantwortlichen Nutzer*innen.",
     "Shift commitment requests": "Schicht-Commit-Anfragen",
-    "Daily target": "Tagessoll"
+    "Daily target": "Tagessoll",
+    "Decline Work Time Request": "Arbeitszeit-Anfrage ablehnen",
+    "Are you sure you want to decline this work time request?": "Möchtest du diese Arbeitszeit-Anfrage wirklich ablehnen?",
+    "Decline Shift Commit Request": "Schicht-Commit-Anfrage ablehnen",
+    "Are you sure you want to decline this shift commit request?": "Möchtest du diese Schicht-Commit-Anfrage wirklich ablehnen?",
+    "Decline Message": "Ablehnungsnachricht"
 }

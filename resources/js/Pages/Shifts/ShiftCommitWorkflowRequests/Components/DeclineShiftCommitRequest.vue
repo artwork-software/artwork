@@ -1,13 +1,13 @@
 <template>
     <ArtworkBaseModal
-        title="Decline Work Time Request"
-        description="Are you sure you want to decline this work time request?"
+        title="Decline Shift Commit Request"
+        description="Are you sure you want to decline this shift commit request?"
         @close="$emit('close')"
-        >
+    >
 
         <form>
             <div>
-                <BaseTextarea id="decline_message" v-model="form.decline_message" name="decline_message" label="Decline Message" placeholder="Enter your message here..." />
+                <BaseTextarea id="decline_message" v-model="form.reason" name="decline_message" label="Decline Message" placeholder="Enter your message here..." />
             </div>
 
             <div class="flex items-center justify-between mt-5">
@@ -42,19 +42,15 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const form = useForm({
-    decline_message: ''
+    reason: ''
 });
 
 const declineRequest = () => {
-    form.post(route('worktime.change-request.decline', props.requestId), {
-        preserveScroll: true,
+    form.patch(route('shifts.commit-requests.decline', props.requestId), {
         onSuccess: () => {
             emit('close');
         },
-        onError: (error) => {
-            console.error('Error declining request:', error);
-        }
-    });
+    })
 }
 </script>
 

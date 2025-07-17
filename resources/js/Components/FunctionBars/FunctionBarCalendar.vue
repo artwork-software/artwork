@@ -381,7 +381,14 @@
                             icon-size="h-7 w-7"
                         />
                     </div>
-                    <GlassyIconButton text="Add Event" icon="IconCirclePlus"  @click="$emit('wantsToAddNewEvent');" />
+
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Add Event')"
+                        icon="IconCirclePlus"
+                        icon-size="h-7 w-7"
+                        @click="$emit('wantsToAddNewEvent');"
+                    />
                 </div>
             </div>
         </div>

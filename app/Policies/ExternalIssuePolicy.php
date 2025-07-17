@@ -12,7 +12,8 @@ class ExternalIssuePolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class ExternalIssuePolicy
      */
     public function view(User $user, ExternalIssue $externalIssue): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the external issue exists
+        return $user->exists && $externalIssue->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class ExternalIssuePolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,8 @@ class ExternalIssuePolicy
      */
     public function update(User $user, ExternalIssue $externalIssue): bool
     {
-        //
+        // Allow update if the user is authenticated and the external issue exists
+        return $user->exists && $externalIssue->exists;
     }
 
     /**
@@ -44,7 +48,8 @@ class ExternalIssuePolicy
      */
     public function delete(User $user, ExternalIssue $externalIssue): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the external issue exists
+        return $user->exists && $externalIssue->exists;
     }
 
     /**
@@ -52,7 +57,8 @@ class ExternalIssuePolicy
      */
     public function restore(User $user, ExternalIssue $externalIssue): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the external issue exists
+        return $user->exists && $externalIssue->exists;
     }
 
     /**
@@ -60,6 +66,7 @@ class ExternalIssuePolicy
      */
     public function forceDelete(User $user, ExternalIssue $externalIssue): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the external issue exists
+        return $user->exists && $externalIssue->exists;
     }
 }

@@ -1,10 +1,12 @@
 <template>
     <div>
         <div>
-            <div class="text-secondaryHover xsWhiteBold px-2 py-1 rounded-lg"
+            <div class="text-secondary-hover xsWhiteBold px-2 py-2 rounded-lg flex items-stretch gap-x-2"
+                 :class="[usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id && usePage().props.auth.user.calendar_settings.use_project_time_period ? 'border-[3px] border-dashed !border-pink-500' : '']"
                  :style="{backgroundColor: backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent)),
                  borderColor: event.eventType.hex_code}">
-                <div class="px-1.5 py-1 border-l-4 max-w-40 w-40" :style="{borderColor: event.eventType.hex_code}">
+                <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event.eventType.hex_code}" v-if="!usePage().props.auth.user.calendar_settings.high_contrast"></div>
+                <div class="max-w-40 w-40" :style="{borderColor: event.eventType.hex_code}">
                     <a v-if="event?.project?.id" :href="route('projects.tab', {project: event.project.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
                         <div class="w-40 max-w-40 truncate ">
                             {{ event.eventType.abbreviation }}: {{ event.eventName ?? event.project.name }}

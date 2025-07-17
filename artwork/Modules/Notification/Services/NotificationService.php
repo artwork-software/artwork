@@ -464,6 +464,9 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT:
             case NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT:
             case NotificationEnum::NOTIFICATION_SHIFT_OPEN_DEMAND:
+            case NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED:
+            case NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED:
+            case NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -481,13 +484,13 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED:
             case NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED:
-            if ($this->getNotificationTo()->id !== Auth::id()) {
-                Notification::send(
-                    $this->getNotificationTo(),
-                    new InventoryArticleNotification($body, $this->getBroadcastMessage())
-                );
-            }
-            break;
+                if ($this->getNotificationTo()->id !== Auth::id()) {
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new InventoryArticleNotification($body, $this->getBroadcastMessage())
+                    );
+                }
+                break;
         }
 
         $this->sendBroadcastMessage($this->getNotificationTo());

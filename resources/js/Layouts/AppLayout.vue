@@ -27,13 +27,8 @@
 
         <SubMenu />
 
-        <main class="lg:pl-20 xl:pl-20">
-            <div class="">
-                <div class="artwork-container pt-30 hidden">
-                    <pre>
-                        {{ usePage() }}
-                    </pre>
-                </div>
+        <main class="lg:pl-20 xl:pl-20 pb-20">
+            <div class="artwork">
                 <slot></slot>
             </div>
         </main>
@@ -57,7 +52,7 @@ const props = defineProps({
 
 watchEffect(() => {
     window.Laravel = window.Laravel || {}
-    if (usePage().props.permissions) {
+    if (usePage().props?.permissions) {
         window.Laravel.jsPermissions = usePage().props.permissions;
     }
 })
@@ -70,7 +65,10 @@ const closePushNotification = (id) => {
 }
 
 onBeforeMount(() => {
-    if ( route().current('events') !== true && usePage().props.auth.user.calendar_settings.use_project_time_period){
+    /**
+     * i think this is unnecessary, but it is here to ensure that the calendar settings are set correctly
+
+    if ( (route().current('events') === false && route().current('shifts.plan') === false) && usePage().props.auth.user.calendar_settings.use_project_time_period){
         let desiredRoute = route('user.calendar_settings.toggle_calendar_settings_use_project_period');
         let payload = {
             use_project_time_period: false,
@@ -80,7 +78,7 @@ onBeforeMount(() => {
 
         axios.patch(desiredRoute, payload);
     }
-
+     */
     reloadRolesAndPermissions()
 })
 

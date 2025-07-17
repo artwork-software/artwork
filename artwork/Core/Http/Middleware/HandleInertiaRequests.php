@@ -10,6 +10,7 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\User\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Request;
@@ -82,6 +83,8 @@ class HandleInertiaRequests extends Middleware
             $sageApiEnabled = !is_null($sageApiSettings) && $sageApiSettings->enabled;
         }
 
+        $isUserWorkFlowUser = $user ? ShiftCommitWorkflowUser::where('user_id', $user->id)->exists() : false;
+
         return array_merge(
             parent::share($request),
             [
@@ -98,6 +101,9 @@ class HandleInertiaRequests extends Middleware
                 'emailFooter' => $generalSettings->email_footer,
                 'invitationEmail' => $generalSettings->invitation_email,
                 'businessEmail' => $generalSettings->business_email,
+                'playingTimeWindowStart' => $generalSettings->playing_time_window_start,
+                'playingTimeWindowEnd' => $generalSettings->playing_time_window_end,
+                'shiftCommitWorkflow' => $generalSettings->shift_commit_workflow_enabled,
                 'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
                 'show_hints' => Auth::guest() ? false : false,
                 'rolesArray' => $rolesArray,
@@ -120,6 +126,7 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => json_decode(auth()->check() ? auth()->user()->jsPermissions() : '{}', true, 512, JSON_THROW_ON_ERROR),
                 // chatUsers only on reload and not on page change
                 'chats' => Inertia::lazy(fn() => $user?->chats()->with(['users'])->get()),
+                'isUserWorkFlowUser' => $isUserWorkFlowUser,
             ]
         );
     }

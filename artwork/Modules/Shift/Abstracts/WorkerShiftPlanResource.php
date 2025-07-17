@@ -58,7 +58,12 @@ class WorkerShiftPlanResource extends JsonResource
                 return [
                     'id' => $shift->getAttribute('id'),
                     'pivotId' => $shift->getRelation('pivot')->getAttribute('id'),
+                    'startPivot' => Carbon::parse($shift->getRelation('pivot')->getAttribute('start_time'))->format('H:i'),
+                    'endPivot' => Carbon::parse($shift->getRelation('pivot')->getAttribute('end_time'))->format('H:i'),
+                    'shortDescription' => $shift->getRelation('pivot')->getAttribute('short_description'),
                     'craftAbbreviationUser' => $shift->getRelation('pivot')->getAttribute('craft_abbreviation'),
+                    'qualificationId' => $shift->getRelation('pivot')->getAttribute('shift_qualification_id'),
+                    'qualificationName' => $shift->getRelation('pivot')->getAttribute('shiftQualification')->getAttribute('name'),
                     'start' => $shift->getAttribute('start'),
                     'end' => $shift->getAttribute('end'),
                     'description' => $shift->getAttribute('description'),
@@ -68,6 +73,7 @@ class WorkerShiftPlanResource extends JsonResource
                     'roomName' => $room?->getAttribute('name'),
                     'eventName' => $event?->getAttribute('name') ?? $event?->getAttribute('eventName'),
                     'eventTypeAbbreviation' => $event?->getAttribute('event_type')->getAttribute('abbreviation'),
+                    'craft' => $shift->getAttribute('craft'),
                 ];
             }
         );

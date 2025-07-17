@@ -147,7 +147,7 @@
 
             <div>
                 <div class="flex items-center w-full gap-x-4">
-                    <ArticleSearch @article-selected="addArticleToIssue" class="w-full"/>
+                    <ArticleSearch @article-selected="addArticleToIssue" id="articleSearchInModal" class="w-full"/>
                     <button type="button" @click="showArticleFilterModal = true" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <ToolTipComponent icon="IconListSearch" :tooltip-text="$t('Search for articles')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                     </button>

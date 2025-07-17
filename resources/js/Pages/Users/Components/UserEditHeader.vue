@@ -2,37 +2,32 @@
     <app-layout :title="$t(title)">
         <div v-if="$page.props.jetstream.canUpdateProfileInformation" class="mx-auto container">
             <div>
-                <div class="mt-5 pr-4">
+                <div class="mt-5 sticky top-0 card white p-5 z-50 mb-5">
                     <div class="headline1 mb-5" v-if="user_to_edit.id === $page.props.auth.user.id">
                         {{ $t('My account')}}
                     </div>
-                    <div class="flex">
-                        <img class=" h-16 w-16 rounded-full flex justify-start object-cover"
+                    <div class="flex items-center gap-4">
+                        <img class="h-16 w-16 rounded-full flex justify-start object-cover"
                              :src="user_to_edit.profile_photo_url"
                              alt=""/>
-                        <div class="flex flex-grow w-full">
-                            <div class="headline1 flex my-auto ml-6">
-                                {{ user_to_edit.first_name }}
+                        <div>
+                            <div class="flex flex-grow w-full gap-x-1">
+                                <div class="headline1">
+                                    {{ user_to_edit.first_name }}
+                                </div>
+                                <div class="headline1">
+                                    {{ user_to_edit.last_name }}
+                                </div>
                             </div>
-                            <div class="headline1 flex my-auto ml-2">
-                                {{ user_to_edit.last_name }}
-                            </div>
+                            <p class="text-gray-500 text-sm">{{ user_to_edit.email }}</p>
                         </div>
+
                     </div>
-                    <div class="my-10">
-                        <div class="hidden sm:block">
-                            <div class="">
-                                <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
-                                    <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)"
-                                         :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']"
-                                         :aria-current="tab.current ? 'page' : undefined">{{ $t(tab.name) }}
-                                    </div>
-                                </nav>
-                            </div>
-                        </div>
+                    <div class="mt-5">
+                        <BaseTabs :tabs="tabs" />
                     </div>
                 </div>
-                <div class="">
+                <div class="card white p-5">
                     <div class="w-full">
                         <slot></slot>
                     </div>
@@ -48,13 +43,15 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
-import {router} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-
+import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 export default {
     mixins: [Permissions],
     name: "UserEditHeader",
     components: {
+        BaseTabs,
+        Link,
         ProjectShiftSidenav,
         ProjectSecondSidenav,
         BaseSidenav,
@@ -69,11 +66,14 @@ export default {
         return {
             show: false,
             tabs: [
-                {id: 1, name: 'Operational plan', href: '#', current: this.currentTab === 'shiftplan', has_permission: this.$can('can plan shifts') || this.hasAdminRole()},
-                {id: 2, name: 'Conditions', href: '#', current: this.currentTab === 'terms', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
-                {id: 3, name: 'Personal data', href: '#', current: this.currentTab === 'info', has_permission: true},
-                {id: 4, name: 'User permissions', href: '#', current: this.currentTab === 'permissions', has_permission: this.hasAdminRole()},
-                {id: 5, name: 'Work profile', href: '#', current: this.currentTab === 'workProfile', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
+                { name: 'Operational plan', href: route('user.edit.shiftplan', {user: this.user_to_edit.id}), current: route().current('user.edit.shiftplan'), permission: this.$can('can plan shifts') || this.hasAdminRole(), icon: 'IconCalendarUser'},
+                //{id: 2, name: 'Conditions', href: route('user.edit.terms', {user: this.user_to_edit.id}), current: route().current('user.edit.terms'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconTaxEuro'},
+                {name: 'Personal data', href: route('user.edit.info', {user: this.user_to_edit.id}), current: route().current('user.edit.info'), permission: true, icon: 'IconUser'},
+                {name: 'User permissions', href: route('user.edit.permissions', {user: this.user_to_edit.id}), current: route().current('user.edit.permissions'), permission: this.hasAdminRole(), icon: 'IconLicense'},
+                {name: 'Work profile', href: route('user.edit.workProfile', {user: this.user_to_edit.id}), current: route().current('user.edit.workProfile'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconBriefcase'},
+                {name: 'Work Time Pattern', href: route('user.edit.work-time-pattern', {user: this.user_to_edit.id}), current: route().current('user.edit.work-time-pattern'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconClockHour10'},
+                {name: 'Employment contract', href: route('user.edit.contract', {user: this.user_to_edit.id}), current: route().current('user.edit.contract'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconContract'},
+                {name: 'Work Times', href: route('user.edit.worktimes', {user: this.user_to_edit.id}), current: route().current('user.edit.worktimes'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconCalendarTime'},
             ],
             title: this.user_to_edit.id === this.$page.props.auth.user.id ? 'My account' : 'User account' + ' - ' + this.user_to_edit.first_name + ' ' + this.user_to_edit.last_name
         }

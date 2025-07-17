@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Settings\HolidaySettings;
 use Carbon\Carbon;
-use NoahNxT\LaravelOpenHolidaysApi\OpenHolidaysApi as VendorApi;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Holidays\Models\Subdivision;
 use Artwork\Modules\Holidays\Requests\HolidayRequest;
@@ -15,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
 
-use function Clue\StreamFilter\fun;
 
 class HolidayController extends Controller
 {
@@ -58,16 +56,30 @@ class HolidayController extends Controller
             endDate: Carbon::parse($request->input('end_date')),
             countryCode: 'DE',
             yearly: $request->boolean('yearly'),
-            color: $request->input('color')
+            color: $request->input('color'),
+            treatAsSpecialDay: $request->boolean('treatAsSpecialDay')
         );
     }
 
     public function update(HolidayRequest $request, Holiday $holiday): void
     {
         $subdivisions = $request->collect('selectedSubdivisions')->pluck('id')->toArray();
-        $holiday->fill($request->only(['name', 'date', 'end_date', 'yearly', 'color']));
+        $holiday->fill($request->only(['name', 'date', 'end_date', 'yearly', 'color', 'treatAsSpecialDay']));
         $holiday->subdivisions()->sync($subdivisions);
         $holiday->save();
+    }
+
+    public function batchUpdateTreatAsSpecialDay(Request $request): void
+    {
+        $holidays = $request->input('holidays', []);
+
+        foreach ($holidays as $holidayId => $treatAsSpecialDay) {
+            $holiday = Holiday::find($holidayId);
+            if ($holiday) {
+                $holiday->treatAsSpecialDay = $treatAsSpecialDay;
+                $holiday->save();
+            }
+        }
     }
 
     public function create(Request $request): void
@@ -107,7 +119,8 @@ class HolidayController extends Controller
                 0,
                 $holiday['id'],
                 true,
-                $color
+                $color,
+                true // Set treatAsSpecialDay to true by default
             );
         }
     }

@@ -487,6 +487,7 @@ const createOnDropElementAndSave = (user, craft) => {
 
     saveUser();
 }
+
 </script>
 
 <style scoped>

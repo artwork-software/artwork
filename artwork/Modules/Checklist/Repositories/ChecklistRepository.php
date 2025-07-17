@@ -4,8 +4,8 @@ namespace Artwork\Modules\Checklist\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Checklist\Models\Checklist;
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
-use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Task\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;

@@ -16,7 +16,7 @@
                 />
             </div>
 
-            <div class="pt-5">
+            <div class="card white p-5 mt-5">
                 <div class="overflow-x-auto">
                     <draggable
                         ghost-class="opacity-50"
@@ -38,7 +38,7 @@
                 </div>
             </div>
 
-            <div class="pt-5">
+            <div class="card white p-5 mt-5">
                 <div class="flex items-center justify-end">
                     <div class="w-44 md:w-56 lg:w-72">
                         <div>

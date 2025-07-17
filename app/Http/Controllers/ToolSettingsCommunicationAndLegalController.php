@@ -36,6 +36,8 @@ class ToolSettingsCommunicationAndLegalController extends Controller
         $generalSettings->email_footer = $request->get('emailFooter') ?? '';
         $generalSettings->invitation_email = $request->get('invitationEmail') ?? '';
         $generalSettings->business_email = $request->get('businessEmail') ?? '';
+        $generalSettings->playing_time_window_start = $request->get('playingTimeWindowStart') ?? '';
+        $generalSettings->playing_time_window_end = $request->get('playingTimeWindowEnd') ?? '';
 
         $generalSettings->save();
 

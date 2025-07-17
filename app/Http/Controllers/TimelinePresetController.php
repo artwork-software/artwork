@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\ShiftPresetTimeline\Http\Requests\TimelinePresetSearchRequest;
-use Artwork\Modules\ShiftPresetTimeline\Http\Requests\TimelinePresetStoreRequest;
-use Artwork\Modules\ShiftPresetTimeline\Http\Requests\TimelinePresetUpdateRequest;
-use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
-use Artwork\Modules\ShiftPresetTimeline\Services\ShiftPresetTimelineService;
+use Artwork\Modules\Shift\Http\Requests\TimelinePresetSearchRequest;
+use Artwork\Modules\Shift\Http\Requests\TimelinePresetStoreRequest;
+use Artwork\Modules\Shift\Http\Requests\TimelinePresetUpdateRequest;
+use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
+use Artwork\Modules\Shift\Services\ShiftPresetTimelineService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 

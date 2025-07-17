@@ -7,7 +7,7 @@ use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use Artwork\Modules\Checklist\Http\Resources\ChecklistShowResource;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
-use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
+use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Task\Http\Requests\DoneOrUndoneTaskRequest;
 use Artwork\Modules\Task\Models\Task;

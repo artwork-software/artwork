@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\ShiftFilter;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Support\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,8 +30,6 @@ class ShiftFilterController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        Debugbar::info('Storing Shift filter');
-
         $filter = ShiftFilter::create([
             'name' => $request->name,
             'user_id' => Auth::id()

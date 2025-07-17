@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Artwork\Modules\ShiftTimePreset\Services;
 
-use Artwork\Modules\ShiftTimePreset\Models\ShiftTimePreset;
-use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
+use Artwork\Modules\Shift\Models\ShiftTimePreset;
+use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Tests\TestCase;
 
 class ShiftTimePresetServiceTest extends TestCase

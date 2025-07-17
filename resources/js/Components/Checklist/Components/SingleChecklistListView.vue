@@ -2,6 +2,9 @@
     <div class="bg-white px-5 py-7 rounded-lg border-l-8 " :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'border-artwork-buttons-create' : 'border-gray-400'">
         <div class="flex items-center justify-between w-fit">
             <div class="flex items-center gap-x-3 cursor-pointer" @click="changeChecklistStatus(checklist)">
+                <span v-if="checklist.private">
+                    <IconLock stroke-width="1.5" class="h-6 w-6" />
+                </span>
                 <div class="font-bold">
                     {{ checklist?.name }}
                 </div>

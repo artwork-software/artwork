@@ -1,17 +1,16 @@
 <template>
-    <BaseModal @closed="closeModal">
-        <h1 class="headline1 mb-6">{{ day.dayString }} {{ day.fullDay }}</h1>
-
-        <div class="flex items-center mb-5">
-            <div>
-                <img :src="user.element.profile_photo_url"
-                     class="object-cover h-10 w-10 rounded-full" alt="">
-            </div>
-            <div class="ml-3 text-sm font-bold">
+    <ArtworkBaseModal :title="day.dayString + ' ' + day.fullDay" description="" @close="closeModal">
+        <div class="font-lexend">
+            <div class="flex items-center mb-5">
+                <div>
+                    <img :src="user.element.profile_photo_url"
+                         class="object-cover h-10 w-10 rounded-full" alt="">
+                </div>
+                <div class="ml-3 text-sm font-lexend font-bold">
                 <span v-if="user.element.type === 'service_provider'">
                     {{ user.element.provider_name }} ({{ $t('Service provider') }})
                 </span>
-                <span v-else>
+                    <span v-else>
                     {{ user.element.first_name }} {{ user.element.last_name }}
                     <span v-if="user.element.type === 'freelancer'">
                         ({{ $t('external') }})
@@ -20,147 +19,167 @@
                         ({{ $t('internal') }})
                     </span>
                 </span>
+                </div>
             </div>
-        </div>
-        <div class="space-y-2">
-            <div v-for="shift in user.element.shifts" class="">
-                <div v-if="shift.days_of_shift?.includes(day.fullDay)" class="flex items-center justify-between group" :id="'shift-' + shift.id">
-                    <div>
-                        <div class="flex text-sm space-x-1 divide-x divide-gray-600 ">
+            <div class="space-y-2">
+                <div v-for="shift in user.element.shifts" class="pb-1">
+                    <div v-show="shift.days_of_shift?.includes(day.fullDay)" class="flex items-center justify-between group border-b border-dashed border-gray-300 py-2" :id="'shift-' + shift.id">
+                        <SingleShiftInShiftOverviewUser :user="user" :shift="shift" />
+                        <!--<SingleEntityInShift :shift="shift" :person="user.element" :shift-qualifications="shiftQualifications" />-->
+                        <!--
+                        <div>
+                            <div class="flex items-center text-sm gap-x-1">
+                                <div class="w-14">
+                                    <div class="px-2 py-0.5 border rounded-lg text-xs w-fit" :style="{ backgroundColor: shift.craft.color + '22', borderColor: blackColorIfColorIsWhite(shift.craft.color) + '55', color: blackColorIfColorIsWhite(shift.craft.color) }">
+                                        {{ shift.craftAbbreviation }}
+                                        <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser" class="mx-1">
+                                        [{{ shift.craftAbbreviationUser }}]
+                                    </span>
+                                    </div>
+                                </div>
+                                <div class="pr-1">
+                                    {{ shift.startPivot }} - {{ shift.endPivot }}
+                                </div>
+                                <div class="pr-1">
+                                    {{ shift.roomName }}
+                                </div>
+                                <div class="pl-1" v-if="shift.eventTypeAbbreviation">
+                                    {{ shift.eventTypeAbbreviation }}:
+                                    {{ shift.eventName }}
+                                </div>
+                            </div>
+
+                            <p class="text-sm" v-if="shift.description">&bdquo;{{ shift.description }}&rdquo;</p>
+                        </div>
+                        <div class="invisible group-hover:visible cursor-pointer flex items-center gap-x-2">
+                            <button type="button" @click="openRequestWorkTimeChangeModal(shift)" v-if="user.element.id === usePage().props.auth.user.id && user.type === 0">
+                                <Component is="IconClockEdit" class="h-5 w-5 hover:text-blue-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
+                            </button>
+                            <button type="button" @click="openConfirmDeleteModal(shift.id, shift.pivotId)">
+                                <Component is="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
+                            </button>
+                        </div>-->
+
+
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="flex items-center my-5" v-if="this.user.type === 0 || this.user.type === 1">
+                <Listbox as="div" v-model="checked" class="w-full relative mt-2">
+                    <ListboxButton class="menu-button">
+                        <div>
                             <div>
-                                {{ shift.craftAbbreviation }}
-                                <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser" class="mx-1">
-                                [{{ shift.craftAbbreviationUser }}]
-                            </span>
-                            </div>
-                            <div class="pl-1">
-                                {{ shift.start }} - {{ shift.end }}
-                            </div>
-                            <div class="pl-1">
-                                {{ shift.roomName }}
-                            </div>
-                            <div class="pl-1" v-if="shift.eventTypeAbbreviation">
-                                {{ shift.eventTypeAbbreviation }}:
-                                {{ shift.eventName }}
+                                {{ checked.name }}
                             </div>
                         </div>
-                        <p class="text-sm" v-if="shift.description">&bdquo;{{ shift.description }}&rdquo;</p>
-                    </div>
-                    <div class="invisible group-hover:visible cursor-pointer">
-                        <button type="button" @click="openConfirmDeleteModal(shift.id, shift.pivotId)">
-                            <Component is="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
-                        </button>
-                    </div>
-                </div>
+                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                    </ListboxButton>
+                    <ListboxOptions class="absolute w-full z-10 bg-artwork-navigation-background shadow-lg rounded-md max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                        <ListboxOption v-for="type in vacationTypes"
+                                       class="text-secondary cursor-pointer p-2 flex justify-between "
+                                       :key="type.type"
+                                       :value="type"
+                                       v-slot="{ active, selected }">
+                            <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                {{ type.name }}
+                            </div>
+                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                        </ListboxOption>
+                    </ListboxOptions>
+                </Listbox>
             </div>
-        </div>
 
-        <div class="flex items-center my-5" v-if="this.user.type === 0 || this.user.type === 1">
-            <Listbox as="div" v-model="checked" class="w-full relative mt-2">
-                <ListboxButton class="menu-button">
-                    <div>
-                        <div>
-                            {{ checked.name }}
-                        </div>
-                    </div>
-                    <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                </ListboxButton>
-                <ListboxOptions class="absolute w-full z-10 bg-artwork-navigation-background shadow-lg rounded-md max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                    <ListboxOption v-for="type in vacationTypes"
-                                   class="text-secondary cursor-pointer p-2 flex justify-between "
-                                   :key="type.type"
-                                   :value="type"
-                                   v-slot="{ active, selected }">
-                        <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                            {{ type.name }}
-                        </div>
-                        <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                    </ListboxOption>
-                </ListboxOptions>
-            </Listbox>
-        </div>
-
-        <div>
             <div>
-                <h4 class="font-semibold">Individuelle Zeit</h4>
-            </div>
-            <div v-if="getIndividualTimesByDate.length > 0">
-                <div class="text-sm mt-3 xsLight mb-3">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
-                        <div>
-                            {{ $t('Title') }}
-                        </div>
-                        <div class="col-span-2">
-                            {{ $t('Period') }}
-                        </div>
-                    </div>
-                </div>
-                <div v-for="(individual_time, index) in getIndividualTimesByDate" class="mb-2">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 group" v-if="individual_time?.days_of_individual_time?.includes(day.withoutFormat)">
-                        <BaseInput id="title" v-model="individual_time.title" label="Title" :show-label="false" no-margin-top />
-                        <div class="flex items-center justify-center col-span-2">
-                            <BaseInput type="time" id="start_time" classes="rounded-r-none" v-model="individual_time.start_time" label="Startzeit" :show-label="false" no-margin-top />
-                            <BaseInput type="time" id="end_time" v-model="individual_time.end_time" classes="border-l-0 rounded-l-none" label="Endzeit" :show-label="false" no-margin-top />
-                        </div>
-                        <div class="invisible group-hover:visible flex items-center justify-center" v-if="individual_time.id">
-                            <component is="IconTrash" class="h-6 w-6 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5" @click="deleteIndividualTimeById(individual_time)" />
-                        </div>
-                    </div>
-                    <div v-if="individual_time.error" class="text-xs text-red-500 -mt-2">
-                        {{ individual_time.error }}
-                    </div>
-                </div>
-                <div class="mt-5">
-                    <component
-                        is="IconCirclePlus"
-                        class="h-6 w-6 xsLight cursor-pointer hover:text-artwork-buttons-hover transition-all duration-300 ease-in-out"
-                        stroke-width="2"
-                        @click="addIndividualTime"
-                    />
-                </div>
-            </div>
-            <div v-else class="cursor-pointer" @click="addIndividualTime">
-                <div class="w-full px-3 py-4 bg-blue-400/30 rounded-lg mt-3">
-                    <AlertComponent text="Es wurden noch keine Zeiten festgelegt. Klicke hier um Zeiten zu erstellen" show-icon icon-size="h-4 w-4" />
-                </div>
-            </div>
-        </div>
-
-        <div class="my-2">
-            <div class="mb-2">
-                <h4 class="font-semibold">{{ $t('Comment')}}</h4>
-            </div>
-            <div>
-                <BaseTextarea id="shift_comment" v-model="shiftPlanComment.comment" label="Comment" :show-label="false" no-margin-top />
-            </div>
-        </div>
-
-        <div class="mt-5 text-sm" v-if="user.availabilities">
-            <h3 class="font-bold mb-3">{{ $t('Registered availabilities') }}</h3>
-
-            <div class="my-2" v-for="availability in user.availabilities[day.fullDay]">
                 <div>
-                    <div class="flex items-center">
-                        <div>
-                            {{ availability.date_casted }}
-                        </div>
-                        <div v-if="!availability.full_day">
-                            , {{ availability.start_time }} - {{ availability.end_time }}
+                    <h4 class="font-semibold">Individuelle Zeit</h4>
+                </div>
+                <div v-if="getIndividualTimesByDate.length > 0">
+                    <div class="text-sm mt-3 xsLight mb-3">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                            <div>
+                                {{ $t('Title') }}
+                            </div>
+                            <div class="col-span-2">
+                                {{ $t('Period') }}
+                            </div>
                         </div>
                     </div>
-                    <p v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo;</p>
+                    <div v-for="(individual_time, index) in getIndividualTimesByDate" class="mb-2">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 group" v-if="individual_time?.days_of_individual_time?.includes(day.withoutFormat)">
+                            <BaseInput id="title" v-model="individual_time.title" label="Title" :show-label="false" no-margin-top />
+                            <div class="flex items-center justify-center col-span-2">
+                                <BaseInput type="time" id="start_time" classes="rounded-r-none" v-model="individual_time.start_time" label="Startzeit" :show-label="false" no-margin-top />
+                                <BaseInput type="time" id="end_time" v-model="individual_time.end_time" classes="border-l-0 rounded-l-none" label="Endzeit" :show-label="false" no-margin-top />
+                            </div>
+                            <div class="invisible group-hover:visible flex items-center justify-center" v-if="individual_time.id">
+                                <component is="IconTrash" class="h-6 w-6 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5" @click="deleteIndividualTimeById(individual_time)" />
+                            </div>
+                        </div>
+                        <div v-if="individual_time.error" class="text-xs text-red-500 -mt-2">
+                            {{ individual_time.error }}
+                        </div>
+                    </div>
+                    <div class="mt-5">
+                        <component
+                            is="IconCirclePlus"
+                            class="h-6 w-6 xsLight cursor-pointer hover:text-artwork-buttons-hover transition-all duration-300 ease-in-out"
+                            stroke-width="2"
+                            @click="addIndividualTime"
+                        />
+                    </div>
+                </div>
+                <div v-else class="cursor-pointer" @click="addIndividualTime">
+                    <div class="w-full px-3 py-4 bg-blue-400/30 rounded-lg mt-3">
+                        <AlertComponent text="Es wurden noch keine Zeiten festgelegt. Klicke hier um Zeiten zu erstellen" show-icon icon-size="h-4 w-4" />
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="flex justify-center mt-5">
-            <FormButton
-                :text="$t('Save')"
-                @click="checkVacation"
-            />
+
+            <div class="my-2">
+                <div class="mb-2">
+                    <h4 class="font-semibold">{{ $t('Comment')}}</h4>
+                </div>
+                <div>
+                    <BaseTextarea id="shift_comment" v-model="shiftPlanComment.comment" label="Comment" :show-label="false" no-margin-top />
+                </div>
+            </div>
+
+            <div class="mt-5 text-sm" v-if="user.availabilities">
+                <h3 class="font-bold mb-3">{{ $t('Registered availabilities') }}</h3>
+
+                <div class="my-2" v-for="availability in user.availabilities[day.fullDay]">
+                    <div>
+                        <div class="flex items-center">
+                            <div>
+                                {{ availability.date_casted }}
+                            </div>
+                            <div v-if="!availability.full_day">
+                                , {{ availability.start_time }} - {{ availability.end_time }}
+                            </div>
+                        </div>
+                        <p v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo;</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-center mt-5">
+                <FormButton
+                    :text="$t('Save')"
+                    @click="checkVacation"
+                />
+            </div>
         </div>
 
         <ConfirmDeleteModal :title="$t('Delete user from shift')" :description="$t('Are you sure you want to delete the user from this shift?')" @closed="closeConfirmDeleteModal" @delete="submitDeleteUserFromShift" v-if="showConfirmDeleteModal" />
-    </BaseModal>
+
+        <RequestWorkTimeChangeModal
+            :user="user.element"
+            :shift="selectedShift"
+            v-if="showRequestWorkTimeChangeModal"
+            @close="showRequestWorkTimeChangeModal = false"
+        />
+    </ArtworkBaseModal>
 
 </template>
 
@@ -188,13 +207,21 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
+import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
+import SingleShiftInShiftOverviewUser from "@/Pages/Shifts/Components/SingleShiftInShiftOverviewUser.vue";
 
 export default defineComponent({
     name: "showUserShiftsModal",
     components: {
+        SingleShiftInShiftOverviewUser,
+        SingleEntityInShift,
+        RequestWorkTimeChangeModal,
+        ArtworkBaseModal,
         BaseTextarea,
         BaseInput,
         AlertComponent,
@@ -227,11 +254,13 @@ export default defineComponent({
                 { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE'},
             ],
             vacationTypeBeforeUpdate: null,
-            copyOfUserIndividualTimes: [...this.user.individual_times],
+            copyOfUserIndividualTimes: this.user.individual_times ? this.user.individual_times : [],
+            showRequestWorkTimeChangeModal: false,
+            selectedShift: null,
             shiftPlanComment: this.user.shift_comments[this.day.withoutFormat] ? this.user.shift_comments[this.day.withoutFormat][0] : {comment: '', date: this.day.withoutFormat},
         }
     },
-    props: ['user', 'day'],
+    props: ['user', 'day', 'shiftQualifications'],
     emits: ['closed', 'delete', 'desiresReload'],
     mounted() {
         const vacation = this.user.vacations?.find(v => v.date === this.day.withoutFormat);
@@ -246,10 +275,15 @@ export default defineComponent({
     },
     computed: {
         getIndividualTimesByDate(){
-            return this.user.individual_times.filter(individual_time => individual_time.days_of_individual_time.includes(this.day.withoutFormat));
-        }
+            return this.copyOfUserIndividualTimes.filter(individual_time => individual_time.days_of_individual_time.includes(this.day.withoutFormat));
+        },
+
     },
     methods: {
+        usePage,
+        blackColorIfColorIsWhite(color) {
+            return color === '#ffffff' ? '#000000' : color;
+        },
         deleteIndividualTimeById(individualTime){
             if (individualTime.id) {
                 router.delete(route('delete.individualTimes', {individualTime: individualTime}), {
@@ -300,7 +334,28 @@ export default defineComponent({
             this.showConfirmDeleteModal = false;
         },
         sendIndividualTimes() {
-            router.post(route('add.update.individualTimesAndShiftPlanComment'), {
+            axios.post(route('add.update.individualTimesAndShiftPlanComment'), {
+                modelId: this.user.element.id,
+                modelType: this.user.type,
+                individualTimes: this.user.individual_times,
+                shift_comment: this.shiftPlanComment,
+            }).then(response => {
+                // Relevante Daten ersetzen
+                if (response.data.individual_times) {
+                    this.copyOfUserIndividualTimes = response.data.individual_times;
+                }
+
+                if (response.data.shift_comment) {
+                    this.shiftPlanComment = response.data.shift_comment;
+                }
+
+                this.sendCheckVacation(); // wichtig für Freigabe etc.
+            }).catch(() => {
+                return false;
+            });
+
+            return false;
+            /*router.post(route('add.update.individualTimesAndShiftPlanComment'), {
                 modelId: this.user.element.id,
                 modelType: this.user.type,
                 individualTimes: this.user.individual_times,
@@ -309,13 +364,21 @@ export default defineComponent({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    this.sendCheckVacation();
+                    router.reload({
+                        only: ['user'],
+                        preserveScroll: true,
+                        preserveState: true,
+                        replace: true,
+                        onSuccess: () => {
+                            this.sendCheckVacation(); // nachgeladen, jetzt sicher aktuell
+                        }
+                    });
                 },
                 onError: () => {
                     return false;
                 }
             });
-            return false;
+            return false;*/
         },
         sendCheckVacation() {
             if (this.user.type === 0) {
@@ -364,6 +427,10 @@ export default defineComponent({
 
             this.sendIndividualTimes();
 
+        },
+        openRequestWorkTimeChangeModal(shift) {
+            this.selectedShift = shift;
+            this.showRequestWorkTimeChangeModal = true;
         }
     }
 })

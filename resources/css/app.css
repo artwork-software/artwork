@@ -1,0 +1,1038 @@
+@import "tailwindcss";
+@theme {
+    /* Farben */
+    --color-primary: #222;
+    --color-primary-hover: #372F60;
+    --color-success: #1FC687;
+    --color-error: #FD6D73;
+    --color-secondary: #A7A6B1;
+    --color-calendar-text: #333;
+    --color-secondary-hover: #FCFCFB;
+    --color-dark-input-bg: rgba(252,252,251,0.15);
+    --color-dark-input-text: #D8D7DE;
+    --color-help: #93929D;
+    --color-dark-gray: #616069;
+    --color-dark-gray-bg: rgba(255,255,255,0.15);
+    --color-background-gray: #F5F5F3;
+    --color-background-gray2: #e3e3e3;
+    --color-button-blue: #3017AD;
+    --color-button-hover: #2D1FDE;
+    --color-tag-bg: rgba(48,23,173,0.1);
+    --color-tag-bg-gray: rgba(94,92,102,1);
+    --color-tag-bg-green: rgba(48,217,0,0.1);
+    --color-tag: rgba(48,23,173,0.3);
+    --color-tag-text: rgba(48,23,173,1);
+    --color-tag-text-green: rgba(48,80,0,1);
+    --color-background-blue: #3017AD34;
+    --color-light-background-gray: #F4F4F3;
+    --color-lightBackgroundGray: #F4F4F3;
+    --color-checkbox-bg: #474459;
+    --color-silver-gray: #CECDD8;
+    --color-user-bg: #EDEDEC;
+    --color-action: #e4eef5;
+    --color-menu-button-blue: #3017AD;
+    --color-shift-text: #82818A;
+    --color-link-on-dark: #BDB6F0;
+
+    /* Artwork Farben */
+    --color-artwork-navigation-background: #222;
+    --color-artwork-navigation-color: #eee;
+    --color-artwork-success: #25cd0e;
+    --color-artwork-warning: #ecce00;
+    --color-artwork-error: #ef4444;
+    --color-artwork-info: #a7a6b1;
+    --color-artwork-buttons-context: #6f6f6f;
+    --color-artwork-buttons-create: #3073ae;
+    --color-artwork-buttons-default: #2a3d75;
+    --color-artwork-buttons-hover: #1c77d7;
+    --color-artwork-buttons-update: #2a3d75;
+    --color-artwork-context-light: #e8e8e8;
+    --color-artwork-context-dark: #6f6f6f;
+    --color-artwork-project-bg: #eee;
+    --color-icon-default-bg: rgba(48,115,174,0.1);
+    --color-icon-default-color: #3073ae;
+    --color-icon-darkgreen-bg: rgba(56,173,23,0.1);
+    --color-icon-darkgreen-color: #21ad17;
+
+    /* Schrift */
+    --font-size-header: 30px;
+    --font-family-sans: Inter, system-ui, sans-serif;
+    --font-family-nanum: "Nanum Pen Script";
+    --font-family-lexend: "Lexend";
+    --font-weight-header: 900;
+    --font-lexend: "Lexend", sans-serif;
+
+    /* Schatten */
+    --shadow-button-blue: 0 35px 60px -15px #2D1FDE;
+    --shadow-card: 0px 4px 25px #27233c47;
+    --shadow-artwork-card: 0 3px 10px rgba(0,0,0,0.2);
+    --shadow-glass: inset 0px 0.5px 0px hsla(0, 0%, 100%, 0.2),
+    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
+    0px 0.5px 2px rgba(0, 0, 0, 0.08),
+    0px 2px 16px -4px rgba(0, 0, 0, 0.1);
+    --shadow-glass-small: inset 0px 0.5px 0px 0px hsla(0, 0%, 100%, 0.2),
+    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
+    0px 0.5px 2px 0px rgba(0, 0, 0, 0.08),
+    0px 2px 12px -4px rgba(0, 0, 0, 0.1);
+    --shadow-elevation-two: inset 0px 0.5px 0px hsla(0, 0%, 100%, 0.2),
+    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
+    0px 0.5px 2px rgba(0, 0, 0, 0.08),
+    0px 2px 16px -4px rgba(0, 0, 0, 0.1);
+    --shadow-button-glow-light: 0 0 6px 2px rgba(255, 255, 255, 0.6);
+
+    /* Flex / Z-Index / Blur */
+    --flex-tags: 1 1 30%;
+    --z-100: 100;
+    --blur-27: 27px;
+    --blur-2xl: 40px;
+}
+
+:root {
+    /*General*/
+    --dp-font-family: 'lexend', sans-serif; /*Font family for the date picker*/
+    --dp-border-radius: 5px; /*Configurable border-radius*/
+    --dp-cell-border-radius: 4px; /*Specific border radius for the calendar cell*/
+    --dp-common-transition: all 0.1s ease-in; /*Generic transition applied on buttons and calendar cells*/
+
+    /*Sizing*/
+    --dp-button-height: 35px; /*Size for buttons in overlays*/
+    --dp-month-year-row-height: 35px; /*Height of the month-year select row*/
+    --dp-month-year-row-button-size: 35px; /*Specific height for the next/previous buttons*/
+    --dp-button-icon-height: 20px; /*Icon sizing in buttons*/
+    --dp-cell-size: 35px; /*Width and height of calendar cell*/
+    --dp-cell-padding: 5px; /*Padding in the cell*/
+    --dp-common-padding: 10px; /*Common padding used*/
+    --dp-input-icon-padding: 35px; /*Padding on the left side of the input if icon is present*/
+    --dp-input-padding: 6px 30px 6px 12px; /*Padding in the input*/
+    --dp-menu-min-width: 260px; /*Adjust the min width of the menu*/
+    --dp-action-buttons-padding: 2px 5px; /*Adjust padding for the action buttons in action row*/
+    --dp-row-margin:  5px 0; /*Adjust the spacing between rows in the calendar*/
+    --dp-calendar-header-cell-padding:  0.5rem; /*Adjust padding in calendar header cells*/
+    --dp-two-calendars-spacing:  10px; /*Space between multiple calendars*/
+    --dp-overlay-col-padding:  3px; /*Padding in the overlay column*/
+    --dp-time-inc-dec-button-size:  32px; /*Sizing for arrow buttons in the time picker*/
+    --dp-menu-padding: 6px 8px; /*Menu padding*/
+
+    /*Font sizes*/
+    --dp-font-size: 1rem; /*Default font-size*/
+    --dp-preview-font-size: 0.8rem; /*Font size of the date preview in the action row*/
+    --dp-time-font-size: 0.8rem; /*Font size in the time picker*/
+
+    /*Transitions*/
+    --dp-animation-duration: 0.1s; /*Transition duration*/
+    --dp-menu-appear-transition-timing: cubic-bezier(.4, 0, 1, 1); /*Timing on menu appear animation*/
+    --dp-transition-timing: ease-out; /*Timing on slide animations*/
+}
+
+
+
+
+@font-face {
+    font-family: 'Inter';
+    src: local('Inter-Regular'), url('../fonts/Inter-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'artwork Pen';
+    src: local('artworkPen'), url('../fonts/artworkPen.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Lexend';
+    src: local('Lexend-Regular'), url('../fonts/Lexend-Regular.ttf') format('truetype');
+}
+
+    body {
+        scrollbar-width: thin; /* Für Firefox */
+        scrollbar-color: rgba(210, 210, 213, 0.44) transparent; /* Für Firefox */
+    }
+
+    [x-cloak] {
+        display: none;
+    }
+
+    ::-webkit-scrollbar {
+        width: 9px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background-color: transparent;
+        box-shadow: none;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: rgba(210, 210, 213, 0.44);
+        border-radius: 16px;
+        border: 4px solid transparent;
+        background-clip: content-box;
+        box-shadow: none;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: #a8bbbf;
+    }
+
+    .base-menu-link {
+        .base-menu-icon {
+            @apply text-secondary;
+        }
+    }
+
+    .stripes {
+        background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuX0tudFciIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIxNyIgaGVpZ2h0PSIxNyIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGxpbmUgeDE9IjAiIHk9IjAiIHgyPSIwIiB5Mj0iMTciIHN0cm9rZT0iI0YzRjRGNiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9wYXR0ZXJuPjwvZGVmcz4gPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuX0tudFcpIiBvcGFjaXR5PSIxIi8+PC9zdmc+');
+    }
+
+    .headline1{
+        font: normal normal 900 30px/34px Lexend;
+        letter-spacing: -0.15px;
+        color: #27233C;
+        opacity: 1;
+    }
+
+    .headline2{
+        font: normal normal 600 20px/25px Lexend;
+        letter-spacing: 0.4px;
+        color: #27233C;
+        opacity: 1;
+    }
+
+    .headline3{
+        font: normal normal 600 18px/21px Lexend;
+        letter-spacing: 0.4px;
+        color: #27233C;
+        opacity: 1;
+    }
+
+    .headline3Light{
+        font: normal normal 18px/21px Inter;
+        letter-spacing: 0;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+
+    .headline4{
+        font: normal normal 600 20px/25px Lexend;
+        letter-spacing: -0.1px;
+        color: #27233C;
+        opacity: 1;
+    }
+
+    .headline6Light{
+        font: normal normal 600 10px/19px Inter;
+        letter-spacing: 0.5px;
+        color: #A7A6B1;
+        text-transform: uppercase;
+        opacity: 1;
+    }
+
+    .xxsLight{
+        font: normal normal 12px/18px Inter;
+        letter-spacing: -0.18px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+
+    .xxsDark{
+        font: normal normal 12px/15px Inter;
+        letter-spacing: 0;
+        color: #27233C;
+        opacity: 1;
+    }
+
+    .xxsDarkBold{
+        font: normal normal 600 12px/15px Inter;
+        letter-spacing: 0;
+        color: #27233C;
+        opacity: 1;
+    }
+
+    .sLight{
+        font: normal normal 16px/19px Inter;
+        letter-spacing: 0.14px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+
+    .xsLighter{
+        font: normal normal 14px/20px Inter;
+        letter-spacing: 0.14px;
+        color: #CECDD8;
+        opacity: 1;
+    }
+
+    .xsWhiteBold{
+        font: normal normal bold 14px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #FCFCFB;
+        opacity: 1;
+    }
+
+    .xWhiteBold{
+        font: normal normal bold 18px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+
+    .xsLight{
+        font: normal normal bold 14px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+
+    .xxsLightSidebar{
+        font: normal normal 600 10px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+
+    .xsDark{
+        font: normal normal 600 14px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #27233C;
+        opacity: 1;
+    }
+
+    .sDark{
+        font: normal normal 600 16px/20px Inter;
+        letter-spacing: 0;
+        color: #27233C;
+        opacity: 1;
+    }
+
+    .mDark{
+        font: normal normal 600 18px/21px Inter;
+        letter-spacing: 0;
+        color: #27233C;
+        opacity: 1;
+    }
+
+    .hind{
+        font: normal normal normal 18px/18px "artwork Pen";
+        letter-spacing: -0.54px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+
+    .errorText{
+        font: normal normal 14px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #FD6D73;
+        opacity: 1;
+    }
+
+    .successText{
+        font: normal normal 14px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #1FC687;
+        opacity: 1;
+    }
+
+    .inputMain{
+        border: 1px solid #CECDD8;
+        opacity: 1;
+    }
+
+    .eventTime{
+        font: normal normal 12px/18px Inter;
+    }
+
+    .eventHeader{
+        font: normal normal bold 12px/20px Inter;
+    }
+
+    .eventBorder{
+        border: 1px solid #D8D7DE;
+        opacity: 1;
+    }
+
+    .calendarRoomHeader{
+        font: normal normal 13px/18px Inter;
+        letter-spacing: -0.2px;
+    }
+    .calendarRoomHeaderBold{
+        font: normal normal bold 13px/18px Inter;
+        letter-spacing: -0.2px;
+    }
+
+    .eventText{
+        font: normal 600 10px/19px Inter;
+    }
+
+    .bigNumber{
+        font: normal normal 40px/48px Lexend;
+        color: #27233C;
+        opacity: 1;
+    }
+
+    .linkText{
+        text-align: left;
+        font: normal normal 12px/18px Inter;
+        letter-spacing: -0.18px;
+        color: #3017AD;
+        opacity: 1;
+    }
+
+    .columnSubName {
+        font: normal normal 600 10px/19px Inter;
+        letter-spacing: 0.5px;
+        color: #A7A6B1;
+        text-transform: uppercase;
+        opacity: 1;
+    }
+
+    .stateColorDefault {
+        background-color: #FCFCFBFF;
+        border: 1px solid #afafaf;
+        color: #696868;
+    }
+
+    .stateColorRed {
+        background: rgba(100, 26, 84, 0.15);
+        border: 1px solid #641A54;
+        color: #641A54;
+    }
+
+    .stateColorPink {
+        background: rgba(218, 63, 135, 0.15);
+        border: 1px solid #DA3F87;
+        color: #DA3F87
+    }
+
+    .stateColorOrange {
+        background: rgba(235, 122, 61, 0.15);
+        border: 1px solid #EB7A3D;
+        color: #EB7A3D;
+    }
+
+    .stateColorYellow {
+        background: rgba(241, 182, 64, 0.15);
+        border: 1px solid #F1B640;
+        color: #F1B640;
+    }
+
+    .stateColorGreen {
+        background: rgba(134, 197, 84, 0.15);
+        border: 1px solid #86C554;
+        color: #86C554;
+    }
+
+    .stateColorDarkGreen {
+        background: rgba(46, 170, 99, 0.15);
+        border: 1px solid #2EAA63;
+        color: #2EAA63;
+    }
+
+    .stateColorDodgeBlue {
+        background: rgba(61, 195, 203, 0.15);
+        border: 1px solid #3DC3CB;
+        color: #3DC3CB;
+    }
+
+    .stateColorBlue {
+        background: rgba(22, 143, 195, 0.15);
+        border: 1px solid #168FC3;
+        color: #168FC3;
+    }
+
+    .stateColorGreenBlue {
+        background: rgba(77, 144, 142, 0.15);
+        border: 1px solid #4D908E;
+        color: #4D908E;
+    }
+
+    .stateColorDarkBlue {
+        background: rgba(33, 72, 92, 0.15);
+        border: 1px solid #21485C;
+        color: #21485C;
+    }
+
+    .checkBoxOnDark {
+        --tw-ring-offset-shadow: 0 0 transparent;
+        --tw-ring-offset-width: 0px;
+        --tw-ring-offset-color: #fff;
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 transparent), 0 0 0 var(--tw-ring-offset-width, 0px) var(--tw-ring-offset-color, rgba(59, 130, 246, 0.5));
+        cursor: pointer;
+        --tw-ring-inset: var(--tw-empty, /*!*/ /*!*/);
+        outline: var(--tw-ring-inset) var(--tw-ring-offset-width) var(--tw-ring-color), 0 0 0 var(--tw-ring-offset-width, 0px) var(--tw-ring-color, rgba(59, 130, 246, 0.5));
+        height: 1.5rem;
+        width: 1.5rem;
+        color: #1FC687;
+        border-width: 2px;
+        border-color: #d2d6dc;
+    }
+
+    @media (max-width: 639px) {
+        .headline1 {
+            font: normal normal 900 24px/34px Lexend;
+        }
+
+        .headline2 {
+            font: normal normal 600 18px/25px Lexend;
+        }
+
+        .headline3 {
+            font: normal normal 600 16px/21px Lexend;
+        }
+
+        .headline3Light {
+            font: normal normal 16px/21px Inter;
+        }
+
+        .headline4 {
+            font: normal normal 600 18px/25px Lexend;
+        }
+
+        .xxsLight{
+            font: normal normal 10px/18px Inter;
+        }
+
+        .xxsDark{
+            font: normal normal 10px/15px Inter;
+        }
+
+        .xxsDarkBold{
+            font: normal normal 600 10px/15px Inter;
+        }
+
+        .sLight{
+            font: normal normal 14px/19px Inter;
+        }
+
+        .xsLighter{
+            font: normal normal 12px/20px Inter;
+        }
+
+        .xsWhiteBold{
+            font: normal normal bold 12px/20px Inter;
+        }
+
+        .xWhiteBold{
+            font: normal normal bold 16px/20px Inter;
+        }
+
+        .xsLight{
+            font: normal normal bold 12px/20px Inter;
+        }
+
+        .xsDark{
+            font: normal normal 600 12px/20px Inter;
+        }
+
+        .sDark{
+            font: normal normal 600 14px/20px Inter;
+        }
+
+        .mDark{
+            font: normal normal 600 16px/21px Inter;
+        }
+
+        .hind{
+            font: normal normal normal 16px/18px "artwork Pen";
+        }
+
+        .errorText{
+            font: normal normal 12px/20px Inter;
+        }
+
+        .successText{
+            font: normal normal 12px/20px Inter;
+        }
+
+        .eventTime{
+            font: normal normal 10px/18px Inter;
+        }
+
+        .eventHeader{
+            font: normal normal bold 10px/20px Inter;
+        }
+
+        .calendarRoomHeader{
+            font: normal normal 10px/18px Inter;
+        }
+
+        .bigNumber{
+            font: normal normal 30px/48px Lexend;
+        }
+
+        .linkText{
+            font: normal normal 10px/18px Inter;
+        }
+    }
+
+    @media (min-width: 640px) and (max-width: 767px) {
+        .headline1 {
+            font: normal normal 900 28px/34px Lexend;
+        }
+
+        .headline2 {
+            font: normal normal 600 20px/25px Lexend;
+        }
+
+        .headline3 {
+            font: normal normal 600 18px/21px Lexend;
+        }
+
+        .headline3Light {
+            font: normal normal 18px/21px Inter;
+        }
+
+        .headline4 {
+            font: normal normal 600 20px/25px Lexend;
+        }
+
+        .xxsLight{
+            font: normal normal 12px/18px Inter;
+        }
+
+        .xxsDark{
+            font: normal normal 12px/15px Inter;
+        }
+
+        .xxsDarkBold{
+            font: normal normal 600 12px/15px Inter;
+        }
+
+        .sLight{
+            font: normal normal 16px/19px Inter;
+        }
+
+        .xsLighter{
+            font: normal normal 14px/20px Inter;
+        }
+
+        .xsWhiteBold{
+            font: normal normal bold 14px/20px Inter;
+        }
+
+        .xWhiteBold{
+            font: normal normal bold 18px/20px Inter;
+        }
+
+        .xsLight{
+            font: normal normal bold 14px/20px Inter;
+        }
+
+        .xsDark{
+            font: normal normal 600 14px/20px Inter;
+        }
+
+        .sDark{
+            font: normal normal 600 16px/20px Inter;
+        }
+
+        .mDark{
+            font: normal normal 600 18px/21px Inter;
+        }
+
+        .hind{
+            font: normal normal normal 18px/18px "artwork Pen";
+        }
+
+        .errorText{
+            font: normal normal 14px/20px Inter;
+        }
+
+        .successText{
+            font: normal normal 14px/20px Inter;
+        }
+
+        .eventTime{
+            font: normal normal 12px/18px Inter;
+        }
+
+        .eventHeader{
+            font: normal normal bold 12px/20px Inter;
+        }
+
+        .calendarRoomHeader{
+            font: normal normal 13px/18px Inter;
+        }
+
+        .bigNumber{
+            font: normal normal 40px/48px Lexend;
+        }
+
+        .linkText{
+            font: normal normal 12px/18px Inter;
+        }
+    }
+
+    .transition-enter-active {
+        @apply transition ease-out duration-100;
+    }
+
+    .transition-enter-from,
+    .transition-leave-to {
+        @apply transform opacity-0 scale-95;
+    }
+
+    .transition-enter-to,
+    .transition-leave-from {
+        @apply transform opacity-100 scale-100;
+    }
+
+    .transition-leave-active {
+        @apply transition ease-in duration-75;
+    }
+
+
+    .event-disabled {
+        background: repeating-linear-gradient( -45deg, transparent, transparent 13px, rgba(189, 189, 189, 0.3) 10px, rgba(189, 189, 189, 0.3) 30px);
+    }
+
+.tooltip {
+    @apply invisible absolute;
+}
+
+.has-tooltip:hover .tooltip {
+    margin-top: -1rem;
+    margin-left: 1.5rem;
+    @apply visible z-50;
+}
+
+.artwork {
+    .artwork-container {
+        @apply mx-auto container px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 mt-5 min-h-screen pb-20;
+    }
+
+    .background-color {
+        @apply bg-white;
+
+        &.soft-green {
+            @apply bg-gradient-to-br from-[#fcfefd] to-[#f6fbf8];
+        }
+
+        &.soft-red {
+            @apply bg-gradient-to-br from-[#fefcfc] to-[#fbf3f3];
+        }
+
+        &.soft-yellow {
+            @apply bg-gradient-to-br from-[#fffef9] to-[#fefcf2];
+        }
+    }
+
+    .border-color {
+        &.soft-green {
+            @apply border-[#edf5ef];
+        }
+
+        &.soft-red {
+            @apply border-[#f6eaea];
+        }
+
+        &.soft-yellow {
+            @apply border-[#f8f3dd];
+        }
+    }
+
+    .text-color {
+        color: #27233C;
+
+        &.light {
+            color: #A7A6B1;
+        }
+
+        &.success {
+            @apply text-green-500;
+        }
+
+        &.danger {
+            @apply text-red-500;
+        }
+
+        &.warning {
+            @apply text-yellow-500;
+        }
+    }
+
+    .headline {
+        &.h1 {
+            font: normal normal 900 30px/34px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h2 {
+            font: normal normal 900 24px/28px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h3 {
+            font: normal normal 900 20px/24px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h4 {
+            font: normal normal 900 16px/20px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+
+        &.h5 {
+            font: normal normal 900 14px/18px Lexend;
+            letter-spacing: -0.15px;
+            opacity: 1;
+        }
+    }
+
+    .sub-line {
+        &.light {
+            font: normal normal bold 14px/20px Inter;
+            letter-spacing: -0.07px;
+            opacity: 1;
+            @apply mt-1;
+        }
+    }
+
+    .card {
+        &.glassy {
+            @apply flex h-fit grow flex-col rounded-3xl bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50 ring-1 ring-white/50 shadow-glass;
+        }
+
+        &.glassy-shiftplan {
+            @apply flex h-fit grow flex-col rounded-3xl bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50 active:bg-artwork-navigation-background shadow-glass;
+        }
+
+        &.white {
+            @apply bg-white rounded-3xl border border-gray-100 w-full shadow-glass;
+        }
+    }
+
+    .button {
+        @apply relative;
+        &.glassy {
+            box-shadow: var(--shadow-glass-small);
+            @apply flex h-fit w-fit items-center rounded-lg p-1.5 bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-gray-100 cursor-pointer;
+        }
+        span {
+            box-shadow: var(--shadow-glass-small);
+            @apply bg-white rounded-xl border border-gray-100 w-fit p-1.5 relative z-30;
+
+            svg {
+                @apply text-gray-500;
+            }
+        }
+
+        p {
+            @apply text-gray-500 text-xs font-lexend font-semibold relative z-20;
+        }
+
+    }
+}
+
+.timeline-container {
+    @apply flex flex-col gap-2 w-full;
+
+    .timeline-dates-container,
+    .timeline-times-container {
+        @apply flex flex-row gap-2;
+
+        .timeline-date-input,
+        .timeline-time-input {
+            @apply h-10 placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border w-full border-gray-300;
+        }
+    }
+
+    .timeline-error-text {
+        @apply text-error text-xs;
+    }
+
+    .timeline-textarea {
+        @apply block w-full placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border border-gray-300;
+    }
+}
+
+.delete-icon {
+    @apply hidden h-5 w-5 hover:text-error cursor-pointer;
+}
+
+
+.text-hover {
+    @apply cursor-pointer transition-all ease-in-out duration-300 hover:bg-white hover:rounded-full p-0.5
+}
+
+.base-menu-link {
+    @apply cursor-pointer flex items-center px-4 py-2 text-sm subpixel-antialiased;
+
+    .base-menu-icon {
+        @apply mr-3 h-5 w-5;
+    }
+}
+
+.btn {
+    @apply rounded-lg;
+
+    &:hover {
+        @apply bg-gray-200;
+    }
+}
+
+.input {
+    @apply rounded-md px-2.5 w-full text-sm border border-gray-300 focus:ring-0 text-primary placeholder-gray-500 placeholder-transparent transition-all duration-150 ease-in-out;
+
+    &:disabled {
+        @apply bg-gray-100 text-gray-600;
+    }
+
+}
+
+.input-label {
+    @apply cursor-text px-1 absolute left-0 -top-6 peer-placeholder-shown:text-xs transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-secondary peer-placeholder-shown:left-2 pointer-events-none;
+}
+
+.input-checklist {
+    color: var(--color-artwork-success);
+    @apply border border-gray-300 rounded-lg p-2.5 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0 shadow-sm;
+}
+
+.input-checklist-small {
+    color: var(--color-artwork-success);
+    @apply border border-gray-300 rounded-md p-0.5 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0;
+}
+
+.input-checklist-dark {
+    color: var(--color-artwork-success);
+    @apply rounded-lg p-2 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0;
+}
+
+.menu-button {
+    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1;
+
+    span {
+        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+    }
+}
+
+.menu-button-no-padding {
+    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create;
+
+    span {
+        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+    }
+}
+
+.menu-button-no-flex {
+    @apply w-full block shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1;
+
+    span {
+        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+    }
+}
+
+
+
+.modal {
+    @apply relative transform bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full rounded-lg;
+}
+
+.modal-header {
+    @apply mb-6;
+
+    .full-modal {
+        @apply px-6 pt-4 pb-2;
+    }
+
+    .not-full-modal {
+        @apply pt-4 pb-2;
+    }
+
+    .model-title {
+        @apply font-black font-lexend text-primary mb-2;
+    }
+
+    .modal-description {
+        @apply text-gray-400 font-lexend font-light;
+    }
+}
+
+.btn-group-hover {
+    @apply transition-colors duration-300 ease-in-out
+}
+
+.btn-hover {
+    @apply transition-colors duration-300 ease-in-out
+}
+
+.btn-border-hover {
+    @apply transition-colors duration-300 ease-in-out
+}
+
+.btn-group-border-hover {
+    @apply transition-colors duration-300 ease-in-out
+}
+
+
+.checklist-card {
+    @apply w-72 min-w-72 rounded-lg;
+
+    .checklist-card-header {
+        @apply  px-4 py-2 flex items-center justify-between text-white truncate rounded-t-lg;
+    }
+
+    .checklist-card-body {
+        @apply bg-gray-100 rounded-b-lg;
+
+        .checklist-card-body-project {
+            @apply w-full text-xs mb-2 flex items-start gap-x-2 px-4 py-2;
+        }
+
+        .checklist-body-add-task {
+            @apply px-5 py-2.5 cursor-pointer flex items-center text-center justify-center;
+        }
+    }
+}
+
+
+.checklist-listview-head-bar {
+    @apply bg-gray-50 px-5 py-2.5 rounded-lg;
+
+    .head-bar-grid {
+        @apply grid grid-cols-12 grid-rows-1 gap-6;
+    }
+}
+
+.checklist-listview-container {
+    @apply space-y-5 mt-5 min-h-screen;
+}
+
+
+.export-modal-container {
+    @apply flex flex-col gap-y-4;
+
+    .tab-container {
+        @apply flex flex-row gap-x-1 mt-4;
+
+        .tab {
+            @apply px-1 py-1.5 text-xs border-b-2 cursor-pointer hover:text-blue-500 hover:border-blue-500;
+        }
+
+        .active {
+            @apply text-blue-500 border-blue-500 hover:text-gray-500 hover:border-gray-500;
+        }
+    }
+}
+
+.dp__btn {
+    @apply !font-lexend !text-xs;
+}
+
+.dp__menu {
+    @apply !rounded-b-3xl !rounded-tr-3xl !font-lexend;
+}
+
+.dp__action_row {
+    @apply !px-4 !py-3;
+}
+
+.dp__action_cancel {
+    @apply !font-lexend !px-4 !py-4
+}
+
+.dp__action_select {
+    @apply !font-lexend !px-4 !py-4
+}

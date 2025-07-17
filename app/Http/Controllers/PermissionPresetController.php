@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\PermissionPresets\Http\Requests\StorePermissionPresetRequest;
-use Artwork\Modules\PermissionPresets\Http\Requests\UpdatePermissionPresetRequest;
-use Artwork\Modules\PermissionPresets\Models\PermissionPreset;
-use Artwork\Modules\PermissionPresets\Services\PermissionPresetService;
+use Artwork\Modules\Permission\Http\Requests\StorePermissionPresetRequest;
+use Artwork\Modules\Permission\Http\Requests\UpdatePermissionPresetRequest;
+use Artwork\Modules\Permission\Models\PermissionPreset;
+use Artwork\Modules\Permission\Services\PermissionPresetService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;

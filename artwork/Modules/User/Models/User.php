@@ -19,8 +19,8 @@ use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
 use Artwork\Modules\MoneySource\Models\MoneySource;
-use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
-use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
+use Artwork\Modules\MoneySource\Models\MoneySourceTask;
+use Artwork\Modules\MoneySource\Models\MoneySourceUserPivot;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
@@ -31,22 +31,15 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
-use Artwork\Modules\ShiftPlanComment\Models\Traits\HasShiftPlanComments;
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
-use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
+use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
+use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\User\Services\WorkingHourService;
-use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
-use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
-use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
-use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
-use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
-use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
-use Artwork\Modules\UserUserManagementSetting\Models\UserUserManagementSetting;
-use Artwork\Modules\UserWorkerShiftPlanFilter\Models\UserWorkerShiftPlanFilter;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
+use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\Authenticatable;
@@ -66,7 +59,6 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Passport\HasApiTokens;
 use Laravel\Scout\Searchable;
 use LaravelAndVueJS\Traits\LaravelPermissionToVueJS;
@@ -90,6 +82,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $toggle_hints
  * @property string $remember_token
  * @property int $current_team_id
+ * @property int $work_time_balance
  * @property string $profile_photo_path
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -127,6 +120,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
  * @property Collection<UserCalendarAbo> $calendarAbo
  * @property Collection<UserShiftCalendarAbo> $shiftCalendarAbo
+ * @property Collection<UserWorkTime> $workTime
+ * @property Collection<UserContractAssign> $contract
  * @property Collection<string> $allPermissions
  * @property array $notification_enums_last_sent_dates
  * @property int $bulk_sort_id
@@ -240,6 +235,7 @@ class User extends Model implements
         'bulk_column_size',
         'chat_public_key',
         'use_chat',
+        'work_time_balance'
     ];
 
     protected $casts = [
@@ -283,6 +279,7 @@ class User extends Model implements
         'profile_photo_url',
         'full_name',
         'type',
+        'formated_work_time_balance',
         //'assigned_craft_ids',
     ];
 
@@ -315,7 +312,17 @@ class User extends Model implements
     {
         return $this->belongsToMany(Shift::class, 'shift_user')
             ->using(ShiftUser::class)
-            ->withPivot('id', 'shift_qualification_id', 'craft_abbreviation');
+            ->withPivot([
+                'id',
+                'shift_qualification_id',
+                'shift_count',
+                'craft_abbreviation',
+                'short_description',
+                'start_date',
+                'end_date',
+                'start_time',
+                'end_time'
+            ]);
     }
 
     public function getFullNameAttribute(): string
@@ -516,7 +523,7 @@ class User extends Model implements
      */
     public function allPermissions(): array
     {
-        if (!$this->exists){
+        if (!$this->exists) {
             return [];
         }
         return $this->getAllPermissions()->pluck('name')->toArray();
@@ -645,4 +652,45 @@ class User extends Model implements
     {
         return $this->morphMany(EventVerification::class, 'verifier');
     }
+
+    public function workTimes(): HasMany
+    {
+        return $this->hasMany(UserWorkTime::class, 'user_id', 'id');
+    }
+
+    public function getNextWorkTime(): ?UserWorkTime
+    {
+        return $this->workTimes()
+            ->whereDate('valid_from', '>', now())
+            ->orderBy('valid_from')
+            ->first();
+    }
+
+    public function getCurrentWorkTime(): ?UserWorkTime
+    {
+        return $this->workTimes()
+            ->where('is_active', true)
+            ->first();
+    }
+
+    public function contract(): HasOne
+    {
+        return $this->hasOne(UserContractAssign::class, 'user_id', 'id');
+    }
+
+    public function workTimeBookings(): HasMany
+    {
+        return $this->hasMany(WorkTimeBooking::class, 'user_id', 'id');
+    }
+
+    public function getFormatedWorkTimeBalanceAttribute(): string
+    {
+        // convert work_time_balance to hours and minutes
+        $hours = floor($this->work_time_balance / 60);
+        $minutes = $this->work_time_balance % 60;
+
+        // format as "HH:MM"
+        return sprintf('%02d:%02d', $hours, $minutes);
+    }
+
 }

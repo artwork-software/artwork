@@ -15,9 +15,9 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
-use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
-use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
-use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
+use Artwork\Modules\User\Models\UserCalendarFilter;
+use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -332,9 +332,14 @@ readonly class CalendarDataService
         $today = Carbon::now();
         $useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period');
 
-        if (!$useProjectTimePeriod && !$project) {
+        // If project mode is turned off, always use the user's calendar filter dates
+        if (!$useProjectTimePeriod) {
+            // Clear the project parameter to ensure no filtering by project happens
+            $project = null;
             return $this->userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         }
+
+        // Only use project time period if project mode is enabled
         if (!$project && $useProjectTimePeriod) {
             $project = $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
         }

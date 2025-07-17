@@ -1,6 +1,6 @@
 <template>
-    <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-lightBackgroundGray'">
-        <div class="flex bg-lightBackgroundGray w-[95%]">
+    <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-light-background-gray'">
+        <div class="flex bg-light-background-gray w-[95%]">
             <BudgetComponent :sage-not-assigned="sageNotAssigned ?? loadedProjectInformation['BudgetTab']?.sageNotAssigned"
                              :hide-project-header="hideProjectHeader "
                              :table="budget?.table ?? loadedProjectInformation['BudgetTab'].budget?.table"

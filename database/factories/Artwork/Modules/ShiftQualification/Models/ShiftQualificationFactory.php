@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Artwork\Modules\ShiftQualification\Models;
 
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;

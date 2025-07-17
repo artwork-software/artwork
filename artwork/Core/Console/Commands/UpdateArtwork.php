@@ -6,7 +6,7 @@ use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Models\NotificationSetting;
-use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
+use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\User\Models\User;
 use Database\Seeders\ProjectManagementBuilderSeed;
 use Illuminate\Console\Command;
@@ -67,7 +67,7 @@ class UpdateArtwork extends Command
 
         // add new Notification type NOTIFICATION_EVENT_VERIFICATION_REQUESTS to NotificationSettings
         $users = User::all();
-        $users->each(function ($user) {
+        $users->each(function ($user): void {
             $user->notificationSettings()->updateOrCreate([
                 'type' => NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS->value,
             ], [
@@ -79,10 +79,15 @@ class UpdateArtwork extends Command
                 'enabled_push' => true,
             ]);
             // Neue Notification-Typen für Inventory
-            foreach ([
+            foreach (
+                [
                 NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
-                NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
-            ] as $enum) {
+                NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED,
+                NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
+                NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
+                NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
+                ] as $enum
+            ) {
                 $user->notificationSettings()->updateOrCreate([
                     'type' => $enum->value,
                 ], [
@@ -116,7 +121,7 @@ class UpdateArtwork extends Command
         // add inventory article plan filter to all users from today + 1 month
         $this->info('add inventory article plan filter to all users');
         $users = User::all();
-        $users->each(function ($user) {
+        $users->each(function ($user): void {
             // if allready exists, skip
             if ($user->inventoryArticlePlanFilter) {
                 return;
@@ -149,8 +154,15 @@ class UpdateArtwork extends Command
         if (DB::table('oauth_clients')->count() === 0) {
             $provider = array_key_exists('users', config('auth.providers')) ? 'users' : null;
 
-            $this->call('passport:client', ['--personal' => true, '--name' => config('app.name').' Personal Access Client']);
-            $this->call('passport:client', ['--password' => true, '--name' => config('app.name').' Password Grant Client', '--provider' => $provider]);
+            $this->call('passport:client', [
+                '--personal' => true,
+                '--name' => config('app.name') . ' Personal Access Client'
+            ]);
+            $this->call('passport:client', [
+                '--password' => true,
+                '--name' => config('app.name') . ' Password Grant Client',
+                '--provider' => $provider
+            ]);
         }
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 use Artwork\Modules\Checklist\Models\Checklist;
-use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
+use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\Project;

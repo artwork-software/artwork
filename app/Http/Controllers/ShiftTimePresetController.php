@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\ShiftTimePreset\Http\Requests\AddShiftTimePresetRequest;
-use Artwork\Modules\ShiftTimePreset\Http\Requests\EditShiftTimePresetRequest;
-use Artwork\Modules\ShiftTimePreset\Models\ShiftTimePreset;
-use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
+use Artwork\Modules\Shift\Http\Requests\AddShiftTimePresetRequest;
+use Artwork\Modules\Shift\Http\Requests\EditShiftTimePresetRequest;
+use Artwork\Modules\Shift\Models\ShiftTimePreset;
+use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Illuminate\Http\Request;
 
 class ShiftTimePresetController extends Controller

@@ -12,7 +12,8 @@ class ChatUserPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class ChatUserPolicy
      */
     public function view(User $user, ChatUser $chatUser): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the chat user exists
+        return $user->exists && $chatUser->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class ChatUserPolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,8 @@ class ChatUserPolicy
      */
     public function update(User $user, ChatUser $chatUser): bool
     {
-        //
+        // Allow update if the user is authenticated and the chat user exists
+        return $user->exists && $chatUser->exists;
     }
 
     /**
@@ -44,7 +48,8 @@ class ChatUserPolicy
      */
     public function delete(User $user, ChatUser $chatUser): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the chat user exists
+        return $user->exists && $chatUser->exists;
     }
 
     /**
@@ -52,7 +57,8 @@ class ChatUserPolicy
      */
     public function restore(User $user, ChatUser $chatUser): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the chat user exists
+        return $user->exists && $chatUser->exists;
     }
 
     /**
@@ -60,6 +66,7 @@ class ChatUserPolicy
      */
     public function forceDelete(User $user, ChatUser $chatUser): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the chat user exists
+        return $user->exists && $chatUser->exists;
     }
 }

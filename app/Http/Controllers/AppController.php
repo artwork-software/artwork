@@ -10,9 +10,9 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Http\Requests\UserCreateRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
-use Artwork\Modules\UserCalendarSettings\Http\Requests\ToggleUseProjectTimePeriodRequest;
-use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
-use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSettingService;
+use Artwork\Modules\User\Http\Requests\ToggleUseProjectTimePeriodRequest;
+use Artwork\Modules\User\Services\UserProjectManagementSettingService;
+use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
@@ -143,6 +143,22 @@ class AppController extends Controller
         }
 
         return $this->redirector->route('events');
+    }
+
+    public function toggleCalendarSettingsUseProjectPeriodShiftPlan(
+        ToggleUseProjectTimePeriodRequest $request
+    ): RedirectResponse|bool {
+        $user = $this->userService->getAuthUser();
+        $user->calendar_settings()->update([
+            'use_project_time_period' => $request->boolean('use_project_time_period'),
+            'time_period_project_id' => $request->integer('project_id')
+        ]);
+
+        if ($request->boolean('is_axios')) {
+            return true;
+        }
+
+        return $this->redirector->route('shifts.plan');
     }
 
     public function index(GeneralSettings $settings): RedirectResponse

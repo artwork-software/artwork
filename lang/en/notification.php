@@ -56,6 +56,13 @@ return [
         // 'Der Termin :event hat noch :count offene Stellen für die Gewerk :craft :shift_start - :shift_end',
         'open_demand_description' =>
             'The event :event still has :count open positions for the craft :craft :shift',
+        'worktime-request' => [
+            'new-request' => 'New work time change request',
+            'link-to-request' => 'Link to request',
+            'old-new-time' =>
+                'The requested change to working hours for :user: ' .
+                'from :start_time to :end_time.',
+        ]
     ],
     'event' => [
         'with_adjoining_audience' => 'Event with audience in adjoining room',

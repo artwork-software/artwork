@@ -7,42 +7,45 @@
     <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2">
         <div class="flex flex-col items-center justify-center h-screen">
             <div class="min-h-96">
-                <div class="">
-                    <div class="text-2xl mb-8 font-bold text-black">
-                        <img :src="$page.props.big_logo" class="max-w-lg h-fit" alt="Big artwork logo"/>
-                    </div>
-                    <div class="flex items-center mb-12">
-                        <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">{{ $t('Login') }}</h2>
-                        <SvgCollection svgName="arrowRight"/>
-                    </div>
-                </div>
-                <form class="space-y-10" @submit.prevent="submit">
-                    <div class="space-y-4">
-                        <BaseInput id="email" v-model="form.email" :label="$t('Email') + '*'" required/>
-                        <BaseInput id="password" type="password" v-model="form.password" :label="$t('Password') + '*'" required/>
-                    </div>
-                    <jet-input-error :message="errors.email" class="mt-2"/>
-                    <div class="flex items-center justify-between">
+                <div class="card glassy p-5">
+                    <div class="my-5">
+                        <div class="text-2xl font-bold text-black">
+                            <img :src="$page.props.big_logo" class="max-w-lg h-fit" alt="Big artwork logo"/>
+                        </div>
                         <div class="flex items-center">
-                            <Checkbox class="justify-between text-sm" :item="rememberCheckbox"/>
-                        </div>
-                        <div class="text-sm">
-                            <Link v-if="canResetPassword" :href="route('password.request')"
-                                  class="!text-xs xsLight !font-lexend subpixel-antialiased hover:font-semibold hover:text-primary">
-                                {{ $t('Forgot your password?') }}
-                            </Link>
+                            <h2 class="mt-6 text-3xl font-bold text-primary">{{ $t('Login') }}</h2>
+                            <SvgCollection svgName="arrowRight"/>
                         </div>
                     </div>
+                    <form class="space-y-10 my-4 card white px-4 py-6" @submit.prevent="submit">
+                        <div class="space-y-4">
+                            <BaseInput id="email" v-model="form.email" :label="$t('Email') + '*'" required/>
+                            <BaseInput id="password" type="password" v-model="form.password" :label="$t('Password') + '*'" required/>
+                        </div>
+                        <jet-input-error :message="errors.email" class="mt-2"/>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <Checkbox class="justify-between text-sm" :item="rememberCheckbox"/>
+                            </div>
+                            <div class="text-sm">
+                                <Link v-if="canResetPassword" :href="route('password.request')"
+                                      class="!text-xs subpixel-antialiased hover:font-semibold hover:text-primary">
+                                    {{ $t('Forgot your password?') }}
+                                </Link>
+                            </div>
+                        </div>
 
 
-                    <div>
-                        <BaseButton :text="$t('Login')" :disabled="this.form.email === '' || this.form.password === ''"
-                                    horizontal-padding="px-44" vertical-padding="py-4" type="submit"/>
-                    </div>
-                </form>
+                        <div>
+                            <ArtworkBaseModalButton :disabled="this.form.email === '' || this.form.password === ''" class="!px-44" vertical-padding="py-4" variant="primary" type="submit">
+                                {{ $t('Login') }}
+                            </ArtworkBaseModalButton>
+                        </div>
+                    </form>
+                </div>
 
             </div>
-            <div class="flex gap-x-4 mt-12 xsLight !font-lexend subpixel-antialiased text-sm tracking-wide">
+            <div class="flex gap-x-4 mt-5 subpixel-antialiased text-sm tracking-wide">
                 <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
                     {{ $t('Imprint') }}
                 </a>
@@ -86,10 +89,14 @@ import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import { reloadRolesAndPermissions } from 'laravel-permission-to-vuejs'
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import ArtworkBaseButton from "@/Artwork/Buttons/ArtworkBaseButton.vue";
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        ArtworkBaseModalButton,
+        ArtworkBaseButton,
         BaseInput,
         TextInputComponent,
         BaseButton,

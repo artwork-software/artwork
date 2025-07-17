@@ -39,11 +39,12 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 w-full px-1" v-if="zoom_factor > 0.6">
             <div class="py-2 px-1 col-span-2">
-                <div class="px-2" :class="usePage().props.auth.user.calendar_settings.high_contrast ? '' : 'border-l-4'" :style="{borderColor: getColorBasedOnUserSettings}">
+                <div class="flex items-stretch gap-x-3 h-full min-h-full">
+                    <div class="p-1 rounded-lg w-1" :style="{backgroundColor: getColorBasedOnUserSettings}" v-if="!usePage().props.auth.user.calendar_settings.high_contrast"></div>
                     <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
                          :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']" class="">
                         <div>
-                            <div class="flex items-center gap-x-1">
+                            <div class="flex items-center gap-x-1 ">
                                 <div  v-if="usePage().props.auth.user.calendar_settings.project_status && event.project?.status" class="text-center rounded-full border group min-h-4 min-w-4 size-4 cursor-pointer" :style="{backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color}">
                                     <div class="absolute hidden group-hover:block top-5">
                                         <div class="bg-artwork-navigation-background text-white text-xs rounded-full px-3 py-0.5">
@@ -238,65 +239,16 @@
                 </div>
 
                 <div class="invisible group-hover/singleEvent:visible flex items-start justify-end w-full" :class="event.isPlanning ? 'pt-2' : ''">
-                    <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''">
-                        <MenuItem v-if="event?.isPlanning && !event.hasVerification" v-slot="{ active }">
-                            <div @click="SendEventToVerification"
-                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <component is="IconLock" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                {{ $t('Request verification') }}
-                            </div>
-                        </MenuItem>
-                        <MenuItem v-if="event?.isPlanning && event.hasVerification" v-slot="{ active }">
-                            <div @click="cancelVerification"
-                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <component is="IconLockOpen" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                {{ $t('Withdraw verification request')}}
-                            </div>
-                        </MenuItem>
-                        <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">
-                            <div @click="approveRequest"
-                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <component is="IconChecks" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                {{ $t('Approve verification') }}
-                            </div>
-                        </MenuItem>
-                        <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">
-                            <div @click="showRejectEventVerificationModal = true"
-                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <component is="IconCircleX" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                {{ $t('Reject verification') }}
-                            </div>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <div @click="$emit('editEvent', event)"
-                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <IconEdit class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                {{ $t('edit')}}
-                            </div>
-                        </MenuItem>
-                        <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" v-slot="{ active }">
-                            <div
-                                @click="$emit('openAddSubEventModal', event, 'create', null)"
-                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
-                                {{$t('Add Sub-Event')}}
-                            </div>
-                        </MenuItem>
-                        <MenuItem v-if="isRoomAdmin || isCreator || hasAdminRole" v-slot="{ active }">
-                            <div
-                                @click="$emit('showDeclineEventModal', event)"
-                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <IconX stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
-                                {{$t('Decline event')}}
-                            </div>
-                        </MenuItem>
-                        <MenuItem v-if="isRoomAdmin || isCreator || hasAdminRole" v-slot="{ active }">
-                            <div @click="$emit('openConfirmModal', event, 'main')"
-                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <IconTrash stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
-                                {{$t('Delete')}}
-                            </div>
-                        </MenuItem>
+                    <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background>
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" icon="IconLock" title="Request verification" />
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" icon="IconLockOpen" title="Withdraw verification request" />
+                        <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" icon="IconChecks" title="Approve verification" />
+                        <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" icon="IconCircleX" title="Reject verification" />
+
+                        <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" icon="IconEdit" title="edit" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" @click="$emit('openAddSubEventModal', event, 'create', null)" icon="IconCirclePlus" title="Add Sub-Event" />
+                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" icon="IconX" title="Decline event" />
+                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" icon="IconTrash" title="Delete" />
                     </BaseMenu>
                 </div>
             </div>
@@ -505,65 +457,16 @@
                                 </div>
                             </div>
                             <div class="invisible group-hover/singleEvent:visible">
-                                <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''">
-                                    <MenuItem v-if="event?.isPlanning && !event.hasVerification" v-slot="{ active }">
-                                        <div @click="SendEventToVerification"
-                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <component is="IconLock" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                            {{ $t('Request verification') }}
-                                        </div>
-                                    </MenuItem>
-                                    <MenuItem v-if="event?.isPlanning && event.hasVerification" v-slot="{ active }">
-                                        <div @click="cancelVerification"
-                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <component is="IconLockOpen" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                            {{ $t('Withdraw verification request')}}
-                                        </div>
-                                    </MenuItem>
-                                    <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">
-                                        <div @click="approveRequest"
-                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <component is="IconChecks" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                            {{ $t('Approve verification') }}
-                                        </div>
-                                    </MenuItem>
-                                    <MenuItem v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" v-slot="{ active }">
-                                        <div @click="showRejectEventVerificationModal = true"
-                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <component is="IconCircleX" class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                            {{ $t('Reject verification') }}
-                                        </div>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <div @click="$emit('editEvent', event)"
-                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconEdit class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
-                                            {{ $t('edit')}}
-                                        </div>
-                                    </MenuItem>
-                                    <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole) && event.eventType.id === 1" v-slot="{ active }">
-                                        <div
-                                            @click="$emit('openAddSubEventModal', event, 'create', null)"
-                                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
-                                            {{$t('Add Sub-Event')}}
-                                        </div>
-                                    </MenuItem>
-                                    <MenuItem v-if="isRoomAdmin || isCreator || hasAdminRole" v-slot="{ active }">
-                                        <div
-                                            @click="$emit('showDeclineEventModal', event)"
-                                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconX stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
-                                            {{$t('Decline event')}}
-                                        </div>
-                                    </MenuItem>
-                                    <MenuItem v-if="isRoomAdmin || isCreator || hasAdminRole" v-slot="{ active }">
-                                        <div @click="$emit('openConfirmModal', event, 'main')"
-                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconTrash stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
-                                            {{$t('Delete')}}
-                                        </div>
-                                    </MenuItem>
+                                <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background>
+                                    <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" icon="IconLock" title="Request verification" />
+                                    <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" icon="IconLockOpen" title="Withdraw verification request" />
+                                    <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" icon="IconChecks" title="Approve verification" />
+                                    <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" icon="IconCircleX" title="Reject verification" />
+
+                                    <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" icon="IconEdit" title="edit" />
+                                    <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" @click="$emit('openAddSubEventModal', event, 'create', null)" icon="IconCirclePlus" title="Add Sub-Event" />
+                                    <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" icon="IconX" title="Decline event" />
+                                    <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" icon="IconTrash" title="Delete" />
                                 </BaseMenu>
                             </div>
                         </div>
@@ -699,6 +602,7 @@ import EventNoteComponent from "@/Layouts/Components/EventNoteComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {Float} from "@headlessui-float/vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 const {t} = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);

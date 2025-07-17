@@ -29,6 +29,7 @@ class ShiftDTO extends Data
         public ?int $roomId,
         public ?array $formatted_dates,
         public ?string $startOfShift,
+        public ?bool $isCommitted = false,
         //public EventDTO $event
     ){
     }
@@ -54,7 +55,8 @@ class ShiftDTO extends Data
             daysOfShift: $shift->getAttribute('days_of_shift'),
             roomId: $shift?->room_id,
             formatted_dates: $shift->getAttribute('formatted_dates'),
-            startOfShift: $shift->getAttribute('start_date')->format('d.m.Y')
+            startOfShift: $shift->getAttribute('start_date')->format('d.m.Y'),
+            isCommitted: $shift->is_committed,
             //event: EventDTO::fromModel($shift->event)
         );
     }

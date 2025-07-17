@@ -1,5 +1,5 @@
 <template>
-    <div class="py-4" :class="[project ? 'bg-white -mx-16 pr-20' : 'bg-gray-50 pr-16', isFullscreen ? 'pl-8' : 'pl-5']">
+    <div class="py-4 px-7 card glassy">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
@@ -20,7 +20,7 @@
 
                     </div>
                     <BaseMenu tooltip-direction="bottom" show-custom-icon icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
-                        <BaseMenuItem icon="IconCalendarRepeat" without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
+                        <BaseMenuItem icon="IconCalendarRepeat" white-menu-background without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>
 
@@ -33,6 +33,7 @@
                         ref="projectSearchInput"
                         is-small
                         label="Search project"
+                        class="w-9 h-9"
                     />
                     <div v-if="projectSearchResults.length > 0"
                          class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg z-50">
@@ -84,7 +85,7 @@
             </div>
 
             <div v-if="isPlanning">
-                <div class="font-lexend text-sm font-bold text-red-500 select-none pointer-events-none">
+                <div class="font-lexend absolute left-10 top-0 text-xs font-bold text-red-500 select-none pointer-events-none">
                     {{ $t('Attention! You are in the planning calendar')}}
                 </div>
             </div>
@@ -380,7 +381,14 @@
                             icon-size="h-7 w-7"
                         />
                     </div>
-                    <PlusButton @click="$emit('wantsToAddNewEvent');"/>
+
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Add Event')"
+                        icon="IconCirclePlus"
+                        icon-size="h-7 w-7"
+                        @click="$emit('wantsToAddNewEvent');"
+                    />
                 </div>
             </div>
         </div>
@@ -432,6 +440,7 @@ import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');

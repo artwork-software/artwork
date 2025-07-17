@@ -7,8 +7,8 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\ShiftPlanComment\Models\ShiftPlanComment;
-use Artwork\Modules\ShiftPlanComment\Services\ShiftPlanCommentService;
+use Artwork\Modules\Shift\Models\ShiftPlanComment;
+use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Request;
 
@@ -42,7 +42,7 @@ class IndividualTimeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): void
+    public function store(Request $request): \Illuminate\Http\JsonResponse
     {
         $modelClass = match ($request->integer('modelType')) {
             1 => Freelancer::class,
@@ -93,6 +93,12 @@ class IndividualTimeController extends Controller
                 $shiftComment['id'] ?? null,
             );
         }
+
+        return response()->json([
+            'individual_times' => $modelInstance->individualTimes()->get(),
+            'shift_comment' => $modelInstance->shiftPlanComments()
+                ->where('date', $request->input('shift_comment.date'))->first(),
+        ]);
     }
 
     /**

@@ -12,7 +12,8 @@ class ExternalIssueFilePolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Allow viewing if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -20,7 +21,8 @@ class ExternalIssueFilePolicy
      */
     public function view(User $user, ExternalIssueFile $externalIssueFile): bool
     {
-        //
+        // Allow viewing if the user is authenticated and the external issue file exists
+        return $user->exists && $externalIssueFile->exists;
     }
 
     /**
@@ -28,7 +30,8 @@ class ExternalIssueFilePolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Allow creation if the user is authenticated
+        return $user->exists;
     }
 
     /**
@@ -36,7 +39,8 @@ class ExternalIssueFilePolicy
      */
     public function update(User $user, ExternalIssueFile $externalIssueFile): bool
     {
-        //
+        // Allow update if the user is authenticated and the external issue file exists
+        return $user->exists && $externalIssueFile->exists;
     }
 
     /**
@@ -44,7 +48,8 @@ class ExternalIssueFilePolicy
      */
     public function delete(User $user, ExternalIssueFile $externalIssueFile): bool
     {
-        //
+        // Allow deletion if the user is authenticated and the external issue file exists
+        return $user->exists && $externalIssueFile->exists;
     }
 
     /**
@@ -52,7 +57,8 @@ class ExternalIssueFilePolicy
      */
     public function restore(User $user, ExternalIssueFile $externalIssueFile): bool
     {
-        //
+        // Allow restoration if the user is authenticated and the external issue file exists
+        return $user->exists && $externalIssueFile->exists;
     }
 
     /**
@@ -60,6 +66,7 @@ class ExternalIssueFilePolicy
      */
     public function forceDelete(User $user, ExternalIssueFile $externalIssueFile): bool
     {
-        //
+        // Allow permanent deletion if the user is authenticated and the external issue file exists
+        return $user->exists && $externalIssueFile->exists;
     }
 }

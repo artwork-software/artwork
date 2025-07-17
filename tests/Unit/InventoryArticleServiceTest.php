@@ -12,7 +12,7 @@ use Tests\TestCase;
 
 class InventoryArticleServiceTest extends TestCase
 {
-    public function test_store_creates_article()
+    public function test_store_creates_article(
     {
         $repo = Mockery::mock(InventoryArticleRepository::class);
 
@@ -32,6 +32,7 @@ class InventoryArticleServiceTest extends TestCase
 
         $repo->shouldReceive('create')->once()->andReturn($createdArticle);
 
+
         // Mock repository methods that are called by the service's helper methods
         $repo->shouldReceive('addImages')->andReturnUsing(function($article, $images, $mainImageIndex) {
             return $article;
@@ -45,7 +46,7 @@ class InventoryArticleServiceTest extends TestCase
         $repo->shouldReceive('attachStatusValues');
 
         $service = new InventoryArticleService($repo);
-        $request = StoreInventoryArticleRequest::create('/','POST', [
+        $request = StoreInventoryArticleRequest::create('/', 'POST', [
             'name' => 'Artikel',
             'description' => 'Beschreibung',
             'inventory_category_id' => 1,
@@ -61,7 +62,7 @@ class InventoryArticleServiceTest extends TestCase
         $this->assertSame($createdArticle, $result);
     }
 
-    public function test_get_available_stock_returns_array()
+    public function test_get_available_stock_returns_array(): void
     {
         $repo = Mockery::mock(InventoryArticleRepository::class);
         $article = Mockery::mock(InventoryArticle::class);

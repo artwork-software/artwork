@@ -8,21 +8,73 @@
                 </div>
             </div>
             <TabComponent :tabs="tabs" />
-            <div class="mt-10">
-                <h3 class="headline2 mb-2">{{}}</h3>
-                <p class="xsLight">
-                    {{}}
-                </p>
+
+            <div class="card glassy p-5 my-10">
+                <div class="card white p-5">
+
+                    <div class="flex items-center justify-between">
+                        <span class="flex grow flex-col">
+                            <label class="font-lexend font-bold mb-1 text-gray-900" id="availability-label">
+                                {{ $t('Duty roster release workflow') }}
+                            </label>
+                            <span class="text-sm text-gray-500 w-1/2" id="availability-description">
+                                {{ $t('Activates a two-stage approval process for schedules.If activated, authorized persons can send time periods (e.g. entire calendar weeks) to selected users for approval. They receive a notification and can approve or reject the schedule. If deactivated, authorized persons can approve schedules directly, without an additional approval process.') }}
+                            </span>
+                        </span>
+                        <div class="group relative inline-flex w-11 shrink-0 rounded-full bg-gray-200 p-0.5 inset-ring inset-ring-gray-900/5 outline-offset-2 outline-blue-600 transition-colors duration-200 ease-in-out has-checked:bg-blue-600 has-focus-visible:outline-2">
+                            <span class="size-5 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out group-has-checked:translate-x-5" />
+                            <input type="checkbox" v-model="shiftCommitWorkflow" @change="changeShiftCommitWorkflow" class="absolute inset-0 appearance-none focus:outline-hidden" id="availability" name="availability" aria-labelledby="availability-label" aria-describedby="availability-description" />
+                        </div>
+                    </div>
+
+
+
+                    <div v-if="shiftCommitWorkflow">
+                        <div class="mt-5 w-1/2">
+                            <UserSearch
+                                :label="$t('Select users who can confirm the shift commit requests')"
+                                @user-selected="addUserToWorkflow"
+                            />
+                        </div>
+
+
+                        <div>
+                            <div v-if="shiftCommitWorkflowUsers?.length > 0" class="flex items-center gap-4 mt-3">
+                                <div v-for="(object, index) in shiftCommitWorkflowUsers" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">
+                                    <div class="flex items-center">
+                                        <div>
+                                            <img class="inline-block size-9 rounded-full object-cover" :src="object.user.profile_photo_url" alt="" />
+                                        </div>
+                                        <div class="mx-2">
+                                            <p class="xsDark group-hover:text-gray-900">{{ object.user.full_name }}</p>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <button type="button" @click="removeUserFormShiftWorkFlow(object.id)">
+                                                <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
-            <div class="flex items-center justify-between gap-x-3">
-                <TinyPageHeadline
-                    :title="$t('Crafts')"
-                    :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
-                />
-               <div class="w-72">
-                   <AddButtonSmall :text="$t('New Craft')" class="mt-5" @click="openAddCraftsModal = true" />
-               </div>
-            </div>
+
+
+            <div class="card white p-5">
+                <div class="flex items-center justify-between gap-x-3">
+                    <div class="w-1/2">
+                        <TinyPageHeadline
+                            :title="$t('Crafts')"
+                            :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
+                        />
+                    </div>
+                    <div class="flex items-center justify-end">
+                        <GlassyIconButton text="New Craft" icon="IconPlus" @click="openAddCraftsModal = true" />
+                    </div>
+                </div>
                 <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="crafts" @start="dragging=true" @end="dragging=false" @change="reorderCrafts(crafts)">
                     <template #item="{element}" :key="element.id">
                         <div :key="element" class="flex justify-between gap-x-6 py-5" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
@@ -70,18 +122,18 @@
                                 <BaseMenu>
                                     <MenuItem @click="updateCraft(element)"
                                               v-slot="{ active }">
-                                        <a :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <a :class="[active ? '' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <IconEdit stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                      class="mr-3 h-5 w-5 text-primaryText "
                                                       aria-hidden="true"/>
                                             {{$t('Edit')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem @click="openDeleteCraftModal(element)"
                                               v-slot="{ active }">
-                                        <a :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <a :class="[active ? '' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <IconTrash stroke-width="1.5"
-                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                       class="mr-3 h-5 w-5 text-primaryText "
                                                        aria-hidden="true"/>
                                             {{$t('Delete')}}
                                         </a>
@@ -92,7 +144,8 @@
 
                     </template>
                 </draggable>
-            <div class="mt-10">
+            </div>
+            <div class="mt-10 card white p-5">
                 <TinyPageHeadline
                     :title="$t('Shift-relevant Event Types')"
                     :description="$t('Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the \'shifts\' tab of the project. You can also define additional events as shift-relevant for each project.')"
@@ -126,13 +179,13 @@
                     <TagComponent v-for="type in relevantEventTypes" :method="removeRelevantEventType" :displayed-text="type.name" :property="type" />
                 </div>
             </div>
-            <div>
+            <div class="card white p-5 mt-10">
                 <div class="flex items-center justify-between">
-                    <TinyPageHeadline class="mt-10"
+                    <TinyPageHeadline class=""
                         :title="$t('Qualifications')"
                         :description="$t('Create or edit qualifications')"
                     />
-                    <AddButtonSmall text="Neue Qualifikation" class="mt-5" @click="this.openShiftQualificationModal('create')" />
+                    <GlassyIconButton text="Neue Qualifikation" icon="IconPlus" @click="this.openShiftQualificationModal('create')" />
                 </div>
                 <div class="mt-5">
                     <div class="mb-5 xsLight" v-if="shiftQualifications.length === 0">
@@ -165,14 +218,14 @@
                     </ul>
                 </div>
             </div>
-            <div>
+            <div class="card white p-5 mt-10">
                 <div class="flex items-center justify-between">
                     <TinyPageHeadline
-                        class="mt-14"
+                        class=""
                         :title="$t('Time presets for shifts')"
                         :description="$t('Create time presets for layers to be able to assign them quickly and easily later.')"
                     />
-                    <AddButtonSmall :text="$t('New time preset')" class="mt-5" @click="showAddShiftPresetModal = true" />
+                    <GlassyIconButton text="New time preset" icon="IconPlus" @click="showAddShiftPresetModal = true" />
                 </div>
                 <div class="mt-5">
                     <AlertComponent
@@ -204,7 +257,7 @@
                     </ul>
                 </div>
             </div>
-            <div class="flex flex-col my-10 gap-2">
+            <div class="flex flex-col my-10 gap-2 card white p-5">
                 <TinyPageHeadline :title="$t('Sort settings')"
                                   :description="$t('Configure the behaviour of shift plans sort opportunity.')"/>
                 <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer">
@@ -257,7 +310,7 @@
 import {defineComponent} from 'vue'
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {CheckIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
-import {ChevronDownIcon, DuplicateIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
+import {ChevronDownIcon, DuplicateIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {
     Listbox,
     ListboxButton,
@@ -287,13 +340,19 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import AddEditShiftTimePreset from "@/Pages/Settings/Components/AddEditShiftTimePreset.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import draggable from "vuedraggable";
-import {router} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import Button from "@/Jetstream/Button.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
+        Button, XIcon,
+        UserSearch,
+        GlassyIconButton,
         ShiftQualificationIconCollection,
         SwitchLabel,
         Switch,
@@ -335,10 +394,12 @@ export default defineComponent({
         'shiftQualifications',
         'shiftTimePresets',
         'usersWithInventoryPermission',
-        'shiftSettings'
+        'shiftSettings',
+        'shiftCommitWorkflowUsers'
     ],
     data(){
         return {
+            shiftCommitWorkflow: usePage().props.shiftCommitWorkflow,
             selectedEventType: null,
             openAddCraftsModal: false,
             craftToEdit: null,
@@ -354,20 +415,40 @@ export default defineComponent({
             dragging: false,
             confirmDeleteTitle: '',
             confirmDeleteDescription: '',
+            userForWorkflowForm: useForm({
+                // users form this.shiftCommitWorkflowUsers but only id is needed
+                users: this.shiftCommitWorkflowUsers.map(user => user.id) || []
+            }),
             deleteType: '',
             tabs: [
                 {
                     name: this.$t('Shift Settings'),
                     href: route('shift.settings'),
                     current: route().current('shift.settings'),
-                    show: true
+                    show: true,
+                    icon: 'IconCalendarUser'
                 },
                 {
                     name: this.$t('Day Services'),
                     href: route('day-service.index'),
                     current: route().current('day-service.index'),
-                    show: true
+                    show: true,
+                    icon: 'IconHours24'
                 },
+                {
+                    name: this.$t('Work Time Pattern'),
+                    href: route('shift.work-time-pattern'),
+                    current: route().current('shift.work-time-pattern'),
+                    show: true,
+                    icon: 'IconClockCog'
+                },
+                {
+                    name: this.$t('User Contracts'),
+                    href: route('user-contract-settings.index'),
+                    current: route().current('user-contract-settings.index'),
+                    show: true,
+                    icon: 'IconContract'
+                }
             ]
         }
     },
@@ -392,6 +473,45 @@ export default defineComponent({
         }
     },
     methods: {
+        addUserToWorkflow(user) {
+            console.log('Adding user to workflow:', user);
+            if (this.userForWorkflowForm.processing || this.userForWorkflowForm.users.includes(user.id)) {
+                console.warn('User is already in the workflow or form is processing.');
+                return;
+            }
+
+            this.userForWorkflowForm.users.push(user.id);
+
+            this.userForWorkflowForm.patch(route('shift.settings.update.shift-commit-workflow-users'), {
+                preserveScroll: true,
+                preserveState: false,
+                onFinish: () => {
+                    // Optional: Benutzerfeedback oder Aufräumarbeiten
+                },
+                onError: () => {
+                    // Optional: Fehlerbehandlung z. B. Benutzer entfernen, wenn Fehler auftritt
+                    const index = this.userForWorkflowForm.users.indexOf(user.id);
+                    if (index !== -1) this.userForWorkflowForm.users.splice(index, 1);
+                }
+            });
+        },
+        removeUserFormShiftWorkFlow(objectId){
+            this.$inertia.delete(route('shift.settings.remove.shift-commit-workflow-user', objectId), {
+                preserveScroll: true,
+                preserveState: false,
+                onSuccess: () => {
+                }
+            });
+        },
+        changeShiftCommitWorkflow(){
+            console.log(this.shiftCommitWorkflow)
+            this.$inertia.patch(route('shift.settings.update.shift-commit-workflow'), {
+                shift_commit_workflow: this.shiftCommitWorkflow
+            }, {
+                preserveScroll: true,
+                preserveState: false
+            });
+        },
         openAddEditShiftPresetModal(shiftTimePreset){
             this.presetToEdit = shiftTimePreset;
             this.showAddShiftPresetModal = true;

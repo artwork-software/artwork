@@ -1,14 +1,8 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="open" full-modal>
-        <form @submit.prevent="saveShift" class="relative z-40 mb-5">
-            <div class="px-6">
-                <ModalHeader
-                    :title="$t('Organize shift')"
-                    :description="$t('Determine how long your shift lasts and how many people should work in your shift.')"
-                />
-            </div>
-            <div class="mt-10">
-                <div class="bg-lightBackgroundGray px-6 py-2 mb-3">
+    <ArtworkBaseModal @close="closeModal" v-if="open" full-modal title="Organize shift" description="Determine how long your shift lasts and how many people should work in your shift.">
+        <form @submit.prevent="saveShift" class="relative z-40 mb-5 artwork">
+            <div class="">
+                <div class="px-5 py-3 mb-5">
                     <div class="flex items-center justify-end my-2">
                         <div class="flex items-center justify-end">
                             <button type="button" class="text-xs text-artwork-buttons-create underline cursor-pointer" @click="showPresetBox = !showPresetBox">
@@ -33,9 +27,9 @@
                                 <IconSearch v-if="!showSearchbar" class="cursor-pointer h-5 w-5" @click="showSearchbar = !showSearchbar"/>
                             </div>
                             <div v-if="filteredShiftTimePresets?.length > 0">
-                                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                                     <div v-for="(shiftTimePreset) in filteredShiftTimePresets" :key="shiftTimePreset.id" @click="takePreset(shiftTimePreset)" class="cursor-pointer">
-                                        <div class="border rounded-lg border-dashed p-2 bg-white flex-col justify-center hover:shadow-sm transition-all ease-in-out" :class="[shiftTimePreset.active ? 'border-green-500' : '']">
+                                        <div class="border rounded-lg border-dashed px-3 py-2 card white flex-col justify-center hover:shadow-sm transition-all ease-in-out" :class="[shiftTimePreset.active ? 'border-green-500' : '']">
                                             <div class="text-xs font-bold truncate">
                                                 {{ shiftTimePreset.name }}
                                             </div>
@@ -234,7 +228,9 @@
                 </div>
             </div>
             <div class="flex w-full items-center px-6" :class="!shift?.roomId ? 'justify-center' : 'justify-between'">
-                <FormButton :text="$t('Save')" type="submit" :disabled="shiftForm.processing"/>
+                <ArtworkBaseModalButton variant="primary" type="submit" :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !shiftForm.break_minutes || !selectedCraft">
+                    {{ $t('Save') }}
+                </ArtworkBaseModalButton>
 
                 <div @click="showComfirmDeleteModal = true" class="text-sm underline cursor-pointer hover:text-red-600 ease-in-out duration-300 transition-colors" v-if="shift?.roomId">
                     {{ $t('Delete shift without Event') }}
@@ -248,7 +244,7 @@
             :description="$t('Do you really want to delete this shift?')"
             :title="$t('Delete shift')"
         />
-    </BaseModal>
+    </ArtworkBaseModal>
 
 
 </template>
@@ -292,11 +288,15 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 
 export default defineComponent({
     name: "AddShiftModal",
     mixins: [Permissions, IconLib],
     components: {
+        ArtworkBaseModalButton,
+        ArtworkBaseModal,
         BaseTextarea,
         BaseInput,
         ConfirmDeleteModal,

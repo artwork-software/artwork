@@ -4,7 +4,7 @@ namespace Artwork\Modules\Project\Events;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Comment;
-use Artwork\Modules\ProjectTab\Models\ProjectComponentValue;
+use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;

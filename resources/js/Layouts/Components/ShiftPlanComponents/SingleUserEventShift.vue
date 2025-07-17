@@ -13,12 +13,16 @@
             <div v-if="shift.is_committed">
                 <IconLock stroke-width="1.5" class="h-5 w-5 text-white"/>
             </div>
+            <button type="button" @click="showRequestWorkTimeChangeModal = true" v-if="userToEditId === usePage().props.auth.user.id && type === 'user'">
+                <Component is="IconClockEdit" class="h-5 w-5 hover:text-blue-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
+            </button>
         </div>
         <div class="flex flex-col bg-backgroundGray rounded-b-lg px-1 pt-1">
             <div class="flex flex-row justify-between border-b-2 border-dashed border-gray-400 pb-1">
                 <span class="text-sm font-bold">{{ shift.start }} - {{ shift.end }}, {{ shift?.room?.name ?? shift?.event?.room?.name }}</span>
                 <IconCalendarMonth v-if="project" class="w-5 h-5 cursor-pointer" @click="toggleProjectTimePeriodAndRedirect"/>
             </div>
+
             <div class="border-b-2 border-dashed border-gray-400 pb-1 pt-0.5">
                 <template v-if="hasColleaguesOnShift(shift)">
                     <span class="text-sm font-bold">{{ $t('Colleagues') }}</span>
@@ -70,6 +74,13 @@
             </div>
         </div>
     </div>
+
+    <RequestWorkTimeChangeModal
+        :user="shift.users.find(user => user.id === userToEditId)"
+        :shift="shift"
+        v-if="showRequestWorkTimeChangeModal"
+        @close="showRequestWorkTimeChangeModal = false"
+    />
 </template>
 <script setup>
 import {IconCalendarMonth, IconLock} from "@tabler/icons-vue";
@@ -79,6 +90,9 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 import {usePage} from "@inertiajs/vue3";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
+import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
+import {ref} from "vue";
+import Button from "@/Jetstream/Button.vue";
 const percentage = usePage().props.high_contrast_percent;
 const {
     backgroundColorWithOpacity,
@@ -131,6 +145,8 @@ const toggleProjectTimePeriodAndRedirect = () => {
         );
     }
 };
+
+const showRequestWorkTimeChangeModal = ref(false);
 
 const hasColleaguesOnShift = (shift) => {
     // The user where the shift is to be displayed is always automatically in the users array, which is why users is always greater than 0

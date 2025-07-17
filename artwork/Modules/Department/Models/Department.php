@@ -4,7 +4,7 @@ namespace Artwork\Modules\Department\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Models\Checklist;
-use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
+use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;

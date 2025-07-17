@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Budget\Models\SumMoneySource;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
-use Artwork\Modules\MoneySourceReminder\Services\MoneySourceThresholdReminderService;
+use Artwork\Modules\MoneySource\Services\MoneySourceThresholdReminderService;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

@@ -1,14 +1,13 @@
 <template>
-
-    <div class="w-max" :class="[eventsWithoutRoom.length > 0 ? 'mt-[6rem]' : 'mt-[4.2rem]']">
-        <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg">
+    <div class="w-max mx-5">
+        <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[84px] rounded-lg">
             <div :style="{minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}"></div>
             <div v-for="room in $page.props.rooms" :key="room.id" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
                 <SingleRoomInHeader :room="room" is-light />
             </div>
         </div>
         <div v-for="day in days">
-            <div class="flex items-center sticky gap-0.5 h-16 bg-gray-200 z-20 first-line:divide-none top-[128px]">
+            <div class="flex items-center sticky gap-0.5 h-16 bg-gray-100 z-20 first-line:divide-none top-36 rounded-r-lg">
                 <div class="flex xxsDark items-center px-8 mt-1.5" :style="{marginLeft: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}">
                     {{ daysWithoutEventsToDisplayHiddenHours.includes(day.fullDay)
                     ? $t('Hours between {start} - {end} are hidden', {
@@ -62,6 +61,7 @@
                                     minWidth: zoom_factor * 212 + 'px',
                                     maxWidth: zoom_factor * 212 + 'px',
                                     height: zoom_factor * 115 + 'px',
+                                    minHeight: zoom_factor * 115 + 'px',
                                     }"
                                      :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                                      class="group/container"
@@ -100,6 +100,7 @@
             </div>
         </div>
     </div>
+
 </template>
 
 <script setup>

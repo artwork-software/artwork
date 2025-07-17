@@ -11,9 +11,9 @@ use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
-use Artwork\Modules\ShiftPlanComment\Models\Traits\HasShiftPlanComments;
-use Artwork\Modules\ShiftQualification\Models\FreelancerShiftQualification;
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
+use Artwork\Modules\Shift\Models\FreelancerShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
@@ -93,7 +93,17 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         return $this
             ->belongsToMany(Shift::class, 'shifts_freelancers')
             ->using(ShiftFreelancer::class)
-            ->withPivot('id', 'shift_qualification_id', 'craft_abbreviation');
+            ->withPivot([
+                'id',
+                'shift_qualification_id',
+                'shift_count',
+                'craft_abbreviation',
+                'short_description',
+                'start_date',
+                'end_date',
+                'start_time',
+                'end_time'
+            ]);
     }
 
     public function getProfilePhotoUrlAttribute(): string

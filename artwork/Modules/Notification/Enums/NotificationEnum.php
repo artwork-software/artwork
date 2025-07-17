@@ -68,6 +68,10 @@ enum NotificationEnum: string
 
     case NOTIFICATION_SHIFT_CONFLICT = 'NOTICATION_SHIFT_CONFLICT';
 
+    case NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED = 'NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED';
+    case NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED = 'NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED';
+    case NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST = 'NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST';
+
     case NOTIFICATION_INVENTORY_ARTICLE_CHANGED = 'NOTIFICATION_INVENTORY_ARTICLE_CHANGED';
     case NOTIFICATION_INVENTORY_OVERBOOKED = 'NOTIFICATION_INVENTORY_OVERBOOKED';
 
@@ -109,6 +113,9 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_INFRINGEMENT,
             self::NOTIFICATION_SHIFT_LOCKED,
             self::NOTIFICATION_SHIFT_AVAILABLE,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
+            self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
             self::NOTIFICATION_SHIFT_OPEN_DEMAND,
             self::NOTIFICATION_SHIFT_CONFLICT => "SHIFTS",
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
@@ -146,6 +153,9 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_AVAILABLE,
             self::NOTIFICATION_SHIFT_OPEN_DEMAND,
             self::NOTIFICATION_REMINDER_ROOM_REQUEST,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
+            self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
             self::NOTIFICATION_SHIFT_CONFLICT => ShiftNotification::class,
         };
     }
@@ -185,6 +195,10 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_OPEN_DEMAND => "Open demands",
             self::NOTIFICATION_SHIFT_CONFLICT => "Availabilities & Conflicts",
             self::NOTIFICATION_REMINDER_ROOM_REQUEST => "Room request reminder",
+
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED => "Worktime change request approved",
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED => "Worktime change request declined",
+            self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST => "New worktime change request",
 
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED => 'Inventory article changed',
             self::NOTIFICATION_INVENTORY_OVERBOOKED => 'Inventory article overbooked',
@@ -230,6 +244,10 @@ enum NotificationEnum: string
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED => 'An inventory article or one of its status values has changed.',
             self::NOTIFICATION_INVENTORY_OVERBOOKED => 'The article in your material issue is now overbooked.',
             self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Find out if there are any event verification requests.",
+
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED => "Find out if your worktime change request has been approved.",
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED => "Find out if your worktime change request has been declined.",
+            self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST => "Find out if you have a new worktime change request.",
         };
     }
 

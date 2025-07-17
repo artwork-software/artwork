@@ -4,9 +4,9 @@ namespace Database\Seeders;
 
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Freelancer\Models\Freelancer;
-use Artwork\Modules\ShiftQualification\Models\FreelancerShiftQualification;
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
-use Artwork\Modules\ShiftQualification\Repositories\FreelancerShiftQualificationRepository;
+use Artwork\Modules\Shift\Models\FreelancerShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Repositories\FreelancerShiftQualificationRepository;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
 

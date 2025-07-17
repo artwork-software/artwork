@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             BudgetColumnSettingSeeder::class,
             DatabaseSettingsSeeder::class,
             SubdivisionSeeder::class,
+            ShiftQualificationIconsSeeder::class,
         ]);
     }
 }

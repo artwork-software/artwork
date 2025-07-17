@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDisclosureComponentsRequest;
 use App\Http\Requests\UpdateDisclosureComponentsRequest;
-use Artwork\Modules\ProjectTab\Models\DisclosureComponents;
+use Artwork\Modules\Project\Models\DisclosureComponents;
 
 class DisclosureComponentsController extends Controller
 {

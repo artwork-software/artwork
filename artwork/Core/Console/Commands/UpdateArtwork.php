@@ -85,7 +85,7 @@ class UpdateArtwork extends Command
                 NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED,
                 NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
                 NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
-                NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
+                NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST, NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST
                 ] as $enum
             ) {
                 $user->notificationSettings()->updateOrCreate([

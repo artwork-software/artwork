@@ -31,14 +31,14 @@
                 <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 1"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                             {{ $t('ToDo-List name descending') }}
                             <IconCheck class="w-5 h-5" v-if="currentSort === 1" />
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 2"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                             {{ $t('ToDo-List name ascending') }}
                             <IconCheck class="w-5 h-5" v-if="currentSort === 2" />
                         </div>

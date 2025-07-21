@@ -33,7 +33,7 @@
                                     <div class="py-1">
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('day')"
-                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Day')"
@@ -43,7 +43,7 @@
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('week')"
-                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')"
@@ -53,7 +53,7 @@
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('month')"
-                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Month')"

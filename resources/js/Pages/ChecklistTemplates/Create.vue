@@ -31,7 +31,7 @@
                     <div @click="openChangeUsersModal"
                          class="text-secondary ml-4 flex items-center px-2 py-2 text-sm subpixel-antialiased cursor-pointer">
                         <PencilAltIcon
-                            class="h-5 w-5 text-primaryText group-hover:text-white"
+                            class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                             aria-hidden="true"/>
                     </div>
                 </div>

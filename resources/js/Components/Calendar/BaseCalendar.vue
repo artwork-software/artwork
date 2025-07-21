@@ -1,6 +1,6 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
-        <div class="w-full top-0 left-4 px-5 sticky z-40" >
+        <div class="w-full top-0 left-8 px-5 fixed z-40" >
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"

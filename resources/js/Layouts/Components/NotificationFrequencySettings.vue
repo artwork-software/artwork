@@ -66,11 +66,11 @@
                                             v-for="frequency in notificationFrequencies"
                                             :key="frequency.value"
                                         >
-                                            <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                                     <span :class="[frequency.value === type.frequency ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                          {{$t(frequency.title)}}
                                                     </span>
-                                                <span :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                <span :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                             <CheckIcon v-if="frequency.value === type.frequency" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                                     </span>
                                             </li>

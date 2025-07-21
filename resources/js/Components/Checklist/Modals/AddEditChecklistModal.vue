@@ -28,11 +28,11 @@
                                                :key="'keineVorlage'"
                                                :value="{name:'',id:null}"
                                                v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <span :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                 {{ $t('No template') }}
                                             </span>
-                                        <span :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                        <span :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                   <IconCircleCheckFilled v-if="selected"
                                                                          class="h-5 w-5 flex text-success"
                                                                          aria-hidden="true"
@@ -45,12 +45,12 @@
                                                :key="template.id"
                                                :value="template"
                                                v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <span
                                                 :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                 {{ template.name }}
                                             </span>
-                                        <span :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                        <span :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                   <IconCircleCheckFilled v-if="selected"
                                                                          class="h-5 w-5 flex text-success"
                                                                          aria-hidden="true"

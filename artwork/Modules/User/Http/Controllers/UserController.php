@@ -37,6 +37,7 @@ use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContract;
+use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
@@ -348,11 +349,24 @@ class UserController extends Controller
 
     public function editUserContract(User $user): Response|ResponseFactory
     {
+        $user->load('contract');
+
+        // Provide a default contract object if the user doesn't have a contract
+        $contract = $user->contract ?? new UserContractAssign([
+            'user_id' => $user->id,
+            'user_contract_id' => null,
+            'free_full_days_per_week' => 0,
+            'free_half_days_per_week' => 0,
+            'special_day_rule_active' => false,
+            'compensation_period' => 0,
+            'free_sundays_per_season' => 0,
+            'days_off_first_26_weeks' => 0.00
+        ]);
 
         return inertia('Users/UserContract', [
             'userToEdit' => new UserShowResource($user),
             'currentTab' => 'workTimePattern',
-            'contract' => $user->load('contract')->contract,
+            'contract' => $contract,
             'userContracts' => UserContract::all(),
         ]);
     }
@@ -871,19 +885,101 @@ class UserController extends Controller
         EventService $eventService,
         UserService $userService
     ): RedirectResponse {
+        // Get the authenticated user ID for reassigning ownership
+        $authUserId = $userService->getAuthUserId();
+
+        // Handle belongsToMany relationships - detach the user
         $user->departments()->detach();
+        $user->projects()->detach();
+        $user->adminRooms()->detach();
+        $user->crafts()->detach();
+        $user->assignedCrafts()->detach();
+        $user->managingCrafts()->detach();
+        $user->shiftQualifications()->detach();
+        $user->chats()->detach();
+        $user->verifiableEventTypes()->detach();
+        $user->accessMoneySources()->detach();
+
+        // Handle hasMany relationships - reassign or delete
+        // Reassign created rooms to authenticated user
         $user->createdRooms()->withTrashed()->each(
             fn(Room $room) => $roomService->update(
                 $room,
-                ['user_id' => $userService->getAuthUserId()]
+                ['user_id' => $authUserId]
             )
         );
+
+        // Reassign events to authenticated user
         $user->events()->withTrashed()->each(
             fn(Event $event) => $eventService->update(
                 $event,
-                ['user_id' => $userService->getAuthUserId()]
+                ['user_id' => $authUserId]
             )
         );
+
+        // Delete or reassign other hasMany relationships
+        $user->project_files()->update(['user_id' => $authUserId]);
+        $user->notificationSettings()->delete();
+        $user->comments()->update(['user_id' => $authUserId]);
+        $user->private_checklists()->update(['user_id' => $authUserId]);
+        $user->doneTasks()->update(['user_id' => $authUserId]);
+        $user->globalNotification()->delete();
+        $user->money_sources()->update(['creator_id' => $authUserId]);
+        $user->moneySourceTasks()->update(['user_id' => $authUserId]);
+        $user->tasks()->update(['user_id' => $authUserId]);
+        $user->eventVerifications()->delete();
+        $user->workTimeBookings()->delete();
+
+        // Handle hasOne relationships - delete
+        if ($user->calendarAbo) {
+            $user->calendarAbo->delete();
+        }
+
+        if ($user->shiftCalendarAbo) {
+            $user->shiftCalendarAbo->delete();
+        }
+
+        if ($user->calendar_settings) {
+            $user->calendar_settings->delete();
+        }
+
+        if ($user->calendar_filter) {
+            $user->calendar_filter->delete();
+        }
+
+        if ($user->shift_calendar_filter) {
+            $user->shift_calendar_filter->delete();
+        }
+
+        if ($user->commentedBudgetItemsSetting) {
+            $user->commentedBudgetItemsSetting->delete();
+        }
+
+        if ($user->workerShiftPlanFilter) {
+            $user->workerShiftPlanFilter->delete();
+        }
+
+        if ($user->inventoryArticlePlanFilter) {
+            $user->inventoryArticlePlanFilter->delete();
+        }
+
+        if ($user->inventoryManagementFilter) {
+            $user->inventoryManagementFilter->delete();
+        }
+
+        if ($user->projectFilterAndSortSetting) {
+            $user->projectFilterAndSortSetting->delete();
+        }
+
+        if ($user->userFilterAndSortSetting) {
+            $user->userFilterAndSortSetting->delete();
+        }
+
+        if ($user->contract) {
+            $user->contract->delete();
+        }
+
+        // Now delete the user
         $user->delete();
 
         broadcast(new UserUpdated())->toOthers();

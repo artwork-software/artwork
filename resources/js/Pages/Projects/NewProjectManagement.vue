@@ -113,7 +113,7 @@
                                     </div>
                                     <MenuItem v-for="projectSortEnumName in projectSortEnumNames" v-slot="{ active }">
                                         <div @click="sortBy = projectSortEnumName; applyFiltersAndSort()"
-                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                             {{ getSortEnumTranslation(projectSortEnumName) }}
                                             <IconCheck v-if="userProjectManagementSetting.sort_by === projectSortEnumName" class="w-5 h-5"/>
                                         </div>

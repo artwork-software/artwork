@@ -93,7 +93,7 @@ class BudgetService
                     table: $table,
                     name: 'Unterprojekte',
                     subName: '-',
-                    type: 'project_relevant_column',
+                    type: 'subprojects_column_for_group',
                     position: 100
                 );
             }
@@ -293,8 +293,25 @@ class BudgetService
 
         $groupedProjectData = [];
         $existingEntries = [];
-
         if ($project->is_group) {
+            // Check if the project group has the "Unterprojekte" column, and add it if it doesn't
+            $hasSubprojectsColumn = $columns->contains(function ($column) {
+                return $column->type === 'subprojects_column_for_group';
+            });
+
+            if (!$hasSubprojectsColumn) {
+                $this->columnService->createColumnInTable(
+                    table: $table,
+                    name: 'Unterprojekte',
+                    subName: '-',
+                    type: 'subprojects_column_for_group',
+                    position: 100
+                );
+
+                // Refresh columns after adding the new one
+                $columns = $table->columns()->get();
+            }
+
             $groupProjects = $project->projectsOfGroup;
             $groupColumns = $project->table()->first()?->columns()->get() ?? collect();
             $firstTwoGroupColumns = $groupColumns->sortBy('position')->take(2);

@@ -470,6 +470,12 @@ class ProjectController extends Controller
         } elseif (!empty($request->selectedGroup)) {
             $group = Project::find($request->selectedGroup['id']);
             $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+
+            // Ensure the group's is_group flag is set to true
+            if (!$group->is_group) {
+                $group->is_group = true;
+                $group->save();
+            }
         }
 
         $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
@@ -478,9 +484,24 @@ class ProjectController extends Controller
 
         $project->departments()->sync($departments->pluck('id'));
 
-        $this->budgetService->generateBasicBudgetValues(
-            $project
-        );
+        // Generate basic budget values for the project
+        $this->budgetService->generateBasicBudgetValues($project);
+
+        // If the project is not a group but is associated with a group,
+        // ensure it has at least one column marked as relevant for project groups
+        if (!$request->boolean('isGroup') && !empty($request->selectedGroup)) {
+            $table = $project->table()->first();
+            if ($table) {
+                $columns = $table->columns()->get();
+                if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
+                    // Mark the last column as relevant for project groups
+                    $lastColumn = $columns->sortBy('position')->last();
+                    if ($lastColumn) {
+                        $lastColumn->update(['relevant_for_project_groups' => true]);
+                    }
+                }
+            }
+        }
 
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id');
         $project->shiftRelevantEventTypes()->sync($eventRelevantEventTypeIds);
@@ -2407,6 +2428,25 @@ class ProjectController extends Controller
         if ($request->get('selectedGroup') !== null) {
             $group = Project::find($request->get('selectedGroup')['id']);
             $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+
+            // Ensure the group's is_group flag is set to true
+            if (!$group->is_group) {
+                $group->is_group = true;
+                $group->save();
+            }
+
+            // Ensure the project has at least one column marked as relevant for project groups
+            $table = $project->table()->first();
+            if ($table) {
+                $columns = $table->columns()->get();
+                if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
+                    // Mark the last column as relevant for project groups
+                    $lastColumn = $columns->sortBy('position')->last();
+                    if ($lastColumn) {
+                        $lastColumn->update(['relevant_for_project_groups' => true]);
+                    }
+                }
+            }
         }
 
         $oldProjectName = $project->name;
@@ -2576,6 +2616,30 @@ class ProjectController extends Controller
     {
         $projectIdsToAdd = $request->collect('projectIdsToAdd')->pluck('id');
         $projectGroup->projectsOfGroup()->sync($projectIdsToAdd);
+
+        // Ensure the project group's is_group flag is set to true if there are projects to add
+        if (!$projectGroup->is_group && count($projectIdsToAdd) > 0) {
+            $projectGroup->is_group = true;
+            $projectGroup->save();
+        }
+
+        // Ensure all projects being added to the group have at least one column marked as relevant for project groups
+        foreach ($projectIdsToAdd as $projectId) {
+            $project = Project::find($projectId);
+            if ($project) {
+                $table = $project->table()->first();
+                if ($table) {
+                    $columns = $table->columns()->get();
+                    if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
+                        // Mark the last column as relevant for project groups
+                        $lastColumn = $columns->sortBy('position')->last();
+                        if ($lastColumn) {
+                            $lastColumn->update(['relevant_for_project_groups' => true]);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private function checkProjectGenreChanges($projectId, $oldGenres, $newGenres): void

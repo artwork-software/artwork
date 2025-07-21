@@ -136,9 +136,9 @@ export default {
                     <BaseMenu has-no-offset>
                         <MenuItem v-slot="{ active }">
                             <a href="#" @click="removeComponentFromTab(element.id)"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                 <IconTrash stroke-width="1.5"
-                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                            aria-hidden="true"/>
                                 {{ $t('Delete') }}
                             </a>

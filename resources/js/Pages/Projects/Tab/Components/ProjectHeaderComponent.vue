@@ -199,18 +199,18 @@ export default {
                                     v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.auth.user.id) || headerObject.projectManagerIds.includes(this.$page.props.auth.user.id) || $can('write projects')"
                                     v-slot="{ active }">
                                     <a @click="openEditProjectModal"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                         <IconEdit stroke-width="1.5"
-                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                   aria-hidden="true"/>
                                         {{ $t('Edit basic data') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="duplicateProject(this.project)"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                         <IconCopy stroke-width="1.5"
-                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                   aria-hidden="true"/>
                                         {{ $t('Duplicate') }}
                                     </a>
@@ -219,9 +219,9 @@ export default {
                                     v-if="headerObject.projectDeleteIds.includes(this.$page.props.auth.user.id) ||$role('artwork admin')"
                                     v-slot="{ active }">
                                     <a @click="openDeleteProjectModal(this.project)"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                         <IconTrash stroke-width="1.5"
-                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                    aria-hidden="true"/>
                                         {{ $t('Put in the trash') }}
                                     </a>
@@ -300,7 +300,7 @@ export default {
                         <button class="ml-4 subpixel-antialiased text-artwork-buttons-create flex items-center cursor-pointer"
                                 @click="openProjectHistoryModal()">
                             <IconChevronRight
-                                class="-mr-0.5 h-4 w-4  group-hover:text-white"
+                                class="-mr-0.5 h-4 w-4  group-hover:text-artwork-buttons-hover"
                                 aria-hidden="true"/>
                             {{ $t('View history') }}
                         </button>

@@ -775,6 +775,25 @@ class ProjectService
     {
         $project->groups()->attach($projectGroup->id);
         $project->save();
+
+        // Update is_group flag of the project group to true
+        if (!$projectGroup->is_group) {
+            $projectGroup->is_group = true;
+            $projectGroup->save();
+        }
+
+        // Ensure the project has at least one column marked as relevant for project groups
+        $table = $project->table()->first();
+        if ($table) {
+            $columns = $table->columns()->get();
+            if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
+                // Mark the last column as relevant for project groups
+                $lastColumn = $columns->sortBy('position')->last();
+                if ($lastColumn) {
+                    $lastColumn->update(['relevant_for_project_groups' => true]);
+                }
+            }
+        }
     }
 
     public function scoutSearch(string $query): \Laravel\Scout\Builder

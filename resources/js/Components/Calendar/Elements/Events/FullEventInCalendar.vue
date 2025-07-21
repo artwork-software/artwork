@@ -209,6 +209,9 @@
                                 </div>
                             </div>
                         </div>
+                        <div v-if="usePage().props.auth.user.calendar_settings.description" :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}" class="">
+                            <EventNoteComponent :event="event"/>
+                        </div>
                     </div>
                     <div v-if="usePage().props.auth.user.calendar_settings.work_shifts" class="grid grid-cols-1 md:grid-cols-2 text-xs my-2">
                         <a v-if="firstProjectShiftTabId" :href="route('projects.tab', {project: event?.project?.id, projectTab: firstProjectShiftTabId})" v-for="(shift) in event.shifts" :key="shift.id">
@@ -218,9 +221,7 @@
                             </span>
                         </a>
                     </div>
-                    <div v-if="usePage().props.auth.user.calendar_settings.description" :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}" class="">
-                        <EventNoteComponent :event="event"/>
-                    </div>
+
                 </div>
             </div>
             <div class="flex gap-x-1 mt-5">

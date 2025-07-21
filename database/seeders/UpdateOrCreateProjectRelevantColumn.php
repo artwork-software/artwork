@@ -26,14 +26,14 @@ class UpdateOrCreateProjectRelevantColumn extends Seeder
         foreach ($projects as $project) {
             if ($project->is_group) {
                 $table = $project?->table;
-                $column = $table?->columns()->where('type', 'project_relevant_column')->first();
+                $column = $table?->columns()->where('type', 'subprojects_column_for_group')->first();
 
                 if (!$column && $table) {
                     $newColumn = $this->columnService->createColumnInTable(
                         $table,
                         'Unterprojekte',
                         '-',
-                        'project_relevant_column',
+                        'subprojects_column_for_group',
                         $table->columns()->count() + 1
                     );
 

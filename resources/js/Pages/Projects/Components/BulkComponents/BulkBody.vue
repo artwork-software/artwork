@@ -41,28 +41,28 @@
             <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72" :disabled="!hasCreateEventsPermission">
                 <MenuItem v-slot="{ active }">
                     <div @click="hasCreateEventsPermission ? updateUserSortId(1) : null"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Sort by room') }}
                         <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 1"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
                     <div @click="hasCreateEventsPermission ? updateUserSortId(2) : null"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Sort by appointment type') }}
                         <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 2"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
                     <div @click="hasCreateEventsPermission ? updateUserSortId(3) : null"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Sort by day') }}
                         <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 3"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
                     <div @click="hasCreateEventsPermission ? updateUserSortId(0) : null"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
                         {{ $t('Reset sorting') }}
                     </div>
                 </MenuItem>

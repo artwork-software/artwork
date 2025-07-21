@@ -98,41 +98,41 @@
                         <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
                             <MenuItem v-slot="{ active }">
                                 <div @click="sortTo(1)"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                     {{ $t('Project period ascending') }}
                                     <IconCheck class="w-5 h-5" v-if="currentSort === 1" />
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                                 <div @click="sortTo(2)"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                     {{ $t('Project period descending') }}
                                     <IconCheck class="w-5 h-5" v-if="currentSort === 2" />
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                                 <div @click="currentSort = 3"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                     {{ $t('ToDo-List name descending') }}
                                     <IconCheck class="w-5 h-5" v-if="currentSort === 3" />
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                                 <div @click="currentSort = 4"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                     {{ $t('ToDo-List name ascending') }}
                                     <IconCheck class="w-5 h-5" v-if="currentSort === 4" />
                                 </div>
                             </MenuItem>
                             <!--<MenuItem v-slot="{ active }">
                                 <div @click="sortTo(5)"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     ToDo Deadline aufsteigend
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                                 <div @click="sortTo(6)"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     ToDo Deadline absteigend
                                 </div>
                             </MenuItem>-->

@@ -21,7 +21,7 @@
                         </span>
                     </div>
                     <MenuItem v-for="userSortEnumName in userSortEnumNames" v-slot="{ active }">
-                        <div @click="this.sortBy = userSortEnumName; this.applyFiltersAndSort()" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                        <div @click="this.sortBy = userSortEnumName; this.applyFiltersAndSort()" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                             {{ getSortEnumTranslation(userSortEnumName) }}
                             <IconCheck v-if="this.getUserSortBySetting() === userSortEnumName" class="w-5 h-5"/>
                         </div>
@@ -105,18 +105,18 @@
                                     <BaseMenu v-if="hasAdminRole()" has-no-offset>
                                         <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                             <a :href="checkLink(user)"
-                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <PencilAltIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                     aria-hidden="true"/>
                                                 {{ $t('Edit Profile') }}
                                             </a>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                             <a @click="openDeleteUserModal(user)"
-                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <TrashIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                     aria-hidden="true"/>
                                                 <span v-if="user.type === 'user'">
                                                             {{ $t('Delete user') }}

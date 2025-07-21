@@ -8,7 +8,7 @@
                 <BaseMenu class="ml-4" v-if="this.$can('edit budget templates')">
                     <MenuItem v-slot="{ active }">
                         <a @click="openRenameTableModal()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <TrashIcon
                                 class="mr-3 h-5 w-5 text-primaryText"
                                 aria-hidden="true"/>
@@ -17,7 +17,7 @@
                     </MenuItem>
                     <MenuItem v-if="table.is_template" v-slot="{ active }">
                         <a @click="deleteBudgetTemplate()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconTrash class="mr-3 h-5 w-5 text-primaryText"/>
                             {{ $t('Delete') }}
                         </a>
@@ -190,14 +190,14 @@
                                         {{ $t('Unlock') }}
                                     </a>
                                 </MenuItem>
-                                <MenuItem v-slot="{ active }" v-if="column.type !== 'project_relevant_column'">
+                                <MenuItem v-slot="{ active }" v-if="column.type !== 'subprojects_column_for_group'">
                                     <a v-show="index > 2" @click="deleteColumn(column.id)"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconTrash class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Delete') }}
                                     </a>
                                 </MenuItem>
-                                <MenuItem v-slot="{ active }" v-if="column.type !== 'project_relevant_column'">
+                                <MenuItem v-slot="{ active }" v-if="column.type !== 'subprojects_column_for_group'">
                                     <a v-show="index > 2" @click="duplicateColumn(column.id)"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconCopy class="mr-3 h-5 w-5 text-primaryText"/>
@@ -205,7 +205,7 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }"
-                                          v-if="!column.relevant_for_project_groups && column.type !== 'project_relevant_column' && !project.is_group">
+                                          v-if="!column.relevant_for_project_groups && column.type !== 'subprojects_column_for_group' && !project.is_group">
                                     <a v-show="index > 2" @click="setRelevantForProjectGroup(column.id)"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconFlagUp class="mr-3 h-5 w-5 text-primaryText"/>
@@ -213,7 +213,7 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }"
-                                          v-if="column.relevant_for_project_groups && column.type !== 'project_relevant_column' && !project.is_group">
+                                          v-if="column.relevant_for_project_groups && column.type !== 'subprojects_column_for_group' && !project.is_group">
                                     <a v-show="index > 2" @click="setRelevantForProjectGroup(column.id)"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconFlagUp class="mr-3 h-5 w-5 text-primaryText"/>
@@ -353,13 +353,13 @@
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <span
-                                            v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">{{
+                                            v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">{{
                                                 this.toCurrencyString(this.getSumOfTable(0, column.id))
                                             }}</span>
                                         <span v-if="column.type === 'sage'">{{
                                                 this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0))
                                             }}</span>
-                                        <span v-if="column.type === 'project_relevant_column'">
+                                        <span v-if="column.type === 'subprojects_column_for_group'">
                                             {{
                                                 this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST'))
                                             }}
@@ -382,7 +382,7 @@
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                         <span
-                                            v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
+                                            v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
                                             {{ this.toCurrencyString(table.commentedCostSums[column.id]) }}
                                         </span>
                                         <span v-if="column.type === 'sage'">
@@ -390,7 +390,7 @@
                                                 this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(0))
                                             }}
                                         </span>
-                                        <span v-if="column.type === 'project_relevant_column'">
+                                        <span v-if="column.type === 'subprojects_column_for_group'">
                                             {{
                                                 this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_COST'))
                                             }}
@@ -464,13 +464,13 @@
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <span
-                                            v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">{{
+                                            v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">{{
                                                 this.toCurrencyString(this.getSumOfTable(1, column.id))
                                             }}</span>
                                         <span v-if="column.type === 'sage'">{{
                                                 this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1))
                                             }}</span>
-                                        <span v-if="column.type === 'project_relevant_column'">
+                                        <span v-if="column.type === 'subprojects_column_for_group'">
                                             {{
                                                 this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING'))
                                             }}
@@ -494,7 +494,7 @@
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                          <span
-                                             v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
+                                             v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
                                             {{ this.toCurrencyString(table.commentedEarningSums[column.id]) }}
                                         </span>
                                         <span v-if="column.type === 'sage'">
@@ -502,7 +502,7 @@
                                                 this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(1))
                                             }}
                                         </span>
-                                        <span v-if="column.type === 'project_relevant_column'">
+                                        <span v-if="column.type === 'subprojects_column_for_group'">
                                             {{
                                                 this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_EARNING'))
                                             }}
@@ -543,7 +543,7 @@
                              this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0) < 0 ? 'text-red-500' : '',
                             calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST') < 0 ? 'text-red-500' : ''
                          ]">
-                            <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
+                            <span v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
                                 {{
                                     this.toCurrencyString((this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)))
                                 }}
@@ -553,7 +553,7 @@
                                     this.toCurrencyString((this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0)))
                                 }}
                             </span>
-                            <span v-if="column.type === 'project_relevant_column'">
+                            <span v-if="column.type === 'subprojects_column_for_group'">
                                 {{
                                     this.toCurrencyString((calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST')))
                                 }}

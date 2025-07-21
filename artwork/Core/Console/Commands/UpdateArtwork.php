@@ -104,7 +104,7 @@ class UpdateArtwork extends Command
         $this->info('----------------------------------------------------------');
 
 
-        // add to all project Groups the new column with type project_relevant_column
+        // add to all project Groups the new column with type subprojects_column_for_group
         $this->info('Add new column to all project groups');
         $this->call('db:seed', ['--class' => 'UpdateOrCreateProjectRelevantColumn', '--force' => true]);
         $this->info('----------------------------------------------------------');
@@ -113,7 +113,7 @@ class UpdateArtwork extends Command
         $this->call('artwork:update-service-provider-contacts');
 
         $this->info('----------------------------------------------------------');
-        // add to all project Groups the new column with type project_relevant_column
+        // add to all project Groups the new column with type subprojects_column_for_group
         $this->info('add basic inventory article status');
         $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder', '--force' => true]);
 

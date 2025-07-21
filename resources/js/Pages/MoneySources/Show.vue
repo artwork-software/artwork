@@ -14,18 +14,18 @@
                                 v-if="$role('artwork admin') || access_member.includes($page.props.auth.user.id) || competent_member.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                 v-slot="{ active }">
                                 <a @click="openEditMoneySourceModal"
-                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconEdit stroke-width="1.5"
-                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                               aria-hidden="true"/>
                                     {{$t('Edit basic data')}}
                                 </a>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                                 <a @click="duplicateMoneySource(this.moneySource) || competent_member.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
-                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconCopy stroke-width="1.5"
-                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                               aria-hidden="true"/>
                                     {{ $t('Duplicate')}}
                                 </a>
@@ -34,9 +34,9 @@
                                 v-if="$role('artwork admin') || access_member.includes($page.props.auth.user.id) || competent_member.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                 v-slot="{ active }">
                                 <a @click="openDeleteSourceModal(this.moneySource)"
-                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconTrash stroke-width="1.5"
-                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                aria-hidden="true"/>
                                     {{ $t('Delete')}}
                                 </a>
@@ -53,7 +53,7 @@
                         <button class="ml-4 mt-3 subpixel-antialiased flex items-center linkText cursor-pointer text-artwork-buttons-create"
                                 @click="openMoneySourceHistoryModal()">
                             <IconChevronRight stroke-width="1.5"
-                                              class="-mr-0.5 h-4 w-4  group-hover:text-white"
+                                              class="-mr-0.5 h-4 w-4  group-hover:text-artwork-buttons-hover"
                                               aria-hidden="true"/>
                             {{ $t('View history')}}
                         </button>

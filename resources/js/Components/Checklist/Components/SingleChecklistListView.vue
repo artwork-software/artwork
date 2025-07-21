@@ -16,13 +16,13 @@
             <BaseMenu has-no-offset v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement" >
                 <MenuItem as="div" v-slot="{ active }" v-if="!checklist.private">
                     <a @click="openEditChecklistTeamsModal = true"
-                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
+                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
                         <IconUserPlus stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
                         {{ $t('Assign users') }}
                     </a>
                 </MenuItem>
                 <MenuItem as="div" v-slot="{ active }">
-                    <a @click="showChecklistEditModal = true" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
+                    <a @click="showChecklistEditModal = true" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
                         <IconEdit stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
                         {{ $t('Edit') }}
                     </a>
@@ -30,14 +30,14 @@
                 <MenuItem as="div" v-slot="{ active }"
                           v-if="!checkIfAllTasksChecked && checklist.tasks.length > 0">
                     <a @click="doneOrUndoneAllTasks(true)"
-                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
+                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
                         <IconListCheck stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
                         {{ $t('Mark all tasks as completed') }}
                     </a>
                 </MenuItem>
                 <MenuItem as="div" v-slot="{ active }" v-if="checkIfAllTasksChecked && checklist.tasks.length > 0">
                     <a @click="doneOrUndoneAllTasks(false)"
-                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
+                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
                         <IconListDetails stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
                         {{ $t('Mark all tasks as unfinished') }}
                     </a>
@@ -45,7 +45,7 @@
                 <MenuItem as="div"
                           v-slot="{ active }">
                     <a @click="createTemplateFromChecklist "
-                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
+                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
                         <IconFilePlus stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
                         {{ $t('Save as template') }}
                     </a>
@@ -53,14 +53,14 @@
                 <MenuItem as="div" v-slot="{ active }">
                     <div
                         @click="duplicateChecklist"
-                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
+                        :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
                         <IconCopy stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
                         {{ $t('Duplicate') }}
                     </div>
                 </MenuItem>
                 <MenuItem as="div" v-slot="{ active }" v-if="can('can use checklists') && checklist.user_id === usePage().props.auth.user.id || can('can edit checklist') || isAdmin || checklist.user_id === usePage().props.auth.user.id">
                     <a @click="showDeleteChecklistModal = true"
-                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
+                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
                         <IconTrash stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
                         {{ $t('Delete') }}
                     </a>

@@ -48,18 +48,18 @@
                     <BaseMenu has-no-offset class="ml-3" v-if="(canEditComponent && (projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds?.includes($page.props.auth.user.id) || isAdmin)) || isInOwnTaskManagement">
                         <MenuItem v-slot="{ active }">
                             <div @click="openEditTaskModal = true"
-                                 :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                 :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                 <IconEdit stroke-width="1.5"
-                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                           aria-hidden="true"/>
                                 {{ $t('Edit') }}
                             </div>
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
                             <a @click="openDeleteTaskModal = true"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                 <IconTrash stroke-width="1.5"
-                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                            aria-hidden="true"/>
                                 {{ $t('Delete') }}
                             </a>

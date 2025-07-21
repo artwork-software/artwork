@@ -113,9 +113,9 @@
                                         <BaseMenu>
                                             <MenuItem v-slot="{ active }">
                                                 <a @click="openEditAreaModal(area)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                                     <IconEdit stroke-width="1.5"
-                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                               aria-hidden="true"/>
                                                     {{ $t('edit')}}
                                                 </a>
@@ -123,27 +123,27 @@
                                             <MenuItem v-slot="{ active }">
                                                 <a href="#"
                                                    @click="duplicateArea(area)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <IconCopy stroke-width="1.5"
-                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                               aria-hidden="true"/>
                                                     {{ $t('Duplicate')}}
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }">
                                                 <a @click="openSoftDeleteAreaModal(area)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <IconTrash stroke-width="1.5"
-                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                                aria-hidden="true"/>
                                                     {{ $t('In the recycle bin')}}
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }">
                                                 <a @click="openDeleteAllRoomsModal(area)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <IconRecycle stroke-width="1.5"
-                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                                  aria-hidden="true"/>
                                                     {{ $t('Remove all rooms')}}
                                                 </a>
@@ -191,9 +191,9 @@
                                                         <BaseMenu :key="element.id" class="invisible group-hover:visible">
                                                             <MenuItem v-slot="{ active }">
                                                                 <a @click="openEditRoomModal(element)"
-                                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                                                     <IconEdit stroke-width="1.5"
-                                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                                               aria-hidden="true"/>
                                                                     {{ $t('edit')}}
                                                                 </a>
@@ -201,18 +201,18 @@
                                                             <MenuItem v-slot="{ active }">
                                                                 <a href="#"
                                                                    @click="duplicateRoom(element)"
-                                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                     <IconCopy stroke-width="1.5"
-                                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                                               aria-hidden="true"/>
                                                                     {{ $t('Duplicate')}}
                                                                 </a>
                                                             </MenuItem>
                                                             <MenuItem v-slot="{ active }">
                                                                 <a @click="openSoftDeleteRoomModal(element)"
-                                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                     <IconTrash stroke-width="1.5"
-                                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                                                aria-hidden="true"/>
                                                                     {{ $t('In the recycle bin')}}
                                                                 </a>
@@ -266,9 +266,9 @@
                                                                       :key="element.id">
                                                                 <MenuItem v-slot="{ active }">
                                                                     <a @click="openEditRoomModal(element)"
-                                                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                                                         <IconEdit stroke-width="1.5"
-                                                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                                                   aria-hidden="true"/>
                                                                         {{ $t('Edit')}}
                                                                     </a>
@@ -276,18 +276,18 @@
                                                                 <MenuItem v-slot="{ active }">
                                                                     <a href="#"
                                                                        @click="duplicateRoom(element)"
-                                                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                         <IconCopy  stroke-width="1.5"
-                                                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                                                    aria-hidden="true"/>
                                                                         {{ $t('Duplicate')}}
                                                                     </a>
                                                                 </MenuItem>
                                                                 <MenuItem v-slot="{ active }">
                                                                     <a @click="openSoftDeleteRoomModal(element)"
-                                                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                         <IconTrash stroke-width="1.5"
-                                                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                                                    aria-hidden="true"/>
                                                                         {{ $t('In the recycle bin')}}
                                                                     </a>

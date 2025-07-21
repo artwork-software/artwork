@@ -9,25 +9,25 @@
         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
             <BaseMenu dots-size="h-5 w-5" has-no-offset>
                 <MenuItem v-slot="{ active }" @click="$emit('editResidency', artist_residency)">
-                    <div :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                    <div :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                         <component is="IconEdit" stroke-width="1.5"
-                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                    aria-hidden="true"/>
                         {{ $t('Edit')}}
                     </div>
                 </MenuItem>
                 <MenuItem @click="duplicate" v-slot="{ active }">
-                    <div :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                    <div :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                         <component is="IconCopy" stroke-width="1.5"
-                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                    aria-hidden="true"/>
                         {{ $t('Duplicate')}}
                     </div>
                 </MenuItem>
                 <MenuItem @click="deleteArtistResidency" v-slot="{ active }">
-                    <div :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                    <div :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                         <component is="IconTrash" stroke-width="1.5"
-                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                    aria-hidden="true"/>
                         {{ $t('Delete')}}
                     </div>

@@ -37,6 +37,7 @@ use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContract;
+use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
@@ -348,11 +349,24 @@ class UserController extends Controller
 
     public function editUserContract(User $user): Response|ResponseFactory
     {
+        $user->load('contract');
+
+        // Provide a default contract object if the user doesn't have a contract
+        $contract = $user->contract ?? new UserContractAssign([
+            'user_id' => $user->id,
+            'user_contract_id' => null,
+            'free_full_days_per_week' => 0,
+            'free_half_days_per_week' => 0,
+            'special_day_rule_active' => false,
+            'compensation_period' => 0,
+            'free_sundays_per_season' => 0,
+            'days_off_first_26_weeks' => 0.00
+        ]);
 
         return inertia('Users/UserContract', [
             'userToEdit' => new UserShowResource($user),
             'currentTab' => 'workTimePattern',
-            'contract' => $user->load('contract')->contract,
+            'contract' => $contract,
             'userContracts' => UserContract::all(),
         ]);
     }

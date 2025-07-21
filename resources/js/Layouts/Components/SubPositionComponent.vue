@@ -26,9 +26,9 @@
                                       v-slot="{ active }"
                                       v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
                                 <span @click="fixSubPosition(subPosition.id)"
-                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                      :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconLock stroke-width="1.5"
-                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                               aria-hidden="true"/>
                                     {{ $t('Commitment') }}
                                 </span>
@@ -37,27 +37,27 @@
                                       v-slot="{ active }"
                                       v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
                                 <span @click="unfixSubPosition(subPosition.id)"
-                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                      :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconLockOpen stroke-width="1.5"
-                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                   aria-hidden="true"/>
                                     {{ $t('Canceling a fixed term') }}
                                 </span>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                                 <span @click="openDeleteSubPositionModal(subPosition)"
-                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                      :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconTrash stroke-width="1.5"
-                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                aria-hidden="true"/>
                                     {{ $t('Delete') }}
                                 </span>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                                 <a @click="duplicateSubpostion(subPosition.id)"
-                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconCopy stroke-width="1.5"
-                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                               aria-hidden="true"/>
                                     {{ $t('Duplicate') }}
                                 </a>
@@ -164,7 +164,7 @@
                                     cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                      class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
                                     <div class=" flex items-center"
-                                         v-if="cell.column.type !== 'project_relevant_column'">
+                                         v-if="cell.column.type !== 'subprojects_column_for_group'">
                                         <div class="cursor-pointer"
                                              @click="handleCellClick(cell, 'comment', index, row)"
                                              v-if="cell.comments_count > 0">
@@ -197,7 +197,7 @@
                                                 }}</span>
                                         </div>
                                     </div>
-                                    <div v-else class="flex items-center gap-x-1">
+                                    <div v-else class="flex items-center gap-x-1" :class="cell.column.color !== 'whiteColumn' ? cell.column.color : ''">
                                         <component @click="openRelevantBudgetDataSumModalForCell(cell)"
                                                    v-if="calculateRelevantBudgetDataSumFormProjectsInGroup(cell) > 0"
                                                    is="IconList"
@@ -248,7 +248,7 @@
                                             @click=""
                                             :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
                                             <IconLock stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                       aria-hidden="true"/>
                                             {{ $t('Exclude') }}
                                         </span>
@@ -259,7 +259,7 @@
                                         <span
                                             :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
                                             <IconLockOpen stroke-width="1.5"
-                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                           aria-hidden="true"/>
                                             {{ $t('Include positions') }}
                                         </span>
@@ -269,7 +269,7 @@
                                             @click="duplicateRow(row.id)"
                                             :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
                                             <IconCopy stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                       aria-hidden="true"/>
                                             {{ $t('Duplicate') }}
                                         </span>
@@ -279,7 +279,7 @@
                                             @click="openDeleteRowModal(row)"
                                             :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
                                             <IconTrash stroke-width="1.5"
-                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                        aria-hidden="true"/>
                                             {{ $t('Delete') }}
                                         </span>
@@ -329,13 +329,13 @@
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'moneySource')"
                                  v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
                                  src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                            <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
+                            <span v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
                                 {{ this.toCurrencyString(subPosition.columnSums[column.id]?.sum) }}
                             </span>
                             <span v-if="column.type === 'sage'">
                                 {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
                             </span>
-                            <span v-if="column.type === 'project_relevant_column'">
+                            <span v-if="column.type === 'subprojects_column_for_group'">
                                 {{ calculateRelevantBudgetDataSumFormProjectsInGroupSubPosition() }}
                             </span>
                             <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"

@@ -25,9 +25,9 @@
                                 <MenuItem v-slot="{ active }">
                                     <a href="#"
                                        @click="eventPropertyToEdit = eventProperty; showEventPropertyModal = true;"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <PencilAltIcon
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                             aria-hidden="true"/>
                                         {{ $t('Event-Eigenschaft bearbeiten') }}
                                     </a>
@@ -35,9 +35,9 @@
                                 <MenuItem v-slot="{ active }">
                                     <a href="#"
                                        @click="eventPropertyToDelete = eventProperty; showDeleteEventPropertyModal = true;"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TrashIcon
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                             aria-hidden="true"/>
                                         {{ $t('Event-Eigenschaft löschen') }}
                                     </a>

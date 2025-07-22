@@ -29,10 +29,15 @@
                 </div>
 
                 <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">{{ $t('Daily Target Hours') }}</h3>
+                </div>
+
+                <div>
                     <BaseInput
                         v-model="workPatternForm.monday"
                         label="Monday"
                         type="time"
+                        :step="1"
                         id="monday" />
                     <p v-if="workPatternForm.errors.monday" class="text-red-500 mt-0.5 text-xs"></p>
                 </div>
@@ -42,6 +47,7 @@
                         v-model="workPatternForm.tuesday"
                         label="Tuesday"
                         type="time"
+                        :step="1"
                         id="tuesday" />
                     <p v-if="workPatternForm.errors.tuesday" class="text-red-500 mt-0.5 text-xs"></p>
                 </div>
@@ -51,6 +57,7 @@
                         v-model="workPatternForm.wednesday"
                         label="Wednesday"
                         type="time"
+                        :step="1"
                         id="wednesday" />
                     <p v-if="workPatternForm.errors.wednesday" class="text-red-500 mt-0.5 text-xs"></p>
 
@@ -61,6 +68,7 @@
                         v-model="workPatternForm.thursday"
                         label="Thursday"
                         type="time"
+                        :step="1"
                         id="thursday" />
                     <p v-if="workPatternForm.errors.thursday" class="text-red-500 mt-0.5 text-xs"></p>
                 </div>
@@ -70,6 +78,7 @@
                         v-model="workPatternForm.friday"
                         label="Friday"
                         type="time"
+                        :step="1"
                         id="friday" />
                     <p v-if="workPatternForm.errors.friday" class="text-red-500 mt-0.5 text-xs"></p>
                 </div>
@@ -79,6 +88,7 @@
                         v-model="workPatternForm.saturday"
                         label="Saturday"
                         type="time"
+                        :step="1"
                         id="saturday" />
                     <p v-if="workPatternForm.errors.saturday" class="text-red-500 mt-0.5 text-xs"></p>
                 </div>
@@ -88,6 +98,7 @@
                         v-model="workPatternForm.sunday"
                         label="Sunday"
                         type="time"
+                        :step="1"
                         id="sunday" />
                     <p v-if="workPatternForm.errors.sunday" class="text-red-500 mt-0.5 text-xs"></p>
                 </div>

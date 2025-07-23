@@ -1,4 +1,9 @@
 {
+    "Add Event": "Add Event",
+    "Add Shift": "Add Shift",
+    "Dismiss": "Dismiss",
+    "No events for this day": "No events for this day",
+    "No shifts for this day": "No shifts for this day",
     "A new verification link has been sent to the email address you provided in your profile settings.": "A new verification link has been sent to the email address you provided in your profile settings.",
     "A new verification link has been sent to your email address.": "A new verification link has been sent to your email address.",
     "A Timeout Occurred": "A Timeout Occurred",
@@ -2888,5 +2893,6 @@
     "Open demands": "Open demands",
     "Find out if there are any open demands for your shifts.": "Find out if there are any open demands for your shifts.",
     "Edit and create categories for your inventory.": "Edit and create categories for your inventory.",
-    "Daily Target Hours": "Daily Target Hours"
+    "Daily Target Hours": "Daily Target Hours",
+    "Collisions with shifts:": "Collisions with shifts:"
 }

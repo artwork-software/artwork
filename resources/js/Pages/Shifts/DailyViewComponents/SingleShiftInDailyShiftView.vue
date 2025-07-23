@@ -46,7 +46,7 @@
             <div v-for="drop in computedShiftQualificationDropElements" :key="drop.shift_qualification_id" class="flex items-center w-full gap-x-2 font-lexend rounded-lg bg-red-100">
                 <Menu as="div" class="relative w-full">
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
-                        <MenuButton class="flex cursor-pointer items-center gap-x-2 font-lexend rounded-lg w-full" @click="checkShiftCollision(drop.shift_qualification_id)">
+                        <MenuButton class="flex cursor-pointer items-center gap-x-2 font-lexend rounded-lg w-full" @click="checkShiftCollision(drop.shift_qualification_id, true)">
                             <div class="py-1.5 px-3 min-w-28 w-28 rounded-l-lg bg-red-200">
                                 <div class="text-xs text-left flex items-center gap-x-1">
                                     <component is="IconInfoTriangle" class="size-4 text-red-600" />
@@ -102,9 +102,10 @@
                                                 v-if="user.hasCollision"
                                                 icon="IconClock"
                                                 icon-size="w-4 h-4"
-                                                :tooltip-text="`${$t('Collision with shifts')}: ${user.collisionShifts.map(s => s.description).join(', ')}`"
+                                                :tooltip-text="getCollisionTooltip(user)"
                                                 direction="top"
                                                 classes="text-red-500 w-fit"
+                                                tooltip-css-class="w-72"
                                             />
                                             <span v-if="user.pivot?.craft_id" class="font-semibold">{{ user.originCraft?.abbreviation || 'N/A' }}</span>
                                         </div>
@@ -134,7 +135,7 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, defineAsyncComponent} from "vue";
+import {ref, computed, watch, defineAsyncComponent, onMounted} from "vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -142,12 +143,16 @@ import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
 import {can, is} from "laravel-permission-to-vuejs";
+import {useI18n} from "vue-i18n";
 
 const props = defineProps({
     shift: Object,
     shiftQualifications: Array,
     crafts: Object
 });
+
+// Initialize i18n
+const { t } = useI18n();
 
 const showShiftDetails = ref(true);
 const showAddShiftModal = ref(false);
@@ -164,6 +169,14 @@ const assignablePeopleCache = ref(
 const loadingStates = ref(
     props.shift.shifts_qualifications.reduce((acc, sq) => {
         acc[sq.shift_qualification_id] = false;
+        return acc;
+    }, {})
+);
+
+// Track when the last request was made for each qualification ID
+const lastRequestTime = ref(
+    props.shift.shifts_qualifications.reduce((acc, sq) => {
+        acc[sq.shift_qualification_id] = 0;
         return acc;
     }, {})
 );
@@ -192,38 +205,82 @@ const shiftGroups = computed(() => [
     { label: 'serviceProviders', items: props.shift.serviceProviders }
 ]);
 
-const checkShiftCollision = async (shiftQualificationId) => {
-    if (assignablePeopleCache.value[shiftQualificationId]?.length > 0) return;
+// Debounce time in milliseconds - prevent requests more frequently than this
+const DEBOUNCE_TIME = 2000; // 2 seconds
 
+const checkShiftCollision = async (shiftQualificationId, forceRefresh = false) => {
+    // Skip if already loading (prevents duplicate requests)
+    if (loadingStates.value[shiftQualificationId]) {
+        return;
+    }
+
+    // Check if we've made a request recently (debounce)
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime.value[shiftQualificationId];
+
+    // Skip if we've made a request recently and not forcing refresh
+    if (!forceRefresh && timeSinceLastRequest < DEBOUNCE_TIME && assignablePeopleCache.value[shiftQualificationId]?.length > 0) {
+        return;
+    }
+
+    // Update last request time
+    lastRequestTime.value[shiftQualificationId] = now;
+
+    // Set loading state
     loadingStates.value[shiftQualificationId] = true;
 
     try {
+        // Check if we have the required time parameters
+        if (!props.shift.start || !props.shift.end) {
+            // Set empty result and return early
+            assignablePeopleCache.value[shiftQualificationId] = getAssignablePeople(shiftQualificationId);
+            return;
+        }
+
+        // Use current date as fallback if date parameters are missing
+        const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
         const people = getAssignablePeople(shiftQualificationId);
-        const response = await axios.post(route('shift.check-collisions'), {
+        // Don't make the request if there are no people to check
+        if (people.length === 0) {
+            assignablePeopleCache.value[shiftQualificationId] = [];
+            return;
+        }
+
+        // Create request parameters with the correct parameter names and fallback values
+        // The backend expects start_date and end_date
+        const requestParams = {
             people: people.map(p => ({
                 id: p.id,
-                type: p.type.replace('service_provider', 'service_provider') // Match backend naming
+                type: p.type // Backend expects 'user', 'freelancer', or 'service_provider'
             })),
-            start_date: props.shift.start_date,
-            end_date: props.shift.end_date,
+            // Use the correct property names for dates - could be either startDate/endDate or start_date/end_date
+            start_date: props.shift.startDate || props.shift.start_date || today,
+            end_date: props.shift.endDate || props.shift.end_date || today,
             start: props.shift.start,
             end: props.shift.end,
             shift_id: props.shift.id
-        });
+        };
+
+        const response = await axios.post(route('shift.check-collisions'), requestParams);
 
         assignablePeopleCache.value[shiftQualificationId] = people.map(person => {
             const collisionData = response.data.find(d =>
                 d.id === person.id && d.type === person.type
             );
 
+            // Ensure hasCollision is set correctly based on collisionShifts
+            const hasCollision = collisionData?.hasCollision || false;
+            const collisionShifts = collisionData?.collisionShifts || [];
+
             return {
                 ...person,
-                hasCollision: collisionData?.hasCollision || false,
-                collisionShifts: collisionData?.collisionShifts || []
+                // Set hasCollision to true if either the backend says it's true OR there are collision shifts
+                hasCollision: hasCollision || collisionShifts.length > 0,
+                collisionShifts: collisionShifts
             };
         });
     } catch (error) {
-        console.error("Collision check failed:", error);
         assignablePeopleCache.value[shiftQualificationId] = getAssignablePeople(shiftQualificationId);
     } finally {
         loadingStates.value[shiftQualificationId] = false;
@@ -231,9 +288,14 @@ const checkShiftCollision = async (shiftQualificationId) => {
 };
 
 const getAssignablePeople = (shiftQualificationId) => {
+    // Validate that the shift has the required properties
+    if (!props.shift || !props.shift.craft || !props.shift.craft.id) {
+        return [];
+    }
+
     const craftIds = [
         props.shift.craft.id,
-        ...Object.values(props.crafts)
+        ...Object.values(props.crafts || {})
             .filter(c => c.universally_applicable)
             .map(c => c.id)
     ];
@@ -288,19 +350,49 @@ const getAssignablePeople = (shiftQualificationId) => {
     return peopleWithCraft;
 };
 
-// Angepasste Methode für das Menü, die ggf. Kollisionsdaten lädt und auch bereits zugewiesene Personen anzeigt
+// Angepasste Methode für das Menü, die bereits zugewiesene Personen anzeigt
+// Diese Funktion sollte KEINE Requests auslösen, da sie bei jedem Rendering aufgerufen wird
 const getAssignablePeopleWithCollision = (shiftQualificationId) => {
-    // Hole die Benutzer aus dem Cache oder zeige alle an, wenn noch keine Kollisionsprüfung durchgeführt wurde
-    if (!assignablePeopleCache.value[shiftQualificationId] || assignablePeopleCache.value[shiftQualificationId].length === 0) {
-        checkShiftCollision(shiftQualificationId);
-        // Während des Ladens, gib leere Liste zurück
-        return [];
+    // Nur die gecachten Daten zurückgeben, ohne einen neuen Request auszulösen
+    // Der Request wird stattdessen beim Öffnen des Dropdowns über den @click Handler ausgelöst
+    if (assignablePeopleCache.value[shiftQualificationId]?.length > 0) {
+        return assignablePeopleCache.value[shiftQualificationId];
     }
 
-    return assignablePeopleCache.value[shiftQualificationId].filter(person => {
-        // Zeige alle Personen an, markiere aber bereits zugewiesene mit einem Flag
-        return true; // Keine Filterung, wir wollen alle anzeigen, inkl. Personen mit Kollisionen
+    // Wenn keine Daten im Cache sind, leeres Array zurückgeben
+    return [];
+};
+
+// Function to generate a more informative tooltip for collision warnings
+const getCollisionTooltip = (user) => {
+    // Basic collision message
+    let tooltip = t('Collisions with shifts:');
+
+    // Add details for each collision shift
+    const collisionDetails = user.collisionShifts.map(shift => {
+        let detail = '';
+
+        // Add craft abbreviation if available
+        if (shift.craftAbbreviation) {
+            detail += ` ${shift.craftAbbreviation}`;
+        }
+        // Add time information
+        let shiftStartDate = new Date(shift.start);
+        let shiftEndDate = new Date(shift.end);
+        let shiftStart = shiftStartDate.getHours().toString().padStart(2, '0') + ':' + shiftStartDate.getMinutes().toString().padStart(2, '0');
+        let shiftEnd = shiftEndDate.getHours().toString().padStart(2, '0') + ':' + shiftEndDate.getMinutes().toString().padStart(2, '0');
+
+        //check Same day
+        if (shiftStartDate.toDateString() !== shiftEndDate.toDateString()) {
+            detail += ` ${shiftStartDate.toLocaleDateString()} ${shiftStart} - ${shiftEndDate.toLocaleDateString()} ${shiftEnd}`;
+        } else {
+            detail += ` ${shiftStartDate.toLocaleDateString()} ${shiftStart} - ${shiftEnd}`;
+        }
+
+        return detail;
     });
+
+    return tooltip + '<br>' + collisionDetails.join('<br>');
 };
 
 const createOnDropElementAndSave = (user, craft, shiftQualificationId) => {
@@ -352,8 +444,35 @@ const AddShiftModal = defineAsyncComponent({
     delay: 200,
 })
 
+// Funktion, um Kollisionen für alle Qualifikationen mit leeren Slots zu prüfen
+const checkAllShiftCollisions = (forceRefresh = false) => {
+    // Validate that the shift has the minimum required properties before checking for collisions
+    if (!props.shift || !props.shift.shifts_qualifications || !props.shift.start || !props.shift.end) {
+        return;
+    }
+
+    // Check if there are any empty slots to check
+    if (computedShiftQualificationDropElements.value.length === 0) {
+        return;
+    }
+
+    // Für jede Qualifikation mit leeren Slots eine Kollisionsprüfung durchführen
+    computedShiftQualificationDropElements.value.forEach(drop => {
+        checkShiftCollision(drop.shift_qualification_id, forceRefresh);
+    });
+};
+
+// Bei Komponenten-Initialisierung Kollisionen prüfen
+onMounted(() => {
+    // Force refresh on initial load to ensure we have the latest data
+    checkAllShiftCollisions(true);
+});
+
+// Wenn sich die Schichtdaten ändern, Cache zurücksetzen und Kollisionen neu prüfen
 watch(() => props.shift, () => {
     // Cache zurücksetzen wenn sich die Schichtdaten ändern
     assignablePeopleCache.value = {};
+    // Kollisionen neu prüfen mit Force Refresh, da sich die Schichtdaten geändert haben
+    checkAllShiftCollisions(true);
 }, { deep: true });
 </script>

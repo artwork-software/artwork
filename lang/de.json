@@ -1,4 +1,9 @@
 {
+    "Add Event": "Veranstaltung hinzufügen",
+    "Add Shift": "Schicht hinzufügen",
+    "Dismiss": "Schließen",
+    "No events for this day": "Keine Veranstaltungen für diesen Tag",
+    "No shifts for this day": "Keine Schichten für diesen Tag",
     "A new verification link has been sent to the email address you provided in your profile settings.": "Ein neuer Bestätigungslink wurde an die E-Mail-Adresse, die in Ihrem Profil hinterlegt ist, gesendet.",
     "A new verification link has been sent to your email address.": "Ein neuer Bestätigungslink wurde an Ihre E-Mail-Adresse versendet.",
     "A Timeout Occurred": "Ein Timeout ist aufgetreten",
@@ -2892,6 +2897,7 @@
     "Open demands": "Offene Anforderungen",
     "Find out if there are any open demands for your shifts.": "Finde heraus, ob es offene Anforderungen für deine Schichten gibt.",
     "Edit and create categories for your inventory.": "Bearbeite und erstelle Kategorien für dein Inventar.",
-    "Daily Target Hours": "Tagessollstunden pro Tag"
+    "Daily Target Hours": "Tagessollstunden pro Tag",
+    "Collisions with shifts:": "Kollisionen mit Schichten:"
 }
 

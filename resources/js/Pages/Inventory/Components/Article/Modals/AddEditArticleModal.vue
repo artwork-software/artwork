@@ -532,7 +532,7 @@
                                                :placeholder="$t('Description')"
                                         />
                                     </td>
-                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                    <td class="text-sm whitespace-nowrap text-gray-500 p-4">
                                         <div class="">
                                             <div class="mt-2 grid grid-cols-1">
                                                 <select id="location" name="location" v-model="detailedArticle.status" required class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
@@ -542,7 +542,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                    <td class="text-sm whitespace-nowrap text-gray-500 p-4">
                                         <input type="text" v-model="detailedArticle.quantity"
                                                required
                                                class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"

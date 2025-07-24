@@ -2891,6 +2891,8 @@
     "Find out if you have a new worktime change request.": "Finde heraus, ob du eine neue Arbeitszeitänderungsanfrage hast.",
     "Open demands": "Offene Anforderungen",
     "Find out if there are any open demands for your shifts.": "Finde heraus, ob es offene Anforderungen für deine Schichten gibt.",
-    "Edit and create categories for your inventory.": "Bearbeite und erstelle Kategorien für dein Inventar."
+    "Edit and create categories for your inventory.": "Bearbeite und erstelle Kategorien für dein Inventar.",
+    "New shift commit workflow request": "Neue Schicht-Commit-Workflow-Anfrage",
+    "Find out if there is a new shift commit workflow request.": "Finde heraus, ob es eine neue Schicht-Commit-Workflow-Anfrage gibt."
 }
 

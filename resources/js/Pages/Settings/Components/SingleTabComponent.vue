@@ -1,6 +1,6 @@
 <template>
     <!-- DropTabComponent -->
-    <div class="border rounded-md px-4 py-5 bg-gray-50/50">
+    <div class="border border-gray-200 rounded-md px-4 py-5 bg-gray-50/50">
         <div class="flex items-center justify-between hover:cursor-grab pb-3 border-b border-dashed border-gray-300">
             <div class="flex items-center gap-2 cursor-pointer" @click="tabClosed = !tabClosed">
                 <h3 class="headline3">{{ tab.name }}</h3>

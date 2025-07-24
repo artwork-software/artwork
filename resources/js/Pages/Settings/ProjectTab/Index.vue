@@ -10,10 +10,12 @@ import IconLib from "@/Mixins/IconLib.vue";
 import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default {
     name: "Index",
     components: {
+        BaseInput,
         GlassyIconButton,
         PlusButton,
         AddEditTabModal,
@@ -125,13 +127,7 @@ export default {
                         <div class="flex items-center justify-end w-full mb-3">
                             <div class="w-44 md:w-56 lg:w-72">
                                 <div>
-                                    <div class="relative rounded-md shadow-sm">
-                                        <input type="text" name="search" v-model="searchComponent" :placeholder="$t('Search')" id="account-number" class="block w-full rounded-md border-0 py-1.5 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                                        <div class=" absolute inset-y-0 right-0 flex items-center pr-3">
-                                            <IconSearch class="h-5 w-5 text-gray-400 pointer-events-none" aria-hidden="true" v-if="searchComponent.length === 0" />
-                                            <IconCircleX class="h-5 w-5 text-gray-400 cursor-pointer hover:text-red-400" aria-hidden="true" v-else @click="searchComponent = ''" />
-                                        </div>
-                                    </div>
+                                    <BaseInput id="search" type="text" name="search" v-model="searchComponent" label="Search" />
                                 </div>
                             </div>
                         </div>

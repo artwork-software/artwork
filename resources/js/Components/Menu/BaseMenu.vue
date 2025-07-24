@@ -51,7 +51,7 @@
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
                 <MenuItems class="z-50 focus:outline-none" :class="[menuWidth, needsMaxHeight ? 'max-h-72 overflow-scroll xl:max-h-none' : '']">
-                    <div class="card white p-2">
+                    <div class="card white p-1.5 !rounded-xl">
                         <slot />
                     </div>
                 </MenuItems>

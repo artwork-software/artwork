@@ -703,6 +703,7 @@
     "You have assigned a shift to a repeat event. Specify the period in which the shift is to be repeated.": "Du hast einem Wiederholungstermin eine Schicht zugewiesen. Lege fest in welchem Zeitraum die Schicht wiederholt werden soll.",
     "Projects": "Projekte",
     "Show only my projects": "Nur meine Projekte anzeigen",
+    "Show only projects without group": "Nur Projekte ohne Gruppe anzeigen",
     "Project groups": "Projektgruppen",
     "Project status": "Projektstatus",
     "Search for projects": "Suche nach Projekten",

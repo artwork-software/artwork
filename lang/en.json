@@ -698,6 +698,7 @@
     "You have assigned a shift to a repeat event. Specify the period in which the shift is to be repeated.": "You have assigned a shift to a repeat date. Specify the period in which the shift is to be repeated.",
     "Projects": "Projects",
     "Show only my projects": "Show only my projects",
+    "Show only projects without group": "Show only projects without group",
     "Project groups": "Project groups",
     "Project status": "Project status",
     "Search for projects": "Search for projects",

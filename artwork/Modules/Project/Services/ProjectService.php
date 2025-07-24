@@ -255,6 +255,12 @@ class ProjectService
                         if (!$projectFilters->contains('showProjectsWithoutEvents')) {
                             $builder->whereHas('events');
                         }
+
+                        // Handle showOnlyProjectsWithoutGroup filter - when true, exclude project groups and projects with assigned groups
+                        if ($projectFilters->contains('showOnlyProjectsWithoutGroup')) {
+                            $builder->where('is_group', 0) // Exclude project groups
+                                   ->whereDoesntHave('groups'); // Exclude projects that have a group assigned
+                        }
                     }
                 )
                 ->where(function (Builder $builder): void {

@@ -38,6 +38,7 @@ const emit = defineEmits(['close']);
 const convertToPlanning = () => {
     router.post(route('projects.convert-to-planning', props.projectId), {}, {
         preserveScroll: true,
+        preserveState: false,
         onSuccess: () => {
             emit('close');
         }

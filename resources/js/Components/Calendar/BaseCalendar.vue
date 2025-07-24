@@ -78,7 +78,7 @@
                                                 />
                                             </div>
                                         </div>
-                                        <div class="absolute right-2 top-3 hidden group-hover/container:block">
+                                        <div class="absolute left-2 bottom-3 hidden group-hover/container:block">
 
                                             <ToolTipComponent
                                                 :tooltip-text="isPlanning ? $t('Add new planned event') : $t('Add new event on this day')"

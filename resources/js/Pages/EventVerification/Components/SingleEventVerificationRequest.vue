@@ -93,6 +93,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {defineAsyncComponent, ref} from "vue";
 import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
 import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
+import dayjs from "dayjs";
 
 const props = defineProps({
     eventVerification: {
@@ -123,18 +124,55 @@ const approveRequest = () => {
 }
 
 const openPlanningCalendarWithEventId = () => {
-    // Get the event's start date
-    const eventStartDate = new Date(props.eventVerification.event.start_time);
+    const startTime = props.eventVerification?.event?.start_time;
 
-    // Calculate the start of the week (Monday)
+    if (!startTime || typeof startTime !== 'string') {
+        console.error('Missing or invalid start_time:', startTime);
+        return;
+    }
+
+    // Erwartet Format: "25. Jul 2025 09:00"
+    const parts = startTime.match(/^(\d{1,2})\. (\w{3}) (\d{4}) (\d{2}):(\d{2})$/);
+    if (!parts) {
+        console.error('Unrecognized date format:', startTime);
+        return;
+    }
+
+    const [_, day, monthStr, year, hour, minute] = parts;
+
+    const months = {
+        Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+        Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+    };
+
+    const month = months[monthStr];
+    if (month === undefined) {
+        console.error('Unknown month abbreviation:', monthStr);
+        return;
+    }
+
+    const eventStartDate = new Date(
+        parseInt(year),
+        month,
+        parseInt(day),
+        parseInt(hour),
+        parseInt(minute)
+    );
+
+    if (isNaN(eventStartDate.getTime())) {
+        console.error('Parsed date is invalid:', eventStartDate);
+        return;
+    }
+
+    // Start of week (Monday)
     const startOfWeek = new Date(eventStartDate);
-    startOfWeek.setDate(eventStartDate.getDate() - eventStartDate.getDay() + (eventStartDate.getDay() === 0 ? -6 : 1));
+    const dayOfWeek = eventStartDate.getDay();
+    const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    startOfWeek.setDate(eventStartDate.getDate() + offset);
 
-    // Calculate the end of the week (Sunday)
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-    // Format dates as YYYY-MM-DD
     const formatDate = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -145,7 +183,6 @@ const openPlanningCalendarWithEventId = () => {
     const startDate = formatDate(startOfWeek);
     const endDate = formatDate(endOfWeek);
 
-    // Update the user's calendar filter to show the week containing the event
     router.patch(route('update.user.calendar.filter.dates', usePage().props.auth.user.id), {
         start_date: startDate,
         end_date: endDate,
@@ -153,14 +190,15 @@ const openPlanningCalendarWithEventId = () => {
         preserveScroll: true,
         preserveState: false,
         onSuccess: () => {
-            // After updating the filter, navigate to the calendar with the highlighted event
-            router.visit(route('planning-event-calendar.index', {highlightEventId: props.eventVerification.event.id}), {
+            router.visit(route('planning-event-calendar.index', {
+                highlightEventId: props.eventVerification.event.id
+            }), {
                 preserveScroll: true,
                 preserveState: false,
             });
         }
     });
-}
+};
 
 
 </script>

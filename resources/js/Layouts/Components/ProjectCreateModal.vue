@@ -601,7 +601,7 @@ const props = defineProps({
 });
 
 // Define emits
-const emit = defineEmits(['closeCreateProjectModal', 'dropFeedback','openProjectStateChangeModal']);
+const emit = defineEmits(['closeCreateProjectModal', 'dropFeedback', 'openProjectStateChangeModal', 'openProjectPlanningStateChangeModal']);
 
 // Setup composables
 const page = usePage();
@@ -743,6 +743,8 @@ const addProject = (bool) => {
                 onSuccess: () => {
                     if(initialStatePlanning.value === 1 && selectedState.value?.is_planning === 0) {
                         emit('openProjectStateChangeModal', props.project);
+                    } else if(initialStatePlanning.value === 0 && selectedState.value?.is_planning === 1) {
+                        emit('openProjectPlanningStateChangeModal', props.project);
                     }
                     emit('closeCreateProjectModal', bool);
 

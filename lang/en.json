@@ -2894,5 +2894,7 @@
     "Find out if there are any open demands for your shifts.": "Find out if there are any open demands for your shifts.",
     "Edit and create categories for your inventory.": "Edit and create categories for your inventory.",
     "Daily Target Hours": "Daily Target Hours",
-    "Collisions with shifts:": "Collisions with shifts:"
+    "Collisions with shifts:": "Collisions with shifts:",
+    "The new project status is marked as planned. Do you want to convert all events of the project to planning events?": "The new project status is marked as planned. Do you want to convert all events of the project to planning events?",
+    "Convert to planning events": "Convert to planning events"
 }

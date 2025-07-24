@@ -1310,6 +1310,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::post('/projects/{project}/request-verification', [EventVerificationController::class, 'requestVerificationForProject'])
         ->name('projects.request-verification');
+    Route::post('/projects/{project}/convert-to-planning', [EventVerificationController::class, 'convertToPlanning'])
+        ->name('projects.convert-to-planning');
     Route::delete('/state/{projectStates}', [ProjectStatesController::class, 'destroy'])->name('state.delete');
     Route::patch('/states/{state}/restore', [ProjectStatesController::class, 'restore'])->name('state.restore');
     Route::patch('/states/{projectStates}/update', [ProjectStatesController::class, 'update'])->name('state.update');

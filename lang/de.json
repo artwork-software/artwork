@@ -2898,6 +2898,8 @@
     "Find out if there are any open demands for your shifts.": "Finde heraus, ob es offene Anforderungen für deine Schichten gibt.",
     "Edit and create categories for your inventory.": "Bearbeite und erstelle Kategorien für dein Inventar.",
     "Daily Target Hours": "Tagessollstunden pro Tag",
-    "Collisions with shifts:": "Kollisionen mit Schichten:"
+    "Collisions with shifts:": "Kollisionen mit Schichten:",
+    "The new project status is marked as planned. Do you want to convert all events of the project to planning events?": "Der neu ausgewählte Projektstatus ist als 'in Planung' markiert. Möchtest du alle Termine des Projekts in Planungstermine umwandeln?",
+    "Convert to planning events": "In Planungstermine umwandeln"
 }
 

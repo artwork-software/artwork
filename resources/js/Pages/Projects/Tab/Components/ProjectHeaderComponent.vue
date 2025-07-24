@@ -275,7 +275,7 @@ export default {
                         </div>
                     </div>
 
-                    <div class="w-full my-1 text-secondary xsDark">
+                    <div class="w-full my-2 text-secondary xsDark">
                         <div v-if="headerObject.firstEventInProject && headerObject.lastEventInProject">
                             {{ $t('Time period/opening hours') }}: {{ headerObject.firstEventInProject?.start_time }}
                             <span v-if="headerObject.firstEventInProject?.start_time">{{ $t('Clock') }} -</span>

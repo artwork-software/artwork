@@ -71,7 +71,7 @@
                             <li v-for="item in navigation" :key="item.name">
                                 <div @mouseover="showToolTipForItem(item)" @mouseleave="hideToolTipForItem(item)">
                                     <Link v-if="!item.isMenu && item.has_permission" :href="item.href" :class="[item.current ? 'bg-gray-50/10 text-white' : 'text-white hover:bg-gray-50/10 hover:text-artwork-buttons-hover', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
-                                        <component :stroke-width="item.current ? '1.5' : '1'" :is="item.icon" :class="[item.current ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover', 'size-6 min-w-6 min-h-6 shrink-0']" aria-hidden="true" />
+                                        <component stroke-width="1.5" :is="item.icon" :class="[item.current ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover', 'size-6 min-w-6 min-h-6 shrink-0']" aria-hidden="true" />
                                         <span v-if="isFullSideBar">{{ $t(item.name) }}</span>
                                     </Link>
                                     <div v-else>

@@ -21,11 +21,13 @@ import {nextTick} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import PrintLayoutSelectorModal from "@/Pages/Projects/Components/PrintLayoutSelectorModal.vue";
 import ProjectStateChangeModal from "@/Layouts/Components/ProjectStateChangeModal.vue";
+import ProjectPlanningStateChangeModal from "@/Layouts/Components/ProjectPlanningStateChangeModal.vue";
 
 export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib, ColorHelper],
     components: {
+        ProjectPlanningStateChangeModal,
         ProjectStateChangeModal,
         PrintLayoutSelectorModal,
         ToolTipComponent,
@@ -83,6 +85,7 @@ export default {
             showAddProjectToGroup: false,
             showPrintLayoutSelectorModal: false,
             showProjectStateChangeModal: false,
+            showProjectPlanningStateChangeModal: false,
         }
     },
     computed: {
@@ -138,6 +141,21 @@ export default {
         openProjectStateChangeModal() {
             this.showProjectStateChangeModal = true;
         },
+        openProjectPlanningStateChangeModal() {
+            this.showProjectPlanningStateChangeModal = true;
+        },
+        closePlanningStateChangeModal() {
+            this.showProjectPlanningStateChangeModal = false;
+            nextTick(() => {
+                router.reload()
+            });
+        },
+        closeProjectStateChangeModal() {
+            this.showProjectStateChangeModal = false;
+            nextTick(() => {
+                router.reload()
+            });
+        }
 
     }
 }
@@ -340,6 +358,7 @@ export default {
                 :states="headerObject.states"
                 @close-create-project-modal="closeEditProjectModal"
                 @open-project-state-change-modal="openProjectStateChangeModal"
+                @open-project-planning-state-change-modal="openProjectPlanningStateChangeModal"
                 :create-settings="createSettings"
                 :project="project"
             />
@@ -398,7 +417,11 @@ export default {
             />
             <ProjectStateChangeModal :project-id="project.id"
                                      v-if="showProjectStateChangeModal"
-                                     @close="showProjectStateChangeModal = false"
+                                     @close="closeProjectStateChangeModal"
+            />
+            <ProjectPlanningStateChangeModal :project-id="project.id"
+                                             v-if="showProjectPlanningStateChangeModal"
+                                             @close="closePlanningStateChangeModal()"
             />
         </div>
     </AppLayout>

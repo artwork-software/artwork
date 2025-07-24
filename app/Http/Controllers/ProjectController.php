@@ -237,7 +237,7 @@ class ProjectController extends Controller
             ->getFromUser($user)
             ->getAttribute('settings');
 
-        if($request->integer('entitiesPerPage') && $user->entities_per_page !== $request->integer('entitiesPerPage')) {
+        if ($request->integer('entitiesPerPage') && $user->entities_per_page !== $request->integer('entitiesPerPage')) {
             $user->update(['entities_per_page' => $request->integer('entitiesPerPage')]);
         }
 
@@ -2065,8 +2065,8 @@ class ProjectController extends Controller
             $query->where('project_id', $project->id);
         },
             'components.disclosureComponents.component.projectValue' => function ($query) use ($project): void {
-            $query->where('project_id', $project->id);
-        }]);
+                $query->where('project_id', $project->id);
+            }]);
 
         $projectTabComponents = $projectTab->components()->with('component')->get()->concat(
             $projectTab->sidebarTabs->flatMap->componentsInSidebar->unique('id')
@@ -2152,6 +2152,14 @@ class ProjectController extends Controller
                     }
                     $eventsSorted = $eventsSorted->values();
                     $headerObject->project->events = $eventsSorted;
+                    // $lastEditEventIds all Event IDs that were edited in the last 5 minutes
+                    $lastEditEventIds = $project->events()
+                        ->where('updated_at', '>=', now()->subMinutes(5))
+                        ->pluck('id')
+                        ->toArray();
+
+                    $headerObject->project->lastEditEventIds = $lastEditEventIds;
+
                     break;
                 case ProjectTabComponentEnum::CALENDAR->value:
                     $atAGlance = $request->boolean('atAGlance');

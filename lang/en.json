@@ -2890,5 +2890,7 @@
     "Edit and create categories for your inventory.": "Edit and create categories for your inventory.",
     "New shift commit workflow request": "New shift commit workflow request",
     "Find out if there is a new shift commit workflow request.": "Find out if there is a new shift commit workflow request.",
-    "No Projects or Groups found": "No Projects or Groups found"
+    "No Projects or Groups found": "No Projects or Groups found",
+    "Last edited events": "Last edited events",
+    "Most recently created events": "Most recently created events"
 }

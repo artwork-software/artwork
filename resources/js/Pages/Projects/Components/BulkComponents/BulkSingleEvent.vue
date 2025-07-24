@@ -1,6 +1,6 @@
 <template>
     <div class="print:w-full flex relative"
-         :class="[event?.isNew ? 'border-2 rounded-lg border-pink-500 border-dashed w-max py-2 px-1' : '']">
+         :class="[event?.isNew ? 'border-2 rounded-lg border-pink-500 border-dashed w-max py-2 px-1' : '', usePage()?.props?.headerObject?.project.lastEditEventIds?.includes(event.id) ? 'border-2 border-blue-500 border-dashed rounded-lg w-max py-2 px-1' : '']">
         <div class="flex items-center gap-4 relative" >
             <div class="flex items-center justify-center pr-2 pl-1" v-if="multiEdit">
                 <input
@@ -238,7 +238,7 @@
                                    stroke-width="2"/>
                         </div>
                     </BaseMenu>
-                    <BaseMenu has-no-offset white-menu-background v-if="!isInModal">
+                    <BaseMenu has-no-offset white-menu-background menu-width="!w-fit" v-if="!isInModal">
                         <BaseMenuItem white-menu-background icon="IconEdit" title="Edit" @click="openEventComponent(event.id)"/>
                         <BaseMenuItem white-menu-background v-if="index > 0 && !event.copy || !isInModal" icon="IconTrash"
                                       title="Put in the trash" @click="openDeleteEventConfirmModal"/>
@@ -259,6 +259,7 @@
         <AddEditEventNoteModal :event="event" v-if="openNoteModal" @close="openNoteModal = false"/>
 
     </div>
+
 </template>
 
 <script setup>

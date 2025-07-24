@@ -43,6 +43,7 @@ class UserCalendarFilterController extends Controller
          * adjoiningNotLoud: returnNullIfFalse(generalFilters.value.adjoiningNotLoud.checked),
          */
 
+
         $roomIds = $request->collect('rooms')->isNotEmpty() ? $request->collect('rooms') : null;
         $areaIds = $request->collect('areas')->isNotEmpty() ? $request->collect('areas') : null;
         $eventTypes = $request->collect('event_types')->isNotEmpty() ? $request->collect('event_types') : null;

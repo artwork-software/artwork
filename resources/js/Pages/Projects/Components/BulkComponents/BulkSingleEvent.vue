@@ -421,6 +421,9 @@ const updateEventInDatabase = async () => {
         }, {
             preserveState: false,
             preserveScroll: true,
+            onSuccess: () => {
+                props.event.isNew = true;
+            },
             onFinish: () => {
                 nextTick(() => {
                     setTimeout(() => {
@@ -433,10 +436,12 @@ const updateEventInDatabase = async () => {
                         window.__bulkSaveRunning = false;
                     }, 300);
                 })
+
             },
             onError: () => {
                 isUpdating.value = false;
                 window.__bulkSaveRunning = false;
+
             }
         });
         }

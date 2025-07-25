@@ -1,7 +1,14 @@
 <template>
     <div class="flex items-center print:hidden">
-        <div class="flex -space-x-2 overflow-hidden items-center">
-            <UserPopoverTooltip v-for="user in project.team" :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
+        <div class="flex overflow-hidden items-center">
+            <UserPopoverTooltip
+                v-for="(user, index) in project.team"
+                :key="index"
+                :user="user"
+                width="8"
+                height="8"
+                :classes="'border-2 cursor-pointer border-white rounded-full ' + (index > 0 ? '-ml-2' : '')"
+            />
        </div>
     </div>
 

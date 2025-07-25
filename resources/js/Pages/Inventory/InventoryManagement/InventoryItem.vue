@@ -10,7 +10,7 @@
                     <MenuItem v-slot="{ active }" as="div">
                         <a @click="showItemDeleteConfirmModal()"
                            :class="[active ? 'active' : 'not-active', 'default group cursor-pointer text-white flex items-center px-4 py-2 subpixel-antialiased text-sm']">
-                            <IconTrash class="h-5 w-5 mr-3 group-hover:text-white"/>
+                            <IconTrash class="h-5 w-5 mr-3 group-hover:text-artwork-buttons-hover"/>
                             {{ $t('Delete') }}
                         </a>
                     </MenuItem>

@@ -56,6 +56,17 @@ return [
         // 'Der Termin :event hat noch :count offene Stellen für die Gewerk :craft :shift_start - :shift_end',
         'open_demand_description' =>
             'Der Termin :event hat noch :count offene Stellen für die Gewerk :craft :shift',
+
+        'worktime-request' => [
+            'new-request' => 'Neue Arbeitszeitänderungsanfrage',
+            'link-to-request' => 'Gehe zu Anfrage',
+            'old-new-time' =>
+                'Die angefragte Arbeitszeitänderung von :user: ' .
+                'von :start_time bis :end_time.',
+        ],
+        'new_commit_request_title' => 'Neue Schicht-Commit-Anfrage',
+        'new_commit_request' => 'Neue Schicht-Commit-Anfrage :start_time - :end_time von :user',
+        'link_label_new_commit_request' => 'Gehe zu Schicht-Commit-Anfrage',
     ],
     'event' => [
         'with_adjoining_audience' => 'Termin mit Publikum im Nebenraum',

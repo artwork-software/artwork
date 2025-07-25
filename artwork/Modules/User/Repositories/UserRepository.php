@@ -147,6 +147,7 @@ class UserRepository extends BaseRepository
                 'manager_type' => $user::class,
                 'chat_public_key' => $user->getAttribute('chat_public_key'),
                 'use_chat' => $user->getAttribute('use_chat'),
+                'position' => $user->getAttribute('position'),
             ]);
     }
 

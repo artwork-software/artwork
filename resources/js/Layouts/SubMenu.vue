@@ -67,7 +67,7 @@
             <nav class="flex flex-1 flex-col px-6">
                 <ul role="list" class="flex flex-1 flex-col gap-y-7">
                     <li>
-                        <ul role="list" class="-mx-3 space-y-2">
+                        <ul role="list" class="-mx-3 space-y-3">
                             <li v-for="item in navigation" :key="item.name">
                                 <div @mouseover="showToolTipForItem(item)" @mouseleave="hideToolTipForItem(item)">
                                     <Link v-if="!item.isMenu && item.has_permission" :href="item.href" :class="[item.current ? 'bg-gray-50/10 text-white' : 'text-white hover:bg-gray-50/10 hover:text-artwork-buttons-hover', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
@@ -76,7 +76,7 @@
                                     </Link>
                                     <div v-else>
                                         <div v-if="item.has_permission" class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 font-semibold p-2">
-                                            <BaseMenu white-menu-background  :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
+                                            <BaseMenu text-with-margin-left white-menu-background menu-width="!w-fit"  :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
                                                 <div v-for="subMenu in item.subMenus" :key="subMenu.name">
                                                     <BaseMenuItem white-menu-background as-link v-if="subMenu.has_permission" :href="subMenu.href" :icon="subMenu.icon" :title="subMenu.name" />
                                                 </div>
@@ -101,7 +101,7 @@
                                         <span v-if="isFullSideBar">{{ $t(item.name) }}</span>
                                     </Link>
                                     <div v-else class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 font-semibold p-2">
-                                        <BaseMenu :no-tooltip="true" white-menu-background :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
+                                        <BaseMenu :no-tooltip="true" menu-width="!w-fit" white-menu-background :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
                                             <div v-for="subMenu in item.subMenus" :key="subMenu.name">
                                                 <BaseMenuItem white-menu-background as-link :href="subMenu.href" :icon="subMenu.icon" :title="subMenu.name" />
                                             </div>
@@ -128,9 +128,9 @@
                                         </PopoverButton>
 
                                         <transition enter-active-class="transition ease-out duration-200" enter-from-class="opacity-0 translate-y-1" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-150" leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 translate-y-1">
-                                            <PopoverPanel class="absolute left-1/2 z-10 mt-5 flex w-screen max-w-max -translate-x-1/2 px-4">
-                                                <div class="w-screen max-w-md flex-auto overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-gray-900/5">
-                                                    <div class="flex w-full items-center justify-between space-x-6 p-6">
+                                            <PopoverPanel class="absolute left-1/2 z-10 flex w-screen max-w-max card glassy -translate-x-1/2 p-3">
+                                                <div class="w-screen max-w-md flex-auto overflow-hidden card white p-3">
+                                                    <div class="flex w-full items-center justify-between space-x-6 p-2">
                                                         <div class="flex-1 truncate ">
                                                             <div class="flex items-center space-x-3">
                                                                 <div class="font-bold headline h2">{{ usePage().props.auth.user.full_name }}</div>
@@ -141,15 +141,15 @@
                                                         <img class="size-14 shrink-0 rounded-full object-cover bg-gray-300" :src="usePage().props.auth.user.profile_photo_url" alt="" />
                                                     </div>
                                                     <div>
-                                                        <div class="-mt-px flex divide-x divide-gray-200 divide-dashed border-t border-gray-200 border-dashed">
+                                                        <div class="py-2 divide-x divide-gray-200 divide-dashed border-t border-gray-200 border-dashed flex items-center justify-between">
                                                             <div class="flex w-0 flex-1">
-                                                                <div @click="logout" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 group hover:text-red-500 transition ease-in-out duration-200 cursor-pointer">
+                                                                <div @click="logout" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent text-sm font-semibold text-gray-900 group hover:text-red-500 transition ease-in-out duration-200 cursor-pointer">
                                                                     <component is="IconLogout" class="size-5 text-gray-400 group-hover:text-red-500 transition ease-in-out duration-200" aria-hidden="true" />
                                                                     {{ $t('Logout') }}
                                                                 </div>
                                                             </div>
                                                             <Link :href="route('user.edit.info', {user: usePage().props.auth.user.id})" class="-ml-px flex w-0 flex-1">
-                                                                <div class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 group hover:text-artwork-buttons-create transition ease-in-out duration-200 cursor-pointer">
+                                                                <div class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent text-sm font-semibold text-gray-900 group hover:text-artwork-buttons-create transition ease-in-out duration-200 cursor-pointer">
                                                                     <component is="IconUserCircle" class="size-5 text-gray-400 group-hover:text-artwork-buttons-create transition ease-in-out duration-200" aria-hidden="true" />
                                                                     {{ $t('Your account') }}
                                                                 </div>
@@ -239,22 +239,20 @@ const navigation = ref([
     },
     {
         name: 'Calendar',
-        href: route('events'),
-        icon: 'IconCalendarClock',
-        current: route().current('events'),
-        isMenu: false,
-        showToolTipForItem: false,
-        has_permission: moduleIsVisible('room_assignment'),
-    },
-    {
-        name: 'Event Planning',
         href: '#',
-        icon: 'IconCalendarCog',
+        icon: 'IconCalendarClock',
         current: true,
         isMenu: true,
         showToolTipForItem: false,
-        has_permission: can('can see planning calendar | can edit planning calendar') || is('artwork admin'),
+        has_permission: moduleIsVisible('inventory'),
         subMenus: [
+            {
+                name: 'Calendar',
+                href: route('events'),
+                icon: 'IconCalendarClock',
+                current: route().current('events'),
+                has_permission: moduleIsVisible('room_assignment')
+            },
             {
                 name: 'Planning Calendar',
                 href: route('planning-event-calendar.index'),
@@ -273,12 +271,49 @@ const navigation = ref([
     },
     {
         name: 'Shift plan',
-        href: route('shifts.plan'),
+        href: '#',
         icon: 'IconCalendarUser',
-        current: route().current('shifts.plan'),
-        isMenu: false,
+        current: true,
+        isMenu: true,
         showToolTipForItem: false,
-        has_permission: can('can view shift plan') || moduleIsVisible('shift_plan'),
+        has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+        subMenus: [
+            {
+                name: 'Duty rosters',
+                href: route('shifts.plan'),
+                icon: 'IconCalendarUser',
+                current: route().current('shifts.plan'),
+                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+            },
+            {
+                name: 'My Operational plan',
+                href: route('user.operationPlan', usePage().props.auth.user.id),
+                icon: 'IconCalendarUser',
+                current: route().current('user.operationPlan'),
+                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+            },
+            {
+                name: 'Shift templates',
+                href: route('shifts.presets'),
+                icon: 'IconCalendarTime',
+                current: route().current('shifts.presets') || route().current('shifts.timeline-presets.index'),
+                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+            },
+            {
+                name: 'Work time change requests',
+                href: route('work-time-request.index'),
+                icon: 'IconTimelineEventPlus',
+                current: route().current('work-time-request.index'),
+                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+            },
+            {
+                name: 'Shift commitment requests',
+                href: route('shifts.commit-requests.index'),
+                icon: 'IconLockSquareRounded',
+                current: route().current('shifts.commit-requests.index'),
+                has_permission: usePage().props.isUserWorkFlowUser && usePage().props.shiftCommitWorkflow || is('artwork admin') && usePage().props.shiftCommitWorkflow,
+            },
+        ]
     },
     {
         name: 'Inventory System',

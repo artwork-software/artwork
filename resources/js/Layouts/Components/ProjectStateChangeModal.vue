@@ -38,6 +38,7 @@ const emit = defineEmits(['close']);
 const requestVerification = () => {
     router.post(route('projects.request-verification', props.projectId), {}, {
         preserveScroll: true,
+        preserveState: false,
         onSuccess: () => {
             emit('close');
         }

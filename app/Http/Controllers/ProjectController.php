@@ -37,7 +37,7 @@ use Artwork\Modules\Budget\Services\SubPositionVerifiedService;
 use Artwork\Modules\Budget\Services\SumCommentService;
 use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
-use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
+use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Models\Category;
@@ -48,22 +48,22 @@ use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\CollectingSociety\Services\CollectingSocietyService;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\CompanyType\Services\CompanyTypeService;
-use Artwork\Modules\ContractType\Models\ContractType;
-use Artwork\Modules\ContractType\Services\ContractTypeService;
+use Artwork\Modules\Contract\Models\ContractType;
+use Artwork\Modules\Contract\Services\ContractTypeService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\CostCenter\Services\CostCenterService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
-use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
+use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Services\EventService;
-use Artwork\Modules\EventComment\Services\EventCommentService;
-use Artwork\Modules\EventProperty\Services\EventPropertyService;
+use Artwork\Modules\Event\Services\EventCommentService;
+use Artwork\Modules\Event\Services\EventPropertyService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
@@ -73,7 +73,7 @@ use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Genre\Services\GenreService;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
-use Artwork\Modules\MoneySourceReminder\Services\MoneySourceThresholdReminderService;
+use Artwork\Modules\MoneySource\Services\MoneySourceThresholdReminderService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -96,13 +96,13 @@ use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Artwork\Modules\Project\Services\ProjectStateService;
-use Artwork\Modules\ProjectManagementBuilder\Models\ProjectManagementBuilder;
-use Artwork\Modules\ProjectManagementBuilder\Services\ProjectManagementBuilderService;
-use Artwork\Modules\ProjectPrintLayout\Services\ProjectPrintLayoutService;
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
-use Artwork\Modules\ProjectTab\Models\Component;
-use Artwork\Modules\ProjectTab\Models\ProjectTab;
-use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Project\Models\ProjectManagementBuilder;
+use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
+use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
@@ -120,8 +120,8 @@ use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
-use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
-use Artwork\Modules\SubEvent\Services\SubEventService;
+use Artwork\Modules\Shift\Services\ShiftQualificationService;
+use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelineRequest;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelinesRequest;
@@ -130,7 +130,7 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
-use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
+use Artwork\Modules\User\Services\UserProjectManagementSettingService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
@@ -237,7 +237,7 @@ class ProjectController extends Controller
             ->getFromUser($user)
             ->getAttribute('settings');
 
-        if($request->integer('entitiesPerPage') && $user->entities_per_page !== $request->integer('entitiesPerPage')) {
+        if ($request->integer('entitiesPerPage') && $user->entities_per_page !== $request->integer('entitiesPerPage')) {
             $user->update(['entities_per_page' => $request->integer('entitiesPerPage')]);
         }
 
@@ -441,6 +441,7 @@ class ProjectController extends Controller
             'number_of_participants' => $request->number_of_participants,
             'color' => $request->get('color'),
             'icon' => $request->get('icon'),
+            'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
         $is_manager = in_array(Auth::id(), $request->get('assignedUsers'), true);
@@ -460,6 +461,7 @@ class ProjectController extends Controller
             'artists' => $request->string('artists'),
             'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
+            'marked_as_done' => $request->boolean('marked_as_done'),
             'cost_center_id' => $request->string('cost_center') !== null ?
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null
         ]);
@@ -470,6 +472,12 @@ class ProjectController extends Controller
         } elseif (!empty($request->selectedGroup)) {
             $group = Project::find($request->selectedGroup['id']);
             $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+
+            // Ensure the group's is_group flag is set to true
+            if (!$group->is_group) {
+                $group->is_group = true;
+                $group->save();
+            }
         }
 
         $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
@@ -478,9 +486,24 @@ class ProjectController extends Controller
 
         $project->departments()->sync($departments->pluck('id'));
 
-        $this->budgetService->generateBasicBudgetValues(
-            $project
-        );
+        // Generate basic budget values for the project
+        $this->budgetService->generateBasicBudgetValues($project);
+
+        // If the project is not a group but is associated with a group,
+        // ensure it has at least one column marked as relevant for project groups
+        if (!$request->boolean('isGroup') && !empty($request->selectedGroup)) {
+            $table = $project->table()->first();
+            if ($table) {
+                $columns = $table->columns()->get();
+                if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
+                    // Mark the last column as relevant for project groups
+                    $lastColumn = $columns->sortBy('position')->last();
+                    if ($lastColumn) {
+                        $lastColumn->update(['relevant_for_project_groups' => true]);
+                    }
+                }
+            }
+        }
 
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id');
         $project->shiftRelevantEventTypes()->sync($eventRelevantEventTypeIds);
@@ -647,7 +670,7 @@ class ProjectController extends Controller
         if ($request->giveBudgetAccess) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
-            $notificationTitle = __('notifications.project.budget.add', ['project' => $project->name], $user->language);
+            $notificationTitle = __('notification.project.budget.add', ['project' => $project->name], $user->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -663,7 +686,7 @@ class ProjectController extends Controller
         }
         $mainPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $notificationTitle = __(
-            'notifications.project.budget.new_verify_request',
+            'notification.project.budget.new_verify_request',
             [],
             User::find($request->user)->language
         );
@@ -738,7 +761,7 @@ class ProjectController extends Controller
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
             $notificationTitle = __(
-                'notifications.project.budget.delete_verify_request',
+                'notification.project.budget.delete_verify_request',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -802,7 +825,7 @@ class ProjectController extends Controller
             $verifiedRequest = $subPosition->verified()->first();
             $table = $mainPosition->table()->first();
             $notificationTitle = __(
-                'notifications.project.budget.delete_verify_request',
+                'notification.project.budget.delete_verify_request',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -886,7 +909,7 @@ class ProjectController extends Controller
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
             $notificationTitle = __(
-                'notifications.project.budget.verify_removed',
+                'notification.project.budget.verify_removed',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -948,7 +971,7 @@ class ProjectController extends Controller
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
             $notificationTitle = __(
-                'notifications.project.budget.verify_removed',
+                'notification.project.budget.verify_removed',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -1023,7 +1046,7 @@ class ProjectController extends Controller
             $user = User::find($request->user);
             // Notification
             $notificationTitle = __(
-                'notifications.project.budget.add',
+                'notification.project.budget.add',
                 [],
                 $user->language
             );
@@ -1065,7 +1088,7 @@ class ProjectController extends Controller
         }
         $subPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $notificationTitle = __(
-            'notifications.project.budget.new_verify_request',
+            'notification.project.budget.new_verify_request',
             [],
             User::find($request->user)->language
         );
@@ -1170,7 +1193,7 @@ class ProjectController extends Controller
 
         foreach ($project->access_budget()->get() as $user) {
             $notificationTitle = __(
-                'notifications.project.budget.fixed',
+                'notification.project.budget.fixed',
                 [],
                 $user->language
             );
@@ -1238,7 +1261,7 @@ class ProjectController extends Controller
 
         foreach ($project->access_budget()->get() as $user) {
             $notificationTitle = __(
-                'notifications.project.budget.unfixed',
+                'notification.project.budget.unfixed',
                 [],
                 $user->language
             );
@@ -2044,8 +2067,8 @@ class ProjectController extends Controller
             $query->where('project_id', $project->id);
         },
             'components.disclosureComponents.component.projectValue' => function ($query) use ($project): void {
-            $query->where('project_id', $project->id);
-        }]);
+                $query->where('project_id', $project->id);
+            }]);
 
         $projectTabComponents = $projectTab->components()->with('component')->get()->concat(
             $projectTab->sidebarTabs->flatMap->componentsInSidebar->unique('id')
@@ -2131,6 +2154,14 @@ class ProjectController extends Controller
                     }
                     $eventsSorted = $eventsSorted->values();
                     $headerObject->project->events = $eventsSorted;
+                    // $lastEditEventIds all Event IDs that were edited in the last 5 minutes
+                    $lastEditEventIds = $project->events()
+                        ->where('updated_at', '>=', now()->subMinutes(5))
+                        ->pluck('id')
+                        ->toArray();
+
+                    $headerObject->project->lastEditEventIds = $lastEditEventIds;
+
                     break;
                 case ProjectTabComponentEnum::CALENDAR->value:
                     $atAGlance = $request->boolean('atAGlance');
@@ -2407,6 +2438,25 @@ class ProjectController extends Controller
         if ($request->get('selectedGroup') !== null) {
             $group = Project::find($request->get('selectedGroup')['id']);
             $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+
+            // Ensure the group's is_group flag is set to true
+            if (!$group->is_group) {
+                $group->is_group = true;
+                $group->save();
+            }
+
+            // Ensure the project has at least one column marked as relevant for project groups
+            $table = $project->table()->first();
+            if ($table) {
+                $columns = $table->columns()->get();
+                if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
+                    // Mark the last column as relevant for project groups
+                    $lastColumn = $columns->sortBy('position')->last();
+                    if ($lastColumn) {
+                        $lastColumn->update(['relevant_for_project_groups' => true]);
+                    }
+                }
+            }
         }
 
         $oldProjectName = $project->name;
@@ -2421,6 +2471,7 @@ class ProjectController extends Controller
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null,
             'icon' => $request->get('icon'),
             'color' => $request->get('color'),
+            'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
         $this->projectService->detachManagementUsers($project, true);
@@ -2576,6 +2627,30 @@ class ProjectController extends Controller
     {
         $projectIdsToAdd = $request->collect('projectIdsToAdd')->pluck('id');
         $projectGroup->projectsOfGroup()->sync($projectIdsToAdd);
+
+        // Ensure the project group's is_group flag is set to true if there are projects to add
+        if (!$projectGroup->is_group && count($projectIdsToAdd) > 0) {
+            $projectGroup->is_group = true;
+            $projectGroup->save();
+        }
+
+        // Ensure all projects being added to the group have at least one column marked as relevant for project groups
+        foreach ($projectIdsToAdd as $projectId) {
+            $project = Project::find($projectId);
+            if ($project) {
+                $table = $project->table()->first();
+                if ($table) {
+                    $columns = $table->columns()->get();
+                    if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
+                        // Mark the last column as relevant for project groups
+                        $lastColumn = $columns->sortBy('position')->last();
+                        if ($lastColumn) {
+                            $lastColumn->update(['relevant_for_project_groups' => true]);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private function checkProjectGenreChanges($projectId, $oldGenres, $newGenres): void
@@ -3636,6 +3711,7 @@ class ProjectController extends Controller
                         'name' => $project->name,
                         'key_visual_path' => $project->key_visual_path,
                         'is_group' => $project->is_group,
+                        'marked_as_done' => $project->marked_as_done,
                     ];
 
                     $addEventsToReturnProject = [];

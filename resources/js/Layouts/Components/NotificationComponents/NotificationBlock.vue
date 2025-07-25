@@ -18,7 +18,7 @@
                     <div class="flex items-center gap-2 xxsLight" v-if="notification.data?.description[0]">
                         {{ notification.data?.description[0].text }}
                         {{ $t('from')}}
-                        <UserPopoverTooltip :id="notification.id" :user="notification.data?.description[0]?.created_by"
+                        <UserPopoverTooltip :id="notification.id" :user="notification.data.created_by"
                                         height="5" width="5"/>
                     </div>
                     <div class="flex items-center gap-2 xxsLight" v-else-if="notification.data.created_by">

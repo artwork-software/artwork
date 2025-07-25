@@ -8,12 +8,12 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
-use Artwork\Modules\ServiceProviderContacts\Models\ServiceProviderContacts;
+use Artwork\Modules\ServiceProvider\Models\ServiceProviderContacts;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
-use Artwork\Modules\ShiftPlanComment\Models\Traits\HasShiftPlanComments;
-use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
+use Artwork\Modules\Shift\Models\ServiceProviderShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -88,7 +88,17 @@ class ServiceProvider extends Model implements DayServiceable
         return $this
             ->belongsToMany(Shift::class, 'shifts_service_providers')
             ->using(ShiftServiceProvider::class)
-            ->withPivot('id', 'shift_qualification_id', 'craft_abbreviation');
+            ->withPivot([
+                'id',
+                'shift_qualification_id',
+                'shift_count',
+                'craft_abbreviation',
+                'short_description',
+                'start_date',
+                'end_date',
+                'start_time',
+                'end_time'
+            ]);
     }
 
     public function assignedCrafts(): morphToMany

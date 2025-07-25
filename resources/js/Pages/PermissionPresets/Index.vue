@@ -57,7 +57,7 @@
                                            ]"
                                         >
                                             <PencilAltIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                 aria-hidden="true"/>
                                             {{ $t('Edit permission preset')}}
                                         </a>
@@ -72,7 +72,7 @@
                                            ]"
                                         >
                                             <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                 aria-hidden="true"/>
                                             <span>
                                                 {{$t('Delete permission preset')}}

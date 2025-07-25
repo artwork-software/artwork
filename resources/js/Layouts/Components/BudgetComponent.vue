@@ -1,6 +1,6 @@
 <template>
 
-    <div :class="[table.is_template ? '' : 'bg-lightBackgroundGray', hideProjectHeader ? '' : 'pt-6']"
+    <div :class="[table.is_template ? '' : 'bg-light-background-gray', hideProjectHeader ? '' : 'pt-6']"
          class="mx-1 pr-10 relative">
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
@@ -8,24 +8,24 @@
                 <BaseMenu class="ml-4" v-if="this.$can('edit budget templates')">
                     <MenuItem v-slot="{ active }">
                         <a @click="openRenameTableModal()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <TrashIcon
-                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                class="mr-3 h-5 w-5 text-primaryText"
                                 aria-hidden="true"/>
                             {{ $t('Rename') }}
                         </a>
                     </MenuItem>
                     <MenuItem v-if="table.is_template" v-slot="{ active }">
                         <a @click="deleteBudgetTemplate()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                            <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                            <IconTrash class="mr-3 h-5 w-5 text-primaryText"/>
                             {{ $t('Delete') }}
                         </a>
                     </MenuItem>
                 </BaseMenu>
             </div>
         </div>
-        <div class="w-full sticky top-0 z-30 flex flex-row-reverse gap-x-4 py-4 items-center bg-lightBackgroundGray">
+        <div class="w-full sticky top-0 z-30 flex flex-row-reverse gap-x-4 py-4 items-center bg-light-background-gray">
             <button v-if="this.$can('edit budget templates') || !table.is_template" @click="openAddColumnModal()"
                     type="button"
                     class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
@@ -106,8 +106,7 @@
                                             ({{ columnCalculatedNames[column.id] }})
                                         </span>
                                     </div>
-                                    <span class="-mt-4"
-                                          v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
+                                    <span class="-mt-4" v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
                                         <Listbox as="div" class="flex ml-2" v-model="column.color"
                                                  v-if="this.$can('edit budget templates') || !table.is_template">
                                             <transition leave-active-class="transition ease-in duration-100"
@@ -123,9 +122,7 @@
                                                             <div class="flex">
                                                                 <span
                                                                     :class="[selected ? 'xsWhiteBold' : 'font-normal', 'block truncate']">
-                                                                    <span
-                                                                        class="block truncate items-center ml-3 flex rounded-full h-10 w-10"
-                                                                        :class="color">
+                                                                    <span class="truncate items-center ml-3 flex rounded-full h-10 w-10" :class="color">
                                                                     </span>
                                                                 </span>
                                                             </div>
@@ -142,9 +139,9 @@
                                         </Listbox>
                                     </span>
                                 </div>
-                                <div @click="column.clicked = !column.clicked" class="h-5 xsDark"
+                                <div @click="column.clicked = !column.clicked" class="h-5 font-lexend text-xs w-full max-w-max"
                                      v-if="!column.clicked">
-                                    {{ column.name }}
+                                    {{ column.name ?? 'no name' }}
                                 </div>
                                 <div v-else>
                                     <input
@@ -159,10 +156,10 @@
                                       v-if="this.hasBudgetAccess() || this.$can('edit budget templates')">
                                 <MenuItem v-slot="{ active }">
                                     <a @click="column.showColorMenu = true"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor"
-                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                             class="mr-3 h-5 w-5 text-primaryText">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                   d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/>
                                         </svg>
@@ -173,10 +170,10 @@
                                           v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
                                           v-if="!column.is_locked">
                                     <a @click="lockColumn(column.id)"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor"
-                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                             class="mr-3 h-5 w-5 text-primaryText">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                   d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
                                         </svg>
@@ -187,56 +184,56 @@
                                           v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
                                           v-if="column.is_locked">
                                     <a @click="unlockColumn(column.id)"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconLockOpen stroke-width="1.5" stroke="currentColor"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                      class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Unlock') }}
                                     </a>
                                 </MenuItem>
-                                <MenuItem v-slot="{ active }" v-if="column.type !== 'project_relevant_column'">
+                                <MenuItem v-slot="{ active }" v-if="column.type !== 'subprojects_column_for_group'">
                                     <a v-show="index > 2" @click="deleteColumn(column.id)"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconTrash class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Delete') }}
                                     </a>
                                 </MenuItem>
-                                <MenuItem v-slot="{ active }" v-if="column.type !== 'project_relevant_column'">
+                                <MenuItem v-slot="{ active }" v-if="column.type !== 'subprojects_column_for_group'">
                                     <a v-show="index > 2" @click="duplicateColumn(column.id)"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconCopy class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconCopy class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Duplicate') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }"
-                                          v-if="!column.relevant_for_project_groups && column.type !== 'project_relevant_column' && !project.is_group">
+                                          v-if="!column.relevant_for_project_groups && column.type !== 'subprojects_column_for_group' && !project.is_group">
                                     <a v-show="index > 2" @click="setRelevantForProjectGroup(column.id)"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconFlagUp class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconFlagUp class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Relevant for project-group') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }"
-                                          v-if="column.relevant_for_project_groups && column.type !== 'project_relevant_column' && !project.is_group">
+                                          v-if="column.relevant_for_project_groups && column.type !== 'subprojects_column_for_group' && !project.is_group">
                                     <a v-show="index > 2" @click="setRelevantForProjectGroup(column.id)"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconFlagUp class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconFlagUp class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Not Relevant for project-group') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-show="index > 2" v-slot="{ active }" v-if="column.commented === 1">
                                     <a @click="updateColumnCommented(column.id, false)"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconLockOpen stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                      class="mr-3 h-5 w-5 text-primaryText"
                                                       aria-hidden="true"/>
                                         {{ $t('Include column') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-show="index > 2" v-slot="{ active }" v-else>
                                     <a @click="updateColumnCommented(column.id, true)"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconLock stroke-width="1.5"
-                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                  class="mr-3 h-5 w-5 text-primaryText"
                                                   aria-hidden="true"/>
                                         {{ $t('Exclude column') }}
                                     </a>
@@ -254,9 +251,9 @@
                              @remove-sage-not-assigned-data="this.showRemoveSageNotAssignedDataConfirmationModal"
         />
         <div class="w-full flex mb-6">
-            <div class="flex flex-wrap w-full bg-secondaryHover border-2 border-gray-300">
+            <div class="flex flex-wrap w-full bg-secondary-hover border-2 border-gray-300">
                 <div class="w-full flex">
-                    <div class="bg-secondaryHover ml-5 w-full" v-if="costsOpened">
+                    <div class="bg-secondary-hover ml-5 w-full" v-if="costsOpened">
                         <div :class="table.columns?.length > 5 ? 'mr-5' : 'w-[97%]'" class="flex justify-between my-10">
                             <div class="headline4  flex">
                                 {{ $t('Expenses') }}
@@ -269,40 +266,40 @@
                             <BaseMenu dots-color="text-artwork-context-dark" v-if="this.hasBudgetAccess()">
                                 <MenuItem v-slot="{ active }">
                                     <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateModal()"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconFileImport class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconFileImport class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Import template') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a v-show="tableIsEmpty && !table.is_template"
                                        @click="openUseTemplateFromProjectModal()"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconFileImport class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconFileImport class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Import from project') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a v-show="!tableIsEmpty && !table.is_template && this.$can('edit budget templates')"
                                        @click="openAddBudgetTemplateModal()"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconFilePlus class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconFilePlus class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Save as template') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a v-show="!tableIsEmpty && !table.is_template" @click="resetBudgetTable"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconRestore
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            class="mr-3 h-5 w-5 text-primaryText"
                                             aria-hidden="true"/>
                                         {{ $t('Reset') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a v-show="table.is_template" @click="deleteBudgetTemplate()"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconTrash class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Delete') }}
                                     </a>
                                 </MenuItem>
@@ -356,13 +353,13 @@
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <span
-                                            v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">{{
+                                            v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">{{
                                                 this.toCurrencyString(this.getSumOfTable(0, column.id))
                                             }}</span>
                                         <span v-if="column.type === 'sage'">{{
                                                 this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0))
                                             }}</span>
-                                        <span v-if="column.type === 'project_relevant_column'">
+                                        <span v-if="column.type === 'subprojects_column_for_group'">
                                             {{
                                                 this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST'))
                                             }}
@@ -385,7 +382,7 @@
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                         <span
-                                            v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
+                                            v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
                                             {{ this.toCurrencyString(table.commentedCostSums[column.id]) }}
                                         </span>
                                         <span v-if="column.type === 'sage'">
@@ -393,7 +390,7 @@
                                                 this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(0))
                                             }}
                                         </span>
-                                        <span v-if="column.type === 'project_relevant_column'">
+                                        <span v-if="column.type === 'subprojects_column_for_group'">
                                             {{
                                                 this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_COST'))
                                             }}
@@ -467,13 +464,13 @@
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <span
-                                            v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">{{
+                                            v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">{{
                                                 this.toCurrencyString(this.getSumOfTable(1, column.id))
                                             }}</span>
                                         <span v-if="column.type === 'sage'">{{
                                                 this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1))
                                             }}</span>
-                                        <span v-if="column.type === 'project_relevant_column'">
+                                        <span v-if="column.type === 'subprojects_column_for_group'">
                                             {{
                                                 this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING'))
                                             }}
@@ -497,7 +494,7 @@
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                          <span
-                                             v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
+                                             v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
                                             {{ this.toCurrencyString(table.commentedEarningSums[column.id]) }}
                                         </span>
                                         <span v-if="column.type === 'sage'">
@@ -505,7 +502,7 @@
                                                 this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(1))
                                             }}
                                         </span>
-                                        <span v-if="column.type === 'project_relevant_column'">
+                                        <span v-if="column.type === 'subprojects_column_for_group'">
                                             {{
                                                 this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_EARNING'))
                                             }}
@@ -546,7 +543,7 @@
                              this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0) < 0 ? 'text-red-500' : '',
                             calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST') < 0 ? 'text-red-500' : ''
                          ]">
-                            <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
+                            <span v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
                                 {{
                                     this.toCurrencyString((this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)))
                                 }}
@@ -556,7 +553,7 @@
                                     this.toCurrencyString((this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0)))
                                 }}
                             </span>
-                            <span v-if="column.type === 'project_relevant_column'">
+                            <span v-if="column.type === 'subprojects_column_for_group'">
                                 {{
                                     this.toCurrencyString((calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST')))
                                 }}

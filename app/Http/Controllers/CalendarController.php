@@ -7,8 +7,8 @@ use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
+use Artwork\Modules\Room\Services\RoomAttributeService;
+use Artwork\Modules\Room\Services\RoomCategoryService;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;

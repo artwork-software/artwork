@@ -15,7 +15,7 @@ use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Repositories\ShiftServiceProviderRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
@@ -59,6 +59,7 @@ class ShiftUserService
             $userId,
             $shiftQualificationId,
             $craftAbbreviation,
+            $shift
         );
 
         $this->shiftsQualificationsService->increaseValueOrCreateWithOne(

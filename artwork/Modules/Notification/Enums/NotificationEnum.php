@@ -68,12 +68,18 @@ enum NotificationEnum: string
 
     case NOTIFICATION_SHIFT_CONFLICT = 'NOTICATION_SHIFT_CONFLICT';
 
+    case NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED = 'NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED';
+    case NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED = 'NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED';
+    case NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST = 'NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST';
+
     case NOTIFICATION_INVENTORY_ARTICLE_CHANGED = 'NOTIFICATION_INVENTORY_ARTICLE_CHANGED';
     case NOTIFICATION_INVENTORY_OVERBOOKED = 'NOTIFICATION_INVENTORY_OVERBOOKED';
 
     case NOTIFICATION_REMINDER_ROOM_REQUEST = 'NOTIFICATION_REMINDER_ROOM_REQUEST';
 
     case NOTIFICATION_EVENT_VERIFICATION_REQUESTS = 'NOTIFICATION_EVENT_VERIFICATION_REQUESTS';
+
+    case NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST = 'NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST';
 
     public function groupType(): string
     {
@@ -109,7 +115,11 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_INFRINGEMENT,
             self::NOTIFICATION_SHIFT_LOCKED,
             self::NOTIFICATION_SHIFT_AVAILABLE,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
+            self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
             self::NOTIFICATION_SHIFT_OPEN_DEMAND,
+            self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
             self::NOTIFICATION_SHIFT_CONFLICT => "SHIFTS",
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
             self::NOTIFICATION_INVENTORY_OVERBOOKED => "INVENTORY",
@@ -146,6 +156,10 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_AVAILABLE,
             self::NOTIFICATION_SHIFT_OPEN_DEMAND,
             self::NOTIFICATION_REMINDER_ROOM_REQUEST,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
+            self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
+            self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
             self::NOTIFICATION_SHIFT_CONFLICT => ShiftNotification::class,
         };
     }
@@ -186,10 +200,15 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_CONFLICT => "Availabilities & Conflicts",
             self::NOTIFICATION_REMINDER_ROOM_REQUEST => "Room request reminder",
 
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED => "Worktime change request approved",
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED => "Worktime change request declined",
+            self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST => "New worktime change request",
+
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED => 'Inventory article changed',
             self::NOTIFICATION_INVENTORY_OVERBOOKED => 'Inventory article overbooked',
 
-            self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Event verification requests"
+            self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Event verification requests",
+            self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST => "New shift commit workflow request",
         };
     }
 
@@ -230,6 +249,11 @@ enum NotificationEnum: string
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED => 'An inventory article or one of its status values has changed.',
             self::NOTIFICATION_INVENTORY_OVERBOOKED => 'The article in your material issue is now overbooked.',
             self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Find out if there are any event verification requests.",
+
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED => "Find out if your worktime change request has been approved.",
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED => "Find out if your worktime change request has been declined.",
+            self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST => "Find out if you have a new worktime change request.",
+            self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST => "Find out if there is a new shift commit workflow request.",
         };
     }
 

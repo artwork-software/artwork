@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Services;
 
-use Artwork\Modules\InventoryManagement\Exports\InventoryManagementExport;
+use Artwork\Modules\Inventory\Exports\InventoryManagementExport;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementExportService;
 use AssertionError;

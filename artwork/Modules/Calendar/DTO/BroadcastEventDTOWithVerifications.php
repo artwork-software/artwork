@@ -6,9 +6,9 @@ use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
-use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
+use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserCalendarSettings;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
@@ -46,6 +46,7 @@ class BroadcastEventDTOWithVerifications extends Data
         public ?bool $isPlanning = false,
         public ?bool $hasVerification = false,
         public ?Collection $verifications = null,
+        public ?Collection $timelines = null,
     ) {
     }
 
@@ -87,6 +88,7 @@ class BroadcastEventDTOWithVerifications extends Data
                 ->orderBy('created_at', 'desc')
                 ->with('verifier')
                 ->get(),
+            timelines: $event->timelines ?? new Collection(),
         );
     }
 }

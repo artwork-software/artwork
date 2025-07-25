@@ -19,7 +19,7 @@ use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserCalendarSettings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -99,13 +99,15 @@ class Project extends Model
         'user_id',
         'color',
         'icon',
+        'marked_as_done'
     ];
 
     protected $casts = [
         'pinned_by_users' => 'array',
         'live_music' => 'boolean',
         'own_copyright' => 'boolean',
-        'is_group' => 'boolean'
+        'is_group' => 'boolean',
+        'marked_as_done' => 'boolean',
     ];
 
     protected $with = [

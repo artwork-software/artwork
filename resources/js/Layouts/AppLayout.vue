@@ -27,13 +27,8 @@
 
         <SubMenu />
 
-        <main class="lg:pl-20 xl:pl-20">
-            <div class="">
-                <div class="artwork-container pt-30 hidden">
-                    <pre>
-                        {{ usePage() }}
-                    </pre>
-                </div>
+        <main class="lg:pl-20 xl:pl-20 pb-20">
+            <div class="artwork">
                 <slot></slot>
             </div>
         </main>
@@ -57,7 +52,7 @@ const props = defineProps({
 
 watchEffect(() => {
     window.Laravel = window.Laravel || {}
-    if (usePage().props.permissions) {
+    if (usePage().props?.permissions) {
         window.Laravel.jsPermissions = usePage().props.permissions;
     }
 })
@@ -70,7 +65,10 @@ const closePushNotification = (id) => {
 }
 
 onBeforeMount(() => {
-    if ( route().current('events') !== true && usePage().props.auth.user.calendar_settings.use_project_time_period){
+    /**
+     * i think this is unnecessary, but it is here to ensure that the calendar settings are set correctly
+
+    if ( (route().current('events') === false && route().current('shifts.plan') === false) && usePage().props.auth.user.calendar_settings.use_project_time_period){
         let desiredRoute = route('user.calendar_settings.toggle_calendar_settings_use_project_period');
         let payload = {
             use_project_time_period: false,
@@ -80,7 +78,7 @@ onBeforeMount(() => {
 
         axios.patch(desiredRoute, payload);
     }
-
+     */
     reloadRolesAndPermissions()
 })
 
@@ -137,7 +135,7 @@ x
                                   @click.middle="useProjectTimePeriodAndRedirect(null, true)"
                                   @click="item.desiredClickHandler"
                                   :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
-                                <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{ $t(item.name) }}
                                 </div>
@@ -154,7 +152,7 @@ x
                                :href="item.href"
                                :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']"
                             >
-                                <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
 
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{ $t(item.name) }}
@@ -174,7 +172,7 @@ x
                                 @click="setHeightOfMenuItems"
                                 :class="[isCurrent(this.managementRoutes) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-3000 ease-in-out hover:font-bold text-xs']">
                                 <div class="flex items-center" :class="fullSidenav ? '' : ''">
-                                    <Component :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                    <Component :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                     <div class="ml-4 w-32 text-left" v-if="fullSidenav">
                                         {{ $t('System') }}
                                     </div>
@@ -207,7 +205,7 @@ x
                         <a @mouseover="!fullSidenav ? hoverTrashMenu = true : null"
                            @mouseleave="hoverTrashMenu = false" :href="getTrashRoute()" v-if="hasAdminRole()" :class="[isCurrentTrashRoute() ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
                             <div class="flex items-center">
-                                <component :is="IconTrash" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :class="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <component :is="IconTrash" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :class="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{  $t('Recycle bin') }}
                                 </div>
@@ -225,7 +223,7 @@ x
                     <a @mouseover="!fullSidenav ? hoverNotificationsMenu = true : null"
                        @mouseleave="hoverNotificationsMenu = false" :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
                         <div class="relative flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs">
-                            <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                            <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                             <div v-if="this.$page.props.auth.user.show_notification_indicator === true"
                                  style="font-size: 7px;"
                                  class="w-3 h-3 block absolute top-0 right-0 rounded-full bg-white text-black text-center">

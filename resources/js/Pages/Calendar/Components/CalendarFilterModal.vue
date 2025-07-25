@@ -1,6 +1,6 @@
 <template>
     <BaseModal modal-size="max-w-4xl" @closed="$emit('close')" full-modal>
-        <div class="px-10 py-6">
+        <div class="p-5">
             <div>
                 <ModalHeader
                     :title="$t('Calendar Filter')"
@@ -27,7 +27,7 @@
                     </div>
                 </div>
 
-                <div class="mb-4 pb-4 border-b-2 border-dashed">
+                <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
                     <div v-if="usePage().props.personalFilters?.length > 0 && !saveFilterOption" class="flex items-center gap-4 mt-3">
                         <div v-for="(filter, index) in usePage().props.personalFilters" class="group block cursor-pointer shrink-0 bg-blue-50  w-fit px-2 py-1.5 rounded-full border border-blue-200">
                             <div class="flex items-center">
@@ -67,7 +67,7 @@
                     </div>
                 </div>
 
-                <div class="mb-4 pb-4 border-b-2 border-dashed">
+                <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
                     <div class="flex flex-wrap items-center gap-2 mt-3">
                         <div v-for="(filter, index) in activeFilters" class="group block cursor-pointer shrink-0 bg-blue-50  w-fit px-2 py-1.5 rounded-full border border-blue-200">
                             <div class="flex items-center">
@@ -90,13 +90,13 @@
 
             <div class="space-y-1">
                 <div v-for="(filterMainCategory, index) in filteredOptionsByCategories" :key="index" class="py-1">
-                    <div class="font-extrabold font-lexend text-white bg-gray-900 rounded-lg px-4 py-2">
+                    <div class="font-extrabold font-lexend text-white bg-gray-900 rounded-lg px-4 py-2 shadow">
                         {{ $t(index) }}
                     </div>
 
                     <div class="space-y-2 mt-2">
                         <div v-for="(filterSubCategory, index) in filterMainCategory" :key="index">
-                            <div class="shadow-md px-3 border rounded-lg ">
+                            <div class="shadow px-3 border border-gray-200 rounded-lg ">
                                 <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="filterSubCategory.open = !filterSubCategory.open">
                                     <div class="font-bold ">
                                         {{ $t(index) }}
@@ -113,13 +113,17 @@
                                 <div v-if="filterSubCategory.open">
                                     <div class="grid gird-cols-1 md:grid-cols-4 gap-4 my-3">
                                         <div v-for="(filter, index) in filterSubCategory" :key="index">
-                                            <div class="flex items-center gap-x-3">
+                                            <div class="flex items-center gap-x-2">
                                                 <div class="flex h-6 shrink-0 items-center">
                                                     <div class="group grid size-4 grid-cols-1">
-                                                        <input :id="removeSpaceFromKey(filter.name)" v-model="filter.checked" type="checkbox" checked="" class="input-checklist !p-2 !rounded-md" />
+                                                        <input v-model="filter.checked" id="candidates" aria-describedby="candidates-description" name="candidates" type="checkbox" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                                                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                                            <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                            <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
                                                     </div>
                                                 </div>
-                                                <div class="text-sm flex items-center gap-x-1 mt-0.5">
+                                                <div class="text-sm flex items-center gap-x-1">
                                                     <div v-if="filter.icon" class="flex items-center gap-2">
                                                         <component :is="filter.icon" class="size-4" stroke-width="1.5"/>
 
@@ -139,13 +143,16 @@
             </div>
         </div>
 
-        <div class="bg-gray-100 px-8 py-4 rounded-b-lg">
+        <div class="bg-gray-100 px-8 py-4 -mx-4 -mb-4 rounded-b-3xl">
             <div class="flex items-center justify-between">
                 <div>
-                    <div @click="resetFilter" class="underline text-artwork-buttons-create text-sm underline-offset-2 cursor-pointer hover:text-artwork-buttons-hover duration-200 ease-in-out">{{ $t('Reset') }}</div>
+                    <div @click="resetFilter" class="underline text-artwork-buttons-create text-xs underline-offset-2 cursor-pointer hover:text-artwork-buttons-hover duration-200 ease-in-out">{{ $t('Reset') }}</div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <SmallFormButton @click="applyFilter" type="button" class="bg-artwork-buttons-create text-white">{{ $t('Apply') }}</SmallFormButton>
+                    <ArtworkBaseModalButton variant="primary" @click="applyFilter">
+                        {{ $t('Apply') }}
+                    </ArtworkBaseModalButton>
+
                 </div>
             </div>
         </div>
@@ -163,6 +170,7 @@ import {XIcon} from "@heroicons/vue/outline";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 
 const props = defineProps({
     filterOptions: {

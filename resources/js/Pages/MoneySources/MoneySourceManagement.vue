@@ -30,7 +30,7 @@
                                                            :key="filter.name"
                                                            :value="filter"
                                                            v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                                <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                                         <span
                                                             :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
                                                             {{ filter.name }}
@@ -147,54 +147,54 @@
                                             <div class="py-1">
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('name')"
-                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{$t('Alphabetical')}}
                                                         <IconSortDescending
                                                             v-if="sortType === 'name' && sortOrder === 'descending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                             aria-hidden="true"/>
                                                         <IconSortAscending
                                                             v-if="sortType === 'name' && sortOrder === 'ascending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"/>
                                                     </div>
                                                 </MenuItem>
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('funding_start_date')"
-                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{$t('Start date')}}
                                                         <IconSortDescending
                                                             v-if="sortType === 'funding_start_date' && sortOrder === 'descending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                             aria-hidden="true"/>
                                                         <IconSortAscending
                                                             v-if="sortType === 'funding_start_date' && sortOrder === 'ascending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"/>
                                                     </div>
                                                 </MenuItem>
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('funding_end_date')"
-                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{$t('End date')}}
                                                         <IconSortDescending
                                                             v-if="sortType === 'funding_end_date' && sortOrder === 'descending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                             aria-hidden="true"/>
                                                         <IconSortAscending
                                                             v-if="sortType === 'funding_end_date' && sortOrder === 'ascending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"/>
                                                     </div>
                                                 </MenuItem>
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('created_at')"
-                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{ $t('Created on')}}
                                                         <IconSortDescending
                                                             v-if="sortType === 'created_at' && sortOrder === 'descending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                             aria-hidden="true"/>
                                                         <IconSortAscending
                                                             v-if="sortType === 'created_at' && sortOrder === 'ascending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"/>
                                                     </div>
                                                 </MenuItem>
                                             </div>
@@ -203,7 +203,7 @@
                                 </Menu>
                                 <div class="flex ml-3"
                                      v-if="$can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                    <AddButtonSmall @click="openAddMoneySourceModal" :text="$t('New')"/>
+                                    <GlassyIconButton text="New" icon="IconPlus" @click="openAddMoneySourceModal" />
                                 </div>
                             </div>
                         </div>
@@ -253,9 +253,9 @@
                                         <BaseMenu>
                                             <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                 <a :href="getEditHref(moneySource)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                                     <IconEdit stroke-width="1.5"
-                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                               aria-hidden="true"/>
                                                     {{ $t('edit')}}
                                                 </a>
@@ -263,9 +263,9 @@
                                             <MenuItem class="cursor-pointer" v-slot="{ active }"
                                                       v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.auth.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                 <a @click="duplicateMoneySource(moneySource)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <IconCopy stroke-width="1.5"
-                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                               aria-hidden="true"/>
                                                     {{ $t('Duplicate')}}
                                                 </a>
@@ -273,9 +273,9 @@
                                             <MenuItem class="cursor-pointer" v-slot="{ active }"
                                                       v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.auth.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                 <a @click="pinMoneySource(moneySource)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <IconPin
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                         aria-hidden="true"/>
                                                     {{moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.auth.user.id) ? $t('Undo pinning') : $t('Pin')}}
                                                 </a>
@@ -283,9 +283,9 @@
                                             <MenuItem class="cursor-pointer" v-slot="{ active }"
                                                       v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.auth.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.auth.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
                                                 <a @click="openDeleteSourceModal(moneySource)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <IconTrash stroke-width="1.5"
-                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                                aria-hidden="true"/>
                                                     {{ $t('Delete')}}
                                                 </a>
@@ -414,11 +414,13 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 
 
 export default defineComponent({
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+        GlassyIconButton,
         BaseModal,
         BaseMenu,
         FormButton,

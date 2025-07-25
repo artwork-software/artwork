@@ -3,7 +3,7 @@
         <Float auto-placement portal :offset="{ mainAxis: hasNoOffset ? 5 : -10, crossAxis: hasNoOffset ? 25 : 75}">
             <div class="font-semibold  flex items-center justify-center w-full" ref="menuButtonRef" :class="[whiteIcon ? 'text-white' : 'text-artwork-buttons-context', dotsColor]">
                 <MenuButton :id="buttonId" class="w-full">
-                   <div class="flex items-center gap-x-3 w-full">
+                   <div class="flex items-center gap-x-1 w-full">
                        <div v-if="showIcon">
                            <IconDotsVertical
                                v-if="!showSortIcon && !showCustomIcon"
@@ -37,7 +37,7 @@
                            />
                        </div>
 
-                       <div v-if="menuButtonText && showMenuButtonText">
+                       <div v-if="menuButtonText && showMenuButtonText" :class="[textWithMarginLeft ? 'ml-2' : '']">
                             {{ $t(menuButtonText) }}
                        </div>
                    </div>
@@ -50,8 +50,8 @@
                         leave-active-class="transition ease-in duration-75"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
-                <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none" :class="[menuWidth, whiteMenuBackground ? 'bg-white' : 'bg-artwork-navigation-background', needsMaxHeight ? 'max-h-72 overflow-scroll xl:max-h-none' : '']">
-                    <div>
+                <MenuItems class="z-50 focus:outline-none" :class="[menuWidth, needsMaxHeight ? 'max-h-72 overflow-scroll xl:max-h-none' : '']">
+                    <div class="card white p-1.5 !rounded-xl">
                         <slot />
                     </div>
                 </MenuItems>
@@ -165,6 +165,11 @@ export default defineComponent({
             default: false,
         },
         needsMaxHeight: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        textWithMarginLeft: {
             type: Boolean,
             required: false,
             default: false,

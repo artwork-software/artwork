@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\TaskTemplate\Services;
 
-use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
+use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Artwork\Modules\TaskTemplate\Repositories\TaskTemplateRepository;
 

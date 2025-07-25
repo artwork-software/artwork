@@ -8,24 +8,24 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
-use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\Event\Services\EventCommentService;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
-use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
-use Artwork\Modules\SubEvent\Services\SubEventService;
+use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
-use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
+use Artwork\Modules\User\Services\UserProjectManagementSettingService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -158,62 +158,109 @@ class ProjectService
                         });
                     }
                 )
-                // Apply other filters with OR logic
+                // Apply project type filters (groups/non-groups)
                 ->when(
                     $projectFilters?->isNotEmpty(),
                     function (Builder $builder) use ($projectFilters): void {
+                        // Handle project type filters (groups/non-groups) with OR logic
                         $builder->where(function (Builder $builder) use ($projectFilters): void {
-                            foreach ($projectFilters as $filter) {
-                                if ($filter === 'showOnlyMyProjects') {
-                                    // Skip this filter as it's already applied above
-                                    continue;
-                                }
+                            $hasProjectTypeFilter = false;
 
-                                switch ($filter) {
-                                    case 'showProjectGroups':
-                                        $builder->orWhere('is_group', 1);
-                                        break;
-                                    case 'showProjects':
-                                        $builder->orWhere('is_group', 0);
-                                        break;
-                                    case 'showExpiredProjects':
-                                        $builder->orWhereHas(
-                                            'events',
-                                            function (Builder $builder): void {
-                                                $todayMidnight = $this->carbonService->getTodayMidnight();
-                                                $builder->where(
-                                                    'start_time',
-                                                    '>',
-                                                    $todayMidnight
-                                                );
-                                                $builder->where(
-                                                    'end_time',
-                                                    '>',
-                                                    $todayMidnight
-                                                );
-                                            },
-                                            '=',
-                                            0
-                                        );
-                                        break;
-                                    case 'showFutureProjects':
-                                        $builder->orWhereHas(
-                                            'events',
-                                            function (Builder $builder): void {
-                                                $builder->where(
-                                                    'start_time',
-                                                    '>',
-                                                    $this->carbonService->getTodayMidnight()
-                                                );
-                                            },
-                                        );
-                                        break;
-                                    case 'showProjectsWithoutEvents':
-                                        $builder->orWhereDoesntHave('events');
-                                        break;
-                                }
+                            if ($projectFilters->contains('showProjectGroups')) {
+                                $builder->orWhere('is_group', 1);
+                                $hasProjectTypeFilter = true;
+                            }
+
+                            if ($projectFilters->contains('showProjects')) {
+                                $builder->orWhere('is_group', 0);
+                                $hasProjectTypeFilter = true;
+                            }
+
+                            // If neither project type filter is active, don't return any projects
+                            if (!$hasProjectTypeFilter) {
+                                $builder->whereRaw('1 = 0');
                             }
                         });
+
+                        // Special case: When both showExpiredProjects and showFutureProjects are false
+                        // Hide all projects with any events, regardless of when they occur
+                        if (!$projectFilters->contains('showExpiredProjects') && !$projectFilters->contains('showFutureProjects')) {
+                            $builder->where(function (Builder $builder) use ($projectFilters): void {
+                                // If showProjectsWithoutEvents is true, only show projects without events
+                                if ($projectFilters->contains('showProjectsWithoutEvents')) {
+                                    $builder->whereDoesntHave('events');
+                                } else {
+                                    // If showProjectsWithoutEvents is false, don't show any projects
+                                    // (since all projects either have events or don't have events)
+                                    $builder->whereRaw('1 = 0');
+                                }
+                            });
+                        } else {
+                            // Handle showExpiredProjects filter - when false, exclude projects with no future events
+                            if (!$projectFilters->contains('showExpiredProjects')) {
+                                $builder->where(function (Builder $builder) use ($projectFilters): void {
+                                    $todayMidnight = $this->carbonService->getTodayMidnight();
+
+                                    // Allow projects without events if showProjectsWithoutEvents is true
+                                    if ($projectFilters->contains('showProjectsWithoutEvents')) {
+                                        $builder->where(function (Builder $subQuery) use ($todayMidnight): void {
+                                            // Either has future events
+                                            $subQuery->whereHas('events', function (Builder $query) use ($todayMidnight): void {
+                                                $query->where(function (Builder $q) use ($todayMidnight): void {
+                                                    $q->where('start_time', '>=', $todayMidnight)
+                                                      ->orWhere('end_time', '>=', $todayMidnight);
+                                                });
+                                            })
+                                            // Or has no events at all
+                                            ->orWhereDoesntHave('events');
+                                        });
+                                    } else {
+                                        // Original behavior when showProjectsWithoutEvents is false
+                                        $builder->whereHas('events', function (Builder $query) use ($todayMidnight): void {
+                                            $query->where(function (Builder $q) use ($todayMidnight): void {
+                                                $q->where('start_time', '>=', $todayMidnight)
+                                                  ->orWhere('end_time', '>=', $todayMidnight);
+                                            });
+                                        });
+                                    }
+                                });
+                            }
+
+                            // Handle showFutureProjects filter - when false, exclude projects with only future events
+                            if (!$projectFilters->contains('showFutureProjects')) {
+                                $builder->where(function (Builder $builder) use ($projectFilters): void {
+                                    $todayMidnight = $this->carbonService->getTodayMidnight();
+
+                                    // Allow projects without events if showProjectsWithoutEvents is true
+                                    if ($projectFilters->contains('showProjectsWithoutEvents')) {
+                                        $builder->where(function (Builder $subQuery) use ($todayMidnight): void {
+                                            // Either has past events
+                                            $subQuery->whereHas('events', function (Builder $query) use ($todayMidnight): void {
+                                                $query->where('start_time', '<', $todayMidnight);
+                                            })
+                                            // Or has no events at all
+                                            ->orWhereDoesntHave('events');
+                                        });
+                                    } else {
+                                        // Original behavior when showProjectsWithoutEvents is false
+                                        $builder->whereHas('events', function (Builder $query) use ($todayMidnight): void {
+                                            $query->where('start_time', '<', $todayMidnight);
+                                        });
+                                    }
+                                });
+                            }
+                        }
+
+                        // Handle showProjectsWithoutEvents filter - when false, exclude projects without events
+                        if (!$projectFilters->contains('showProjectsWithoutEvents')) {
+                            $builder->whereHas('events');
+                        }
+
+                        // Handle showOnlyProjectsWithoutGroup filter - when true, exclude project groups and projects with assigned groups
+                        if ($projectFilters->contains('showOnlyProjectsWithoutGroup')) {
+                            $builder->where('is_group', 0) // Exclude project groups
+                                   ->whereDoesntHave('groups'); // Exclude projects that have a group assigned
+                        }
                     }
                 )
                 ->where(function (Builder $builder): void {
@@ -775,6 +822,25 @@ class ProjectService
     {
         $project->groups()->attach($projectGroup->id);
         $project->save();
+
+        // Update is_group flag of the project group to true
+        if (!$projectGroup->is_group) {
+            $projectGroup->is_group = true;
+            $projectGroup->save();
+        }
+
+        // Ensure the project has at least one column marked as relevant for project groups
+        $table = $project->table()->first();
+        if ($table) {
+            $columns = $table->columns()->get();
+            if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
+                // Mark the last column as relevant for project groups
+                $lastColumn = $columns->sortBy('position')->last();
+                if ($lastColumn) {
+                    $lastColumn->update(['relevant_for_project_groups' => true]);
+                }
+            }
+        }
     }
 
     public function scoutSearch(string $query): \Laravel\Scout\Builder

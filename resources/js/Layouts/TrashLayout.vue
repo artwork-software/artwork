@@ -38,12 +38,12 @@
                                                        :key="page.name"
                                                        :value="page"
                                                        v-slot="{ active, selected }">
-                                            <li @click="redirectToPage(page.href)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between p-3 text-sm subpixel-antialiased']">
+                                            <li @click="redirectToPage(page.href)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group cursor-pointer flex items-center justify-between p-3 text-sm subpixel-antialiased']">
                                                 <span
                                                     :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                     {{ page.name }}
                                                 </span>
-                                                <span :class="[active ? 'bg-artwork-navigation-color/10 text-white' :
+                                                <span :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' :
                                                     'text-secondary',
                                                     'group flex items-center text-sm subpixel-antialiased']">
                                                     <CheckIcon v-if="selected"

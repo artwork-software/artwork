@@ -7,8 +7,8 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
-use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Scheduling\Models\Scheduling;
 use Artwork\Modules\Scheduling\Repositories\SchedulingRepository;
@@ -32,6 +32,7 @@ class SchedulingService
         string $model,
         int $modelId
     ): bool {
+        /** @var Scheduling $scheduling */
         $scheduling = $this->schedulingRepository->getByUserIdAndTypeAndModelAndModelId(
             $userId,
             $type,
@@ -40,8 +41,7 @@ class SchedulingService
         );
 
         if ($scheduling instanceof Scheduling) {
-            $scheduling->__call('increment', ['count']);
-
+            $scheduling->increment('count');
             return true;
         }
 

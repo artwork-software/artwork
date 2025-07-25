@@ -10,6 +10,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            BudgetColumnSettingSeeder::class,
             RolesAndPermissionsSeeder::class,
             ShiftQualificationSeeder::class,
             AuthUserSeeder::class,
@@ -29,9 +30,9 @@ class DatabaseSeeder extends Seeder
             ManufacturerSeeder::class,
             InventoryArticleStatusSeeder::class,
             EventStatusSeeder::class,
-            BudgetColumnSettingSeeder::class,
             DatabaseSettingsSeeder::class,
             SubdivisionSeeder::class,
+            ShiftQualificationIconsSeeder::class,
         ]);
     }
 }

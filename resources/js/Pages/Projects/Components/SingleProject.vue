@@ -59,27 +59,27 @@
                     <MenuItem v-slot="{ active }"
                               v-if="$role('artwork admin') || $can('write projects') || this.checkPermission(project, 'edit')">
                         <a @click="openEditProjectModal()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             <IconEdit stroke-width="1.5"
-                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                       aria-hidden="true"/>
                             {{ $t('Edit basic data') }}
                         </a>
                     </MenuItem>
                     <MenuItem class="cursor-pointer" v-slot="{ active }" v-if="project.pinned_by_users && project.pinned_by_users.includes($page.props.auth.user.id)">
                         <a @click="pinProject()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconPinnedOff stroke-width="1.5"
-                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                            aria-hidden="true"/>
                             {{  $t('Undo pinning') }}
                         </a>
                     </MenuItem>
                     <MenuItem class="cursor-pointer" v-slot="{ active }" v-else>
                         <a @click="pinProject()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconPin stroke-width="1.5"
-                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                      aria-hidden="true"/>
                             {{  $t('Pin') }}
                         </a>
@@ -87,9 +87,9 @@
                     <MenuItem v-slot="{ active }"
                               v-if="$role('artwork admin') || $can('write projects') || $can('management projects') || this.checkPermission(project, 'edit')">
                         <a href="#" @click="duplicateProject()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconCopy stroke-width="1.5"
-                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                       aria-hidden="true"/>
                             {{ $t('Duplicate') }}
                         </a>
@@ -97,9 +97,9 @@
                     <MenuItem v-slot="{ active }"
                               v-if="$role('artwork admin') || $can('delete projects') || this.checkPermission(project, 'delete')">
                         <a href="#" @click="openDeleteProjectModal()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconTrash stroke-width="1.5"
-                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                        aria-hidden="true"/>
                             {{ $t('Put in the trash') }}
                         </a>

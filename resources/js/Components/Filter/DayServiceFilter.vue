@@ -49,7 +49,7 @@ export default {
         <MenuItems class="absolute left-0 z-10 mt-2 w-56 origin-top-left rounded-lg bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
             <div class="py-1">
                 <MenuItem v-slot="{ active }" v-for="dayService in dayServices">
-                    <div @click="updateDayService(dayService)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']" class="cursor-pointer">
+                    <div @click="updateDayService(dayService)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']" class="cursor-pointer">
                         <div class="flex items-center">
                             <component :is="dayService.icon" class="h-5 w-5" :style="{color: dayService.hex_color}"/>
                             <span class="ml-2">{{ dayService.name }}</span>

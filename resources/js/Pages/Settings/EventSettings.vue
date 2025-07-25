@@ -2,10 +2,10 @@
     <app-layout :title="$t('Event Settings')">
 
            <EventSettingHeader>
-               <div class="">
+               <div>
                    <div class="flex items-center justify-between mb-5">
                        <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
-                       <AddButtonBig @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
+                       <GlassyIconButton icon="IconPlus" @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
                        <div v-if="this.$page.props.show_hints" class="flex mt-1">
                            <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                            <span class="hind ml-1 my-auto">{{$t('Create new Event Types')}}</span>
@@ -52,25 +52,9 @@
                            </div>
                        </div>
                        <div class="flex items-center">
-                           <BaseMenu has-no-offset>
-                               <MenuItem v-slot="{ active }">
-                                   <div @click="openEditEventTypeModal(eventType)"
-                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                       <PencilAltIcon
-                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                           aria-hidden="true"/>
-                                       {{$t('Edit event type')}}
-                                   </div>
-                               </MenuItem>
-                               <MenuItem v-if="index !== 0" v-slot="{ active }">
-                                   <div @click="openDeleteEventTypeModal(eventType)"
-                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                       <TrashIcon
-                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                           aria-hidden="true"/>
-                                       {{$t('Delete event type')}}
-                                   </div>
-                               </MenuItem>
+                           <BaseMenu has-no-offset white-menu-background>
+                               <BaseMenuItem title="Edit event type" white-menu-background @click="openEditEventTypeModal(eventType)" />
+                               <BaseMenuItem v-if="index !== 0" title="Delete event type" icon="IconTrash" white-menu-background @click="openDeleteEventTypeModal(eventType)" />
                            </BaseMenu>
                        </div>
                    </li>
@@ -115,8 +99,10 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSettingHeader.vue";
 import {ColorPicker} from "vue3-colorpicker";
 import AddEditEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/AddEditEventTypModal.vue";
+import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import DeleteEventTypeConfirmationModal from "@/Pages/Settings/EventType/Components/Modals/DeleteEventTypeConfirmationModal.vue";
 import DeleteStandardEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/DeleteStandardEventTypeModal.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 export default {
     mixins: [Permissions],
     computed: {
@@ -156,6 +142,8 @@ export default {
         }
     },
     components: {
+        BaseMenuItem,
+        GlassyIconButton,
         ColorPicker,
         EventSettingHeader,
         TextInputComponent,

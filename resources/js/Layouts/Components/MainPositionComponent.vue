@@ -37,44 +37,44 @@
                     <div class="flex w-full">
                         <BaseMenu v-if="this.hasBudgetAccess || this.$can('edit budget templates')" dots-color="text-artwork-context-light">
                             <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'">
-                                            <span @click="openVerifiedModal(true, false, mainPosition.id, mainPosition)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconLock stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" />
+                                            <span @click="openVerifiedModal(true, false, mainPosition.id, mainPosition)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconLock stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
                                                 {{ $t('Get verified by user') }}
                                             </span>
                             </MenuItem>
                             <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && (mainPosition.verified?.requested === this.$page.props.auth.user.id || projectManagers.includes(this.$page.props.auth.user.id))">
-                                            <span @click="removeVerification(mainPosition, 'main')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" />
+                                            <span @click="removeVerification(mainPosition, 'main')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
                                                 {{ $t('Cancel verification') }}
                                             </span>
                             </MenuItem>
                             <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && (mainPosition.verified?.requested_by === this.$page.props.auth.user.id || projectManagers.includes(this.$page.props.auth.user.id))">
-                                            <span @click="requestRemove(mainPosition, 'main')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" />
+                                            <span @click="requestRemove(mainPosition, 'main')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
                                                 {{ $t('Withdraw verification request') }}
                                             </span>
                             </MenuItem>
                             <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !mainPosition.is_fixed">
-                                            <span @click="fixMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconLock stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" />
+                                            <span @click="fixMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconLock stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
                                                 {{ $t('Commitment') }}
                                             </span>
                             </MenuItem>
                             <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && mainPosition.is_fixed">
-                                            <span @click="unfixMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconLockOpen class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" stroke-width="1.5"  />
+                                            <span @click="unfixMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconLockOpen class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" stroke-width="1.5"  />
                                                 {{ $t('Canceling a fixed term') }}
                                             </span>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                            <span @click="openDeleteMainPositionModal(mainPosition)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" stroke-width="1.5" aria-hidden="true"/>
+                                            <span @click="openDeleteMainPositionModal(mainPosition)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" stroke-width="1.5" aria-hidden="true"/>
                                                 {{ $t('Delete') }}
                                             </span>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <a @click="duplicateMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <IconCopy class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" stroke-width="1.5" aria-hidden="true"/>
+                                <a @click="duplicateMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <IconCopy class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" stroke-width="1.5" aria-hidden="true"/>
                                     {{ $t('Duplicate') }}
                                 </a>
                             </MenuItem>
@@ -112,17 +112,20 @@
                 <td class="w-28"></td>
                 <td class="w-72">SUM</td>
                 <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center" v-for="column in table.columns.slice(3)" v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
-                    <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="mainPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
+                    <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="[
+                        mainPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : '',
+                        column.color !== 'whiteColumn' ? column.color : ''
+                    ]">
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-if="mainPosition.columnSums[column.id]?.hasComments && mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-else-if="mainPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments_white.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'moneySource')" v-else-if="mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                        <span v-if="column.type !== 'sage' && column.type !== 'project_relevant_column'">
+                        <span v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
                             {{ this.toCurrencyString(mainPosition.columnSums[column.id]?.sum) }}
                         </span>
                         <span v-if="column.type === 'sage'">
                             {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
                         </span>
-                        <span v-if="column.type === 'project_relevant_column'">
+                        <span v-if="column.type === 'subprojects_column_for_group'">
                             {{ calculateRelevantBudgetDataSumFormProjectsInGroupMainPosition() }}
                         </span>
                         <div v-if="this.hasBudgetAccess" class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openMainPositionSumDetailModal(mainPosition, column)">

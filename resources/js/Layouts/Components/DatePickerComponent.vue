@@ -1,69 +1,94 @@
 <template>
     <div v-if="!project">
         <div class="flex items-center gap-x-2" id="datePicker">
-            <ToolTipComponent direction="right" :tooltip-text="$t('Select time')" icon="IconCalendar" icon-size="h-5 w-5 mr-3" class="cursor-pointer" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
+            <VueDatePicker
+                v-model="dateValuePicker"
+                model-auto
+                range
+                multi-calendars
+                :preset-dates="customShortcuts"
+                :enable-time-picker="false"
+                :teleport="true"
+                auto-position="bottom"
+                :format="format"
+                :preview-format="'dd.MM.yyyy'"
+                :cancelText="$t('Cancel')" :selectText="$t('Apply')"
+                :locale="usePage().props.auth.user.language"
+            >
+                <template #trigger>
+                    <ToolTipComponent
+                        direction="right"
+                        :tooltip-text="$t('Select time')"
+                        icon="IconCalendar"
+                        icon-size="h-5 w-5 mr-3"
+                        class="cursor-pointer"
+                    />
+                </template>
+                <template #preset-date-range-button="{ label, value }">
+                  <span
+                      role="button"
+                      :tabindex="0"
+                      @click="() => handleShortcut(value)"
+                      @keyup.enter.prevent="() => handleShortcut(value)"
+                      @keyup.space.prevent="() => handleShortcut(value)"
+                  >
+                    {{ label }}
+                  </span>
+                </template>
+            </VueDatePicker>
             <div class="relative rounded-md">
-                <div class="absolute inset-y-0 pointer-events-none left-1 xsDark flex items-center pl-3 bg-white z-40 h-8 top-1">
+                <div class="absolute inset-y-0 pointer-events-none left-1 xsDark flex items-center pl-3 bg-white z-40 h-8 top-[3px]">
                     {{ startDateString }},
                 </div>
-                <!-- necessary to bind dateValueArray as v-model, otherwise dates are not updated correctly in user shift plans -->
                 <input v-if="is_user_shift_plan === true"
-                       v-model="dateValueArray[0]"
-                       @change="this.updateTimes"
+                       v-model="dateValue[0]"
+                       @change="updateTimes"
                        ref="startDate"
                        id="startDate"
                        type="date"
                        :disabled="!!project"
                        placeholder="Start"
-                       class="border-gray-300 pl-10 inputMain xsDark placeholder-secondary shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
+                       class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[0]"
-                       @change="this.updateTimes"
+                       @change="updateTimes"
                        ref="startDate"
                        id="startDate"
                        type="date"
                        :disabled="!!project"
                        placeholder="Start"
-                       class="border-gray-300 pl-10 inputMain xsDark placeholder-secondary shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
-                <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 bg-white z-40 h-8 top-1">
+                       class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
+                <div class="absolute inset-y-0 right-1 flex items-center pl-4 bg-white z-40 h-8 top-1">
                     <IconCalendar class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
                 </div>
             </div>
             <div class="relative rounded-md">
-                <div class="absolute inset-y-0 left-1 pointer-events-none xsDark flex items-center pl-3 bg-white z-40 h-8 top-1">
-                     {{ endDateString}},
+                <div class="absolute inset-y-0 left-1 pointer-events-none xsDark flex items-center pl-3 bg-white z-40 h-8 top-[3px]">
+                     {{ endDateString }},
                 </div>
-                <!-- necessary to bind dateValueArray as v-model, otherwise dates are not updated correctly in user shift plans -->
                 <input v-if="is_user_shift_plan === true"
-                       v-model="dateValueArray[1]"
-                       @change="this.updateTimes"
+                       v-model="dateValue[1]"
+                       @change="updateTimes"
                        ref="endDate"
                        id="endDate"
                        type="date"
                        :disabled="!!project"
                        placeholder="Ende"
-                       class="border-gray-300 pl-10 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
+                       class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[1]"
-                       @change="this.updateTimes"
+                       @change="updateTimes"
                        ref="endDate"
                        id="endDate"
                        type="date"
                        :disabled="!!project"
                        placeholder="Ende"
-                       class="border-gray-300 pl-10 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
-                    <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 bg-white z-40 h-8 top-1">
-                        <IconCalendar class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
-                    </div>
+                       class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
+                <div class="absolute inset-y-0 right-1 flex items-center pl-4 bg-white z-40 h-8 top-1">
+                    <IconCalendar class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
+                </div>
             </div>
         </div>
-        <VueTailwindDatepicker class="absolute z-50" v-if="showDateRangePicker"
-                               no-input
-                               :shortcuts="customShortcuts"
-                               separator=" - " :formatter="formatter"
-                               :options="datePickerOptions" @update:modelValue="dateValue = $event" i18n="de"
-                               v-model="dateValuePicker" id="datePicker">
-        </VueTailwindDatepicker>
     </div>
     <div class="font-medium text-gray-900" v-else>
         {{ $t('Project period') }}: {{ new Date(dateValue[0]).format("DD.MM.YYYY") }} - {{ new Date(dateValue[1]).format("DD.MM.YYYY") }}
@@ -71,237 +96,304 @@
     <div v-if="hasError" class="text-error mt-1 mx-2" :class="errorMessage.length > 0 ? 'mt-10' : ''" >{{ errorMessage }}</div>
 </template>
 
-<script>
-import VueTailwindDatepicker from 'vue-tailwind-datepicker'
-import {ref} from "vue";
-import {router} from "@inertiajs/vue3";
+<script setup>
+import { ref, computed, watch, onMounted } from "vue";
+import { usePage, router } from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css'
+import {useTranslation} from "@/Composeables/Translation.js";
+import { IconCalendar } from '@tabler/icons-vue';
+const $t = useTranslation()
+// Props
+const props = defineProps({
+    dateValueArray: Array,
+    project: [Object, Boolean],
+    is_shift_plan: Boolean,
+    is_user_shift_plan: Boolean,
+    is_inventory_article_planning: Boolean
+});
 
+// Refs & State
+const dateValue = ref(props.dateValueArray ? [...props.dateValueArray] : []);
+const dateValuePicker = ref(props.dateValueArray ? [...props.dateValueArray] : []);
+const showDateRangePicker = ref(false);
+const errorMessage = ref('');
+const hasError = ref(false);
+const startDateString = ref('');
+const endDateString = ref('');
+const startDate = ref(null);
+const endDate = ref(null);
+
+// Formatter
 const formatter = ref({
     date: 'YYYY-MM-DD',
     month: 'MMM'
-})
+});
 
-export default {
-    mixins: [Permissions, IconLib],
-    name: "DatePickerComponent",
-    components: {ToolTipComponent, VueTailwindDatepicker},
-    props: ['dateValueArray', 'project', 'is_shift_plan', 'is_user_shift_plan', 'is_inventory_article_planning'],
-    data() {
-        return {
-            dateValue: this.dateValueArray ? this.dateValueArray : [],
-            datePickerOptions: {
-                shortcuts: {
-                    today: this.$t('Today'),
-                    yesterday: this.$t('Yesterday'),
-                    past: period => this.$t('Last {0} days', [period]),
-                    currentMonth: this.$t('Current month'),
-                    pastMonth: this.$t('Past month')
-                },
-                footer: {
-                    apply: this.$t('Apply'),
-                    cancel: this.$t('Cancel')
-                }
-            },
-            dateValuePicker: this.dateValueArray ? this.dateValueArray : [],
-            formatter: formatter,
-            showDateRangePicker: false,
-            refreshPage: false,
-            customShortcuts: null,
-            errorMessage: '',
-            hasError: false,
-            startDateString: '',
-            endDateString: '',
+// Shortcuts
+const customShortcuts = [
+    {
+        label: $t('Today'),
+        value: () => {
+            const today = new Date();
+            today.setHours(12, 0, 0, 0);
+            return [new Date(today), new Date(today)];
         }
     },
-    watch: {
-        dateValuePicker: {
-            handler() {
-                this.showDateRangePicker = false;
-                this.updateTimes()
-            }
+    {
+        label: $t('Current week'),
+        value: () => {
+            const today = new Date();
+            const first = new Date(today);
+            const last = new Date(today);
+            const day = today.getDay();
+            const offset = day === 0 ? -6 : 1;
+            first.setDate(today.getDate() - day + offset);
+            last.setDate(first.getDate() + 6);
+            first.setHours(12, 0, 0, 0);
+            last.setHours(12, 0, 0, 0);
+            return [first, last];
         }
     },
-    mounted() {
-        this.removeDateIcons();
-        this.startDateString = this.getDayOfWeek(new Date(this.dateValue[0])).replace('.', '');
-        this.endDateString = this.getDayOfWeek(new Date(this.dateValue[1])).replace('.', '');
-        document.addEventListener('click', (event) => {
-            if (!event.target.closest('#datePicker') && this.showDateRangePicker) {
-                this.showDateRangePicker = false;
-            }
-        });
-
-        this.customShortcuts = () => {
-            return [
-                {
-                    label: this.$t('Today'),
-                    atClick: () => {
-                        return [
-                            new Date(),
-                            new Date()
-                        ];
-                    }
-                },
-                {
-                    label: this.$t('Current week'),
-                    atClick: () => {
-                        const today = new Date();
-                        const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)));
-                        const lastDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + 6));
-
-                        return [firstDayOfWeek, lastDayOfWeek];
-                    }
-                },
-                {
-                    label: this.$t('Current month'),
-                    atClick: () => {
-                        const today = new Date();
-                        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-                        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-                        return [firstDayOfMonth, lastDayOfMonth];
-                    }
-                },
-                {
-                    label: this.$t('Current year'),
-                    atClick: () => {
-                        const today = new Date();
-                        const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
-                        const lastDayOfYear = new Date(today.getFullYear(), 11, 31);
-
-                        return [firstDayOfYear, lastDayOfYear];
-                    }
-                },
-                {
-                    label: this.$t('Next 30 days'),
-                    atClick: () => {
-                        const today = new Date();
-                        const next30DaysStart = new Date(today.setDate(today.getDate() + 1));
-                        const next30DaysEnd = new Date(today.setDate(today.getDate() + 29));
-
-                        return [next30DaysStart, next30DaysEnd];
-                    }
-                },
-                {
-                    label: this.$t('Next 90 days'),
-                    atClick: () => {
-                        const today = new Date();
-                        const next90DaysStart = new Date(today.setDate(today.getDate() + 1));
-                        const next90DaysEnd = new Date(today.setDate(today.getDate() + 89));
-
-                        return [next90DaysStart, next90DaysEnd];
-                    }
-                },
-                {
-                    label: this.$t('Next 12 months'),
-                    atClick: () => {
-                        const today = new Date();
-                        const next12MonthsStart = new Date(today.setDate(today.getDate() + 1));
-                        const next12MonthsEnd = new Date(today.setDate(today.getDate() + 364));
-
-                        return [next12MonthsStart, next12MonthsEnd];
-                    }
-                }
-            ]
+    {
+        label: $t('Current month'),
+        value: () => {
+            const today = new Date();
+            const first = new Date(today.getFullYear(), today.getMonth(), 1, 12, 0, 0, 0);
+            const last = new Date(today.getFullYear(), today.getMonth() + 1, 0, 12, 0, 0, 0);
+            return [first, last];
         }
     },
-    methods: {
-        getDayOfWeek(date) {
-            const days = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
-            return days[date.getDay()];
-        },
-        removeDateIcons() {
-            const startDateInput = this.$refs.startDate;
-            const endDateInput = this.$refs.endDate;
-
-            if (startDateInput) {
-                startDateInput.style.webkitAppearance = 'none';
-                startDateInput.style.mozAppearance = 'textfield';
-
-                startDateInput.style.webkitCalendarPickerIndicator = 'none';
-                startDateInput.style.webkitClearButton = 'none';
-                startDateInput.style.webkitInnerSpinButton = 'none';
-                startDateInput.style.webkitOuterSpinButton = 'none';
-                startDateInput.style.mozFocusInner = 'none';
-                startDateInput.style.mozFocusOuter = 'none';
-                startDateInput.style.msClear = 'none';
-            }
-
-            if (endDateInput) {
-                endDateInput.style.webkitAppearance = 'none';
-                endDateInput.style.mozAppearance = 'textfield';
-                endDateInput.style.webkitCalendarPickerIndicator = 'none';
-                endDateInput.style.webkitClearButton = 'none';
-                endDateInput.style.webkitInnerSpinButton = 'none';
-                endDateInput.style.webkitOuterSpinButton = 'none';
-                endDateInput.style.mozFocusInner = 'none';
-                endDateInput.style.mozFocusOuter = 'none';
-                endDateInput.style.msClear = 'none';
-
-            }
-        },
-        toggleDateRangePicker() {
-            this.showDateRangePicker = !this.showDateRangePicker;
-        },
-        updateTimes() {
-            const startDate = new Date(this.dateValue[0]);
-            const endDate = new Date(this.dateValue[1]);
-
-            if (startDate?.getFullYear() < 1800 || endDate?.getFullYear() < 1800) {
-                this.errorMessage = this.$t('Please select a valid date.');
-                return;
-            }
-
-            if (endDate < startDate) {
-                this.errorMessage = this.$t('The end date must be after the start date.');
-                this.hasError = true;
-            } else {
-                this.errorMessage = '';
-                this.hasError = false;
-
-                if (this.is_shift_plan) {
-                    router.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.auth.user.id), {
-                        start_date: startDate,
-                        end_date: endDate,
-                    }, {
-                        preserveState: false,
-                        preserveScroll: true,
-                    });
-                } else if (this.is_user_shift_plan) {
-                    router.patch(route('update.user.worker.shift-plan.filters.update', this.$page.props.auth.user.id), {
-                        start_date: startDate,
-                        end_date: endDate,
-                    }, {
-                        preserveState: true,
-                        preserveScroll: true,
-                    });
-                } else if (this.is_inventory_article_planning) {
-                    router.patch(route('update.user.inventory.article-plan.filters.update', this.$page.props.auth.user.id), {
-                        start_date: startDate,
-                        end_date: endDate,
-                    }, {
-                        preserveState: true,
-                        preserveScroll: true,
-                    });
-                } else {
-                    router.patch(route('update.user.calendar.filter.dates', this.$page.props.auth.user.id), {
-                        start_date: startDate,
-                        end_date: endDate,
-                    }, {
-                        preserveState: false,
-                        preserveScroll: true,
-                    });
-                }
-            }
-        },
+    {
+        label: $t('Current year'),
+        value: () => {
+            const today = new Date();
+            const first = new Date(today.getFullYear(), 0, 1, 12, 0, 0, 0);
+            const last = new Date(today.getFullYear(), 11, 31, 12, 0, 0, 0);
+            return [first, last];
+        }
     },
+    {
+        label: $t('Next 7 days'),
+        value: () => {
+            const start = new Date();
+            const end = new Date();
+            start.setDate(start.getDate() + 1);
+            end.setDate(end.getDate() + 7);
+            start.setHours(12, 0, 0, 0);
+            end.setHours(12, 0, 0, 0);
+            return [start, end];
+        }
+    },
+    {
+        label: $t('Next 14 days'),
+        value: () => {
+            const start = new Date();
+            const end = new Date();
+            start.setDate(start.getDate() + 1);
+            end.setDate(end.getDate() + 14);
+            start.setHours(12, 0, 0, 0);
+            end.setHours(12, 0, 0, 0);
+            return [start, end];
+        }
+    },
+    {
+        label: $t('Next 30 days'),
+        value: () => {
+            const start = new Date();
+            const end = new Date();
+            start.setDate(start.getDate() + 1);
+            end.setDate(end.getDate() + 30);
+            start.setHours(12, 0, 0, 0);
+            end.setHours(12, 0, 0, 0);
+            return [start, end];
+        }
+    },
+    {
+        label: $t('Next 90 days'),
+        value: () => {
+            const start = new Date();
+            const end = new Date();
+            start.setDate(start.getDate() + 1);
+            end.setDate(end.getDate() + 90);
+            start.setHours(12, 0, 0, 0);
+            end.setHours(12, 0, 0, 0);
+            return [start, end];
+        }
+    },
+    {
+        label: $t('Next 12 months'),
+        value: () => {
+            const start = new Date();
+            const end = new Date();
+            start.setDate(start.getDate() + 1);
+            end.setFullYear(end.getFullYear() + 1);
+            end.setDate(end.getDate() - 1);
+            start.setHours(12, 0, 0, 0);
+            end.setHours(12, 0, 0, 0);
+            return [start, end];
+        }
+    },
+];
+
+// Computed
+const formattedStartDate = computed({
+    get() {
+        return dateValue.value.length > 0 && dateValue.value[0] instanceof Date
+            ? dateValue.value[0].toISOString().slice(0, 10)
+            : '';
+    },
+    set(value) {
+        const date = value ? new Date(value + 'T12:00:00') : null;
+        if (dateValue.value.length > 0) {
+            dateValue.value[0] = date;
+        } else {
+            dateValue.value[0] = date;
+            dateValue.value.push(null);
+        }
+    }
+});
+const formattedEndDate = computed({
+    get() {
+        return dateValue.value.length > 1 && dateValue.value[1] instanceof Date
+            ? dateValue.value[1].toISOString().slice(0, 10)
+            : '';
+    },
+    set(value) {
+        const date = value ? new Date(value + 'T12:00:00') : null;
+        if (dateValue.value.length > 1) {
+            dateValue.value[1] = date;
+        } else {
+            if (dateValue.value.length === 0) dateValue.value.push(null);
+            dateValue.value[1] = date;
+        }
+    }
+});
+
+// Methoden
+function getDayOfWeek(date) {
+    const days = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
+    return days[date.getDay()];
 }
+
+function removeDateIcons() {
+    if (startDate.value) {
+        startDate.value.style.webkitAppearance = 'none';
+        startDate.value.style.mozAppearance = 'textfield';
+        startDate.value.style.webkitCalendarPickerIndicator = 'none';
+        startDate.value.style.webkitClearButton = 'none';
+        startDate.value.style.webkitInnerSpinButton = 'none';
+        startDate.value.style.webkitOuterSpinButton = 'none';
+        startDate.value.style.mozFocusInner = 'none';
+        startDate.value.style.mozFocusOuter = 'none';
+        startDate.value.style.msClear = 'none';
+    }
+    if (endDate.value) {
+        endDate.value.style.webkitAppearance = 'none';
+        endDate.value.style.mozAppearance = 'textfield';
+        endDate.value.style.webkitCalendarPickerIndicator = 'none';
+        endDate.value.style.webkitClearButton = 'none';
+        endDate.value.style.webkitInnerSpinButton = 'none';
+        endDate.value.style.webkitOuterSpinButton = 'none';
+        endDate.value.style.mozFocusInner = 'none';
+        endDate.value.style.mozFocusOuter = 'none';
+        endDate.value.style.msClear = 'none';
+    }
+}
+
+function handleShortcut(value) {
+    dateValue.value = typeof value === 'function' ? value() : value;
+    updateTimes();
+}
+
+function format(date) {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function updateTimes() {
+    const startDateObj = new Date(dateValue.value[0]);
+    const endDateObj = new Date(dateValue.value[1]);
+
+    if (startDateObj?.getFullYear() < 1800 || endDateObj?.getFullYear() < 1800) {
+        errorMessage.value = $t('Please select a valid date.');
+        return;
+    }
+
+    if (endDateObj < startDateObj) {
+        errorMessage.value = $t('The end date must be after the start date.');
+        hasError.value = true;
+    } else {
+        errorMessage.value = '';
+        hasError.value = false;
+
+        const userId = usePage().props.auth.user.id;
+        if (props.is_shift_plan) {
+            router.patch(route('update.user.shift.calendar.filter.dates', userId), {
+                start_date: startDateObj,
+                end_date: endDateObj,
+            }, {
+                preserveState: false,
+                preserveScroll: true,
+            });
+        } else if (props.is_user_shift_plan) {
+            router.patch(route('update.user.worker.shift-plan.filters.update', userId), {
+                start_date: startDateObj,
+                end_date: endDateObj,
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+            });
+        } else if (props.is_inventory_article_planning) {
+            router.patch(route('update.user.inventory.article-plan.filters.update', userId), {
+                start_date: startDateObj,
+                end_date: endDateObj,
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+            });
+        } else {
+            router.patch(route('update.user.calendar.filter.dates', userId), {
+                start_date: startDateObj,
+                end_date: endDateObj,
+            }, {
+                preserveState: false,
+                preserveScroll: true,
+            });
+        }
+    }
+}
+
+// Watcher
+watch(dateValuePicker, () => {
+    dateValue.value[0] = format(dateValuePicker.value[0]);
+    dateValue.value[1] = format(dateValuePicker.value[1]);
+    updateTimes();
+});
+
+// Lifecycle
+onMounted(() => {
+    removeDateIcons();
+    startDateString.value = getDayOfWeek(new Date(dateValue.value[0])).replace('.', '');
+    endDateString.value = getDayOfWeek(new Date(dateValue.value[1])).replace('.', '');
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('#datePicker') && showDateRangePicker.value) {
+            showDateRangePicker.value = false;
+        }
+    });
+});
 </script>
 
 <style scoped>
+
+
+
 .remove-date-icon::-webkit-calendar-picker-indicator {
     display: none;
 }

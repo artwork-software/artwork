@@ -1,7 +1,22 @@
 <template>
     <div class="w-full flex flex-col">
         <ShiftHeader>
-            <div class="ml-5 bg-white flex-grow">
+
+            <transition name="fade" appear>
+                <div class="pointer-events-none fixed z-50 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
+                    <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
+                        <component :is="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
+                        <p class="text-sm/6 text-white">
+                            {{ showCalendarWarning }}
+                        </p>
+                        <button type="button" class="-m-1.5 flex-none p-1.5">
+                            <span class="sr-only">Dismiss</span>
+                            <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
+                        </button>
+                    </div>
+                </div>
+            </transition>
+            <div class=" bg-white flex-grow">
                 <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
                                       @next-time-range="nextTimeRange"
                                       :date-value="dateValue"
@@ -13,6 +28,8 @@
                                       @openHistoryModal="openHistoryModal"
                                       :user_filters="user_filters"
                                       :crafts="crafts"
+                                      :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                                      :firstProjectShiftTabId="firstProjectShiftTabId"
                                       @select-go-to-next-mode="selectGoToNextMode"
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 >
@@ -47,6 +64,26 @@
                         </div>
                     </template>
                     <template #moreButtons>
+                        <Switch @click="changeDailyViewMode" v-model="dailyViewMode" :class="[dailyViewMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                            <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent
+                                        icon="IconCalendarWeek"
+                                        icon-size="h-4 w-4"
+                                        :tooltip-text="$t('Daily view')"
+                                        direction="left"
+                                    />
+                                </span>
+                                <span :class="[dailyViewMode ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent
+                                        icon="IconCalendarWeek"
+                                        icon-size="h-4 w-4"
+                                        :tooltip-text="$t('Daily view')"
+                                        direction="left"
+                                    />
+                                </span>
+                            </span>
+                        </Switch>
                         <Switch @click="toggleMultiEditModeCalendar" v-model="multiEditModeCalendar" :class="[multiEditModeCalendar ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                             <span :class="[multiEditModeCalendar ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                 <span :class="[multiEditModeCalendar ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
@@ -79,8 +116,8 @@
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
                                     <th  v-for="day in days" :id="day.isExtraRow ? 'extra_row_' + day.weekNumber : day.fullDay" style="max-width: 204px"
-                                         class="z-20 h-8 py-2 border-r-2 border-artwork-navigation-background truncate text-white">
-                                        <div v-if="day.isExtraRow" style="width:37px">
+                                         class="z-20 h-8 py-2 px-[1px] border-r-2 border-artwork-navigation-background truncate text-white">
+                                        <div v-if="day.isExtraRow" :style="{width:  '200px'}">
                                             <span class="text-[9px] font-bold">KW{{day.weekNumber }}</span>
                                         </div>
                                         <div v-else :style="{width:  '200px'}" class="flex items-center h-full justify-between calendarRoomHeaderBold ml-2">
@@ -109,19 +146,20 @@
                                 </TableHead>
                             </div>
                         </template>
+
                         <template #body>
                             <TableBody class="eventByDaysContainer">
-                                <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId" class="w-full table-row"
+                                <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId" class="w-full table-row divide-x divide-gray-300"
                                     :class="$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
                                     <th :id="'roomNameContainer_' + index"
                                         class="xsDark w-48 table-cell align-middle"
-                                        :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
+                                        :class="[index % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                                         <div class="flex font-semibold items-center ml-4">
                                             {{ room.roomName }}
                                         </div>
                                     </th>
-                                    <td :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : 'border-dashed', multiEditModeCalendar ? '' : 'border-r-2 ', $page.props.auth.user.calendar_settings.expand_days ? '' : 'h-28']"
-                                        class="border-gray-400 day-container relative table-cell align-top"
+                                    <td :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : '', multiEditModeCalendar ? '' : '', $page.props.auth.user.calendar_settings.expand_days ? '' : 'h-28']"
+                                        class="border-gray-400 day-container relative table-cell align-top px-[1px]"
                                         v-for="day in days" :data-day="day.fullDay">
                                         <div
                                             v-if="!day.isExtraRow && multiEditModeCalendar"
@@ -131,17 +169,17 @@
                                             class="absolute w-full h-full"
                                             @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)">
                                         </div>
-                                        <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.isExtraRow">
+                                        <div class="bg-background-gray2 h-full min-w-full mb-3" v-if="day.isExtraRow" :style="{width: '202px', maxWidth: '202px'}">
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-else style="width: 200px" class="cell group " :class="$page.props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
-                                            <div v-if="usePage().props.auth.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
+                                            <div v-if="usePage().props.auth.user.calendar_settings.display_project_groups && room.content[day.fullDay]?.events" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
                                                 <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"  class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
                                                     <component :is="group.icon" class="size-4" aria-hidden="true"/>
                                                     <span>{{ group.name }}</span>
                                                 </Link>
                                             </div>
-                                            <div v-for="event in room.content[day.fullDay].events" class="mb-1">
+                                            <div v-if="room.content[day.fullDay]?.events" v-for="event in room.content[day.fullDay].events" class="mb-1"  >
                                                 <SingleShiftPlanEvent
                                                     v-if="checkIfEventHasShiftsToDisplay(event)"
                                                     :multiEditMode="multiEditMode"
@@ -164,7 +202,7 @@
                                                                         :firstProjectShiftTabId="firstProjectShiftTabId"/>
                                             </div>
                                             <div class="space-y-0.5">
-                                                <div v-for="shift in room.content[day.fullDay].shifts">
+                                                <div v-if="room.content[day.fullDay]?.shifts" v-for="shift in room.content[day.fullDay].shifts">
                                                     <div class="bg-gray-50 rounded-lg border border-gray-100 py-0.5"
                                                          v-if="shift.daysOfShift.includes(day.fullDay)">
                                                         <SingleShiftInRoom
@@ -423,10 +461,8 @@
                                         {{ $t('Reset') }}
                                     </span>
                                     </div>
-                                    <MenuItem v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums"
-                                              v-slot="{ active }">
-                                        <div @click="this.applySort(computedShiftPlanWorkerSortEnum)"
-                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                    <MenuItem v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums" v-slot="{ active }">
+                                        <div @click="this.applySort(computedShiftPlanWorkerSortEnum)" :class="[active ? 'text-gray-500' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                             <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
                                                     <span :class="this.$page.props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                         {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
@@ -458,10 +494,9 @@
                         </div>
                         <div class="pt-14 z-10">
                             <table class="w-full text-white overflow-y-scroll z-10">
-                                <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                                 <div class="z-10">
                                     <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
-                                    <tr class="stickyYAxisNoMarginLeft pl-2 cursor-pointer w-48 xsLight flex justify-between pb-1"
+                                    <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight !font-lexend flex justify-between pb-1"
                                         @click="changeCraftVisibility(craft.id)">
                                         {{ craft.name }}
                                         <ChevronDownIcon
@@ -470,8 +505,8 @@
                                         />
                                     </tr>
                                     <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users"
-                                        class="w-full flex ">
-                                        <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right"
+                                        class="w-full flex">
+                                        <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right pb-[1px]"
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
                                                          :item="user.element"
@@ -507,26 +542,31 @@
                                                                :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
                                             />
                                         </th>
-                                        <td v-for="day in days" class="flex gap-x-0.5 relative">
+                                        <td v-for="day in days" class="flex pr-[1px] relative pb-[1px]">
                                             <div v-if="!day.isExtraRow" :class="[
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     $page.props.auth.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     multiEditMode && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-100 !overflow-hidden' : ''
                                                 ]"
-                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-y-scroll hover:opacity-100"
+                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell h-full cursor-pointer overflow-y-scroll hover:opacity-100"
                                                  :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
                                                  @click="handleCellClick(user, day)">
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
-                                                 class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
-                                                 style="width: 39px"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : 'h-12',
+                                                 class="p-2 bg-gray-50/30 text-center flex items-center justify-center text-white h-full rounded-lg shiftCell cursor-default overflow-hidden"
+                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '']">
-                                                <span v-if="user.type === 0">
-                                                    {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
-                                                </span>
+                                                <div>
+                                                    <div class="text-[9px]">
+                                                        Arbeitszeit KW {{ day.weekNumber }}
+                                                    </div>
+                                                    <div class="font-lexend text-xs" :class="user?.weeklyWorkingHours[day.weekNumber]?.isMinus ? 'text-red-100' : 'text-green-100'">
+                                                        {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div
                                                 v-if="user.dayServices"
@@ -544,7 +584,7 @@
                                     </tr>
                                     </tbody>
                                     <tbody>
-                                    <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 pl-2 xsLight flex justify-between pb-1"
+                                    <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 !font-lexend xsLight flex justify-between pb-1"
                                         @click="changeCraftVisibility('noCraft')">
                                         {{ $t('Without craft assignment') }}
                                         <ChevronDownIcon
@@ -554,7 +594,7 @@
                                     </tr>
                                     <tr v-if="!closedCrafts.includes('noCraft')"
                                         v-for="(user,index) in workersWithoutCraft" class="w-full flex">
-                                        <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right"
+                                        <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right pb-[1px]"
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
                                                          :item="user.element"
@@ -587,23 +627,28 @@
                                                                @highlightShiftsOfUser="highlightShiftsOfUser"
                                                                :color="null"/>
                                         </th>
-                                        <td v-for="day in days" class="flex gap-x-0.5 relative">
+                                        <td v-for="day in days" class="flex pr-[1px] relative pb-[1px]">
                                             <div v-if="!day.isExtraRow"
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-100 !overflow-hidden' : '',
                                                     multiEditMode ? '!overflow-hidden' : '']"
-                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll hover:opacity-100"
+                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell h-full cursor-pointer overflow-y-scroll hover:opacity-100"
                                                  @click="handleCellClick(user, day)"
                                                  :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-20' : '']"/>
                                             </div>
-                                            <div v-else class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 39px"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : 'h-12',
+                                            <div v-else class="p-2 bg-gray-50/30 text-center flex items-center justify-center text-white h-full rounded-lg shiftCell cursor-default overflow-hidden" :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']">
-                                                <span v-if="user.type === 0">
-                                                    {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
-                                                </span>
+                                                <div>
+                                                    <div class="text-[9px]">
+                                                        Arbeitszeit KW {{ day.weekNumber }}
+                                                    </div>
+                                                    <div class="font-lexend text-xs" :class="user?.weeklyWorkingHours[day.weekNumber]?.isMinus ? 'text-red-100' : 'text-green-100'">
+                                                        {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div
                                                 v-if="user.dayServices"
@@ -628,9 +673,10 @@
             </div>
             <show-user-shifts-modal
                 v-if="showUserShifts"
-                @closed="showUserShifts = false"
+                @close="showUserShifts = false"
                 :user="userToShow"
                 :day="dayToShow"
+                :shift-qualifications="shiftQualifications"
                 @desires-reload="userShiftModalDesiresReload"
             />
 
@@ -693,6 +739,7 @@
         :multi-add-mode="multiEditModeCalendar"
         :rooms-and-dates-for-multi-edit="multiEditCalendarDays"
     />
+
 </template>
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -720,7 +767,15 @@ import {SelectorIcon} from "@heroicons/vue/solid";
 import ShiftsQualificationsAssignmentModal
     from "@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {IconArrowDown, IconArrowUp, IconChevronDown, IconFileText, IconPencil, IconX} from "@tabler/icons-vue";
+import {
+    IconAlertSquareRounded,
+    IconArrowDown,
+    IconArrowUp,
+    IconChevronDown,
+    IconFileText,
+    IconPencil,
+    IconX
+} from "@tabler/icons-vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -743,12 +798,16 @@ import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import DeleteCalendarMultiEditEntities from "@/Pages/Shifts/Components/DeleteCalendarMultiEditEntities.vue";
 import DeleteCalendarRoomShiftEntriesModal from "@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        ShiftCommitDateSelectModal,
+        BaseMenuItem,
         DeleteCalendarRoomShiftEntriesModal,
         DeleteCalendarMultiEditEntities,
         AddShiftModal,
@@ -800,15 +859,15 @@ export default {
         'projects',
         'shiftPlan',
         'days',
-        'filterOptions',
         'dateValue',
+        'filterOptions',
+        'user_filters',
         'personalFilters',
         'selectedDate',
         'history',
         'usersForShifts',
         'freelancersForShifts',
         'serviceProvidersForShifts',
-        'user_filters',
         'crafts',
         'shiftQualifications',
         'dayServices',
@@ -816,6 +875,8 @@ export default {
         'shiftPlanWorkerSortEnums',
         'useFirstNameForSort',
         'userShiftPlanShiftQualificationFilters',
+        'projectNameUsedForProjectTimePeriod',
+        'calendarWarningText'
     ],
     data() {
         return {
@@ -868,7 +929,9 @@ export default {
             showAddShiftModal: false,
             shiftToEdit: null,
             newShiftPlanData: ref(this.shiftPlan),
-            openCellMultiEditCalendarDelete: false
+            openCellMultiEditCalendarDelete: false,
+            dailyViewMode: usePage().props.auth.user.daily_view ?? false,
+            showCalendarWarning: ref(this.calendarWarningText)
         }
     },
     mounted() {
@@ -884,6 +947,10 @@ export default {
 
         this.setupInertiaNavigationGuard();
 
+
+        setTimeout(() => {
+            this.showCalendarWarning = ''
+        }, 5000)
         /**
          * this code needs to be built in, when the observer is fixed and the observer is used
          *  const observer = new IntersectionObserver(
@@ -1012,7 +1079,17 @@ export default {
         },
     },
     methods: {
+        IconAlertSquareRounded,
         usePage,
+        changeDailyViewMode(){
+            this.dailyViewMode = !this.dailyViewMode;
+            router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
+                daily_view: this.dailyViewMode
+            }, {
+                preserveScroll: false,
+                preserveState: false
+            })
+        },
         getAllProjectGroupsInEventsByDay(events){
             let projectGroups = [];
 
@@ -1322,7 +1399,8 @@ export default {
                         availabilities: freelancer.availabilities,
                         dayServices: freelancer.dayServices,
                         individual_times: freelancer.individual_times,
-                        shift_comments: freelancer.shift_comments
+                        shift_comments: freelancer.shift_comments,
+                        weeklyWorkingHours: freelancer.weeklyWorkingHours,
                     });
                 })
             }
@@ -1335,7 +1413,8 @@ export default {
                     assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
                     dayServices: service_provider.dayServices,
                     individual_times: service_provider.individual_times,
-                    shift_comments: service_provider.shift_comments
+                    shift_comments: service_provider.shift_comments,
+                    weeklyWorkingHours: service_provider.weeklyWorkingHours,
                 });
             })
             return users;
@@ -1984,7 +2063,7 @@ export default {
                 this.updateHeight();
             },
             deep: true
-        }
+        },
     }
 }
 </script>

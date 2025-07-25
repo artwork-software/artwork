@@ -5,7 +5,8 @@
       'border shadow-glass backdrop-blur-md',
       'disabled:opacity-50',
       variantClass[variant],
-      sizeClass[size]
+      sizeClass[size],
+        disabled ? '!cursor-not-allowed !bg-gray-100 !border-gray-400 !text-gray-700' : 'cursor-pointer',
     ]"
         :type="type"
         :disabled="disabled"
@@ -25,13 +26,14 @@ const props = defineProps({
 const variantClass = {
     primary: 'text-blue-500 bg-blue-100 border-blue-200 hover:bg-blue-200 hover:text-blue-500 disabled:bg-gray-100 hover:border-blue-300',
     secondary: 'text-gray-500 bg-gray-100 border-gray-200 hover:bg-gray-200 hover:text-gray-500 disabled:bg-gray-100 hover:border-gray-300',
+    success: 'text-green-500 bg-green-100 border-green-200 hover:bg-green-200 hover:text-green-500 disabled:bg-green-100 hover:border-green-300',
     danger: 'text-red-500 bg-red-100 border-red-200 hover:bg-red-200 hover:text-red-500 disabled:bg-gray-100 hover:border-red-300'
 }
 
 const sizeClass = {
     xs: 'text-xs px-4 py-1',
-    sm: 'px-8 py-2 text-sm',
-    md: 'px-10 py-3 text-sm',
-    lg: 'px-12 py-4 text-lg'
+    sm: 'px-8 py-2 text-xs',
+    md: 'px-10 py-3 text-xs',
+    lg: 'px-12 py-4 text-md'
 }
 </script>

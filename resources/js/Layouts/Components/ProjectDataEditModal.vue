@@ -31,12 +31,12 @@
                             <button @click="selectNewKeyVisual" type="button"
                                     class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                                 <IconEdit
-                                    class="h-5 w-5 text-primaryText group-hover:text-white"
+                                    class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                     aria-hidden="true"/>
                             </button>
                             <button @click="deleteKeyVisual" type="button"
                                     class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                                <IconX class="h-5 w-5 text-primaryText group-hover:text-white"
+                                <IconX class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                        aria-hidden="true"/>
                             </button>
                         </div>

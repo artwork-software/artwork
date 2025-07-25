@@ -16,8 +16,7 @@ use Inertia\Inertia;
 class EventStatusController extends Controller
 {
     public function __construct(
-        private readonly EventStatusService $eventStatusService,
-        private readonly EventService $eventService
+        private readonly EventStatusService $eventStatusService
     ) {
     }
 

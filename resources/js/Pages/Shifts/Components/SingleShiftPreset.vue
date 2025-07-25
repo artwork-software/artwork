@@ -14,21 +14,21 @@
                 <BaseMenu dots-size="h-4 w-4">
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="showEditShiftModal = true"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
                             {{ $t('Redefine template')}}
                         </a>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="duplicatePreset"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
                             {{ $t('Duplicate template') }}
                         </a>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="showConfirmDeleteModal = true"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
                             {{ $t('Delete template')}}
                         </a>

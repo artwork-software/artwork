@@ -46,7 +46,7 @@
                             <MenuItem v-slot="{ active }"
                                       v-for="(type, index) in loadedProjectInformation['ShiftTab'].shift_sort_types">
                                 <div @click="this.applySort(type)"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                     {{ getSortEnumTranslation(type) }}
                                     <IconCheck class="w-5 h-5 ml-3"
                                                v-if="$page.props.auth.user.sort_type_shift_tab === type"/>

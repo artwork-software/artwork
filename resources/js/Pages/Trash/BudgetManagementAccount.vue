@@ -64,7 +64,7 @@
                                                 'text-secondary',
                                                 'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
                                             <RefreshIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                 aria-hidden="true"/>
                                             {{ $t('Restore') }}
                                         </Link>
@@ -81,7 +81,7 @@
                                                 'text-secondary',
                                                 'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
                                             <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                 aria-hidden="true"/>
                                             {{ $t('Delete permanently') }}
                                         </Link>

@@ -4,7 +4,7 @@ namespace Artwork\Modules\Project\Http\Resources;
 
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Project\Models\ProjectState;
-use Artwork\Modules\ProjectTab\Models\ProjectTab;
+use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;

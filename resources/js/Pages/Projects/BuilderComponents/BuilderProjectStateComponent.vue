@@ -2,16 +2,17 @@
     <div v-if="project.state">
         <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-xs ml-2 mb-1 inline-flex border"
             :class="isColorCloseToWhite(project.state.color) ? 'text-black' : 'text-white'"
-            :style="{
-                backgroundColor: project.state.color,
-                borderColor: isColorCloseToWhite(project.state.color) ? 'black' : project.state.color
-            }">
+              :style="{backgroundColor: backgroundColorWithOpacity(project.state.color), color: TextColorWithDarken(project.state.color), borderColor: TextColorWithDarken(project.state.color)}">
             {{ project?.state?.name }}
         </span>
     </div>
 </template>
 
 <script setup>
+import ColorHelper from '../../../Mixins/ColorHelper.vue';
+
+// Extract methods from ColorHelper mixin
+const { backgroundColorWithOpacity, TextColorWithDarken } = ColorHelper.methods;
 
 const props = defineProps({
     project: {

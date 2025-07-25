@@ -23,7 +23,7 @@
                     <MenuItems class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <div class="py-1">
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
                                     <ToolTipComponent
                                         direction="right"
                                         :tooltip-text="$t('Jump around') + ' ' + $t('Day')"
@@ -32,7 +32,7 @@
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('week')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                <div @click="changeUserSelectedGoTo('week')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
                                     <ToolTipComponent
                                         direction="right"
                                         :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')"
@@ -41,7 +41,7 @@
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('month')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                <div @click="changeUserSelectedGoTo('month')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
                                     <ToolTipComponent
                                         direction="right"
                                         :tooltip-text="$t('Jump around') + ' ' + $t('Month')"
@@ -77,19 +77,19 @@
                     <MenuItems class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <div class="py-1">
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
+                                <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
                                     <IconCalendar stroke-width="1.5" class="h-5 w-5 text-white"/>
                                     <span class="tooltip rounded shadow-lg p-1 text-xs bg-artwork-navigation-background">Tag</span>
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('week')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
+                                <div @click="changeUserSelectedGoTo('week')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
                                     <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-white"/>
                                     <span class="tooltip rounded shadow-lg p-1 text-xs bg-artwork-navigation-background">KW</span>
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('month')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
+                                <div @click="changeUserSelectedGoTo('month')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
                                     <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-white"/>
                                     <span class="tooltip rounded shadow-lg p-1 text-xs bg-artwork-navigation-background">Monat</span>
                                 </div>

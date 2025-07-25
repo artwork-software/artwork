@@ -9,10 +9,12 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Services\EventTimelineService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Events\AssignUserToShift;
@@ -22,6 +24,9 @@ use Artwork\Modules\Shift\Events\MultiShiftCreateInShiftPlan;
 use Artwork\Modules\Shift\Events\RemoveEntityFormShiftEvent;
 use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
+use Artwork\Modules\Shift\Models\ShiftUser;
+use Artwork\Modules\Shift\Models\ShiftFreelancer;
+use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -29,8 +34,8 @@ use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
-use Artwork\Modules\ShiftPlanComment\Services\ShiftPlanCommentService;
-use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
+use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
+use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\Vacation\Models\VacationConflict;
@@ -41,6 +46,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Random\RandomException;
 
@@ -58,6 +64,7 @@ class ShiftController extends Controller
         private readonly VacationService $vacationService,
         private readonly EventTimelineService $eventTimelineService,
         private readonly EventService $eventService,
+        private readonly GeneralSettings $generalSettings,
     ) {
     }
 
@@ -199,7 +206,7 @@ class ShiftController extends Controller
         ShiftsQualificationsService $shiftsQualificationsService,
         ProjectTabService $projectTabService
     ): RedirectResponse {
-        $projectId =  $shift->event()->first()?->project()?->first()->id;
+        $projectId = $shift->event()->first()?->project()?->first()->id;
         if ($shift->is_committed) {
             $event = $shift->event;
 
@@ -300,7 +307,6 @@ class ShiftController extends Controller
         $this->shiftService->save($shift);
 
 
-
         foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
             $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
         }
@@ -317,7 +323,6 @@ class ShiftController extends Controller
         if ($projectTab && $projectId && !$request->boolean('updateOrCreateInShiftPlan')) {
             return $this->redirector->route('projects.tab', [$projectId, $projectTab->id]);
         }
-
 
 
         return $this->redirector->back();
@@ -710,7 +715,7 @@ class ShiftController extends Controller
                 $conflict->delete();
             });
         }
-        if ($shift->event_id){
+        if ($shift->event_id) {
             broadcast(new DestroyShift(
                 $shift,
                 $shift->event->room_id
@@ -788,7 +793,6 @@ class ShiftController extends Controller
                 $request->get('userTypeId'),
                 $request->get('userType')
             ));
-
         }
 
         foreach ($shiftsToHandle['assignToShift'] as $shiftToAssign) {
@@ -1206,6 +1210,173 @@ class ShiftController extends Controller
         }
     }
 
+
+    /**
+     * Check for collisions in shifts for given people and time range.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkCollisions(Request $request): \Illuminate\Http\JsonResponse
+    {
+
+        try {
+            $people = $request->input('people', []);
+            $shiftId = $request->input('shift_id');
+            $startDateRaw = $request->input('start_date');
+            $endDateRaw = $request->input('end_date');
+            $startRaw = $request->input('start');
+            $endRaw = $request->input('end');
+
+            // Validate required parameters
+            if (empty($startDateRaw) || empty($endDateRaw) || empty($startRaw) || empty($endRaw)) {
+                return response()->json(['error' => 'Missing required parameters'], 400);
+            }
+
+            // Aktuelle Schicht Zeiten
+            try {
+                $currentStart = Carbon::parse(Carbon::parse($startDateRaw)->toDateString() . ' ' . $startRaw);
+                $currentEnd = Carbon::parse(Carbon::parse($endDateRaw)->toDateString() . ' ' . $endRaw);
+                if ($currentEnd <= $currentStart) {
+                    $currentEnd->addDay();
+                }
+            } catch (\Exception $e) {
+                Log::error('Error parsing date/time values', [
+                    'start_date' => $startDateRaw,
+                    'end_date' => $endDateRaw,
+                    'start' => $startRaw,
+                    'end' => $endRaw,
+                    'error' => $e->getMessage()
+                ]);
+                return response()->json(['error' => 'Invalid date/time format'], 400);
+            }
+
+            $results = [];
+            foreach ($people as $person) {
+                if (!isset($person['type']) || !isset($person['id'])) {
+                    continue; // Skip invalid person entries
+                }
+
+                $type = $person['type'];
+                $id = $person['id'];
+                $hasCollision = false;
+                $collisionShifts = [];
+
+
+            // Pivot holen
+                $query = match ($type) {
+                    'user' => ShiftUser::where('user_id', $id),
+                    'freelancer' => ShiftFreelancer::where('freelancer_id', $id),
+                    'service_provider' => ShiftServiceProvider::where('service_provider_id', $id),
+                    default => null
+                };
+                if (!$query) {
+                    continue;
+                }
+
+                $query = $query
+                ->with('shift.craft')
+                ->get();
+
+                foreach ($query as $pivot) {
+                    if (!$shift = $pivot->shift) {
+                        continue;
+                    }
+                    // Datum + Zeit - korrekt zusammensetzen
+                    try {
+                        // Validate that all required date/time values are available
+                        $startDate = $pivot->start_date ?? $shift->start_date ?? null;
+                        $startTime = $pivot->start_time ?? $shift->start ?? null;
+                        $endDate = $pivot->end_date ?? $shift->end_date ?? null;
+                        $endTime = $pivot->end_time ?? $shift->end ?? null;
+                        // Check if any required values are missing
+                        if (!$startDate || !$startTime || !$endDate || !$endTime) {
+                            continue; // Skip this shift
+                        }
+
+                        $startDate = Carbon::parse($startDate)->toDateString();
+                        $endDate = Carbon::parse($endDate)->toDateString();
+                        $startTime = Carbon::parse($startTime)->format('H:i');
+                        $endTime = Carbon::parse($endTime)->format('H:i');
+                        $shiftStart = Carbon::parse($startDate . ' ' . $startTime);
+                        $shiftEnd = Carbon::parse($endDate . ' ' . $endTime);
+
+                    } catch (\Exception $e) {
+                        continue; // Skip this shift
+                    }
+                    if ($shiftEnd <= $shiftStart) {
+                        $shiftEnd->addDay();
+                    }
+                    // Kollisionslogik - Prüfung aller drei Kollisionsfälle
+                    $case1 = $currentStart >= $shiftStart && $currentStart < $shiftEnd;
+                    $case2 = $currentEnd > $shiftStart && $currentEnd <= $shiftEnd;
+                    $case3 = $currentStart <= $shiftStart && $currentEnd >= $shiftEnd;
+
+                    // Special case for exact time match (mentioned in issue description)
+                    // This handles the case where a user is assigned to a shift with the exact same time as the current shift
+                    $exactMatch = $currentStart->format('H:i') === $shiftStart->format('H:i') &&
+                              $currentEnd->format('H:i') === $shiftEnd->format('H:i') &&
+                              $currentStart->toDateString() === $shiftStart->toDateString() &&
+                              $currentEnd->toDateString() === $shiftEnd->toDateString();
+                    // Check for any collision case OR exact time match
+                    if ($case1 || $case2 || $case3 || $exactMatch) {
+                        $hasCollision = true;
+
+                        // Für Debugging: Welcher Fall hat die Kollision ausgelöst
+                        $collisionCase = '';
+                        if ($case1) {
+                            $collisionCase .= '1';
+                        }
+                        if ($case2) {
+                            $collisionCase .= '2';
+                        }
+                        if ($case3) {
+                            $collisionCase .= '3';
+                        }
+                        if ($exactMatch) {
+                            $collisionCase .= 'E'; // E for Exact match
+                        }
+                        $collisionShifts[] = [
+                        'id' => $shift->id,
+                        'start' => $shiftStart->format('Y-m-d H:i'),
+                        'end' => $shiftEnd->format('Y-m-d H:i'),
+                        'description' => $shift->description,
+                        'craftAbbreviation' => $shift->craft?->abbreviation ?? '',
+                        'collisionCase' => $collisionCase,
+                        'isExactMatch' => $exactMatch,
+                        'shiftStartTime' => $shiftStart->format('H:i'),
+                        'shiftEndTime' => $shiftEnd->format('H:i'),
+                        'currentStartTime' => $currentStart->format('H:i'),
+                        'currentEndTime' => $currentEnd->format('H:i')
+                        ];
+                    }
+                }
+
+            // Double-check that hasCollision is set correctly based on collisionShifts
+                if (!$hasCollision && count($collisionShifts) > 0) {
+                    // Fix the inconsistency by setting hasCollision to true if there are collision shifts
+                    $hasCollision = true;
+                }
+
+                $results[] = [
+                'id' => $id,
+                'type' => $type,
+                'hasCollision' => $hasCollision,
+                'collisionShifts' => $collisionShifts,
+                ];
+            }
+
+            return response()->json($results);
+        } catch (\Exception $e) {
+            Log::error('Unexpected error in checkCollisions', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'An unexpected error occurred'], 500);
+        }
+    }
+
+
     public function storeShiftMultiAdd(
         Request $request,
         ShiftsQualificationsService $shiftsQualificationsService
@@ -1239,5 +1410,77 @@ class ShiftController extends Controller
             }
         }
         broadcast(new MultiShiftCreateInShiftPlan($createdShifts));
+    }
+
+    public function updateIndividualShiftTime(Request $request)
+    {
+        $shiftId = $request->get('shiftPivotId');
+        $entity = $request->get('entity');
+        $startTime = $request->get('start_time');
+        $endTime = $request->get('end_time');
+
+
+        // Pivot holen
+        $query = match ($entity['type']) {
+            'user' => ShiftUser::find($shiftId),
+            'freelancer' => ShiftFreelancer::find($shiftId),
+            'service_provider' => ShiftServiceProvider::find($shiftId),
+            default => null
+        };
+        if (!$query) {
+            return response()->json(['error' => 'Shift pivot not found'], 404);
+        }
+
+
+        $startDate = Carbon::parse($query->start_date ?? $query->shift->start_date)->toDateString();
+        $endDate = Carbon::parse($query->end_date ?? $query->shift->end_date)->toDateString();
+        $startDateTime = Carbon::parse($startDate . ' ' . $startTime);
+        $endDateTime = Carbon::parse($endDate . ' ' . $endTime);
+
+        if ($endDateTime <= $startDateTime) {
+            $endDateTime->addDay();
+        }
+
+        // Update the pivot with new start and end times
+        $query->update([
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'start_date' => $startDateTime->format('Y-m-d'),
+            'end_date' => $endDateTime->format('Y-m-d'),
+        ]);
+    }
+
+    public function updateShortDescription(Request $request): void
+    {
+        $shiftId = $request->get('shiftPivotId');
+        $entity = $request->get('entity');
+
+        // Pivot holen
+        $query = match ($entity['type']) {
+            'user' => ShiftUser::find($shiftId),
+            'freelancer' => ShiftFreelancer::find($shiftId),
+            'service_provider' => ShiftServiceProvider::find($shiftId),
+            default => null
+        };
+
+        // Update the pivot with new short description
+        $query->update([
+            'short_description' => $request->get('short_description'),
+        ]);
+
+        // Broadcast the updated shift
+        if (!$query->shift->event_id) {
+            broadcast(new UpdateShiftInShiftPlan($query->shift, $query->shift->room_id));
+        } else {
+            broadcast(new UpdateShiftInShiftPlan($query->shift, $query->shift->event->room_id));
+        }
+    }
+
+    public function updateWorkflowSettings(Request $request): RedirectResponse
+    {
+        $this->generalSettings->shift_commit_workflow_enabled = $request->input('shift_commit_workflow');
+        $this->generalSettings->save();
+
+        return back();
     }
 }

@@ -11,7 +11,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\PresetShift\Models\PresetShift;
+use Artwork\Modules\Shift\Models\PresetShift;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Events\AssignUserToShift;
@@ -21,6 +21,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use stdClass;
 
 class ShiftService
@@ -49,47 +50,55 @@ class ShiftService
         return $this->shiftRepository->getById($shiftId);
     }
 
-    private function convertStartEndTime(array $data, Event $event): stdClass
+    private function convertStartEndDate(array $data): object
     {
-        $convertedTime = new StdClass();
-        $convertedStartTime = Carbon::parse($data['start']);
-        $convertedEndTime = Carbon::parse($data['end']);
+        $start = Carbon::parse($data['start']);
+        $end = Carbon::parse($data['end']);
 
-        $convertedTime->start = Carbon::parse($event->start_time)->format('Y-m-d');
-        if ($convertedEndTime->isBefore($convertedStartTime)) {
-            $convertedTime->end = Carbon::parse($event->start_time)->addDay()->format('Y-m-d');
-        } else {
-            $convertedTime->end = Carbon::parse($event->start_time)->format('Y-m-d');
-        }
-        return $convertedTime;
+        return (object) [
+            'start' => $start->format('Y-m-d'),
+            'end' => $end->isBefore($start)
+                ? $start->copy()->addDay()->format('Y-m-d')
+                : $start->format('Y-m-d'),
+        ];
     }
 
     public function createShiftBySeriesEvent(Event $event, array $data, int $craftId): Shift|Model
     {
-        $shift = new Shift();
-        $shift->start_date = $this->convertStartEndTime($data, $event)->start;
-        $shift->end_date = $this->convertStartEndTime($data, $event)->end;
-        $shift->start = $data['start'];
-        $shift->end = $data['end'];
-        $shift->break_minutes = $data['break_minutes'];
-        $shift->description = $data['description'];
+        $dates = $this->convertStartEndDate($data);
+
+        $shift = new Shift([
+            'start_date' => $dates->start,
+            'end_date' => $dates->end,
+            'start' => $data['start'],
+            'end' => $data['end'],
+            'break_minutes' => $data['break_minutes'],
+            'description' => $data['description'],
+            'is_committed' => false,
+        ]);
+
         $shift->event()->associate($event);
         $shift->craft()->associate($craftId);
-        $shift->is_committed = false;
+
         return $this->save($shift);
     }
 
     public function createShift(Event $event, Craft $craft, array $data): Shift|Model
     {
-        $shift = new Shift();
-        $shift->start_date = $this->convertStartEndTime($data, $event)->start;
-        $shift->end_date = $this->convertStartEndTime($data, $event)->end;
-        $shift->start = $data['start'];
-        $shift->end = $data['end'];
-        $shift->break_minutes = $data['break_minutes'];
-        $shift->description = $data['description'];
+        $dates = $this->convertStartEndDate($data);
+
+        $shift = new Shift([
+            'start_date' => $dates->start,
+            'end_date' => $dates->end,
+            'start' => $data['start'],
+            'end' => $data['end'],
+            'break_minutes' => $data['break_minutes'],
+            'description' => $data['description'],
+        ]);
+
         $shift->event()->associate($event);
         $shift->craft()->associate($craft);
+
         return $this->save($shift);
     }
 
@@ -104,15 +113,20 @@ class ShiftService
 
     public function createAutomatic(Event $event, int $craftId, array $data): Shift|Model
     {
-        $shift = new Shift();
-        $shift->start_date = $this->convertStartEndTime($data, $event)->start;
-        $shift->end_date = $this->convertStartEndTime($data, $event)->end;
-        $shift->start = Carbon::parse($data['start'])->format('H:i');
-        $shift->end =  Carbon::parse($data['end'])->format('H:i');
-        $shift->break_minutes = $data['break_minutes'];
-        $shift->description = $data['description'];
+        $dates = $this->convertStartEndDate($data);
+
+        $shift = new Shift([
+            'start_date' => $dates->start,
+            'end_date' => $dates->end,
+            'start' => Carbon::parse($data['start'])->format('H:i'),
+            'end' => Carbon::parse($data['end'])->format('H:i'),
+            'break_minutes' => $data['break_minutes'],
+            'description' => $data['description'],
+        ]);
+
         $shift->event()->associate($event);
         $shift->craft()->associate($craftId);
+
         return $this->save($shift);
     }
 
@@ -134,31 +148,53 @@ class ShiftService
         return $shift;
     }
 
-    public function createShiftWithoutEventAutomatic(int $craftId, array $data, string $day)
+    public function createShiftWithoutEventAutomatic(int $craftId, array $data, string $day): Shift|Model
     {
-        $shift = new Shift();
-        $shift->start_date = $day;
-        $shift->end_date = $day;
-        $shift->start = Carbon::parse($data['start'])->format('H:i');
-        $shift->end =  Carbon::parse($data['end'])->format('H:i');
-        $shift->break_minutes = $data['break_minutes'];
-        $shift->description = $data['description'];
+        $start = Carbon::parse($data['start']);
+        $end = Carbon::parse($data['end']);
+
+        $startDate = Carbon::parse($day)->format('Y-m-d');
+        $endDate = $end->isBefore($start)
+            ? Carbon::parse($day)->copy()->addDay()->format('Y-m-d')
+            : $startDate;
+
+        $shift = new Shift([
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'start' => $start->format('H:i'),
+            'end' => $end->format('H:i'),
+            'break_minutes' => $data['break_minutes'],
+            'description' => $data['description'],
+            'room_id' => $data['room_id'],
+        ]);
+
         $shift->craft()->associate($craftId);
-        $shift->room_id = $data['room_id'];
+
         return $this->save($shift);
     }
 
-    public function createShiftWithoutEvent(int $craftId, array $data)
+    public function createShiftWithoutEvent(int $craftId, array $data): Shift|Model
     {
-        $shift = new Shift();
-        $shift->start_date = $data['start_date'];
-        $shift->end_date = $data['end_date'];
-        $shift->start = $data['start'];
-        $shift->end = $data['end'];
-        $shift->break_minutes = $data['break_minutes'];
-        $shift->description = $data['description'];
+        $start = Carbon::parse($data['start']);
+        $end = Carbon::parse($data['end']);
+        $startDate = Carbon::parse($data['start_date']);
+
+        $endDate = $end->isBefore($start)
+            ? $startDate->copy()->addDay()->format('Y-m-d')
+            : $startDate->format('Y-m-d');
+
+        $shift = new Shift([
+            'start_date' => $startDate->format('Y-m-d'),
+            'end_date' => $endDate,
+            'start' => $start->format('H:i'),
+            'end' => $end->format('H:i'),
+            'break_minutes' => $data['break_minutes'],
+            'description' => $data['description'],
+            'room_id' => $data['room_id'],
+        ]);
+
         $shift->craft()->associate($craftId);
-        $shift->room_id = $data['room_id'];
+
         return $this->save($shift);
     }
 
@@ -346,5 +382,63 @@ class ShiftService
             };
         }
 
+    }
+
+    public function commitShiftsByDate(Carbon $startDate, Carbon $endDate): void
+    {
+        $shifts = Shift::whereBetween('start_date', [$startDate, $endDate])->get();
+
+        if ($shifts->isEmpty()) {
+            return;
+        }
+
+        $firstShift = $shifts->first();
+        $lastShift = $shifts->last();
+
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setPriority(3);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_LOCKED);
+
+        $userIdHasGetNotification = [];
+
+        foreach ($shifts as $shift) {
+            $shift->is_committed = true;
+            $shift->committing_user_id = Auth::id();
+            $shift->save();
+
+            foreach ($shift->users as $user) {
+                if (!in_array($user->id, $userIdHasGetNotification)) {
+                    $userIdHasGetNotification[] = $user->id;
+
+                    $notificationTitle = __('notification.shift.locked');
+                    $notificationDescription = [
+                        1 => [
+                            'type' => 'string',
+                            'title' => __(
+                                'notification.keyWords.concerns_time_period',
+                                [
+                                    'start' => $firstShift->start_date->format('d.m.Y H:i'),
+                                    'end' => $lastShift->end_date->format('d.m.Y H:i'),
+                                ],
+                                $user->language
+                            ),
+                            'href' => null
+                        ],
+                    ];
+
+                    $broadcastMessage = [
+                        'id' => random_int(1, 1000000),
+                        'type' => 'success',
+                        'message' => $notificationTitle
+                    ];
+
+                    $this->notificationService->setDescription($notificationDescription);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
+                }
+            }
+        }
     }
 }

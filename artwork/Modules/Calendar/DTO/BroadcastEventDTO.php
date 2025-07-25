@@ -6,9 +6,9 @@ use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
-use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
+use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserCalendarSettings;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
@@ -45,6 +45,7 @@ class BroadcastEventDTO extends Data
         public ?string $option_string,
         public ?bool $isPlanning = false,
         public ?bool $hasVerification = false,
+        public ?Collection $timelines = new Collection(),
     ) {
     }
 
@@ -81,6 +82,7 @@ class BroadcastEventDTO extends Data
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
             hasVerification: $event->getAttribute('has_verification') ?? false,
+            timelines: $event->timelines ?? new Collection(),
         );
     }
 }

@@ -10,67 +10,81 @@
                            show-icon icon-size="h-5 w-5"
                            classes="!items-center"/>
         </div>
-        <div class="flex items-center justify-end gap-x-4 print:hidden w-64 ml-4" v-if="!isInModal">
-            <MultiEditSwitch :multi-edit="multiEdit"
-                             :room-mode="false"
-                             @update:multi-edit="UpdateMultiEditEmits"
-                             :disabled="!hasCreateEventsPermission"/>
-            <div class="flex items-center gap-x-2">
-                <PlanningSwitch :planning="isPlanningEvent"
-                               @update:planning="isPlanningEvent = $event"
-                               :disabled="!hasCreateEventsPermission"/>
+        <div class="flex items-center justify-between gap-x-4 print:hidden" v-if="!isInModal">
+            <div class="flex items-center gap-x-4">
+                <div class="flex items-center gap-x-2 text-xs">
+                    <div class="h-4 w-8 p-2 border-2 border-blue-500 rounded-lg border-dashed"></div>
+                    {{ $t('Last edited events') }}
+                </div>
+                <div class="flex items-center gap-x-2 text-xs">
+                    <div class="h-4 w-8 p-2 border-2 border-pink-500 rounded-lg border-dashed"></div>
+                    {{ $t('Most recently created events') }}
+                </div>
             </div>
-            <ToolTipComponent
-                icon="IconCircuitCapacitorPolarized"
-                icon-size="h-7 w-7"
-                :tooltip-text="$t('Customize column size')"
-                direction="bottom"
-                @click="hasCreateEventsPermission ? showIndividualColumnSizeConfigModal = true : null"
-                :class="!hasCreateEventsPermission ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
-            />
-            <ToolTipComponent icon="IconFileExport"
-                              icon-size="h-7 w-7"
-                              :tooltip-text="$t('Export project list')"
-                              direction="bottom"
-                              @click="showExportModal = true"/>
-            <ToolTipComponent icon="IconCalendarMonth"
-                              icon-size="h-7 w-7"
-                              :tooltip-text="$t('Show project period in calendar')"
-                              direction="bottom"
-                              @click="useProjectTimePeriodAndRedirect()"/>
-            <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72" :disabled="!hasCreateEventsPermission">
-                <MenuItem v-slot="{ active }">
-                    <div @click="hasCreateEventsPermission ? updateUserSortId(1) : null"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
-                        {{ $t('Sort by room') }}
-                        <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 1"/>
-                    </div>
-                </MenuItem>
-                <MenuItem v-slot="{ active }">
-                    <div @click="hasCreateEventsPermission ? updateUserSortId(2) : null"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
-                        {{ $t('Sort by appointment type') }}
-                        <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 2"/>
-                    </div>
-                </MenuItem>
-                <MenuItem v-slot="{ active }">
-                    <div @click="hasCreateEventsPermission ? updateUserSortId(3) : null"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
-                        {{ $t('Sort by day') }}
-                        <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 3"/>
-                    </div>
-                </MenuItem>
-                <MenuItem v-slot="{ active }">
-                    <div @click="hasCreateEventsPermission ? updateUserSortId(0) : null"
-                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
-                        {{ $t('Reset sorting') }}
-                    </div>
-                </MenuItem>
-            </BaseMenu>
+            <div class="flex items-center justify-end gap-x-4 print:hidden">
+                <MultiEditSwitch :multi-edit="multiEdit"
+                                 :room-mode="false"
+                                 @update:multi-edit="UpdateMultiEditEmits"
+                                 :disabled="!hasCreateEventsPermission"/>
+                <div class="flex items-center gap-x-2">
+                    <PlanningSwitch :planning="isPlanningEvent"
+                                    @update:planning="isPlanningEvent = $event"
+                                    :disabled="!hasCreateEventsPermission"/>
+                </div>
+                <ToolTipComponent
+                    icon="IconCircuitCapacitorPolarized"
+                    icon-size="h-7 w-7"
+                    :tooltip-text="$t('Customize column size')"
+                    direction="bottom"
+                    @click="hasCreateEventsPermission ? showIndividualColumnSizeConfigModal = true : null"
+                    :class="!hasCreateEventsPermission ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
+                />
+                <ToolTipComponent icon="IconFileExport"
+                                  icon-size="h-7 w-7"
+                                  :tooltip-text="$t('Export project list')"
+                                  direction="bottom"
+                                  @click="showExportModal = true"/>
+                <ToolTipComponent icon="IconCalendarMonth"
+                                  icon-size="h-7 w-7"
+                                  :tooltip-text="$t('Show project period in calendar')"
+                                  direction="bottom"
+                                  @click="useProjectTimePeriodAndRedirect()"/>
+                <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72" class="!w-fit" :disabled="!hasCreateEventsPermission">
+                    <MenuItem v-slot="{ active }">
+                        <div @click="hasCreateEventsPermission ? updateUserSortId(1) : null"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                            {{ $t('Sort by room') }}
+                            <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 1"/>
+                        </div>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }">
+                        <div @click="hasCreateEventsPermission ? updateUserSortId(2) : null"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                            {{ $t('Sort by appointment type') }}
+                            <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 2"/>
+                        </div>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }">
+                        <div @click="hasCreateEventsPermission ? updateUserSortId(3) : null"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                            {{ $t('Sort by day') }}
+                            <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 3"/>
+                        </div>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }">
+                        <div @click="hasCreateEventsPermission ? updateUserSortId(0) : null"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                            {{ $t('Reset sorting') }}
+                        </div>
+                    </MenuItem>
+                </BaseMenu>
+
+            </div>
+
         </div>
 
 
-        <div class="max-w-7xl overflow-x-scroll relative" >
+        <div class="overflow-x-scroll relative" >
             <BulkHeader v-model="timeArray" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
             <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
                 <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
@@ -112,7 +126,7 @@
                 </div>
                 <BaseButton
                     v-if="isInModal"
-                    @click="hasCreateEventsPermission ? submit : null"
+                    @click="submit"
                     :class="['h-12 pointer-events-auto', hasCreateEventsPermission ? 'bg-artwork-buttons-create text-white' : 'bg-gray-400 text-white cursor-not-allowed']"
                     :text="$t('Create')">
                     <IconCirclePlus class="w-5 h-5 text-white mr-2"/>
@@ -535,6 +549,7 @@ const {hasAdminRole, can} = usePermission(usePage().props),
         });
 
         invalidEvents.value = events.filter(event => event.type.individual_name && !event.name);
+
 
         if (invalidEvents.value.length > 0) {
             invalidEvents.value.forEach(event => {

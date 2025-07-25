@@ -142,7 +142,7 @@ class Shift extends Model
         return $this
             ->belongsToMany(User::class, 'shift_user')
             ->using(ShiftUser::class)
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation'])
+            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time'])
             ->without('calendar_settings');
     }
 
@@ -151,7 +151,7 @@ class Shift extends Model
         return $this
             ->belongsToMany(Freelancer::class, 'shifts_freelancers')
             ->using(ShiftFreelancer::class)
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation']);
+            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time']);
     }
 
     public function serviceProvider(): BelongsToMany
@@ -159,7 +159,7 @@ class Shift extends Model
         return $this
             ->belongsToMany(ServiceProvider::class, 'shifts_service_providers')
             ->using(ShiftServiceProvider::class)
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation']);
+            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time']);
     }
 
     /**
@@ -244,41 +244,41 @@ class Shift extends Model
         return $builder
             ->whereBetween('event_start_day', [$eventStartDay, $eventEndDay])
             ->orWhereBetween('event_end_day', [$eventStartDay, $eventEndDay])
-            ->orWhereBetween('start_date', [$eventStartDay, $eventEndDay])
-            ->orWhereBetween('end_date', [$eventStartDay, $eventEndDay]);
+            ->orWhereBetween('shifts.start_date', [$eventStartDay, $eventEndDay])
+            ->orWhereBetween('shifts.end_date', [$eventStartDay, $eventEndDay]);
     }
 
     public function scopeStartAndEndOverlap(Builder $builder, string $start, string $end): Builder
     {
         return $builder
-            ->whereBetween('start', [$start, $end])
-            ->orWhereBetween('end', [$start, $end])
+            ->whereBetween('shifts.start', [$start, $end])
+            ->orWhereBetween('shifts.end', [$start, $end])
             ->orWhere(function (Builder $builder) use ($start, $end): void {
                 $builder
-                    ->where('start', '>', $start)
-                    ->where('end', '<', $end);
+                    ->where('shifts.start', '>', $start)
+                    ->where('shifts.end', '<', $end);
             })
             ->orWhere(function (Builder $builder) use ($start, $end): void {
                 $builder
-                    ->where('start', '<', $start)
-                    ->where('end', '>', $end);
+                    ->where('shifts.start', '<', $start)
+                    ->where('shifts.end', '>', $end);
             });
     }
 
     public function scopeStartAndEndDateOverlap(Builder $builder, string $start, string $end): Builder
     {
         return $builder
-            ->whereBetween('start_date', [$start, $end])
-            ->orWhereBetween('end_date', [$start, $end])
+            ->whereBetween('shifts.start_date', [$start, $end])
+            ->orWhereBetween('shifts.end_date', [$start, $end])
             ->orWhere(function (Builder $builder) use ($start, $end): void {
                 $builder
-                    ->where('start_date', '>', $start)
-                    ->where('end_date', '<', $end);
+                    ->where('shifts.start_date', '>', $start)
+                    ->where('shifts.end_date', '<', $end);
             })
             ->orWhere(function (Builder $builder) use ($start, $end): void {
                 $builder
-                    ->where('start_date', '<', $start)
-                    ->where('end_date', '>', $end);
+                    ->where('shifts.start_date', '<', $start)
+                    ->where('shifts.end_date', '>', $end);
             });
     }
 

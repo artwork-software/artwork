@@ -30,7 +30,7 @@ readonly class MemberChange implements RoomChange
             if (!in_array($roomAdminAfter->id, $roomAdminIdsBefore, true)) {
                 $user = User::find($roomAdminAfter->id);
                 $notificationTitle = __(
-                    'notifications.room.leader.add',
+                    'notification.room.leader.add',
                     ['room' => $room->name],
                     $user->language
                 );
@@ -62,7 +62,7 @@ readonly class MemberChange implements RoomChange
             if (!in_array($roomAdminBefore, $roomAdminIdsAfter, true)) {
                 $user = User::find($roomAdminBefore);
                 $notificationTitle = __(
-                    'notifications.room.leader.remove',
+                    'notification.room.leader.remove',
                     ['room' => $room->name],
                     $user->language
                 );

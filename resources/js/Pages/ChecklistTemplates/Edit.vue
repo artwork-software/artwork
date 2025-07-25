@@ -27,7 +27,7 @@
                             <div @click="openChangeUsersModal"
                                  class="text-secondary flex items-center text-sm subpixel-antialiased cursor-pointer">
                                 <IconEdit stroke-width="2"
-                                    class="h-5 w-5 text-primaryText group-hover:text-white"
+                                    class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                     aria-hidden="true"/>
                             </div>
                         </div>

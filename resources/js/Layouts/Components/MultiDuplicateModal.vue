@@ -21,7 +21,7 @@
                                 <ListboxOption as="template" class="p-2 text-sm"
                                                :value="null"
                                                v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
+                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
                                         <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
                                             {{ $t('No room displacement')}}
                                         </div>
@@ -35,7 +35,7 @@
                                                :key="room.id"
                                                :value="room"
                                                v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
+                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
                                         <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
                                             {{ room.name }}
                                         </div>
@@ -64,7 +64,7 @@
                                                    :key="calculation.id"
                                                    :value="calculation"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
+                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
                                             <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
                                                 {{ calculation.type }}
                                             </div>
@@ -99,7 +99,7 @@
                                                    :key="time.id"
                                                    :value="time"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
+                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
                                             <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
                                                 {{ time.value }}
                                             </div>

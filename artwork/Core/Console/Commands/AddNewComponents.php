@@ -2,9 +2,9 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentPermissionEnum;
-use Artwork\Modules\ProjectTab\Models\Component;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentPermissionEnum;
+use Artwork\Modules\Project\Models\Component;
 use Illuminate\Console\Command;
 
 class AddNewComponents extends Command

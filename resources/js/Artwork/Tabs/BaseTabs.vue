@@ -1,6 +1,6 @@
 <template>
-    <div>
-        <div class="block font-lexend overflow-scroll">
+    <div class="w-full">
+        <div class="block font-lexend overflow-x-auto overflow-y-hidden w-full">
             <div class=" border-gray-200">
                 <nav class="-mb-px flex space-x-10 " aria-label="Tabs">
                     <div v-for="tab in tabs">

@@ -80,6 +80,14 @@
                                                 {{ $t('Show projects without events') }}
                                             </p>
                                         </div>
+                                        <div class="flex max-h-8 mb-3 mt-3">
+                                            <input v-model="showOnlyProjectsWithoutGroup"
+                                                   type="checkbox"
+                                                   class="input-checklist-dark"/>
+                                            <p class=" ml-4 my-auto text-sm text-secondary">
+                                                {{ $t('Show only projects without group') }}
+                                            </p>
+                                        </div>
                                         <div class="flex justify-between xsLight mb-3"
                                              @click="showProjectStateFilter = !showProjectStateFilter">
                                             {{ $t('Project status') }}
@@ -147,7 +155,7 @@
                 <div class="relative">
                     <BaseCard>
                         <div class="p-5">
-                            <div class="overflow-x-auto w-full pb-5">
+                            <div class="overflow-x-auto px-2 w-full pb-5">
                                 <div class="sticky top-0 z-10 w-fit mb-4 rounded-lg">
                                     <div class="grid px-3 py-3 " :style="`grid-template-columns: ${gridTemplateColumns}`">
                                         <div v-for="component in components" :key="component.name"  :class="component.type === 'ActionsComponent' ? 'flex justify-end' : ''" class="px-3 text-left flex items-center" >
@@ -403,6 +411,7 @@ const showProjects = ref(props.userProjectManagementSetting?.project_filters.sho
 const showExpiredProjects = ref(props.userProjectManagementSetting?.project_filters.showExpiredProjects);
 const showFutureProjects = ref(props.userProjectManagementSetting?.project_filters.showFutureProjects ?? false);
 const showProjectsWithoutEvents = ref(props.userProjectManagementSetting?.project_filters.showProjectsWithoutEvents);
+const showOnlyProjectsWithoutGroup = ref(props.userProjectManagementSetting?.project_filters.showOnlyProjectsWithoutGroup);
 const sortBy = ref(props.userProjectManagementSetting?.sort_by === null ? undefined : props.userProjectManagementSetting?.sort_by);
 
 const showProjectStateFilter = ref(true);
@@ -509,6 +518,7 @@ const applyFiltersAndSort = (resetPage = true) => {
             showExpiredProjects: getTruthyOrUndefined(showExpiredProjects.value),
             showFutureProjects: getTruthyOrUndefined(showFutureProjects.value),
             showProjectsWithoutEvents: getTruthyOrUndefined(showProjectsWithoutEvents.value),
+            showOnlyProjectsWithoutGroup: getTruthyOrUndefined(showOnlyProjectsWithoutGroup.value),
         },
         sort: sortBy.value,
     }, {

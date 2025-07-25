@@ -9,7 +9,7 @@
                             {{ showCalendarWarning }}
                         </p>
                         <button type="button" class="-m-1.5 flex-none p-1.5">
-                            <span class="sr-only">Dismiss</span>
+                            <span class="sr-only">{{ $t('Dismiss') }}</span>
                             <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
                         </button>
                     </div>
@@ -83,10 +83,10 @@
                                         </div>
                                     </div>
                                     <div v-else>
-                                        <div class="text-gray-300 text-center">Keine Veranstaltungen für diesen Tag</div>
+                                        <div class="text-gray-300 text-center">{{ $t('No events for this day') }}</div>
                                     </div>
                                     <div class="mt-5">
-                                        <GlassyIconButton text="Add Event" icon="IconCalendarPlus" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)" />
+                                        <GlassyIconButton :text="$t('Add Event')" icon="IconCalendarPlus" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)" />
                                     </div>
                                 </div>
                                 <div class="card white p-5 text-xs font-lexend col-span-2">
@@ -96,10 +96,10 @@
                                         </div>
                                     </div>
                                     <div v-else>
-                                        <div class="text-gray-300 text-center">Keine Schichten für diesen Tag</div>
+                                        <div class="text-gray-300 text-center">{{ $t('No shifts for this day') }}</div>
                                     </div>
                                     <div class="mt-5">
-                                        <GlassyIconButton text="Add Shift" icon="IconCalendarUser" @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)" />
+                                        <GlassyIconButton :text="$t('Add Shift')" icon="IconCalendarUser" @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)" />
                                     </div>
                                 </div>
                             </div>

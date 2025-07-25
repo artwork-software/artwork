@@ -239,22 +239,20 @@ const navigation = ref([
     },
     {
         name: 'Calendar',
-        href: route('events'),
-        icon: 'IconCalendarClock',
-        current: route().current('events'),
-        isMenu: false,
-        showToolTipForItem: false,
-        has_permission: moduleIsVisible('room_assignment'),
-    },
-    {
-        name: 'Event Planning',
         href: '#',
-        icon: 'IconCalendarCog',
+        icon: 'IconCalendarClock',
         current: true,
         isMenu: true,
         showToolTipForItem: false,
-        has_permission: can('can see planning calendar | can edit planning calendar') || is('artwork admin'),
+        has_permission: moduleIsVisible('inventory'),
         subMenus: [
+            {
+                name: 'Calendar',
+                href: route('events'),
+                icon: 'IconCalendarClock',
+                current: route().current('events'),
+                has_permission: moduleIsVisible('room_assignment')
+            },
             {
                 name: 'Planning Calendar',
                 href: route('planning-event-calendar.index'),

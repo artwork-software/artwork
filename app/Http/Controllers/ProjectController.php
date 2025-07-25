@@ -237,7 +237,7 @@ class ProjectController extends Controller
             ->getFromUser($user)
             ->getAttribute('settings');
 
-        if($request->integer('entitiesPerPage') && $user->entities_per_page !== $request->integer('entitiesPerPage')) {
+        if ($request->integer('entitiesPerPage') && $user->entities_per_page !== $request->integer('entitiesPerPage')) {
             $user->update(['entities_per_page' => $request->integer('entitiesPerPage')]);
         }
 
@@ -441,6 +441,7 @@ class ProjectController extends Controller
             'number_of_participants' => $request->number_of_participants,
             'color' => $request->get('color'),
             'icon' => $request->get('icon'),
+            'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
         $is_manager = in_array(Auth::id(), $request->get('assignedUsers'), true);
@@ -460,6 +461,7 @@ class ProjectController extends Controller
             'artists' => $request->string('artists'),
             'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
+            'marked_as_done' => $request->boolean('marked_as_done'),
             'cost_center_id' => $request->string('cost_center') !== null ?
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null
         ]);
@@ -668,7 +670,7 @@ class ProjectController extends Controller
         if ($request->giveBudgetAccess) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
-            $notificationTitle = __('notifications.project.budget.add', ['project' => $project->name], $user->language);
+            $notificationTitle = __('notification.project.budget.add', ['project' => $project->name], $user->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -684,7 +686,7 @@ class ProjectController extends Controller
         }
         $mainPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $notificationTitle = __(
-            'notifications.project.budget.new_verify_request',
+            'notification.project.budget.new_verify_request',
             [],
             User::find($request->user)->language
         );
@@ -759,7 +761,7 @@ class ProjectController extends Controller
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
             $notificationTitle = __(
-                'notifications.project.budget.delete_verify_request',
+                'notification.project.budget.delete_verify_request',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -823,7 +825,7 @@ class ProjectController extends Controller
             $verifiedRequest = $subPosition->verified()->first();
             $table = $mainPosition->table()->first();
             $notificationTitle = __(
-                'notifications.project.budget.delete_verify_request',
+                'notification.project.budget.delete_verify_request',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -907,7 +909,7 @@ class ProjectController extends Controller
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
             $notificationTitle = __(
-                'notifications.project.budget.verify_removed',
+                'notification.project.budget.verify_removed',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -969,7 +971,7 @@ class ProjectController extends Controller
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
             $notificationTitle = __(
-                'notifications.project.budget.verify_removed',
+                'notification.project.budget.verify_removed',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -1044,7 +1046,7 @@ class ProjectController extends Controller
             $user = User::find($request->user);
             // Notification
             $notificationTitle = __(
-                'notifications.project.budget.add',
+                'notification.project.budget.add',
                 [],
                 $user->language
             );
@@ -1086,7 +1088,7 @@ class ProjectController extends Controller
         }
         $subPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $notificationTitle = __(
-            'notifications.project.budget.new_verify_request',
+            'notification.project.budget.new_verify_request',
             [],
             User::find($request->user)->language
         );
@@ -1191,7 +1193,7 @@ class ProjectController extends Controller
 
         foreach ($project->access_budget()->get() as $user) {
             $notificationTitle = __(
-                'notifications.project.budget.fixed',
+                'notification.project.budget.fixed',
                 [],
                 $user->language
             );
@@ -1259,7 +1261,7 @@ class ProjectController extends Controller
 
         foreach ($project->access_budget()->get() as $user) {
             $notificationTitle = __(
-                'notifications.project.budget.unfixed',
+                'notification.project.budget.unfixed',
                 [],
                 $user->language
             );
@@ -2065,8 +2067,8 @@ class ProjectController extends Controller
             $query->where('project_id', $project->id);
         },
             'components.disclosureComponents.component.projectValue' => function ($query) use ($project): void {
-            $query->where('project_id', $project->id);
-        }]);
+                $query->where('project_id', $project->id);
+            }]);
 
         $projectTabComponents = $projectTab->components()->with('component')->get()->concat(
             $projectTab->sidebarTabs->flatMap->componentsInSidebar->unique('id')
@@ -2152,6 +2154,14 @@ class ProjectController extends Controller
                     }
                     $eventsSorted = $eventsSorted->values();
                     $headerObject->project->events = $eventsSorted;
+                    // $lastEditEventIds all Event IDs that were edited in the last 5 minutes
+                    $lastEditEventIds = $project->events()
+                        ->where('updated_at', '>=', now()->subMinutes(5))
+                        ->pluck('id')
+                        ->toArray();
+
+                    $headerObject->project->lastEditEventIds = $lastEditEventIds;
+
                     break;
                 case ProjectTabComponentEnum::CALENDAR->value:
                     $atAGlance = $request->boolean('atAGlance');
@@ -2461,6 +2471,7 @@ class ProjectController extends Controller
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null,
             'icon' => $request->get('icon'),
             'color' => $request->get('color'),
+            'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
         $this->projectService->detachManagementUsers($project, true);
@@ -3700,6 +3711,7 @@ class ProjectController extends Controller
                         'name' => $project->name,
                         'key_visual_path' => $project->key_visual_path,
                         'is_group' => $project->is_group,
+                        'marked_as_done' => $project->marked_as_done,
                     ];
 
                     $addEventsToReturnProject = [];

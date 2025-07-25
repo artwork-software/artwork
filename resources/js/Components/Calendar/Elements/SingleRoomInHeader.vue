@@ -1,5 +1,5 @@
 <template>
-    <Link :style="textStyle" class="flex font-semibold w-full items-center px-8" :class="isLight ? 'text-white' : 'xsDark'" :href="route('rooms.show', { room: room?.id ?? room.roomId })">
+    <Link :style="textStyle" class="flex font-semibold items-center px-8" :class="isLight ? 'text-white' : 'xsDark'" :href="route('rooms.show', { room: room?.id ?? room.roomId })">
         {{ room?.name ?? room.roomName }}
     </Link>
 </template>

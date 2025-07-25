@@ -6,15 +6,19 @@ use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\User\Models\User;
-use Database\Seeders\ProjectManagementBuilderSeed;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Laravel\Passport\Passport;
 
 class UpdateArtwork extends Command
 {
+    protected $signature = 'artwork:update';
+    protected $description = 'Updates Artwork core data and modules';
+
     public function __construct(
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
         private readonly CraftItemMigrationService $craftItemMigrationService,
@@ -22,147 +26,185 @@ class UpdateArtwork extends Command
         parent::__construct();
     }
 
-    protected $signature = 'artwork:update';
-
-    protected $description = 'Command description';
-
-    /**
-     * Execute the console command.
-     */
     public function handle(): void
     {
-        $this->info('Artwork Update Command is running');
+        $this->info('--- Starting Artwork Update ---');
 
+        $this->updateProjectManagementBuilder();
+        $this->updatePermissions();
+        $this->addNewComponents();
+        $this->updateShiftQualificationIcons();
+        $this->updateNotificationSettings();
+        $this->addProjectGroupColumn();
+        $this->updateServiceProviderContacts();
+        $this->addInventoryArticleStatus();
+        $this->addInventoryArticlePlanFilter();
+        $this->migrateCraftInventoryItems();
+        $this->setupPassport();
+        $this->removeOldCalendarComponent();
+
+        $this->info('--- Artwork Update Finished ---');
+    }
+
+    private function updateProjectManagementBuilder(): void
+    {
+        $this->section('Project Management Builder');
         if ($this->projectManagementBuilderService->getProjectManagementBuilder()->isEmpty()) {
-            $this->call(ProjectManagementBuilderSeed::class);
-            $this->info('----------------------------------------------------------');
-            $this->info('Project Management Builder Seed has been called');
+            $this->call('db:seed', ['--class' => 'ProjectManagementBuilderSeed']);
+            $this->info('Seed executed');
         } else {
-            $this->info('----------------------------------------------------------');
-            $this->info('Project Management Builder Seed already exists');
+            $this->info('Already seeded');
         }
-        $this->info('----------------------------------------------------------');
+    }
 
-        $this->info('Permissions Update Command is running');
+    private function updatePermissions(): void
+    {
+        $this->section('Permissions');
         $this->call('artwork:update-permissions');
-        $this->info('Permissions Update Command has been called');
-        $this->info('----------------------------------------------------------');
+    }
 
-        $this->info('Artwork Add New Components Command is running');
+    private function addNewComponents(): void
+    {
+        $this->section('New Components');
         $this->call('artwork:add-new-components');
-        $this->info('Artwork Add New Components Command has been called');
-        $this->info('----------------------------------------------------------');
+    }
 
-        $this->info('Update Shift-Qualification-Icons');
+    private function updateShiftQualificationIcons(): void
+    {
+        $this->section('Shift Qualification Icons');
         $this->call('db:seed', ['--class' => 'ShiftQualificationIconsSeeder', '--force' => true]);
-        $this->info('----------------------------------------------------------');
+    }
 
-
-        $this->info('Change Notification Settings');
+    private function updateNotificationSettings(): void
+    {
+        $this->section('Notification Settings');
 
         NotificationSetting::where('type', 'NOTIFICATION_ROOM_ANSWER')->update([
             'title' => 'Room requests answered',
             'description' => 'Find out if your room requests has been answered.',
         ]);
 
-        // add new Notification type NOTIFICATION_EVENT_VERIFICATION_REQUESTS to NotificationSettings
         $users = User::all();
-        $users->each(function ($user): void {
-            $user->notificationSettings()->updateOrCreate([
-                'type' => NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS->value,
-            ], [
-                'frequency' => NotificationFrequencyEnum::DAILY->value,
-                'group_type' => 'EVENTS',
-                'title' => NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS->title(),
-                'description' => NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS->description(),
-                'enabled_email' => true,
-                'enabled_push' => true,
-            ]);
-            // Neue Notification-Typen für Inventory
-            foreach (
+        foreach ($users as $user) {
+            $this->addUserNotificationSettings($user);
+        }
+    }
+
+    private function addUserNotificationSettings(User $user): void
+    {
+        $notificationTypes = [
+            NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS,
+            NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
+            NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED,
+            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
+            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
+            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
+            NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
+        ];
+
+        foreach ($notificationTypes as $enum) {
+            $user->notificationSettings()->updateOrCreate(
+                ['type' => $enum->value],
                 [
-                NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
-                NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED,
-                NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
-                NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
-                NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST, NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST
-                ] as $enum
-            ) {
-                $user->notificationSettings()->updateOrCreate([
-                    'type' => $enum->value,
-                ], [
                     'frequency' => NotificationFrequencyEnum::DAILY->value,
                     'group_type' => $enum->groupType(),
                     'title' => $enum->title(),
                     'description' => $enum->description(),
                     'enabled_email' => true,
                     'enabled_push' => true,
-                ]);
-            }
-        });
+                ]
+            );
+        }
+    }
 
-        $this->info('----------------------------------------------------------');
-
-
-        // add to all project Groups the new column with type subprojects_column_for_group
-        $this->info('Add new column to all project groups');
+    private function addProjectGroupColumn(): void
+    {
+        $this->section('Project Group Column');
         $this->call('db:seed', ['--class' => 'UpdateOrCreateProjectRelevantColumn', '--force' => true]);
-        $this->info('----------------------------------------------------------');
+    }
 
-        $this->info('Change service provider contacts to the new contact model structure');
+    private function updateServiceProviderContacts(): void
+    {
+        $this->section('Service Provider Contacts');
         $this->call('artwork:update-service-provider-contacts');
+    }
 
-        $this->info('----------------------------------------------------------');
-        // add to all project Groups the new column with type subprojects_column_for_group
-        $this->info('add basic inventory article status');
+    private function addInventoryArticleStatus(): void
+    {
+        $this->section('Inventory Article Status');
         $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder', '--force' => true]);
+    }
 
-        $this->info('----------------------------------------------------------');
-        // add inventory article plan filter to all users from today + 1 month
-        $this->info('add inventory article plan filter to all users');
-        $users = User::all();
-        $users->each(function ($user): void {
-            // if allready exists, skip
-            if ($user->inventoryArticlePlanFilter) {
-                return;
-            }
+    private function addInventoryArticlePlanFilter(): void
+    {
+        $this->section('Inventory Article Plan Filter');
+        User::doesntHave('inventoryArticlePlanFilter')->each(function (User $user): void {
             $user->inventoryArticlePlanFilter()->create([
                 'start_date' => now(),
                 'end_date' => now()->addMonth(),
             ]);
         });
+    }
 
-        $this->info('----------------------------------------------------------');
-        $this->info('Migrating craft inventory items to inventory articles');
+    private function migrateCraftInventoryItems(): void
+    {
+        $this->section('Craft Item Migration');
         $result = $this->craftItemMigrationService->migrateCraftItemsToInventoryArticles();
-        $this->info("Migration completed!");
-        $this->info("Successfully migrated: {$result['success_count']} items");
-        if (isset($result['skipped_count']) && $result['skipped_count'] > 0) {
-            $this->info("Skipped: {$result['skipped_count']} items (already migrated)");
+        $this->info("Migrated: {$result['success_count']} items");
+        if (!empty($result['skipped_count'])) {
+            $this->info("Skipped: {$result['skipped_count']} items");
         }
+    }
 
-        $this->info('----------------------------------------------------------');
-        $this->info('Artwork Update Command has finished');
-        //Setup Passport
-        $this->info('----------------------------------------------------------');
-        $this->info('Setting up Laravel Passport if not already set up');
+    private function setupPassport(): void
+    {
+        $this->section('Passport Setup');
+
         if (!is_readable(Passport::keyPath('oauth-public.key'))) {
-            $this->info('Laravel Passport is not set up, creating');
             $this->call('passport:keys', ['--force' => true]);
         }
 
         if (DB::table('oauth_clients')->count() === 0) {
-            $provider = array_key_exists('users', config('auth.providers')) ? 'users' : null;
+            $provider = config('auth.providers.users') ? 'users' : null;
 
             $this->call('passport:client', [
                 '--personal' => true,
                 '--name' => config('app.name') . ' Personal Access Client'
             ]);
+
             $this->call('passport:client', [
                 '--password' => true,
                 '--name' => config('app.name') . ' Password Grant Client',
-                '--provider' => $provider
+                '--provider' => $provider,
             ]);
         }
+    }
+
+    private function removeOldCalendarComponent(): void
+    {
+        $this->section('Calendar Component Removal');
+
+        $calendar = Component::where('type', ProjectTabComponentEnum::CALENDAR->value)->first();
+        if (!$calendar) {
+            $this->info('No calendar component found.');
+            return;
+        }
+
+        $calendar->users()->detach();
+        $calendar->departments()->detach();
+        $calendar->sidebarTabComponent()?->delete();
+        $calendar->tabComponent()?->delete();
+        $calendar->projectValue()?->delete();
+        $calendar->componentInDisclosures()?->delete();
+        $calendar->componentInPrintLayouts()?->delete();
+        $calendar->delete();
+
+        $this->info('Old calendar component has been removed.');
+    }
+
+    private function section(string $title): void
+    {
+        $this->info(str_repeat('-', 60));
+        $this->info("[$title]");
     }
 }

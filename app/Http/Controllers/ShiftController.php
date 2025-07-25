@@ -1219,90 +1219,161 @@ class ShiftController extends Controller
      */
     public function checkCollisions(Request $request): \Illuminate\Http\JsonResponse
     {
-        $people = $request->input('people', []);
-        $shiftId = $request->input('shift_id');
-        $startDateRaw = $request->input('start_date');
-        $endDateRaw = $request->input('end_date');
-        $startRaw = $request->input('start');
-        $endRaw = $request->input('end');
 
-        // Aktuelle Schicht Zeiten
-        $currentStart = Carbon::parse(Carbon::parse($startDateRaw)->toDateString() . ' ' . $startRaw);
-        $currentEnd = Carbon::parse(Carbon::parse($endDateRaw)->toDateString() . ' ' . $endRaw);
-        if ($currentEnd <= $currentStart) {
-            $currentEnd->addDay();
-        }
+        try {
+            $people = $request->input('people', []);
+            $shiftId = $request->input('shift_id');
+            $startDateRaw = $request->input('start_date');
+            $endDateRaw = $request->input('end_date');
+            $startRaw = $request->input('start');
+            $endRaw = $request->input('end');
 
-        $results = [];
-
-        foreach ($people as $person) {
-            $type = $person['type'];
-            $id = $person['id'];
-            $hasCollision = false;
-            $collisionShifts = [];
-
-            // Pivot holen
-            $query = match ($type) {
-                'user' => ShiftUser::where('user_id', $id),
-                'freelancer' => ShiftFreelancer::where('freelancer_id', $id),
-                'service_provider' => ShiftServiceProvider::where('service_provider_id', $id),
-                default => null
-            };
-            if (!$query) {
-                continue;
+            // Validate required parameters
+            if (empty($startDateRaw) || empty($endDateRaw) || empty($startRaw) || empty($endRaw)) {
+                return response()->json(['error' => 'Missing required parameters'], 400);
             }
 
-            $query = $query
-                ->with('shift.craft')
-                ->get();
+            // Aktuelle Schicht Zeiten
+            try {
+                $currentStart = Carbon::parse(Carbon::parse($startDateRaw)->toDateString() . ' ' . $startRaw);
+                $currentEnd = Carbon::parse(Carbon::parse($endDateRaw)->toDateString() . ' ' . $endRaw);
+                if ($currentEnd <= $currentStart) {
+                    $currentEnd->addDay();
+                }
+            } catch (\Exception $e) {
+                Log::error('Error parsing date/time values', [
+                    'start_date' => $startDateRaw,
+                    'end_date' => $endDateRaw,
+                    'start' => $startRaw,
+                    'end' => $endRaw,
+                    'error' => $e->getMessage()
+                ]);
+                return response()->json(['error' => 'Invalid date/time format'], 400);
+            }
 
-            foreach ($query as $pivot) {
-                if (!$shift = $pivot->shift) {
+            $results = [];
+            foreach ($people as $person) {
+                if (!isset($person['type']) || !isset($person['id'])) {
+                    continue; // Skip invalid person entries
+                }
+
+                $type = $person['type'];
+                $id = $person['id'];
+                $hasCollision = false;
+                $collisionShifts = [];
+
+
+            // Pivot holen
+                $query = match ($type) {
+                    'user' => ShiftUser::where('user_id', $id),
+                    'freelancer' => ShiftFreelancer::where('freelancer_id', $id),
+                    'service_provider' => ShiftServiceProvider::where('service_provider_id', $id),
+                    default => null
+                };
+                if (!$query) {
                     continue;
                 }
 
-                // Datum + Zeit - korrekt zusammensetzen
-                $startDate = Carbon::parse($pivot->start_date ?? $shift->start_date)->toDateString();
-                $startTime = $pivot->start_time ?? $shift->start;
+                $query = $query
+                ->with('shift.craft')
+                ->get();
 
-                $endDate = Carbon::parse($pivot->end_date ?? $shift->end_date)->toDateString();
-                $endTime = $pivot->end_time ?? $shift->end;
+                foreach ($query as $pivot) {
+                    if (!$shift = $pivot->shift) {
+                        continue;
+                    }
+                    // Datum + Zeit - korrekt zusammensetzen
+                    try {
+                        // Validate that all required date/time values are available
+                        $startDate = $pivot->start_date ?? $shift->start_date ?? null;
+                        $startTime = $pivot->start_time ?? $shift->start ?? null;
+                        $endDate = $pivot->end_date ?? $shift->end_date ?? null;
+                        $endTime = $pivot->end_time ?? $shift->end ?? null;
+                        // Check if any required values are missing
+                        if (!$startDate || !$startTime || !$endDate || !$endTime) {
+                            continue; // Skip this shift
+                        }
 
-                $shiftStart = Carbon::parse($startDate . ' ' . $startTime);
-                $shiftEnd = Carbon::parse($endDate . ' ' . $endTime);
-                if ($shiftEnd <= $shiftStart) {
-                    $shiftEnd->addDay();
-                }
+                        $startDate = Carbon::parse($startDate)->toDateString();
+                        $endDate = Carbon::parse($endDate)->toDateString();
+                        $startTime = Carbon::parse($startTime)->format('H:i');
+                        $endTime = Carbon::parse($endTime)->format('H:i');
+                        $shiftStart = Carbon::parse($startDate . ' ' . $startTime);
+                        $shiftEnd = Carbon::parse($endDate . ' ' . $endTime);
 
-                Log::debug("$type #$id shiftStart/End", [
-                    'shiftStart' => $shiftStart->toDateTimeString(),
-                    'shiftEnd' => $shiftEnd->toDateTimeString(),
-                    'currentStart' => $currentStart->toDateTimeString(),
-                    'currentEnd' => $currentEnd->toDateTimeString(),
-                ]);
+                    } catch (\Exception $e) {
+                        continue; // Skip this shift
+                    }
+                    if ($shiftEnd <= $shiftStart) {
+                        $shiftEnd->addDay();
+                    }
+                    // Kollisionslogik - Prüfung aller drei Kollisionsfälle
+                    $case1 = $currentStart >= $shiftStart && $currentStart < $shiftEnd;
+                    $case2 = $currentEnd > $shiftStart && $currentEnd <= $shiftEnd;
+                    $case3 = $currentStart <= $shiftStart && $currentEnd >= $shiftEnd;
 
-                // Kollisionslogik
-                if ($currentStart < $shiftEnd && $currentEnd > $shiftStart) {
-                    $hasCollision = true;
-                    $collisionShifts[] = [
+                    // Special case for exact time match (mentioned in issue description)
+                    // This handles the case where a user is assigned to a shift with the exact same time as the current shift
+                    $exactMatch = $currentStart->format('H:i') === $shiftStart->format('H:i') &&
+                              $currentEnd->format('H:i') === $shiftEnd->format('H:i') &&
+                              $currentStart->toDateString() === $shiftStart->toDateString() &&
+                              $currentEnd->toDateString() === $shiftEnd->toDateString();
+                    // Check for any collision case OR exact time match
+                    if ($case1 || $case2 || $case3 || $exactMatch) {
+                        $hasCollision = true;
+
+                        // Für Debugging: Welcher Fall hat die Kollision ausgelöst
+                        $collisionCase = '';
+                        if ($case1) {
+                            $collisionCase .= '1';
+                        }
+                        if ($case2) {
+                            $collisionCase .= '2';
+                        }
+                        if ($case3) {
+                            $collisionCase .= '3';
+                        }
+                        if ($exactMatch) {
+                            $collisionCase .= 'E'; // E for Exact match
+                        }
+                        $collisionShifts[] = [
                         'id' => $shift->id,
                         'start' => $shiftStart->format('Y-m-d H:i'),
                         'end' => $shiftEnd->format('Y-m-d H:i'),
                         'description' => $shift->description,
                         'craftAbbreviation' => $shift->craft?->abbreviation ?? '',
-                    ];
+                        'collisionCase' => $collisionCase,
+                        'isExactMatch' => $exactMatch,
+                        'shiftStartTime' => $shiftStart->format('H:i'),
+                        'shiftEndTime' => $shiftEnd->format('H:i'),
+                        'currentStartTime' => $currentStart->format('H:i'),
+                        'currentEndTime' => $currentEnd->format('H:i')
+                        ];
+                    }
                 }
-            }
 
-            $results[] = [
+            // Double-check that hasCollision is set correctly based on collisionShifts
+                if (!$hasCollision && count($collisionShifts) > 0) {
+                    // Fix the inconsistency by setting hasCollision to true if there are collision shifts
+                    $hasCollision = true;
+                }
+
+                $results[] = [
                 'id' => $id,
                 'type' => $type,
                 'hasCollision' => $hasCollision,
                 'collisionShifts' => $collisionShifts,
-            ];
-        }
+                ];
+            }
 
-        return response()->json($results);
+            return response()->json($results);
+        } catch (\Exception $e) {
+            Log::error('Unexpected error in checkCollisions', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'An unexpected error occurred'], 500);
+        }
     }
 
 
@@ -1383,9 +1454,6 @@ class ShiftController extends Controller
     {
         $shiftId = $request->get('shiftPivotId');
         $entity = $request->get('entity');
-
-        //dd($entity, $startTime, $endTime);
-        // Find the shift by ID
 
         // Pivot holen
         $query = match ($entity['type']) {

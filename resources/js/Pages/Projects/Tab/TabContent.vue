@@ -214,13 +214,11 @@ const removeML = (componentType) => {
         componentType === 'ShiftTab' ||
         componentType === 'BudgetTab' ||
         componentType === 'ChecklistComponent' ||
-        componentType === 'ChecklistAllComponent' ||
-        componentType === 'CommentTab' ||
-        componentType === 'CommentAllTab'
+        componentType === 'ChecklistAllComponent'
     ) {
-        return '-ml-14';
+        return '';
     } else {
-        return 'max-w-7xl';
+        return 'artwork-container !pb-0 !mb-0 !mt-0';
     }
 };
 </script>

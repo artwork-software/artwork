@@ -457,7 +457,7 @@ const addPropertyToCategory = (property) => {
             name: property.name,
             type: property.type,
             select_values: property.select_values,
-            defaultValue: ''
+            defaultValue: property.type === 'checkbox' ? false : ''
         });
     }
 };
@@ -473,7 +473,7 @@ const addPropertyToSubCategory = (property, subCategory) => {
             name: property.name,
             type: property.type,
             select_values: property.select_values,
-            defaultValue: ''
+            defaultValue: property.type === 'checkbox' ? false : ''
         });
     }
 };
@@ -481,12 +481,21 @@ const addPropertyToSubCategory = (property, subCategory) => {
 onMounted(() => {
     if (props.category) {
         categoryForm.properties = props.category.properties.map(property => {
+            let defaultValue = property.pivot.value ?? '';
+
+            // Convert string checkbox values to booleans
+            if (property.type === 'checkbox') {
+                defaultValue = defaultValue === 'true' ? true :
+                              defaultValue === 'false' ? false :
+                              defaultValue === '' ? false : defaultValue;
+            }
+
             return {
                 id: property.id,
                 name: property.name,
                 type: property.type,
                 select_values: property.select_values,
-                defaultValue: property.pivot.value ?? ''
+                defaultValue: defaultValue
             }
         });
 
@@ -496,12 +505,21 @@ onMounted(() => {
                 id: subCategory.id,
                 name: subCategory.name,
                 properties: subCategory.properties ? subCategory.properties.map(property => {
+                    let defaultValue = property.pivot.value ?? '';
+
+                    // Convert string checkbox values to booleans
+                    if (property.type === 'checkbox') {
+                        defaultValue = defaultValue === 'true' ? true :
+                                      defaultValue === 'false' ? false :
+                                      defaultValue === '' ? false : defaultValue;
+                    }
+
                     return {
                         id: property.id,
                         name: property.name,
                         type: property.type,
                         select_values: property.select_values,
-                        defaultValue: property.pivot.value ?? ''
+                        defaultValue: defaultValue
                     }
                 }) : []
             }
@@ -526,8 +544,31 @@ const capitalizeFirstLetter = (val) => {
 }
 
 const createOrUpdateCategory = () => {
+    // Convert boolean checkbox values to strings for category properties
+    if (categoryForm.properties && categoryForm.properties.length > 0) {
+        categoryForm.properties.forEach(property => {
+            if (property.type === 'checkbox' && typeof property.defaultValue === 'boolean') {
+                property.defaultValue = property.defaultValue ? 'true' : 'false';
+            }
+        });
+    }
 
-    categoryForm.subcategories = subCategories.value;
+    // Convert boolean checkbox values to strings for subcategory properties
+    const processedSubCategories = subCategories.value.map(subCategory => {
+        const processedSubCategory = {...subCategory};
+        if (processedSubCategory.properties && processedSubCategory.properties.length > 0) {
+            processedSubCategory.properties = processedSubCategory.properties.map(property => {
+                const processedProperty = {...property};
+                if (processedProperty.type === 'checkbox' && typeof processedProperty.defaultValue === 'boolean') {
+                    processedProperty.defaultValue = processedProperty.defaultValue ? 'true' : 'false';
+                }
+                return processedProperty;
+            });
+        }
+        return processedSubCategory;
+    });
+
+    categoryForm.subcategories = processedSubCategories;
 
     if (categoryForm.id) {
         categoryForm.patch(route('inventory-management.settings.categories.update', {inventoryCategory: categoryForm.id}), {

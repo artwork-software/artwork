@@ -2,7 +2,7 @@
     <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed">
         <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
             <PopoverButton class="gap-x-2 font-lexend rounded-lg">
-                <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}60` }">
+                <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${returnCraftColor}` }">
                     <p class="text-xs text-left font-lexend">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
                 </div>
             </PopoverButton>
@@ -36,17 +36,27 @@
             </transition>
         </Float>
     </Popover>
+
     <div v-else class="gap-x-2 font-lexend rounded-lg" @click="showRequestWorkTimeChangeModal = true">
-        <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}60` }">
+        <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${returnCraftColor}` }">
             <p class="text-xs text-left font-lexend">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
         </div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-4 w-full gap-x-2">
-        <p class="text-xs truncate col-span-1">
+
+    <div class="grid grid-cols-1 md:grid-cols-4 w-full gap-x-2 group">
+        <div class="text-xs truncate col-span-1 flex items-center gap-x-3">
             <span v-if="person.pivot?.craft_abbreviation !== shift.craft?.abbreviation">
                 [{{ person.pivot?.craft_abbreviation }}]
             </span>
-            {{ person.name || person.full_name }}</p>
+            {{ person.name || person.full_name }}
+            <div v-if="can('can plan shifts') || is('artwork admin')" class="hidden group-hover:block ml-1">
+                <span class="flex items-center justify-center">
+                    <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
+                        <IconX class="w-2 h-2 text-white cursor-pointer" @click="deleteUserFromShift(person)"/>
+                    </span>
+                </span>
+            </div>
+        </div>
 
         <div class="flex items-center gap-x-1 col-span-1">
             <component :is="findShiftQualification(person.pivot?.shift_qualification_id)?.icon" class="size-3" />
@@ -113,6 +123,8 @@ import {Float} from "@headlessui-float/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
 import {computed, ref} from "vue";
+import {IconX} from "@tabler/icons-vue";
+import {can, is} from "laravel-permission-to-vuejs";
 
 const props = defineProps({
     person: {
@@ -185,6 +197,37 @@ const saveShortDescription = (closePopover) => {
 const isCurrentUserPlannerOfShiftCraft = computed(() => {
     return props.shift.craft.craft_shift_planer.some(planner => planner.id === usePage().props.auth.user.id);
 });
+
+const returnCraftColor = computed(() => {
+    const color = props.shift?.craft?.color?.toLowerCase();
+    if (!color || color === '#ffffff') {
+        return '#9e9e9e60'; // Standardgrau mit Transparenz
+    }
+    return `${color}60`; // Farbe mit Transparenz
+});
+
+const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState = false) => {
+
+    const userType = user.type === 'user' ? 0 : user.type === 'freelancer' ? 1 : 2;
+    const usersPivotId = user.pivot.id;
+    router.delete(
+        route(
+            'shift.removeUserByType',
+            {
+                usersPivotId: usersPivotId,
+                userType: userType,
+                isShiftTab: true
+            }
+        ),
+        {
+            data: {
+                removeFromSingleShift: removeFromSingleShift
+            },
+            preserveScroll: true,
+            preserveState: preserveState,
+        }
+    );
+}
 </script>
 
 <style scoped>

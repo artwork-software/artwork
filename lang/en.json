@@ -1,4 +1,9 @@
 {
+    "Add Event": "Add Event",
+    "Add Shift": "Add Shift",
+    "Dismiss": "Dismiss",
+    "No events for this day": "No events for this day",
+    "No shifts for this day": "No shifts for this day",
     "A new verification link has been sent to the email address you provided in your profile settings.": "A new verification link has been sent to the email address you provided in your profile settings.",
     "A new verification link has been sent to your email address.": "A new verification link has been sent to your email address.",
     "A Timeout Occurred": "A Timeout Occurred",
@@ -693,6 +698,7 @@
     "You have assigned a shift to a repeat event. Specify the period in which the shift is to be repeated.": "You have assigned a shift to a repeat date. Specify the period in which the shift is to be repeated.",
     "Projects": "Projects",
     "Show only my projects": "Show only my projects",
+    "Show only projects without group": "Show only projects without group",
     "Project groups": "Project groups",
     "Project status": "Project status",
     "Search for projects": "Search for projects",
@@ -2888,5 +2894,18 @@
     "Open demands": "Open demands",
     "Find out if there are any open demands for your shifts.": "Find out if there are any open demands for your shifts.",
     "Edit and create categories for your inventory.": "Edit and create categories for your inventory.",
-    "Daily Target Hours": "Daily Target Hours"
+    "New shift commit workflow request": "New shift commit workflow request",
+    "Find out if there is a new shift commit workflow request.": "Find out if there is a new shift commit workflow request.",
+    "No Projects or Groups found": "No Projects or Groups found",
+    "Last edited events": "Last edited events",
+    "Most recently created events": "Most recently created events",
+    "Create project in this group": "Create project in this group",
+    "Mark as Done": "Mark as Done",
+    "As soon as this option is activated, the project no longer appears in the project searches.": "As soon as this option is activated, the project no longer appears in the project searches.",
+    "Add the project to a project group": "Add the project to a project group",
+    "Activate this option to be able to assign the event directly to a project": "Activate this option to be able to assign the event directly to a project",
+    "Daily Target Hours": "Daily Target Hours",
+    "Collisions with shifts:": "Collisions with shifts:",
+    "The new project status is marked as planned. Do you want to convert all events of the project to planning events?": "The new project status is marked as planned. Do you want to convert all events of the project to planning events?",
+    "Convert to planning events": "Convert to planning events"
 }

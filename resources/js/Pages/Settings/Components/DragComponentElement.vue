@@ -32,7 +32,7 @@ export default {
 
 <template>
     <DropComponentsToolTip :top="true" :tooltip-text="component.special ? $t(component.name) : component.name">
-        <div class="flex p-3 rounded-lg border mb-3 hover:cursor-grab h-16 w-full items-center gap-2" draggable="true"  @dragend="onDragEnd" @dragstart="onDragStart">
+        <div class="flex p-3 rounded-lg border border-gray-200 mb-3 hover:cursor-grab h-16 w-full items-center gap-2" draggable="true"  @dragend="onDragEnd" @dragstart="onDragStart">
             <div class="flex items-center justify-center">
                 <ComponentIcons :type="component.type" />
             </div>

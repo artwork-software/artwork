@@ -50,8 +50,8 @@
                         leave-active-class="transition ease-in duration-75"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
-                <MenuItems class="z-50 focus:outline-none card glassy p-2.5" :class="[menuWidth, needsMaxHeight ? 'max-h-72 overflow-scroll xl:max-h-none' : '']">
-                    <div class="card white">
+                <MenuItems class="z-50 focus:outline-none" :class="[menuWidth, needsMaxHeight ? 'max-h-72 overflow-scroll xl:max-h-none' : '']">
+                    <div class="card white p-1.5 !rounded-xl">
                         <slot />
                     </div>
                 </MenuItems>

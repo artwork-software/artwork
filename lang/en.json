@@ -2892,5 +2892,6 @@
     "Find out if there is a new shift commit workflow request.": "Find out if there is a new shift commit workflow request.",
     "No Projects or Groups found": "No Projects or Groups found",
     "Last edited events": "Last edited events",
-    "Most recently created events": "Most recently created events"
+    "Most recently created events": "Most recently created events",
+    "Create project in this group": "Create project in this group"
 }

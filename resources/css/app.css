@@ -790,16 +790,17 @@
     }
 
     .card {
+        @apply rounded-lg;
         &.glassy {
-            @apply flex h-fit grow flex-col rounded-3xl bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50 ring-1 ring-white/50 shadow-glass;
+            @apply flex h-fit rounded-lg grow flex-col bg-gradient-to-bl  from-white/40 to-sky-100/20 text-left backdrop-blur-sm border border-white/50 ring-1 ring-white/50 shadow-glass;
         }
 
         &.glassy-shiftplan {
-            @apply flex h-fit grow flex-col rounded-3xl bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50 active:bg-artwork-navigation-background shadow-glass;
+            @apply flex h-fit rounded-lg grow flex-col bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50 active:bg-artwork-navigation-background shadow-glass;
         }
 
         &.white {
-            @apply bg-white rounded-3xl border border-gray-100 w-full shadow-glass;
+            @apply bg-white rounded-lg border border-gray-100 w-full shadow-glass;
         }
     }
 

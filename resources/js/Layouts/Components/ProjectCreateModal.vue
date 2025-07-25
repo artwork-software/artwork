@@ -519,7 +519,7 @@
                                 :text="t('Set up events')"
                                 class="mt-8 inline-flex items-center"
                                 classes="!w-fit gap-x-2 h-12 bg-artwork-buttons-create">
-                                <IconCalendarMonth class="w-5 h-5" />
+                                <component is="IconCalendarMonth" class="w-5 h-5" />
                             </BaseButton>
                             <BaseButton
                                 type="submit"
@@ -528,10 +528,9 @@
                                 class="mt-8 inline-flex items-center "
                                 classes="!w-fit gap-x-2 h-12"
                             >
-                                <IconCirclePlus class="w-5 h-5" />
+                                <component is="IconCirclePlus" class="w-5 h-5" />
                             </BaseButton>
                         </div>
-
 
                     </div>
                 </div>
@@ -597,7 +596,12 @@ const props = defineProps({
     projectGroups: Array,
     states: Array,
     createSettings: Object,
-    project: Object
+    project: Object,
+    selectedGroup: {
+        type: Object,
+        default: null,
+        required: false,
+    },
 });
 
 // Define emits
@@ -643,7 +647,7 @@ const TextColorWithDarken = (color, percent = 75) => {
 // Reactive state
 const isCreateProjectTab = ref(true);
 const isCreateProjectGroupTab = ref(false);
-const addToProjectGroup = ref(props.project ? !!props.project?.groups[0] : false);
+const addToProjectGroup = ref(props.project ? !!props.project?.groups[0] : props.selectedGroup ? !!props.selectedGroup : false);
 const createProjectForm = useForm({
     name: props.project ? props.project.name : '',
     artists: props.project ? props.project.artists : '',
@@ -652,7 +656,7 @@ const createProjectForm = useForm({
     assignedGenreIds: props.project ? props.project?.genres?.map(genre => genre.id) : [],
     isGroup: props.project ? props.project.is_group : false,
     projects: [],
-    selectedGroup: props.project ? props.project?.groups[0] : null,
+    selectedGroup: props.project ? props.project?.groups[0] : props.selectedGroup ? props.selectedGroup : null,
     budget_deadline: props.project ? props.project.budget_deadline : '',
     state: null,
     assignedUsers: [],

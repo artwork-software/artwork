@@ -147,7 +147,7 @@
                 <div class="relative">
                     <BaseCard>
                         <div class="p-5">
-                            <div class="overflow-x-auto w-full pb-5">
+                            <div class="overflow-x-auto px-2 w-full pb-5">
                                 <div class="sticky top-0 z-10 w-fit mb-4 rounded-lg">
                                     <div class="grid px-3 py-3 " :style="`grid-template-columns: ${gridTemplateColumns}`">
                                         <div v-for="component in components" :key="component.name"  :class="component.type === 'ActionsComponent' ? 'flex justify-end' : ''" class="px-3 text-left flex items-center" >

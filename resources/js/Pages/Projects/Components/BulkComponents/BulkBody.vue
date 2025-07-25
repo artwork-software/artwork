@@ -84,7 +84,7 @@
         </div>
 
 
-        <div class="max-w-7xl overflow-x-scroll relative" >
+        <div class="overflow-x-scroll relative" >
             <BulkHeader v-model="timeArray" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
             <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
                 <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">

@@ -32,6 +32,7 @@ class SchedulingService
         string $model,
         int $modelId
     ): bool {
+        /** @var Scheduling $scheduling */
         $scheduling = $this->schedulingRepository->getByUserIdAndTypeAndModelAndModelId(
             $userId,
             $type,
@@ -40,8 +41,7 @@ class SchedulingService
         );
 
         if ($scheduling instanceof Scheduling) {
-            $scheduling->__call('increment', ['count']);
-
+            $scheduling->increment('count');
             return true;
         }
 

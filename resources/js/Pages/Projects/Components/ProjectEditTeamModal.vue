@@ -7,14 +7,16 @@
                 <div class="xsLight">
                     {{ $t('Type the name of the users you want to add to the team. The users receive read access to this project. Only the project manager can grant further rights.') }}
                 </div>
-                <div class="mt-6 relative">
+                <div class="my-6 relative">
                     <div class="my-auto w-full">
-                        <input id="departmentSearch" v-model="department_and_user_query" type="text"
+                        <BaseInput label="Name" id="departmentSearch" class="w-full" v-model="department_and_user_query" type="text" />
+
+                        <!--<input id="departmentSearch" v-model="department_and_user_query" type="text"
                                autocomplete="off"
                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="departmentSearch"
-                               class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                               class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>-->
                     </div>
                     <transition leave-active-class="transition ease-in duration-100"
                                 leave-from-class="opacity-100"
@@ -59,11 +61,11 @@
                         </div>
                     </transition>
                 </div>
-                <div class="mt-4">
-                    <div v-for="user in this.users" class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
+                <div class="my-6">
+                    <div v-for="user in this.users" class="flex justify-between mt-4 mr-1 items-center font-bold text-primary pb-3">
                         <div class="flex items-center w-56">
                             <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full"
+                                <img class="flex h-11 w-11 object-cover rounded-full"
                                      :src="user.profile_photo_url"
                                      alt=""/>
                                 <span class="flex ml-4">
@@ -192,11 +194,13 @@ import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: "ProjectEditTeamModal",
     components: {
+        BaseInput,
         BaseModal,
         FormButton,
         Dropdown,

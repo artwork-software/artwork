@@ -1,13 +1,13 @@
 <template>
     <div class="w-max mx-5">
-        <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[84px] rounded-lg">
+        <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[71px] rounded-lg">
             <div :style="{minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}"></div>
             <div v-for="room in $page.props.rooms" :key="room.id" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
                 <SingleRoomInHeader :room="room" is-light />
             </div>
         </div>
         <div v-for="day in days">
-            <div class="flex items-center sticky gap-0.5 h-16 bg-gray-100 z-20 first-line:divide-none top-36 rounded-r-lg">
+            <div class="flex items-center sticky gap-0.5 h-16 bg-gray-100 z-20 first-line:divide-none top-34 rounded-r-lg">
                 <div class="flex xxsDark items-center px-8 mt-1.5" :style="{marginLeft: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}">
                     {{ daysWithoutEventsToDisplayHiddenHours.includes(day.fullDay)
                     ? $t('Hours between {start} - {end} are hidden', {
@@ -46,7 +46,7 @@
                 </div>
             </div>
             <div v-for="hour in day.hoursOfDay">
-                <div v-if="shouldShowHour(hour, calendarData, day)" class="border-b border-dashed">
+                <div v-if="shouldShowHour(hour, calendarData, day)" class="border-b border-gray-300 border-dashed">
                     <div class="w-fit events-by-days-container rounded-lg" ref="calendarToCalculate">
                         <div :key="day.fullDay"
                              :style="{ height: zoom_factor * 115 + 'px' }"

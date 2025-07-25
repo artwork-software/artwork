@@ -1,5 +1,5 @@
 <template>
-    <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
+    <div id="myCalendar" ref="calendarRef" class="bg-white">
         <div class="w-full top-0 left-8 px-5 fixed z-40" >
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
@@ -27,7 +27,7 @@
                 </div>
             </div>
         </div>
-        <div>
+        <div class="pt-20">
             <div v-if="!usePage().props.auth.user.daily_view && !usePage().props.auth.user.at_a_glance">
                 <div class="w-max" :class="eventsWithoutRoom.length > 0 ? '' : ''">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white px-5'">
@@ -78,7 +78,7 @@
                                                 />
                                             </div>
                                         </div>
-                                        <div class="absolute right-2 bottom-3 hidden group-hover/container:block">
+                                        <div class="absolute left-2 bottom-3 hidden group-hover/container:block">
 
                                             <ToolTipComponent
                                                 :tooltip-text="isPlanning ? $t('Add new planned event') : $t('Add new event on this day')"
@@ -499,7 +499,7 @@ const resetMultiEdit = () => {
     editEvents.value = [];
     editEventsRoomIds.value = [];
     editEventsRoomsDesiredDays.value = [];
-    toggleMultiEdit(false);
+    //toggleMultiEdit(false);
 };
 
 

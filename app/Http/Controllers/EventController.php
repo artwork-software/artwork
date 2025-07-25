@@ -770,6 +770,7 @@ class EventController extends Controller
         SageApiSettingsService $sageApiSettingsService
     ): CalendarEventResource | RedirectResponse {
         $this->authorize('create', Event::class);
+        /** @var Event $firstEvent */
         $firstEvent = Event::create($request->data());
         $firstEvent->eventProperties()->sync($request->get('event_properties'));
         $this->adjoiningRoomsCheck($request, $firstEvent);
@@ -786,7 +787,8 @@ class EventController extends Controller
             );
         }
 
-        $projectFirstEvent = $firstEvent->project()->first();
+        /** @var Project $projectFirstEvent */
+        $projectFirstEvent = $firstEvent->project;
 
         if ($request->is_series) {
             $series = SeriesEvents::create([
@@ -852,8 +854,8 @@ class EventController extends Controller
             }
         }
 
-        if (!empty($firstEvent->project()->get())) {
-            $eventProject = $firstEvent->project()->first();
+        if (!empty($firstEvent->project)) {
+            $eventProject = $firstEvent->project;
 
             if ($eventProject) {
                 $this->changeService->saveFromBuilder(
@@ -962,8 +964,8 @@ class EventController extends Controller
             'type' => 'error',
             'message' => $notificationTitle
         ];
-        $room = $event->room()->first();
-        $project = $event->project()->first();
+        $room = $event->room;
+        $project = $event->project;
         $notificationDescription = [
             1 => [
                 'type' => 'link',
@@ -972,7 +974,7 @@ class EventController extends Controller
             ],
             2 => [
                 'type' => 'string',
-                'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                'title' =>  $event->event_type->name . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -1014,8 +1016,8 @@ class EventController extends Controller
             'type' => 'error',
             'message' => $notificationTitle
         ];
-        $room = $event->room()->first();
-        $project = $event->project()->first();
+        $room = $event->room;
+        $project = $event->project;
         $notificationDescription = [
             1 => [
                 'type' => 'link',
@@ -1024,7 +1026,7 @@ class EventController extends Controller
             ],
             2 => [
                 'type' => 'string',
-                'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                'title' =>  $event->event_type->name . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -1061,8 +1063,8 @@ class EventController extends Controller
     private function createConflictNotification($collision, Event $event): void
     {
 
-        $room = $event->room()->first();
-        $project = $event->project()->first();
+        $room = $event->room;
+        $project = $event->project;
 
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(2);
@@ -1100,7 +1102,7 @@ class EventController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'title' =>  $event->event_type->name . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
@@ -1183,13 +1185,13 @@ class EventController extends Controller
                     ],
                     2 => [
                         'type' => 'string',
-                        'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                        'title' => $event->event_type->name . ', ' . $event->eventName,
                         'href' => null
                     ],
                     3 => [
                         'type' => 'link',
-                        'title' => $event->project()->first()->name ?? '',
-                        'href' => $event->project()->first() ?
+                        'title' => $event->project->name ?? '',
+                        'href' => $event->project ?
                             route(
                                 'projects.tab',
                                 [
@@ -1232,13 +1234,13 @@ class EventController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'title' => $event->event_type->name . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
                     'type' => 'link',
-                    'title' => $event->project()->first()->name ?? '',
-                    'href' => $event->project()->first() ?
+                    'title' => $event->project->name ?? '',
+                    'href' => $event->project ?
                         route(
                             'projects.tab',
                             [
@@ -1276,19 +1278,20 @@ class EventController extends Controller
         Event $event,
         ProjectController $projectController
     ): void {
+        dd($request->all());
         $this->authorize('update', $event);
         if (!$request->noNotifications) {
             $projectManagers = [];
             $this->notificationService->setNotificationKey(Str::random(15));
-            $room = $event->room()->first();
-            $project = $event->project()->first();
+            $room = $event->room;
+            $project = $event->project;
             if (!empty($project)) {
                 $projectManagers = $project->managerUsers()->get();
             }
             if (!empty($request->adminComment)) {
                 $projectManagers = [];
                 $this->notificationService->setNotificationKey(Str::random(15));
-                $project = $event->project()->first();
+                $project = $event->project;
                 if (!empty($project)) {
                     $projectManagers = $project->managerUsers()->get();
                 }
@@ -1325,7 +1328,7 @@ class EventController extends Controller
                         ],
                         2 => [
                             'type' => 'string',
-                            'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                            'title' => $event->event_type->name . ', ' . $event->eventName,
                             'href' => null
                         ],
                         3 => [
@@ -1360,7 +1363,7 @@ class EventController extends Controller
                     $this->notificationService->setNotificationTo($projectManager);
                     $this->notificationService->createNotification();
                 }
-                $notificationTitle = __('notification.event.admin_message', [], $event->creator()->first()->language);
+                $notificationTitle = __('notification.event.admin_message', [], $event->creator->language);
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -1376,7 +1379,7 @@ class EventController extends Controller
                     ],
                     2 => [
                         'type' => 'string',
-                        'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                        'title' => $event->event_type->name . ', ' . $event->eventName,
                         'href' => null
                     ],
                     3 => [
@@ -1442,7 +1445,7 @@ class EventController extends Controller
                     ],
                     2 => [
                         'type' => 'string',
-                        'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                        'title' => $event->event_type->name . ', ' . $event->eventName,
                         'href' => null
                     ],
                     3 => [
@@ -1480,7 +1483,7 @@ class EventController extends Controller
             $notificationTitle = __(
                 'notification.event.room_change_confirmed',
                 [],
-                $event->creator()->first()->language
+                $event->creator->language
             );
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
@@ -1495,7 +1498,7 @@ class EventController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'title' => $event->event_type->name . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
@@ -1560,7 +1563,7 @@ class EventController extends Controller
                 $this->changeService
                     ->createBuilder()
                     ->setModelClass(Project::class)
-                    ->setModelId($event->project()->first()->id)
+                    ->setModelId($event->project->id)
                     ->setTranslationKey('Schedule modified')
             );
         }

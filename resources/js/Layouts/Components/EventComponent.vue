@@ -487,13 +487,26 @@
                     <!--    Project    -->
                     <div v-if="canEdit">
                         <!-- Checkbox to decide if i show this block or not -->
+
                         <div class="my-3">
-                            <input type="checkbox" v-model="showProjectInfo"
-                                   class="input-checklist">
-                            <span
-                                :class="[showProjectInfo ? 'xsDark' : 'xsLight', 'text-sm ml-2']">{{
-                                    $t('Assign event to a project')
-                                }}</span>
+
+                            <div class="flex gap-3">
+                                <div class="flex h-6 shrink-0 items-center">
+                                    <div class="group grid size-4 grid-cols-1">
+                                        <input v-model="showProjectInfo" id="showProjectInfo" aria-describedby="showProjectInfo-description" name="showProjectInfo" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                            <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="text-sm/6">
+                                    <label for="showProjectInfo" class="text-gray-900">{{ $t('Assign event to a project') }}</label>
+                                    <p id="showProjectInfo-description" class="text-gray-500 text-xs">
+                                        {{ $t('Activate this option to be able to assign the event directly to a project') }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                         <div v-if="showProjectInfo">
                             <div class="xsLight flex" v-if="!this.creatingProject">
@@ -537,20 +550,18 @@
                                     </SwitchGroup>
                                 </div>
                                 <div class="relative w-full">
+
+                                    <ProjectSearch
+                                        v-if="!creatingProject"
+                                        @project-selected="chooseProject"
+                                    />
+
                                     <BaseInput
                                         id="projectName"
+                                        v-else
                                         :label="creatingProject ? $t('New project name') : $t('Search project')"
                                         v-model="projectName"
                                     />
-                                    <div v-if="projectSearchResults.length > 0 && !creatingProject"
-                                         class="absolute bg-primary truncate sm:text-sm w-full z-10">
-                                        <div v-for="(project, index) in projectSearchResults"
-                                             :key="index"
-                                             @click="chooseProject(project)"
-                                             class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
-                                            {{ project.name }}
-                                        </div>
-                                    </div>
                                 </div>
 
                             </div>
@@ -826,6 +837,7 @@ import Button from "@/Jetstream/Button.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 
 const {getDaysOfEvent} = useEvent();
 
@@ -851,6 +863,7 @@ export default {
         Permissions, IconLib
     ],
     components: {
+        ProjectSearch,
         ArtworkBaseModal,
         BaseTextarea,
         BaseInput,

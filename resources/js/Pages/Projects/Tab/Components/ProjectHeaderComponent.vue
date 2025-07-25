@@ -1,8 +1,8 @@
 <template>
     <AppLayout :title="project?.name + ' (' + currentTab.name + ')'">
         <!-- Project Header -->
-        <div class="px-10">
-            <div class="mt-5">
+        <div class="">
+            <div class="mt-10 artwork-container !pb-0">
                 <div class="">
                     <!-- if in group -->
                     <div v-if="project?.groups?.length > 0" class="bg-secondaryHover text-sm shadow-sm border border-gray-200 px-3 py-1 rounded-lg -mb-2 z-20 w-fit pr-6 pb-0.5">
@@ -103,21 +103,6 @@
                         </div>
                     </div>
 
-                    <div class="my-4 flex items-center gap-x-4" v-if="project.is_group">
-                        <div class="text-blue-500 hover:text-blue-700 duration-300 ease-in-out cursor-pointer underline underline-offset-2 text-xs flex items-center gap-x-2" @click="showAddProjectToGroup = true" v-if="is('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.auth.user.id) || headerObject.projectManagerIds.includes(this.$page.props.auth.user.id) || can('write projects')">
-                                <span class="cursor-pointer">
-                                    <component is="IconCirclePlus" class="inline-block size-4" />
-                                </span>
-                            {{ $t('Add projects to group') }}
-                        </div>
-                        <div class="text-blue-500 hover:text-blue-700 duration-300 ease-in-out cursor-pointer underline underline-offset-2 text-xs flex items-center gap-x-2" @click="openCreateNewProjectInGroupModal" v-if="is('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.auth.user.id) || headerObject.projectManagerIds.includes(this.$page.props.auth.user.id) || can('write projects')">
-                                <span class="cursor-pointer">
-                                    <component is="IconCirclePlus" class="inline-block size-4" />
-                                </span>
-                            {{ $t('Create project in this group') }}
-                        </div>
-                    </div>
-
                     <div class="w-full my-2 text-secondary xsDark">
                         <div v-if="headerObject.firstEventInProject && headerObject.lastEventInProject">
                             {{ $t('Time period/opening hours') }}: {{ headerObject.firstEventInProject?.start_time }}
@@ -146,25 +131,27 @@
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- tabs -->
-            <div class="w-full h-full border-b-2 border-dashed pb-5 border-gray-100">
-                <div class="font-lexend">
-                    <div class="hidden sm:block">
-                        <div class="border-gray-200">
-                            <nav class="-mb-px text-sm tracking-wide pt-4 flex space-x-12" aria-label="Tabs">
-                                <Link v-for="tab in headerObject.tabs" :key="tab?.name"
-                                      :href="route('projects.tab', {project: headerObject.project.id, projectTab: tab.id})"
-                                      :class="[tab.id === headerObject.currentTabId ? 'border-artwork-buttons-hover text-artwork-buttons-hover' : 'border-transparent hover:text-gray-600 hover:border-gray-300 text-artwork-context-dark', 'whitespace-nowrap py-2 px-1 border-b-2 font-black duration-300 ease-in-out']"
-                                      :aria-current="tab.id === headerObject.currentTabId ? 'page' : undefined">
-                                    {{ tab.name }}
-                                </Link>
-                            </nav>
+                <div class="w-full h-full border-b-2 border-dashed pb-5 border-gray-100">
+                    <div class="font-lexend">
+                        <div class="hidden sm:block">
+                            <div class="border-gray-200">
+                                <nav class="-mb-px text-sm tracking-wide pt-4 flex space-x-12" aria-label="Tabs">
+                                    <Link v-for="tab in headerObject.tabs" :key="tab?.name"
+                                          :href="route('projects.tab', {project: headerObject.project.id, projectTab: tab.id})"
+                                          :class="[tab.id === headerObject.currentTabId ? 'border-artwork-buttons-hover text-artwork-buttons-hover' : 'border-transparent hover:text-gray-600 hover:border-gray-300 text-artwork-context-dark', 'whitespace-nowrap py-2 px-1 border-b-2 font-black duration-300 ease-in-out']"
+                                          :aria-current="tab.id === headerObject.currentTabId ? 'page' : undefined">
+                                        {{ tab.name }}
+                                    </Link>
+                                </nav>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- tabs -->
+
             <!-- Tab Content -->
             <div class="">
                 <slot />
@@ -252,6 +239,7 @@ import ProjectStateChangeModal from "@/Layouts/Components/ProjectStateChangeModa
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 
 const props = defineProps({
     headerObject: {

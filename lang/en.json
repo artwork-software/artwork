@@ -2896,5 +2896,6 @@
     "Create project in this group": "Create project in this group",
     "Mark as Done": "Mark as Done",
     "As soon as this option is activated, the project no longer appears in the project searches.": "As soon as this option is activated, the project no longer appears in the project searches.",
-    "Add the project to a project group": "Add the project to a project group"
+    "Add the project to a project group": "Add the project to a project group",
+    "Activate this option to be able to assign the event directly to a project": "Activate this option to be able to assign the event directly to a project"
 }

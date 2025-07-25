@@ -2900,6 +2900,7 @@
     "Create project in this group": "Projekt in dieser Gruppe erstellen",
     "Mark as Done": "Als erledigt markieren",
     "As soon as this option is activated, the project no longer appears in the project searches.": "Sobald diese Option aktiviert ist, erscheint das Projekt nicht mehr in den Projektsuchen.",
-    "Add the project to a project group": "Projekt zu einer Projektgruppe hinzufügen"
+    "Add the project to a project group": "Projekt zu einer Projektgruppe hinzufügen",
+    "Activate this option to be able to assign the event directly to a project": "Aktiviere diese Option, um das Ereignis direkt einem Projekt zuzuordnen"
 }
 

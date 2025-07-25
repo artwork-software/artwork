@@ -330,7 +330,7 @@ function closeEditProjectModal() {
     editingProject.value = false;
 }
 function duplicateProject(project) {
-    router.post(`/projects/${project.id}/duplicate`);
+    router.post(route('projects.duplicate', project.id));
 }
 function openDeleteProjectModal(project) {
     projectToDelete.value = project;
@@ -353,7 +353,7 @@ function deleteProjectFromGroup(projectGroupId) {
     });
 }
 function deleteProject() {
-    router.delete(`/projects/${projectToDelete.value.id}`);
+    router.delete(route('projects.destroy', projectToDelete.value.id));
     closeDeleteProjectModal();
 }
 function locationString() {

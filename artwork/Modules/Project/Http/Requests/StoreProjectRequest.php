@@ -21,6 +21,7 @@ class StoreProjectRequest extends FormRequest
             'projects.*' => 'exists:projects,id',
             'color' => 'nullable|string|max:255',
             'icon' => 'nullable|string|max:255',
+            'marked_as_done' => 'nullable|boolean',
         ];
     }
 }

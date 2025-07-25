@@ -241,7 +241,7 @@
                                 </Listbox>
                             </div>
 
-                            <div class="px-6 py-6 bg-lightBackgroundGray" v-if="createSettings.managers">
+                            <div class="px-11 py-6 -mx-5 bg-lightBackgroundGray" v-if="createSettings.managers">
                                 <div class="font-semibold text-sm pb-2">{{ t('Project management')}}</div>
                                 <UserSearch @user-selected="addUserToProject" only-manager />
 
@@ -272,17 +272,36 @@
                                 />
                             </div>
 
+
+
+                            <div v-if="createSettings.budget_deadline" class="px-6 py-2">
+                                <BaseInput
+                                    type="date"
+                                    id="budgetDeadline"
+                                    v-model="createProjectForm.budget_deadline"
+                                    label="Budget deadline" />
+                            </div>
+
                             <div class="px-6 py-2" v-if="!project?.is_group || !project">
 
-                                <div class="flex items-center ">
-                                    <input id="addToProjectGroup" type="checkbox" v-model="addToProjectGroup"
-                                           class="input-checklist"/>
-                                    <label for="addToProjectGroup"
-                                           :class="addToProjectGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
-                                           class="ml-2">
-                                        {{ t('Belongs to project group') }}
-                                    </label>
+                                <div class="flex gap-3">
+                                    <div class="flex h-6 shrink-0 items-center">
+                                        <div class="group grid size-4 grid-cols-1">
+                                            <input v-model="addToProjectGroup" id="addToProjectGroup" aria-describedby="addToProjectGroup-description" name="addToProjectGroup" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                                <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm/6">
+                                        <label for="addToProjectGroup" class="text-gray-900">{{ $t('Belongs to project group') }}</label>
+                                        <p id="addToProjectGroup-description" class="text-gray-500 text-xs">
+                                            {{ $t('Add the project to a project group') }}
+                                        </p>
+                                    </div>
                                 </div>
+
                                 <div v-if="addToProjectGroup" class="pt-5">
                                     <ProjectSearch id="2" @project-selected="createProjectForm.selectedGroup = $event" only-project-groups label="Search project group" v-if="!createProjectForm.selectedGroup"/>
 
@@ -297,12 +316,24 @@
                                 </div>
                             </div>
 
-                            <div v-if="createSettings.budget_deadline" class="px-6 py-2">
-                                <BaseInput
-                                    type="date"
-                                    id="budgetDeadline"
-                                    v-model="createProjectForm.budget_deadline"
-                                    label="Budget deadline" />
+                            <div class="px-6 py-2">
+                                <div class="flex gap-3">
+                                    <div class="flex h-6 shrink-0 items-center">
+                                        <div class="group grid size-4 grid-cols-1">
+                                            <input v-model="createProjectForm.marked_as_done" id="marked_as_done" aria-describedby="marked_as_done-description" name="marked_as_done" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                                <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm/6">
+                                        <label for="marked_as_done" class="text-gray-900">{{ $t('Mark as Done') }}</label>
+                                        <p id="marked_as_done-description" class="text-gray-500 text-xs">
+                                            {{ $t('As soon as this option is activated, the project no longer appears in the project searches.') }}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="w-full flex items-center justify-end gap-x-4 pb-6 px-6">
@@ -312,7 +343,7 @@
                                 :text="t('Set up events')"
                                 class="mt-8 inline-flex items-center"
                                 classes="!w-fit gap-x-2 h-12 bg-artwork-buttons-create">
-                                <IconCalendarMonth class="w-5 h-5" />
+                                <component is="IconCalendarMonth" class="w-5 h-5" />
                             </BaseButton>
                             <BaseButton
                                 type="submit"
@@ -321,7 +352,7 @@
                                 class="mt-8 inline-flex items-center "
                                 classes="!w-fit gap-x-2 h-12"
                             >
-                                <IconCirclePlus class="w-5 h-5" />
+                                <component is="IconCirclePlus" class="w-5 h-5" />
                             </BaseButton>
                         </div>
                     </div>
@@ -663,6 +694,7 @@ const createProjectForm = useForm({
     cost_center: props.project ? props.project?.cost_center?.name : '',
     icon: props.project ? props.project.icon : 'IconPhotoCircle',
     color: props.project ? props.project.color : null,
+    marked_as_done: props.project ? props.project.marked_as_done : false,
 });
 const projectGroupProjects = ref([]);
 const projectGroupSearchResults = ref([]);

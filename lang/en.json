@@ -2893,5 +2893,8 @@
     "No Projects or Groups found": "No Projects or Groups found",
     "Last edited events": "Last edited events",
     "Most recently created events": "Most recently created events",
-    "Create project in this group": "Create project in this group"
+    "Create project in this group": "Create project in this group",
+    "Mark as Done": "Mark as Done",
+    "As soon as this option is activated, the project no longer appears in the project searches.": "As soon as this option is activated, the project no longer appears in the project searches.",
+    "Add the project to a project group": "Add the project to a project group"
 }

@@ -99,13 +99,15 @@ class Project extends Model
         'user_id',
         'color',
         'icon',
+        'marked_as_done'
     ];
 
     protected $casts = [
         'pinned_by_users' => 'array',
         'live_music' => 'boolean',
         'own_copyright' => 'boolean',
-        'is_group' => 'boolean'
+        'is_group' => 'boolean',
+        'marked_as_done' => 'boolean',
     ];
 
     protected $with = [

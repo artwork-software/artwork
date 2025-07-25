@@ -441,6 +441,7 @@ class ProjectController extends Controller
             'number_of_participants' => $request->number_of_participants,
             'color' => $request->get('color'),
             'icon' => $request->get('icon'),
+            'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
         $is_manager = in_array(Auth::id(), $request->get('assignedUsers'), true);
@@ -460,6 +461,7 @@ class ProjectController extends Controller
             'artists' => $request->string('artists'),
             'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
+            'marked_as_done' => $request->boolean('marked_as_done'),
             'cost_center_id' => $request->string('cost_center') !== null ?
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null
         ]);
@@ -2469,6 +2471,7 @@ class ProjectController extends Controller
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null,
             'icon' => $request->get('icon'),
             'color' => $request->get('color'),
+            'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
         $this->projectService->detachManagementUsers($project, true);
@@ -3708,6 +3711,7 @@ class ProjectController extends Controller
                         'name' => $project->name,
                         'key_visual_path' => $project->key_visual_path,
                         'is_group' => $project->is_group,
+                        'marked_as_done' => $project->marked_as_done,
                     ];
 
                     $addEventsToReturnProject = [];

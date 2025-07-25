@@ -67,8 +67,10 @@ const emit = defineEmits(['project-selected']);
 const projectSearchQuery = ref('');
 const projects = ref([]);
 const checkIfMustListed = (project) => {
+    if (project.marked_as_done) return false;
     if (props.noProjectGroups) return !project.is_group;
     if (props.onlyProjectGroups) return !!project.is_group;
+
     return true;
 };
 

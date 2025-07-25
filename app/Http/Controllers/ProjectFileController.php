@@ -104,7 +104,7 @@ class ProjectFileController extends Controller
         $this->notificationService->setProjectId($project->id);
 
         foreach ($projectFileUsers as $projectFileUser) {
-            $notificationTitle = __('notifications.project.file.permission_add', [], $projectFileUser->language);
+            $notificationTitle = __('notification.project.file.permission_add', [], $projectFileUser->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -191,7 +191,7 @@ class ProjectFileController extends Controller
         $this->notificationService->setProjectId($project->id);
 
         foreach ($projectFileUsers as $projectFileUser) {
-            $notificationTitle = __('notifications.project.file.changed', [], $projectFileUser->language);
+            $notificationTitle = __('notification.project.file.changed', [], $projectFileUser->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -254,7 +254,7 @@ class ProjectFileController extends Controller
         $this->notificationService->setProjectId($project->id);
 
         foreach ($projectFileUsers as $projectFileUser) {
-            $notificationTitle = __('notifications.project.file.deleted', [], $projectFileUser->language);
+            $notificationTitle = __('notification.project.file.deleted', [], $projectFileUser->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'error',

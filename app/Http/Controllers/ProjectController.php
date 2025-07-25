@@ -668,7 +668,7 @@ class ProjectController extends Controller
         if ($request->giveBudgetAccess) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
-            $notificationTitle = __('notifications.project.budget.add', ['project' => $project->name], $user->language);
+            $notificationTitle = __('notification.project.budget.add', ['project' => $project->name], $user->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -684,7 +684,7 @@ class ProjectController extends Controller
         }
         $mainPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $notificationTitle = __(
-            'notifications.project.budget.new_verify_request',
+            'notification.project.budget.new_verify_request',
             [],
             User::find($request->user)->language
         );
@@ -759,7 +759,7 @@ class ProjectController extends Controller
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
             $notificationTitle = __(
-                'notifications.project.budget.delete_verify_request',
+                'notification.project.budget.delete_verify_request',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -823,7 +823,7 @@ class ProjectController extends Controller
             $verifiedRequest = $subPosition->verified()->first();
             $table = $mainPosition->table()->first();
             $notificationTitle = __(
-                'notifications.project.budget.delete_verify_request',
+                'notification.project.budget.delete_verify_request',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -907,7 +907,7 @@ class ProjectController extends Controller
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
             $notificationTitle = __(
-                'notifications.project.budget.verify_removed',
+                'notification.project.budget.verify_removed',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -969,7 +969,7 @@ class ProjectController extends Controller
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
             $notificationTitle = __(
-                'notifications.project.budget.verify_removed',
+                'notification.project.budget.verify_removed',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -1044,7 +1044,7 @@ class ProjectController extends Controller
             $user = User::find($request->user);
             // Notification
             $notificationTitle = __(
-                'notifications.project.budget.add',
+                'notification.project.budget.add',
                 [],
                 $user->language
             );
@@ -1086,7 +1086,7 @@ class ProjectController extends Controller
         }
         $subPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $notificationTitle = __(
-            'notifications.project.budget.new_verify_request',
+            'notification.project.budget.new_verify_request',
             [],
             User::find($request->user)->language
         );
@@ -1191,7 +1191,7 @@ class ProjectController extends Controller
 
         foreach ($project->access_budget()->get() as $user) {
             $notificationTitle = __(
-                'notifications.project.budget.fixed',
+                'notification.project.budget.fixed',
                 [],
                 $user->language
             );
@@ -1259,7 +1259,7 @@ class ProjectController extends Controller
 
         foreach ($project->access_budget()->get() as $user) {
             $notificationTitle = __(
-                'notifications.project.budget.unfixed',
+                'notification.project.budget.unfixed',
                 [],
                 $user->language
             );

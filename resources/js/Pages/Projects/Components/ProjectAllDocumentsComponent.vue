@@ -82,6 +82,7 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 
 import { useProjectDocumentListener } from "@/Composeables/Listener/useProjectDocumentListener.js";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
+import axios from "axios";
 
 export default defineComponent({
     mixins: [
@@ -106,10 +107,9 @@ export default defineComponent({
     data() {
         return {
             uploadDocumentFeedback: "",
-            documentForm: useForm({
-                file: null,
-                tabId: this.tab_id ? this.tab_id : null
-            }),
+            documentForm: {
+                errors: {}
+            },
             deletingFile: false,
             documents: this.project?.project_files_all ?? []
         };
@@ -118,27 +118,41 @@ export default defineComponent({
         useProjectDocumentListener(this.documents, this.project.id).init();
     },
     methods: {
-        uploadChosenDocuments(event) {
-            this.validateTypeAndUpload([...event.target.files])
+        async uploadChosenDocuments(event) {
+            const files = Array.from(event.target.files);
+            await this.validateTypeAndUpload(files);
+            event.target.value = '';
         },
-        uploadDraggedDocuments(event) {
-            this.validateTypeAndUpload([...event.dataTransfer.files])
+        async uploadDraggedDocuments(event) {
+            const files = Array.from(event.dataTransfer.files);
+            await this.validateTypeAndUpload(files);
         },
-        uploadDocumentToProject(file) {
-            this.documentForm.file = file
-
-            this.documentForm.post(route('project_files.store', {project: this.project.id}), {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.documentForm.file = null
+        async uploadDocumentToProject(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            if (this.tab_id) {
+                formData.append('tabId', this.tab_id);
+            }
+            try {
+                await axios.post(route('project_files.store', {project: this.project.id}), formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                // Erfolgreich, Listener aktualisiert die Liste
+            } catch (error) {
+                if (error.response && error.response.data && error.response.data.errors) {
+                    this.documentForm.errors = error.response.data.errors;
+                } else {
+                    this.uploadDocumentFeedback = this.$t('Upload failed');
                 }
-            })
+            }
         },
-        validateTypeAndUpload(files) {
+        async validateTypeAndUpload(files) {
             this.uploadDocumentFeedback = "";
+            this.documentForm.errors = {};
             for (let file of files) {
-              this.uploadDocumentToProject(file)
+                await this.uploadDocumentToProject(file);
             }
         },
         selectNewFiles() {

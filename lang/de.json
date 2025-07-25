@@ -1,4 +1,9 @@
 {
+    "Add Event": "Veranstaltung hinzufügen",
+    "Add Shift": "Schicht hinzufügen",
+    "Dismiss": "Schließen",
+    "No events for this day": "Keine Veranstaltungen für diesen Tag",
+    "No shifts for this day": "Keine Schichten für diesen Tag",
     "A new verification link has been sent to the email address you provided in your profile settings.": "Ein neuer Bestätigungslink wurde an die E-Mail-Adresse, die in Ihrem Profil hinterlegt ist, gesendet.",
     "A new verification link has been sent to your email address.": "Ein neuer Bestätigungslink wurde an Ihre E-Mail-Adresse versendet.",
     "A Timeout Occurred": "Ein Timeout ist aufgetreten",
@@ -698,6 +703,7 @@
     "You have assigned a shift to a repeat event. Specify the period in which the shift is to be repeated.": "Du hast einem Wiederholungstermin eine Schicht zugewiesen. Lege fest in welchem Zeitraum die Schicht wiederholt werden soll.",
     "Projects": "Projekte",
     "Show only my projects": "Nur meine Projekte anzeigen",
+    "Show only projects without group": "Nur Projekte ohne Gruppe anzeigen",
     "Project groups": "Projektgruppen",
     "Project status": "Projektstatus",
     "Search for projects": "Suche nach Projekten",
@@ -2901,6 +2907,10 @@
     "Mark as Done": "Als erledigt markieren",
     "As soon as this option is activated, the project no longer appears in the project searches.": "Sobald diese Option aktiviert ist, erscheint das Projekt nicht mehr in den Projektsuchen.",
     "Add the project to a project group": "Projekt zu einer Projektgruppe hinzufügen",
-    "Activate this option to be able to assign the event directly to a project": "Aktiviere diese Option, um das Ereignis direkt einem Projekt zuzuordnen"
+    "Activate this option to be able to assign the event directly to a project": "Aktiviere diese Option, um das Ereignis direkt einem Projekt zuzuordnen",
+    "Daily Target Hours": "Tagessollstunden pro Tag",
+    "Collisions with shifts:": "Kollisionen mit Schichten:",
+    "The new project status is marked as planned. Do you want to convert all events of the project to planning events?": "Der neu ausgewählte Projektstatus ist als 'in Planung' markiert. Möchtest du alle Termine des Projekts in Planungstermine umwandeln?",
+    "Convert to planning events": "In Planungstermine umwandeln"
 }
 

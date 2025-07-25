@@ -167,6 +167,7 @@
                 :states="headerObject.states"
                 @close-create-project-modal="closeEditProjectModal"
                 @open-project-state-change-modal="openProjectStateChangeModal"
+                @open-project-planning-state-change-modal="openProjectPlanningStateChangeModal"
                 :create-settings="createSettings"
                 :project="projectForCreateModal"
                 :selected-group="selectedGroup"
@@ -217,12 +218,18 @@
                 v-if="showProjectStateChangeModal"
                 @close="showProjectStateChangeModal = false"
             />
+
+            <ProjectPlanningStateChangeModal
+                :project-id="project.id"
+                v-if="showProjectPlanningStateChangeModal"
+                @close="closePlanningStateChangeModal()"
+            />
         </div>
     </AppLayout>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import {ref, computed, nextTick} from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { Link, router } from "@inertiajs/vue3";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
@@ -240,6 +247,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import ProjectPlanningStateChangeModal from "@/Layouts/Components/ProjectPlanningStateChangeModal.vue";
 
 const props = defineProps({
     headerObject: {
@@ -279,6 +287,7 @@ const projectToDelete = ref(null);
 const showAddProjectToGroup = ref(false);
 const showPrintLayoutSelectorModal = ref(false);
 const showProjectStateChangeModal = ref(false);
+const showProjectPlanningStateChangeModal = ref(false);
 const projectForCreateModal = ref(props.project);
 const selectedGroup = ref(null);
 const {
@@ -356,6 +365,24 @@ function locationString() {
 
 function openProjectStateChangeModal() {
     showProjectStateChangeModal.value = true;
+}
+
+const openProjectPlanningStateChangeModal = () => {
+    showProjectPlanningStateChangeModal.value = true;
+}
+
+const closePlanningStateChangeModal = () => {
+    showProjectPlanningStateChangeModal.value = false;
+    nextTick(() => {
+        router.reload()
+    });
+}
+
+const closeProjectStateChangeModal = () => {
+    showProjectStateChangeModal.value = false;
+    nextTick(() => {
+        router.reload()
+    });
 }
 </script>
 

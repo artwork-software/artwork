@@ -179,7 +179,6 @@ class EventVerificationController extends Controller
         // Get the authenticated user
         /** @var User $user */
         $user = $this->authManager->user();
-
         // Find all planning events for the project
         $planningEvents = Event::where('project_id', $project)
             ->where('is_planning', true)
@@ -188,6 +187,21 @@ class EventVerificationController extends Controller
         // Request verification for each planning event
         foreach ($planningEvents as $event) {
             $this->eventVerificationService->requestVerification($event, $user);
+            broadcast(new EventCreated($event->fresh(), $event->room_id));
+        }
+    }
+
+    /**
+     * Convert all events of a project to planning events
+     */
+    public function convertToPlanning(Request $request, $project): void
+    {
+        // Find all events for the project
+        $events = Event::where('project_id', $project)->get();
+        // Convert each event to a planning event
+        foreach ($events as $event) {
+            $event->is_planning = true;
+            $event->save();
             broadcast(new EventCreated($event->fresh(), $event->room_id));
         }
     }

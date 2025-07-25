@@ -253,7 +253,6 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 
-// Props
 const props = defineProps({
     headerObject: {
         type: Object,
@@ -285,7 +284,6 @@ const props = defineProps({
     }
 });
 
-// Reaktive States
 const showProjectHistory = ref(false);
 const editingProject = ref(false);
 const deletingProject = ref(false);
@@ -300,12 +298,11 @@ const {
     getTextColorBasedOnBackground,
 } = useColorHelper();
 
-// Computed Properties
+
 const projectState = computed(() => {
     return props.headerObject.states.find(state => state.id === props.project?.state);
 });
 
-// Methoden
 function openCreateNewProjectInGroupModal() {
     projectForCreateModal.value = null;
     selectedGroup.value = props.project;
@@ -319,27 +316,34 @@ function hasBudgetAccess() {
 function openProjectHistoryModal() {
     showProjectHistory.value = true;
 }
+
 function closeProjectHistoryModal() {
     showProjectHistory.value = false;
 }
+
 function openEditProjectModal() {
     projectForCreateModal.value = props.project;
     editingProject.value = true;
 }
+
 function closeEditProjectModal() {
     editingProject.value = false;
 }
+
 function duplicateProject(project) {
     router.post(route('projects.duplicate', project.id));
 }
+
 function openDeleteProjectModal(project) {
     projectToDelete.value = project;
     deletingProject.value = true;
 }
+
 function closeDeleteProjectModal() {
     deletingProject.value = false;
     projectToDelete.value = null;
 }
+
 function deleteProjectFromGroup(projectGroupId) {
     router.delete(route('projects.group.delete', {
         project: props.project.id,
@@ -352,13 +356,16 @@ function deleteProjectFromGroup(projectGroupId) {
         }
     });
 }
+
 function deleteProject() {
     router.delete(route('projects.destroy', projectToDelete.value.id));
     closeDeleteProjectModal();
 }
+
 function locationString() {
     return Object.values(props.headerObject.roomsWithAudience).join(", ");
 }
+
 function openProjectStateChangeModal() {
     showProjectStateChangeModal.value = true;
 }

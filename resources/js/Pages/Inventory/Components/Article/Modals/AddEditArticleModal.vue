@@ -302,7 +302,7 @@
                                                   @update:modelValue="query = ''">
                                             <div class="relative">
                                                 <ComboboxInput
-                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6"
+                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900  placeholder:text-gray-400"
                                                     @change="query = $event.target.value" @blur="query = ''"
                                                     :display-value="(person) => property.value ? rooms?.find((room) => room.id === parseInt(property.value) ).name : ''"/>
                                                 <ComboboxButton
@@ -312,7 +312,7 @@
                                                 </ComboboxButton>
 
                                                 <ComboboxOptions v-if="filteredPeople.length > 0"
-                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
                                                     <ComboboxOption v-for="person in filteredPeople" :key="person.id"
                                                                     :value="person.id" as="template"
                                                                     v-slot="{ active, selected }">
@@ -405,7 +405,7 @@
 
 
                                         <div v-if="property.type === 'selection'" class="">
-                                            <div class="mt-2 grid grid-cols-1">
+                                            <div class="grid grid-cols-1 p-2">
                                                 <select id="location" name="location" v-model="property.value" :required="property.is_required" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
                                                     <option v-if="property.is_required" value="" disabled selected>{{ $t('Please select') }}*</option>
                                                     <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
@@ -519,22 +519,22 @@
                                 <tbody class="divide-y divide-gray-200 bg-white">
                                 <tr class="divide-x divide-gray-200 group"
                                     v-for="(detailedArticle, index) in articleForm?.detailed_article_quantities">
-                                    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0">
+                                    <td class="py-4 pr-4 pl-4 text-sm min-w-36 font-medium whitespace-nowrap text-gray-900 sm:pl-0">
                                         <input type="text" v-model="detailedArticle.name"
                                                required
                                                class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                                placeholder="Name"
                                         />
                                     </td>
-                                    <td class="p-4 text-sm whitespace-nowrap text-gray-500 xsLight cursor-default">
+                                    <td class="p-4 text-sm whitespace-nowrap min-w-36 text-gray-500 xsLight cursor-default">
                                         <input type="text" v-model="detailedArticle.description"
                                                class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                                :placeholder="$t('Description')"
                                         />
                                     </td>
-                                    <td class="text-sm whitespace-nowrap text-gray-500 p-4">
+                                    <td class="text-sm whitespace-nowrap text-gray-500 p-4 sm:pr-0 min-w-36">
                                         <div class="">
-                                            <div class="mt-2 grid grid-cols-1">
+                                            <div class="mt-2 grid grid-cols-1 p-2">
                                                 <select id="location" name="location" v-model="detailedArticle.status" required class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
                                                     <option value="" disabled selected>{{ $t('Please select a status') }}*</option>
                                                     <option v-for="status in statuses" :value="status" :key="status.id">{{ status.name }}</option>
@@ -549,13 +549,13 @@
                                                :placeholder="$t('Quantity*')"
                                         />
                                     </td>
-                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0"
+                                    <td class="text-sm whitespace-nowrap text-gray-500 min-w-36 sm:pr-0"
                                         v-for="property in detailedArticle?.properties">
                                         <Combobox v-if="property.type === 'room'" as="div" v-model="property.value"
                                                   @update:modelValue="query = ''">
                                             <div class="relative">
                                                 <ComboboxInput
-                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6"
+                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900  placeholder:text-gray-400"
                                                     @change="query = $event.target.value" @blur="query = ''"
                                                     :display-value="(person) => property.value ? rooms?.find((room) => room.id === parseInt(property.value) )?.name : ''"/>
                                                 <ComboboxButton
@@ -565,7 +565,7 @@
                                                 </ComboboxButton>
 
                                                 <ComboboxOptions v-if="filteredPeople.length > 0"
-                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
                                                     <ComboboxOption v-for="person in filteredPeople" :key="person.id"
                                                                     :value="person.id" as="template"
                                                                     v-slot="{ active, selected }">
@@ -589,7 +589,7 @@
                                                   v-model="property.value" @update:modelValue="queryManufacturer = ''">
                                             <div class="relative">
                                                 <ComboboxInput
-                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900  placeholder:text-gray-400 sm:text-sm/6"
+                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900  placeholder:text-gray-400"
                                                     @change="queryManufacturer = $event.target.value"
                                                     @blur="queryManufacturer = ''"
                                                     :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.value) )?.name : ''"/>
@@ -600,7 +600,7 @@
                                                 </ComboboxButton>
 
                                                 <ComboboxOptions v-if="filteredManufacturers.length > 0"
-                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
                                                     <ComboboxOption v-for="person in filteredManufacturers"
                                                                     :key="person.id" :value="person.id" as="template"
                                                                     v-slot="{ active, selected }">
@@ -649,14 +649,14 @@
                                             </div>
                                         </div>
 
-                                        <div v-if="property.type === 'checkbox'" class="px-3">
+                                        <div v-if="property.type === 'checkbox'" class="px-3 items-center flex">
                                             <input type="checkbox" :checked="booleanValue(property.value)"
                                                    @change="property.value = $event.target.checked"
                                                    class="input-checklist"/>
                                         </div>
 
                                         <div v-if="property.type === 'selection'" class="">
-                                            <div class="mt-2 grid grid-cols-1">
+                                            <div class="grid grid-cols-1 p-2">
                                                 <select id="location" name="location" v-model="property.value" :required="property.is_required" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
                                                     <option v-if="property.is_required" value="" disabled selected>{{ $t('Please select') }}*</option>
                                                     <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>

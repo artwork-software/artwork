@@ -1,6 +1,6 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white">
-        <div class="w-full top-0 left-8 px-5 fixed z-40" >
+        <div class="w-full left-8 top-0 px-5 fixed z-40" >
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
@@ -29,8 +29,8 @@
         </div>
         <div class="pt-20">
             <div v-if="!usePage().props.auth.user.daily_view && !usePage().props.auth.user.at_a_glance">
-                <div class="w-max" :class="eventsWithoutRoom.length > 0 ? '' : ''">
-                    <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white px-5'">
+                <div class="w-max -ml-3" :class="eventsWithoutRoom.length > 0 ? '' : ''">
+                    <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white'">
                         <CalendarHeader :rooms="rooms" :filtered-events-length="eventsWithoutRoom.length"/>
                         <div class="w-fit events-by-days-container" :class="[!project ? '' : '', isFullscreen ? 'mt-4': '',]" ref="calendarToCalculate">
                             <div v-for="day in days"

@@ -12,7 +12,7 @@ class WorkflowInstanceRepository extends BaseRepository
     {
         return WorkflowInstance::class;
     }
-    
+
     public function findBySubject(Model $subject): \Illuminate\Database\Eloquent\Collection
     {
         return $this->getBuilder()
@@ -22,7 +22,7 @@ class WorkflowInstanceRepository extends BaseRepository
             ->orderBy('created_at', 'desc')
             ->get();
     }
-    
+
     public function findActiveBySubject(Model $subject): \Illuminate\Database\Eloquent\Collection
     {
         return $this->getBuilder()
@@ -33,9 +33,11 @@ class WorkflowInstanceRepository extends BaseRepository
             ->orderBy('created_at', 'desc')
             ->get();
     }
-    
-    public function findByDefinitionAndSubject(int $definitionId, Model $subject): \Illuminate\Database\Eloquent\Collection
-    {
+
+    public function findByDefinitionAndSubject(
+        int $definitionId,
+        Model $subject
+    ): \Illuminate\Database\Eloquent\Collection {
         return $this->getBuilder()
             ->whereHas('workflowDefinitionConfig', function ($query) use ($definitionId) {
                 $query->where('workflow_definition_id', $definitionId);
@@ -46,7 +48,7 @@ class WorkflowInstanceRepository extends BaseRepository
             ->orderBy('created_at', 'desc')
             ->get();
     }
-    
+
     public function getRunning(): \Illuminate\Database\Eloquent\Collection
     {
         return $this->getBuilder()

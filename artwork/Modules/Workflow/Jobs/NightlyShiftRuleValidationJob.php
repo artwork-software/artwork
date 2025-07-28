@@ -14,7 +14,10 @@ use Illuminate\Support\Facades\Log;
 
 class NightlyShiftRuleValidationJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public function __construct(protected int $daysAhead = 14, protected bool $autoCreateWorkflows = true)
     {

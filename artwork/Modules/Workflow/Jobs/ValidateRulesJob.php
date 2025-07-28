@@ -12,7 +12,10 @@ use Illuminate\Queue\SerializesModels;
 
 class ValidateRulesJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public function __construct(
         private readonly Carbon $startDate,
@@ -40,7 +43,7 @@ class ValidateRulesJob implements ShouldQueue
                 'end_date' => $this->endDate->toDateString(),
                 'error' => $e->getMessage()
             ]);
-            
+
             throw $e;
         }
     }

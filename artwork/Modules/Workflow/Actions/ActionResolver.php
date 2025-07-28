@@ -7,11 +7,9 @@ use Illuminate\Support\Collection;
 
 class ActionResolver
 {
-    private Collection $actions;
-
-    public function __construct()
-    {
-        $this->actions = collect();
+    public function __construct(
+        private Collection $actions = new Collection()
+    ) {
         $this->registerDefaultActions();
     }
 

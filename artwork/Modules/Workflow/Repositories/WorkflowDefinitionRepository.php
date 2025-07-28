@@ -11,7 +11,7 @@ class WorkflowDefinitionRepository extends BaseRepository
     {
         return WorkflowDefinition::class;
     }
-    
+
     public function findByType(string $type): \Illuminate\Database\Eloquent\Collection
     {
         return $this->getBuilder()
@@ -19,7 +19,7 @@ class WorkflowDefinitionRepository extends BaseRepository
             ->where('is_active', true)
             ->get();
     }
-    
+
     public function findActiveByName(string $name): ?WorkflowDefinition
     {
         return $this->getBuilder()
@@ -27,7 +27,7 @@ class WorkflowDefinitionRepository extends BaseRepository
             ->where('is_active', true)
             ->first();
     }
-    
+
     public function getActive(): \Illuminate\Database\Eloquent\Collection
     {
         return $this->getBuilder()

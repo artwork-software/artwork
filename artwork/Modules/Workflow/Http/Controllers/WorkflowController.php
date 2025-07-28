@@ -5,17 +5,20 @@ namespace Artwork\Modules\Workflow\Http\Controllers;
 use Artwork\Modules\Workflow\Models\WorkflowDefinition;
 use Artwork\Modules\Workflow\Models\WorkflowInstance;
 use Artwork\Modules\Workflow\Services\WorkflowService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class WorkflowController extends Controller
 {
-    public function __construct(protected WorkflowService $workflowService)
-    {
+    public function __construct(
+        private readonly WorkflowService $workflowService
+    ) {
     }
 
-    public function create(): \Inertia\Response
+    public function create(): Response
     {
         $definitions = WorkflowDefinition::with('currentConfig')
             ->where('is_active', true)
@@ -28,7 +31,7 @@ class WorkflowController extends Controller
         ]);
     }
 
-    public function index(): \Inertia\Response
+    public function index(): Response
     {
         $definitions = WorkflowDefinition::with('currentConfig')->get();
         $instances = WorkflowInstance::with('workflowDefinitionConfig.workflowDefinition')
@@ -41,7 +44,7 @@ class WorkflowController extends Controller
         ]);
     }
 
-    public function showDefinition(WorkflowDefinition $definition): \Inertia\Response
+    public function showDefinition(WorkflowDefinition $definition): Response
     {
         $definition->load('currentConfig');
 
@@ -50,7 +53,7 @@ class WorkflowController extends Controller
         ]);
     }
 
-    public function showInstance(WorkflowInstance $instance): \Inertia\Response
+    public function showInstance(WorkflowInstance $instance): Response
     {
         $instance->load('workflowDefinitionConfig.workflowDefinition', 'workflowLogs');
         $availableTransitions = $this->workflowService->getAvailableTransitions($instance);
@@ -61,7 +64,7 @@ class WorkflowController extends Controller
         ]);
     }
 
-    public function executeTransition(Request $request, WorkflowInstance $instance): \Illuminate\Http\RedirectResponse
+    public function executeTransition(Request $request, WorkflowInstance $instance): RedirectResponse
     {
         $request->validate([
             'transition' => 'required|string',
@@ -76,12 +79,12 @@ class WorkflowController extends Controller
         return redirect()->back()->with('error', 'Failed to execute transition.');
     }
 
-    public function createDefinition(): \Inertia\Response
+    public function createDefinition(): Response
     {
         return Inertia::render('Workflow/CreateDefinition');
     }
 
-    public function storeDefinition(Request $request): \Illuminate\Http\RedirectResponse
+    public function storeDefinition(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',

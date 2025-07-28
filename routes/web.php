@@ -100,6 +100,7 @@ use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
 use Artwork\Modules\Workflow\Http\Controllers\WorkflowController;
+use Artwork\Modules\Workflow\Http\Controllers\ShiftWarningController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
 use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
@@ -164,6 +165,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/instances/{instance}', [WorkflowController::class, 'showInstance'])->name('workflow.instances.show');
         Route::post('/instances/{instance}/transitions', [WorkflowController::class, 'executeTransition'])->name('workflow.instances.execute-transition');
         Route::post('/definitions', [WorkflowController::class, 'storeDefinition'])->name('workflow.definitions.store');
+    });
+
+    // Shift Warning routes - Admin interface for shift rules
+    Route::group(['prefix' => 'shift-warnings'], function (): void {
+        Route::get('/rules', [ShiftWarningController::class, 'index'])->name('shift-warnings.rules.index');
+        Route::post('/rules', [ShiftWarningController::class, 'store'])->name('shift-warnings.rules.store');
+        Route::put('/rules/{rule}', [ShiftWarningController::class, 'update'])->name('shift-warnings.rules.update');
+        Route::delete('/rules/{rule}', [ShiftWarningController::class, 'destroy'])->name('shift-warnings.rules.destroy');
+        
+        Route::get('/contracts', [ShiftWarningController::class, 'contractAssignments'])->name('shift-warnings.contracts.index');
+        Route::put('/contracts/{contract}/assignments', [ShiftWarningController::class, 'updateContractAssignments'])->name('shift-warnings.contracts.assignments.update');
+        
+        Route::get('/rules/{ruleType}/configuration', [ShiftWarningController::class, 'getRuleConfiguration'])->name('shift-warnings.rules.configuration');
     });
 
     // TOOL SETTING ROUTE

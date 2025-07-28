@@ -65,17 +65,20 @@ class WorkflowRuleService
         Carbon $startDate, 
         Carbon $endDate
     ): Collection {
-        $allViolations = collect();
+        // First get existing violations from database
+        $existingViolations = $this->violationRepository->getViolationsForDateRange($startDate, $endDate);
         
-        // Get all subjects that have active rules
+        // Then validate for new violations
+        $newViolations = collect();
         $subjects = $this->getSubjectsWithActiveRules();
         
         foreach ($subjects as $subject) {
             $violations = $this->validateRulesForSubject($subject, $startDate, $endDate);
-            $allViolations = $allViolations->concat($violations);
+            $newViolations = $newViolations->concat($violations);
         }
         
-        return $allViolations;
+        // Merge existing and new violations
+        return $existingViolations->concat($newViolations);
     }
 
     public function createRule(
@@ -115,6 +118,34 @@ class WorkflowRuleService
     {
         $ruleImplementation = $this->getRuleImplementation($ruleType);
         return $ruleImplementation?->getConfiguration() ?? [];
+    }
+
+    public function getViolationsForSubject(
+        Model $subject, 
+        Carbon $startDate, 
+        Carbon $endDate
+    ): Collection {
+        return $this->violationRepository->getViolationsForSubject($subject, $startDate, $endDate);
+    }
+
+    public function getPendingViolations(): Collection
+    {
+        return $this->violationRepository->getPendingViolations();
+    }
+
+    public function updateViolationStatus(WorkflowRuleViolation $violation, string $status): bool
+    {
+        return $this->violationRepository->updateStatus($violation, $status);
+    }
+
+    public function cleanupOldViolations(Carbon $olderThan): int
+    {
+        return $this->violationRepository->deleteOldViolations($olderThan);
+    }
+
+    public function getViolationsByStatus(string $status): Collection
+    {
+        return $this->violationRepository->getViolationsByStatus($status);
     }
 
     private function getActiveRulesForSubject(Model $subject): Collection

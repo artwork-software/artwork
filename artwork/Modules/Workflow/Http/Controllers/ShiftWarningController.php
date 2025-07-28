@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Workflow\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Artwork\Modules\Workflow\Services\WorkflowRuleService;
 use Artwork\Modules\Workflow\Models\WorkflowRule;
 use Artwork\Modules\User\Models\UserContract;
@@ -10,11 +11,12 @@ use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class ShiftWarningController
+class ShiftWarningController extends Controller
 {
     public function __construct(
         private readonly WorkflowRuleService $workflowRuleService
-    ) {}
+    ) {
+    }
 
     public function index(): Response
     {
@@ -138,5 +140,111 @@ class ShiftWarningController
         $configuration = $this->workflowRuleService->getRuleConfiguration($ruleType);
 
         return response()->json($configuration);
+    }
+
+    public function validateRules(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'user_id' => 'nullable|exists:users,id'
+        ]);
+
+        try {
+            $startDate = \Carbon\Carbon::parse($validated['start_date']);
+            $endDate = \Carbon\Carbon::parse($validated['end_date']);
+
+            if (!empty($validated['user_id'])) {
+                $user = \Artwork\Modules\User\Models\User::find($validated['user_id']);
+                $violations = $this->workflowRuleService->getViolationsForSubject($user, $startDate, $endDate);
+            } else {
+                $violations = $this->workflowRuleService->checkRuleViolationsForDateRange($startDate, $endDate);
+            }
+
+            return response()->json([
+                'success' => true,
+                'violations' => $violations->map(function ($violation) {
+                    return [
+                        'id' => $violation->id,
+                        'rule_name' => $violation->workflowRule?->name,
+                        'violation_date' => $violation->violation_date,
+                        'message' => $violation->violation_data['message'] ?? 'Regelverstoß erkannt',
+                        'severity' => $violation->severity,
+                        'warning_color' => $violation->workflowRule?->warning_color,
+                        'violation_data' => $violation->violation_data
+                    ];
+                })->values(),
+                'count' => $violations->count(),
+                'date_range' => [
+                    'start' => $startDate->toDateString(),
+                    'end' => $endDate->toDateString()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fehler beim Validieren der Regeln: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getPendingViolations(): JsonResponse
+    {
+        try {
+            $violations = $this->workflowRuleService->getPendingViolations();
+
+            return response()->json([
+                'success' => true,
+                'violations' => $violations->map(function ($violation) {
+                    return [
+                        'id' => $violation->id,
+                        'rule_name' => $violation->workflowRule?->name,
+                        'violation_date' => $violation->violation_date,
+                        'message' => $violation->violation_data['message'] ?? 'Regelverstoß erkannt',
+                        'severity' => $violation->severity,
+                        'status' => $violation->status,
+                        'warning_color' => $violation->workflowRule?->warning_color
+                    ];
+                })->values(),
+                'count' => $violations->count()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fehler beim Abrufen der Verstöße: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateViolationStatus(Request $request, int $violationId): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|in:pending,acknowledged,resolved,dismissed'
+        ]);
+
+        try {
+            $violation = \Artwork\Modules\Workflow\Models\WorkflowRuleViolation::findOrFail($violationId);
+            $updated = $this->workflowRuleService->updateViolationStatus($violation, $validated['status']);
+
+            if ($updated) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Status erfolgreich aktualisiert'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Status konnte nicht aktualisiert werden'
+            ], 400);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fehler beim Aktualisieren des Status: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

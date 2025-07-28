@@ -99,6 +99,7 @@ use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
 use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
+use Artwork\Modules\Workflow\Http\Controllers\WorkflowController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
 use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
@@ -154,6 +155,16 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
+
+    // Workflow routes - only accessible via direct URL
+    Route::group(['prefix' => 'workflow'], function (): void {
+        Route::get('/', [WorkflowController::class, 'index'])->name('workflow.index');
+        Route::get('/definitions/create', [WorkflowController::class, 'createDefinition'])->name('workflow.definitions.create');
+        Route::get('/definitions/{definition}', [WorkflowController::class, 'showDefinition'])->name('workflow.definitions.show');
+        Route::get('/instances/{instance}', [WorkflowController::class, 'showInstance'])->name('workflow.instances.show');
+        Route::post('/instances/{instance}/transitions', [WorkflowController::class, 'executeTransition'])->name('workflow.instances.execute-transition');
+        Route::post('/definitions', [WorkflowController::class, 'storeDefinition'])->name('workflow.definitions.store');
+    });
 
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {

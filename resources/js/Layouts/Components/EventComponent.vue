@@ -762,7 +762,7 @@
                 </div>
                 <div class="flex justify-center w-full py-4" v-else>
                     <FormButton
-                        :disabled="!this.selectedRoom || this.selectedRoom === '' || !submit || endDate > seriesEndDate || series && !seriesEndDate || !this.$can('request room occupancy')"
+                        :disabled="!this.selectedRoom || this.selectedRoom === '' || !submit || endDate > seriesEndDate || series && !seriesEndDate || !this.$can('request room occupancy') || !this.$can('can see planning calendar')"
                         @click="updateOrCreateEvent(true)"
                         :text="$t('Request occupancy')"
                     />

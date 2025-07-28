@@ -2907,5 +2907,20 @@
     "Daily Target Hours": "Daily Target Hours",
     "Collisions with shifts:": "Collisions with shifts:",
     "The new project status is marked as planned. Do you want to convert all events of the project to planning events?": "The new project status is marked as planned. Do you want to convert all events of the project to planning events?",
-    "Convert to planning events": "Convert to planning events"
+    "Convert to planning events": "Convert to planning events",
+    "Configure your calendar settings here.": "Configure your calendar settings here.",
+    "Increases the color intensity in the calendar to make texts and elements more clearly visible, ideal for better readability and accessibility.": "Increases the color intensity in the calendar to make texts and elements more clearly visible, ideal for better readability and accessibility.",
+    "Shows the artists involved in the project in the calendar, helpful for an overview of who is involved and when.": "Shows the artists involved in the project in the calendar, helpful for an overview of who is involved and when.",
+    "Shows the current status of the project in the calendar, from planning to implementation, to keep an eye on progress at all times.": "Shows the current status of the project in the calendar, from planning to implementation, to keep an eye on progress at all times.",
+    "List the responsible project managers in the calendar and ensure clarity as to who is responsible for coordination and management.": "List the responsible project managers in the calendar and ensure clarity as to who is responsible for coordination and management.",
+    "Indicates events that take place regularly, ideal for planning recurring meetings or rehearsals.": "Indicates events that take place regularly, ideal for planning recurring meetings or rehearsals.",
+    "Shows entered work or deployment shifts in the calendar, useful for clear personnel and deployment planning.": "Shows entered work or deployment shifts in the calendar, useful for clear personnel and deployment planning.",
+    "Contains additional information or notes about the event, perfect for recording details or special features.": "Contains additional information or notes about the event, perfect for recording details or special features.",
+    "The title or name of the calendar entry provides information about the content or purpose of the event at a glance.": "The title or name of the calendar entry provides information about the content or purpose of the event at a glance.",
+    "Expands all days in the calendar automatically, so you can see all events at a glance without having to scroll.": "Expands all days in the calendar automatically, so you can see all events at a glance without having to scroll.",
+    "Colors calendar entries according to their status, making it easier to quickly identify scheduled, confirmed or completed events, for example.": "Colors calendar entries according to their status, making it easier to quickly identify scheduled, confirmed or completed events, for example.",
+    "Hides rooms in the calendar in which no events are entered, for a clearer display of active areas.": "Hides rooms in the calendar in which no events are entered, for a clearer display of active areas.",
+    "Shows the associated project group of an event in the calendar, helpful for assignment and overview with several groups.": "Shows the associated project group of an event in the calendar, helpful for assignment and overview with several groups.",
+    "Highlights firmly scheduled events in the calendar, ideal for quickly recognizing binding times.": "Highlights firmly scheduled events in the calendar, ideal for quickly recognizing binding times.",
+    "Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.": "Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning."
 }

@@ -2911,6 +2911,21 @@
     "Daily Target Hours": "Tagessollstunden pro Tag",
     "Collisions with shifts:": "Kollisionen mit Schichten:",
     "The new project status is marked as planned. Do you want to convert all events of the project to planning events?": "Der neu ausgewählte Projektstatus ist als 'in Planung' markiert. Möchtest du alle Termine des Projekts in Planungstermine umwandeln?",
-    "Convert to planning events": "In Planungstermine umwandeln"
+    "Convert to planning events": "In Planungstermine umwandeln",
+    "Configure your calendar settings here.": "Konfiguriere hier deine Kalendereinstellungen.",
+    "Increases the color intensity in the calendar to make texts and elements more clearly visible, ideal for better readability and accessibility.": "Erhöht die Farbintensität im Kalender, um Texte und Elemente deutlicher sichtbar zu machen, ideal für bessere Lesbarkeit und Barrierefreiheit.",
+    "Shows the artists involved in the project in the calendar, helpful for an overview of who is involved and when.": "Zeigt die beteiligten Künstler*innen im Projekt im Kalender an, hilfreich für einen Überblick darüber, wer beteiligt ist und wann.",
+    "Shows the current status of the project in the calendar, from planning to implementation, to keep an eye on progress at all times.": "Zeigt den aktuellen Status des Projekts im Kalender an, von der Planung bis zur Umsetzung, um den Fortschritt jederzeit im Blick zu behalten.",
+    "List the responsible project managers in the calendar and ensure clarity as to who is responsible for coordination and management.": "Listet die verantwortlichen Projektmanager*innen im Kalender auf und sorgt für Klarheit darüber, wer für die Koordination und das Management verantwortlich ist.",
+    "Indicates events that take place regularly, ideal for planning recurring meetings or rehearsals.": "Kennzeichnet Termine, die regelmäßig stattfinden, ideal für die Planung wiederkehrender Meetings oder Proben.",
+    "Shows entered work or deployment shifts in the calendar, useful for clear personnel and deployment planning.": "Zeigt eingegebene Arbeits- oder Einsatzschichten im Kalender an, nützlich für eine klare Personal- und Einsatzplanung.",
+    "Contains additional information or notes about the event, perfect for recording details or special features.": "Enthält zusätzliche Informationen oder Notizen zum Termin, perfekt zum Festhalten von Details oder Besonderheiten.",
+    "The title or name of the calendar entry provides information about the content or purpose of the event at a glance.": "Der Titel oder Name des Kalendereintrags gibt auf einen Blick Auskunft über den Inhalt oder Zweck des Termins.",
+    "Expands all days in the calendar automatically, so you can see all events at a glance without having to scroll.": "Erweitert alle Tage im Kalender automatisch, sodass du alle Termine auf einen Blick sehen kannst, ohne scrollen zu müssen.",
+    "Colors calendar entries according to their status, making it easier to quickly identify scheduled, confirmed or completed events, for example.": "Färbt Kalendereinträge nach ihrem Status, um es einfacher zu machen, geplante, bestätigte oder abgeschlossene Termine auf einen Blick zu erkennen.",
+    "Hides rooms in the calendar in which no events are entered, for a clearer display of active areas.": "Blendet Räume im Kalender aus, in denen keine Termine eingetragen sind, für eine klarere Anzeige aktiver Bereiche.",
+    "Shows the associated project group of an event in the calendar, helpful for assignment and overview with several groups.": "Zeigt die zugehörige Projektgruppe eines Termins im Kalender an, hilfreich für die Zuordnung und Übersicht bei mehreren Gruppen.",
+    "Highlights firmly scheduled events in the calendar, ideal for quickly recognizing binding times.": "Hervorhebt festgelegte Termine im Kalender, ideal um verbindliche Zeiten schnell zu erkennen.",
+    "Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.": "Zeigt vorläufig eingetragene, noch nicht bestätigte Termine an, hilfreich für die Orientierung in der weiteren Planung."
 }
 

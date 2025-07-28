@@ -162,206 +162,14 @@
                         @click="showCalendarFilterModal = true"
                     />
 
-                    <Menu as="div" class="relative inline-block items-center text-left">
-                        <div class="flex items-center">
-                            <MenuButton id="displaySettings">
-                            <span class="items-center flex">
-                                <button type="button"
-                                        class="text-sm flex items-center my-auto text-primary focus:outline-none transition">
-                                    <ToolTipComponent
-                                        direction="bottom"
-                                        :tooltip-text="$t('Display Settings')"
-                                        icon="IconSettings"
-                                        icon-size="h-7 w-7"
-                                    />
-                                </button>
-                            </span>
-                            </MenuButton>
-                        </div>
-                        <transition
-                            enter-active-class="transition duration-50 ease-out"
-                            enter-from-class="transform scale-100 opacity-100"
-                            enter-to-class="transform scale-100 opacity-100"
-                            leave-active-class="transition duration-75 ease-in"
-                            leave-from-class="transform scale-100 opacity-100"
-                            leave-to-class="transform scale-95 opacity-0">
-                            <MenuItems
-                                class="w-80 absolute right-0 top-12 origin-top-right shadow-lg bg-artwork-navigation-background rounded-lg ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                <div class="w-76 p-6">
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-high-contrast"
-                                               v-model="userCalendarSettings.high_contrast"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-high-contrast"
-                                               :class="userCalendarSettings.high_contrast ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('High contrast') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-project-artists"
-                                               v-model="userCalendarSettings.project_artists"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-project-artists"
-                                               :class="userCalendarSettings.project_artists ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Artists') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-project-status"
-                                               v-model="userCalendarSettings.project_status"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-project-status"
-                                               :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Project Status') }}
-                                        </label>
-                                    </div>
-                                    <!-- hidden on purpose: @todo: to clarify -->
-                                    <div class="hidden items-center py-1">
-                                        <input id="cb-options"
-                                               v-model="userCalendarSettings.options"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-options"
-                                               :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Option prioritization') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-project-management"
-                                               v-model="userCalendarSettings.project_management"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-project-management"
-                                               :class="userCalendarSettings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Project managers') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-repeating-events"
-                                               v-model="userCalendarSettings.repeating_events"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-repeating-events"
-                                               :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Repeat event') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1" v-if="canAny(['can manage workers', 'can plan shifts']) || hasAdminRole()">
-                                        <input id="cb-work-shifts"
-                                               v-model="userCalendarSettings.work_shifts"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-work-shifts"
-                                               :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Shifts') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-description"
-                                               v-model="userCalendarSettings.description"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-description"
-                                               :class="userCalendarSettings.description ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Description') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-event-name"
-                                               v-model="userCalendarSettings.event_name"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-event-name"
-                                               :class="userCalendarSettings.event_name ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Event name') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-expand-days" v-model="userCalendarSettings.expand_days"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-expand-days"
-                                               :class="userCalendarSettings.expand_days ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Expand days') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1" v-if="usePage().props.event_status_module">
-                                        <input id="cb-use-event-status-color"
-                                               v-model="userCalendarSettings.use_event_status_color"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-use-event-status-color"
-                                               :class="userCalendarSettings.use_event_status_color ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Use event status colour') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-hide-occupied-rooms"
-                                               v-model="userCalendarSettings.hide_unoccupied_rooms"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-hide-occupied-rooms"
-                                               :class="userCalendarSettings.hide_unoccupied_rooms ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Hide unoccupied rooms') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-display-project-groups"
-                                               v-model="userCalendarSettings.display_project_groups"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-display-project-groups"
-                                               :class="userCalendarSettings.display_project_groups ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Show project group') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1" v-if="isPlanning">
-                                        <input id="cb-show-unplanned-events"
-                                               v-model="userCalendarSettings.show_unplanned_events"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-show-unplanned-events"
-                                               :class="userCalendarSettings.show_unplanned_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Show fixed events') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1" v-if="!isPlanning">
-                                        <input id="cb-show-planned-events"
-                                               v-model="userCalendarSettings.show_planned_events"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-show-planned-events"
-                                               :class="userCalendarSettings.show_planned_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Show planned events') }}
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="flex justify-end">
-                                    <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">
-                                        {{ $t('Save') }}
-                                    </button>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Display Settings')"
+                        icon="IconSettings"
+                        icon-size="h-7 w-7"
+                        @click="showCalendarSettingsModal = true"
+                    />
+
                     <div v-if="!project">
                         <div @click="showCalendarAboSettingModal = true"
                              class="flex items-center gap-x-1 text-sm group cursor-pointer">
@@ -416,6 +224,12 @@
         :personal-filters="personalFilters"
         :user_filters="user_filters"
     />
+
+    <CalendarSettingsModal
+        v-if="showCalendarSettingsModal"
+        @close="showCalendarSettingsModal = false"
+        :is-planning="isPlanning"
+    />
 </template>
 
 <script setup>
@@ -441,6 +255,7 @@ import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum
 import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import CalendarSettingsModal from "@/Artwork/Modals/CalendarSettingsModal.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');
@@ -468,24 +283,9 @@ const roomCollisions = ref([]);
 const externUpdate = ref(false);
 const showCalendarAboInfoModal = ref(false);
 const showCalendarFilterModal = ref(false);
+const showCalendarSettingsModal = ref(false);
 const projectSearchInput = ref(null);
-const userCalendarSettings = useForm({
-    project_status: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_status : false,
-    project_artists: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_artists : false,
-    options: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.options : false,
-    project_management: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_management : false,
-    repeating_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.repeating_events : false,
-    work_shifts: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.work_shifts : false,
-    description: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.description : false,
-    event_name: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.event_name : false,
-    high_contrast: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.high_contrast : false,
-    expand_days: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.expand_days : false,
-    use_event_status_color: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.use_event_status_color : false,
-    hide_unoccupied_rooms: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.hide_unoccupied_rooms : false,
-    display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
-    show_unplanned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_unplanned_events : false,
-    show_planned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_planned_events : false,
-});
+
 
 
 const projectSearch = ref('');
@@ -695,38 +495,7 @@ const updateTimes = () => {
     });
 }
 
-const saveUserCalendarSettings = () => {
-    let valuesToReload = [];
-    let preserveState = true
 
-    if (userCalendarSettings.project_management) {
-        valuesToReload.push('leaders');
-    }
-
-    if (userCalendarSettings.project_status) {
-        valuesToReload.push('status');
-    }
-
-    if (userCalendarSettings.hide_unoccupied_rooms || !userCalendarSettings.hide_unoccupied_rooms) {
-        valuesToReload.push('rooms');
-        valuesToReload.push('calendar');
-        valuesToReload.push('calendarData');
-        preserveState = false;
-    }
-
-    userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.auth.user.id}), {
-        preserveScroll: true,
-        preserveState: preserveState,
-        onSuccess: () => {
-            if (valuesToReload.length > 0) {
-                router.reload({
-                    only: valuesToReload
-                });
-            }
-        }
-    })
-    document.getElementById('displaySettings').click();
-}
 
 const jumpToDayOfMonth = (day) => {
     emits('jumpToDayOfMonth', day);

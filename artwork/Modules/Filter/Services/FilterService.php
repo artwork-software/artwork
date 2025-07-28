@@ -78,7 +78,6 @@ class FilterService
                     'label' => $room->getAttribute('name'),
                 ]),
         ];
-
     }
 
     private function map(Collection $collection): Collection|\Illuminate\Support\Collection

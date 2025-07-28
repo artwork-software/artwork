@@ -1278,7 +1278,6 @@ class EventController extends Controller
         Event $event,
         ProjectController $projectController
     ): void {
-        dd($request->all());
         $this->authorize('update', $event);
         if (!$request->noNotifications) {
             $projectManagers = [];

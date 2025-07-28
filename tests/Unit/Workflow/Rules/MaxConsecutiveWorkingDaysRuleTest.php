@@ -27,24 +27,24 @@ class MaxConsecutiveWorkingDaysRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_has_correct_name()
+    public function testHasCorrectName(): void
     {
         $this->assertEquals('max_consecutive_working_days', $this->rule->getName());
     }
 
     #[Test]
-    public function it_has_correct_description()
+    public function testHasCorrectDescription(): void
     {
         $this->assertEquals('Überprüft die maximale Anzahl aufeinanderfolgender Arbeitstage', $this->rule->getDescription());
     }
 
     #[Test]
-    public function it_detects_violation_when_consecutive_days_exceed_limit()
+    public function testDetectsViolationWhenConsecutiveDaysExceedLimit(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $startDate = Carbon::parse('2025-01-13'); // Monday
         $endDate = Carbon::parse('2025-01-19');   // Sunday
-        
+
         // Mock 6 consecutive working days (Mon-Sat)
         $mockSubject->shouldReceive('getPlannedWorkingHours')
             ->with(Mockery::type(Carbon::class))
@@ -64,7 +64,7 @@ class MaxConsecutiveWorkingDaysRuleTest extends TestCase
 
         // Should detect violation on Saturday (6th consecutive day)
         $this->assertGreaterThan(0, count($violations));
-        
+
         $violation = $violations[0];
         $this->assertEquals(6, $violation['consecutive_days']);
         $this->assertEquals(5, $violation['max_days']);
@@ -72,12 +72,12 @@ class MaxConsecutiveWorkingDaysRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_resets_counter_on_rest_day()
+    public function testResetsCounterOnRestDay(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $startDate = Carbon::parse('2025-01-13'); // Monday
         $endDate = Carbon::parse('2025-01-19');   // Sunday
-        
+
         // Mock: Work Mon-Wed, Rest Thu, Work Fri-Sun
         $mockSubject->shouldReceive('getPlannedWorkingHours')
             ->with(Mockery::type(Carbon::class))
@@ -100,12 +100,12 @@ class MaxConsecutiveWorkingDaysRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_no_violation_when_within_limit()
+    public function testReturnsNoViolationWhenWithinLimit(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $startDate = Carbon::parse('2025-01-13'); // Monday
         $endDate = Carbon::parse('2025-01-17');   // Friday
-        
+
         // Mock 5 consecutive working days (exactly at limit)
         $mockSubject->shouldReceive('getPlannedWorkingHours')
             ->with(Mockery::type(Carbon::class))
@@ -123,10 +123,10 @@ class MaxConsecutiveWorkingDaysRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_uses_default_values_when_context_missing()
+    public function testUsesDefaultValuesWhenContextMissing(): void
     {
         $mockSubject = Mockery::mock(Model::class);
-        
+
         // Mock method to avoid issues with default date range
         $mockSubject->shouldReceive('getPlannedWorkingHours')
             ->andReturn(0);
@@ -138,12 +138,12 @@ class MaxConsecutiveWorkingDaysRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_handles_zero_working_hours_correctly()
+    public function testHandlesZeroWorkingHoursCorrectly(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $startDate = Carbon::parse('2025-01-13');
         $endDate = Carbon::parse('2025-01-17');
-        
+
         // All days have zero working hours
         $mockSubject->shouldReceive('getPlannedWorkingHours')
             ->with(Mockery::type(Carbon::class))
@@ -161,7 +161,7 @@ class MaxConsecutiveWorkingDaysRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_can_apply_to_subjects_with_required_methods()
+    public function testCanApplyToSubjectsWithRequiredMethods(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $mockSubject->shouldReceive('getPlannedWorkingHours')
@@ -173,13 +173,13 @@ class MaxConsecutiveWorkingDaysRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_has_correct_configuration()
+    public function testHasCorrectConfiguration(): void
     {
         $config = $this->rule->getConfiguration();
 
         $this->assertArrayHasKey('fields', $config);
         $this->assertArrayHasKey('max_days', $config['fields']);
-        
+
         $maxDaysField = $config['fields']['max_days'];
         $this->assertEquals('number', $maxDaysField['type']);
         $this->assertEquals('Maximale aufeinanderfolgende Arbeitstage', $maxDaysField['label']);
@@ -189,12 +189,12 @@ class MaxConsecutiveWorkingDaysRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_tracks_consecutive_days_correctly_across_week_boundary()
+    public function testTracksConsecutiveDaysCorrectlyAcrossWeekBoundary(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $startDate = Carbon::parse('2025-01-11'); // Saturday
         $endDate = Carbon::parse('2025-01-20');   // Following Monday
-        
+
         // Work Sat, Sun, Mon, Tue, Wed, Thu (6 consecutive days)
         $mockSubject->shouldReceive('getPlannedWorkingHours')
             ->with(Mockery::type(Carbon::class))

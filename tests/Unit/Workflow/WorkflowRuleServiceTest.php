@@ -25,10 +25,10 @@ class WorkflowRuleServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->mockRuleRepository = Mockery::mock(WorkflowRuleRepository::class);
         $this->mockViolationRepository = Mockery::mock(WorkflowRuleViolationRepository::class);
-        
+
         $this->service = new WorkflowRuleService(
             $this->mockRuleRepository,
             $this->mockViolationRepository
@@ -42,7 +42,7 @@ class WorkflowRuleServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_can_register_a_rule()
+    public function testCanRegisterARule(): void
     {
         $mockRule = Mockery::mock(WorkflowRuleContract::class);
         $mockRule->shouldReceive('getName')
@@ -52,12 +52,12 @@ class WorkflowRuleServiceTest extends TestCase
         $this->service->registerRule($mockRule);
 
         $availableTypes = $this->service->getAvailableRuleTypes();
-        
+
         $this->assertContains('test_rule', $availableTypes);
     }
 
     #[Test]
-    public function it_can_create_a_rule()
+    public function testCanCreateARule(): void
     {
         $expectedData = [
             'name' => 'Test Rule',
@@ -86,14 +86,14 @@ class WorkflowRuleServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_can_assign_rule_to_subject()
+    public function testCanAssignRuleToSubject(): void
     {
         $mockRule = Mockery::mock(WorkflowRule::class);
         $mockSubject = Mockery::mock(Model::class);
         $mockRelation = Mockery::mock();
 
         $mockSubject->shouldReceive('getKey')->andReturn(1);
-        
+
         $mockRule->shouldReceive('workflowRuleAssignments')
             ->once()
             ->andReturn($mockRelation);
@@ -111,7 +111,7 @@ class WorkflowRuleServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_validates_rules_for_subject()
+    public function testValidatesRulesForSubject(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $mockRule = Mockery::mock(WorkflowRule::class);
@@ -143,7 +143,7 @@ class WorkflowRuleServiceTest extends TestCase
         // Register test rule
         $mockRuleImplementation->shouldReceive('getName')
             ->andReturn('test_rule');
-        
+
         $mockRuleImplementation->shouldReceive('validate')
             ->andReturn([
                 [
@@ -167,7 +167,7 @@ class WorkflowRuleServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_empty_collection_when_no_rules_active()
+    public function testReturnsEmptyCollectionWhenNoRulesActive(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $startDate = Carbon::now();
@@ -186,7 +186,7 @@ class WorkflowRuleServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_skips_validation_when_rule_implementation_not_found()
+    public function testSkipsValidationWhenRuleImplementationNotFound(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $mockRule = Mockery::mock(WorkflowRule::class);
@@ -211,7 +211,7 @@ class WorkflowRuleServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_gets_rule_configuration()
+    public function testGetsRuleConfiguration(): void
     {
         $mockRule = Mockery::mock(WorkflowRuleContract::class);
         $expectedConfig = [
@@ -226,7 +226,7 @@ class WorkflowRuleServiceTest extends TestCase
 
         $mockRule->shouldReceive('getName')
             ->andReturn('test_rule');
-        
+
         $mockRule->shouldReceive('getConfiguration')
             ->once()
             ->andReturn($expectedConfig);
@@ -239,7 +239,7 @@ class WorkflowRuleServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_empty_array_for_unknown_rule_configuration()
+    public function testReturnsEmptyArrayForUnknownRuleConfiguration(): void
     {
         $result = $this->service->getRuleConfiguration('unknown_rule');
 

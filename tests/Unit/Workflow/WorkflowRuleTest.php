@@ -23,10 +23,10 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_has_correct_fillable_attributes()
+    public function testHasCorrectFillableAttributes(): void
     {
         $rule = new WorkflowRule();
-        
+
         $expectedFillable = [
             'name',
             'description',
@@ -42,7 +42,7 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_casts_attributes_correctly()
+    public function testCastsAttributesCorrectly(): void
     {
         $rule = new WorkflowRule([
             'individual_number_value' => '8.5',
@@ -53,19 +53,19 @@ class WorkflowRuleTest extends TestCase
 
         $this->assertIsFloat($rule->individual_number_value);
         $this->assertEquals(8.5, $rule->individual_number_value);
-        
+
         $this->assertIsBool($rule->is_active);
         $this->assertTrue($rule->is_active);
-        
+
         $this->assertIsBool($rule->notify_on_violation);
         $this->assertTrue($rule->notify_on_violation);
-        
+
         $this->assertIsArray($rule->configuration);
         $this->assertEquals(['test' => 'value'], $rule->configuration);
     }
 
     #[Test]
-    public function it_has_workflow_rule_violations_relationship()
+    public function testHasWorkflowRuleViolationsRelationship(): void
     {
         $rule = new WorkflowRule();
         $relation = $rule->workflowRuleViolations();
@@ -75,7 +75,7 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_has_workflow_rule_assignments_relationship()
+    public function testHasWorkflowRuleAssignmentsRelationship(): void
     {
         $rule = new WorkflowRule();
         $relation = $rule->workflowRuleAssignments();
@@ -85,7 +85,7 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_has_users_to_notify_relationship()
+    public function testHasUsersToNotifyRelationship(): void
     {
         $rule = new WorkflowRule();
         $relation = $rule->usersToNotify();
@@ -95,7 +95,7 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_has_contracts_relationship()
+    public function testHasContractsRelationship(): void
     {
         $rule = new WorkflowRule();
         $relation = $rule->contracts();
@@ -105,16 +105,16 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_checks_if_active_for_subject_when_rule_is_active()
+    public function testChecksIfActiveForSubjectWhenRuleIsActive(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $mockSubject->shouldReceive('getKey')->andReturn(1);
-        
+
         $mockAssignmentsRelation = Mockery::mock();
-        
+
         $rule = Mockery::mock(WorkflowRule::class)->makePartial();
         $rule->is_active = true;
-        
+
         $rule->shouldReceive('workflowRuleAssignments')
             ->once()
             ->andReturn($mockAssignmentsRelation);
@@ -122,11 +122,11 @@ class WorkflowRuleTest extends TestCase
         $mockAssignmentsRelation->shouldReceive('where')
             ->with('subject_type', get_class($mockSubject))
             ->andReturn($mockAssignmentsRelation);
-            
+
         $mockAssignmentsRelation->shouldReceive('where')
             ->with('subject_id', 1)
             ->andReturn($mockAssignmentsRelation);
-            
+
         $mockAssignmentsRelation->shouldReceive('exists')
             ->andReturn(true);
 
@@ -136,10 +136,10 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_false_when_rule_is_not_active()
+    public function testReturnsFalseWhenRuleIsNotActive(): void
     {
         $mockSubject = Mockery::mock(Model::class);
-        
+
         $rule = new WorkflowRule();
         $rule->is_active = false;
 
@@ -149,16 +149,16 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_false_when_no_assignment_exists()
+    public function testReturnsFalseWhenNoAssignmentExists(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $mockSubject->shouldReceive('getKey')->andReturn(1);
-        
+
         $mockAssignmentsRelation = Mockery::mock();
-        
+
         $rule = Mockery::mock(WorkflowRule::class)->makePartial();
         $rule->is_active = true;
-        
+
         $rule->shouldReceive('workflowRuleAssignments')
             ->once()
             ->andReturn($mockAssignmentsRelation);
@@ -166,11 +166,11 @@ class WorkflowRuleTest extends TestCase
         $mockAssignmentsRelation->shouldReceive('where')
             ->with('subject_type', get_class($mockSubject))
             ->andReturn($mockAssignmentsRelation);
-            
+
         $mockAssignmentsRelation->shouldReceive('where')
             ->with('subject_id', 1)
             ->andReturn($mockAssignmentsRelation);
-            
+
         $mockAssignmentsRelation->shouldReceive('exists')
             ->andReturn(false);
 
@@ -180,7 +180,7 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_gets_validation_config_with_basic_attributes()
+    public function testGetsValidationConfigWithBasicAttributes(): void
     {
         $rule = new WorkflowRule([
             'trigger_type' => 'max_working_hours_on_day',
@@ -200,7 +200,7 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_merges_configuration_in_validation_config()
+    public function testMergesConfigurationInValidationConfig(): void
     {
         $rule = new WorkflowRule([
             'trigger_type' => 'max_working_hours_on_day',
@@ -226,7 +226,7 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_handles_null_configuration_in_validation_config()
+    public function testHandlesNullConfigurationInValidationConfig(): void
     {
         $rule = new WorkflowRule([
             'trigger_type' => 'max_working_hours_on_day',
@@ -247,7 +247,7 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_should_notify_on_violation_when_flag_is_true()
+    public function testShouldNotifyOnViolationWhenFlagIsTrue(): void
     {
         $rule = new WorkflowRule([
             'notify_on_violation' => true
@@ -257,7 +257,7 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_should_not_notify_on_violation_when_flag_is_false()
+    public function testShouldNotNotifyOnViolationWhenFlagIsFalse(): void
     {
         $rule = new WorkflowRule([
             'notify_on_violation' => false
@@ -267,7 +267,7 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_should_not_notify_on_violation_when_flag_is_null()
+    public function testShouldNotNotifyOnViolationWhenFlagIsNull(): void
     {
         $rule = new WorkflowRule([
             'notify_on_violation' => null
@@ -277,15 +277,15 @@ class WorkflowRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_uses_soft_deletes()
+    public function testUsesSoftDeletes(): void
     {
         $rule = new WorkflowRule();
-        
+
         $this->assertContains('Illuminate\Database\Eloquent\SoftDeletes', class_uses_recursive($rule));
     }
 
     #[Test]
-    public function it_can_be_mass_assigned_with_all_fillable_attributes()
+    public function testCanBeMassAssignedWithAllFillableAttributes(): void
     {
         $data = [
             'name' => 'Test Rule',

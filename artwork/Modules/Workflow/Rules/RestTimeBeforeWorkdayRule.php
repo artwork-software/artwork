@@ -25,26 +25,26 @@ class RestTimeBeforeWorkdayRule implements WorkflowRule
         $minRestHours = $context['value'] ?? 8;
         $startDate = $context['start_date'] ?? now()->subDays(1);
         $endDate = $context['end_date'] ?? now()->addDays(14);
-        
+
         // Erweitere Datumsbereich um einen Tag nach vorne für Vergleich
         $extendedStart = $startDate->copy()->subDay();
         $dateRange = CarbonPeriod::create($extendedStart, $endDate);
-        
+
         $latestShiftEndLastDay = null;
-        
+
         foreach ($dateRange as $date) {
             // Prüfe nur Werktage (nicht Sonntag und nicht Feiertag)
             if (!$this->isWorkday($date)) {
                 $latestShiftEndLastDay = $this->getLatestShiftEndOfDay($subject, $date);
                 continue;
             }
-            
+
             $earliestShiftStart = $this->getEarliestShiftStartOfDay($subject, $date);
-            
+
             // Prüfe Ruhezeit wenn beide Werte vorhanden sind
             if ($latestShiftEndLastDay && $earliestShiftStart) {
                 $restHours = $this->calculateRestHours($latestShiftEndLastDay, $earliestShiftStart);
-                
+
                 if ($restHours < $minRestHours) {
                     $violations[] = [
                         'date' => $date->toDateString(),
@@ -57,11 +57,11 @@ class RestTimeBeforeWorkdayRule implements WorkflowRule
                     ];
                 }
             }
-            
+
             // Aktualisiere letztes Schichtende für nächsten Tag
             $latestShiftEndLastDay = $this->getLatestShiftEndOfDay($subject, $date);
         }
-        
+
         return $violations;
     }
 
@@ -91,10 +91,10 @@ class RestTimeBeforeWorkdayRule implements WorkflowRule
         if ($date->isSunday()) {
             return false;
         }
-        
+
         // Hier könnte eine Feiertag-Prüfung gegen die Holiday-Tabelle stehen
         // return !$this->isHoliday($date);
-        
+
         return true;
     }
 
@@ -103,12 +103,12 @@ class RestTimeBeforeWorkdayRule implements WorkflowRule
         if (!method_exists($subject, 'shifts')) {
             return null;
         }
-        
+
         $shift = $subject->shifts()
             ->whereDate('start_time', $date)
             ->orderBy('start_time', 'asc')
             ->first();
-            
+
         return $shift ? Carbon::parse($shift->start_time) : null;
     }
 
@@ -117,17 +117,17 @@ class RestTimeBeforeWorkdayRule implements WorkflowRule
         if (!method_exists($subject, 'shifts')) {
             return null;
         }
-        
+
         $shift = $subject->shifts()
             ->whereDate('end_time', $date)
             ->orderBy('end_time', 'desc')
             ->first();
-            
+
         return $shift ? Carbon::parse($shift->end_time) : null;
     }
 
     private function calculateRestHours(Carbon $shiftEnd, Carbon $nextShiftStart): float
     {
-        return $nextShiftStart->diffInHours($shiftEnd, false);
+        return $shiftEnd->diffInHours($nextShiftStart, false);
     }
 }

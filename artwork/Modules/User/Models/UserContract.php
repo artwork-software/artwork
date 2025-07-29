@@ -53,4 +53,9 @@ class UserContract extends Model
             'workflow_rule_id'
         )->withTimestamps();
     }
+
+    public function userContractAssigns(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserContractAssign::class, 'user_contract_id');
+    }
 }

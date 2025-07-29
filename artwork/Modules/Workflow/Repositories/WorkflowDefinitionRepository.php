@@ -12,6 +12,16 @@ class WorkflowDefinitionRepository extends BaseRepository
         return WorkflowDefinition::class;
     }
 
+    public function create(array $data): WorkflowDefinition
+    {
+        return WorkflowDefinition::create($data);
+    }
+
+    public function getBuilder()
+    {
+        return WorkflowDefinition::query();
+    }
+
     public function findByType(string $type): \Illuminate\Database\Eloquent\Collection
     {
         return $this->getBuilder()

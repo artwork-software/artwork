@@ -73,7 +73,7 @@ class WorkflowRule extends Model
     public function contracts(): BelongsToMany
     {
         return $this->belongsToMany(
-            \Artwork\Modules\Contract\Models\Contract::class,
+            \Artwork\Modules\User\Models\UserContract::class,
             'workflow_rule_contract_assignments',
             'workflow_rule_id',
             'contract_id'

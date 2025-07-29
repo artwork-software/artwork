@@ -26,19 +26,19 @@ class MaxWorkingHoursOnDayRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_has_correct_name()
+    public function testHasCorrectName(): void
     {
         $this->assertEquals('max_working_hours_on_day', $this->rule->getName());
     }
 
     #[Test]
-    public function it_has_correct_description()
+    public function testHasCorrectDescription(): void
     {
         $this->assertEquals('Überprüft das Tagesmaximum an Arbeitsstunden', $this->rule->getDescription());
     }
 
     #[Test]
-    public function it_can_apply_to_subjects_with_getPlannedWorkingHours_method()
+    public function testCanApplyToSubjectsWithGetPlannedWorkingHoursMethod(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $mockSubject->shouldReceive('getPlannedWorkingHours')
@@ -50,7 +50,7 @@ class MaxWorkingHoursOnDayRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_can_apply_to_subjects_with_shifts_method()
+    public function testCanApplyToSubjectsWithShiftsMethod(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $mockSubject->shouldReceive('shifts')
@@ -62,7 +62,7 @@ class MaxWorkingHoursOnDayRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_cannot_apply_to_subjects_without_required_methods()
+    public function testCannotApplyToSubjectsWithoutRequiredMethods(): void
     {
         $mockSubject = Mockery::mock(Model::class);
 
@@ -72,11 +72,11 @@ class MaxWorkingHoursOnDayRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_violation_when_hours_exceed_limit()
+    public function testReturnsViolationWhenHoursExceedLimit(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $date = Carbon::parse('2025-01-15');
-        
+
         $mockSubject->shouldReceive('getPlannedWorkingHours')
             ->with($date)
             ->andReturn(10.0);
@@ -89,18 +89,19 @@ class MaxWorkingHoursOnDayRuleTest extends TestCase
         $violations = $this->rule->validate($mockSubject, $context);
 
         $this->assertCount(1, $violations);
-        $this->assertEquals($date, $violations[0]['date']);
+        $this->assertEquals($date->toDateString(), $violations[0]['date']);
         $this->assertEquals(10.0, $violations[0]['planned_hours']);
         $this->assertEquals(8, $violations[0]['max_hours']);
+        $this->assertEquals('high', $violations[0]['severity']);
         $this->assertStringContainsString('Tagesmaximum von 8h überschritten', $violations[0]['message']);
     }
 
     #[Test]
-    public function it_returns_no_violation_when_hours_within_limit()
+    public function testReturnsNoViolationWhenHoursWithinLimit(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $date = Carbon::parse('2025-01-15');
-        
+
         $mockSubject->shouldReceive('getPlannedWorkingHours')
             ->with($date)
             ->andReturn(6.0);
@@ -116,10 +117,10 @@ class MaxWorkingHoursOnDayRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_uses_default_values_when_context_missing()
+    public function testUsesDefaultValuesWhenContextMissing(): void
     {
         $mockSubject = Mockery::mock(Model::class);
-        
+
         $mockSubject->shouldReceive('getPlannedWorkingHours')
             ->andReturn(10.0);
 
@@ -127,10 +128,12 @@ class MaxWorkingHoursOnDayRuleTest extends TestCase
 
         $this->assertCount(1, $violations);
         $this->assertEquals(8, $violations[0]['max_hours']); // Default value
+        $this->assertEquals('high', $violations[0]['severity']);
+        $this->assertIsString($violations[0]['date']); // Date should be a string
     }
 
     #[Test]
-    public function it_gets_planned_hours_via_shifts_relation()
+    public function testGetsPlannedHoursViaShiftsRelation(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $mockShiftsRelation = Mockery::mock();
@@ -163,7 +166,7 @@ class MaxWorkingHoursOnDayRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_zero_hours_when_no_methods_available()
+    public function testReturnsZeroHoursWhenNoMethodsAvailable(): void
     {
         $mockSubject = Mockery::mock(Model::class);
         $date = Carbon::parse('2025-01-15');
@@ -179,13 +182,13 @@ class MaxWorkingHoursOnDayRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_has_correct_configuration()
+    public function testHasCorrectConfiguration(): void
     {
         $config = $this->rule->getConfiguration();
 
         $this->assertArrayHasKey('fields', $config);
         $this->assertArrayHasKey('max_hours', $config['fields']);
-        
+
         $maxHoursField = $config['fields']['max_hours'];
         $this->assertEquals('number', $maxHoursField['type']);
         $this->assertEquals('Maximale Stunden pro Tag', $maxHoursField['label']);

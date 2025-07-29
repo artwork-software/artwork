@@ -3,10 +3,17 @@
 namespace Artwork\Modules\Workflow\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Workflow\Models\WorkflowRuleViolation;
 use Artwork\Modules\Workflow\Services\WorkflowRuleService;
 use Artwork\Modules\Workflow\Models\WorkflowRule;
 use Artwork\Modules\User\Models\UserContract;
-use Illuminate\Http\Request;
+use Artwork\Modules\Workflow\Http\Requests\StoreShiftWarningRequest;
+use Artwork\Modules\Workflow\Http\Requests\UpdateShiftWarningRequest;
+use Artwork\Modules\Workflow\Http\Requests\UpdateContractAssignmentsRequest;
+use Artwork\Modules\Workflow\Http\Requests\ValidateRulesRequest;
+use Artwork\Modules\Workflow\Http\Requests\UpdateViolationStatusRequest;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,20 +34,9 @@ class ShiftWarningController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreShiftWarningRequest $request): Response
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'trigger_type' => 'required|string',
-            'individual_number_value' => 'required|numeric|min:0',
-            'warning_color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
-            'notify_on_violation' => 'boolean',
-            'contract_ids' => 'array',
-            'contract_ids.*' => 'exists:user_contracts,id',
-            'user_ids' => 'array',
-            'user_ids.*' => 'exists:users,id'
-        ]);
+        $validated = $request->validated();
 
         $rule = $this->workflowRuleService->createRule(
             name: $validated['name'],
@@ -53,35 +49,27 @@ class ShiftWarningController extends Controller
             ]
         );
 
-        // Zuweisungen zu Verträgen
         if (!empty($validated['contract_ids'])) {
             $rule->contracts()->sync($validated['contract_ids']);
         }
 
-        // Zuweisungen zu Benutzern für Benachrichtigungen
         if (!empty($validated['user_ids'])) {
             $rule->usersToNotify()->sync($validated['user_ids']);
         }
 
-        return response()->json([
-            'message' => 'Regel erfolgreich erstellt',
-            'rule' => $rule->load(['contracts', 'usersToNotify'])
+        return Inertia::render('ShiftWarnings/Index', [
+            'rules' => WorkflowRule::with(['usersToNotify', 'contracts'])->get(),
+            'availableRuleTypes' => $this->workflowRuleService->getAvailableRuleTypes(),
+            'contracts' => UserContract::all(),
+            'flash' => [
+                'message' => 'Regel erfolgreich erstellt'
+            ]
         ]);
     }
 
-    public function update(Request $request, WorkflowRule $rule): JsonResponse
+    public function update(UpdateShiftWarningRequest $request, WorkflowRule $rule): Response
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'individual_number_value' => 'required|numeric|min:0',
-            'warning_color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
-            'notify_on_violation' => 'boolean',
-            'contract_ids' => 'array',
-            'contract_ids.*' => 'exists:user_contracts,id',
-            'user_ids' => 'array',
-            'user_ids.*' => 'exists:users,id'
-        ]);
+        $validated = $request->validated();
 
         $rule->update([
             'name' => $validated['name'],
@@ -97,18 +85,27 @@ class ShiftWarningController extends Controller
         $rule->contracts()->sync($validated['contract_ids'] ?? []);
         $rule->usersToNotify()->sync($validated['user_ids'] ?? []);
 
-        return response()->json([
-            'message' => 'Regel erfolgreich aktualisiert',
-            'rule' => $rule->load(['contracts', 'usersToNotify'])
+        return Inertia::render('ShiftWarnings/Index', [
+            'rules' => WorkflowRule::with(['usersToNotify', 'contracts'])->get(),
+            'availableRuleTypes' => $this->workflowRuleService->getAvailableRuleTypes(),
+            'contracts' => UserContract::all(),
+            'flash' => [
+                'message' => 'Regel erfolgreich aktualisiert'
+            ]
         ]);
     }
 
-    public function destroy(WorkflowRule $rule): JsonResponse
+    public function destroy(WorkflowRule $rule): Response
     {
         $rule->delete();
 
-        return response()->json([
-            'message' => 'Regel erfolgreich gelöscht'
+        return Inertia::render('ShiftWarnings/Index', [
+            'rules' => WorkflowRule::with(['usersToNotify', 'contracts'])->get(),
+            'availableRuleTypes' => $this->workflowRuleService->getAvailableRuleTypes(),
+            'contracts' => UserContract::all(),
+            'flash' => [
+                'message' => 'Regel erfolgreich gelöscht'
+            ]
         ]);
     }
 
@@ -120,131 +117,149 @@ class ShiftWarningController extends Controller
         ]);
     }
 
-    public function updateContractAssignments(Request $request, UserContract $contract): JsonResponse
-    {
-        $validated = $request->validate([
-            'rule_ids' => 'array',
-            'rule_ids.*' => 'exists:workflow_rules,id'
-        ]);
+    public function updateContractAssignments(
+        UpdateContractAssignmentsRequest $request,
+        UserContract $contract
+    ): Response {
+        $validated = $request->validated();
 
         $contract->workflowRules()->sync($validated['rule_ids'] ?? []);
 
-        return response()->json([
-            'message' => 'Regelzuweisungen erfolgreich aktualisiert',
-            'contract' => $contract->load('workflowRules')
+        return Inertia::render('ShiftWarnings/ContractAssignments', [
+            'contracts' => UserContract::with(['workflowRules', 'userContractAssigns.user'])->get(),
+            'rules' => WorkflowRule::where('is_active', true)->get(),
+            'flash' => [
+                'message' => 'Regelzuweisungen erfolgreich aktualisiert'
+            ]
         ]);
     }
 
-    public function getRuleConfiguration(string $ruleType): JsonResponse
+    public function getRuleConfiguration(string $ruleType): Response
     {
         $configuration = $this->workflowRuleService->getRuleConfiguration($ruleType);
 
-        return response()->json($configuration);
+        return Inertia::render('ShiftWarnings/Index', [
+            'rules' => WorkflowRule::with(['usersToNotify', 'contracts'])->get(),
+            'availableRuleTypes' => $this->workflowRuleService->getAvailableRuleTypes(),
+            'contracts' => UserContract::all(),
+            'ruleConfiguration' => $configuration
+        ]);
     }
 
-    public function validateRules(Request $request): JsonResponse
+    public function validateRules(ValidateRulesRequest $request): Response
     {
-        $validated = $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'user_id' => 'nullable|exists:users,id'
-        ]);
+        $validated = $request->validated();
 
         try {
-            $startDate = \Carbon\Carbon::parse($validated['start_date']);
-            $endDate = \Carbon\Carbon::parse($validated['end_date']);
+            $startDate = Carbon::parse($validated['start_date']);
+            $endDate = Carbon::parse($validated['end_date']);
 
             if (!empty($validated['user_id'])) {
-                $user = \Artwork\Modules\User\Models\User::find($validated['user_id']);
+                $user = User::find($validated['user_id']);
                 $violations = $this->workflowRuleService->getViolationsForSubject($user, $startDate, $endDate);
             } else {
                 $violations = $this->workflowRuleService->checkRuleViolationsForDateRange($startDate, $endDate);
             }
 
-            return response()->json([
-                'success' => true,
-                'violations' => $violations->map(function ($violation) {
-                    return [
-                        'id' => $violation->id,
-                        'rule_name' => $violation->workflowRule?->name,
-                        'violation_date' => $violation->violation_date,
-                        'message' => $violation->violation_data['message'] ?? 'Regelverstoß erkannt',
-                        'severity' => $violation->severity,
-                        'warning_color' => $violation->workflowRule?->warning_color,
-                        'violation_data' => $violation->violation_data
-                    ];
-                })->values(),
-                'count' => $violations->count(),
-                'date_range' => [
+            $violationsData = $violations->map(function ($violation) {
+                return [
+                    'id' => $violation->id,
+                    'rule_name' => $violation->workflowRule?->name,
+                    'violation_date' => $violation->violation_date,
+                    'message' => $violation->violation_data['message'] ?? 'Regelverstoß erkannt',
+                    'severity' => $violation->severity,
+                    'warning_color' => $violation->workflowRule?->warning_color,
+                    'violation_data' => $violation->violation_data
+                ];
+            })->values();
+
+            return Inertia::render('ShiftWarnings/Index', [
+                'rules' => WorkflowRule::with(['usersToNotify', 'contracts'])->get(),
+                'availableRuleTypes' => $this->workflowRuleService->getAvailableRuleTypes(),
+                'contracts' => UserContract::all(),
+                'violations' => $violationsData,
+                'violationsCount' => $violations->count(),
+                'dateRange' => [
                     'start' => $startDate->toDateString(),
                     'end' => $endDate->toDateString()
                 ]
             ]);
-
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Fehler beim Validieren der Regeln: ' . $e->getMessage()
-            ], 500);
+            return Inertia::render('ShiftWarnings/Index', [
+                'rules' => WorkflowRule::with(['usersToNotify', 'contracts'])->get(),
+                'availableRuleTypes' => $this->workflowRuleService->getAvailableRuleTypes(),
+                'contracts' => UserContract::all(),
+                'error' => 'Fehler beim Validieren der Regeln: ' . $e->getMessage()
+            ]);
         }
     }
 
-    public function getPendingViolations(): JsonResponse
+    public function getPendingViolations(): Response
     {
         try {
             $violations = $this->workflowRuleService->getPendingViolations();
 
-            return response()->json([
-                'success' => true,
-                'violations' => $violations->map(function ($violation) {
-                    return [
-                        'id' => $violation->id,
-                        'rule_name' => $violation->workflowRule?->name,
-                        'violation_date' => $violation->violation_date,
-                        'message' => $violation->violation_data['message'] ?? 'Regelverstoß erkannt',
-                        'severity' => $violation->severity,
-                        'status' => $violation->status,
-                        'warning_color' => $violation->workflowRule?->warning_color
-                    ];
-                })->values(),
-                'count' => $violations->count()
-            ]);
+            $violationsData = $violations->map(function ($violation) {
+                return [
+                    'id' => $violation->id,
+                    'rule_name' => $violation->workflowRule?->name,
+                    'violation_date' => $violation->violation_date,
+                    'message' => $violation->violation_data['message'] ?? 'Regelverstoß erkannt',
+                    'severity' => $violation->severity,
+                    'status' => $violation->status,
+                    'warning_color' => $violation->workflowRule?->warning_color
+                ];
+            })->values();
 
+            return Inertia::render('ShiftWarnings/Index', [
+                'rules' => WorkflowRule::with(['usersToNotify', 'contracts'])->get(),
+                'availableRuleTypes' => $this->workflowRuleService->getAvailableRuleTypes(),
+                'contracts' => UserContract::all(),
+                'pendingViolations' => $violationsData,
+                'pendingViolationsCount' => $violations->count()
+            ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Fehler beim Abrufen der Verstöße: ' . $e->getMessage()
-            ], 500);
+            return Inertia::render('ShiftWarnings/Index', [
+                'rules' => WorkflowRule::with(['usersToNotify', 'contracts'])->get(),
+                'availableRuleTypes' => $this->workflowRuleService->getAvailableRuleTypes(),
+                'contracts' => UserContract::all(),
+                'error' => 'Fehler beim Abrufen der Verstöße: ' . $e->getMessage()
+            ]);
         }
     }
 
-    public function updateViolationStatus(Request $request, int $violationId): JsonResponse
+    public function updateViolationStatus(UpdateViolationStatusRequest $request, int $violationId): Response
     {
-        $validated = $request->validate([
-            'status' => 'required|string|in:pending,acknowledged,resolved,dismissed'
-        ]);
+        $validated = $request->validated();
 
         try {
-            $violation = \Artwork\Modules\Workflow\Models\WorkflowRuleViolation::findOrFail($violationId);
+            $violation = WorkflowRuleViolation::findOrFail($violationId);
             $updated = $this->workflowRuleService->updateViolationStatus($violation, $validated['status']);
 
             if ($updated) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Status erfolgreich aktualisiert'
+                return Inertia::render('ShiftWarnings/Index', [
+                    'rules' => WorkflowRule::with(['usersToNotify', 'contracts'])->get(),
+                    'availableRuleTypes' => $this->workflowRuleService->getAvailableRuleTypes(),
+                    'contracts' => UserContract::all(),
+                    'flash' => [
+                        'message' => 'Status erfolgreich aktualisiert'
+                    ]
                 ]);
             }
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Status konnte nicht aktualisiert werden'
-            ], 400);
-
+            return Inertia::render('ShiftWarnings/Index', [
+                'rules' => WorkflowRule::with(['usersToNotify', 'contracts'])->get(),
+                'availableRuleTypes' => $this->workflowRuleService->getAvailableRuleTypes(),
+                'contracts' => UserContract::all(),
+                'error' => 'Status konnte nicht aktualisiert werden'
+            ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Fehler beim Aktualisieren des Status: ' . $e->getMessage()
-            ], 500);
+            return Inertia::render('ShiftWarnings/Index', [
+                'rules' => WorkflowRule::with(['usersToNotify', 'contracts'])->get(),
+                'availableRuleTypes' => $this->workflowRuleService->getAvailableRuleTypes(),
+                'contracts' => UserContract::all(),
+                'error' => 'Fehler beim Aktualisieren des Status: ' . $e->getMessage()
+            ]);
         }
     }
 }

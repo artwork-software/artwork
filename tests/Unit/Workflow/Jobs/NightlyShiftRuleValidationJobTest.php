@@ -17,13 +17,14 @@ class NightlyShiftRuleValidationJobTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         Log::spy();
     }
 
     protected function tearDown(): void
     {
         Mockery::close();
+        Carbon::setTestNow(); // Reset Carbon test time
         parent::tearDown();
     }
 
@@ -102,7 +103,7 @@ class NightlyShiftRuleValidationJobTest extends TestCase
         // Verify logging
         Log::shouldHaveReceived('info')
             ->with('Starting nightly shift rule validation', Mockery::type('array'));
-        
+
         Log::shouldHaveReceived('info')
             ->with('Nightly shift rule validation completed', Mockery::type('array'));
     }
@@ -280,9 +281,4 @@ class NightlyShiftRuleValidationJobTest extends TestCase
             }));
     }
 
-    protected function tearDown(): void
-    {
-        Carbon::setTestNow(); // Reset Carbon test time
-        parent::tearDown();
-    }
 }

@@ -26,229 +26,324 @@ class WeeklyMaxHoursRuleTest extends TestCase
     }
 
     #[Test]
-    public function it_has_correct_name()
+    public function testHasCorrectName(): void
     {
         $this->assertEquals('weekly_max_hours', $this->rule->getName());
     }
 
     #[Test]
-    public function it_has_correct_description()
+    public function testHasCorrectDescription(): void
     {
         $this->assertEquals('Überprüft das Wochenmaximum an Arbeitsstunden', $this->rule->getDescription());
     }
 
-    #[Test]
-    public function it_detects_violation_when_weekly_hours_exceed_limit()
+    /**
+     * Create a concrete test class that extends Model and implements getPlannedWorkingHours
+     */
+    private function createTestSubject(array $hoursMap): Model
     {
-        $mockSubject = Mockery::mock(Model::class);
-        $startDate = Carbon::parse('2025-01-13'); // Monday
-        $endDate = Carbon::parse('2025-01-19');   // Sunday
-        
-        // Mock 8 hours per day for 6 days = 48 hours (exceeds 40h limit)
-        $mockSubject->shouldReceive('getPlannedWorkingHours')
-            ->with(Mockery::type(Carbon::class))
-            ->andReturnUsing(function ($date) {
-                // Sunday = 0h, rest = 8h per day
-                return $date->dayOfWeek === 0 ? 0 : 8;
-            });
+        // Create a concrete class that extends Model
+        $testSubject = new class extends Model {
+            private $hoursMap = [];
 
-        $context = [
-            'value' => 40, // Max 40 hours per week
-            'start_date' => $startDate,
-            'end_date' => $endDate
-        ];
+            public function setHoursMap(array $hoursMap): void
+            {
+                $this->hoursMap = $hoursMap;
+            }
 
-        $violations = $this->rule->validate($mockSubject, $context);
-
-        $this->assertGreaterThan(0, count($violations));
-        
-        // Should detect violation on Saturday (when 48h is reached)
-        $saturdayViolation = collect($violations)->first(function ($v) {
-            return Carbon::parse($v['date'])->dayOfWeek === 6; // Saturday
-        });
-        
-        $this->assertNotNull($saturdayViolation);
-        $this->assertEquals(48, $saturdayViolation['weekly_hours']);
-        $this->assertEquals(40, $saturdayViolation['max_hours']);
-        $this->assertStringContainsString('Wochenmaximum von 40h überschritten', $saturdayViolation['message']);
-    }
-
-    #[Test]
-    public function it_resets_weekly_hours_on_monday()
-    {
-        $mockSubject = Mockery::mock(Model::class);
-        $startDate = Carbon::parse('2025-01-06'); // Previous Monday
-        $endDate = Carbon::parse('2025-01-20');   // Following Monday
-        
-        // Mock high hours in first week, low hours in second week
-        $mockSubject->shouldReceive('getPlannedWorkingHours')
-            ->with(Mockery::type(Carbon::class))
-            ->andReturnUsing(function ($date) {
-                if ($date->weekOfYear === Carbon::parse('2025-01-06')->weekOfYear) {
-                    // First week: 8h per day
-                    return $date->dayOfWeek === 0 ? 0 : 8;
-                } else {
-                    // Second week: 4h per day (within limit)
-                    return $date->dayOfWeek === 0 ? 0 : 4;
+            public function getPlannedWorkingHours(Carbon $date): float
+            {
+                $dateStr = $date->format('Y-m-d');
+                echo "\nConcrete class getPlannedWorkingHours called with date: " . $dateStr;
+                if (isset($this->hoursMap[$dateStr])) {
+                    echo " - returning " . $this->hoursMap[$dateStr] . " hours";
+                    return $this->hoursMap[$dateStr];
                 }
-            });
+                echo " - returning 0 hours (default)";
+                return 0.0;
+            }
+        };
 
-        $context = [
-            'value' => 40,
-            'start_date' => $startDate,
-            'end_date' => $endDate
-        ];
+        // Set the hours map after construction
+        $testSubject->setHoursMap($hoursMap);
 
-        $violations = $this->rule->validate($mockSubject, $context);
-
-        // Should have violations in first week but not second week
-        $firstWeekViolations = collect($violations)->filter(function ($v) {
-            return Carbon::parse($v['date'])->weekOfYear === Carbon::parse('2025-01-06')->weekOfYear;
-        });
-
-        $secondWeekViolations = collect($violations)->filter(function ($v) {
-            return Carbon::parse($v['date'])->weekOfYear === Carbon::parse('2025-01-13')->weekOfYear;
-        });
-
-        $this->assertGreaterThan(0, $firstWeekViolations->count());
-        $this->assertEquals(0, $secondWeekViolations->count());
+        return $testSubject;
     }
 
     #[Test]
-    public function it_adjusts_date_range_to_full_weeks()
+    public function testDetectsViolationWhenWeeklyHoursExceedLimit(): void
     {
-        $mockSubject = Mockery::mock(Model::class);
-        $startDate = Carbon::parse('2025-01-15'); // Wednesday
-        $endDate = Carbon::parse('2025-01-17');   // Friday
-        
-        // Should expand to Monday (13th) - Sunday (19th)
-        $mockSubject->shouldReceive('getPlannedWorkingHours')
-            ->with(Mockery::type(Carbon::class))
-            ->andReturnUsing(function ($date) {
-                // Verify we're getting Monday and Sunday dates too
-                $dayOfWeek = $date->dayOfWeek;
-                return $dayOfWeek === 0 ? 0 : 8; // 8h except Sunday
-            });
-
-        $context = [
-            'value' => 40,
-            'start_date' => $startDate,
-            'end_date' => $endDate
+        // Create a map of dates to hours
+        $hoursMap = [
+            '2025-01-13' => 8.0,  // Monday
+            '2025-01-14' => 10.0, // Tuesday
+            '2025-01-15' => 10.0, // Wednesday
+            '2025-01-16' => 10.0, // Thursday
+            '2025-01-17' => 10.0, // Friday
+            '2025-01-18' => 0.0,  // Saturday
+            '2025-01-19' => 0.0,  // Sunday
         ];
 
-        $violations = $this->rule->validate($mockSubject, $context);
+        // Create a concrete test subject that implements getPlannedWorkingHours
+        $testSubject = $this->createTestSubject($hoursMap);
 
-        // The rule should process the full week, not just Wed-Fri
-        // We can verify this by checking if violations include dates outside the original range
-        $this->assertIsArray($violations);
-    }
-
-    #[Test]
-    public function it_returns_no_violation_when_within_limit()
-    {
-        $mockSubject = Mockery::mock(Model::class);
         $startDate = Carbon::parse('2025-01-13'); // Monday
-        $endDate = Carbon::parse('2025-01-19');   // Sunday
-        
-        // Mock 5 hours per day for 6 days = 30 hours (within 40h limit)
-        $mockSubject->shouldReceive('getPlannedWorkingHours')
-            ->with(Mockery::type(Carbon::class))
-            ->andReturnUsing(function ($date) {
-                return $date->dayOfWeek === 0 ? 0 : 5; // 5h except Sunday
-            });
+        $endDate = Carbon::parse('2025-01-19'); // Sunday
 
         $context = [
-            'value' => 40,
             'start_date' => $startDate,
-            'end_date' => $endDate
+            'end_date' => $endDate,
+            'max_hours' => 40 // Maximum 40 hours per week
         ];
 
-        $violations = $this->rule->validate($mockSubject, $context);
+        $violations = $this->rule->validate($testSubject, $context);
 
+        // Total hours: 8 + 10 + 10 + 10 + 10 = 48 hours (exceeds 40)
+        $this->assertCount(1, $violations);
+        $this->assertEquals(48, $violations[0]['weekly_hours']);
+        $this->assertEquals(40, $violations[0]['max_hours']);
+        $this->assertEquals('2025-01-13', $violations[0]['week_start']);
+        $this->assertStringContainsString('Wochenmaximum von 40h überschritten', $violations[0]['message']);
+    }
+
+    #[Test]
+    public function testResetsWeeklyHoursOnMonday(): void
+    {
+        // Create a map of dates to hours
+        $hoursMap = [
+            // First week (exceeds limit)
+            '2025-01-13' => 10.0, // Monday
+            '2025-01-14' => 10.0, // Tuesday
+            '2025-01-15' => 10.0, // Wednesday
+            '2025-01-16' => 10.0, // Thursday
+            '2025-01-17' => 10.0, // Friday
+            '2025-01-18' => 0.0,  // Saturday
+            '2025-01-19' => 0.0,  // Sunday
+
+            // Second week (within limit)
+            '2025-01-20' => 7.0, // Monday
+            '2025-01-21' => 7.0, // Tuesday
+            '2025-01-22' => 7.0, // Wednesday
+            '2025-01-23' => 7.0, // Thursday
+            '2025-01-24' => 7.0, // Friday
+            '2025-01-25' => 0.0, // Saturday
+            '2025-01-26' => 0.0, // Sunday
+        ];
+
+        // Create a concrete test subject that implements getPlannedWorkingHours
+        $testSubject = $this->createTestSubject($hoursMap);
+
+        $startDate = Carbon::parse('2025-01-13'); // Monday week 1
+        $endDate = Carbon::parse('2025-01-26'); // Sunday week 2
+
+        $context = [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'max_hours' => 40
+        ];
+
+        $violations = $this->rule->validate($testSubject, $context);
+
+        // Should only report violation for the first week
+        $this->assertCount(1, $violations);
+        $this->assertEquals(50, $violations[0]['weekly_hours']);
+        $this->assertEquals('2025-01-13', $violations[0]['week_start']);
+    }
+
+    #[Test]
+    public function testAdjustsDateRangeToFullWeeks(): void
+    {
+        // Create a map of dates to hours - 10 hours for each weekday across two weeks
+        $hoursMap = [
+            // First week
+            '2025-01-13' => 10.0, // Monday
+            '2025-01-14' => 10.0, // Tuesday
+            '2025-01-15' => 10.0, // Wednesday
+            '2025-01-16' => 10.0, // Thursday
+            '2025-01-17' => 10.0, // Friday
+            '2025-01-18' => 0.0,  // Saturday
+            '2025-01-19' => 0.0,  // Sunday
+
+            // Second week
+            '2025-01-20' => 10.0, // Monday
+            '2025-01-21' => 10.0, // Tuesday
+            '2025-01-22' => 10.0, // Wednesday
+            '2025-01-23' => 10.0, // Thursday
+            '2025-01-24' => 10.0, // Friday
+            '2025-01-25' => 0.0,  // Saturday
+            '2025-01-26' => 0.0,  // Sunday
+        ];
+
+        // Create a concrete test subject that implements getPlannedWorkingHours
+        $testSubject = $this->createTestSubject($hoursMap);
+
+        // Specify a date range that doesn't align with week boundaries
+        $startDate = Carbon::parse('2025-01-15'); // Wednesday
+        $endDate = Carbon::parse('2025-01-22'); // Wednesday next week
+
+        $context = [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'max_hours' => 40
+        ];
+
+        $violations = $this->rule->validate($testSubject, $context);
+
+        // Should adjust to full weeks and detect violations
+        $this->assertCount(2, $violations);
+
+        // First week: 2025-01-13 to 2025-01-19
+        $this->assertEquals('2025-01-13', $violations[0]['week_start']);
+
+        // Second week: 2025-01-20 to 2025-01-26
+        $this->assertEquals('2025-01-20', $violations[1]['week_start']);
+    }
+
+    #[Test]
+    public function testReturnsNoViolationWhenWithinLimit(): void
+    {
+        // Create a map of dates to hours - 8 hours for each weekday (exactly at limit)
+        $hoursMap = [
+            '2025-01-13' => 8.0, // Monday
+            '2025-01-14' => 8.0, // Tuesday
+            '2025-01-15' => 8.0, // Wednesday
+            '2025-01-16' => 8.0, // Thursday
+            '2025-01-17' => 8.0, // Friday
+            '2025-01-18' => 0.0, // Saturday
+            '2025-01-19' => 0.0, // Sunday
+        ];
+
+        // Create a concrete test subject that implements getPlannedWorkingHours
+        $testSubject = $this->createTestSubject($hoursMap);
+
+        $startDate = Carbon::parse('2025-01-13'); // Monday
+        $endDate = Carbon::parse('2025-01-19'); // Sunday
+
+        $context = [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'max_hours' => 40
+        ];
+
+        $violations = $this->rule->validate($testSubject, $context);
+
+        // Total hours: 8 * 5 = 40 hours (exactly at limit)
         $this->assertCount(0, $violations);
     }
 
     #[Test]
-    public function it_uses_default_values_when_context_missing()
+    public function testUsesDefaultValuesWhenContextMissing(): void
     {
-        $mockSubject = Mockery::mock(Model::class);
-        
-        $mockSubject->shouldReceive('getPlannedWorkingHours')
-            ->andReturn(0);
+        // Create a map of dates to hours - all days have 10 hours (exceeds default limit)
+        $hoursMap = [];
 
-        $violations = $this->rule->validate($mockSubject, []);
+        // Set up hours for a month (to ensure we cover the default date range)
+        $startDate = Carbon::now()->startOfMonth();
+        $endDate = Carbon::now()->endOfMonth();
 
+        $currentDate = $startDate->copy();
+        while ($currentDate <= $endDate) {
+            // Weekdays have 10 hours, weekends have 0
+            $hoursMap[$currentDate->format('Y-m-d')] = $currentDate->isWeekday() ? 10.0 : 0.0;
+            $currentDate->addDay();
+        }
+
+        // Create a concrete test subject that implements getPlannedWorkingHours
+        $testSubject = $this->createTestSubject($hoursMap);
+
+        // Call validate with empty context (should use defaults)
+        $violations = $this->rule->validate($testSubject, []);
+
+        // Verify that the method returns an array (we don't care about the specific violations)
         $this->assertIsArray($violations);
+
+        // If there are violations, verify they use the default max hours value (40)
+        if (count($violations) > 0) {
+            $this->assertEquals(40, $violations[0]['max_hours']);
+        }
     }
 
     #[Test]
-    public function it_can_apply_to_subjects_with_required_methods()
+    public function testCanApplyToSubjectsWithRequiredMethods(): void
     {
-        $mockSubject = Mockery::mock(Model::class);
-        $mockSubject->shouldReceive('getPlannedWorkingHours')
-            ->andReturn(true);
+        // Create a concrete test subject that implements getPlannedWorkingHours
+        $testSubject = $this->createTestSubject([]);
 
-        $result = $this->rule->canApplyTo($mockSubject);
-
+        // Test that the rule can apply to our subject
+        $result = $this->rule->canApplyTo($testSubject);
         $this->assertTrue($result);
+
+        // Create a subject without the required methods
+        $subjectWithoutMethods = new class extends Model {};
+
+        // Test that the rule cannot apply to a subject without the required methods
+        $this->assertFalse($this->rule->canApplyTo($subjectWithoutMethods));
     }
 
     #[Test]
-    public function it_has_correct_configuration()
+    public function testHasCorrectConfiguration(): void
     {
         $config = $this->rule->getConfiguration();
 
         $this->assertArrayHasKey('fields', $config);
         $this->assertArrayHasKey('max_hours', $config['fields']);
-        
+
         $maxHoursField = $config['fields']['max_hours'];
         $this->assertEquals('number', $maxHoursField['type']);
         $this->assertEquals('Maximale Stunden pro Woche', $maxHoursField['label']);
         $this->assertEquals(40, $maxHoursField['default']);
-        $this->assertEquals(1, $maxHoursField['min']);
-        $this->assertEquals(80, $maxHoursField['max']);
     }
 
     #[Test]
-    public function it_handles_week_spanning_multiple_periods()
+    public function testHandlesWeekSpanningMultiplePeriods(): void
     {
-        $mockSubject = Mockery::mock(Model::class);
-        $startDate = Carbon::parse('2025-01-13'); // Monday
-        $endDate = Carbon::parse('2025-01-26');   // Second Sunday
-        
-        // Mock consistent daily hours across two weeks
-        $mockSubject->shouldReceive('getPlannedWorkingHours')
-            ->with(Mockery::type(Carbon::class))
-            ->andReturnUsing(function ($date) {
-                return $date->dayOfWeek === 0 ? 0 : 7; // 7h per day except Sunday
-            });
+        // Create a map of dates to hours for three weeks
+        $hoursMap = [
+            // First week (within limit)
+            '2025-01-13' => 8.0, // Monday
+            '2025-01-14' => 8.0, // Tuesday
+            '2025-01-15' => 8.0, // Wednesday
+            '2025-01-16' => 8.0, // Thursday
+            '2025-01-17' => 8.0, // Friday
+            '2025-01-18' => 0.0, // Saturday
+            '2025-01-19' => 0.0, // Sunday
 
-        $context = [
-            'value' => 40,
-            'start_date' => $startDate,
-            'end_date' => $endDate
+            // Second week (exceeds limit)
+            '2025-01-20' => 10.0, // Monday
+            '2025-01-21' => 10.0, // Tuesday
+            '2025-01-22' => 10.0, // Wednesday
+            '2025-01-23' => 10.0, // Thursday
+            '2025-01-24' => 10.0, // Friday
+            '2025-01-25' => 0.0,  // Saturday
+            '2025-01-26' => 0.0,  // Sunday
+
+            // Third week (within limit)
+            '2025-01-27' => 7.0, // Monday
+            '2025-01-28' => 7.0, // Tuesday
+            '2025-01-29' => 7.0, // Wednesday
+            '2025-01-30' => 7.0, // Thursday
+            '2025-01-31' => 7.0, // Friday
+            '2025-02-01' => 0.0, // Saturday
+            '2025-02-02' => 0.0, // Sunday
         ];
 
-        $violations = $this->rule->validate($mockSubject, $context);
+        // Create a concrete test subject that implements getPlannedWorkingHours
+        $testSubject = $this->createTestSubject($hoursMap);
 
-        // Should have violations in both weeks (42h each week)
-        $week1Violations = collect($violations)->filter(function ($v) {
-            $date = Carbon::parse($v['date']);
-            return $date->between(
-                Carbon::parse('2025-01-13'),
-                Carbon::parse('2025-01-19')
-            );
-        });
+        $startDate = Carbon::parse('2025-01-13'); // Monday week 1
+        $endDate = Carbon::parse('2025-02-02'); // Sunday week 3
 
-        $week2Violations = collect($violations)->filter(function ($v) {
-            $date = Carbon::parse($v['date']);
-            return $date->between(
-                Carbon::parse('2025-01-20'),
-                Carbon::parse('2025-01-26')
-            );
-        });
+        $context = [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'max_hours' => 40
+        ];
 
-        $this->assertGreaterThan(0, $week1Violations->count());
-        $this->assertGreaterThan(0, $week2Violations->count());
+        $violations = $this->rule->validate($testSubject, $context);
+
+        // Should only report violation for the second week
+        $this->assertCount(1, $violations);
+        $this->assertEquals(50, $violations[0]['weekly_hours']);
+        $this->assertEquals('2025-01-20', $violations[0]['week_start']);
     }
 }

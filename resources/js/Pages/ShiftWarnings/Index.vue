@@ -50,7 +50,7 @@
                                         {{ rule.individual_number_value }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <div 
+                                        <div
                                             class="w-6 h-6 rounded-full border"
                                             :style="{ backgroundColor: rule.warning_color }"
                                         ></div>
@@ -162,6 +162,27 @@
                                 </span>
                             </label>
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Verträge zuweisen</label>
+                            <select
+                                v-model="form.contract_ids"
+                                multiple
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                                size="4"
+                            >
+                                <option
+                                    v-for="contract in contracts"
+                                    :key="contract.id"
+                                    :value="contract.id"
+                                >
+                                    {{ contract.name }}
+                                </option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">
+                                Mehrere Verträge können mit Strg+Klick (oder Cmd+Klick) ausgewählt werden.
+                            </p>
+                        </div>
                     </div>
 
                     <div class="mt-6 flex justify-end space-x-3">
@@ -187,7 +208,7 @@
 
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
-import Modal from '@/Components/Modal.vue'
+import Modal from '@/Jetstream/Modal.vue'
 import { ref, reactive } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 
@@ -261,12 +282,12 @@ function resetForm() {
 }
 
 function saveRule() {
-    const url = editingRule.value 
+    const url = editingRule.value
         ? `/shift-warnings/rules/${editingRule.value.id}`
         : '/shift-warnings/rules'
-    
+
     const method = editingRule.value ? 'put' : 'post'
-    
+
     useForm(form)[method](url, {
         onSuccess: () => {
             closeModal()

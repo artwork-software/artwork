@@ -33,18 +33,18 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <div class="flex items-center space-x-2">
-                                            <div 
-                                                v-for="(user, index) in contract.user_contract_assigns.slice(0, 3)" 
+                                            <div
+                                                v-for="(user, index) in contract.user_contract_assigns.slice(0, 3)"
                                                 :key="user.user.id"
                                                 class="flex items-center"
                                             >
-                                                <img 
+                                                <img
                                                     v-if="user.user.profile_photo_url"
-                                                    :src="user.user.profile_photo_url" 
+                                                    :src="user.user.profile_photo_url"
                                                     :alt="user.user.full_name"
                                                     class="w-8 h-8 rounded-full"
                                                 />
-                                                <div 
+                                                <div
                                                     v-else
                                                     class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs"
                                                 >
@@ -52,7 +52,7 @@
                                                 </div>
                                                 <span class="ml-1 text-xs">{{ user.user.first_name }}</span>
                                             </div>
-                                            <button 
+                                            <button
                                                 v-if="contract.user_contract_assigns.length > 3"
                                                 @click="showAllUsers(contract)"
                                                 class="text-blue-600 hover:text-blue-900 text-xs"
@@ -63,8 +63,8 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <div class="flex flex-wrap gap-1">
-                                            <span 
-                                                v-for="rule in contract.workflow_rules" 
+                                            <span
+                                                v-for="rule in contract.workflow_rules"
                                                 :key="rule.id"
                                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                                             >
@@ -104,18 +104,18 @@
                 <div v-if="selectedContract" class="mb-4">
                     <h3 class="text-sm font-medium text-gray-700 mb-2">Vertrag aktiv für:</h3>
                     <div class="flex flex-wrap gap-2">
-                        <div 
-                            v-for="user in selectedContract.user_contract_assigns" 
+                        <div
+                            v-for="user in selectedContract.user_contract_assigns"
                             :key="user.user.id"
                             class="flex items-center bg-gray-100 rounded-lg px-3 py-1"
                         >
-                            <img 
+                            <img
                                 v-if="user.user.profile_photo_url"
-                                :src="user.user.profile_photo_url" 
+                                :src="user.user.profile_photo_url"
                                 :alt="user.user.full_name"
                                 class="w-6 h-6 rounded-full mr-2"
                             />
-                            <div 
+                            <div
                                 v-else
                                 class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs mr-2"
                             >
@@ -129,8 +129,8 @@
                 <div class="space-y-4">
                     <h3 class="text-sm font-medium text-gray-700">Verfügbare Regeln:</h3>
                     <div class="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto">
-                        <label 
-                            v-for="rule in rules" 
+                        <label
+                            v-for="rule in rules"
                             :key="rule.id"
                             class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
                             :class="{ 'border-blue-500 bg-blue-50': assignmentForm.rule_ids.includes(rule.id) }"
@@ -144,7 +144,7 @@
                             <div class="flex-1">
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium">{{ rule.name }}</span>
-                                    <div 
+                                    <div
                                         class="w-4 h-4 rounded-full border ml-2"
                                         :style="{ backgroundColor: rule.warning_color }"
                                     ></div>
@@ -179,9 +179,9 @@
 
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
-import Modal from '@/Components/Modal.vue'
 import { ref, reactive } from 'vue'
 import { useForm } from '@inertiajs/vue3'
+import Modal from "@/Jetstream/Modal.vue";
 
 const props = defineProps({
     contracts: Array,

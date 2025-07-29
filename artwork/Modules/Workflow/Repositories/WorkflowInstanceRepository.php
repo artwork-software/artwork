@@ -13,6 +13,16 @@ class WorkflowInstanceRepository extends BaseRepository
         return WorkflowInstance::class;
     }
 
+    public function create(array $data): WorkflowInstance
+    {
+        return WorkflowInstance::create($data);
+    }
+
+    public function getBuilder()
+    {
+        return WorkflowInstance::query();
+    }
+
     public function findBySubject(Model $subject): \Illuminate\Database\Eloquent\Collection
     {
         return $this->getBuilder()

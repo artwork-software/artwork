@@ -214,8 +214,11 @@ const filteredOptionsByCategories = computed(() => {
         eventFilters: {},
     }
 
+
+
     areaFilters.forEach(filter => {
         filteredOptions.areaFilters[filter] = props.filterOptions[filter];
+
     })
 
     roomFilters.forEach(filter => {

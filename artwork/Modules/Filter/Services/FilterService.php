@@ -39,38 +39,20 @@ class FilterService
     /**
      * @return array<string, mixed>
      */
-    public function getCalendarFilterDefinitions(bool $isCalendar = false): array
+    public function getCalendarFilterDefinitions(): array
     {
         $roomCategories = $this->categoryRepository->getAll();
         $roomAttributes = $this->roomAttributeRepository->getAll();
         $eventTypes = $this->eventTypeService->getAll();
         $eventProperties = $this->eventPropertyRepository->getAll();
 
-        if ($isCalendar) {
-            return [
-                'room_categories' => $this->map($roomCategories),
-                'room_attributes' => $this->map($roomAttributes),
-                'event_types' => $this->map($eventTypes),
-                'event_properties' => $this->map($eventProperties),
-                'areas' => $this->map($this->areaRepository->getAll()),
-                'rooms' => $this->roomRepository
-                    ->allWithoutTrashed()
-                    ->map(fn(Room $room) => [
-                        'id' => $room->getAttribute('id'),
-                        'name' => $room->getAttribute('name'),
-                        'label' => $room->getAttribute('name'),
-                    ]),
-            ];
-        }
-
         return [
-            'roomCategories' => $this->map($roomCategories),
-            'roomAttributes' => $this->map($roomAttributes),
-            'eventTypes' => $this->map($eventTypes),
-            'eventProperties' => $this->map($eventProperties),
-
-            'areas' => $this->map($this->areaRepository->getAll()),
-            'rooms' => $this->roomRepository
+            'room_category_ids' => $this->map($roomCategories),
+            'room_attribute_ids' => $this->map($roomAttributes),
+            'event_type_ids' => $this->map($eventTypes),
+            'event_property_ids' => $this->map($eventProperties),
+            'area_ids' => $this->map($this->areaRepository->getAll()),
+            'room_ids' => $this->roomRepository
                 ->allWithoutTrashed()
                 ->map(fn(Room $room) => [
                     'id' => $room->getAttribute('id'),

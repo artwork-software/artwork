@@ -164,12 +164,12 @@
                                       icon-size="h-7 w-7" @click="openHistoryModal()"/>
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal"
                                       icon-size="h-7 w-7" v-if="!isFullscreen" @click="enterFullscreenMode"/>
-                    <!--<ShiftPlanFilter
+                    <ShiftPlanFilter
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
                         :user_filters="user_filters"
                         :crafts="crafts"
-                    />-->
+                    />
 
                 </div>
             </div>
@@ -243,6 +243,7 @@ import axios from 'axios';
 import {usePermission} from "@/Composeables/Permission.js";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
 import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
+import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 const {hasAdminRole, can} = usePermission(usePage().props);
 
 const props = defineProps({

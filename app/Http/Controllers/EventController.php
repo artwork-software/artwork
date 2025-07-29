@@ -189,7 +189,11 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $userCalendarFilter = $user->userFilters()->calendarFilter()->first(); //$user->getAttribute('calendar_filter');
+
+        //dd($userCalendarFilter);
+
+
         $userCalendarSettings = $user->getAttribute('calendar_settings');
         $isPlanning = $request->input('isPlanning') === 'true';
 
@@ -345,7 +349,7 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $userCalendarFilter = $user->userFilters()->calendarFilter()->first();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
 
         $this->userService->shareCalendarAbo('calendar');
@@ -459,7 +463,7 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $userCalendarFilter = $user->getAttribute('shift_calendar_filter');
+        $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
         $renderViewName = 'Shifts/ShiftPlan';
         $this->userService->shareCalendarAbo('shiftCalendar');

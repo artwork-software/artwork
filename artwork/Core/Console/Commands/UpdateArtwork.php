@@ -42,6 +42,7 @@ class UpdateArtwork extends Command
         $this->migrateCraftInventoryItems();
         $this->setupPassport();
         $this->removeOldCalendarComponent();
+        $this->migrateFilterToNewFilterStructure();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -206,5 +207,74 @@ class UpdateArtwork extends Command
     {
         $this->info(str_repeat('-', 60));
         $this->info("[$title]");
+    }
+
+    private function migrateFilterToNewFilterStructure(): void
+    {
+        $this->section('Filter Migration');
+
+        User::with(['calendar_filter', 'shift_calendar_filter'])->chunk(100, function ($users): void {
+            foreach ($users as $user) {
+                // Calendar Filter migrieren
+                if ($user->calendar_filter) {
+                    $calendarFilter = $user->calendar_filter;
+
+                    $user->userFilters()->updateOrCreate(
+                        ['filter_type' => 'calendar_filter'],
+                        [
+                            'start_date' => $calendarFilter->start_date ?? now(),
+                            'end_date' => $calendarFilter->end_date ?? now()->addMonth(),
+                            'event_type_ids' => $calendarFilter->event_types ?? [],
+                            'room_ids' => $calendarFilter->rooms ?? [],
+                            'area_ids' => $calendarFilter->areas ?? [],
+                            'room_attribute_ids' => $calendarFilter->room_attributes ?? [],
+                            'room_category_ids' => $calendarFilter->room_categories ?? [],
+                            'event_property_ids' => $calendarFilter->event_properties ?? [],
+                            'craft_ids' => [], // Keine Datenquelle in deinem Modell
+                        ]
+                    );
+
+                    $calendarFilter->delete();
+                }
+
+                // Shift Filter migrieren
+                if ($user->shift_calendar_filter) {
+                    $shiftFilter = $user->shift_calendar_filter;
+
+                    $user->userFilters()->updateOrCreate(
+                        ['filter_type' => 'shift_filter'],
+                        [
+                            'start_date' => $shiftFilter->start_date ?? now(),
+                            'end_date' => $shiftFilter->end_date ?? now()->addMonth(),
+                            'event_type_ids' => $shiftFilter->event_types ?? [],
+                            'room_ids' => $shiftFilter->rooms ?? [],
+                            'area_ids' => [],
+                            'room_attribute_ids' => [],
+                            'room_category_ids' => [],
+                            'event_property_ids' => [],
+                            'craft_ids' => [],
+                        ]
+                    );
+
+                    $shiftFilter->delete();
+                }
+            }
+        });
+    }
+
+    private function migrateUserFilter(User $user, string $relation, string $filterType, array $fields): void
+    {
+        $filter = $user->$relation;
+
+        if (!$filter) {
+            return;
+        }
+
+        $data = collect($fields)->mapWithKeys(fn($field) => [
+            $field =>
+                $filter->$field ?? ($field === 'start_date' ? now() : ($field === 'end_date' ? now()->addMonth() : [])),
+        ])->toArray();
+
+        $user->userFilters()->updateOrCreate(['filter_type' => $filterType], $data);
     }
 }

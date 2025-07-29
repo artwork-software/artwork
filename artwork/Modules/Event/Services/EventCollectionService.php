@@ -10,6 +10,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\User\Models\UserFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -152,21 +153,16 @@ class EventCollectionService
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     private function buildRoomCollectionBaseQuery(
         Room $room,
-        ?CalendarFilter $calendarFilter,
+        ?UserFilter $calendarFilter,
         ?Project $project,
         ?CarbonPeriod $calendarPeriod,
         ?Carbon $date
     ): HasMany {
-        $isLoud = $calendarFilter?->is_loud ?? false;
-        $isNotLoud = $calendarFilter?->is_not_loud ?? false;
-        $hasAudience = $calendarFilter?->has_audience ?? false;
-        $hasNoAudience = $calendarFilter?->has_no_audience ?? false;
-        $showAdjoiningRooms = $calendarFilter?->show_adjoining_rooms ?? false;
-        $eventTypeIds = $calendarFilter?->event_types ?? null;
-        $roomIds = $calendarFilter?->rooms ?? null;
-        $areaIds = $calendarFilter?->areas ?? null;
-        $roomAttributeIds = $calendarFilter?->room_attributes ?? null;
-        $roomCategoryIds = $calendarFilter?->room_categories ?? null;
+        $eventTypeIds = $calendarFilter?->event_type_ids ?? null;
+        $roomIds = $calendarFilter?->room_ids ?? null;
+        $areaIds = $calendarFilter?->area_ids ?? null;
+        $roomAttributeIds = $calendarFilter?->room_attribute_ids ?? null;
+        $roomCategoryIds = $calendarFilter?->room_category_ids ?? null;
 
         $roomEventsQuery = Room::query()->getRelation('events')
             ->with(
@@ -235,7 +231,6 @@ class EventCollectionService
                 fn(Builder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
                     ->when($roomIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
                     ->when($areaIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
-                    ->when($showAdjoiningRooms, fn(Builder $roomBuilder) => $roomBuilder->with('adjoining_rooms'))
                     ->when($roomAttributeIds, fn(Builder $roomBuilder) => $roomBuilder
                         ->whereHas('attributes', fn(Builder $roomAttributeBuilder) => $roomAttributeBuilder
                             ->whereIn('room_attributes.id', $roomAttributeIds)))
@@ -253,21 +248,6 @@ class EventCollectionService
                 });
             });
 
-        if ($hasAudience && !$hasNoAudience) {
-            $roomEventsQuery->where('audience', true);
-        }
-
-        if (!$hasAudience && $hasNoAudience) {
-            $roomEventsQuery->where('audience', false);
-        }
-
-        if ($isLoud && !$isNotLoud) {
-            $roomEventsQuery->where('is_loud', true);
-        }
-
-        if (!$isLoud && $isNotLoud) {
-            $roomEventsQuery->where('is_loud', false);
-        }
 
         $roomEventsQuery->where('deleted_at', null);
 

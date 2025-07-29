@@ -49,23 +49,13 @@ class RoomRepository extends BaseRepository
         ?array $roomIds,
         ?array $roomAttributeIds,
         ?array $areaIds,
-        ?array $roomCategoryIds,
-        ?bool $adjoiningNotLoud = null,
-        ?bool $adjoiningNoAudience = null,
-        ?Carbon $startDate = null,
-        ?Carbon $endDate = null
+        ?array $roomCategoryIds
     ): Collection {
         return Room::query()
             ->unlessRoomIds($roomIds)
             ->unlessRoomAttributeIds($roomAttributeIds)
             ->unlessAreaIds($areaIds)
             ->unlessRoomCategoryIds($roomCategoryIds)
-            ->whenFilterAdjoiningWithStartAndEndDate(
-                $adjoiningNotLoud,
-                $adjoiningNoAudience,
-                $startDate,
-                $endDate
-            )
             ->orderBy('order')
             ->get();
     }

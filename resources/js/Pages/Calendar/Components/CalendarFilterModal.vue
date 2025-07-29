@@ -1,12 +1,6 @@
 <template>
-    <BaseModal modal-size="max-w-4xl" @closed="$emit('close')" full-modal>
+    <ArtworkBaseModal modal-size="max-w-4xl" title="Calendar Filter" description="Allows you to show and hide specific calendar contents, ideal for quickly finding the relevant information." @close="$emit('close')" full-modal>
         <div class="p-5">
-            <div>
-                <ModalHeader
-                    :title="$t('Calendar Filter')"
-                />
-            </div>
-
             <div>
                 <div class="flex items-start justify-between">
                     <div>
@@ -72,7 +66,7 @@
                         <div v-for="(filter, index) in activeFilters" class="group block cursor-pointer shrink-0 bg-blue-50  w-fit px-2 py-1.5 rounded-full border border-blue-200">
                             <div class="flex items-center">
                                 <div class="mx-2">
-                                    <p class="text-blue-500 text-xs font-bold group-hover:text-blue-600">
+                                    <p class="text-blue-500 text-xs group-hover:text-blue-600">
                                         <span v-if="filter.id === 'adjoiningNoAudience' || filter.id === 'adjoiningNotLoud'">{{ $t(filter?.name)}}</span>
                                         <span v-else>{{ filter?.name }}</span>
                                     </p>
@@ -90,19 +84,19 @@
 
             <div class="space-y-1">
                 <div v-for="(filterMainCategory, index) in filteredOptionsByCategories" :key="index" class="py-1">
-                    <div class="font-extrabold font-lexend text-white bg-gray-900 rounded-lg px-4 py-2 shadow">
+                    <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
                         {{ $t(index) }}
                     </div>
 
                     <div class="space-y-2 mt-2">
                         <div v-for="(filterSubCategory, index) in filterMainCategory" :key="index">
-                            <div class="shadow px-3 border border-gray-200 rounded-lg ">
+                            <div class="card white px-4 ">
                                 <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="filterSubCategory.open = !filterSubCategory.open">
-                                    <div class="font-bold ">
+                                    <div class="text-sm text-gray-900">
                                         {{ $t(index) }}
                                     </div>
                                     <div class="flex items-center gap-5">
-                                        <span class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs font-medium text-green-600 ring-1 ring-inset ring-green-500/10" :class="filterSubCategory.filter(filter => filter.checked).length > 0 ? 'visible' : 'invisible'">
+                                        <span class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10" :class="filterSubCategory.filter(filter => filter.checked).length > 0 ? 'visible' : 'invisible'">
                                             <!-- count of checked filters in subcategory -->
                                             {{ filterSubCategory.filter(filter => filter.checked).length }} {{ $t('selected') }}
                                         </span>
@@ -126,9 +120,8 @@
                                                 <div class="text-sm flex items-center gap-x-1">
                                                     <div v-if="filter.icon" class="flex items-center gap-2">
                                                         <component :is="filter.icon" class="size-4" stroke-width="1.5"/>
-
                                                     </div>
-                                                    <label :for="removeSpaceFromKey(filter.name)" class="font-medium text-gray-900">
+                                                    <label :for="removeSpaceFromKey(filter.name)" class="text-gray-900">
                                                         {{ filter.name }}
                                                     </label>
                                                 </div>
@@ -143,7 +136,7 @@
             </div>
         </div>
 
-        <div class="bg-gray-100 px-8 py-4 -mx-4 -mb-4 rounded-b-3xl">
+        <div class="px-5 py-4">
             <div class="flex items-center justify-between">
                 <div>
                     <div @click="resetFilter" class="underline text-artwork-buttons-create text-xs underline-offset-2 cursor-pointer hover:text-artwork-buttons-hover duration-200 ease-in-out">{{ $t('Reset') }}</div>
@@ -156,21 +149,19 @@
                 </div>
             </div>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
 
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {computed, onMounted, ref} from "vue";
 import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import {XIcon} from "@heroicons/vue/outline";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const props = defineProps({
     filterOptions: {
@@ -184,6 +175,10 @@ const props = defineProps({
     user_filters: {
         type: Object,
         required: true
+    },
+    inShiftPlan: {
+        type: Boolean,
+        default: false
     },
 })
 
@@ -286,17 +281,30 @@ const applyFilter = () => {
         }
     });
 
-    router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), {
-        rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
-        areas: areaFilterIds.length > 0 ? areaFilterIds : null,
-        event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
-        room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_attributes),
-        room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_categories),
-        event_properties: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_properties),
-    }, {
-        preserveScroll: true,
-        preserveState: false,
-    })
+
+    if (!props.inShiftPlan) {
+        router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), {
+            rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
+            areas: areaFilterIds.length > 0 ? areaFilterIds : null,
+            event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
+            room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_attributes),
+            room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_categories),
+            event_properties: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_properties),
+        }, {
+            preserveScroll: true,
+            preserveState: false,
+        })
+    } else {
+        router.patch(route('update.user.shift.calendar.filter', usePage().props.auth.user.id), {
+            rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
+            event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
+        }, {
+            preserveState: false,
+            preserveScroll: true,
+        })
+    }
+
+
 }
 
 const saveFilter = () => {

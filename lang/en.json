@@ -2922,5 +2922,8 @@
     "Hides rooms in the calendar in which no events are entered, for a clearer display of active areas.": "Hides rooms in the calendar in which no events are entered, for a clearer display of active areas.",
     "Shows the associated project group of an event in the calendar, helpful for assignment and overview with several groups.": "Shows the associated project group of an event in the calendar, helpful for assignment and overview with several groups.",
     "Highlights firmly scheduled events in the calendar, ideal for quickly recognizing binding times.": "Highlights firmly scheduled events in the calendar, ideal for quickly recognizing binding times.",
-    "Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.": "Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning."
+    "Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.": "Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.",
+    "Shows the required or existing qualifications of a shift in the calendar, helpful for precise shift planning.": "Shows the required or existing qualifications of a shift in the calendar, helpful for precise shift planning.",
+    "Shows stored notes on appointments in the calendar, handy for having additional information directly in view.": "Shows stored notes on appointments in the calendar, handy for having additional information directly in view.",
+    "Allows you to show and hide specific calendar contents, ideal for quickly finding the relevant information.": "Allows you to show and hide specific calendar contents, ideal for quickly finding the relevant information."
 }

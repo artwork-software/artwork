@@ -534,7 +534,7 @@ class EventController extends Controller
             'days' => $period,
             'shiftPlan' => $calendarData->rooms,
             'personalFilters' => $this->filterService->getPersonalFilter(),
-            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
+            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(true),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
             'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByCreationDateAscending(),

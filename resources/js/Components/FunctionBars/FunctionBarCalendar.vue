@@ -234,19 +234,15 @@
 
 <script setup>
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import {computed, inject, nextTick, ref, watch} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, ref, watch} from "vue";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
-import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
-import {Menu, MenuButton, MenuItems, Switch} from "@headlessui/vue";
+import {Switch} from "@headlessui/vue";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
 import {Link, router, useForm, usePage} from "@inertiajs/vue3";
 import {usePermission} from "@/Composeables/Permission.js";
-import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
-import Input from "@/Jetstream/Input.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
@@ -254,8 +250,6 @@ import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
-import CalendarSettingsModal from "@/Artwork/Modals/CalendarSettingsModal.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');
@@ -280,7 +274,6 @@ const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const dateValueCopy = ref(dateValue ?? []);
 const showExportModal = ref(false);
 const roomCollisions = ref([]);
-const externUpdate = ref(false);
 const showCalendarAboInfoModal = ref(false);
 const showCalendarFilterModal = ref(false);
 const showCalendarSettingsModal = ref(false);
@@ -302,6 +295,12 @@ const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
         }
     );
 };
+
+const CalendarSettingsModal = defineAsyncComponent({
+    loader: () => import('@/Artwork/Modals/CalendarSettingsModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
 
 const exportTabEnums = useExportTabEnums();
 const getExportModalConfiguration = () => {

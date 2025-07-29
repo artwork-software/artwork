@@ -16,7 +16,7 @@
                     <p id="high_contrast-description" class="text-gray-500 text-xs">{{ $t('Increases the color intensity in the calendar to make texts and elements more clearly visible, ideal for better readability and accessibility.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3">
+            <div class="flex gap-3" v-if="!inShiftPlan">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.project_artists" id="high_contrast" aria-describedby="project_artists-description" name="project_artists" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -31,7 +31,7 @@
                     <p id="project_artists-description" class="text-gray-500 text-xs">{{ $t('Shows the artists involved in the project in the calendar, helpful for an overview of who is involved and when.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3">
+            <div class="flex gap-3" v-if="!inShiftPlan">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.project_status" id="project_status" aria-describedby="project_status-description" name="project_status" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -46,7 +46,7 @@
                     <p id="project_status-description" class="text-gray-500 text-xs">{{ $t('Shows the current status of the project in the calendar, from planning to implementation, to keep an eye on progress at all times.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3">
+            <div class="flex gap-3" v-if="!inShiftPlan">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.project_management" id="project_management" aria-describedby="project_management-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -61,7 +61,7 @@
                     <p id="project_management-description" class="text-gray-500 text-xs">{{ $t('List the responsible project managers in the calendar and ensure clarity as to who is responsible for coordination and management.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3">
+            <div class="flex gap-3" v-if="!inShiftPlan">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.repeating_events" id="repeating_events" aria-describedby="repeating_events-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -76,7 +76,7 @@
                     <p id="repeating_events-description" class="text-gray-500 text-xs">{{ $t('Indicates events that take place regularly, ideal for planning recurring meetings or rehearsals.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3" v-if="can('can manage workers|can plan shifts') || is('artwork admin')">
+            <div class="flex gap-3" v-if="can('can manage workers|can plan shifts') || is('artwork admin') || !inShiftPlan">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.work_shifts" id="work_shifts" aria-describedby="work_shifts-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -91,7 +91,7 @@
                     <p id="work_shifts-description" class="text-gray-500 text-xs">{{ $t('Shows entered work or deployment shifts in the calendar, useful for clear personnel and deployment planning.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3">
+            <div class="flex gap-3" v-if="!inShiftPlan">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.description" id="description" aria-describedby="description-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -106,7 +106,7 @@
                     <p id="description-description" class="text-gray-500 text-xs">{{ $t('Contains additional information or notes about the event, perfect for recording details or special features.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3">
+            <div class="flex gap-3" v-if="!inShiftPlan">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.event_name" id="event_name" aria-describedby="event_name-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -136,7 +136,7 @@
                     <p id="expand_days-description" class="text-gray-500 text-xs">{{ $t('Expands all days in the calendar automatically, so you can see all events at a glance without having to scroll.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3" v-if="usePage().props.event_status_module">
+            <div class="flex gap-3" v-if="usePage().props.event_status_module && !inShiftPlan">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.use_event_status_color" id="use_event_status_color" aria-describedby="use_event_status_color-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -151,7 +151,7 @@
                     <p id="use_event_status_color-description" class="text-gray-500 text-xs">{{ $t('Colors calendar entries according to their status, making it easier to quickly identify scheduled, confirmed or completed events, for example.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3">
+            <div class="flex gap-3" v-if="!inShiftPlan">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.hide_unoccupied_rooms" id="hide_unoccupied_rooms" aria-describedby="hide_unoccupied_rooms-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -181,7 +181,7 @@
                     <p id="display_project_groups-description" class="text-gray-500 text-xs">{{ $t('Shows the associated project group of an event in the calendar, helpful for assignment and overview with several groups.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3" v-if="isPlanning">
+            <div class="flex gap-3" v-if="isPlanning && !inShiftPlan">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.show_unplanned_events" id="show_unplanned_events" aria-describedby="show_unplanned_events-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -196,7 +196,7 @@
                     <p id="show_unplanned_events-description" class="text-gray-500 text-xs">{{ $t('Highlights firmly scheduled events in the calendar, ideal for quickly recognizing binding times.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3" v-if="!isPlanning">
+            <div class="flex gap-3" v-if="!isPlanning && !inShiftPlan">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.show_planned_events" id="show_planned_events" aria-describedby="show_planned_events-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -209,6 +209,36 @@
                 <div class="text-sm/6">
                     <label for="show_planned_events" class="font-medium text-gray-900">{{ $t('Show planned events') }}</label>
                     <p id="show_planned_events-description" class="text-gray-500 text-xs">{{ $t('Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.') }}</p>
+                </div>
+            </div>
+            <div class="flex gap-3" v-if="inShiftPlan">
+                <div class="flex h-6 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                        <input v-model="userCalendarSettings.show_qualifications" id="show_planned_events" aria-describedby="show_planned_events-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                            <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="text-sm/6">
+                    <label for="show_planned_events" class="font-medium text-gray-900">{{ $t('Show qualifications') }}</label>
+                    <p id="show_planned_events-description" class="text-gray-500 text-xs">{{ $t('Shows the required or existing qualifications of a shift in the calendar, helpful for precise shift planning.') }}</p>
+                </div>
+            </div>
+            <div class="flex gap-3" v-if="inShiftPlan">
+                <div class="flex h-6 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                        <input v-model="userCalendarSettings.shift_notes" id="show_planned_events" aria-describedby="show_planned_events-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                            <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="text-sm/6">
+                    <label for="show_planned_events" class="font-medium text-gray-900">{{ $t('Show notes') }}</label>
+                    <p id="show_planned_events-description" class="text-gray-500 text-xs">{{ $t('Shows stored notes on appointments in the calendar, handy for having additional information directly in view.') }}</p>
                 </div>
             </div>
 
@@ -248,6 +278,10 @@ const props = defineProps({
     isPlanning: {
         type: Boolean,
         default: false
+    },
+    inShiftPlan: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -270,6 +304,8 @@ const userCalendarSettings = useForm({
     display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
     show_unplanned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_unplanned_events : false,
     show_planned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_planned_events : false,
+    show_qualifications: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_qualifications : false,
+    shift_notes: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.shift_notes : false,
 });
 
 const saveUserCalendarSettings = () => {

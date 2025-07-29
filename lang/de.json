@@ -2926,6 +2926,9 @@
     "Hides rooms in the calendar in which no events are entered, for a clearer display of active areas.": "Blendet Räume im Kalender aus, in denen keine Termine eingetragen sind, für eine klarere Anzeige aktiver Bereiche.",
     "Shows the associated project group of an event in the calendar, helpful for assignment and overview with several groups.": "Zeigt die zugehörige Projektgruppe eines Termins im Kalender an, hilfreich für die Zuordnung und Übersicht bei mehreren Gruppen.",
     "Highlights firmly scheduled events in the calendar, ideal for quickly recognizing binding times.": "Hervorhebt festgelegte Termine im Kalender, ideal um verbindliche Zeiten schnell zu erkennen.",
-    "Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.": "Zeigt vorläufig eingetragene, noch nicht bestätigte Termine an, hilfreich für die Orientierung in der weiteren Planung."
+    "Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.": "Zeigt vorläufig eingetragene, noch nicht bestätigte Termine an, hilfreich für die Orientierung in der weiteren Planung.",
+    "Shows the required or existing qualifications of a shift in the calendar, helpful for precise shift planning.": "Zeigt die erforderlichen oder vorhandenen Qualifikationen einer Schicht im Kalender an, hilfreich für eine präzise Schichtplanung.",
+    "Shows stored notes on appointments in the calendar, handy for having additional information directly in view.": "Zeigt gespeicherte Notizen zu Terminen im Kalender an, praktisch, um zusätzliche Informationen direkt im Blick zu haben.",
+    "Allows you to show and hide specific calendar contents, ideal for quickly finding the relevant information.": "Erlaubt es dir, bestimmte Kalenderinhalte anzuzeigen und auszublenden, ideal um schnell die relevanten Informationen zu finden."
 }
 

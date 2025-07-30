@@ -5,6 +5,7 @@ namespace Artwork\Modules\Room\DTOs;
 use Artwork\Core\Abstracts\BaseDto;
 use Artwork\Modules\Room\Http\Resources\RoomCalendarResource;
 use Artwork\Modules\User\Models\UserCalendarFilter;
+use Artwork\Modules\User\Models\UserFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 
@@ -57,7 +58,7 @@ class ShowDto extends BaseDto
 
     public ?string $selectedDate = null;
 
-    public ?UserCalendarFilter $userFilters = null;
+    public ?UserFilter $userFilters = null;
 
     public ?int $firstProjectTabId = null;
 
@@ -219,7 +220,7 @@ class ShowDto extends BaseDto
         return $this;
     }
 
-    public function setUserFilters(?UserCalendarFilter $userFilters): self
+    public function setUserFilters(?UserFilter $userFilters): self
     {
         $this->userFilters = $userFilters;
 
@@ -402,7 +403,7 @@ class ShowDto extends BaseDto
         return $this->selectedDate;
     }
 
-    public function getUserFilters(): ?UserCalendarFilter
+    public function getUserFilters(): ?UserFilter
     {
         return $this->userFilters;
     }

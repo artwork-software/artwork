@@ -1082,7 +1082,7 @@ readonly class EventService
             )
             ->setDays($periodArray)
             ->setFilterOptions($filterService->getCalendarFilterDefinitions())
-            ->setUserFilters($userService->getAuthUser()->shift_calendar_filter)
+            ->setUserFilters($userService->getAuthUser()->userFilters()->shiftFilter()->first())
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setPersonalFilters($shiftFilterController->index())
             ->setUsersForShifts(
@@ -1281,7 +1281,7 @@ readonly class EventService
             )
             ->setAreas($areaService->getAll())
             ->setPersonalFilters($filterService->getPersonalFilter())
-            ->setUserFilters($user->getAttribute('calendar_filter'))
+            ->setUserFilters($user->userFilters()->calendarFilter()->first())
             ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
             ->setFirstProjectCalendarTabId(
                 $projectTabService
@@ -1442,7 +1442,7 @@ readonly class EventService
             ->setAreas($areaService->getAll())
             ->setFilterOptions($filterService->getCalendarFilterDefinitions())
             ->setPersonalFilters($filterService->getPersonalFilter())
-            ->setUserFilters($userService->getAuthUser()->calendar_filter)
+            ->setUserFilters($userService->getAuthUser()->userFilters()->calendarFilter()->first())
             ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
             ->setFirstProjectCalendarTabId(
                 $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)

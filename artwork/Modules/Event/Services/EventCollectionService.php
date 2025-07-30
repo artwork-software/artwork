@@ -30,7 +30,7 @@ class EventCollectionService
     public function collectEventsForRooms(
         array|SupportCollection $roomsWithEvents,
         CarbonPeriod $calendarPeriod,
-        ?CalendarFilter $calendarFilter,
+        ?UserFilter $calendarFilter,
         ?Project $project = null,
         ?bool $desiresInventorySchedulingResource = false
     ): SupportCollection {
@@ -62,7 +62,7 @@ class EventCollectionService
     public function collectEventsForRoom(
         Room $room,
         CarbonPeriod $calendarPeriod,
-        ?CalendarFilter $calendarFilter,
+        ?UserFilter $calendarFilter,
         ?Project $project = null,
         ?bool $desiresInventorySchedulingResource = false
     ): array {
@@ -118,7 +118,7 @@ class EventCollectionService
     public function collectEventsForRoomsOnSpecificDays(
         array $desiredRooms,
         array $desiredDays,
-        ?CalendarFilter $calendarFilter,
+        ?UserFilter $calendarFilter,
         ?Project $project = null,
     ): array {
         $collectedEvents = [];

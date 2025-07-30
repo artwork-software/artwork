@@ -7,6 +7,7 @@ use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\User\Models\UserCalendarFilter;
+use Artwork\Modules\User\Models\UserFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 use Inertia\Inertia;
@@ -172,7 +173,7 @@ class EventManagementDto extends BaseDto
         return $this;
     }
 
-    public function setUserFilters(?UserCalendarFilter $userFilters): self
+    public function setUserFilters(?UserFilter $userFilters): self
     {
         $this->userFilters = $userFilters;
 
@@ -307,7 +308,7 @@ class EventManagementDto extends BaseDto
         return $this->personalFilters;
     }
 
-    public function getUserFilters(): ?UserCalendarFilter
+    public function getUserFilters(): ?UserFilter
     {
         return $this->userFilters;
     }

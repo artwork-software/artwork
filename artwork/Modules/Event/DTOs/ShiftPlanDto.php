@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Event\DTOs;
 
 use Artwork\Core\Abstracts\BaseDto;
+use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -25,7 +26,7 @@ class ShiftPlanDto extends BaseDto
 
     public ?array $filterOptions = null;
 
-    public ?UserShiftCalendarFilter $userFilters = null;
+    public ?UserFilter $userFilters = null;
 
     public ?array $dateValue = null;
 
@@ -139,7 +140,7 @@ class ShiftPlanDto extends BaseDto
         return $this;
     }
 
-    public function setUserFilters(?UserShiftCalendarFilter $userFilters): self
+    public function setUserFilters(?UserFilter $userFilters): self
     {
         $this->userFilters = $userFilters;
 
@@ -279,7 +280,7 @@ class ShiftPlanDto extends BaseDto
         return $this->filterOptions;
     }
 
-    public function getUserFilters(): ?UserShiftCalendarFilter
+    public function getUserFilters(): ?UserFilter
     {
         return $this->userFilters;
     }

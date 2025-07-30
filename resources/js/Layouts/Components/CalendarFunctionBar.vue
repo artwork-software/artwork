@@ -408,31 +408,31 @@ export default {
     computed: {
         activeFilters: function () {
             let activeFiltersArray = []
-            this.filterOptions.rooms.forEach((room) => {
+            this.filterOptions.room_ids.forEach((room) => {
                 if(this.user_filters.rooms?.includes(room.id)){
                     activeFiltersArray.push(room)
                 }
             })
 
-            this.filterOptions.areas.forEach((area) => {
+            this.filterOptions.area_ids.forEach((area) => {
                 if(this.user_filters.areas?.includes(area.id)){
                     activeFiltersArray.push(area)
                 }
             })
 
-            this.filterOptions.eventTypes.forEach((eventType) => {
+            this.filterOptions.event_type_ids.forEach((eventType) => {
                 if(this.user_filters.event_types?.includes(eventType.id)){
                     activeFiltersArray.push(eventType)
                 }
             })
 
-            this.filterOptions.roomCategories.forEach((category) => {
+            this.filterOptions.room_category_ids.forEach((category) => {
                 if(this.user_filters.room_categories?.includes(category.id)){
                     activeFiltersArray.push(category)
                 }
             })
 
-            this.filterOptions.roomAttributes.forEach((attribute) => {
+            this.filterOptions.room_attribute_ids.forEach((attribute) => {
                 if(this.user_filters.room_attributes?.includes(attribute.id)){
                     activeFiltersArray.push(attribute)
                 }

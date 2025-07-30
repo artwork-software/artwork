@@ -14,5 +14,6 @@ class WorkflowTriggered
         public readonly Model $subject,
         public readonly string $triggerType,
         public readonly array $context = []
-    ) {}
+    ) {
+    }
 }

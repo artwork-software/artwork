@@ -429,7 +429,7 @@
                                                 <label for="showFreelancers" class="font-medium text-white">{{ $t('Show freelancer') }}</label>
                                             </div>
                                         </div>
-                                        <CraftFilter :crafts="crafts" is_tiny/>
+                                        <CraftFilter :crafts="crafts" :filtered-craft-ids="user_filters.craft_ids" is_tiny/>
                                         <div class="py-4">
                                             <div>
                                                 <div class="h-9 flex items-center cursor-pointer" @click="showShiftQualificationFilter = !showShiftQualificationFilter">
@@ -1000,10 +1000,10 @@ export default {
                 crafts.users = craft.users;
             });
 
-            if (this.$page.props.auth.user.show_crafts?.length === 0 || this.$page.props.auth.user.show_crafts === null) {
+            if (this.user_filters.craft_ids?.length === 0 || this.user_filters.craft_ids === null) {
                 return crafts;
             } else {
-                return crafts.filter((craft) => this.$page.props.auth.user.show_crafts.includes(craft.id));
+                return crafts.filter((craft) => this.user_filters.craft_ids.includes(craft.id));
             }
         },
         workersWithoutCraft() {

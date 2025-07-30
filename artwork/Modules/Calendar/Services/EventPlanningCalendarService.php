@@ -13,8 +13,10 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserFilter;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
+
 use function PHPUnit\Framework\isFalse;
 
 class EventPlanningCalendarService
@@ -29,7 +31,7 @@ class EventPlanningCalendarService
 
     public function filterRoomsEvents(
         Collection $rooms,
-        UserCalendarFilter $filter,
+        UserFilter $filter,
         $startDate,
         $endDate,
         ?UserCalendarSettings $userCalendarSettings = null,
@@ -62,23 +64,23 @@ class EventPlanningCalendarService
                 'shifts:id,event_id,start_date,end_date',
             ])
             ->whereIn('room_id', $roomIds)
-            ->where(function ($q) use ($startDate, $endDate) {
+            ->where(function ($q) use ($startDate, $endDate): void {
                 $q->whereBetween('start_time', [$startDate, $endDate])
                     ->orWhereBetween('end_time', [$startDate, $endDate])
-                    ->orWhere(function ($q) use ($startDate, $endDate) {
+                    ->orWhere(function ($q) use ($startDate, $endDate): void {
                         $q->where('start_time', '<=', $startDate)
                             ->where('end_time', '>=', $endDate);
                     });
             })
-            ->unless(empty($filter->event_types), function ($q) use ($filter) {
-                $q->whereIn('event_type_id', $filter->event_types);
+            ->unless(empty($filter->event_type_ids), function ($q) use ($filter): void {
+                $q->whereIn('event_type_id', $filter->event_type_ids);
             })
-            ->unless(empty($filter->event_properties), function ($q) use ($filter) {
-                $q->whereHas('eventProperties', function ($q) use ($filter) {
-                    $q->whereIn('event_property_id', $filter->event_properties);
+            ->unless(empty($filter->event_property_ids), function ($q) use ($filter): void {
+                $q->whereHas('eventProperties', function ($q) use ($filter): void {
+                    $q->whereIn('event_property_id', $filter->event_property_ids);
                 });
             })
-            ->where(function($query) use ($userCalendarSettings) {
+            ->where(function ($query) use ($userCalendarSettings): void {
                 // Always include planning events
                 $query->where('is_planning', true);
 

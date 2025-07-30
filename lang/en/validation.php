@@ -173,6 +173,46 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        'eventName' => [
+            'required_if' => 'Event name is required if it is marked as mandatory.',
+        ],
+        'projectId' => [
+            'required_if' => 'A project must be assigned when required by the event type.',
+        ],
+        'projectName' => [
+            'required_unless' => 'Project name is required unless "creating project" is false.',
+        ],
+        'start' => [
+            'required' => 'Start date is required.',
+            'date'     => 'Start must be a valid date.',
+        ],
+        'end' => [
+            'required' => 'End date is required.',
+            'date'     => 'End must be a valid date.',
+            'after'    => 'End date must be after the start date.',
+        ],
+        'roomId' => [
+            'exists' => 'The selected room does not exist.',
+        ],
+        'declinedRoomId' => [
+            'exists' => 'The declined room does not exist.',
+        ],
+        'eventTypeId' => [
+            'required' => 'Event type is required.',
+            'exists'   => 'The selected event type is invalid.',
+        ],
+        'eventStatusId' => [
+            'exists' => 'The selected event status is invalid.',
+        ],
+        'projectIdMandatory' => [
+            'required' => 'Project assignment requirement must be specified if the event type demands it.',
+        ],
+        'eventNameMandatory' => [
+            'required' => 'Event name requirement must be specified if the event type demands it.',
+        ],
+        'creatingProject' => [
+            'required' => 'It must be specified whether a new project is being created.',
+        ],
     ],
 
     /*

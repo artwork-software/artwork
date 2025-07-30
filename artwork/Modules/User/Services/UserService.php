@@ -18,6 +18,7 @@ use Artwork\Modules\User\Events\UserUpdated;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
@@ -272,7 +273,7 @@ class UserService
     /**
      * @return array<int, Carbon>
      */
-    public function getUserCalendarFilterDatesOrDefault(UserCalendarFilter|UserShiftCalendarFilter $userCalendarFilter): array
+    public function getUserCalendarFilterDatesOrDefault(UserFilter $userCalendarFilter): array
     {
 
         $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->getAttribute('start_date')) &&

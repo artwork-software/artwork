@@ -1182,7 +1182,7 @@ export default {
             this.selectedRoom = this.rooms.find(room => room.id === this.event.roomId);
             this.description = this.event.description;
 
-            console.log(this.event);
+            //console.log(this.event);
 
             this.event_properties?.forEach((event_property) => {
                 event_property.checked = this.event?.eventProperties.some(
@@ -1351,8 +1351,8 @@ export default {
                 this.setCombinedTimeString(this.endDate, this.endTime, 'end');
 
                 // Only validate start and end times, don't set error for other fields
-                try {
-                    await axios.post('/events', {start: this.startFull, end: this.endFull}, {headers: {'X-Dry-Run': true}});
+                /*try {
+                    //await axios.post('/events', {start: this.startFull, end: this.endFull}, {headers: {'X-Dry-Run': true}});
                 } catch (error) {
                     // Only set errors related to start and end times
                     if (error.response && error.response.data && error.response.data.errors) {
@@ -1365,7 +1365,7 @@ export default {
                         }
                         this.error = Object.keys(errors).length > 0 ? errors : null;
                     }
-                }
+                }*/
             }
         },
         addMinutes(date, minutes) {

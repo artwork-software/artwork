@@ -189,7 +189,11 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $userCalendarFilter = $user->userFilters()->calendarFilter()->first(); //$user->getAttribute('calendar_filter');
+
+        //dd($userCalendarFilter);
+
+
         $userCalendarSettings = $user->getAttribute('calendar_settings');
         $isPlanning = $request->input('isPlanning') === 'true';
 
@@ -319,8 +323,9 @@ class EventController extends Controller
             'period' => $period,
             'rooms' => $rooms,
             'calendar' => Inertia::always(fn() => $calendarData->rooms),
-            'personalFilters' => Inertia::always(fn() => $this->filterService->getPersonalFilter()),
-            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(true),
+            'personalFilters' => Inertia::always(fn() =>
+                $this->filterService->getPersonalFilter($user, 'calendar_filter')),
+            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
                 EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)),
             'areas' => $this->areaService->getAll(),
@@ -335,7 +340,9 @@ class EventController extends Controller
             'first_project_shift_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'projectNameUsedForProjectTimePeriod' => $userCalendarSettings->getAttribute('time_period_project_id') ?
-                $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'))->name : null,
+                $this->projectService->findById(
+                    $userCalendarSettings->getAttribute('time_period_project_id')
+                )->name : null,
             'calendarWarningText' => $calendarWarningText,
             'months' => $months,
         ]);
@@ -345,7 +352,7 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $userCalendarFilter = $user->userFilters()->planningCalendarFilter()->first();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
 
         $this->userService->shareCalendarAbo('calendar');
@@ -432,8 +439,9 @@ class EventController extends Controller
             'period' => $period,
             'rooms' => $rooms,
             'calendar' => Inertia::always(fn() => $calendarData->rooms),
-            'personalFilters' => Inertia::always(fn() => $this->filterService->getPersonalFilter()),
-            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(true),
+            'personalFilters' => Inertia::always(fn() => $this->filterService
+                ->getPersonalFilter($user, 'planning_filter')),
+            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
                 EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)),
             'areas' => $this->areaService->getAll(),
@@ -459,7 +467,7 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $userCalendarFilter = $user->getAttribute('shift_calendar_filter');
+        $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
         $renderViewName = 'Shifts/ShiftPlan';
         $this->userService->shareCalendarAbo('shiftCalendar');
@@ -533,7 +541,7 @@ class EventController extends Controller
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
             'days' => $period,
             'shiftPlan' => $calendarData->rooms,
-            'personalFilters' => $this->filterService->getPersonalFilter(),
+            'personalFilters' => $this->filterService->getPersonalFilter($user, 'shift_filter'),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,

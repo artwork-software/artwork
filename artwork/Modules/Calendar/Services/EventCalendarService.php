@@ -16,6 +16,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\AuthManager;
@@ -29,7 +30,7 @@ readonly class EventCalendarService
 
     public function filterRoomsEvents(
         Collection $rooms,
-        UserCalendarFilter $filter,
+        UserFilter $filter,
         $startDate,
         $endDate,
         ?UserCalendarSettings $userCalendarSettings = null,
@@ -73,7 +74,7 @@ readonly class EventCalendarService
 
     public function filterRoomsEventsWithMinimalData(
         Collection $rooms,
-        UserCalendarFilter $filter,
+        UserFilter $filter,
         $startDate,
         $endDate,
         ?UserCalendarSettings $userCalendarSettings = null,
@@ -87,7 +88,7 @@ readonly class EventCalendarService
             $userCalendarSettings,
         );
         $eventDTOs = collect();
-        foreach($events as $event) {
+        foreach ($events as $event) {
             $eventDTOs->push(new MinimalEventDTO(
                 id: $event->id,
                 start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
@@ -149,7 +150,7 @@ readonly class EventCalendarService
     private function filter(
         Builder $eventsQuery,
         Collection $rooms,
-        UserCalendarFilter $filter,
+        UserFilter $filter,
         $startDate,
         $endDate,
         ?UserCalendarSettings $userCalendarSettings = null,
@@ -159,21 +160,21 @@ readonly class EventCalendarService
 
         return $eventsQuery
             ->whereIn('room_id', $rooms->pluck('id'))
-            ->where(function ($q) use ($startDate, $endDateEndOfDay) {
+            ->where(function ($q) use ($startDate, $endDateEndOfDay): void {
                 $q->whereBetween('start_time', [$startDate, $endDateEndOfDay])
                     ->orWhereBetween('end_time', [$startDate, $endDateEndOfDay])
-                    ->orWhere(function ($q) use ($startDate, $endDateEndOfDay) {
+                    ->orWhere(function ($q) use ($startDate, $endDateEndOfDay): void {
                         $q->where('start_time', '<=', $startDate)
                             ->where('end_time', '>=', $endDateEndOfDay);
                     });
             })
-            ->when(!empty($filter->event_types), fn($q) => $q->whereIn('event_type_id', $filter->event_types))
-            ->when(!empty($filter->event_properties), function ($q) use ($filter) {
-                $q->whereHas('eventProperties', function ($q) use ($filter) {
-                    $q->whereIn('event_property_id', $filter->event_properties);
+            ->when(!empty($filter->event_type_ids), fn($q) => $q->whereIn('event_type_id', $filter->event_type_ids))
+            ->when(!empty($filter->event_property_ids), function ($q) use ($filter): void {
+                $q->whereHas('eventProperties', function ($q) use ($filter): void {
+                    $q->whereIn('event_property_id', $filter->event_property_ids);
                 });
             })
-            ->where(function($query) use ($userCalendarSettings) {
+            ->where(function ($query) use ($userCalendarSettings): void {
                 // Always include non-planning events
                 $query->where('is_planning', false);
 
@@ -184,6 +185,5 @@ readonly class EventCalendarService
             })
             ->orderBy('start_time')
             ->get();
-
     }
 }

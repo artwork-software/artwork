@@ -146,9 +146,10 @@
                     <slot name="moreButtons">
 
                     </slot>
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Display Settings')" icon="IconSettings" icon-size="h-7 w-7"
-                                      @click="showCalendarSettingsModal = true"/>
+                    <!--<ToolTipComponent direction="bottom" :tooltip-text="$t('Display Settings')" icon="IconSettings" icon-size="h-7 w-7"
+                                      @click="showCalendarSettingsModal = true"/>-->
 
+                    <FunctionBarSetting :is-planning="false" />
 
                     <!--<ToolTipComponent  direction="bottom"
                                        :tooltip-text="$t('Filter')"
@@ -243,6 +244,7 @@ import axios from 'axios';
 import {usePermission} from "@/Composeables/Permission.js";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
+import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 const {hasAdminRole, can} = usePermission(usePage().props);
 
 const props = defineProps({

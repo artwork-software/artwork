@@ -169,13 +169,15 @@
                         :filter-type="isPlanning ? 'planning_filter' : 'calendar_filter'"
                     />
 
-                    <ToolTipComponent
+                    <FunctionBarSetting :is-planning="isPlanning" />
+
+                    <!--<ToolTipComponent
                         direction="bottom"
                         :tooltip-text="$t('Display Settings')"
                         icon="IconSettings"
                         icon-size="h-7 w-7"
                         @click="showCalendarSettingsModal = true"
-                    />
+                    />-->
 
                     <div v-if="!project">
                         <div @click="showCalendarAboSettingModal = true"
@@ -225,11 +227,7 @@
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" />
 
 
-    <CalendarSettingsModal
-        v-if="showCalendarSettingsModal"
-        @close="showCalendarSettingsModal = false"
-        :is-planning="isPlanning"
-    />
+
 </template>
 
 <script setup>
@@ -251,6 +249,7 @@ import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum
 import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
+import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');

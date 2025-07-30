@@ -8,20 +8,22 @@
             @click="showCalendarFilterModal = true"/>
 
         <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="checkIfAnyFilterIsActive">
-              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+              <span class="absolute inline-flex h-full w-full motion-safe:animate-ping rounded-full bg-blue-400 opacity-75"></span>
               <span class="relative inline-flex size-2.5 rounded-full bg-blue-500"></span>
         </span>
     </div>
 
-    <CalendarFilterModal
-        v-if="showCalendarFilterModal"
-        @close="showCalendarFilterModal = false"
-        :filter-options="filterOptions"
-        :personal-filters="personalFilters"
-        :user_filters="user_filters"
-        :crafts="crafts"
-        :filter-type="filterType"
-    />
+    <teleport to="body">
+        <CalendarFilterModal
+            v-if="showCalendarFilterModal"
+            @close="showCalendarFilterModal = false"
+            :filter-options="filterOptions"
+            :personal-filters="personalFilters"
+            :user_filters="user_filters"
+            :crafts="crafts"
+            :filter-type="filterType"
+        />
+    </teleport>
 </template>
 
 <script setup>

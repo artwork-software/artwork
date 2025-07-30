@@ -12,6 +12,7 @@ use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\Room\Repositories\RoomAttributeRepository;
 use Artwork\Modules\Room\Repositories\RoomCategoryRepository;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,16 +27,18 @@ class FilterService
         private readonly RoomCategoryRepository $categoryRepository,
         private readonly EventPropertyRepository $eventPropertyRepository,
         private readonly CraftService $craftService,
+        private readonly AuthManager $authManager
     ) {
     }
 
     public function getPersonalFilter(?User $user = null, string $filterType = 'calendar_filter'): Collection
     {
+        $foundedUser = $user;
         //dirty compatibility hacks
-        if ($user === null) {
-            $user = auth()?->user();
+        if ($foundedUser === null) {
+            $foundedUser = $this->authManager->user();
         }
-        return $user->userFilterTemplates()->where('filter_type', $filterType)->get();
+        return $foundedUser->userFilterTemplates()->where('filter_type', $filterType)->get();
     }
 
     /**

@@ -54,14 +54,14 @@
                 <IconZoomOut @click="decrementZoomFactor" :disabled="zoomFactor >= 1.4"
                              v-if="!atAGlance" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomOut>
                 <IconArrowsDiagonal  class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="enterFullscreenMode" v-if="!atAGlance && !isFullscreen"/>
-                <IndividualCalendarFilterComponent
+                <!--<IndividualCalendarFilterComponent
                     class=""
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :at-a-glance="atAGlance"
                     :type="project ? 'project' : 'individual'"
                     :user_filters="user_filters"
-                    :extern-updated="externUpdate"/>
+                    :extern-updated="externUpdate"/>-->
                 <Menu as="div" class="relative inline-block items-center text-left">
                     <div class="flex items-center">
                         <MenuButton>

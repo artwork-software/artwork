@@ -150,11 +150,19 @@
                                       @click="showCalendarSettingsModal = true"/>
 
 
-                    <ToolTipComponent  direction="bottom"
+                    <!--<ToolTipComponent  direction="bottom"
                                        :tooltip-text="$t('Filter')"
                                        icon="IconFilter"
                                        icon-size="h-7 w-7"
-                                      @click="showCalendarFilterModal = true"/>
+                                      @click="showCalendarFilterModal = true"/>-->
+
+                    <FunctionBarFilter
+                        :user_filters="user_filters"
+                        :personal-filters="personalFilters"
+                        :filter-options="filterOptions"
+                        :crafts="crafts"
+                        in-shift-plan
+                    />
 
                     <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
                                       :tooltip-text="$t('Lock all shifts')" icon="IconCalendarCheck" icon-size="h-7 w-7"
@@ -164,12 +172,12 @@
                                       icon-size="h-7 w-7" @click="openHistoryModal()"/>
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal"
                                       icon-size="h-7 w-7" v-if="!isFullscreen" @click="enterFullscreenMode"/>
-                    <ShiftPlanFilter
+                    <!--<ShiftPlanFilter
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
                         :user_filters="user_filters"
                         :crafts="crafts"
-                    />
+                    />-->
 
                 </div>
             </div>
@@ -201,15 +209,7 @@
         in-shift-plan
     />
 
-    <CalendarFilterModal
-        v-if="showCalendarFilterModal"
-        @close="showCalendarFilterModal = false"
-        :filter-options="filterOptions"
-        :personal-filters="personalFilters"
-        :user_filters="user_filters"
-        :crafts="crafts"
-        in-shift-plan
-    />
+
 </template>
 
 <script setup>
@@ -242,8 +242,7 @@ import {ref, computed, watch, nextTick, defineAsyncComponent} from 'vue';
 import axios from 'axios';
 import {usePermission} from "@/Composeables/Permission.js";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
-import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
-import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
+import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 const {hasAdminRole, can} = usePermission(usePage().props);
 
 const props = defineProps({
@@ -286,13 +285,13 @@ const CalendarSettingsModal = defineAsyncComponent({
 // Computed properties
 const activeFilters = computed(() => {
     let activeFiltersArray = [];
-    props.filterOptions.rooms.forEach((room) => {
+    props.filterOptions.room_ids.forEach((room) => {
         if (props.user_filters.rooms?.includes(room.id)) {
             activeFiltersArray.push(room);
         }
     });
 
-    props.filterOptions.event_types.forEach((eventType) => {
+    props.filterOptions.event_type_ids.forEach((eventType) => {
         if (props.user_filters.event_types?.includes(eventType.id)) {
             activeFiltersArray.push(eventType);
         }

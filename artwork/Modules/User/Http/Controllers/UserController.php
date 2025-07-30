@@ -1128,7 +1128,23 @@ class UserController extends Controller
 
     public function updateShowCrafts(User $user, Request $request): void
     {
-        $user->update($request->only('show_crafts'));
+        $user->userFilters()->updateOrCreate(
+            ['filter_type' => 'shift_filter'],
+            [
+                'craft_ids' => $this->nullableArray($request->collect('craft_ids')),
+            ]
+        );
+    }
+
+    /**
+     * @param $collection
+     * @return array<string, mixed>|null
+     * @throws Throwable
+     */
+    private function nullableArray($collection): ?array
+    {
+        $array = $collection->filter()->all();
+        return empty($array) ? null : array_values($array);
     }
 
     public function updateShowShiftQualifications(User $user, Request $request): void

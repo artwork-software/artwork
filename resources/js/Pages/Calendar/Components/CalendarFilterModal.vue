@@ -135,7 +135,6 @@
                 </div>
             </div>
         </div>
-
         <div class="px-5 py-4">
             <div class="flex items-center justify-between">
                 <div>
@@ -208,13 +207,12 @@ const filteredOptionsByCategories = computed(() => {
     let roomFilters = Object.keys(props.filterOptions).filter(key => key.includes('room'));
     let eventFilters = Object.keys(props.filterOptions).filter(key => key.includes('event'));
     let areaFilters = Object.keys(props.filterOptions).filter(key => key.includes('area'));
+    let craftFilter = Object.keys(props.filterOptions).filter(key => key.includes('craft'));
     let filteredOptions = {
         roomFilters: {},
         areaFilters: {},
         eventFilters: {},
     }
-
-
 
     areaFilters.forEach(filter => {
         filteredOptions.areaFilters[filter] = props.filterOptions[filter];
@@ -228,6 +226,13 @@ const filteredOptionsByCategories = computed(() => {
     eventFilters.forEach(filter => {
         filteredOptions.eventFilters[filter] = props.filterOptions[filter];
     })
+
+    if(props.inShiftPlan) {
+        filteredOptions.craftFilters = {};
+        craftFilter.forEach(filter => {
+            filteredOptions.craftFilters[filter] = props.filterOptions[filter];
+        })
+    }
 
     return filteredOptions;
 })
@@ -267,47 +272,34 @@ const arrayToIds = (array) => {
     return array?.filter(item => item.checked).map(item => item.id) ?? null;
 }
 
-const returnNullIfFalse = (variable) => {
-    if (!variable) {
-        return false
-    }
-    return variable
-}
 
 const applyFilter = () => {
-    // Get all area filters from areaFilters
-    let areaFilterIds = [];
-    Object.keys(filteredOptionsByCategories.value.areaFilters).forEach(areaKey => {
-        const areaFilterArray = filteredOptionsByCategories.value.areaFilters[areaKey];
-        if (areaFilterArray && Array.isArray(areaFilterArray)) {
-            areaFilterIds = [...areaFilterIds, ...areaFilterArray.filter(item => item.checked).map(item => item.id)];
-        }
-    });
+    const data = {
+        filter_type: props.inShiftPlan ? 'shift_filter' : 'calendar_filter',
+    };
 
+    // Hilfsfunktion: checked IDs extrahieren
+    const extractCheckedIds = (filterGroup) => {
+        const result = {};
+        Object.entries(filteredOptionsByCategories.value[filterGroup]).forEach(([key, list]) => {
+            const checked = list.filter(item => item.checked).map(item => item.id);
+            result[key] = checked.length > 0 ? checked : null;
+        });
+        return result;
+    };
 
-    if (!props.inShiftPlan) {
-        router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), {
-            rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
-            areas: areaFilterIds.length > 0 ? areaFilterIds : null,
-            event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
-            room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_attributes),
-            room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_categories),
-            event_properties: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_properties),
-        }, {
-            preserveScroll: true,
-            preserveState: false,
-        })
-    } else {
-        router.patch(route('update.user.shift.calendar.filter', usePage().props.auth.user.id), {
-            rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
-            event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
-        }, {
-            preserveState: false,
-            preserveScroll: true,
-        })
+    // Raum-, Bereichs- und Eventfilter dynamisch sammeln
+    Object.assign(data, extractCheckedIds('roomFilters'));
+    Object.assign(data, extractCheckedIds('areaFilters'));
+    Object.assign(data, extractCheckedIds('eventFilters'));
+    if(props.inShiftPlan) {
+        Object.assign(data, extractCheckedIds('craftFilters'));
     }
+    router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), data, {
+        preserveScroll: true,
+        preserveState: false,
 
-
+    });
 }
 
 const saveFilter = () => {

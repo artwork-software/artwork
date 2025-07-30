@@ -64,10 +64,13 @@ class UserCalendarFilterController extends Controller
 
     public function updateDates(Request $request, User $user): void
     {
-        $user->calendar_filter()->update([
-            'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
-            'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
-        ]);
+        $user->userFilters()->updateOrCreate(
+            ['filter_type' => 'calendar_filter'],
+            [
+                'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
+                'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+            ]
+        );
     }
 
     public function singleValueUpdate(User $user, Request $request): RedirectResponse

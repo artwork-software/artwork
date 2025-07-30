@@ -224,13 +224,13 @@ class UpdateArtwork extends Command
                         [
                             'start_date' => $calendarFilter->start_date ?? now(),
                             'end_date' => $calendarFilter->end_date ?? now()->addMonth(),
-                            'event_type_ids' => $calendarFilter->event_types ?? [],
-                            'room_ids' => $calendarFilter->rooms ?? [],
-                            'area_ids' => $calendarFilter->areas ?? [],
-                            'room_attribute_ids' => $calendarFilter->room_attributes ?? [],
-                            'room_category_ids' => $calendarFilter->room_categories ?? [],
-                            'event_property_ids' => $calendarFilter->event_properties ?? [],
-                            'craft_ids' => [], // Keine Datenquelle in deinem Modell
+                            'event_type_ids' => $calendarFilter->event_types ?? null,
+                            'room_ids' => $calendarFilter->rooms ?? null,
+                            'area_ids' => $calendarFilter->areas ?? null,
+                            'room_attribute_ids' => $calendarFilter->room_attributes ?? null,
+                            'room_category_ids' => $calendarFilter->room_categories ?? null,
+                            'event_property_ids' => $calendarFilter->event_properties ?? null,
+                            'craft_ids' => null, // Keine Datenquelle in deinem Modell
                         ]
                     );
 
@@ -246,13 +246,13 @@ class UpdateArtwork extends Command
                         [
                             'start_date' => $shiftFilter->start_date ?? now(),
                             'end_date' => $shiftFilter->end_date ?? now()->addMonth(),
-                            'event_type_ids' => $shiftFilter->event_types ?? [],
-                            'room_ids' => $shiftFilter->rooms ?? [],
-                            'area_ids' => [],
-                            'room_attribute_ids' => [],
-                            'room_category_ids' => [],
-                            'event_property_ids' => [],
-                            'craft_ids' => [],
+                            'event_type_ids' => $shiftFilter->event_types ?? null,
+                            'room_ids' => $shiftFilter->rooms ?? null,
+                            'area_ids' => null,
+                            'room_attribute_ids' => null,
+                            'room_category_ids' => null,
+                            'event_property_ids' => null,
+                            'craft_ids' => null,
                         ]
                     );
 
@@ -272,7 +272,7 @@ class UpdateArtwork extends Command
 
         $data = collect($fields)->mapWithKeys(fn($field) => [
             $field =>
-                $filter->$field ?? ($field === 'start_date' ? now() : ($field === 'end_date' ? now()->addMonth() : [])),
+                $filter->$field ?? ($field === 'start_date' ? now() : ($field === 'end_date' ? now()->addMonth() : null)),
         ])->toArray();
 
         $user->userFilters()->updateOrCreate(['filter_type' => $filterType], $data);

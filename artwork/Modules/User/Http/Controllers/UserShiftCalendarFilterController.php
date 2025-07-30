@@ -20,10 +20,13 @@ class UserShiftCalendarFilterController extends Controller
 
     public function updateDates(Request $request, User $user): void
     {
-        $user->shift_calendar_filter()->update([
-            'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
-            'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
-        ]);
+        $user->userFilters()->updateOrCreate(
+            ['filter_type' => 'shift_filter'],
+            [
+                'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
+                'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+            ]
+        );
     }
 
     public function updateUserWorkerShiftPlanFilters(Request $request, User $user): void

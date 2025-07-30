@@ -2376,6 +2376,8 @@
     "Configure column width": "Spaltenbreite konfigurieren",
     "roomFilters": "Raumfilter",
     "eventFilters": "Terminfilter",
+    "craftFilters": "Gewerkfilter",
+    "craft_ids": "Gewerke",
     "room_category_ids": "Raumkategorien",
     "room_attribute_ids": "Raumattribute",
     "room_ids": "Räume",

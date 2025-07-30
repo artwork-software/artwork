@@ -11,7 +11,7 @@ class UpdateUserFilterRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,14 @@ class UpdateUserFilterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'filter_type' => 'required|string|in:calendar_filter,shift_filter',
+            'room_ids' => 'nullable|array',
+            'area_ids' => 'nullable|array',
+            'room_category_ids' => 'nullable|array',
+            'room_attribute_ids' => 'nullable|array',
+            'event_type_ids' => 'nullable|array',
+            'event_property_ids' => 'nullable|array',
+            'craft_ids' => 'nullable|array',
         ];
     }
 }

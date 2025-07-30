@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Filter\Services;
 
 use Artwork\Modules\Area\Repositories\AreaRepository;
+use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Repositories\EventPropertyRepository;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Repositories\FilterRepository;
@@ -24,6 +25,7 @@ class FilterService
         private readonly AreaRepository $areaRepository,
         private readonly RoomCategoryRepository $categoryRepository,
         private readonly EventPropertyRepository $eventPropertyRepository,
+        private readonly CraftService $craftService,
     ) {
     }
 
@@ -45,6 +47,7 @@ class FilterService
         $roomAttributes = $this->roomAttributeRepository->getAll();
         $eventTypes = $this->eventTypeService->getAll();
         $eventProperties = $this->eventPropertyRepository->getAll();
+        $crafts = $this->craftService->getAll();
 
         return [
             'room_category_ids' => $this->map($roomCategories),
@@ -59,6 +62,7 @@ class FilterService
                     'name' => $room->getAttribute('name'),
                     'label' => $room->getAttribute('name'),
                 ]),
+            'craft_ids' => $this->map($crafts),
         ];
     }
 

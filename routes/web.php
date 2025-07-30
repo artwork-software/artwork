@@ -91,6 +91,7 @@ use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
 use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use Artwork\Modules\User\Http\Controllers\UserContractController;
 use Artwork\Modules\User\Http\Controllers\UserController;
+use Artwork\Modules\User\Http\Controllers\UserFilterController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarAboController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
@@ -797,7 +798,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('reset.user.calendar.filter');
     Route::delete('/user/{user}/calendar/shift/filter/reset', [UserShiftCalendarFilterController::class, 'reset'])
         ->name('reset.user.shift.calendar.filter');
-    Route::patch('/user/{user}/calendar/filter/update', [UserCalendarFilterController::class, 'update'])
+    Route::patch('/user/{user}/calendar/filter/update', [UserFilterController::class, 'update'])
         ->name('update.user.calendar.filter');
     Route::patch('/user/{user}/shift/calendar/filter/update', [UserShiftCalendarFilterController::class, 'update'])
         ->name('update.user.shift.calendar.filter');

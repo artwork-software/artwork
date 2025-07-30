@@ -154,12 +154,18 @@
                         :user_filters="user_filters"
                         :extern-updated="externUpdate"/>-->
 
-                    <ToolTipComponent
+                    <!--<ToolTipComponent
                         icon="IconFilter"
                         icon-size="h-7 w-7"
                         direction="bottom"
                         :tooltip-text="$t('Filter')"
                         @click="showCalendarFilterModal = true"
+                    />-->
+
+                    <FunctionBarFilter
+                        :user_filters="user_filters"
+                        :personal-filters="personalFilters"
+                        :filter-options="filterOptions"
                     />
 
                     <ToolTipComponent
@@ -217,13 +223,6 @@
         @close="closeCalendarAboSettingModal"/>
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" />
 
-    <CalendarFilterModal
-        v-if="showCalendarFilterModal"
-        @close="showCalendarFilterModal = false"
-        :filter-options="filterOptions"
-        :personal-filters="personalFilters"
-        :user_filters="user_filters"
-    />
 
     <CalendarSettingsModal
         v-if="showCalendarSettingsModal"
@@ -250,6 +249,7 @@ import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');

@@ -161,7 +161,7 @@
                         :personal-filters="personalFilters"
                         :filter-options="filterOptions"
                         :crafts="crafts"
-                        in-shift-plan
+                        filter-type="shift_filter"
                     />
 
                     <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"

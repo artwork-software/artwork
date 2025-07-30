@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Filter\Models\Filter;
@@ -11,6 +10,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Models\RoomCategory;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserFilterTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection as Collection;
@@ -103,24 +103,18 @@ class FilterController extends Controller
         //return Redirect::back();
     }
 
-    public function activate(Filter $filter, User $user)
+    public function activate(UserFilterTemplate $filter, User $user): void
     {
-        $calendarFilter = $user->calendar_filter;
-
-        $eventTypes = $filter->event_types->isNotEmpty() ? $filter->event_types->pluck('id') : null;
-        $rooms = $filter->rooms->isNotEmpty() ? $filter->rooms->pluck('id') : null;
-        $areas = $filter->areas->isNotEmpty() ? $filter->areas->pluck('id') : null;
-        $roomAttributes = $filter->room_attributes->isNotEmpty() ? $filter->room_attributes->pluck('id') : null;
-        $roomCategories = $filter->room_categories->isNotEmpty() ? $filter->room_categories->pluck('id') : null;
-
-
-        $calendarFilter->update([
-            'event_types' => $eventTypes,
-            'rooms' => $rooms,
-            'areas' => $areas,
-            'room_attributes' => $roomAttributes,
-            'room_categories' => $roomCategories,
-            'event_properties' => $filter->eventProperties ?? null
+        $user->userFilters()->updateOrCreate([
+            'filter_type' => $filter->filter_type
+        ], [
+            'room_ids' => $filter->room_ids,
+            'area_ids' => $filter->area_ids,
+            'room_category_ids' => $filter->room_category_ids,
+            'room_attribute_ids' => $filter->room_attribute_ids,
+            'event_type_ids' => $filter->event_type_ids,
+            'event_property_ids' => $filter->event_property_ids,
+            'craft_ids' => $filter->craft_ids,
         ]);
     }
 }

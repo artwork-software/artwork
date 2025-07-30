@@ -26,7 +26,7 @@
                         <div v-for="(filter, index) in usePage().props.personalFilters" class="group block cursor-pointer shrink-0 bg-blue-50  w-fit px-2 py-1.5 rounded-full border border-blue-200">
                             <div class="flex items-center">
                                 <div class="mx-2" @click="activateFilter(filter)">
-                                    <p class="text-blue-500 text-xs font-bold group-hover:text-blue-600">{{ filter.name}}</p>
+                                    <p class="text-blue-500 text-xs group-hover:text-blue-600">{{ filter.name}}</p>
                                 </div>
                                 <div class="flex items-center">
                                     <button type="button" @click="removeFilter(filter)">
@@ -43,9 +43,9 @@
                                 v-model="saveFilterForm.name"
                                 label="Filter name"
                             />
-                            <SmallFormButton @click="saveFilter" type="button" class="bg-artwork-buttons-create text-white">
+                            <ArtworkBaseModalButton @click="saveFilter" type="button">
                                 {{ $t('Save') }}
-                            </SmallFormButton>
+                            </ArtworkBaseModalButton>
                         </div>
                     </div>
                 </div>
@@ -110,7 +110,7 @@
                                             <div class="flex items-center gap-x-2">
                                                 <div class="flex h-6 shrink-0 items-center">
                                                     <div class="group grid size-4 grid-cols-1">
-                                                        <input v-model="filter.checked" id="candidates" aria-describedby="candidates-description" name="candidates" type="checkbox" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                                                        <input v-model="filter.checked" :id="removeSpaceFromKey(filter.name)" :aria-describedby="removeSpaceFromKey(filter.name) + '-description'" :name="removeSpaceFromKey(filter.name)" type="checkbox" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
                                                         <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
                                                             <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                             <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -135,6 +135,7 @@
                 </div>
             </div>
         </div>
+
         <div class="px-5 py-4">
             <div class="flex items-center justify-between">
                 <div>
@@ -179,6 +180,10 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    filterType: {
+        type: String,
+        default: 'calendar_filter'
+    }
 })
 
 const emits = defineEmits([
@@ -198,7 +203,6 @@ const activeFilters = computed(() => {
             activeFilters.push(...filteredOptionsByCategories.value[category][subCategory].filter(filter => filter.checked));
         })
     })
-
 
     return activeFilters;
 })
@@ -227,7 +231,7 @@ const filteredOptionsByCategories = computed(() => {
         filteredOptions.eventFilters[filter] = props.filterOptions[filter];
     })
 
-    if(props.inShiftPlan) {
+    if(props.filterType === 'shift_filter' || props.inShiftPlan) {
         filteredOptions.craftFilters = {};
         craftFilter.forEach(filter => {
             filteredOptions.craftFilters[filter] = props.filterOptions[filter];
@@ -268,60 +272,50 @@ const resetFilter = () => {
     applyFilter();
 }
 
-const arrayToIds = (array) => {
-    return array?.filter(item => item.checked).map(item => item.id) ?? null;
-}
-
+const extractCheckedIds = (filterGroup) => {
+    const result = {};
+    Object.entries(filteredOptionsByCategories.value[filterGroup]).forEach(([key, list]) => {
+        const checked = list.filter(item => item.checked).map(item => item.id);
+        result[key] = checked.length > 0 ? checked : null;
+    });
+    return result;
+};
 
 const applyFilter = () => {
     const data = {
-        filter_type: props.inShiftPlan ? 'shift_filter' : 'calendar_filter',
+        filter_type: props.filterType,
     };
 
-    // Hilfsfunktion: checked IDs extrahieren
-    const extractCheckedIds = (filterGroup) => {
-        const result = {};
-        Object.entries(filteredOptionsByCategories.value[filterGroup]).forEach(([key, list]) => {
-            const checked = list.filter(item => item.checked).map(item => item.id);
-            result[key] = checked.length > 0 ? checked : null;
-        });
-        return result;
+    Object.assign(data, extractCheckedIds('roomFilters'));
+    Object.assign(data, extractCheckedIds('areaFilters'));
+    Object.assign(data, extractCheckedIds('eventFilters'));
+    if(props.filterType === 'shift_filter' || props.inShiftPlan) {
+        Object.assign(data, extractCheckedIds('craftFilters'));
+    }
+    router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), data, {
+        preserveScroll: true,
+        preserveState: false,
+        onFinish: () => {
+            restoreFilterState()
+        }
+    });
+}
+
+
+
+const saveFilter = () => {
+    const data = {
+        filter_type: props.filterType,
+        name: saveFilterForm.name
     };
 
-    // Raum-, Bereichs- und Eventfilter dynamisch sammeln
     Object.assign(data, extractCheckedIds('roomFilters'));
     Object.assign(data, extractCheckedIds('areaFilters'));
     Object.assign(data, extractCheckedIds('eventFilters'));
     if(props.inShiftPlan) {
         Object.assign(data, extractCheckedIds('craftFilters'));
     }
-    router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), data, {
-        preserveScroll: true,
-        preserveState: false,
-
-    });
-}
-
-const saveFilter = () => {
-    // Get all area filters from areaFilters
-    let areaFilterIds = [];
-    Object.keys(filteredOptionsByCategories.value.areaFilters).forEach(areaKey => {
-        const areaFilterArray = filteredOptionsByCategories.value.areaFilters[areaKey];
-        if (areaFilterArray && Array.isArray(areaFilterArray)) {
-            areaFilterIds = [...areaFilterIds, ...areaFilterArray.filter(item => item.checked).map(item => item.id)];
-        }
-    });
-
-    // save filter to user filters
-    router.post(route('filter.store'), {
-        name: saveFilterForm.name,
-        rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
-        areas: areaFilterIds.length > 0 ? areaFilterIds : null,
-        event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_types),
-        room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_attributes),
-        room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.room_categories),
-        event_properties: arrayToIds(filteredOptionsByCategories.value.eventFilters.event_properties),
-    }, {
+    router.post(route('filter.store', usePage().props.auth.user.id), data, {
         preserveScroll: true,
         onSuccess: () => {
             saveFilterForm.reset();
@@ -329,19 +323,23 @@ const saveFilter = () => {
             router.reload({
                 only: ['personalFilters']
             })
+        },
+        onFinish: () => {
+            restoreFilterState()
         }
-    })
+    });
 }
 
 const removeFilter = (filter) => {
-    // remove filter from user filters
     router.delete(route('filter.destroy', filter.id), {
         preserveScroll: true,
-        preserveState: true,
         onSuccess: () => {
             router.reload({
                 only: ['personalFilters']
             })
+        },
+        onFinish: () => {
+            restoreFilterState()
         }
     })
 }
@@ -353,8 +351,7 @@ const activateFilter = (filter) => {
     })
 }
 
-onMounted(() => {
-    // set all filters to checked if they are in user filters
+const restoreFilterState = () => {
     Object.keys(filteredOptionsByCategories.value).forEach(category => {
         Object.keys(filteredOptionsByCategories.value[category]).forEach(subCategory => {
             filteredOptionsByCategories.value[category][subCategory].forEach(filter => {
@@ -363,7 +360,11 @@ onMounted(() => {
             })
         })
     })
-})
+}
+
+onMounted(() => {
+    restoreFilterState();
+});
 </script>
 
 <style scoped>

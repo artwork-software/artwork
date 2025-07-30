@@ -92,6 +92,7 @@ use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingControl
 use Artwork\Modules\User\Http\Controllers\UserContractController;
 use Artwork\Modules\User\Http\Controllers\UserController;
 use Artwork\Modules\User\Http\Controllers\UserFilterController;
+use Artwork\Modules\User\Http\Controllers\UserFilterTemplateController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarAboController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
@@ -549,8 +550,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Filters
     Route::get('/filters', [FilterController::class, 'index']);
-    Route::post('/filters', [FilterController::class, 'store'])->name('filter.store');
-    Route::delete('/filters/{filter}', [FilterController::class, 'destroy'])->name('filter.destroy');
+    Route::post('/filters/{user}', [UserFilterTemplateController::class, 'store'])->name('filter.store');
+    Route::delete('/filters/{filter}', [UserFilterTemplateController::class, 'destroy'])->name('filter.destroy');
     Route::post('/filters/{filter}/{user}', [FilterController::class, 'activate'])->name('filter.activate');
 
     //Shift Filters

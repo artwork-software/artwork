@@ -55,9 +55,6 @@ class UserFilterController extends Controller
      */
     public function update(UpdateUserFilterRequest $request, User $user): void
     {
-
-        //dd($request->all());
-
         $user->userFilters()->updateOrCreate(
             ['filter_type' => $request->input('filter_type')],
             [

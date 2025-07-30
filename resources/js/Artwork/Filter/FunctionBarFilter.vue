@@ -7,7 +7,7 @@
             icon-size="h-7 w-7"
             @click="showCalendarFilterModal = true"/>
 
-        <span class="absolute flex size-2.5 top-0 right-0" v-if="checkIfAnyFilterIsActive">
+        <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="checkIfAnyFilterIsActive">
               <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
               <span class="relative inline-flex size-2.5 rounded-full bg-blue-500"></span>
         </span>
@@ -20,16 +20,14 @@
         :personal-filters="personalFilters"
         :user_filters="user_filters"
         :crafts="crafts"
-        :in-shift-plan="inShiftPlan"
+        :filter-type="filterType"
     />
 </template>
 
 <script setup>
 
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {computed, ref} from "vue";
-import CalendarFilterModal from "@/Pages/Calendar/Components/CalendarFilterModal.vue";
-
+import {computed, defineAsyncComponent, ref} from "vue";
 
 const props = defineProps({
     filterOptions: {
@@ -51,6 +49,10 @@ const props = defineProps({
     inShiftPlan: {
         type: Boolean,
         default: false
+    },
+    filterType: {
+        type: String,
+        default: 'calendar_filter'
     }
 });
 
@@ -72,6 +74,12 @@ const checkIfAnyFilterIsActive = computed(() => {
         return value !== null && value !== '';
     });
 });
+
+const CalendarFilterModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Calendar/Components/CalendarFilterModal.vue'),
+    delay: 200,
+    timeout: 5000
+})
 </script>
 
 <style scoped>

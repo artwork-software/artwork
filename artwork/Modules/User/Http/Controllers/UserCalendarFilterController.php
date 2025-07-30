@@ -32,18 +32,6 @@ class UserCalendarFilterController extends Controller
 
     public function update(Request $request, User $user): void
     {
-        /**
-         * rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
-         * areas: arrayToIds(filteredOptionsByCategories.value.roomFilters.areas),
-         * event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.eventTypes),
-         * room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.roomAttributes),
-         * room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.roomCategories),
-         * event_properties: arrayToIds(filteredOptionsByCategories.value.eventFilters.eventProperties),
-         * adjoiningNoAudience: returnNullIfFalse(generalFilters.value.adjoiningNoAudience.checked),
-         * adjoiningNotLoud: returnNullIfFalse(generalFilters.value.adjoiningNotLoud.checked),
-         */
-
-
         $roomIds = $request->collect('rooms')->isNotEmpty() ? $request->collect('rooms') : null;
         $areaIds = $request->collect('areas')->isNotEmpty() ? $request->collect('areas') : null;
         $eventTypes = $request->collect('event_types')->isNotEmpty() ? $request->collect('event_types') : null;

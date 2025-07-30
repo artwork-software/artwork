@@ -9,9 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
+ * @property string $name
  * @property int $user_id
- * @property \Illuminate\Support\Carbon $start_date
- * @property \Illuminate\Support\Carbon $end_date
  * @property string $filter_type
  * @property array $event_type_ids
  * @property array $room_ids
@@ -20,24 +19,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property array $room_category_ids
  * @property array $event_property_ids
  * @property array $craft_ids
- * @property \Illuminate\Support\Carbon $created_at
+ * * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
- * @property \Illuminate\Support\Carbon $deleted_at
- * @property User $user
- * @method static Builder|UserFilter shiftFilter()
- * @method static Builder|UserFilter calendarFilter()
- * @method static Builder|UserFilter planningCalendarFilter()
+ * * @property User $user
+ * @method static Builder|UserFilterTemplate shiftFilter()
  */
-
-class UserFilter extends Model
+class UserFilterTemplate extends Model
 {
+    /** @use HasFactory<\Database\Factories\UserFilterTemplateFactory> */
+    use HasFactory;
+
     /** @use HasFactory<\Database\Factories\UserFilterFactory> */
     use HasFactory;
 
     protected $fillable = [
+        'name',
         'user_id',
-        'start_date',
-        'end_date',
         'filter_type',
         'event_type_ids',
         'room_ids',
@@ -49,8 +46,6 @@ class UserFilter extends Model
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
         'event_type_ids' => 'array',
         'room_ids' => 'array',
         'area_ids' => 'array',
@@ -62,7 +57,7 @@ class UserFilter extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id', 'id', 'user_filters');
+        return $this->belongsTo(User::class, 'user_id', 'id', 'user');
     }
 
     public function scopeShiftFilter(Builder $query): Builder
@@ -73,9 +68,5 @@ class UserFilter extends Model
     public function scopeCalendarFilter(Builder $query): Builder
     {
         return $query->where('filter_type', 'calendar_filter');
-    }
-    public function scopePlanningCalendarFilter(Builder $query): Builder
-    {
-        return $query->where('filter_type', 'planning_filter');
     }
 }

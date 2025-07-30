@@ -166,6 +166,7 @@
                         :user_filters="user_filters"
                         :personal-filters="personalFilters"
                         :filter-options="filterOptions"
+                        :filter-type="isPlanning ? 'planning_filter' : 'calendar_filter'"
                     />
 
                     <ToolTipComponent

@@ -234,6 +234,21 @@ class UpdateArtwork extends Command
                         ]
                     );
 
+                    $user->userFilters()->updateOrCreate(
+                        ['filter_type' => 'planning_filter'],
+                        [
+                            'start_date' => $calendarFilter->start_date ?? now(),
+                            'end_date' => $calendarFilter->end_date ?? now()->addMonth(),
+                            'event_type_ids' => $calendarFilter->event_types ?? null,
+                            'room_ids' => $calendarFilter->rooms ?? null,
+                            'area_ids' => $calendarFilter->areas ?? null,
+                            'room_attribute_ids' => $calendarFilter->room_attributes ?? null,
+                            'room_category_ids' => $calendarFilter->room_categories ?? null,
+                            'event_property_ids' => $calendarFilter->event_properties ?? null,
+                            'craft_ids' => null, // Keine Datenquelle in deinem Modell
+                        ]
+                    );
+
                     $calendarFilter->delete();
                 }
 
@@ -252,7 +267,7 @@ class UpdateArtwork extends Command
                             'room_attribute_ids' => null,
                             'room_category_ids' => null,
                             'event_property_ids' => null,
-                            'craft_ids' => null,
+                            'craft_ids' => $user->show_crafts,
                         ]
                     );
 

@@ -4,14 +4,14 @@ namespace Artwork\Modules\User\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateUserFilterRequest extends FormRequest
+class UpdateUserFilterTemplateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -21,7 +21,9 @@ class UpdateUserFilterRequest extends FormRequest
      */
     public function rules(): array
     {
+
         return [
+            'name' => 'required|string|max:255',
             'filter_type' => 'required|string|in:calendar_filter,shift_filter,planning_filter',
             'event_type_ids' => 'nullable|array',
             'event_type_ids.*' => 'integer|exists:event_types,id',

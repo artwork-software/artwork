@@ -29,13 +29,13 @@ class FilterService
     ) {
     }
 
-    public function getPersonalFilter(?User $user = null): \Illuminate\Support\Collection
+    public function getPersonalFilter(?User $user = null, string $filterType = 'calendar_filter'): Collection
     {
         //dirty compatibility hacks
         if ($user === null) {
-            $user = auth()->user();
+            $user = auth()?->user();
         }
-        return $this->filterRepository->getPersonalFilter($user);
+        return $user->userFilterTemplates()->where('filter_type', $filterType)->get();
     }
 
     /**

@@ -43,6 +43,13 @@ export default {
                     current: route().current('user-contract-settings.index'),
                     show: true,
                     icon: 'IconContract'
+                },
+                {
+                    name: this.$t('Workflows'),
+                    href: route('shift-warnings.rules.index'),
+                    current: route().current('shift-warnings.rules.index'),
+                    show: true,
+                    icon: 'IconJumpRope'
                 }
             ],
             iconList: [

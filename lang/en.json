@@ -2907,5 +2907,8 @@
     "Daily Target Hours": "Daily Target Hours",
     "Collisions with shifts:": "Collisions with shifts:",
     "The new project status is marked as planned. Do you want to convert all events of the project to planning events?": "The new project status is marked as planned. Do you want to convert all events of the project to planning events?",
-    "Convert to planning events": "Convert to planning events"
+    "Convert to planning events": "Convert to planning events",
+    "Shift warnings - rules": "Shift warnings - rules",
+    "Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies. You can create, edit, and delete shift warning rules here.": "Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies. You can create, edit, and delete shift warning rules here.",
+    "Create new rule": "Create new rule"
 }

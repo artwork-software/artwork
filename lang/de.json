@@ -2911,6 +2911,9 @@
     "Daily Target Hours": "Tagessollstunden pro Tag",
     "Collisions with shifts:": "Kollisionen mit Schichten:",
     "The new project status is marked as planned. Do you want to convert all events of the project to planning events?": "Der neu ausgewählte Projektstatus ist als 'in Planung' markiert. Möchtest du alle Termine des Projekts in Planungstermine umwandeln?",
-    "Convert to planning events": "In Planungstermine umwandeln"
+    "Convert to planning events": "In Planungstermine umwandeln",
+    "Shift warnings - rules": "Schichtwarnungen - Regeln",
+    "Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies. You can create, edit, and delete shift warning rules here.": "Schichtwarnungen werden verwendet, um die Einhaltung von Arbeitsvorschriften und internen Richtlinien zu überwachen und durchzusetzen. Du kannst hier Schichtwarnungsregeln erstellen, bearbeiten und löschen.",
+    "Create new rule": "Neue Regel erstellen"
 }
 

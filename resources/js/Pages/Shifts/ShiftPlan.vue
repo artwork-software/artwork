@@ -542,19 +542,19 @@
                                         <td v-for="day in days" class="flex pr-[1px] relative pb-[1px]">
                                             <div v-if="!day.isExtraRow" :class="[
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
-                                                    $page.props.auth.user.compact_mode ? 'h-8' : '',
+                                                    $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : 'h-12 max-h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     multiEditMode && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-100 !overflow-hidden' : ''
                                                 ]"
                                                  class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell h-full cursor-pointer overflow-y-scroll hover:opacity-100"
-                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
+                                                 :style="{width: '202px', maxWidth: '202px'}"
                                                  @click="handleCellClick(user, day)">
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
                                                  class="p-2 bg-gray-50/30 text-center flex items-center justify-center text-white h-full rounded-lg shiftCell cursor-default overflow-hidden"
-                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : '',
+                                                 :style="{width: '202px', maxWidth: '202px'}"
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <div :class="$page.props.auth.user.compact_mode ? 'flex items-center gap-x-1' : ''">
                                                     <div class="text-[9px]">
@@ -629,7 +629,7 @@
                                                     multiEditMode ? '!overflow-hidden' : '']"
                                                  class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell h-full cursor-pointer overflow-y-scroll hover:opacity-100"
                                                  @click="handleCellClick(user, day)"
-                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
+                                                 :style="{width: '202px', maxWidth: '202px'}">
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else class="p-2 bg-gray-50/30 text-center flex items-center justify-center text-white h-full rounded-lg shiftCell cursor-default overflow-hidden" :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"

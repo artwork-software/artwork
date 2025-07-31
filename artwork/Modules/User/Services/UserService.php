@@ -307,7 +307,7 @@ class UserService
      */
     public function getUserShiftCalendarFilterDatesOrDefault(User $user): array
     {
-        $userShiftCalendarFilter = $user->shift_calendar_filter;
+        $userShiftCalendarFilter = $user->userFilters()->shiftFilter()->first();
 
         $hasUserShiftCalendarFilterDates = !is_null($userShiftCalendarFilter?->start_date) &&
             !is_null($userShiftCalendarFilter?->end_date);

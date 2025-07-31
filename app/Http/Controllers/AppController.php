@@ -7,12 +7,14 @@ use App\Providers\RouteServiceProvider;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Http\Requests\UserCreateRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Http\Requests\ToggleUseProjectTimePeriodRequest;
 use Artwork\Modules\User\Services\UserProjectManagementSettingService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
+use Carbon\Carbon;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
@@ -192,8 +194,23 @@ class AppController extends Controller
 
         $user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
         $user->calendar_settings()->create();
-        $user->calendar_filter()->create();
-        $user->shift_calendar_filter()->create();
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
+
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::PLANNING_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
+
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::SHIFT_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
         $this->userProjectManagementSettingService->updateOrCreateIfNecessary(
             $user,
             $this->userProjectManagementSettingService->getDefaults()

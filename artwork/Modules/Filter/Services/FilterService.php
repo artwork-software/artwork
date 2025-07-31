@@ -11,6 +11,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\Room\Repositories\RoomAttributeRepository;
 use Artwork\Modules\Room\Repositories\RoomCategoryRepository;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
@@ -31,7 +32,7 @@ class FilterService
     ) {
     }
 
-    public function getPersonalFilter(?User $user = null, string $filterType = 'calendar_filter'): Collection
+    public function getPersonalFilter(?User $user = null, string $filterType = UserFilterTypes::CALENDAR_FILTER->value): Collection
     {
         $foundedUser = $user;
         //dirty compatibility hacks

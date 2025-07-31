@@ -152,7 +152,7 @@ class EventController extends Controller
                     $this->eventCollectionService->collectEventsForRoomsOnSpecificDays(
                         $desiredRoomIds,
                         $desiredDays,
-                        $request->user()->calendar_filter,
+                        $request->user()->userFilters()->calendarFilter()->first(),
                         $projectId > 0 ?
                             $projectService->findById($projectId) :
                             null

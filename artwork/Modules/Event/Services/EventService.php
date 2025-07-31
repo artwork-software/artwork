@@ -697,7 +697,7 @@ readonly class EventService
         [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($user);
 
         $periodArray = $this->generatePeriodArray($startDate, $endDate, $user);
-        $userFilter = $user->shift_calendar_filter;
+        $userFilter = $user->userFilters()->shiftCalendar()->first();
         $userCalendarSettings = $user->calendar_settings;
         $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate);
 
@@ -1170,7 +1170,7 @@ readonly class EventService
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
-        $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $userCalendarFilter = $user->userFilters()->calendarFilter()->first();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
 
         //today is used if project calendar is opened and no events are given as project calendar
@@ -1181,7 +1181,7 @@ readonly class EventService
             !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
             !$project
         ) {
-            [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
+            [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         } else {
             if (!$project && $useProjectTimePeriod) {
                 $project = $projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
@@ -1319,7 +1319,7 @@ readonly class EventService
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
-        $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $userCalendarFilter = $user->userFilters()->calendarFilter()->first();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
 
         //today is used if project calendar is opened and no events are given as project calendar
@@ -1330,7 +1330,7 @@ readonly class EventService
             !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
             !$project
         ) {
-            [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
+            [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         } else {
             if (!$project && $useProjectTimePeriod) {
                 $project = $projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
@@ -1384,7 +1384,7 @@ readonly class EventService
                 ];
             }
         }
-        $userFilter = $user->calendar_filter;
+        $userFilter = $user->userFilters()->calendarFilter()->first();
         $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings);
 
         $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate, $userCalendarSettings);

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Models;
 
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -62,11 +63,11 @@ class UserFilterTemplate extends Model
 
     public function scopeShiftFilter(Builder $query): Builder
     {
-        return $query->where('filter_type', 'shift_filter');
+        return $query->where('filter_type', UserFilterTypes::SHIFT_FILTER->value);
     }
 
     public function scopeCalendarFilter(Builder $query): Builder
     {
-        return $query->where('filter_type', 'calendar_filter');
+        return $query->where('filter_type', UserFilterTypes::CALENDAR_FILTER->value);
     }
 }

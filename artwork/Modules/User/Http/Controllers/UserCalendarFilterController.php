@@ -3,6 +3,7 @@
 namespace Artwork\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -53,7 +54,7 @@ class UserCalendarFilterController extends Controller
     public function updateDates(Request $request, User $user): void
     {
         $user->userFilters()->updateOrCreate(
-            ['filter_type' => 'calendar_filter'],
+            ['filter_type' => UserFilterTypes::CALENDAR_FILTER->value],
             [
                 'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
                 'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')

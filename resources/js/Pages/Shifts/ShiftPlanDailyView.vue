@@ -48,7 +48,6 @@
                             :user_filters="user_filters"
                             :crafts="crafts"
                         />-->
-
                         <FunctionBarFilter
                             :user_filters="user_filters"
                             :personal-filters="personalFilters"
@@ -100,7 +99,7 @@
                                     </div>
                                     <div class="card white p-5 text-xs font-lexend col-span-2">
                                         <div class="space-y-2" v-if="room.content[day.fullDay]?.shifts?.length > 0">
-                                            <div v-for="shift in room.content[day.fullDay]?.shifts" :key="shift.id">
+                                            <div v-for="shift in filterShiftsByCraft(room.content[day.fullDay]?.shifts)" :key="shift.id">
                                                 <SingleShiftInDailyShiftView :shift="shift" :shift-qualifications="shiftQualifications" :crafts="crafts"/>
                                             </div>
                                         </div>
@@ -298,6 +297,22 @@ const  changeDailyViewMode = () => {
         preserveScroll: false,
         preserveState: false
     })
+};
+
+const filterShiftsByCraft = (shifts) => {
+    if (!shifts) return [];
+
+    // If craft_ids is populated in user_filters, filter shifts by craft
+    if (props.user_filters.craft_ids && props.user_filters.craft_ids.length > 0) {
+        return shifts.filter(shift => {
+            console.log(shift);
+            // Check if the shift's craft_id is in the user_filters.craft_ids array
+            return props.user_filters.craft_ids.includes(shift.craft?.id);
+        });
+    }
+
+    // If no craft_ids filter is set, return all shifts
+    return shifts;
 };
 
 

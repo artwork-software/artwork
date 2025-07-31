@@ -14,6 +14,7 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
@@ -49,7 +50,7 @@ readonly class CalendarDataService
     public function createCalendarData(
         Carbon $startDate,
         Carbon $endDate,
-        UserShiftCalendarFilter|UserCalendarFilter|null $calendarFilter,
+        UserFilter|null $calendarFilter,
         ?Project $project = null,
         ?Room $room = null,
         ?bool $desiresInventorySchedulingResource = null
@@ -113,14 +114,10 @@ readonly class CalendarDataService
         $roomsWithEvents = empty($room) ?
             $this->eventCollectionService->collectEventsForRooms(
                 roomsWithEvents: $this->roomRepository->getFilteredRoomsBy(
-                    $calendarFilter?->rooms,
-                    $calendarFilter?->room_attributes,
-                    $calendarFilter?->areas,
-                    $calendarFilter?->room_categories,
-                    $calendarFilter?->adjoining_not_loud,
-                    $calendarFilter?->adjoining_no_audience,
-                    $startDate,
-                    $endDate
+                    $calendarFilter?->room_ids,
+                    $calendarFilter?->room_attribute_ids,
+                    $calendarFilter?->area_ids,
+                    $calendarFilter?->room_category_ids,
                 ),
                 calendarPeriod: $calendarPeriod,
                 calendarFilter: $calendarFilter,
@@ -204,7 +201,7 @@ readonly class CalendarDataService
             $monthNumber = $period->month;
 
             $holidayForDay = $holidays->where('date', $period->toDateString())->values() ?? [];
-            if ($extraRow){
+            if ($extraRow) {
                 if ($isMonday) {
                     $periodArray[] = [
                         'isExtraRow' => true,
@@ -256,7 +253,7 @@ readonly class CalendarDataService
                         ->whereDay('end_date', $period->day);
                 });
             })
-            ->with(['subdivisions' => function ($query) {
+            ->with(['subdivisions' => function ($query): void {
                 $query->select('name');
             }])
             ->get()
@@ -269,39 +266,38 @@ readonly class CalendarDataService
             ));
     }
 
-    public function getFilteredRooms($filter, $userCalendarSettings, $startDate, $endDate) {
+    public function getFilteredRooms(UserFilter $filter, $userCalendarSettings, $startDate, $endDate)
+    {
         $userCalendarFilter = $filter;
         $rooms = Room::select(['id', 'name', 'temporary', 'start_date', 'end_date'])
             ->where('relevant_for_disposition', true)
-            ->unlessRoomIds($userCalendarFilter?->rooms)
-            ->unlessRoomAttributeIds($userCalendarFilter?->room_attributes)
-            ->unlessAreaIds($userCalendarFilter?->areas)
-            ->unlessRoomCategoryIds($userCalendarFilter?->room_categories)
-            ->whenFilterAdjoiningWithStartAndEndDate(
-                $userCalendarFilter?->adjoining_not_loud,
-                $userCalendarFilter?->adjoining_no_audience,
-                $startDate,
-                $endDate
-            )
-            ->when($userCalendarSettings?->hide_unoccupied_rooms, function ($query) use ($filter, $startDate, $endDate) {
-                $query->whereExists(function ($eventQuery) use ($filter, $startDate, $endDate) {
-                    $eventQuery->selectRaw(1)
+            ->unlessRoomIds($userCalendarFilter?->room_ids)
+            ->unlessRoomAttributeIds($userCalendarFilter?->room_attribute_ids)
+            ->unlessAreaIds($userCalendarFilter?->area_ids)
+            ->unlessRoomCategoryIds($userCalendarFilter?->room_category_ids)
+            ->when(
+                $userCalendarSettings?->hide_unoccupied_rooms,
+                function ($query) use ($filter, $startDate, $endDate
+                ): void {
+                    $query->whereExists(function ($eventQuery) use ($filter, $startDate, $endDate): void {
+                        $eventQuery->selectRaw(1)
                         ->from('events')
                         ->whereColumn('events.room_id', 'rooms.id')
-                        ->unless(empty($filter->event_types), function ($q) use ($filter) {
-                            $q->whereIn('events.event_type_id', $filter->event_types);
+                        ->unless(empty($filter->event_type_ids), function ($q) use ($filter): void {
+                            $q->whereIn('events.event_type_id', $filter->event_type_ids);
                         })
-                        ->where(function ($q) use ($startDate, $endDate) {
-                            $q->where(function ($q) use ($startDate, $endDate) {
+                        ->where(function ($q) use ($startDate, $endDate): void {
+                            $q->where(function ($q) use ($startDate, $endDate): void {
                                 $q->whereBetween('start_time', [$startDate, $endDate])
                                     ->orWhereBetween('end_time', [$startDate, $endDate]);
-                            })->orWhere(function ($q) use ($startDate, $endDate) {
+                            })->orWhere(function ($q) use ($startDate, $endDate): void {
                                 $q->where('start_time', '<=', $startDate)
                                     ->where('end_time', '>=', $endDate);
                             });
                         });
-                });
-            })
+                    });
+                }
+            )
             ->orderBy('order')
             ->get();
 
@@ -324,9 +320,15 @@ readonly class CalendarDataService
         ));
     }
 
+    /**
+     * @param UserCalendarSettings $userCalendarSettings
+     * @param UserFilter $userCalendarFilter
+     * @param Project|null $project
+     * @return array<\Carbon\Carbon>
+     */
     public function getCalendarDateRange(
         UserCalendarSettings $userCalendarSettings,
-        UserCalendarFilter|UserShiftCalendarFilter $userCalendarFilter,
+        UserFilter $userCalendarFilter,
         ?Project $project = null
     ): array {
         $today = Carbon::now();
@@ -347,6 +349,11 @@ readonly class CalendarDataService
         return $this->getProjectDateRange($project, $today);
     }
 
+    /**
+     * @param $project
+     * @param Carbon $today
+     * @return array<\Carbon\Carbon>
+     */
     protected function getProjectDateRange($project, Carbon $today): array
     {
         if (!$project) {
@@ -374,7 +381,7 @@ readonly class CalendarDataService
      * @param \Carbon\Carbon|null $end2 End date of second range
      * @return bool True if the ranges overlap, false otherwise
      */
-    private function datesOverlap($start1, $end1, $start2, $end2): bool
+    private function datesOverlap(?\Carbon\Carbon $start1, ?\Carbon\Carbon $end1, ?\Carbon\Carbon $start2, ?\Carbon\Carbon $end2): bool
     {
         // If any date is null, we can't determine overlap
         if ($start1 === null || $end1 === null || $start2 === null || $end2 === null) {

@@ -173,6 +173,46 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        'eventName' => [
+            'required_if' => 'Der Veranstaltungsname ist erforderlich, wenn das Feld als Pflichtfeld markiert ist.',
+        ],
+        'projectId' => [
+            'required_if' => 'Ein Projekt muss zugewiesen werden, wenn der Event-Typ es verlangt.',
+        ],
+        'projectName' => [
+            'required_unless' => 'Der Projektname ist erforderlich, außer "Projekt wird erstellt" ist deaktiviert.',
+        ],
+        'start' => [
+            'required' => 'Das Startdatum ist erforderlich.',
+            'date'     => 'Das Startdatum muss ein gültiges Datum sein.',
+        ],
+        'end' => [
+            'required' => 'Das Enddatum ist erforderlich.',
+            'date'     => 'Das Enddatum muss ein gültiges Datum sein.',
+            'after'    => 'Das Enddatum muss nach dem Startdatum liegen.',
+        ],
+        'roomId' => [
+            'exists' => 'Der ausgewählte Raum existiert nicht.',
+        ],
+        'declinedRoomId' => [
+            'exists' => 'Der abgelehnte Raum existiert nicht.',
+        ],
+        'eventTypeId' => [
+            'required' => 'Ein Veranstaltungstyp ist erforderlich.',
+            'exists'   => 'Der ausgewählte Veranstaltungstyp ist ungültig.',
+        ],
+        'eventStatusId' => [
+            'exists' => 'Der ausgewählte Veranstaltungsstatus ist ungültig.',
+        ],
+        'projectIdMandatory' => [
+            'required' => 'Die Projektzuweisung muss angegeben werden, wenn der Event-Typ dies verlangt.',
+        ],
+        'eventNameMandatory' => [
+            'required' => 'Die Verpflichtung zum Veranstaltungsnamen muss angegeben werden, wenn der Event-Typ dies verlangt.',
+        ],
+        'creatingProject' => [
+            'required' => 'Es muss angegeben werden, ob ein neues Projekt erstellt wird.',
+        ],
     ],
 
     /*

@@ -39,11 +39,16 @@ export default {
             type: Array,
             default: () => []
         },
+        filteredCraftIds: {
+            type: Array,
+            default: () => [],
+            required: false,
+        }
     },
     data() {
         return {
             showCraftFilter: false,
-            selectedCrafts: this.$page.props.auth.user ? this.$page.props.auth.user.show_crafts ?? [] : []
+            selectedCrafts: this.filteredCraftIds ? this.filteredCraftIds ?? [] : []
         }
     },
     methods: {
@@ -57,7 +62,7 @@ export default {
 
             // save to user
             this.$inertia.patch(route('user.update.show_crafts', {user: this.$page.props.auth.user.id}), {
-                show_crafts: this.selectedCrafts
+                craft_ids: this.selectedCrafts
             });
         }
     }

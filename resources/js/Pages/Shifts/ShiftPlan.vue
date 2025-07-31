@@ -3,7 +3,7 @@
         <ShiftHeader>
 
             <transition name="fade" appear>
-                <div class="pointer-events-none fixed z-50 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
+                <div class="pointer-events-none fixed z-100 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
                     <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
                         <component :is="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
                         <p class="text-sm/6 text-white">
@@ -150,7 +150,7 @@
                         <template #body>
                             <TableBody class="eventByDaysContainer">
                                 <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId" class="w-full table-row divide-x divide-gray-300"
-                                    :class="$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
+                                    :class="[$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28']">
                                     <th :id="'roomNameContainer_' + index"
                                         class="xsDark w-48 table-cell align-middle"
                                         :class="[index % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
@@ -169,7 +169,7 @@
                                             class="absolute w-full h-full"
                                             @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)">
                                         </div>
-                                        <div class="bg-background-gray2 h-full min-w-full mb-3" v-if="day.isExtraRow" :style="{width: '202px', maxWidth: '202px'}">
+                                        <div class="bg-background-gray2 h-full min-w-full mb-3 border-l-2 border-gray-800" v-if="day.isExtraRow" :style="{width: '202px', maxWidth: '202px'}">
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-else style="width: 200px" class="cell group " :class="$page.props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
@@ -429,7 +429,7 @@
                                                 <label for="showFreelancers" class="font-medium text-white">{{ $t('Show freelancer') }}</label>
                                             </div>
                                         </div>
-                                        <CraftFilter :crafts="crafts" is_tiny/>
+                                        <CraftFilter :crafts="crafts" :filtered-craft-ids="user_filters.craft_ids" is_tiny/>
                                         <div class="py-4">
                                             <div>
                                                 <div class="h-9 flex items-center cursor-pointer" @click="showShiftQualificationFilter = !showShiftQualificationFilter">
@@ -510,8 +510,7 @@
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
                                                          :item="user.element"
-                                                         :expected-hours="user.expectedWorkingHours"
-                                                         :planned-hours="user.plannedWorkingHours"
+                                                         :work-time-balance="user.workTimeBalance"
                                                          :type="user.type"
                                                          :color="craft.color"
                                                          :craft="craft"
@@ -519,8 +518,7 @@
                                             />
                                             <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                                :item="user.element"
-                                                               :expected-hours="user.expectedWorkingHours"
-                                                               :planned-hours="user.plannedWorkingHours"
+                                                               :work-time-balance="user.workTimeBalance"
                                                                :type="user.type"
                                                                :userForMultiEdit="userForMultiEdit"
                                                                :multiEditMode="multiEditMode"
@@ -534,8 +532,7 @@
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
                                                                :item="user.element"
-                                                               :expected-hours="user.expectedWorkingHours"
-                                                               :planned-hours="user.plannedWorkingHours"
+                                                               :work-time-balance="user.workTimeBalance"
                                                                :type="user.type"
                                                                @highlightShiftsOfUser="highlightShiftsOfUser"
                                                                :color="craft.color"
@@ -545,21 +542,21 @@
                                         <td v-for="day in days" class="flex pr-[1px] relative pb-[1px]">
                                             <div v-if="!day.isExtraRow" :class="[
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
-                                                    $page.props.auth.user.compact_mode ? 'h-8' : '',
+                                                    $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : 'h-12 max-h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     multiEditMode && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-100 !overflow-hidden' : ''
                                                 ]"
                                                  class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell h-full cursor-pointer overflow-y-scroll hover:opacity-100"
-                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
+                                                 :style="{width: '202px', maxWidth: '202px'}"
                                                  @click="handleCellClick(user, day)">
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
                                                  class="p-2 bg-gray-50/30 text-center flex items-center justify-center text-white h-full rounded-lg shiftCell cursor-default overflow-hidden"
-                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : '',
+                                                 :style="{width: '202px', maxWidth: '202px'}"
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '']">
-                                                <div>
+                                                <div :class="$page.props.auth.user.compact_mode ? 'flex items-center gap-x-1' : ''">
                                                     <div class="text-[9px]">
                                                         Arbeitszeit KW {{ day.weekNumber }}
                                                     </div>
@@ -598,16 +595,14 @@
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
                                                          :item="user.element"
-                                                         :expected-hours="user.expectedWorkingHours"
-                                                         :planned-hours="user.plannedWorkingHours"
+                                                         :work-time-balance="user.workTimeBalance"
                                                          :type="user.type"
                                                          :color="null"
                                                          :craft="null"
                                             />
                                             <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                                :item="user.element"
-                                                               :expected-hours="user.expectedWorkingHours"
-                                                               :planned-hours="user.plannedWorkingHours"
+                                                               :work-time-balance="user.workTimeBalance"
                                                                :type="user.type"
                                                                :userForMultiEdit="userForMultiEdit"
                                                                :multiEditMode="multiEditMode"
@@ -621,27 +616,26 @@
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
                                                                :item="user.element"
-                                                               :expected-hours="user.expectedWorkingHours"
-                                                               :planned-hours="user.plannedWorkingHours"
+                                                               :work-time-balance="user.workTimeBalance"
                                                                :type="user.type"
                                                                @highlightShiftsOfUser="highlightShiftsOfUser"
                                                                :color="null"/>
                                         </th>
                                         <td v-for="day in days" class="flex pr-[1px] relative pb-[1px]">
                                             <div v-if="!day.isExtraRow"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : 'h-12',
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : 'h-12 max-h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-100 !overflow-hidden' : '',
                                                     multiEditMode ? '!overflow-hidden' : '']"
                                                  class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell h-full cursor-pointer overflow-y-scroll hover:opacity-100"
                                                  @click="handleCellClick(user, day)"
-                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
+                                                 :style="{width: '202px', maxWidth: '202px'}">
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else class="p-2 bg-gray-50/30 text-center flex items-center justify-center text-white h-full rounded-lg shiftCell cursor-default overflow-hidden" :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.auth.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']">
-                                                <div>
+                                                <div :class="$page.props.auth.user.compact_mode ? 'flex items-center gap-x-1' : ''">
                                                     <div class="text-[9px]">
                                                         Arbeitszeit KW {{ day.weekNumber }}
                                                     </div>
@@ -1000,10 +994,10 @@ export default {
                 crafts.users = craft.users;
             });
 
-            if (this.$page.props.auth.user.show_crafts?.length === 0 || this.$page.props.auth.user.show_crafts === null) {
+            if (this.user_filters.craft_ids?.length === 0 || this.user_filters.craft_ids === null) {
                 return crafts;
             } else {
-                return crafts.filter((craft) => this.$page.props.auth.user.show_crafts.includes(craft.id));
+                return crafts.filter((craft) => this.user_filters.craft_ids.includes(craft.id));
             }
         },
         workersWithoutCraft() {
@@ -1377,8 +1371,9 @@ export default {
                 users.push({
                     element: user.user,
                     type: 0,
-                    plannedWorkingHours: user.plannedWorkingHours,
-                    expectedWorkingHours: user.expectedWorkingHours,
+                    workTimeBalance: user.workTimeBalance,
+                    //plannedWorkingHours: user.plannedWorkingHours,
+                    //expectedWorkingHours: user.expectedWorkingHours,
                     vacations: user.vacations,
                     assigned_craft_ids: user.user.assigned_craft_ids,
                     availabilities: user.availabilities,
@@ -1393,7 +1388,7 @@ export default {
                     users.push({
                         element: freelancer.freelancer,
                         type: 1,
-                        plannedWorkingHours: freelancer.plannedWorkingHours,
+                        //plannedWorkingHours: freelancer.plannedWorkingHours,
                         vacations: freelancer.vacations,
                         assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
                         availabilities: freelancer.availabilities,
@@ -1409,7 +1404,7 @@ export default {
                 users.push({
                     element: service_provider.service_provider,
                     type: 2,
-                    plannedWorkingHours: service_provider.plannedWorkingHours,
+                    //plannedWorkingHours: service_provider.plannedWorkingHours,
                     assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
                     dayServices: service_provider.dayServices,
                     individual_times: service_provider.individual_times,

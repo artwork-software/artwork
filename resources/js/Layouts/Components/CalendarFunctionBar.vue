@@ -54,14 +54,14 @@
                 <IconZoomOut @click="decrementZoomFactor" :disabled="zoomFactor >= 1.4"
                              v-if="!atAGlance" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomOut>
                 <IconArrowsDiagonal  class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="enterFullscreenMode" v-if="!atAGlance && !isFullscreen"/>
-                <IndividualCalendarFilterComponent
+                <!--<IndividualCalendarFilterComponent
                     class=""
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :at-a-glance="atAGlance"
                     :type="project ? 'project' : 'individual'"
                     :user_filters="user_filters"
-                    :extern-updated="externUpdate"/>
+                    :extern-updated="externUpdate"/>-->
                 <Menu as="div" class="relative inline-block items-center text-left">
                     <div class="flex items-center">
                         <MenuButton>
@@ -408,31 +408,31 @@ export default {
     computed: {
         activeFilters: function () {
             let activeFiltersArray = []
-            this.filterOptions.rooms.forEach((room) => {
+            this.filterOptions.room_ids.forEach((room) => {
                 if(this.user_filters.rooms?.includes(room.id)){
                     activeFiltersArray.push(room)
                 }
             })
 
-            this.filterOptions.areas.forEach((area) => {
+            this.filterOptions.area_ids.forEach((area) => {
                 if(this.user_filters.areas?.includes(area.id)){
                     activeFiltersArray.push(area)
                 }
             })
 
-            this.filterOptions.eventTypes.forEach((eventType) => {
+            this.filterOptions.event_type_ids.forEach((eventType) => {
                 if(this.user_filters.event_types?.includes(eventType.id)){
                     activeFiltersArray.push(eventType)
                 }
             })
 
-            this.filterOptions.roomCategories.forEach((category) => {
+            this.filterOptions.room_category_ids.forEach((category) => {
                 if(this.user_filters.room_categories?.includes(category.id)){
                     activeFiltersArray.push(category)
                 }
             })
 
-            this.filterOptions.roomAttributes.forEach((attribute) => {
+            this.filterOptions.room_attribute_ids.forEach((attribute) => {
                 if(this.user_filters.room_attributes?.includes(attribute.id)){
                     activeFiltersArray.push(attribute)
                 }

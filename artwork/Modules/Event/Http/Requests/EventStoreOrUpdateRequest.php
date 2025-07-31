@@ -37,4 +37,30 @@ class EventStoreOrUpdateRequest extends FormRequest
             'showProjectPeriodInCalendar' => ['sometimes', 'nullable', 'boolean'],
         ];
     }
+
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'eventName.required_if'       => __('validation.custom.eventName.required_if'),
+            'projectId.required_if'       => __('validation.custom.projectId.required_if'),
+            'projectName.required_unless' => __('validation.custom.projectName.required_unless'),
+            'start.required'              => __('validation.custom.start.required'),
+            'start.date'                  => __('validation.custom.start.date'),
+            'end.required'                => __('validation.custom.end.required'),
+            'end.date'                    => __('validation.custom.end.date'),
+            'end.after'                   => __('validation.custom.end.after'),
+            'roomId.exists'               => __('validation.custom.roomId.exists'),
+            'declinedRoomId.exists'       => __('validation.custom.declinedRoomId.exists'),
+            'eventTypeId.required'        => __('validation.custom.eventTypeId.required'),
+            'eventTypeId.exists'          => __('validation.custom.eventTypeId.exists'),
+            'eventStatusId.exists'        => __('validation.custom.eventStatusId.exists'),
+            'projectIdMandatory.required' => __('validation.custom.projectIdMandatory.required'),
+            'eventNameMandatory.required' => __('validation.custom.eventNameMandatory.required'),
+            'creatingProject.required'    => __('validation.custom.creatingProject.required'),
+        ];
+    }
 }

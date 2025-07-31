@@ -7,14 +7,13 @@
     <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2">
         <div class="flex flex-col items-center justify-center h-screen">
             <div class="min-h-96">
-                <div class="card glassy p-5">
-                    <div class="my-5">
-                        <div class="text-2xl font-bold text-black">
+                <div class="">
+                    <div class="my-10">
+                        <div class="text-2xl font-bold text-black font-lexend flex items-center gap-x-4">
                             <img :src="$page.props.big_logo" class="max-w-lg h-fit" alt="Big artwork logo"/>
-                        </div>
-                        <div class="flex items-center">
-                            <h2 class="mt-6 text-3xl font-bold text-primary">{{ $t('Login') }}</h2>
-                            <SvgCollection svgName="arrowRight"/>
+                            <span>
+                                {{ $t('Login') }}
+                            </span>
                         </div>
                     </div>
                     <form class="space-y-10 my-4 card white px-4 py-6" @submit.prevent="submit">
@@ -34,8 +33,6 @@
                                 </Link>
                             </div>
                         </div>
-
-
                         <div>
                             <ArtworkBaseModalButton :disabled="this.form.email === '' || this.form.password === ''" class="!px-44" vertical-padding="py-4" variant="primary" type="submit">
                                 {{ $t('Login') }}

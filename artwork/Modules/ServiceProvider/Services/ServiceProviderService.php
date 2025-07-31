@@ -50,9 +50,9 @@ readonly class ServiceProviderService
                 $desiredServiceProviderResource->setStartDate($startDate)->setEndDate($endDate);
             }
 
-            $plannedWorkingHours = $this->workingHourService->convertMinutesInHours(
+            /*$plannedWorkingHours = $this->workingHourService->convertMinutesInHours(
                 $this->workingHourService->calculateShiftTime($serviceProvider, $startDate, $endDate)
-            );
+            );*/
             $weeklyWorkingHours = $this->workingHourService->calculateWeeklyWorkingHours(
                 $serviceProvider,
                 $startDate,
@@ -61,7 +61,7 @@ readonly class ServiceProviderService
 
             $serviceProvidersWithPlannedWorkingHours[] = [
                 'service_provider' => $desiredServiceProviderResource->resolve(),
-                'plannedWorkingHours' => $plannedWorkingHours,
+                //'plannedWorkingHours' => $plannedWorkingHours,
                 'weeklyWorkingHours' => $weeklyWorkingHours,
                 'dayServices' => $serviceProvider->dayServices?->groupBy('pivot.date'),
                 'individual_times' => $serviceProvider->individualTimes()

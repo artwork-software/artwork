@@ -14,10 +14,12 @@ use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\User\DTOs\UserShiftPlanPageDto;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Events\UserUpdated;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
@@ -88,8 +90,23 @@ class UserService
         $user->assignRole(...$roles);
         $user->givePermissionTo(...$permissions);
         $user->calendar_settings()->create();
-        $user->calendar_filter()->create();
-        $user->shift_calendar_filter()->create();
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
+
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::PLANNING_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
+
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::SHIFT_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
 
         $this->userUserManagementSettingService->updateOrCreateIfNecessary(
             $user,
@@ -272,18 +289,15 @@ class UserService
     /**
      * @return array<int, Carbon>
      */
-    public function getUserCalendarFilterDatesOrDefault(UserCalendarFilter|UserShiftCalendarFilter $userCalendarFilter): array
+    public function getUserCalendarFilterDatesOrDefault(UserFilter $userCalendarFilter): array
     {
+        $startDate = $userCalendarFilter->start_date
+            ? Carbon::parse($userCalendarFilter->start_date)->startOfDay()
+            : now()->startOfDay();
 
-        $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->getAttribute('start_date')) &&
-            !is_null($userCalendarFilter?->getAttribute('end_date'));
-
-        $startDate = $hasUserCalendarFilterDates ?
-            Carbon::create($userCalendarFilter->getAttribute('start_date'))->startOfDay() :
-            Carbon::now()->startOfDay();
-        $endDate = $hasUserCalendarFilterDates ?
-            Carbon::create($userCalendarFilter->getAttribute('end_date'))->endOfDay() :
-            Carbon::now()->addWeeks()->endOfDay();
+        $endDate = $userCalendarFilter->end_date
+            ? Carbon::parse($userCalendarFilter->end_date)->endOfDay()
+            : now()->addWeeks()->endOfDay();
 
         return [$startDate, $endDate];
     }
@@ -293,7 +307,7 @@ class UserService
      */
     public function getUserShiftCalendarFilterDatesOrDefault(User $user): array
     {
-        $userShiftCalendarFilter = $user->shift_calendar_filter;
+        $userShiftCalendarFilter = $user->userFilters()->shiftFilter()->first();
 
         $hasUserShiftCalendarFilterDates = !is_null($userShiftCalendarFilter?->start_date) &&
             !is_null($userShiftCalendarFilter?->end_date);

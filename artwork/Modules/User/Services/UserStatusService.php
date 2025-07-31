@@ -11,7 +11,7 @@ class UserStatusService
     public function markOnline(int $userId): void
     {
         // check if Redis is available
-        if (!config('app.use_chat_module')){
+        if (!config('app.use_chat_module')) {
             //Log::error('Redis is not available');
             return;
         }
@@ -23,14 +23,13 @@ class UserStatusService
         }
 
         event(new UserStatusUpdated($userId, 'online'));
-
     }
 
 
     public function getStatus(int $userId): string
     {
         // check if Redis is available
-        if (!config('app.use_chat_module')){
+        if (!config('app.use_chat_module')) {
             //Log::error('Redis is not available');
             return 'offline';
         }
@@ -52,7 +51,8 @@ class UserStatusService
             return 'online';
         }
 
-        event(new UserStatusUpdated($userId,
+        event(new UserStatusUpdated(
+            $userId,
             $ttl < 300 ? 'away' : 'online'
         ));
 
@@ -62,7 +62,7 @@ class UserStatusService
     public function markOffline(int $userId): void
     {
         // check if Redis is available
-        if (!config('app.use_chat_module')){
+        if (!config('app.use_chat_module')) {
             //Log::error('Redis is not available');
             return;
         }

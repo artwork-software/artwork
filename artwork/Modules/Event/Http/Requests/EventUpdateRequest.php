@@ -50,4 +50,6 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
 
         return $eventData[$key] ?? $default;
     }
+
+
 }

@@ -35,7 +35,7 @@
                                 </div>
                             </div>
                             <div class="p-5">
-                                <div class="card white p-5 relative font-lexend">
+                                <div class="card white p-5 relative">
                                     <slot/>
                                 </div>
                             </div>

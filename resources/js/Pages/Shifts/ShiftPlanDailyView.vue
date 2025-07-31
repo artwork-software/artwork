@@ -42,11 +42,19 @@
                         </span>
                         </Switch>
 
-                        <ShiftPlanFilter
+                        <!--<ShiftPlanFilter
                             :filter-options="filterOptions"
                             :personal-filters="personalFilters"
                             :user_filters="user_filters"
                             :crafts="crafts"
+                        />-->
+
+                        <FunctionBarFilter
+                            :user_filters="user_filters"
+                            :personal-filters="personalFilters"
+                            :filter-options="filterOptions"
+                            :crafts="crafts"
+                            filter-type="shift_filter"
                         />
                     </div>
                 </div>
@@ -167,6 +175,7 @@ import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import { IconAlertSquareRounded } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
+import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 
 const props = defineProps({
     days: {

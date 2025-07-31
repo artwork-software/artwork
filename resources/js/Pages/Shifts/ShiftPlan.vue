@@ -150,7 +150,7 @@
                         <template #body>
                             <TableBody class="eventByDaysContainer">
                                 <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId" class="w-full table-row divide-x divide-gray-300"
-                                    :class="$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
+                                    :class="[$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28']">
                                     <th :id="'roomNameContainer_' + index"
                                         class="xsDark w-48 table-cell align-middle"
                                         :class="[index % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
@@ -169,7 +169,7 @@
                                             class="absolute w-full h-full"
                                             @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)">
                                         </div>
-                                        <div class="bg-background-gray2 h-full min-w-full mb-3" v-if="day.isExtraRow" :style="{width: '202px', maxWidth: '202px'}">
+                                        <div class="bg-background-gray2 h-full min-w-full mb-3 border-l-2 border-gray-800" v-if="day.isExtraRow" :style="{width: '202px', maxWidth: '202px'}">
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-else style="width: 200px" class="cell group " :class="$page.props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">

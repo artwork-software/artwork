@@ -5,6 +5,7 @@ namespace Artwork\Modules\Project\DTOs;
 use Artwork\Core\Abstracts\BaseDto;
 use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\User\Models\UserCalendarFilter;
+use Artwork\Modules\User\Models\UserFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 
@@ -30,7 +31,7 @@ class CalendarDto extends BaseDto
 
     public ?array $eventsWithoutRoom = null;
 
-    public ?UserCalendarFilter $userFilters = null;
+    public ?UserFilter $userFilters = null;
 
     public function setEventsAtAGlance(?SupportCollection $eventsAtAGlance): self
     {
@@ -102,7 +103,7 @@ class CalendarDto extends BaseDto
         return $this;
     }
 
-    public function setUserFilters(?UserCalendarFilter $userFilters): self
+    public function setUserFilters(?UserFilter $userFilters): self
     {
         $this->userFilters = $userFilters;
 
@@ -171,7 +172,7 @@ class CalendarDto extends BaseDto
         return $this->eventsWithoutRoom;
     }
 
-    public function getUserFilters(): ?UserCalendarFilter
+    public function getUserFilters(): ?UserFilter
     {
         return $this->userFilters;
     }

@@ -42,6 +42,7 @@ class UpdateArtwork extends Command
         $this->migrateCraftInventoryItems();
         $this->setupPassport();
         $this->removeOldCalendarComponent();
+        $this->migrateFilterToNewFilterStructure();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -207,4 +208,102 @@ class UpdateArtwork extends Command
         $this->info(str_repeat('-', 60));
         $this->info("[$title]");
     }
+
+    private function migrateFilterToNewFilterStructure(): void
+    {
+        $this->section('Filter Migration');
+
+        User::with(['calendar_filter', 'shift_calendar_filter'])->chunk(100, function ($users): void {
+            foreach ($users as $user) {
+                // Calendar + Planning Filter aus calendar_filter oder Fallback
+                if ($user->calendar_filter) {
+                    $this->migrateUserFilter($user, 'calendar_filter', 'calendar_filter', $this->calendarFields());
+                    $this->migrateUserFilter($user, 'calendar_filter', 'planning_filter', $this->calendarFields());
+                    $user->calendar_filter->delete();
+                } else {
+                    $this->setFallbackFilter($user, ['calendar_filter', 'planning_filter']);
+                }
+
+                // Shift Filter aus shift_calendar_filter oder Fallback
+                if ($user->shift_calendar_filter) {
+                    $this->migrateUserFilter($user, 'shift_calendar_filter', 'shift_filter', [
+                        'start_date', 'end_date', 'event_types', 'rooms'
+                    ], [
+                        'craft_ids' => $user->show_crafts,
+                    ]);
+                    $user->shift_calendar_filter->delete();
+                } else {
+                    $this->setFallbackFilter($user, ['shift_filter']);
+                }
+            }
+        });
+    }
+
+    /**
+     * Migriert einen Filter mit optionalen Extra-Werten.
+     */
+    private function migrateUserFilter(User $user, string $relation, string $filterType, array $fields, array $extra = []): void
+    {
+        $filter = $user->$relation;
+
+        if (!$filter) {
+            return;
+        }
+
+        $data = collect($fields)->mapWithKeys(fn($field) => [
+            $this->convertFieldName($field) =>
+                $filter->$field ?? (
+                    $field === 'start_date' ? now() : (
+                        $field === 'end_date' ? now()->addMonth() : null
+                    )
+                ),
+        ])->merge($extra)->toArray();
+
+        $user->userFilters()->updateOrCreate(['filter_type' => $filterType], $data);
+    }
+
+    /**
+     * Fallback bei fehlenden alten Filtern.
+     */
+    private function setFallbackFilter(User $user, array $types): void
+    {
+        foreach ($types as $type) {
+            $user->userFilters()->updateOrCreate(
+                ['filter_type' => $type],
+                [
+                    'start_date' => now(),
+                    'end_date' => now()->addMonth(),
+                ]
+            );
+        }
+    }
+
+    /**
+     * Mappt Calendar-Filter-Felder.
+     * @return array<string>
+     */
+    private function calendarFields(): array
+    {
+        return [
+            'start_date', 'end_date', 'event_types', 'rooms',
+            'areas', 'room_attributes', 'room_categories', 'event_properties',
+        ];
+    }
+
+    /**
+     * Wandelt interne Felder zu DB-Feldern um.
+     */
+    private function convertFieldName(string $field): string
+    {
+        return match ($field) {
+            'event_types' => 'event_type_ids',
+            'rooms' => 'room_ids',
+            'areas' => 'area_ids',
+            'room_attributes' => 'room_attribute_ids',
+            'room_categories' => 'room_category_ids',
+            'event_properties' => 'event_property_ids',
+            default => $field,
+        };
+    }
+
 }

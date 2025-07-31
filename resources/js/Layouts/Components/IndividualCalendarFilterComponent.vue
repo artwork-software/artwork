@@ -484,12 +484,12 @@ export default {
             }
         },
         initFilter() {
-            this.filterArray.rooms = this.filterOptions.rooms;
-            this.filterArray.areas = this.filterOptions.areas;
-            this.filterArray.roomCategories = this.filterOptions.roomCategories;
-            this.filterArray.roomAttributes = this.filterOptions.roomAttributes;
-            this.filterArray.eventTypes = this.filterOptions.eventTypes;
-            this.filterArray.eventProperties = this.filterOptions.eventProperties;
+            this.filterArray.rooms = this.filterOptions.room_ids;
+            this.filterArray.areas = this.filterOptions.area_ids;
+            this.filterArray.roomCategories = this.filterOptions.room_category_ids;
+            this.filterArray.roomAttributes = this.filterOptions.room_attribute_ids;
+            this.filterArray.eventTypes = this.filterOptions.event_type_ids;
+            this.filterArray.eventProperties = this.filterOptions.event_property_ids;
             this.setCheckedFalse(this.filterArray.rooms);
             this.setCheckedFalse(this.filterArray.areas);
             this.setCheckedFalse(this.filterArray.roomCategories);

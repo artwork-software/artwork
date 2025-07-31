@@ -3,7 +3,7 @@
         <ShiftHeader>
 
             <transition name="fade" appear>
-                <div class="pointer-events-none fixed z-50 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
+                <div class="pointer-events-none fixed z-100 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
                     <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
                         <component :is="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
                         <p class="text-sm/6 text-white">
@@ -510,8 +510,7 @@
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
                                                          :item="user.element"
-                                                         :expected-hours="user.expectedWorkingHours"
-                                                         :planned-hours="user.plannedWorkingHours"
+                                                         :work-time-balance="user.workTimeBalance"
                                                          :type="user.type"
                                                          :color="craft.color"
                                                          :craft="craft"
@@ -519,8 +518,7 @@
                                             />
                                             <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                                :item="user.element"
-                                                               :expected-hours="user.expectedWorkingHours"
-                                                               :planned-hours="user.plannedWorkingHours"
+                                                               :work-time-balance="user.workTimeBalance"
                                                                :type="user.type"
                                                                :userForMultiEdit="userForMultiEdit"
                                                                :multiEditMode="multiEditMode"
@@ -534,8 +532,7 @@
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
                                                                :item="user.element"
-                                                               :expected-hours="user.expectedWorkingHours"
-                                                               :planned-hours="user.plannedWorkingHours"
+                                                               :work-time-balance="user.workTimeBalance"
                                                                :type="user.type"
                                                                @highlightShiftsOfUser="highlightShiftsOfUser"
                                                                :color="craft.color"
@@ -598,16 +595,14 @@
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
                                                          :item="user.element"
-                                                         :expected-hours="user.expectedWorkingHours"
-                                                         :planned-hours="user.plannedWorkingHours"
+                                                         :work-time-balance="user.workTimeBalance"
                                                          :type="user.type"
                                                          :color="null"
                                                          :craft="null"
                                             />
                                             <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                                :item="user.element"
-                                                               :expected-hours="user.expectedWorkingHours"
-                                                               :planned-hours="user.plannedWorkingHours"
+                                                               :work-time-balance="user.workTimeBalance"
                                                                :type="user.type"
                                                                :userForMultiEdit="userForMultiEdit"
                                                                :multiEditMode="multiEditMode"
@@ -621,8 +616,7 @@
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
                                                                :item="user.element"
-                                                               :expected-hours="user.expectedWorkingHours"
-                                                               :planned-hours="user.plannedWorkingHours"
+                                                               :work-time-balance="user.workTimeBalance"
                                                                :type="user.type"
                                                                @highlightShiftsOfUser="highlightShiftsOfUser"
                                                                :color="null"/>
@@ -1377,8 +1371,9 @@ export default {
                 users.push({
                     element: user.user,
                     type: 0,
-                    plannedWorkingHours: user.plannedWorkingHours,
-                    expectedWorkingHours: user.expectedWorkingHours,
+                    workTimeBalance: user.workTimeBalance,
+                    //plannedWorkingHours: user.plannedWorkingHours,
+                    //expectedWorkingHours: user.expectedWorkingHours,
                     vacations: user.vacations,
                     assigned_craft_ids: user.user.assigned_craft_ids,
                     availabilities: user.availabilities,
@@ -1393,7 +1388,7 @@ export default {
                     users.push({
                         element: freelancer.freelancer,
                         type: 1,
-                        plannedWorkingHours: freelancer.plannedWorkingHours,
+                        //plannedWorkingHours: freelancer.plannedWorkingHours,
                         vacations: freelancer.vacations,
                         assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
                         availabilities: freelancer.availabilities,
@@ -1409,7 +1404,7 @@ export default {
                 users.push({
                     element: service_provider.service_provider,
                     type: 2,
-                    plannedWorkingHours: service_provider.plannedWorkingHours,
+                    //plannedWorkingHours: service_provider.plannedWorkingHours,
                     assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
                     dayServices: service_provider.dayServices,
                     individual_times: service_provider.individual_times,

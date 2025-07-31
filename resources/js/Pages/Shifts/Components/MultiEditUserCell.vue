@@ -32,8 +32,7 @@
                             </div>
                         </div>
                         <div class="flex items-center justify-center w-26">
-                            <div class="text-[9px] w-full " v-if="!$page.props.auth.user.compact_mode && type === 0"> {{plannedHours}}  {{expectedHours ? ' | ' + expectedHours : ''}}</div>
-                            <div class="text-[9px] w-full" v-if="!$page.props.auth.user.compact_mode && type !== 0">{{ plannedHours }}</div>
+                            <div class="text-[9px] w-full " v-if="!$page.props.auth.user.compact_mode && type === 0">{{ workTimeBalance }}</div>
                         </div>
                     </div>
 
@@ -72,15 +71,16 @@ export default defineComponent({
     props: [
         'item',
         'type',
-        'plannedHours',
-        'expectedHours',
+        //'plannedHours',
+        //'expectedHours',
         'userForMultiEdit',
         'multiEditMode',
         'color',
         'craftId',
         'craft',
         'multiEditCellByDayAndUser',
-        'isManagingCraft'
+        'isManagingCraft',
+        'workTimeBalance'
     ],
     watch: {
         multiEditMode: {

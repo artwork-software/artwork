@@ -104,7 +104,7 @@ class WorkingHourService
      * @param Carbon $endDate End date
      * @return array Array of shift minutes indexed by date string
      */
-    private function precomputeShiftMinutesForDays($user, Carbon $startDate, Carbon $endDate): array
+    private function precomputeShiftMinutesForDays(User|Freelancer|ServiceProvider $user, Carbon $startDate, Carbon $endDate): array
     {
         $shiftMinutesPerDay = [];
         $dateRange = CarbonPeriod::create($startDate, $endDate);
@@ -231,16 +231,16 @@ class WorkingHourService
         // Eager load all necessary relationships for all workers at once
         $workers = $this->userRepository->getWorkers()->load([
             'shifts',
-            'individualTimes' => function ($query) use ($startDate, $endDate) {
+            'individualTimes' => function ($query) use ($startDate, $endDate): void {
                 $query->individualByDateRange($startDate->toDateString(), $endDate->toDateString());
             },
-            'workTimeBookings' => function ($query) use ($startDate, $endDate) {
+            'workTimeBookings' => function ($query) use ($startDate, $endDate): void {
                 $query->whereBetween('booking_day', [$startDate->toDateString(), $endDate->toDateString()]);
             },
-            'workTimes' => function ($query) use ($startDate, $endDate) {
-                $query->where(function ($q) use ($endDate) {
+            'workTimes' => function ($query) use ($startDate, $endDate): void {
+                $query->where(function ($q) use ($endDate): void {
                     $q->whereNull('valid_from')->orWhere('valid_from', '<=', $endDate);
-                })->where(function ($q) use ($startDate) {
+                })->where(function ($q) use ($startDate): void {
                     $q->whereNull('valid_until')->orWhere('valid_until', '>=', $startDate);
                 });
             },
@@ -248,10 +248,10 @@ class WorkingHourService
         ]);
 
         // Precompute expected minutes for all users
-        $expectedMinutesCache = $this->precomputeExpectedMinutes($workers, $startDate, $endDate);
+        $expectedMinutesCache = []; //$this->precomputeExpectedMinutes($workers, $startDate, $endDate);
 
         // Precompute planned minutes for all users
-        $plannedMinutesCache = $this->precomputePlannedMinutes($workers, $startDate, $endDate);
+        $plannedMinutesCache = []; //$this->precomputePlannedMinutes($workers, $startDate, $endDate);
 
         // Precompute weekly working hours for all users
         $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours($workers, $startDate, $endDate);
@@ -279,6 +279,7 @@ class WorkingHourService
                 'is_freelancer' => $user->getAttribute('is_freelancer'),
                 'individual_times' => $user->individualTimes,
                 'shift_comments' => $user->getShiftPlanCommentsForPeriod($startDate, $endDate),
+                'workTimeBalance' => $this->convertMinutesInHours($user->work_time_balance ?? 0),
             ];
 
             $userData['weeklyWorkingHours'] = $weeklyWorkingHoursCache[$userId] ?? [];
@@ -405,11 +406,15 @@ class WorkingHourService
                             $validFrom = $workTime->valid_from ? Carbon::parse($workTime->valid_from) : null;
                             $validUntil = $workTime->valid_until ? Carbon::parse($workTime->valid_until) : null;
 
-                            if ((!$validFrom || $validFrom->lte($current)) &&
-                                (!$validUntil || $validUntil->gte($current))) {
-                                if (!$activePattern ||
+                            if (
+                                (!$validFrom || $validFrom->lte($current)) &&
+                                (!$validUntil || $validUntil->gte($current))
+                            ) {
+                                if (
+                                    !$activePattern ||
                                     (!$activePattern->valid_from && $validFrom) ||
-                                    ($activePattern->valid_from && $validFrom && $validFrom->gt($activePattern->valid_from))) {
+                                    ($activePattern->valid_from && $validFrom && $validFrom->gt($activePattern->valid_from))
+                                ) {
                                     $activePattern = $workTime;
                                 }
                             }
@@ -500,10 +505,10 @@ class WorkingHourService
                 // TAGESSOLL (Expected)
                 if ($entity instanceof User) {
                     $userWorkTime = $entity->workTimes()
-                        ->where(function ($q) use ($current) {
+                        ->where(function ($q) use ($current): void {
                             $q->whereNull('valid_from')->orWhere('valid_from', '<=', $current);
                         })
-                        ->where(function ($q) use ($current) {
+                        ->where(function ($q) use ($current): void {
                             $q->whereNull('valid_until')->orWhere('valid_until', '>=', $current);
                         })
                         ->orderByDesc('valid_from')
@@ -633,11 +638,15 @@ class WorkingHourService
                     $validFrom = $workTime->valid_from ? Carbon::parse($workTime->valid_from) : null;
                     $validUntil = $workTime->valid_until ? Carbon::parse($workTime->valid_until) : null;
 
-                    if ((!$validFrom || $validFrom->lte($date)) &&
-                        (!$validUntil || $validUntil->gte($date))) {
-                        if (!$activePattern ||
+                    if (
+                        (!$validFrom || $validFrom->lte($date)) &&
+                        (!$validUntil || $validUntil->gte($date))
+                    ) {
+                        if (
+                            !$activePattern ||
                             (!$activePattern->valid_from && $validFrom) ||
-                            ($activePattern->valid_from && $validFrom && $validFrom->gt($activePattern->valid_from))) {
+                            ($activePattern->valid_from && $validFrom && $validFrom->gt($activePattern->valid_from))
+                        ) {
                             $activePattern = $workTime;
                         }
                     }
@@ -665,10 +674,10 @@ class WorkingHourService
             $weekday = strtolower($current->format('l'));
 
             $activePattern = $user->workTimes()
-                ->where(function ($q) use ($current) {
+                ->where(function ($q) use ($current): void {
                     $q->whereNull('valid_from')->orWhere('valid_from', '<=', $current);
                 })
-                ->where(function ($q) use ($current) {
+                ->where(function ($q) use ($current): void {
                     $q->whereNull('valid_until')->orWhere('valid_until', '>=', $current);
                 })
                 ->orderByDesc('valid_from')
@@ -686,5 +695,4 @@ class WorkingHourService
 
         return $totalMinutes;
     }
-
 }

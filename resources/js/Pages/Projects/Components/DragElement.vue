@@ -27,8 +27,7 @@
                         </div>
                     </div>
                     <div class="flex items-center justify-center w-26">
-                        <div class="text-[9px] w-full " v-if="!$page.props.auth.user.compact_mode && type === 0"> {{plannedHours}}  {{expectedHours ? ' | ' + expectedHours : ''}}</div>
-                        <div class="text-[9px] w-full" v-if="!$page.props.auth.user.compact_mode && type !== 0">{{ plannedHours }}</div>
+                        <div class="text-[9px] w-full" :class="workTimeBalanceClass" v-if="!$page.props.auth.user.compact_mode && type === 0">{{ workTimeBalance }}</div>
                     </div>
                 </div>
 
@@ -68,11 +67,33 @@ export default defineComponent({
         'item',
         'type',
         'plannedHours',
-        'expectedHours',
+        //'expectedHours',
         'color',
         'craft',
-        'isManagingCraft'
+        'isManagingCraft',
+        'workTimeBalance'
     ],
+    computed: {
+        workTimeBalanceClass() {
+            if (!this.workTimeBalance) {
+                return 'text-white';
+            }
+
+            const [hourPart, minutePartRaw] = this.workTimeBalance.split('h');
+            const hours = parseInt(hourPart.trim(), 10);
+            const minutes = parseInt(minutePartRaw.split('m')[0].trim(), 10);
+
+            if (hours > 0 || (hours === 0 && minutes > 0)) {
+                return 'text-green-200';
+            }
+
+            if (hours < 0 || (hours === 0 && minutes < 0)) {
+                return 'text-red-200';
+            }
+
+            return 'text-white';
+        }
+    },
     methods: {
         onDragStart(event) {
             event.dataTransfer.setData(

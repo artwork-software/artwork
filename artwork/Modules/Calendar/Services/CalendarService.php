@@ -221,7 +221,7 @@ class CalendarService
         ?Project $project
     ): Builder|HasMany {
         $user = Auth::user();
-        $calendarFilter = $user->shift_calendar_filter()->first();
+        $calendarFilter = $user->userFilters()->shiftCalendar()->first();
 
         $isLoud = $calendarFilter->is_loud ?? false;
         $isNotLoud = $calendarFilter->is_not_loud ?? false;

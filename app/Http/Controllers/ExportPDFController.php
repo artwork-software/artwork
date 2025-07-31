@@ -51,7 +51,7 @@ class ExportPDFController extends Controller
         $projectId = $request->get('project');
         $startDate = $request->get('start');
         $endDate = $request->get('end');
-        $userCalendarFilter = $userService->getAuthUser()->calendar_filter;
+        $userCalendarFilter = $userService->getAuthUser()->userFilters()->calendarFilter()->first();
 
         if (!$startDate && $projectId) {
             $startDate = $carbon->create($projectService->getFirstEventInProject($projectId)
@@ -85,7 +85,7 @@ class ExportPDFController extends Controller
         $showCalendar = $this->calendarDataService->createCalendarData(
             startDate: $startDate,
             endDate: $endDate,
-            calendarFilter: $userService->getAuthUser()->getAttribute('calendar_filter'),
+            calendarFilter: $userService->getAuthUser()->userFilters()->calendarFilter()->first(),
             project: $projectId ? $projectService->findById($projectId) : null
         );
 
@@ -96,7 +96,7 @@ class ExportPDFController extends Controller
                 'rooms' => $roomService->getFilteredRooms(
                     $carbon->parse($request->input('start')),
                     $carbon->parse($request->input('end')),
-                    $userService->getAuthUser()->getAttribute('calendar_filter')
+                    $userService->getAuthUser()->userFilters()->calendarFilter()->first()
                 ),
                 'filterRooms' => RoomPdfResource::collection(Room::all()),
                 'calendar' => $showCalendar['roomsWithEvents'],

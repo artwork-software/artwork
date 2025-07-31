@@ -78,6 +78,7 @@ use Artwork\Modules\Task\Http\Resources\TaskDashboardResource;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
@@ -151,7 +152,7 @@ class EventController extends Controller
                     $this->eventCollectionService->collectEventsForRoomsOnSpecificDays(
                         $desiredRoomIds,
                         $desiredDays,
-                        $request->user()->calendar_filter,
+                        $request->user()->userFilters()->calendarFilter()->first(),
                         $projectId > 0 ?
                             $projectService->findById($projectId) :
                             null
@@ -214,7 +215,9 @@ class EventController extends Controller
         if ($user->daily_view && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
-            $user->calendar_filter->update([
+            $user->userFilters()->updateOrCreate([
+                'filter_type' => UserFilterTypes::CALENDAR_FILTER->value
+            ], [
                 'end_date' => $endDate->format('Y-m-d')
             ]);
         }
@@ -222,7 +225,9 @@ class EventController extends Controller
         if ($startDate->diffInDays($endDate) > (365 * 2)) {
             $endDate = $startDate->copy()->addYears(2);
             $calendarWarningText = __('calendar.calendar_limit_two_years');
-            $user->calendar_filter->update([
+            $user->userFilters()->updateOrCreate([
+                'filter_type' => UserFilterTypes::CALENDAR_FILTER->value
+            ], [
                 'end_date' => $endDate->format('Y-m-d')
             ]);
         }
@@ -324,7 +329,7 @@ class EventController extends Controller
             'rooms' => $rooms,
             'calendar' => Inertia::always(fn() => $calendarData->rooms),
             'personalFilters' => Inertia::always(fn() =>
-                $this->filterService->getPersonalFilter($user, 'calendar_filter')),
+                $this->filterService->getPersonalFilter($user, UserFilterTypes::CALENDAR_FILTER->value)),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
                 EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)),
@@ -365,7 +370,9 @@ class EventController extends Controller
         if ($user->daily_view && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
-            $user->calendar_filter->update([
+            $user->userFilters()->updateOrCreate([
+                'filter_type' => UserFilterTypes::PLANNING_FILTER->value
+            ], [
                 'end_date' => $endDate->format('Y-m-d')
             ]);
         }
@@ -374,7 +381,9 @@ class EventController extends Controller
         if ($startDate->diffInDays($endDate) > (365 * 2)) {
             $endDate = $startDate->copy()->addYears(2);
             $calendarWarningText = __('calendar.calendar_limit_two_years');
-            $user->calendar_filter->update([
+            $user->userFilters()->updateOrCreate([
+                'filter_type' => UserFilterTypes::PLANNING_FILTER->value
+            ], [
                 'end_date' => $endDate->format('Y-m-d')
             ]);
         }
@@ -440,7 +449,7 @@ class EventController extends Controller
             'rooms' => $rooms,
             'calendar' => Inertia::always(fn() => $calendarData->rooms),
             'personalFilters' => Inertia::always(fn() => $this->filterService
-                ->getPersonalFilter($user, 'planning_filter')),
+                ->getPersonalFilter($user, UserFilterTypes::PLANNING_FILTER->value)),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
                 EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)),
@@ -456,7 +465,9 @@ class EventController extends Controller
             'first_project_shift_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'projectNameUsedForProjectTimePeriod' => $userCalendarSettings->getAttribute('time_period_project_id') ?
-                $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'))->name : null,
+                $this->projectService->findById(
+                    $userCalendarSettings->getAttribute('time_period_project_id')
+                )->name : null,
             'calendarWarningText' => $calendarWarningText,
             'months' => $months,
             'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id'),
@@ -479,7 +490,20 @@ class EventController extends Controller
         if ($user->getAttribute('daily_view') && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
-            $user->shift_calendar_filter->update([
+            $user->userFilters()->updateOrCreate([
+                'filter_type' => UserFilterTypes::SHIFT_FILTER->value
+            ], [
+                'end_date' => $endDate->format('Y-m-d')
+            ]);
+        }
+
+        // only allow one month in shift plan view
+        if ($startDate->diffInDays($endDate) > 31) {
+            $endDate = $startDate->copy()->addDays(30);
+            $calendarWarningText = __('calendar.calendar_limit_one_month');
+            $user->userFilters()->updateOrCreate([
+                'filter_type' => UserFilterTypes::SHIFT_FILTER->value
+            ], [
                 'end_date' => $endDate->format('Y-m-d')
             ]);
         }
@@ -541,7 +565,7 @@ class EventController extends Controller
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
             'days' => $period,
             'shiftPlan' => $calendarData->rooms,
-            'personalFilters' => $this->filterService->getPersonalFilter($user, 'shift_filter'),
+            'personalFilters' => $this->filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
@@ -550,7 +574,9 @@ class EventController extends Controller
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'projectNameUsedForProjectTimePeriod' => $userCalendarSettings->getAttribute('time_period_project_id') ?
-                $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'))->name : null,
+                $this->projectService->findById(
+                    $userCalendarSettings->getAttribute('time_period_project_id')
+                )->name : null,
             'shiftPlanWorkerSortEnums' => array_map(
                 static function (ShiftPlanWorkerSortEnum $enum): string {
                     return $enum->name;
@@ -601,7 +627,7 @@ class EventController extends Controller
                 $userService,
                 $request->collect('rooms')->all(),
                 $request->collect('days')->all(),
-                $userService->getAuthUser()->getAttribute('shift_calendar_filter')
+                $userService->getAuthUser()?->userFilters()->shiftFilter()->first()
             ),
             'workerData' => $shiftWorkerService
                 ->getResolvedWorkerShiftPlanResourcesByIdsAndTypesWithPlannedWorkingHours(
@@ -620,7 +646,7 @@ class EventController extends Controller
                 $userService,
                 $request->collect('rooms')->all(),
                 $request->collect('days')->all(),
-                $userService->getAuthUser()->getAttribute('shift_calendar_filter')
+                $userService->getAuthUser()?->userFilters()->shiftFilter()->first()
             ),
         ];
     }

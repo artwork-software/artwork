@@ -350,7 +350,7 @@ function editRule(rule) {
     form.description = rule.configuration?.description || ''
     form.trigger_type = rule.trigger_type
     form.individual_number_value = rule.individual_number_value
-    form.warning_color = rule.warning_color
+    form.warning_color = rule.configuration.warning_color
     form.notify_on_violation = rule.notify_on_violation
     form.contract_ids = rule.contracts.map(c => c.id)
     form.user_ids = rule.users_to_notify.map(u => u.id)

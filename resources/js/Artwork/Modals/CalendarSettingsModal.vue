@@ -196,7 +196,7 @@
                     <p id="show_unplanned_events-description" class="text-gray-500 text-xs">{{ $t('Highlights firmly scheduled events in the calendar, ideal for quickly recognizing binding times.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3" v-if="!isPlanning && !inShiftPlan">
+            <div class="flex gap-3" v-if="!isPlanning && !inShiftPlan && can('can see planning calendar | can edit planning calendar') || is('artwork admin')">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.show_planned_events" id="show_planned_events" aria-describedby="show_planned_events-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />

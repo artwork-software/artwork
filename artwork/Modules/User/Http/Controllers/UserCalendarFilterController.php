@@ -53,8 +53,12 @@ class UserCalendarFilterController extends Controller
 
     public function updateDates(Request $request, User $user): void
     {
+        $isPlanning = $request->get('isPlanning', false);
         $user->userFilters()->updateOrCreate(
-            ['filter_type' => UserFilterTypes::CALENDAR_FILTER->value],
+            [
+                'filter_type' =>
+                    $isPlanning ? UserFilterTypes::PLANNING_FILTER->value : UserFilterTypes::CALENDAR_FILTER->value
+            ],
             [
                 'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
                 'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')

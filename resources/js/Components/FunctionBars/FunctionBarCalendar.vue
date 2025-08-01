@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
-                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"/>
+                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false" :is_planning="isPlanning"/>
                     <div class="flex items-center">
                         <button v-if="!dailyView" class="ml-2 text-black previousTimeRange" @click="previousTimeRange">
                             <IconChevronLeft class="h-5 w-5 text-primary"/>
@@ -488,6 +488,7 @@ const updateTimes = () => {
     router.patch(route('update.user.calendar.filter.dates', usePage().props.auth.user.id), {
         start_date: dateValueCopy.value[0],
         end_date: dateValueCopy.value[1],
+        isPlanning: props.isPlanning
     }, {
         preserveScroll: false,
         preserveState: false

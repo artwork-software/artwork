@@ -205,4 +205,24 @@ class EventVerificationController extends Controller
             broadcast(new EventCreated($event->fresh(), $event->room_id));
         }
     }
+
+    public function redirectToCalendar(Event $event): \Illuminate\Http\RedirectResponse
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        $user->userFilters()->planningCalendarFilter()->first()->update([
+            'start_date' => $event->start_time,
+            'end_date' => $event->end_time,
+            'event_type_ids' => null,
+            'room_ids' => null,
+            'area_ids' => null,
+            'room_attribute_ids' => null,
+            'room_category_ids' => null,
+            'event_property_ids' => null,
+            'craft_ids' => null,
+        ]);
+
+        return redirect()->route('planning-event-calendar.index');
+    }
 }

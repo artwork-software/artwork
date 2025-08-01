@@ -15,79 +15,69 @@
                 <GlassyIconButton text="Create new rule" icon="IconPlus" @click="openCreateModal" />
             </div>
 
-
             <div class="card white p-5 mt-5">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Name
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Typ
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Wert
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Warnfarbe
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Verträge
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Aktionen
-                            </th>
-                        </tr>
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ $t('Name') }}
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ $t('Type') }}
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ $t('Value') }}
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ $t('Warning color') }}
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ $t('Contracts') }}
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ $t('Actions') }}
+                                </th>
+                            </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                        <tr v-for="rule in rules" :key="rule.id">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ rule.name }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ formatTriggerType(rule.trigger_type) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ rule.individual_number_value }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <div
-                                    class="w-6 h-6 rounded-full border"
-                                    :style="{ backgroundColor: rule.warning_color }"
-                                ></div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <span v-if="rule.contracts.length > 0">
-                                            {{ rule.contracts.length }} Vertrag(e)
-                                        </span>
-                                <span v-else class="text-gray-400">Keine Zuweisungen</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button
-                                    @click="editRule(rule)"
-                                    class="text-indigo-600 hover:text-indigo-900 mr-4"
-                                >
-                                    Bearbeiten
-                                </button>
-                                <button
-                                    @click="deleteRule(rule)"
-                                    class="text-red-600 hover:text-red-900"
-                                >
-                                    Löschen
-                                </button>
-                            </td>
-                        </tr>
+                            <tr v-for="rule in rules" :key="rule.id">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ rule.name }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ formatTriggerType(rule.trigger_type) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ rule.individual_number_value }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <div
+                                        class="w-6 h-6 rounded-full border"
+                                        :style="{ backgroundColor: rule.configuration.warning_color }"
+                                    ></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <span v-if="rule.contracts.length > 0">
+                                        {{ rule.contracts.length }} {{ $t('Contract(s)')}}
+                                    </span>
+                                    <span v-else class="text-gray-400">{{ $t('No assignments') }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium flex justify-end items-center">
+                                    <BaseMenu white-menu-background has-no-offset >
+                                        <BaseMenuItem white-menu-background title="Edit" @click="editRule(rule)" />
+                                        <BaseMenuItem white-menu-background title="Delete" icon="IconTrash" @click="deleteRule(rule)" />
+                                    </BaseMenu>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
 
-            <ArtworkBaseModal v-if="showModal" @close="closeModal" :title="editingRule ? 'Edit Rule' : 'Create New Rule'" :description="editingRule ? 'Edit the selected rule.' : 'Create a new shift warning rule.'">
+            <ArtworkBaseModal v-if="showModal" @close="closeModal" :title="editingRule ? 'Edit Rule' : 'Create new rule'" :description="editingRule ? 'Edit the selected rule.' : 'Create a new shift warning rule.'">
                 <div class="p-5">
-
                     <form @submit.prevent="saveRule">
                         <div class="grid grid-cols-1 gap-4">
                             <div>
@@ -122,7 +112,7 @@
                                     </ListboxButton>
                                     <ListboxButton v-else class="menu-button">
                                         <div class="flex flex-grow xsLight text-left subpixel-antialiased">
-                                            Regel-Typ
+                                            {{ $t('Rule type') }}
                                         </div>
                                         <span class="pointer-events-none">
                                              <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
@@ -150,7 +140,7 @@
                             <div>
                                 <BaseInput
                                     v-model="form.individual_number_value"
-                                    label="Wert"
+                                    label="Value"
                                     required
                                     type="number"
                                     id="individual_number_value"
@@ -159,13 +149,14 @@
 
                             <div>
                                 <div class="flex items-center mb-2">
-                                    <label class="block text-sm font-medium text-gray-700 mr-2">Warnfarbe</label>
+                                    <label class="block text-sm font-medium text-gray-700 mr-2">{{ $t('Warning color')}}</label>
                                 </div>
                                 <ColorPickerComponent
                                     v-model="form.warning_color"
                                     label="Warnfarbe"
                                     class="!w-full"
                                     :color="form.warning_color"
+                                    @updateColor="addColor"
                                 />
                             </div>
 
@@ -187,24 +178,49 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Verträge zuweisen</label>
-                                <select
-                                    v-model="form.contract_ids"
-                                    multiple
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                                    size="4"
-                                >
-                                    <option
-                                        v-for="contract in contracts"
-                                        :key="contract.id"
-                                        :value="contract.id"
-                                    >
-                                        {{ contract.name }}
-                                    </option>
-                                </select>
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Mehrere Verträge können mit Strg+Klick (oder Cmd+Klick) ausgewählt werden.
-                                </p>
+                                <div class="relative">
+                                    <Listbox as="div" class="flex relative" v-model="form.contract_ids" id="eventType" multiple>
+                                        <ListboxButton class="menu-button">
+                                            <div class="flex flex-grow xsLight text-left subpixel-antialiased">
+                                                {{ $t('Assign contracts')}}
+                                            </div>
+                                            <span class="pointer-events-none">
+                                             <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        </span>
+                                        </ListboxButton>
+                                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                            <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                                <ListboxOption
+                                                    as="template"
+                                                    class="max-h-8"
+                                                    v-for="contract in contracts"
+                                                    :key="contract.id"
+                                                    :value="contract.id"
+                                                    v-slot="{ active, selected }"
+                                                >
+                                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                        <div class="flex">
+                                                            <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                                {{ contract.name }}
+                                                            </span>
+                                                        </div>
+                                                        <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                            <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                        </span>
+                                                    </li>
+                                                </ListboxOption>
+                                            </ListboxOptions>
+                                        </transition>
+                                    </Listbox>
+                                </div>
+
+                                <!-- Display selected contracts -->
+                                <div class="mt-2">
+                                    <span v-if="form.contract_ids.length > 0" class="text-sm text-gray-600">
+                                        {{ form.contract_ids.length }} {{ $t('Contract(s) selected')}}
+                                    </span>
+                                    <span v-else class="text-sm text-gray-400">{{ $t('No contracts selected')}}</span>
+                                </div>
                             </div>
                         </div>
 
@@ -214,13 +230,13 @@
                                 variant="danger"
                                 @click="closeModal"
                             >
-                                Abbrechen
+                                {{ $t('Cancel') }}
                             </ArtworkBaseModalButton>
                             <ArtworkBaseModalButton
                                 type="submit"
                                 variant="primary"
                             >
-                                {{ editingRule ? 'Aktualisieren' : 'Erstellen' }}
+                                {{ editingRule ? $t('Update') : $t('Create') }}
                             </ArtworkBaseModalButton>
                         </div>
                     </form>
@@ -228,90 +244,6 @@
             </ArtworkBaseModal>
         </div>
     </AppLayout>
-      <!--      <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h1 class="text-2xl font-bold text-gray-900">Schichtwarnungen - Regeln</h1>
-                        <button
-                            @click="openCreateModal"
-                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                        >
-                            Neue Regel erstellen
-                        </button>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Name
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Typ
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Wert
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Warnfarbe
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Verträge
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Aktionen
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="rule in rules" :key="rule.id">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {{ rule.name }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ formatTriggerType(rule.trigger_type) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ rule.individual_number_value }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <div
-                                            class="w-6 h-6 rounded-full border"
-                                            :style="{ backgroundColor: rule.warning_color }"
-                                        ></div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <span v-if="rule.contracts.length > 0">
-                                            {{ rule.contracts.length }} Vertrag(e)
-                                        </span>
-                                        <span v-else class="text-gray-400">Keine Zuweisungen</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button
-                                            @click="editRule(rule)"
-                                            class="text-indigo-600 hover:text-indigo-900 mr-4"
-                                        >
-                                            Bearbeiten
-                                        </button>
-                                        <button
-                                            @click="deleteRule(rule)"
-                                            class="text-red-600 hover:text-red-900"
-                                        >
-                                            Löschen
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-    </AppLayout>-->
 </template>
 
 <script setup>
@@ -328,6 +260,8 @@ import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue"
 import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 const props = defineProps({
     rules: Array,
@@ -376,7 +310,7 @@ const tabs = ref([
 const showModal = ref(false)
 const editingRule = ref(null)
 
-const form = reactive({
+const form = useForm({
     name: '',
     description: '',
     trigger_type: '',
@@ -404,6 +338,10 @@ function openCreateModal() {
     editingRule.value = null
     resetForm()
     showModal.value = true
+}
+
+const addColor = (color) => {
+    form.warning_color = color
 }
 
 function editRule(rule) {
@@ -438,21 +376,30 @@ function resetForm() {
 
 function saveRule() {
     const url = editingRule.value
-        ? `/shift-warnings/rules/${editingRule.value.id}`
-        : '/shift-warnings/rules'
+        ? route('shift-warnings.rules.update', editingRule.value.id)
+        : route('shift-warnings.rules.store')
 
-    const method = editingRule.value ? 'put' : 'post'
 
-    useForm(form)[method](url, {
-        onSuccess: () => {
-            closeModal()
-        }
-    })
+    if(editingRule.value){
+        form.put(url, {
+            preserveScroll: true,
+            onSuccess: () => {
+                closeModal()
+            }
+        })
+    } else {
+        form.post(url, {
+            preserveScroll: true,
+            onSuccess: () => {
+                closeModal()
+            }
+        })
+    }
 }
 
 function deleteRule(rule) {
     if (confirm('Möchten Sie diese Regel wirklich löschen?')) {
-        useForm({}).delete(`/shift-warnings/rules/${rule.id}`)
+        useForm({}).delete(route('shift-warnings.rules.destroy', rule.id))
     }
 }
 </script>

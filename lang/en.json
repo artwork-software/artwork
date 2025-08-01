@@ -2910,5 +2910,16 @@
     "Convert to planning events": "Convert to planning events",
     "Shift warnings - rules": "Shift warnings - rules",
     "Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies. You can create, edit, and delete shift warning rules here.": "Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies. You can create, edit, and delete shift warning rules here.",
-    "Create new rule": "Create new rule"
+    "Create new rule": "Create new rule",
+    "Contract(s) selected": "Contract(s) selected",
+    "Assign contracts": "Assign contracts",
+    "Notification of rule violation": "Notification of rule violation",
+    "No contracts selected": "No contracts selected",
+    "Warning color": "Warning color",
+    "Rule type": "Rule type",
+    "Edit Rule": "Edit Rule",
+    "Edit the selected rule.": "Edit the selected rule.",
+    "Create a new shift warning rule.": "Create a new shift warning rule.",
+    "Contract(s)": "Contract(s)",
+    "No assignments": "No assignments"
 }

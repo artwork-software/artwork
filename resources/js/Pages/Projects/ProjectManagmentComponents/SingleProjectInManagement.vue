@@ -19,6 +19,7 @@
                     :class="component.type === 'ActionsComponent' ? 'flex justify-end' : ''"
                     @click="openProject(component, project)"
                 >
+
                     <component
                         v-if="checkIfComponentIsVisible(component)"
                         :is="componentMapping['Builder' + component.type]"
@@ -27,6 +28,7 @@
                         :menu-visible="menuVisible"
                         :menu-position="menuPosition"
                     />
+
 
                     <BaseMenu has-no-offset white-menu-background v-show="showActionComponent && component.type === 'ActionsComponent'"  v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')">
                         <BaseMenuItem white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" icon="IconFolderOpen"/>
@@ -123,6 +125,8 @@ import BuilderDropDown from "@/Pages/Projects/BuilderComponents/BuilderDropDown.
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
+import BuilderArtistNameDisplayComponent
+    from "@/Pages/Projects/BuilderComponents/BuilderArtistNameDisplayComponent.vue";
 
 const props = defineProps({
     project: {
@@ -185,7 +189,8 @@ const componentMapping = {
     BuilderBudgetInformations,
     BuilderTextField,
     BuilderCheckbox,
-    BuilderDropDown
+    BuilderDropDown,
+    BuilderArtistNameDisplayComponent
 };
 
 const page = ref(route().params.page ?? 1);

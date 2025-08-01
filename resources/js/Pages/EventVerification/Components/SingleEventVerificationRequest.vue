@@ -183,6 +183,10 @@ const openPlanningCalendarWithEventId = () => {
     const startDate = formatDate(startOfWeek);
     const endDate = formatDate(endOfWeek);
 
+
+    router.get(route('event-verifications.redirect-to-calendar', props.eventVerification.event.id))
+    /*
+
     router.patch(route('update.user.calendar.filter.dates', usePage().props.auth.user.id), {
         start_date: startDate,
         end_date: endDate,
@@ -198,6 +202,8 @@ const openPlanningCalendarWithEventId = () => {
             });
         }
     });
+
+     */
 };
 
 

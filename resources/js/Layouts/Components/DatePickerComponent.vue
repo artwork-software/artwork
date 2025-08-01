@@ -113,7 +113,11 @@ const props = defineProps({
     project: [Object, Boolean],
     is_shift_plan: Boolean,
     is_user_shift_plan: Boolean,
-    is_inventory_article_planning: Boolean
+    is_inventory_article_planning: Boolean,
+    is_planning: {
+        type: Boolean,
+        default: false
+    }
 });
 
 // Refs & State
@@ -362,6 +366,7 @@ function updateTimes() {
             router.patch(route('update.user.calendar.filter.dates', userId), {
                 start_date: startDateObj,
                 end_date: endDateObj,
+                isPlanning: props.is_planning,
             }, {
                 preserveState: false,
                 preserveScroll: true,

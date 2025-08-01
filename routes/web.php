@@ -2164,6 +2164,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // event-verifications.request-verification
         Route::post('/verification-request/request-verification', [EventVerificationController::class, 'requestVerification'])
             ->name('events-verifications.request-verification');
+
+        Route::get('/redirect-to-calendar/{event}', [EventVerificationController::class, 'redirectToCalendar'])
+            ->name('event-verifications.redirect-to-calendar');
     });
 
     Route::group(['prefix' => 'accommodation'], function (): void {

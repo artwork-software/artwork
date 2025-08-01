@@ -58,5 +58,18 @@ class AddNewComponents extends Command
         } else {
             $this->info('Component Subprojects component already exists');
         }
+        if (!Component::query()->where('type', ProjectTabComponentEnum::ARTIST_NAME_DISPLAY)->first()) {
+            Component::create([
+                'name' => 'Artist Name Display Component',
+                'type' => ProjectTabComponentEnum::ARTIST_NAME_DISPLAY,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => true,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ]);
+            $this->info('Component Artist Name Display Component added');
+        } else {
+            $this->info('Component Artist Name Display Component already exists');
+        }
     }
 }

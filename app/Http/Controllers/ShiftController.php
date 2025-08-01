@@ -135,16 +135,18 @@ class ShiftController extends Controller
             $this->shiftService->createInfringementNotification($shift);
         }
 
-        $this->changeService->saveFromBuilder(
-            $this->changeService
-                ->createBuilder()
-                ->setType('shift')
-                ->setModelClass(Shift::class)
-                ->setModelId($shift->id)
-                ->setShift($shift)
-                ->setTranslationKey('Shift of event was created')
-                ->setTranslationKeyPlaceholderValues([$event->eventName])
-        );
+        if ($event?->exists) {
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('shift')
+                    ->setModelClass(Shift::class)
+                    ->setModelId($shift->id)
+                    ->setShift($shift)
+                    ->setTranslationKey('Shift of event was created')
+                    ->setTranslationKeyPlaceholderValues([$event?->eventName])
+            );
+        }
 
         broadcast(new UpdateEventShiftInShiftPlan(
             $shift->load([
@@ -154,7 +156,7 @@ class ShiftController extends Controller
                 'serviceProvider',
                 'committedBy'
             ]),
-            $shift->event->room_id
+            $shift?->event?->room_id ?? $shift?->room_id,
         ));
     }
 
@@ -171,16 +173,18 @@ class ShiftController extends Controller
         if ($shift->is_committed) {
             $event = $shift->event;
 
-            $this->changeService->saveFromBuilder(
-                $this->changeService
-                    ->createBuilder()
-                    ->setType('shift')
-                    ->setModelClass(Shift::class)
-                    ->setModelId($shift->id)
-                    ->setShift($shift)
-                    ->setTranslationKey('Shift of event has been edited')
-                    ->setTranslationKeyPlaceholderValues([$event->eventName])
-            );
+            if ($event?->exists) {
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('shift')
+                        ->setModelClass(Shift::class)
+                        ->setModelId($shift->id)
+                        ->setShift($shift)
+                        ->setTranslationKey('Shift of event has been edited')
+                        ->setTranslationKeyPlaceholderValues([$event?->eventName])
+                );
+            }
         }
 
         $shift->fill($request->only([
@@ -208,18 +212,20 @@ class ShiftController extends Controller
     ): RedirectResponse {
         $projectId = $shift->event()->first()?->project()?->first()->id;
         if ($shift->is_committed) {
-            $event = $shift->event;
+            $event = $shift?->event;
 
-            $this->changeService->saveFromBuilder(
-                $this->changeService
-                    ->createBuilder()
-                    ->setType('shift')
-                    ->setModelClass(Shift::class)
-                    ->setModelId($shift->id)
-                    ->setShift($shift)
-                    ->setTranslationKey('Shift of event has been edited')
-                    ->setTranslationKeyPlaceholderValues([$event->eventName])
-            );
+            if ($event?->exists) {
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('shift')
+                        ->setModelClass(Shift::class)
+                        ->setModelId($shift->id)
+                        ->setShift($shift)
+                        ->setTranslationKey('Shift of event has been edited')
+                        ->setTranslationKeyPlaceholderValues([$event?->eventName])
+                );
+            }
 
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
@@ -229,8 +235,8 @@ class ShiftController extends Controller
                 $notificationTitle = __(
                     'notification.shift.locked_changes',
                     [
-                        'projectName' => $shift->event()->first()->project()->first()->name,
-                        'craftAbbreviation' => $shift->craft()->first()->abbreviation
+                        'projectName' => $shift?->event?->project?->name ?? __('notification.shift.without_project'),
+                        'craftAbbreviation' => $shift->craft->abbreviation
                     ],
                     $user->language
                 );
@@ -263,8 +269,9 @@ class ShiftController extends Controller
                     $notificationTitle = __(
                         'notification.shift.locked_changes',
                         [
-                            'projectName' => $shift->event()->first()->project()->first()->name,
-                            'craftAbbreviation' => $shift->craft()->first()->abbreviation
+                            'projectName' => $shift?->event?->project?->name ??
+                                __('notification.shift.without_project'),
+                            'craftAbbreviation' => $shift->craft->abbreviation
                         ],
                         $craftUser->language
                     );
@@ -333,8 +340,8 @@ class ShiftController extends Controller
         $notificationTitle = __(
             'notification.shift.shift_staffing',
             [
-                'projectName' => $shift->event()->first()->project()->first()->name,
-                'craftAbbreviation' => $shift->craft()->first()->abbreviation
+                'projectName' => $shift?->event?->project?->name ?? __('notification.shift.without_project'),
+                'craftAbbreviation' => $shift->craft->abbreviation
             ],
             $user->language
         );
@@ -620,16 +627,18 @@ class ShiftController extends Controller
         if ($shift->is_committed) {
             $event = $shift->event;
 
-            $this->changeService->saveFromBuilder(
-                $this->changeService
-                    ->createBuilder()
-                    ->setType('shift')
-                    ->setModelClass(Shift::class)
-                    ->setModelId($shift->id)
-                    ->setShift($shift)
-                    ->setTranslationKey('Shift of event was deleted')
-                    ->setTranslationKeyPlaceholderValues([$event->eventName])
-            );
+            if ($event?->exists) {
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('shift')
+                        ->setModelClass(Shift::class)
+                        ->setModelId($shift->id)
+                        ->setShift($shift)
+                        ->setTranslationKey('Shift of event was deleted')
+                        ->setTranslationKeyPlaceholderValues([$event->eventName])
+                );
+            }
 
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
@@ -640,8 +649,9 @@ class ShiftController extends Controller
                     $notificationTitle = __(
                         'notification.shift.deleted_where_locked',
                         [
-                            'projectName' => $shift->event()->first()->project()->first()->name,
-                            'craftAbbreviation' => $shift->craft()->first()->abbreviation
+                            'projectName' => $shift?->event?->project?->name ??
+                                __('notification.shift.without_project'),
+                            'craftAbbreviation' => $shift->craft->abbreviation
                         ],
                         $user->language
                     );
@@ -675,8 +685,9 @@ class ShiftController extends Controller
                     $notificationTitle = __(
                         'notification.shift.deleted_where_locked',
                         [
-                            'projectName' => $shift->event()->first()->project()->first()->name,
-                            'craftAbbreviation' => $shift->craft()->first()->abbreviation
+                            'projectName' => $shift?->event?->project?->name ??
+                                __('notification.shift.without_project'),
+                            'craftAbbreviation' => $shift->craft->abbreviation
                         ],
                         $craftUser->language
                     );

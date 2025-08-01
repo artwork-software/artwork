@@ -116,26 +116,28 @@ class ShiftUserService
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
     ): void {
-        $changeService->saveFromBuilder(
-            $changeService
-                ->createBuilder()
-                ->setType('shift')
-                ->setModelClass(Shift::class)
-                ->setModelId($shift->id)
-                ->setShift($shift)
-                ->setTranslationKey('Employee was added to the shift as')
-                ->setTranslationKeyPlaceholderValues([
-                    $user->getFullNameAttribute(),
-                    $shift->craft->abbreviation,
-                    $shift->event->eventName ?? '',
-                    $shiftQualification->name
-                ])
-        );
+        if ($shift->event?->exists) {
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setType('shift')
+                    ->setModelClass(Shift::class)
+                    ->setModelId($shift->id)
+                    ->setShift($shift)
+                    ->setTranslationKey('Employee was added to the shift as')
+                    ->setTranslationKeyPlaceholderValues([
+                        $user->getFullNameAttribute(),
+                        $shift->craft->abbreviation,
+                        $shift->event->eventName ?? '',
+                        $shiftQualification->name
+                    ])
+            );
+        }
         $this->createAssignedToShiftNotification($shift, $user, $notificationService);
         if (
             $user->vacations()
-                ->where('date', '<=', $shift->event_start_day)
-                ->where('date', '>=', $shift->event_end_day)
+                ->where('date', '<=', $shift?->event_start_day ?? $shift->start_date)
+                ->where('date', '>=', $shift?->event_end_day ?? $shift->end_date)
                 ->count() > 0
         ) {
             $this->createVacationConflictNotification($shift, $user, $notificationService);
@@ -162,11 +164,13 @@ class ShiftUserService
         User $user,
         NotificationService $notificationService
     ): void {
-        $notificationService->setProjectId($shift->event?->project->id);
-        $notificationService->setEventId($shift->event->id);
+        if ($shift->event?->exists) {
+            $notificationService->setProjectId($shift->event?->project->id);
+            $notificationService->setEventId($shift->event->id);
+        }
         $notificationService->setShiftId($shift->id);
         $notificationTitle = __('notification.shift.new_shift_add', [
-            'projectName' => $shift->event?->project->name ?? '',
+            'craftName' => $shift->craft->name,
             'craftAbbreviation' => $shift->craft->abbreviation
         ], $user->language);
         $notificationService->setTitle($notificationTitle);
@@ -211,7 +215,8 @@ class ShiftUserService
                 }
                 $notificationTitle = __('notification.shift.conflict_shift_withName', [
                     'date' => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
-                    'projectName' => $shift->event->project->name,
+                    'projectName' => $shift?->event?->project?->name ??
+                        __('notification.shift.without_project'),
                     'craftAbbreviation' => $shift->craft->abbreviation
                 ], $craftUser->language);
                 $notificationService->setTitle($notificationTitle);
@@ -729,28 +734,33 @@ class ShiftUserService
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
     ): void {
-        $changeService->saveFromBuilder(
-            $changeService
-                ->createBuilder()
-                ->setType('shift')
-                ->setModelClass(Shift::class)
-                ->setModelId($shift->id)
-                ->setShift($shift)
-                ->setTranslationKey('Employee was removed from shift')
-                ->setTranslationKeyPlaceholderValues([
-                    $user->getFullNameAttribute(),
-                    $shift->craft->abbreviation,
-                    $shift->event->eventName
-                ])
-        );
+        if ($shift?->event?->exists) {
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setType('shift')
+                    ->setModelClass(Shift::class)
+                    ->setModelId($shift->id)
+                    ->setShift($shift)
+                    ->setTranslationKey('Employee was removed from shift')
+                    ->setTranslationKeyPlaceholderValues([
+                        $user->getFullNameAttribute(),
+                        $shift->craft->abbreviation,
+                        $shift->event?->eventName
+                    ])
+            );
 
-        $notificationService->setProjectId($shift->event->project->id);
-        $notificationService->setEventId($shift->event->id);
+            $notificationService->setProjectId($shift?->event?->project?->id);
+            $notificationService->setEventId($shift?->event?->id);
+        }
+
+
         $notificationService->setShiftId($shift->id);
         $notificationTitle = __(
             'notification.shift.shift_staffing_deleted',
             [
-                'projectName' => $shift->event->project->name,
+                'projectName' => $shift?->event?->project?->name ??
+                    __('notification.shift.without_project'),
                 'craftAbbreviation' => $shift->craft->abbreviation
             ],
             $user->language

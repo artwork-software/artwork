@@ -60,21 +60,23 @@ readonly class ShiftServiceProviderService
         $shiftCountService->handleShiftServiceProvidersShiftCount($shift, $serviceProviderId);
 
         if ($shift->is_committed) {
-            $changeService->saveFromBuilder(
-                $changeService
-                    ->createBuilder()
-                    ->setType('shift')
-                    ->setModelClass(Shift::class)
-                    ->setModelId($shift->id)
-                    ->setShift($shift)
-                    ->setTranslationKey('Service provider was added to the shift as')
-                    ->setTranslationKeyPlaceholderValues([
-                        $shiftServiceProviderPivot->serviceProvider->getNameAttribute(),
-                        $shift->craft->abbreviation,
-                        $shift->event->eventName,
-                        $shiftServiceProviderPivot->shiftQualification->name
-                    ])
-            );
+            if ($shift?->event?->exists) {
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setType('shift')
+                        ->setModelClass(Shift::class)
+                        ->setModelId($shift->id)
+                        ->setShift($shift)
+                        ->setTranslationKey('Service provider was added to the shift as')
+                        ->setTranslationKeyPlaceholderValues([
+                            $shiftServiceProviderPivot->serviceProvider->getNameAttribute(),
+                            $shift->craft->abbreviation,
+                            $shift->event->eventName,
+                            $shiftServiceProviderPivot->shiftQualification->name
+                        ])
+                );
+            }
         }
 
         if (
@@ -94,8 +96,6 @@ readonly class ShiftServiceProviderService
                 $changeService
             );
         }
-
-
     }
 
     private function handleSeriesShiftData(

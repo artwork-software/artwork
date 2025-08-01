@@ -22,6 +22,7 @@
             v-if="showCalendarSettingsModal"
             @close="showCalendarSettingsModal = false"
             :is-planning="isPlanning"
+            :in-shift-plan="isInShiftPlan"
         />
     </teleport>
 </template>
@@ -37,6 +38,10 @@ const props = defineProps({
     isPlanning: {
         type: Boolean,
         default: false
+    },
+    isInShiftPlan: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -50,6 +55,13 @@ const CalendarSettingsModal = defineAsyncComponent({
 
 const checkIfAnySettingIsActive = computed(() => {
 
+    const settingsInShiftPlan = [
+        'high_contrast', 'work_shifts', 'expand_days', 'display_project_groups', 'show_qualifications', 'shift_notes'
+    ]
+
+    if (props.isInShiftPlan) {
+        return settingsInShiftPlan.some(setting => usePage().props.auth.user.calendar_settings[setting]);
+    }
 
     if (usePage().props.auth.user.calendar_settings) {
         const userCalendarSettings = usePage().props.auth.user.calendar_settings;

@@ -14,6 +14,7 @@ class WorkTimeBookingService
     public function __construct(
         protected GeneralSettings $settings,
         protected WorkTimeBookingRepository $repository,
+
     ) {
     }
 
@@ -57,6 +58,25 @@ class WorkTimeBookingService
                 ? $workTimeBalanceChange - $previousBooking->work_time_balance_change
                 : $workTimeBalanceChange;
 
+            // Neue Logik für Krankheitstage
+            $vacation = $user->vacations()->byDate($today)->first();
+            if ($vacation && $vacation->type === 'NOT_AVAILABLE') {
+                $plannedMinutes = $this->calculateShiftMinutes($today, $user)['total'];
+
+                if ($plannedMinutes > $wantedMinutes) {
+                    $workedTimes['total'] = $plannedMinutes;
+                    $workTimeBalanceChange = $plannedMinutes - $wantedMinutes;
+                } else {
+                    $workedTimes['total'] = 0;
+                    $workTimeBalanceChange = 0;
+                }
+            } else {
+                $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange(
+                    $workedTimes['total'],
+                    $wantedMinutes
+                );
+            }
+
             $this->repository->storeBookingAndUpdateBalanceInTransaction($user, $today, $weekdayIndex, [
                 'name' => "daily_work_time_booking_{$today->toDateString()}",
                 'wanted_working_hours' => $wantedMinutes,
@@ -71,47 +91,6 @@ class WorkTimeBookingService
             }
         }
     }
-
-
-    /*public function calculateDailyWorkingHours(): void
-    {
-        $users = $this->repository->getWorkShiftUsers();
-        $today = now()->startOfDay();
-        $weekdayIndex = $today->dayOfWeek;
-        $weekdayName = $this->getWeekdayName($weekdayIndex);
-
-        foreach ($users as $user) {
-            $wantedMinutes = $this->getPlannedWorkingMinutes($user, $weekdayName);
-
-            if ($this->repository->isHoliday($today)) {
-                $wantedMinutes = 0;
-            }
-
-            $workedTimes = $this->calculateShiftMinutes($today, $user);
-            $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange(
-                $workedTimes['total'],
-                $wantedMinutes
-            );
-
-            $previousBooking = $this->repository->getPreviousBooking($user, $today, $weekdayIndex);
-            $delta = $previousBooking
-                ? $workTimeBalanceChange - $previousBooking->work_time_balance_change
-                : $workTimeBalanceChange;
-
-            $this->repository->storeBookingAndUpdateBalanceInTransaction($user, $today, $weekdayIndex, [
-                'name' => "daily_work_time_booking_{$today->toDateString()}",
-                'wanted_working_hours' => $wantedMinutes,
-                'worked_hours' => $workedTimes['total'],
-                'nightly_working_hours' => $workedTimes['night'],
-                'is_special_day' => false,
-                'work_time_balance_change' => $workTimeBalanceChange,
-            ]);
-
-            if ($delta !== 0) {
-                $this->repository->updateUserBalance($user, $delta);
-            }
-        }
-    }*/
 
     private function getWeekdayName(int $day): string
     {
@@ -119,12 +98,6 @@ class WorkTimeBookingService
             0 => 'sunday', 1 => 'monday', 2 => 'tuesday',
             3 => 'wednesday', 4 => 'thursday', 5 => 'friday', 6 => 'saturday'
         ][$day] ?? 'unknown';
-    }
-
-    private function getPlannedWorkingMinutes(User $user, string $weekday): int
-    {
-        $plannedTime = $user->workTime[$weekday] ?? null;
-        return $plannedTime ? now()->startOfDay()->diffInMinutes($plannedTime) : 0;
     }
 
     /**
@@ -197,13 +170,13 @@ class WorkTimeBookingService
     {
         UserWorkTime::query()
             ->whereDate('valid_from', '<=', now())
-            ->where(function ($q) {
+            ->where(function ($q): void {
                 $q->whereNull('valid_until')->orWhere('valid_until', '>=', now());
             })
             ->update(['is_active' => true]);
 
         UserWorkTime::query()
-            ->where(function ($q) {
+            ->where(function ($q): void {
                 $q->whereDate('valid_from', '>', now())->orWhereDate('valid_until', '<', now());
             })
             ->update(['is_active' => false]);

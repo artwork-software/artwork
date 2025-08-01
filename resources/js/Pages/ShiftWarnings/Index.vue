@@ -10,7 +10,7 @@
 
 
 
-            <div class="flex items-center justify-between mt-5">
+            <div class="flex items-center justify-between">
                 <TabComponent :tabs="tabs" use-translation/>
                 <GlassyIconButton text="Create new rule" icon="IconPlus" @click="openCreateModal" />
             </div>
@@ -299,11 +299,11 @@ const tabs = ref([
         icon: 'IconContract'
     },
     {
-        name: 'Workflows',
+        name: 'Shift warnings - rules',
         href: route('shift-warnings.rules.index'),
         current: route().current('shift-warnings.rules.index'),
         show: true,
-        icon: 'IconJumpRope'
+        icon: 'IconGavel'
     }
 ])
 

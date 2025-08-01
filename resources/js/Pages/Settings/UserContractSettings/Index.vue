@@ -93,11 +93,11 @@ const tabs = ref([
         icon: 'IconContract'
     },
     {
-        name: 'Workflows',
+        name: 'Shift warnings - rules',
         href: route('shift-warnings.rules.index'),
         current: route().current('shift-warnings.rules.index'),
         show: true,
-        icon: 'IconJumpRope'
+        icon: 'IconGavel'
     }
 ])
 </script>

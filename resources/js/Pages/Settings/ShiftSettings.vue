@@ -450,11 +450,11 @@ export default defineComponent({
                     icon: 'IconContract'
                 },
                 {
-                    name: this.$t('Workflows'),
+                    name: this.$t('Shift warnings - rules'),
                     href: route('shift-warnings.rules.index'),
                     current: route().current('shift-warnings.rules.index'),
                     show: true,
-                    icon: 'IconJumpRope'
+                    icon: 'IconGavel'
                 }
             ]
         }

@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, watch} from 'vue'
 
 const props = defineProps({
     totals: {
@@ -50,5 +50,16 @@ function parseMinutesToSeconds(timeStr) {
     const [h, m] = timeStr.split(':').map(Number)
     return h * 60 + m
 }
+
+watch(() => props.totals, (newVal) => {
+    const newWorked = parseMinutesToSeconds(newVal.worked)
+    const newWanted = parseMinutesToSeconds(newVal.wanted)
+
+    displayWorked.value = 0
+    displayWanted.value = 0
+
+    animate(newWorked, displayWorked)
+    animate(newWanted, displayWanted)
+}, { deep: true })
 </script>
 

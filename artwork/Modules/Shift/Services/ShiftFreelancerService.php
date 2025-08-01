@@ -104,7 +104,7 @@ readonly class ShiftFreelancerService
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
     ): void {
-        if ($shift->event->exists) {
+        if ($shift?->event?->exists) {
             $changeService->saveFromBuilder(
                 $changeService
                     ->createBuilder()
@@ -353,20 +353,22 @@ readonly class ShiftFreelancerService
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
     ): void {
-        $changeService->saveFromBuilder(
-            $changeService
-                ->createBuilder()
-                ->setType('shift')
-                ->setModelClass(Shift::class)
-                ->setModelId($shift->id)
-                ->setShift($shift)
-                ->setTranslationKey('Freelancer was removed from shift')
-                ->setTranslationKeyPlaceholderValues([
-                    $freelancer->getNameAttribute(),
-                    $shift->craft->abbreviation,
-                    $shift->event->eventName
-                ])
-        );
+        if ($shift?->event?->exists) {
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setType('shift')
+                    ->setModelClass(Shift::class)
+                    ->setModelId($shift->id)
+                    ->setShift($shift)
+                    ->setTranslationKey('Freelancer was removed from shift')
+                    ->setTranslationKeyPlaceholderValues([
+                        $freelancer->getNameAttribute(),
+                        $shift->craft->abbreviation,
+                        $shift->event->eventName
+                    ])
+            );
+        }
         $vacationConflictService->checkVacationConflictsShifts(
             $shift,
             $notificationService,

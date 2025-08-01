@@ -823,6 +823,19 @@ class ShiftController extends Controller
                     $changeService
                 );
 
+                broadcast(new AssignUserToShift(
+                    $shift->load([
+                        'craft',
+                        'users',
+                        'freelancer',
+                        'serviceProvider',
+                        'committedBy'
+                    ]),
+                    $shift?->room_id ?? $shift?->event?->room_id,
+                    $request->get('userTypeId'),
+                    $request->get('userType')
+                ));
+
                 continue;
             }
 
@@ -890,6 +903,34 @@ class ShiftController extends Controller
                 $changeService,
                 $request->get('seriesShiftData')
             );
+
+            if (!$shift->event_id) {
+                broadcast(new AssignUserToShift(
+                    $shift->load([
+                        'craft',
+                        'users',
+                        'freelancer',
+                        'serviceProvider',
+                        'committedBy'
+                    ]),
+                    $shift->room_id,
+                    $request->get('userId'),
+                    $request->get('userType')
+                ));
+            } else {
+                broadcast(new AssignUserToShift(
+                    $shift->load([
+                        'craft',
+                        'users',
+                        'freelancer',
+                        'serviceProvider',
+                        'committedBy'
+                    ]),
+                    $shift->event->room_id,
+                    $request->get('userId'),
+                    $request->get('userType')
+                ));
+            }
 
             return $isShiftTab ? $this->redirector->back() : true;
         }
@@ -974,7 +1015,35 @@ class ShiftController extends Controller
                 $changeService
             );
 
-            return $isShiftTab ? $this->redirector->back() : null;
+            if (!$shift->event_id) {
+                broadcast(new RemoveEntityFormShiftEvent(
+                    $shift->load([
+                        'craft',
+                        'users',
+                        'freelancer',
+                        'serviceProvider',
+                        'committedBy'
+                    ]),
+                    $shift->room_id,
+                    $usersPivotId,
+                    $userType
+                ));
+            } else {
+                broadcast(new RemoveEntityFormShiftEvent(
+                    $shift->load([
+                        'craft',
+                        'users',
+                        'freelancer',
+                        'serviceProvider',
+                        'committedBy'
+                    ]),
+                    $shift->event->room_id,
+                    $usersPivotId,
+                    $userType
+                ));
+            }
+
+            return null;
         }
 
         $serviceToUse->removeFromShift(

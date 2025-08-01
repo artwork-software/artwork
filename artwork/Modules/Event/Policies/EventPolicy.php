@@ -13,12 +13,16 @@ class EventPolicy
 
     public function create(User $user): bool
     {
-        return $user->can([PermissionEnum::EVENT_REQUEST->value]);
+        return $user->can([PermissionEnum::EVENT_REQUEST->value]) ||
+               $user->can([PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value]) ||
+                $user->can([PermissionEnum::CAN_SEE_PLANNING_CALENDAR]) ||
+                $user->can([PermissionEnum::CAN_EDIT_PLANNING_CALENDAR]);
     }
 
     public function update(User $user, Event $event): bool
     {
         return $user->can(PermissionEnum::PROJECT_MANAGEMENT->value) ||
+            $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR) ||
             $event->room?->users()
                 ->wherePivot('is_admin', true)
                 ->where('user_id', $user->id)

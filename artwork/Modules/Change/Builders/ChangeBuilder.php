@@ -135,8 +135,8 @@ class ChangeBuilder implements Builder
             }
 
             $changes[] = [
-                'event_title' => $this->shift->event->eventName,
-                'event_id' => $this->shift->event->id,
+                'event_title' => $this->shift?->event?->eventName ?? __('notifications.shift.without_event'),
+                'event_id' => $this->shift?->event?->id ?? null,
                 'shift_id' => $this->shift->id,
                 'shift_description' => $this->shift->description,
             ];

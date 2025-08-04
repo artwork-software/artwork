@@ -43,6 +43,7 @@ enum ProjectTabComponentEnum: string
     case BULK_EDIT = 'BulkBody';
 
     case ARTIST_RESIDENCIES = 'ArtistResidenciesComponent';
+    case ARTIST_NAME_DISPLAY = 'ArtistNameDisplayComponent';
 
     /**
      * Get all available values

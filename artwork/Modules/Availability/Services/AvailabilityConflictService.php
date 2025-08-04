@@ -54,7 +54,7 @@ class AvailabilityConflictService
                 $notificationTitle = __(
                     'notification.shift.conflict',
                     [],
-                    $user->language
+                    $user?->language ?? app()->getFallbackLocale()
                 );
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
@@ -72,7 +72,7 @@ class AvailabilityConflictService
                                 'from' => $shift->start,
                                 'to' => $shift->end
                             ],
-                            $user->language
+                            $user?->language ?? app()->getFallbackLocale()
                         ),
                         'href' => null
                     ],
@@ -148,7 +148,7 @@ class AvailabilityConflictService
             $notificationTitle = __(
                 'notification.shift.conflict',
                 [],
-                $user->language
+                $user?->language ?? app()->getFallbackLocale()
             );
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
@@ -166,7 +166,7 @@ class AvailabilityConflictService
                             'from' => $shift->start,
                             'to' => $shift->end
                         ],
-                        $user->language
+                        $user?->language ?? app()->getFallbackLocale()
                     ),
                     'href' => null
                 ],

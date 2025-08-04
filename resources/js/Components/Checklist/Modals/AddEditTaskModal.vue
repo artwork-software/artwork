@@ -10,7 +10,7 @@
             <div class="mt-6">
                 <div class="flex">
                     <div class="mt-1 w-full mr-4">
-                        <TextInputComponent
+                        <BaseInput
                             id="taskName"
                             v-model="taskForm.name"
                             :label="$t('Task') + '*'"
@@ -19,9 +19,14 @@
                     </div>
                 </div>
                 <div class="flex mt-3 mr-4">
-                    <DateInputComponent id="deadlineDate" v-model="taskForm.deadlineDate" :label="$t('To be done until?')" />
+                    <BaseInput
+                        id="deadlineDate"
+                        v-model="taskForm.deadlineDate"
+                        :label="$t('To be done until?')"
+                        type="date"
+                    />
                 </div>
-                <div class="mb-2 mr-4" v-if="!checklist.private">
+                <div class="mb-2 mr-4 mt-2" v-if="!checklist.private">
                     <UserSearch :only-team="isInOwnTaskManagement" :team-member="project?.users?.map((user) => user.id) ?? checklist?.project?.users?.map((user) => user.id)"
                                 @user-selected="addUserToTask"
                     />
@@ -45,10 +50,11 @@
                     </div>
                 </div>
                 <div class="mt-4 mr-4">
-                        <textarea
-                            :placeholder="$t('Comment')"
-                            v-model="taskForm.description" rows="3"
-                            class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
+                        <BaseTextarea
+                            id="taskDescription"
+                            v-model="taskForm.description"
+                            :label="$t('Comment')"
+                            :rows="3"
                         />
                 </div>
                 <div class="w-full flex items-center justify-center text-center">
@@ -70,9 +76,9 @@ import {XIcon} from "@heroicons/vue/outline";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import {useForm} from "@inertiajs/vue3";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import {ref} from "vue";
 
 const props = defineProps({

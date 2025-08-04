@@ -196,14 +196,15 @@ class EventController extends Controller
 
 
         $userCalendarSettings = $user->getAttribute('calendar_settings');
-        $isPlanning = $request->input('isPlanning') === 'true';
+        $isPlanning = $request->boolean('isPlanning', false);
+
 
         $this->userService->shareCalendarAbo('calendar');
         $dateRangeRequested = false;
 
         if ($request->input('start_date') && $request->input('end_date')) {
-            $startDate = Carbon::parse($request->input('start_date'));
-            $endDate = Carbon::parse($request->input('end_date'));
+            $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
+            $endDate = Carbon::parse($request->input('end_date'))->endOfDay();
             $dateRangeRequested = true;
         } else {
             [$startDate, $endDate] = $this->calendarDataService
@@ -353,7 +354,7 @@ class EventController extends Controller
         ]);
     }
 
-    public function viewPlanningCalendar(?Project $project = null): Response
+    public function viewPlanningCalendar(Request $request, ?Project $project = null): Response
     {
         /** @var User $user */
         $user = $this->authManager->user();
@@ -363,7 +364,7 @@ class EventController extends Controller
         $this->userService->shareCalendarAbo('calendar');
 
         [$startDate, $endDate] = $this->calendarDataService
-            ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter);
+                ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
 
         $calendarWarningText = '';
 

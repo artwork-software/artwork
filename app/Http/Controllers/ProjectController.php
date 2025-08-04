@@ -308,6 +308,9 @@ class ProjectController extends Controller
                         $projectData->color = $project->color;
                         $projectData->icon = $project->icon;
                         break;
+                    case ProjectTabComponentEnum::ARTIST_NAME_DISPLAY->value:
+                        $projectData->artist_name = $project->artists;
+                        break;
                     case ProjectTabComponentEnum::PROJECT_STATUS->value:
                         $projectData->state = ProjectState::find($project->state);
                         break;
@@ -2218,6 +2221,9 @@ class ProjectController extends Controller
                 case ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value:
                     $headerObject->project->shift_contacts = $project->shift_contact;
                     $headerObject->project->project_managers = $project->managerUsers;
+                    break;
+                case ProjectTabComponentEnum::ARTIST_NAME_DISPLAY->value:
+                    $headerObject->project->artist_name = $project->artists;
                     break;
                 case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
                     $headerObject->project->collecting_society = $project->collectingSociety;

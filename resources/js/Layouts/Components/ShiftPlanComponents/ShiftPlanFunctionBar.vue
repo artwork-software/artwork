@@ -149,7 +149,7 @@
                     <!--<ToolTipComponent direction="bottom" :tooltip-text="$t('Display Settings')" icon="IconSettings" icon-size="h-7 w-7"
                                       @click="showCalendarSettingsModal = true"/>-->
 
-                    <FunctionBarSetting :is-planning="false" />
+                    <FunctionBarSetting :is-planning="false" is-in-shift-plan />
 
                     <!--<ToolTipComponent  direction="bottom"
                                        :tooltip-text="$t('Filter')"

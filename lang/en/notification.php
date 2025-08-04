@@ -34,6 +34,8 @@ return [
         'delete' => 'A contract has been deleted',
     ],
     'shift' => [
+        'without_event' => 'Shift without event',
+        'without_project' => 'Shift without project',
         'add' => 'You have been added to :shift',
         'remove' => 'You have been removed from :shift',
         'locked' => 'Shift schedule finalized',

@@ -19,14 +19,14 @@
                     v-model="dateRangeCopy.start"
                     type="date"
                     :label="$t('Start date')"
-                    @change="updateWorkTimeDateRange"
+                    @focusout="updateWorkTimeDateRange"
                 />
                 <BaseInput
                     id="work_time_end_date"
                     v-model="dateRangeCopy.end"
                     type="date"
                     :label="$t('End date')"
-                    @change="updateWorkTimeDateRange"
+                    @focusout="updateWorkTimeDateRange"
                 />
             </div>
 
@@ -189,6 +189,8 @@ const dateRangeCopy = ref({
     end: props.dateRange.end
 })
 
+const totalCopy = ref(props.totals)
+
 const showWorkingTimePostEntryModal = ref(false)
 
 // Function to check if a date is in the past
@@ -216,7 +218,8 @@ const updateWorkTimeDateRange = () => {
         data: {
             start: dateRangeCopy.value.start,
             end: dateRangeCopy.value.end
-        }
+        },
+        preserveState: true,
     })
 }
 </script>

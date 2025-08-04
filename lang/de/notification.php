@@ -34,6 +34,8 @@ return [
         'delete' => 'Ein Vertrag wurde gelöscht',
     ],
     'shift' => [
+        'without_event' => 'Schicht ohne Termin',
+        'without_project' => 'Schicht ohne Projekt',
         'add' => 'Du wurdest zu :shift hinzugefügt',
         'remove' => 'Du wurdest aus :shift entfernt',
         'locked' => 'Dienstplan festgeschrieben',

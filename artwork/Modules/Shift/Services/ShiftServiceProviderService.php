@@ -4,6 +4,7 @@ namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Shift\Events\ShiftAssigned;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;
@@ -60,21 +61,23 @@ readonly class ShiftServiceProviderService
         $shiftCountService->handleShiftServiceProvidersShiftCount($shift, $serviceProviderId);
 
         if ($shift->is_committed) {
-            $changeService->saveFromBuilder(
-                $changeService
-                    ->createBuilder()
-                    ->setType('shift')
-                    ->setModelClass(Shift::class)
-                    ->setModelId($shift->id)
-                    ->setShift($shift)
-                    ->setTranslationKey('Service provider was added to the shift as')
-                    ->setTranslationKeyPlaceholderValues([
-                        $shiftServiceProviderPivot->serviceProvider->getNameAttribute(),
-                        $shift->craft->abbreviation,
-                        $shift->event->eventName,
-                        $shiftServiceProviderPivot->shiftQualification->name
-                    ])
-            );
+            if ($shift?->event?->exists) {
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setType('shift')
+                        ->setModelClass(Shift::class)
+                        ->setModelId($shift->id)
+                        ->setShift($shift)
+                        ->setTranslationKey('Service provider was added to the shift as')
+                        ->setTranslationKeyPlaceholderValues([
+                            $shiftServiceProviderPivot->serviceProvider->getNameAttribute(),
+                            $shift->craft->abbreviation,
+                            $shift->event->eventName,
+                            $shiftServiceProviderPivot->shiftQualification->name
+                        ])
+                );
+            }
         }
 
         if (
@@ -94,7 +97,6 @@ readonly class ShiftServiceProviderService
                 $changeService
             );
         }
-
 
     }
 
@@ -200,20 +202,22 @@ readonly class ShiftServiceProviderService
         $shiftCountService->handleShiftServiceProvidersShiftCount($shift, $serviceProvider->id);
 
         if ($shift->is_committed) {
-            $changeService->saveFromBuilder(
-                $changeService
-                    ->createBuilder()
-                    ->setType('shift')
-                    ->setModelClass(Shift::class)
-                    ->setModelId($shift->id)
-                    ->setShift($shift)
-                    ->setTranslationKey('Service provider was removed from shift')
-                    ->setTranslationKeyPlaceholderValues([
-                        $serviceProvider->getNameAttribute(),
-                        $shift->craft->abbreviation,
-                        $shift->event->eventName
-                    ])
-            );
+            if ($shift?->event?->exists) {
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setType('shift')
+                        ->setModelClass(Shift::class)
+                        ->setModelId($shift->id)
+                        ->setShift($shift)
+                        ->setTranslationKey('Service provider was removed from shift')
+                        ->setTranslationKeyPlaceholderValues([
+                            $serviceProvider->getNameAttribute(),
+                            $shift->craft->abbreviation,
+                            $shift->event->eventName
+                        ])
+                );
+            }
         }
 
         if (!$removeFromSingleShift) {

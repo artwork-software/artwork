@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @deprecated This model is deprecated and replaced by Artwork\Modules\Shift\Models\ShiftRule
+ * The new system provides simpler rule management without complex workflow configurations
+ * @see \Artwork\Modules\Shift\Models\ShiftRule
+ */
 class WorkflowRule extends Model
 {
     use SoftDeletes;

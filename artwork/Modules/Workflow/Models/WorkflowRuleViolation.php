@@ -6,6 +6,11 @@ use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * @deprecated This model is deprecated and replaced by Artwork\Modules\Shift\Models\ShiftRuleViolation
+ * The new system links violations directly to shifts instead of using polymorphic relationships
+ * @see \Artwork\Modules\Shift\Models\ShiftRuleViolation
+ */
 class WorkflowRuleViolation extends Model
 {
     protected $fillable = [

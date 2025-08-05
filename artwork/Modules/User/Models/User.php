@@ -733,16 +733,24 @@ class User extends Model implements
         return $contractAssign?->userContract;
     }
 
-    public function getActiveWorkflowRules()
+    public function getActiveShiftRules()
     {
         $activeContract = $this->activeWorkContract();
         if (!$activeContract) {
             return collect();
         }
 
-        return $activeContract->workflowRules()
+        return $activeContract->shiftRules()
             ->where('is_active', true)
             ->get();
+    }
+
+    /**
+     * @deprecated Use getActiveShiftRules() instead
+     */
+    public function getActiveWorkflowRules()
+    {
+        return $this->getActiveShiftRules();
     }
 
     public function getPlannedWorkingHours(Carbon $date): float

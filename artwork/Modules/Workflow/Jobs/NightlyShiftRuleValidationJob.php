@@ -12,6 +12,11 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * @deprecated This job is deprecated and replaced by the new shift-rules:validate command
+ * Use the new command with scheduled tasks instead: php artisan shift-rules:validate
+ * @see \Artwork\Modules\Shift\Console\Commands\ValidateShiftRulesCommand
+ */
 class NightlyShiftRuleValidationJob implements ShouldQueue
 {
     use Dispatchable;

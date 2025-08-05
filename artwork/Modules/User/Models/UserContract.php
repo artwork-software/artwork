@@ -44,6 +44,9 @@ class UserContract extends Model
         'free_sundays_per_season' => 'integer'
     ];
 
+    /**
+     * @deprecated Use shiftRules() instead
+     */
     public function workflowRules(): BelongsToMany
     {
         return $this->belongsToMany(

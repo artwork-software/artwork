@@ -29,6 +29,8 @@
 
         <main class="lg:pl-20 xl:pl-20 pb-20">
             <div class="artwork">
+
+                <PopupChat v-if="$page.props.auth.user.use_chat"/>
                 <slot></slot>
             </div>
         </main>
@@ -41,6 +43,7 @@ import SubMenu from "@/Layouts/SubMenu.vue";
 import {onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
+import PopupChat from "@/Components/Chat/PopupChat.vue";
 const { locale } = useI18n();
 
 const props = defineProps({

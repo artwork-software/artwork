@@ -146,107 +146,39 @@
                     <slot name="moreButtons">
 
                     </slot>
-                    <Menu as="div" class="relative inline-block items-center text-left">
-                        <div class="flex items-center">
-                            <MenuButton id="displaySettings">
-                            <span class="items-center flex">
-                                <button type="button"
-                                        class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
-                                    <ToolTipComponent
-                                        direction="bottom"
-                                        :tooltip-text="$t('Display Settings')"
-                                        icon="IconSettings"
-                                        icon-size="h-7 w-7"
-                                    />
-                                </button>
-                            </span>
-                            </MenuButton>
-                        </div>
-                        <transition
-                            enter-active-class="transition duration-50 ease-out"
-                            enter-from-class="transform scale-100 opacity-100"
-                            enter-to-class="transform scale-100 opacity-100"
-                            leave-active-class="transition duration-75 ease-in"
-                            leave-from-class="transform scale-100 opacity-100"
-                            leave-to-class="transform scale-95 opacity-0">
-                            <MenuItems
-                                class="w-80 absolute right-0 top-12 origin-top-right shadow-lg bg-artwork-navigation-background rounded-lg ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                <div class="w-76 p-6">
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-high-contrast"
-                                               v-model="userCalendarSettings.high_contrast"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-high-contrast"
-                                               :class="userCalendarSettings.high_contrast ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('High contrast') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-project-artists"
-                                               v-model="userCalendarSettings.show_qualifications"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-project-artists"
-                                               :class="userCalendarSettings.show_qualifications ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Show qualifications') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-project-status"
-                                               v-model="userCalendarSettings.shift_notes"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-project-status"
-                                               :class="userCalendarSettings.shift_notes ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Show notes') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-expand-days" v-model="userCalendarSettings.expand_days"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-expand-days"
-                                               :class="userCalendarSettings.expand_days ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Expand days') }}
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center py-1">
-                                        <input id="cb-expand-days" v-model="userCalendarSettings.display_project_groups"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <label for="cb-expand-days"
-                                               :class="userCalendarSettings.display_project_groups ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                               class="ml-4 my-auto text-secondary cursor-pointer">
-                                            {{ $t('Show project group') }}
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="flex justify-end">
-                                    <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">
-                                        {{ $t('Save') }}
-                                    </button>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                    <!--<ToolTipComponent direction="bottom" :tooltip-text="$t('Display Settings')" icon="IconSettings" icon-size="h-7 w-7"
+                                      @click="showCalendarSettingsModal = true"/>-->
+
+                    <FunctionBarSetting :is-planning="false" is-in-shift-plan />
+
+                    <!--<ToolTipComponent  direction="bottom"
+                                       :tooltip-text="$t('Filter')"
+                                       icon="IconFilter"
+                                       icon-size="h-7 w-7"
+                                      @click="showCalendarFilterModal = true"/>-->
+
+                    <FunctionBarFilter
+                        :user_filters="user_filters"
+                        :personal-filters="personalFilters"
+                        :filter-options="filterOptions"
+                        :crafts="crafts"
+                        filter-type="shift_filter"
+                    />
+
                     <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
                                       :tooltip-text="$t('Lock all shifts')" icon="IconCalendarCheck" icon-size="h-7 w-7"
                                       @click="commitAllShifts()"/>
+
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory"
                                       icon-size="h-7 w-7" @click="openHistoryModal()"/>
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal"
                                       icon-size="h-7 w-7" v-if="!isFullscreen" @click="enterFullscreenMode"/>
-                    <ShiftPlanFilter
+                    <!--<ShiftPlanFilter
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
                         :user_filters="user_filters"
                         :crafts="crafts"
-                    />
+                    />-->
 
                 </div>
             </div>
@@ -270,24 +202,25 @@
         @close="showShiftCommitDateSelectModal = false"
 
     />
+
+    <CalendarSettingsModal
+        v-if="showCalendarSettingsModal"
+        @close="showCalendarSettingsModal = false"
+        :is-planning="false"
+        in-shift-plan
+    />
+
+
 </template>
 
 <script setup>
 import Button from "@/Jetstream/Button.vue";
 import {
-    Combobox,
-    ComboboxButton,
-    ComboboxInput,
-    ComboboxLabel,
-    ComboboxOption,
-    ComboboxOptions,
     Menu,
     MenuButton,
     MenuItem,
     MenuItems,
     Switch,
-    SwitchGroup,
-    SwitchLabel
 } from "@headlessui/vue";
 
 import {
@@ -298,25 +231,20 @@ import {
     IconCalendar,
     IconChevronRight,
     IconChevronRightPipe,
-    IconGeometry,
-    IconSettings,
-    IconCalendarCheck,
-    IconHistory,
-    IconArrowsDiagonal
 } from "@tabler/icons-vue";
 
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router, useForm, Link, usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import {ref, computed, watch, nextTick} from 'vue';
+import {ref, computed, watch, nextTick, defineAsyncComponent} from 'vue';
 import axios from 'axios';
 import {usePermission} from "@/Composeables/Permission.js";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
-
+import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
+import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 const {hasAdminRole, can} = usePermission(usePage().props);
 
 const props = defineProps({
@@ -337,6 +265,8 @@ const emit = defineEmits(['enterFullscreenMode', 'previousTimeRange', 'nextTimeR
 // Data properties
 const showConfirmCommitModal = ref(false);
 const showShiftCommitDateSelectModal = ref(false);
+const showCalendarSettingsModal = ref(false);
+const showCalendarFilterModal = ref(false);
 const scrollDays = ref(1);
 const projectSearch = ref('');
 const projectSearchResults = ref([]);
@@ -348,16 +278,22 @@ const userCalendarSettings = useForm({
     display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
 });
 
+const CalendarSettingsModal = defineAsyncComponent({
+    loader: () => import('@/Artwork/Modals/CalendarSettingsModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
 // Computed properties
 const activeFilters = computed(() => {
     let activeFiltersArray = [];
-    props.filterOptions.rooms.forEach((room) => {
+    props.filterOptions.room_ids.forEach((room) => {
         if (props.user_filters.rooms?.includes(room.id)) {
             activeFiltersArray.push(room);
         }
     });
 
-    props.filterOptions.eventTypes.forEach((eventType) => {
+    props.filterOptions.event_type_ids.forEach((eventType) => {
         if (props.user_filters.event_types?.includes(eventType.id)) {
             activeFiltersArray.push(eventType);
         }

@@ -124,6 +124,7 @@ import ArtistResidenciesComponent from "@/Pages/Projects/Tab/Components/ArtistRe
 import GroupProjectDisplayComponent from "@/Pages/Projects/Components/GroupProjectDisplayComponent.vue";
 import ProjectGroupDisplayComponent from "@/Pages/Projects/Components/ProjectGroupDisplayComponent.vue";
 import DisclosureComponent from "@/Pages/Projects/Tab/Components/DisclosureComponent.vue";
+import ArtistNameDisplayComponent from "@/Pages/Projects/Components/ArtistNameDisplayComponent.vue";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
@@ -160,7 +161,8 @@ const componentMapping = {
     ArtistResidenciesComponent,
     GroupProjectDisplayComponent,
     ProjectGroupDisplayComponent,
-    DisclosureComponent
+    DisclosureComponent,
+    ArtistNameDisplayComponent
 };
 
 const props = defineProps({

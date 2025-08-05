@@ -21,6 +21,126 @@ class WorkingHourService
     ) {
     }
 
+    /**
+     * Precompute planned minutes for all users at once
+     *
+     * @param Collection $users Collection of users
+     * @param Carbon $startDate Start date
+     * @param Carbon $endDate End date
+     * @return array Array of planned minutes indexed by user ID
+     */
+    private function precomputePlannedMinutes(Collection $users, Carbon $startDate, Carbon $endDate): array
+    {
+        $plannedMinutes = [];
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+        $dateArray = [];
+
+        // Create an array of all dates in the range
+        foreach ($dateRange as $date) {
+            $dateArray[] = $date->toDateString();
+        }
+
+        // Process each user
+        foreach ($users as $user) {
+            $userId = $user->id;
+            $plannedMinutes[$userId] = 0;
+
+            // Create a map of individual minutes per day
+            $individualMinutesPerDay = collect();
+            foreach ($user->individualTimes as $individualTime) {
+                foreach ($individualTime->days_of_individual_time as $day) {
+                    // Skip if day is null or not a valid array key type
+                    if ($day === null || !is_scalar($day)) {
+                        continue;
+                    }
+                    $individualMinutesPerDay[$day] = $individualTime->working_time_minutes ?? 0;
+                }
+            }
+
+            // Create a map of bookings per day
+            $bookingsPerDay = collect();
+            foreach ($user->workTimeBookings as $booking) {
+                $bookingDay = $booking->booking_day;
+                // Skip if booking_day is null or not a valid array key type
+                if ($bookingDay === null || !is_scalar($bookingDay)) {
+                    continue;
+                }
+
+                if (!$bookingsPerDay->has($bookingDay)) {
+                    $bookingsPerDay[$bookingDay] = 0;
+                }
+                $bookingsPerDay[$bookingDay] += $booking->worked_hours;
+            }
+
+            // Precompute shift minutes for all days
+            $shiftMinutesPerDay = $this->precomputeShiftMinutesForDays($user, $startDate, $endDate);
+
+            // Calculate total minutes for each day
+            foreach ($dateArray as $dateStr) {
+                // Add individual time if available
+                if ($individualMinutesPerDay->has($dateStr)) {
+                    $plannedMinutes[$userId] += $individualMinutesPerDay[$dateStr];
+                }
+
+                // Add either booking or shift time
+                if ($bookingsPerDay->has($dateStr)) {
+                    $plannedMinutes[$userId] += $bookingsPerDay[$dateStr];
+                } else {
+                    $plannedMinutes[$userId] += $shiftMinutesPerDay[$dateStr] ?? 0;
+                }
+            }
+
+            $plannedMinutes[$userId] = max(0, $plannedMinutes[$userId]);
+        }
+
+        return $plannedMinutes;
+    }
+
+    /**
+     * Precompute shift minutes for all days for a user
+     *
+     * @param User|Freelancer|ServiceProvider $user User
+     * @param Carbon $startDate Start date
+     * @param Carbon $endDate End date
+     * @return array Array of shift minutes indexed by date string
+     */
+    private function precomputeShiftMinutesForDays(User|Freelancer|ServiceProvider $user, Carbon $startDate, Carbon $endDate): array
+    {
+        $shiftMinutesPerDay = [];
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+        foreach ($dateRange as $day) {
+            $dateStr = $day->toDateString();
+            $shiftMinutesPerDay[$dateStr] = 0;
+
+            $dayStart = $day->copy()->startOfDay();
+            $dayEnd = $day->copy()->endOfDay();
+
+            foreach ($user->shifts as $shift) {
+                $pivot = $shift->pivot;
+
+                $shiftStart = Carbon::parse($pivot->start_date)->setTimeFrom(Carbon::parse($pivot->start_time));
+                $shiftEnd = Carbon::parse($pivot->end_date)->setTimeFrom(Carbon::parse($pivot->end_time));
+
+                if ($shiftStart->gt($dayEnd) || $shiftEnd->lt($dayStart)) {
+                    continue;
+                }
+
+                $breakMinutes = (int)($shift->break_minutes ?? 0);
+
+                $workStart = max($shiftStart, $dayStart);
+                $workEnd = min($shiftEnd, $dayEnd);
+
+                if ($workStart->lt($workEnd)) {
+                    $duration = $workStart->diffInMinutes($workEnd) - $breakMinutes;
+                    $shiftMinutesPerDay[$dateStr] += max(0, $duration);
+                }
+            }
+        }
+
+        return $shiftMinutesPerDay;
+    }
+
     public function calculateShiftTime(
         User|Freelancer|ServiceProvider $entity,
         Carbon $startDate,
@@ -36,6 +156,10 @@ class WorkingHourService
         $individualMinutesPerDay = collect();
         foreach ($individualTimes as $individualTime) {
             foreach ($individualTime->days_of_individual_time as $day) {
+                // Skip if day is null or not a valid array key type
+                if ($day === null || !is_scalar($day)) {
+                    continue;
+                }
                 $individualMinutesPerDay[$day] = $individualTime->working_time_minutes ?? 0;
             }
         }
@@ -104,36 +228,61 @@ class WorkingHourService
     ): array {
         $usersWithPlannedWorkingHours = [];
 
+        // Eager load all necessary relationships for all workers at once
+        $workers = $this->userRepository->getWorkers()->load([
+            'shifts',
+            'individualTimes' => function ($query) use ($startDate, $endDate): void {
+                $query->individualByDateRange($startDate->toDateString(), $endDate->toDateString());
+            },
+            'workTimeBookings' => function ($query) use ($startDate, $endDate): void {
+                $query->whereBetween('booking_day', [$startDate->toDateString(), $endDate->toDateString()]);
+            },
+            'workTimes' => function ($query) use ($startDate, $endDate): void {
+                $query->where(function ($q) use ($endDate): void {
+                    $q->whereNull('valid_from')->orWhere('valid_from', '<=', $endDate);
+                })->where(function ($q) use ($startDate): void {
+                    $q->whereNull('valid_until')->orWhere('valid_until', '>=', $startDate);
+                });
+            },
+            'dayServices',
+        ]);
+
+        // Precompute expected minutes for all users
+        $expectedMinutesCache = []; //$this->precomputeExpectedMinutes($workers, $startDate, $endDate);
+
+        // Precompute planned minutes for all users
+        $plannedMinutesCache = []; //$this->precomputePlannedMinutes($workers, $startDate, $endDate);
+
+        // Precompute weekly working hours for all users
+        $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours($workers, $startDate, $endDate);
+
         /** @var User $user */
-        foreach ($this->userRepository->getWorkers() as $user) {
+        foreach ($workers as $user) {
             /** @var JsonResource $desiredResourceClass */
             $desiredUserResource = $desiredResourceClass::make($user);
             if ($desiredUserResource instanceof UserShiftPlanResource) {
                 $desiredUserResource->setStartDate($startDate)->setEndDate($endDate);
             }
 
+            $userId = $user->id;
             $plannedWorkingHours = $this->convertMinutesInHours(
-                $this->calculateShiftTime($user, $startDate, $endDate)
-            );
-            $weeklyWorkingHours = $this->calculateWeeklyWorkingHours(
-                $user,
-                $startDate,
-                $endDate
+                $plannedMinutesCache[$userId] ?? 0
             );
 
             $userData = [
                 'user' => $desiredUserResource->resolve(),
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'expectedWorkingHours' => $this->convertMinutesInHours(
-                    $this->calculateExpectedMinutesBasedOnWorkPattern($user, $startDate, $endDate)
+                    $expectedMinutesCache[$userId] ?? 0
                 ),
                 'dayServices' => $user->dayServices?->groupBy('pivot.date'),
                 'is_freelancer' => $user->getAttribute('is_freelancer'),
-                'individual_times' => $user->individualTimes()->individualByDateRange($startDate, $endDate)->get(),
+                'individual_times' => $user->individualTimes,
                 'shift_comments' => $user->getShiftPlanCommentsForPeriod($startDate, $endDate),
+                'workTimeBalance' => $this->convertMinutesInHours($user->work_time_balance ?? 0),
             ];
 
-            $userData['weeklyWorkingHours'] = $weeklyWorkingHours;
+            $userData['weeklyWorkingHours'] = $weeklyWorkingHoursCache[$userId] ?? [];
             if ($addVacationsAndAvailabilities) {
                 $userData['vacations'] = $user->getVacationDays();
                 $userData['availabilities'] = $this->userRepository
@@ -164,6 +313,154 @@ class WorkingHourService
     }
 
     /**
+     * Precompute weekly working hours for all users at once
+     *
+     * @param Collection $users Collection of users
+     * @param Carbon $startDate Start date
+     * @param Carbon $endDate End date
+     * @return array Array of weekly working hours indexed by user ID
+     */
+    private function precomputeWeeklyWorkingHours(Collection $users, Carbon $startDate, Carbon $endDate): array
+    {
+        $weeklyWorkingHoursCache = [];
+        $period = CarbonPeriod::create($startDate->copy()->startOfWeek(), '1 week', $endDate->copy()->endOfWeek());
+        $weekPeriods = [];
+
+        // Create an array of week periods
+        foreach ($period as $weekStart) {
+            $weekEnd = $weekStart->copy()->endOfWeek();
+            $actualStart = $weekStart->greaterThanOrEqualTo($startDate) ? $weekStart : $startDate;
+            $actualEnd = $weekEnd->lessThanOrEqualTo($endDate) ? $weekEnd : $endDate;
+
+            $weekPeriods[] = [
+                'weekStart' => $weekStart,
+                'actualStart' => $actualStart,
+                'actualEnd' => $actualEnd,
+                'weekNumber' => ltrim($weekStart->format('W'), '0')
+            ];
+        }
+
+        // Precompute shift minutes for all days for all users
+        $allShiftMinutes = [];
+        foreach ($users as $user) {
+            $allShiftMinutes[$user->id] = $this->precomputeShiftMinutesForDays($user, $startDate, $endDate);
+        }
+
+        // Process each user
+        foreach ($users as $user) {
+            $userId = $user->id;
+            $weeklyWorkingHoursCache[$userId] = [];
+
+            // Create a map of individual minutes per day
+            $individualMinutesPerDay = collect();
+            foreach ($user->individualTimes as $individualTime) {
+                foreach ($individualTime->days_of_individual_time as $day) {
+                    // Skip if day is null or not a valid array key type
+                    if ($day === null || !is_scalar($day)) {
+                        continue;
+                    }
+                    $individualMinutesPerDay[$day] = $individualTime->working_time_minutes ?? 0;
+                }
+            }
+
+            // Create a map of bookings per day
+            $bookingsPerDay = collect();
+            foreach ($user->workTimeBookings as $booking) {
+                $bookingDay = $booking->booking_day;
+                // Skip if booking_day is null or not a valid array key type
+                if ($bookingDay === null || !is_scalar($bookingDay)) {
+                    continue;
+                }
+
+                if (!$bookingsPerDay->has($bookingDay)) {
+                    $bookingsPerDay[$bookingDay] = 0;
+                }
+                $bookingsPerDay[$bookingDay] += $booking->worked_hours;
+            }
+
+            // Get shift minutes for this user
+            $shiftMinutesPerDay = $allShiftMinutes[$userId];
+
+            // Process each week
+            foreach ($weekPeriods as $weekPeriod) {
+                $weekStart = $weekPeriod['weekStart'];
+                $actualStart = $weekPeriod['actualStart'];
+                $actualEnd = $weekPeriod['actualEnd'];
+                $weekNumber = $weekPeriod['weekNumber'];
+
+                $totalPlannedMinutes = 0;
+                $totalExpectedMinutes = 0;
+
+                $current = $actualStart->copy();
+
+                // Process each day in the week
+                while ($current->lte($actualEnd)) {
+                    $dateStr = $current->toDateString();
+                    $weekday = strtolower($current->format('l'));
+
+                    // Calculate expected minutes (TAGESSOLL)
+                    if ($user instanceof User) {
+                        // Find the active pattern for this date
+                        $activePattern = null;
+                        foreach ($user->workTimes as $workTime) {
+                            $validFrom = $workTime->valid_from ? Carbon::parse($workTime->valid_from) : null;
+                            $validUntil = $workTime->valid_until ? Carbon::parse($workTime->valid_until) : null;
+
+                            if (
+                                (!$validFrom || $validFrom->lte($current)) &&
+                                (!$validUntil || $validUntil->gte($current))
+                            ) {
+                                if (
+                                    !$activePattern ||
+                                    (!$activePattern->valid_from && $validFrom) ||
+                                    ($activePattern->valid_from && $validFrom && $validFrom->gt($activePattern->valid_from))
+                                ) {
+                                    $activePattern = $workTime;
+                                }
+                            }
+                        }
+
+                        $patternTime = $activePattern?->{$weekday};
+                        if ($patternTime instanceof Carbon) {
+                            $dailyTargetMinutes = $patternTime->hour * 60 + $patternTime->minute;
+                        } else {
+                            $dailyTargetMinutes = round(($user->weekly_working_hours / 7) * 60);
+                        }
+                    } else {
+                        $dailyTargetMinutes = round(($user->weekly_working_hours / 7) * 60);
+                    }
+
+                    $totalExpectedMinutes += $dailyTargetMinutes;
+
+                    // Calculate planned minutes (GEPLANT)
+                    if ($individualMinutesPerDay->has($dateStr)) {
+                        $totalPlannedMinutes += $individualMinutesPerDay[$dateStr];
+                    }
+
+                    if ($bookingsPerDay->has($dateStr)) {
+                        $totalPlannedMinutes += $bookingsPerDay[$dateStr];
+                    } else {
+                        $totalPlannedMinutes += $shiftMinutesPerDay[$dateStr] ?? 0;
+                    }
+
+                    $current->addDay();
+                }
+
+                $differenceInMinutes = ($totalPlannedMinutes) - ($totalExpectedMinutes);
+
+                $weeklyWorkingHoursCache[$userId][$weekNumber] = [
+                    'daily_target' => $this->convertMinutesInHours($totalExpectedMinutes, true),
+                    'planned' => $this->convertMinutesInHours($totalPlannedMinutes, true),
+                    'difference' => $this->convertMinutesInHours($differenceInMinutes),
+                    'isMinus' => $differenceInMinutes < 0,
+                ];
+            }
+        }
+
+        return $weeklyWorkingHoursCache;
+    }
+
+    /**
      * @param User $user
      * @param int|float $plannedWorkingHours
      * @param Carbon $startDate
@@ -181,6 +478,10 @@ class WorkingHourService
         $individualMinutesPerDay = collect();
         foreach ($individualTimes as $individualTime) {
             foreach ($individualTime->days_of_individual_time as $day) {
+                // Skip if day is null or not a valid array key type
+                if ($day === null || !is_scalar($day)) {
+                    continue;
+                }
                 $individualMinutesPerDay[$day] = $individualTime->working_time_minutes ?? 0;
             }
         }
@@ -204,10 +505,10 @@ class WorkingHourService
                 // TAGESSOLL (Expected)
                 if ($entity instanceof User) {
                     $userWorkTime = $entity->workTimes()
-                        ->where(function ($q) use ($current) {
+                        ->where(function ($q) use ($current): void {
                             $q->whereNull('valid_from')->orWhere('valid_from', '<=', $current);
                         })
-                        ->where(function ($q) use ($current) {
+                        ->where(function ($q) use ($current): void {
                             $q->whereNull('valid_until')->orWhere('valid_until', '>=', $current);
                         })
                         ->orderByDesc('valid_from')
@@ -296,6 +597,73 @@ class WorkingHourService
     }
 
 
+    /**
+     * Precompute expected minutes for all users at once
+     *
+     * @param Collection $users Collection of users
+     * @param Carbon $startDate Start date
+     * @param Carbon $endDate End date
+     * @return array Array of expected minutes indexed by user ID
+     */
+    private function precomputeExpectedMinutes(Collection $users, Carbon $startDate, Carbon $endDate): array
+    {
+        $expectedMinutes = [];
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+        $dateArray = [];
+        $weekdayMap = [];
+
+        // Create a map of dates and their weekdays
+        foreach ($dateRange as $date) {
+            $dateStr = $date->toDateString();
+            $weekday = strtolower($date->format('l'));
+            $dateArray[] = $dateStr;
+            $weekdayMap[$dateStr] = $weekday;
+        }
+
+        foreach ($users as $user) {
+            $userId = $user->id;
+            $expectedMinutes[$userId] = 0;
+            $fallbackMinutesPerDay = (int) round(($user->weekly_working_hours / 7) * 60);
+
+            // Get all work times for this user (already eager loaded)
+            $workTimes = $user->workTimes;
+
+            foreach ($dateArray as $dateStr) {
+                $date = Carbon::parse($dateStr);
+                $weekday = $weekdayMap[$dateStr];
+
+                // Find the active pattern for this date
+                $activePattern = null;
+                foreach ($workTimes as $workTime) {
+                    $validFrom = $workTime->valid_from ? Carbon::parse($workTime->valid_from) : null;
+                    $validUntil = $workTime->valid_until ? Carbon::parse($workTime->valid_until) : null;
+
+                    if (
+                        (!$validFrom || $validFrom->lte($date)) &&
+                        (!$validUntil || $validUntil->gte($date))
+                    ) {
+                        if (
+                            !$activePattern ||
+                            (!$activePattern->valid_from && $validFrom) ||
+                            ($activePattern->valid_from && $validFrom && $validFrom->gt($activePattern->valid_from))
+                        ) {
+                            $activePattern = $workTime;
+                        }
+                    }
+                }
+
+                if ($activePattern && $activePattern->{$weekday}) {
+                    $time = $activePattern->{$weekday};
+                    $expectedMinutes[$userId] += $time->hour * 60 + $time->minute;
+                } else {
+                    $expectedMinutes[$userId] += $fallbackMinutesPerDay;
+                }
+            }
+        }
+
+        return $expectedMinutes;
+    }
+
     private function calculateExpectedMinutesBasedOnWorkPattern(User $user, Carbon $startDate, Carbon $endDate): int
     {
         $totalMinutes = 0;
@@ -306,10 +674,10 @@ class WorkingHourService
             $weekday = strtolower($current->format('l'));
 
             $activePattern = $user->workTimes()
-                ->where(function ($q) use ($current) {
+                ->where(function ($q) use ($current): void {
                     $q->whereNull('valid_from')->orWhere('valid_from', '<=', $current);
                 })
-                ->where(function ($q) use ($current) {
+                ->where(function ($q) use ($current): void {
                     $q->whereNull('valid_until')->orWhere('valid_until', '>=', $current);
                 })
                 ->orderByDesc('valid_from')
@@ -327,5 +695,4 @@ class WorkingHourService
 
         return $totalMinutes;
     }
-
 }

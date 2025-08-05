@@ -16,6 +16,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
@@ -24,7 +25,7 @@ class ShiftCalendarService
 {
     public function filterRoomsEventsAnShifts(
         Collection $rooms,
-        UserShiftCalendarFilter $filter,
+        UserFilter $filter,
         $startDate,
         $endDate,
         ?UserCalendarSettings $userCalendarSettings = null,
@@ -44,7 +45,7 @@ class ShiftCalendarService
         ];
 
         if ($addTimeline) {
-            $eventWith['timelines'] = function ($query) {
+            $eventWith['timelines'] = function ($query): void {
                 $query->orderBy('start');
             };
         }
@@ -56,23 +57,23 @@ class ShiftCalendarService
         ])
             ->with($eventWith)
             ->whereIn('room_id', $roomIds)
-            ->where(function ($query) use ($startDate, $endDate) {
+            ->where(function ($query) use ($startDate, $endDate): void {
                 $query->whereBetween('start_time', [$startDate, $endDate])
                     ->orWhereBetween('end_time', [$startDate, $endDate])
-                    ->orWhere(function ($q) use ($startDate, $endDate) {
+                    ->orWhere(function ($q) use ($startDate, $endDate): void {
                         $q->where('start_time', '<', $startDate)
                             ->where('end_time', '>', $endDate);
                     });
             })
-            ->when(!empty($filter->event_types), fn($query) => $query->whereIn('event_type_id', $filter->event_types))
+            ->when(!empty($filter->event_type_ids), fn($query) => $query->whereIn('event_type_id', $filter->event_type_ids))
             ->get();
 
 
         $shifts = Shift::where('event_id', null)->whereIn('room_id', $roomIds)
-            ->where(function ($query) use ($startDate, $endDate) {
+            ->where(function ($query) use ($startDate, $endDate): void {
                 $query->whereBetween('start_date', [$startDate, $endDate])
                     ->orWhereBetween('end_date', [$startDate, $endDate])
-                    ->orWhere(function ($q) use ($startDate, $endDate) {
+                    ->orWhere(function ($q) use ($startDate, $endDate): void {
                         $q->where('start_date', '<', $startDate)
                             ->where('end_date', '>', $endDate);
                     });
@@ -123,12 +124,10 @@ class ShiftCalendarService
             $content = $period;
 
             $groupedEvents = $room->events->flatMap(fn($eventDTO) =>
-            collect($eventDTO->daysOfEvent)->map(fn($date) => ['date' => $date, 'event' => $eventDTO])
-            )->groupBy('date');
+            collect($eventDTO->daysOfEvent)->map(fn($date) => ['date' => $date, 'event' => $eventDTO]))->groupBy('date');
 
             $groupedShifts = $room->shifts->flatMap(fn($shiftDTO) =>
-            collect($shiftDTO->daysOfShift)->map(fn($date) => ['date' => $date, 'shift' => $shiftDTO])
-            )->groupBy('date');
+            collect($shiftDTO->daysOfShift)->map(fn($date) => ['date' => $date, 'shift' => $shiftDTO]))->groupBy('date');
 
             foreach ($groupedEvents as $date => $eventsOnDate) {
                 if (isset($content[$date])) {

@@ -91,6 +91,8 @@ use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
 use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use Artwork\Modules\User\Http\Controllers\UserContractController;
 use Artwork\Modules\User\Http\Controllers\UserController;
+use Artwork\Modules\User\Http\Controllers\UserFilterController;
+use Artwork\Modules\User\Http\Controllers\UserFilterTemplateController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarAboController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
@@ -573,8 +575,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Filters
     Route::get('/filters', [FilterController::class, 'index']);
-    Route::post('/filters', [FilterController::class, 'store'])->name('filter.store');
-    Route::delete('/filters/{filter}', [FilterController::class, 'destroy'])->name('filter.destroy');
+    Route::post('/filters/{user}', [UserFilterTemplateController::class, 'store'])->name('filter.store');
+    Route::delete('/filters/{filter}', [UserFilterTemplateController::class, 'destroy'])->name('filter.destroy');
     Route::post('/filters/{filter}/{user}', [FilterController::class, 'activate'])->name('filter.activate');
 
     //Shift Filters
@@ -822,7 +824,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('reset.user.calendar.filter');
     Route::delete('/user/{user}/calendar/shift/filter/reset', [UserShiftCalendarFilterController::class, 'reset'])
         ->name('reset.user.shift.calendar.filter');
-    Route::patch('/user/{user}/calendar/filter/update', [UserCalendarFilterController::class, 'update'])
+    Route::patch('/user/{user}/calendar/filter/update', [UserFilterController::class, 'update'])
         ->name('update.user.calendar.filter');
     Route::patch('/user/{user}/shift/calendar/filter/update', [UserShiftCalendarFilterController::class, 'update'])
         ->name('update.user.shift.calendar.filter');
@@ -2187,6 +2189,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // event-verifications.request-verification
         Route::post('/verification-request/request-verification', [EventVerificationController::class, 'requestVerification'])
             ->name('events-verifications.request-verification');
+
+        Route::get('/redirect-to-calendar/{event}', [EventVerificationController::class, 'redirectToCalendar'])
+            ->name('event-verifications.redirect-to-calendar');
     });
 
     Route::group(['prefix' => 'accommodation'], function (): void {

@@ -13,12 +13,14 @@ import {
     SwitchLabel
 } from "@headlessui/vue";
 import {useForm} from "@inertiajs/vue3";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     name: "GeneralCalendarAboSettingModal",
     mixins: [IconLib],
     props: ['eventTypes', 'rooms', 'areas'],
     components: {
+        ArtworkBaseModal,
         FormButton,
         BaseModal, SwitchGroup, Switch, SwitchLabel,
         Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
@@ -78,7 +80,7 @@ export default {
 </script>
 
 <template>
-    <BaseModal v-if="true" @closed="closeModal(false)" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
+    <ArtworkBaseModal v-if="true" @close="closeModal(false)" title="Calendar subscription settings" description="Customize your calendar subscription to suit your individual needs. Select a specific time period, certain appointment types and activate notifications to stay optimally informed and make your planning easier. Use these settings to configure your calendar according to your preferences and stay organized.">
         <div class="max-h-[calc(100%-10rem)] mt-5">
             <div class="mb-5">
                 <h2 class="headline1 mb-6">{{ $t('Calendar subscription settings') }}</h2>
@@ -93,7 +95,7 @@ export default {
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="date_range" class="font-medium text-gray-900">{{ $t('Set period for calendar subscription') }}</label>
-                        <p id="date_range-description" class="text-gray-500">
+                        <p id="date_range-description" class="text-gray-500 text-xs">
                             {{ $t('Select a specific period for your calendar subscription. If you do not select a period, the subscription will continue indefinitely. This allows you to subscribe to the calendar for a set period of time only.') }}
                         </p>
                     </div>
@@ -124,7 +126,7 @@ export default {
                         <label for="specific_event_types" class="font-medium text-gray-900">
                             {{ $t('Select event types for calendar subscription') }}
                         </label>
-                        <p id="specific_event_types-description" class="text-gray-500">
+                        <p id="specific_event_types-description" class="text-gray-500 text-xs">
                             {{ $t('Select specific types of events for your calendar subscription. This allows you to specify which event types should be displayed in your subscribed calendar to optimize your planning.') }}
                         </p>
                     </div>
@@ -170,7 +172,7 @@ export default {
                         <label for="specific_event_types" class="font-medium text-gray-900">
                             {{ $t('Select areas for calendar subscription') }}
                         </label>
-                        <p id="specific_event_types-description" class="text-gray-500">
+                        <p id="specific_event_types-description" class="text-gray-500 text-xs">
                             {{ $t('Select specific areas for your calendar subscription. This allows you to define which areas should be displayed in your subscribed calendar to optimize your planning.') }}
                         </p>
                     </div>
@@ -215,7 +217,7 @@ export default {
                         <label for="specific_event_types" class="font-medium text-gray-900">
                             {{ $t('Select rooms for calendar subscription') }}
                         </label>
-                        <p id="specific_event_types-description" class="text-gray-500">
+                        <p id="specific_event_types-description" class="text-gray-500 text-xs">
                             {{ $t('Select specific rooms for your calendar subscription. This allows you to define which rooms should be displayed in your subscribed calendar to optimize your planning.') }}
                         </p>
                     </div>
@@ -259,7 +261,7 @@ export default {
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="enable_notification" class="font-medium text-gray-900">{{ $t('Activate calendar notifications') }}</label>
-                        <p id="enable_notification-description" class="text-gray-500">
+                        <p id="enable_notification-description" class="text-gray-500 text-xs">
                             {{ $t("Receive timely notifications about upcoming events. Activate this option to receive reminders and alerts for your scheduled events and make sure you don't miss any important events.") }}
                         </p>
                     </div>
@@ -305,7 +307,7 @@ export default {
             </div>
 
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <style scoped>

@@ -19,14 +19,14 @@
                     v-model="dateRangeCopy.start"
                     type="date"
                     :label="$t('Start date')"
-                    @change="updateWorkTimeDateRange"
+                    @focusout="updateWorkTimeDateRange"
                 />
                 <BaseInput
                     id="work_time_end_date"
                     v-model="dateRangeCopy.end"
                     type="date"
                     :label="$t('End date')"
-                    @change="updateWorkTimeDateRange"
+                    @focusout="updateWorkTimeDateRange"
                 />
             </div>
 
@@ -84,9 +84,9 @@
                                         width: `${Math.min((Math.abs(entry.daily_target_minutes) / Math.abs(entry.daily_target_minutes)) * 100, 100)}%`
                                     }"
                                 ></div>
-                                <!-- Missing hours (red-gray striped) - when planned < required and no worked hours -->
+                                <!-- Missing hours (red-gray striped) - when planned < required and no worked hours (only for current or future days) -->
                                 <div
-                                    v-if="entry.planned_minutes < Math.abs(entry.daily_target_minutes) && !entry.worked_hours"
+                                    v-if="entry.planned_minutes < Math.abs(entry.daily_target_minutes) && !entry.worked_hours && !isDateInPast(entry.date)"
                                     class="absolute top-0 left-0 h-full bg-striped-red-gray"
                                     :style="{
                                         left: `${(entry.planned_minutes / Math.abs(entry.daily_target_minutes)) * 100}%`,
@@ -113,13 +113,14 @@
                                     }"
                                 ></div>
 
-                                <!-- Undertime (red) - when worked < required -->
+                                <!-- Undertime (red) - when worked < required or when it's a past day with no worked hours -->
                                 <div
-                                    v-if="entry.worked_hours && entry.worked_hours < Math.abs(entry.daily_target_minutes)"
+                                    v-if="(entry.worked_hours && entry.worked_hours < Math.abs(entry.daily_target_minutes)) ||
+                                         (isDateInPast(entry.date) && !entry.worked_hours)"
                                     class="absolute top-0 left-0 h-full bg-red-500"
                                     :style="{
-                                        left: `${(entry.worked_hours / Math.abs(entry.daily_target_minutes)) * 100}%`,
-                                        width: `${((Math.abs(entry.daily_target_minutes) - entry.worked_hours) / Math.abs(entry.daily_target_minutes)) * 100}%`
+                                        left: `${(entry.worked_hours ? entry.worked_hours : 0) / Math.abs(entry.daily_target_minutes) * 100}%`,
+                                        width: `${((Math.abs(entry.daily_target_minutes) - (entry.worked_hours ? entry.worked_hours : 0)) / Math.abs(entry.daily_target_minutes)) * 100}%`
                                     }"
                                 ></div>
                             </div>
@@ -188,8 +189,17 @@ const dateRangeCopy = ref({
     end: props.dateRange.end
 })
 
+const totalCopy = ref(props.totals)
+
 const showWorkingTimePostEntryModal = ref(false)
 
+// Function to check if a date is in the past
+const isDateInPast = (dateString) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of today
+    const checkDate = new Date(dateString);
+    return checkDate < today;
+}
 
 const updateWorkTimeDateRange = () => {
 
@@ -208,7 +218,8 @@ const updateWorkTimeDateRange = () => {
         data: {
             start: dateRangeCopy.value.start,
             end: dateRangeCopy.value.end
-        }
+        },
+        preserveState: true,
     })
 }
 </script>

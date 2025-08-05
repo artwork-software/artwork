@@ -1,7 +1,8 @@
 <template>
     <div>
         <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
-            <div class="col-span-1 flex items-center justify-center">
+            <div class="col-span-2 flex items-center gap-x-2">
+                <component is="IconLock" v-if="shift.isCommitted" class="w-4 h-4" />
                 <div class="px-2 py-0.5 border rounded-lg text-xs w-fit" :style="{ backgroundColor: shift.craft.color + '22', borderColor: blackColorIfColorIsWhite(shift.craft.color) + '55', color: blackColorIfColorIsWhite(shift.craft.color) }">
                     {{ shift.craftAbbreviation }}
                     <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser" class="mx-1">

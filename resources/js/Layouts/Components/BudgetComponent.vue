@@ -246,7 +246,7 @@
                 </thead>
             </table>
         </div>
-        <SageNotAssignedData v-if="!this.isBudgetTemplateManagement && this.$page.props.sageApiEnabled"
+        <SageNotAssignedData v-if="this.$page.props.sageApiEnabled"
                              :sage-not-assigned="sageNotAssigned"
                              @remove-sage-not-assigned-data="this.showRemoveSageNotAssignedDataConfirmationModal"
         />
@@ -922,7 +922,6 @@ export default {
         'budgetAccess',
         'projectManager',
         'columns',
-        'isBudgetTemplateManagement',
         'sageNotAssigned',
         'first_project_budget_tab_id'
     ],

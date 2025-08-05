@@ -194,6 +194,14 @@ class DefaultComponentSeeder extends Seeder
                 'special' => true,
                 'sidebar_enabled' => true,
                 'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ],
+            [
+                'name' => 'Artist Name Display Component',
+                'type' => ProjectTabComponentEnum::ARTIST_NAME_DISPLAY,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => true,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ]
         ];
 

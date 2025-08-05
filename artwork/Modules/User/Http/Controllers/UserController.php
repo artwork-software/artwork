@@ -399,7 +399,7 @@ class UserController extends Controller
             'totals' => [
                 'worked' => $this->convertMinutesToHoursAndMinutes($totalWorkedMinutes),
                 'wanted' => $this->convertMinutesToHoursAndMinutes($totalWantedMinutes, true),
-            ],
+            ]
         ]);
     }
 
@@ -472,12 +472,27 @@ class UserController extends Controller
                     }
                 }
             } else {
-                $workedMinutes += $this->getPlannedShiftMinutesForDay($user, $current);
-            }
+                // Wenn kein Booking, dann prüfen ob Krankheit
+                $vacation = $user->vacations()->byDate($current)->first();
+                if ($vacation && $vacation->type === 'NOT_AVAILABLE') {
+                    $plannedShiftMinutes = $this->getPlannedShiftMinutesForDay($user, $current);
 
-            // Add individual time (if exists)
-            if ($individualTimes->has($dateKey)) {
-                $workedMinutes += $individualTimes[$dateKey];
+                    if ($plannedShiftMinutes > $dailyTargetMinutes) {
+                        $workedMinutes = $plannedShiftMinutes;
+                        $balanceChange = $plannedShiftMinutes - $dailyTargetMinutes;
+                    } else {
+                        $workedMinutes = 0;
+                        $balanceChange = 0;
+                    }
+
+                    $nightlyMinutes = 0; // Krankheit zählt keine Nachtzeit
+                } else {
+                    $workedMinutes += $this->getPlannedShiftMinutesForDay($user, $current);
+
+                    if ($individualTimes->has($dateKey)) {
+                        $workedMinutes += $individualTimes[$dateKey];
+                    }
+                }
             }
 
             $entry = [
@@ -507,6 +522,7 @@ class UserController extends Controller
 
         return $schedule;
     }
+
 
 
     private function getPlannedShiftMinutesForDay(User $user, Carbon $day): int
@@ -1128,7 +1144,23 @@ class UserController extends Controller
 
     public function updateShowCrafts(User $user, Request $request): void
     {
-        $user->update($request->only('show_crafts'));
+        $user->userFilters()->updateOrCreate(
+            ['filter_type' => 'shift_filter'],
+            [
+                'craft_ids' => $this->nullableArray($request->collect('craft_ids')),
+            ]
+        );
+    }
+
+    /**
+     * @param $collection
+     * @return array<string, mixed>|null
+     * @throws Throwable
+     */
+    private function nullableArray($collection): ?array
+    {
+        $array = $collection->filter()->all();
+        return empty($array) ? null : array_values($array);
     }
 
     public function updateShowShiftQualifications(User $user, Request $request): void

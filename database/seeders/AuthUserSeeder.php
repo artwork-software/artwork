@@ -10,9 +10,11 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\UserShiftQualification;
 use Artwork\Modules\Shift\Repositories\UserShiftQualificationRepository;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserProjectManagementSettingService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -101,8 +103,23 @@ class AuthUserSeeder extends Seeder
         }
 
         $user->calendar_settings()->create();
-        $user->calendar_filter()->create();
-        $user->shift_calendar_filter()->create();
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
+
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::PLANNING_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
+
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::SHIFT_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
         $user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
 
         $user = User::create([
@@ -134,8 +151,23 @@ class AuthUserSeeder extends Seeder
             ])
         );
         $user->calendar_settings()->create();
-        $user->calendar_filter()->create();
-        $user->shift_calendar_filter()->create();
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
+
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::PLANNING_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
+
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::SHIFT_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
         $user->givePermissionTo([
             PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
             //PermissionNameEnum::PROJECT_VIEW->value,
@@ -191,8 +223,23 @@ class AuthUserSeeder extends Seeder
             ])
         );
         $user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
-        $user->calendar_filter()->create();
-        $user->shift_calendar_filter()->create();
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
+
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::PLANNING_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
+
+        $user->userFilters()->create([
+            'filter_type' => UserFilterTypes::SHIFT_FILTER->value,
+            'start_date' => Carbon::now()->startOfDay(),
+            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+        ]);
         $user->calendar_settings()->create();
         foreach (NotificationEnum::cases() as $notificationType) {
             $user->notificationSettings()->create([

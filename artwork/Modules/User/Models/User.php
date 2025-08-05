@@ -469,6 +469,19 @@ class User extends Model implements
         return $this->hasOne(UserShiftCalendarFilter::class);
     }
 
+    /**
+     * New Filter for Calendar
+     */
+    public function userFilters(): HasMany
+    {
+        return $this->hasMany(UserFilter::class, 'user_id', 'id');
+    }
+
+    public function userFilterTemplates(): HasMany
+    {
+        return $this->hasMany(UserFilterTemplate::class, 'user_id', 'id');
+    }
+
     public function commentedBudgetItemsSetting(): HasOne
     {
         return $this->hasOne(UserCommentedBudgetItemsSetting::class);

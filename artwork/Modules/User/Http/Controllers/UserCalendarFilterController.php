@@ -3,6 +3,7 @@
 namespace Artwork\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -32,18 +33,6 @@ class UserCalendarFilterController extends Controller
 
     public function update(Request $request, User $user): void
     {
-        /**
-         * rooms: arrayToIds(filteredOptionsByCategories.value.roomFilters.rooms),
-         * areas: arrayToIds(filteredOptionsByCategories.value.roomFilters.areas),
-         * event_types: arrayToIds(filteredOptionsByCategories.value.eventFilters.eventTypes),
-         * room_attributes: arrayToIds(filteredOptionsByCategories.value.roomFilters.roomAttributes),
-         * room_categories: arrayToIds(filteredOptionsByCategories.value.roomFilters.roomCategories),
-         * event_properties: arrayToIds(filteredOptionsByCategories.value.eventFilters.eventProperties),
-         * adjoiningNoAudience: returnNullIfFalse(generalFilters.value.adjoiningNoAudience.checked),
-         * adjoiningNotLoud: returnNullIfFalse(generalFilters.value.adjoiningNotLoud.checked),
-         */
-
-
         $roomIds = $request->collect('rooms')->isNotEmpty() ? $request->collect('rooms') : null;
         $areaIds = $request->collect('areas')->isNotEmpty() ? $request->collect('areas') : null;
         $eventTypes = $request->collect('event_types')->isNotEmpty() ? $request->collect('event_types') : null;
@@ -64,10 +53,17 @@ class UserCalendarFilterController extends Controller
 
     public function updateDates(Request $request, User $user): void
     {
-        $user->calendar_filter()->update([
-            'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
-            'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
-        ]);
+        $isPlanning = $request->get('isPlanning', false);
+        $user->userFilters()->updateOrCreate(
+            [
+                'filter_type' =>
+                    $isPlanning ? UserFilterTypes::PLANNING_FILTER->value : UserFilterTypes::CALENDAR_FILTER->value
+            ],
+            [
+                'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
+                'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+            ]
+        );
     }
 
     public function singleValueUpdate(User $user, Request $request): RedirectResponse

@@ -729,7 +729,8 @@ class User extends Model implements
 
     public function activeWorkContract()
     {
-        return $this->contract()?->userContract();
+        $contractAssign = $this->contract()->first();
+        return $contractAssign?->userContract;
     }
 
     public function getActiveWorkflowRules()

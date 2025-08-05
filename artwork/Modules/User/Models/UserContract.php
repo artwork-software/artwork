@@ -58,4 +58,14 @@ class UserContract extends Model
     {
         return $this->hasMany(UserContractAssign::class, 'user_contract_id');
     }
+
+    public function shiftRules(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \Artwork\Modules\Shift\Models\ShiftRule::class,
+            'shift_rule_contract_assignments',
+            'contract_id',
+            'shift_rule_id'
+        )->withTimestamps();
+    }
 }

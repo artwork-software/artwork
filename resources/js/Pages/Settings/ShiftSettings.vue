@@ -448,6 +448,13 @@ export default defineComponent({
                     current: route().current('user-contract-settings.index'),
                     show: true,
                     icon: 'IconContract'
+                },
+                {
+                    name: this.$t('Shift warnings - rules'),
+                    href: route('shift-warnings.rules.index'),
+                    current: route().current('shift-warnings.rules.index'),
+                    show: true,
+                    icon: 'IconGavel'
                 }
             ]
         }

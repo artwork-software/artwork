@@ -32,6 +32,7 @@ class ShiftRuleWorkflowTest extends TestCase
     private Room $room;
     private Event $event;
     private Craft $craft;
+    private \Artwork\Modules\Shift\Models\ShiftQualification $shiftQualification;
 
     protected function setUp(): void
     {
@@ -60,22 +61,21 @@ class ShiftRuleWorkflowTest extends TestCase
         // Assign User to Contract
         \Database\Factories\UserContractAssignFactory::new()->create([
             'user_id' => $this->user->id,
-            'user_contract_id' => $this->contract->id,
-            'start_date' => now()->subMonths(6),
-            'end_date' => now()->addMonths(6)
+            'user_contract_id' => $this->contract->id
         ]);
 
         // Create Project, Room, Event, Craft for Shifts
         $this->project = \Artwork\Modules\Project\Models\Project::factory()->create(['name' => 'Test Projekt']);
         $this->room = \Artwork\Modules\Room\Models\Room::factory()->create(['name' => 'Test Raum']);
         $this->craft = \Artwork\Modules\Craft\Models\Craft::factory()->create(['name' => 'Test Craft']);
+        $this->shiftQualification = \Database\Factories\Artwork\Modules\ShiftQualification\Models\ShiftQualificationFactory::new()->create(['name' => 'Test Qualification']);
 
         $this->event = \Artwork\Modules\Event\Models\Event::factory()->create([
             'name' => 'Test Event',
             'project_id' => $this->project->id,
             'room_id' => $this->room->id,
-            'start_time' => '08:00:00',
-            'end_time' => '18:00:00',
+            'start_time' => now()->setTimeFromTimeString('08:00:00'),
+            'end_time' => now()->setTimeFromTimeString('18:00:00'),
             'eventName' => 'Test Event'
         ]);
 
@@ -125,7 +125,7 @@ class ShiftRuleWorkflowTest extends TestCase
         ]);
 
         // Assign user to shift
-        $longShift->users()->attach($this->user->id);
+        $longShift->users()->attach($this->user->id, ['shift_qualification_id' => $this->shiftQualification->id]);
 
         // Step 2: Run validation service
         $violations = $this->shiftRuleService->validateRulesForUser(
@@ -168,8 +168,8 @@ class ShiftRuleWorkflowTest extends TestCase
                 'name' => "Test Event Tag $i",
                 'project_id' => $this->project->id,
                 'room_id' => $this->room->id,
-                'start_time' => '09:00:00',
-                'end_time' => '17:00:00'
+                'start_time' => $shiftDate->setTimeFromTimeString('09:00:00'),
+                'end_time' => $shiftDate->setTimeFromTimeString('17:00:00')
             ]);
 
             $shift = Shift::create([
@@ -184,7 +184,7 @@ class ShiftRuleWorkflowTest extends TestCase
                 'is_committed' => false
             ]);
 
-            $shift->users()->attach($this->user->id);
+            $shift->users()->attach($this->user->id, ['shift_qualification_id' => $this->shiftQualification->id]);
             $shifts[] = $shift;
         }
 
@@ -223,7 +223,7 @@ class ShiftRuleWorkflowTest extends TestCase
             'is_committed' => false
         ]);
 
-        $shift->users()->attach($this->user->id);
+        $shift->users()->attach($this->user->id, ['shift_qualification_id' => $this->shiftQualification->id]);
 
         // Run the validation command
         $exitCode = Artisan::call('shift-rules:validate', ['--days' => 7]);
@@ -258,7 +258,7 @@ class ShiftRuleWorkflowTest extends TestCase
             'is_committed' => false
         ]);
 
-        $shift->users()->attach($this->user->id);
+        $shift->users()->attach($this->user->id, ['shift_qualification_id' => $this->shiftQualification->id]);
 
         // Create violation through service
         $violations = $this->shiftRuleService->validateRulesForUser(
@@ -316,7 +316,7 @@ class ShiftRuleWorkflowTest extends TestCase
                 'is_committed' => false
             ]);
 
-            $shift->users()->attach($this->user->id);
+            $shift->users()->attach($this->user->id, ['shift_qualification_id' => $this->shiftQualification->id]);
         }
 
         // Day 6: Long shift (12 hours) + 6th consecutive day
@@ -340,7 +340,7 @@ class ShiftRuleWorkflowTest extends TestCase
             'is_committed' => false
         ]);
 
-        $violationShift->users()->attach($this->user->id);
+        $violationShift->users()->attach($this->user->id, ['shift_qualification_id' => $this->shiftQualification->id]);
 
         // Run validation
         $violations = $this->shiftRuleService->validateRulesForUser(
@@ -350,7 +350,10 @@ class ShiftRuleWorkflowTest extends TestCase
         );
 
         // Should have violations for both rules on the same day
-        $violationsOnLastDay = $violations->where('violation_date', $violationDate->format('Y-m-d'));
+        $violationsOnLastDay = $violations->filter(function ($violation) use ($violationDate) {
+            return $violation->violation_date->format('Y-m-d') === $violationDate->format('Y-m-d');
+        });
+        
         $this->assertGreaterThan(1, $violationsOnLastDay->count());
 
         // Check specific violations
@@ -383,7 +386,7 @@ class ShiftRuleWorkflowTest extends TestCase
             'is_committed' => false
         ]);
 
-        $shift->users()->attach($this->user->id);
+        $shift->users()->attach($this->user->id, ['shift_qualification_id' => $this->shiftQualification->id]);
 
         // Run validation
         $violations = $this->shiftRuleService->validateRulesForUser(
@@ -417,7 +420,7 @@ class ShiftRuleWorkflowTest extends TestCase
             'is_committed' => false
         ]);
 
-        $shift->users()->attach($this->user->id);
+        $shift->users()->attach($this->user->id, ['shift_qualification_id' => $this->shiftQualification->id]);
 
         // Run validation
         $violations = $this->shiftRuleService->validateRulesForUser(
@@ -455,7 +458,7 @@ class ShiftRuleWorkflowTest extends TestCase
             'is_committed' => false
         ]);
 
-        $shift->users()->attach($userWithoutContract->id);
+        $shift->users()->attach($userWithoutContract->id, ['shift_qualification_id' => $this->shiftQualification->id]);
 
         // Run validation
         $violations = $this->shiftRuleService->validateRulesForUser(
@@ -486,7 +489,7 @@ class ShiftRuleWorkflowTest extends TestCase
             'is_committed' => false
         ]);
 
-        $shift->users()->attach($this->user->id);
+        $shift->users()->attach($this->user->id, ['shift_qualification_id' => $this->shiftQualification->id]);
 
         // Run validation
         $violations = $this->shiftRuleService->validateRulesForUser(
@@ -518,7 +521,7 @@ class ShiftRuleWorkflowTest extends TestCase
             'is_committed' => false
         ]);
 
-        $shift->users()->attach($this->user->id);
+        $shift->users()->attach($this->user->id, ['shift_qualification_id' => $this->shiftQualification->id]);
 
         // Capture command output
         Artisan::call('shift-rules:validate', ['--days' => 7]);

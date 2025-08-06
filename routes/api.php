@@ -7,7 +7,7 @@ use Artwork\Modules\User\Services\UserStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiController;
-use Artwork\Modules\Workflow\Http\Controllers\ShiftWarningController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftRuleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,9 +62,9 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/inventory/articles/{article}', [InventoryArticleApiController::class, 'show']);
 });
 
-// Shift Warning API routes
+// Shift Rules API routes
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/shift-warnings/validate', [ShiftWarningController::class, 'validateRules'])->name('api.shift-warnings.validate');
-    Route::get('/shift-warnings/pending', [ShiftWarningController::class, 'getPendingViolations'])->name('api.shift-warnings.pending');
-    Route::patch('/shift-warnings/violations/{violationId}/status', [ShiftWarningController::class, 'updateViolationStatus'])->name('api.shift-warnings.update-status');
+    Route::post('/shift-rules/validate', [ShiftRuleController::class, 'validateRules'])->name('api.shift-rules.validate');
+    Route::get('/shift-rules/pending', [ShiftRuleController::class, 'getPendingViolations'])->name('api.shift-rules.pending');
+    Route::patch('/shift-rules/violations/{violationId}/status', [ShiftRuleController::class, 'updateViolationStatus'])->name('api.shift-rules.update-status');
 });

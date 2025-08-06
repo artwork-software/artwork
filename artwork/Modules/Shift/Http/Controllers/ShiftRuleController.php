@@ -11,6 +11,7 @@ use Artwork\Modules\User\Models\UserContract;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,7 +31,7 @@ class ShiftRuleController extends Controller
         ]);
     }
 
-    public function store(Request $request): Response
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -66,7 +67,7 @@ class ShiftRuleController extends Controller
         ]);
     }
 
-    public function update(Request $request, ShiftRule $rule): Response
+    public function update(Request $request, ShiftRule $shiftRule): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -79,7 +80,7 @@ class ShiftRuleController extends Controller
             'user_ids.*' => 'exists:users,id'
         ]);
 
-        $rule->update([
+        $shiftRule->update([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? '',
             'individual_number_value' => $validated['individual_number_value'],
@@ -87,17 +88,17 @@ class ShiftRuleController extends Controller
         ]);
 
         // Update assignments
-        $rule->contracts()->sync($validated['contract_ids'] ?? []);
-        $rule->usersToNotify()->sync($validated['user_ids'] ?? []);
+        $shiftRule->contracts()->sync($validated['contract_ids'] ?? []);
+        $shiftRule->usersToNotify()->sync($validated['user_ids'] ?? []);
 
         return redirect()->back()->with('flash', [
             'message' => 'Regel erfolgreich aktualisiert'
         ]);
     }
 
-    public function destroy(ShiftRule $rule): Response
+    public function destroy(ShiftRule $shiftRule): RedirectResponse
     {
-        $rule->delete();
+        $shiftRule->delete();
 
         return redirect()->back()->with('flash', [
             'message' => 'Regel erfolgreich gelöscht'
@@ -112,7 +113,7 @@ class ShiftRuleController extends Controller
         ]);
     }
 
-    public function updateContractAssignments(Request $request, UserContract $contract): Response
+    public function updateContractAssignments(Request $request, UserContract $contract): RedirectResponse
     {
         $validated = $request->validate([
             'rule_ids' => 'nullable|array',
@@ -217,7 +218,7 @@ class ShiftRuleController extends Controller
         }
     }
 
-    public function updateViolationStatus(Request $request, int $violationId): Response
+    public function updateViolationStatus(Request $request, int $violationId): RedirectResponse
     {
         $validated = $request->validate([
             'status' => 'required|in:resolved,ignored'
@@ -238,6 +239,59 @@ class ShiftRuleController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Fehler beim Aktualisieren des Status: ' . $e->getMessage());
         }
+    }
+
+    public function show(ShiftRule $shiftRule): Response
+    {
+        return Inertia::render('ShiftRules/Show', [
+            'rule' => $shiftRule->load(['usersToNotify', 'contracts'])
+        ]);
+    }
+
+    public function assignContracts(Request $request, ShiftRule $shiftRule): RedirectResponse
+    {
+        $validated = $request->validate([
+            'contract_ids' => 'required|array',
+            'contract_ids.*' => 'exists:user_contracts,id'
+        ]);
+
+        $shiftRule->contracts()->sync($validated['contract_ids']);
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Verträge erfolgreich zugewiesen'
+        ]);
+    }
+
+    public function assignUsers(Request $request, ShiftRule $shiftRule): RedirectResponse
+    {
+        $validated = $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id'
+        ]);
+
+        $shiftRule->usersToNotify()->sync($validated['user_ids']);
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Benutzer erfolgreich zugewiesen'
+        ]);
+    }
+
+    public function resolveViolation(Request $request, ShiftRuleViolation $violation): RedirectResponse
+    {
+        $violation->resolve(auth()->id());
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Regelverstoß erfolgreich gelöst'
+        ]);
+    }
+
+    public function ignoreViolation(Request $request, ShiftRuleViolation $violation): RedirectResponse
+    {
+        $violation->ignore(auth()->id());
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Regelverstoß erfolgreich ignoriert'
+        ]);
     }
 
     private function getAvailableRuleTypes(): array

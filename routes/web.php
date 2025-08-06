@@ -102,7 +102,7 @@ use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
 use Artwork\Modules\Workflow\Http\Controllers\WorkflowController;
-use Artwork\Modules\Workflow\Http\Controllers\ShiftWarningController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftRuleController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
 use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
@@ -169,32 +169,23 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/definitions', [WorkflowController::class, 'storeDefinition'])->name('workflow.definitions.store');
     });
 
-    // Shift Warning routes - Admin interface for shift rules
-    Route::group(['prefix' => 'shift-warnings'], function (): void {
-        Route::get('/rules', [ShiftWarningController::class, 'index'])->name('shift-warnings.rules.index');
-        Route::post('/rules', [ShiftWarningController::class, 'store'])->name('shift-warnings.rules.store');
-        Route::put('/rules/{rule}', [ShiftWarningController::class, 'update'])->name('shift-warnings.rules.update');
-        Route::delete('/rules/{rule}', [ShiftWarningController::class, 'destroy'])->name('shift-warnings.rules.destroy');
-        
-        Route::get('/contracts', [ShiftWarningController::class, 'contractAssignments'])->name('shift-warnings.contracts.index');
-        Route::put('/contracts/{contract}/assignments', [ShiftWarningController::class, 'updateContractAssignments'])->name('shift-warnings.contracts.assignments.update');
-        
-        Route::get('/rules/{ruleType}/configuration', [ShiftWarningController::class, 'getRuleConfiguration'])->name('shift-warnings.rules.configuration');
-    });
-
     // Shift Rules routes - New shift rules management system
     Route::group(['prefix' => 'shift-rules'], function (): void {
         Route::get('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'index'])->name('shift-rules.index');
         Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->name('shift-rules.store');
+        
+        // Specific routes must come before parameterized routes
+        Route::get('/contracts/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'contractAssignments'])->name('shift-rules.contracts.index');
+        Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->name('shift-rules.contracts.assignments.update');
+        Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->name('shift-rules.validate');
+        Route::get('/pending', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getPendingViolations'])->name('shift-rules.pending');
+        
+        // Parameterized routes come last
         Route::get('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'show'])->name('shift-rules.show');
         Route::put('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'update'])->name('shift-rules.update');
         Route::delete('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'destroy'])->name('shift-rules.destroy');
-        
-        Route::get('/contracts/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'contractAssignments'])->name('shift-rules.contracts.index');
         Route::post('/{shiftRule}/contracts', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignContracts'])->name('shift-rules.contracts.assign');
         Route::post('/{shiftRule}/users', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignUsers'])->name('shift-rules.users.assign');
-        
-        Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->name('shift-rules.validate');
     });
 
     // Shift Rule Violations routes

@@ -2,7 +2,7 @@
     <Menu as="div" class="inline-block print:hidden w-full float-left" :class="!noRelative ? 'relative' : ''">
         <Float auto-placement portal :offset="{ mainAxis: hasNoOffset ? 5 : -10, crossAxis: hasNoOffset ? 25 : 75}">
             <div class="font-semibold  flex items-center justify-center w-full" ref="menuButtonRef" :class="[whiteIcon ? 'text-white' : 'text-artwork-buttons-context', dotsColor]">
-                <MenuButton :id="buttonId" class="w-full">
+                <MenuButton :id="buttonId" class="w-full cursor-pointer">
                    <div class="flex items-center gap-x-1 w-full">
                        <div v-if="showIcon">
                            <IconDotsVertical

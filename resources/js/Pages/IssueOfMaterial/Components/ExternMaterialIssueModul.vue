@@ -15,6 +15,7 @@
                     <div class="col-span-full">
                         <BaseInput id="return_date" v-model="externMaterialIssueForm.return_date" :label="$t('Return Date')" type="date" />
                         <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.return_date">{{ externMaterialIssueForm.errors.return_date }}</p>
+                        <p class="text-xs text-red-500 ml-1 mt-2" v-if="isReturnDateBeforeIssueDate">{{ $t('Return date cannot be earlier than issue date') }}</p>
                     </div>
                     <div class="col-span-full">
                         <BaseInput id="external_name" v-model="externMaterialIssueForm.external_name" :label="$t('External Name')" type="text" />
@@ -187,7 +188,7 @@
         <div class="flex justify-center w-full">
             <FormButton
                 :text="externMaterialIssue?.id ? $t('Update') : $t('Save')"
-                :disabled="externMaterialIssueForm.processing || !externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date || !externMaterialIssueForm.material_value"
+                :disabled="externMaterialIssueForm.processing || !externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date || !externMaterialIssueForm.material_value || isReturnDateBeforeIssueDate"
                 type="submit"
             />
         </div>
@@ -218,7 +219,7 @@ import ArticleSearchFilterModal from "@/Pages/IssueOfMaterial/Components/Article
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {router, useForm} from "@inertiajs/vue3";
-import {onMounted, ref, watch} from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import debounce from "lodash.debounce";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -265,6 +266,17 @@ const externMaterialIssueForm = useForm({
 
 const showArticleFilterModal = ref(false)
 const showSelectMaterialSetModal = ref(false)
+
+const isReturnDateBeforeIssueDate = computed(() => {
+    if (!externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date) {
+        return false
+    }
+
+    const issueDate = new Date(externMaterialIssueForm.issue_date)
+    const returnDate = new Date(externMaterialIssueForm.return_date)
+
+    return returnDate < issueDate
+})
 
 
 const addSpecialItem = () => {

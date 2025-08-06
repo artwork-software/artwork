@@ -1,4 +1,6 @@
 {
+    "End date cannot be earlier than start date": "End date cannot be earlier than start date",
+    "Return date cannot be earlier than issue date": "Return date cannot be earlier than issue date",
     "Add Event": "Add Event",
     "Add Shift": "Add Shift",
     "Dismiss": "Dismiss",

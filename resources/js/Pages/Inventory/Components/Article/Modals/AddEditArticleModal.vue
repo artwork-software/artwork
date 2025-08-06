@@ -1283,7 +1283,7 @@ onMounted(() => {
         }));
 
         if (props.article.is_detailed_quantity) {
-            if (!props.article.detailed_article_quantities?.length || !props.article.detailed_article_quantities[0].properties?.length) {
+            if (!props.article.detailed_article_quantities?.length) {
                 articleForm.detailed_article_quantities = [{
                     name: props.article.name,
                     description: props.article.description,

@@ -36,12 +36,7 @@
                     </div>
                 </div>
             </div>
-
         </div>
-
-        <pre>
-            {{ materialSets }}
-        </pre>
 
         <CreateOrUpdateMaterialSetModal
             v-if="showCreateOrUpdateMaterialSetModal"

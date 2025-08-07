@@ -41,7 +41,7 @@ class InventoryArticleService
         ?string $search = ''
     ): LengthAwarePaginator {
         $query = $this->buildArticleQuery($category, $subCategory, $search);
-        
+
         // Optimiere durch Eager Loading aller benötigten Relationen
         $query->with([
             'category',
@@ -53,7 +53,7 @@ class InventoryArticleService
             'statusValues',
             'detailedArticleQuantities.status',
         ]);
-        
+
         $filters = json_decode(Request::get('filters', '[]'), true, 512, JSON_THROW_ON_ERROR);
         $query = $this->articleRepository->applyFilters($query, $filters);
 
@@ -146,15 +146,33 @@ class InventoryArticleService
         }
 
         return DB::transaction(function () use ($article, $request) {
-            // Vorherige Werte sichern
-            $oldQuantity = $article->quantity;
-            $oldStatus1 = optional($article->statusValues->firstWhere('id', 1))->pivot->value;
+            // Vorherige Werte sichern mit Null-Handling
+            $oldQuantity = $article->quantity ?? null;
 
-            // Detailed Articles: Status 1 Werte sichern
+            // Sicheres Zugreifen auf statusValues mit mehrfacher Null-Prüfung
+            $oldStatus1 = null;
+            if ($article->statusValues && ($status1 = $article->statusValues->firstWhere('id', 1))) {
+                $oldStatus1 = isset($status1->pivot) && isset($status1->pivot->value) ? $status1->pivot->value : null;
+            }
+
+            // Detailed Articles: Status 1 Werte sichern mit Null-Handling
             $oldDetailedStatus1 = [];
-            foreach ($article->detailedArticleQuantities as $detailed) {
-                if ($detailed->status && $detailed->status->id == 1) {
-                    $oldDetailedStatus1[$detailed->id] = $detailed->status->pivot->value ?? $detailed->status->value;
+            // Prüfe, ob detailedArticleQuantities existiert, bevor darauf zugegriffen wird
+            if ($article && isset($article->detailedArticleQuantities)) {
+                foreach ($article->detailedArticleQuantities as $detailed) {
+                    // Stelle sicher, dass detailed, status und id existieren
+                    if ($detailed && isset($detailed->status) && isset($detailed->status->id) &&
+                        $detailed->status->id == 1 && isset($detailed->id)) {
+
+                        // Sicheres Zugreifen auf pivot und value
+                        if (isset($detailed->status->pivot) && isset($detailed->status->pivot->value)) {
+                            $oldDetailedStatus1[$detailed->id] = $detailed->status->pivot->value;
+                        } elseif (isset($detailed->status->value)) {
+                            $oldDetailedStatus1[$detailed->id] = $detailed->status->value;
+                        } else {
+                            $oldDetailedStatus1[$detailed->id] = null;
+                        }
+                    }
                 }
             }
 
@@ -181,23 +199,43 @@ class InventoryArticleService
 
             $article = $article->fresh(['detailedArticleQuantities.status', 'statusValues']);
 
-            // Nachherige Werte prüfen
-            $newQuantity = $article?->quantity;
-            $newStatus1 = optional($article?->statusValues->firstWhere('id', 1))->pivot->value;
+            // Nachherige Werte prüfen mit verbessertem Null-Handling
+            $newQuantity = $article ? ($article->quantity ?? null) : null;
+
+            // Sicheres Zugreifen auf statusValues mit mehrfacher Null-Prüfung
+            $newStatus1 = null;
+            if ($article && $article->statusValues && ($status1 = $article->statusValues->firstWhere('id', 1))) {
+                $newStatus1 = isset($status1->pivot) && isset($status1->pivot->value) ? $status1->pivot->value : null;
+            }
 
             $detailedStatus1Changed = false;
-            foreach ($article?->detailedArticleQuantities as $detailed) {
-                if ($detailed->status && $detailed->status->id == 1) {
-                    $old = $oldDetailedStatus1[$detailed->id] ?? null;
-                    $new = $detailed->status->pivot->value ?? $detailed->status->value;
-                    if (is_numeric($old) && is_numeric($new) && $new < $old) {
-                        $detailedStatus1Changed = true;
-                        break;
+            // Ensure detailedArticleQuantities exists before iterating
+            if ($article && $article->detailedArticleQuantities) {
+                foreach ($article->detailedArticleQuantities as $detailed) {
+                    // Ensure detailed and status objects exist and have required properties
+                    if ($detailed && $detailed->status && $detailed->status->id == 1 && isset($detailed->id)) {
+                        $old = $oldDetailedStatus1[$detailed->id] ?? null;
+                        // Ensure pivot exists before accessing its properties
+                        $new = null;
+                        if (isset($detailed->status->pivot) && isset($detailed->status->pivot->value)) {
+                            $new = $detailed->status->pivot->value;
+                        } elseif (isset($detailed->status->value)) {
+                            $new = $detailed->status->value;
+                        }
+
+                        if (is_numeric($old) && is_numeric($new) && $new < $old) {
+                            $detailedStatus1Changed = true;
+                            break;
+                        }
                     }
                 }
             }
 
-            if ($oldQuantity != $newQuantity || $oldStatus1 != $newStatus1 || $detailedStatus1Changed) {
+            // Null-safe comparison of quantities and status values
+            $quantityChanged = $oldQuantity !== null && $newQuantity !== null && $oldQuantity != $newQuantity;
+            $status1Changed = $oldStatus1 !== null && $newStatus1 !== null && $oldStatus1 != $newStatus1;
+
+            if ($quantityChanged || $status1Changed || $detailedStatus1Changed) {
                 $this->notifyResponsibleUsersOnArticleChange($article);
             }
 

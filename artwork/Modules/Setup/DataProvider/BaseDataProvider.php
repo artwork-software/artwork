@@ -387,8 +387,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "Planungskalender einsehen und Planen",
                 'translation_key' => "View and plan in the planning calendar",
                 'group' => 'Event management',
-                'tooltipText' => 'Ein User mit diesem Recht darf Termine ohne Anfrage direkt fest planen in allen Räumen',
-                'tooltipKey' => 'A user with this permission can schedule events directly without a request in all rooms',
+                'tooltipText' => 'Ein User mit diesem Recht darf den Planungskalender einsehen und darin planen',
+                'tooltipKey' => 'A user with this permission can view the planning calendar and plan within it',
                 'checked' => false
             ],
             [

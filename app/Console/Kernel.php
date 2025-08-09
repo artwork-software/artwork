@@ -69,6 +69,7 @@ class Kernel extends ConsoleKernel
     {
         $this->load(__DIR__ . '/Commands');
         $this->load(dirname(__DIR__, 2) . '/artwork/Core/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Shift/Console/Commands', true);
 
         require base_path('routes/console.php');
     }

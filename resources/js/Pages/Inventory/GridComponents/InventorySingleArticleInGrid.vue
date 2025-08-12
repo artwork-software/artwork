@@ -1,7 +1,7 @@
 <template>
     <div class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden font-lexend" @click="showArticleDetail = true">
         <div class="flex items-center justify-center">
-            <img  :src="getMainImageInImage.image" @error="(e) => e.target.src = usePage().props.big_logo" alt="" class="w-44 h-44 object-fill rounded-lg">
+            <img  :src="getMainImageInImage.image" @error="handleImageError" alt="" :class="imageClasses">
         </div>
         <div class="mt-4">
             <div class="flex items-center">
@@ -58,11 +58,27 @@ const props = defineProps({
 })
 
 const showEditArticleModal = ref(false);
+const isUsingFallbackImage = ref(false);
 
 const openEditArticleModal = () => {
     showArticleDetail.value = false;
     showEditArticleModal.value = true;
 }
+
+const handleImageError = (e) => {
+    e.target.src = usePage().props.big_logo;
+    isUsingFallbackImage.value = true;
+}
+
+const imageClasses = computed(() => {
+    const baseClasses = "w-44 h-44 rounded-lg";
+    // Check if we're using fallback image either from error handler or directly from getMainImageInImage
+    const isFallbackImage = isUsingFallbackImage.value || getMainImageInImage.value.image === usePage().props.big_logo;
+    // Use object-contain for fallback logo to show entire logo without cropping
+    // Use object-cover for regular images to maintain aspect ratio without stretching
+    const objectFitClass = isFallbackImage ? "object-contain" : "object-cover";
+    return `${baseClasses} ${objectFitClass}`;
+});
 
 const ArticleDetailModal = defineAsyncComponent({
     loader: () => import('@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue'),

@@ -1,5 +1,5 @@
 <template>
-    <AppLayout>
+    <AppLayout :title="$t('Inventory Article Planning')">
         <div class="-ml-4">
             <!-- topbar with date range selector -->
             <div class="flex items-center p-4 border-b shadow-sm">
@@ -13,7 +13,7 @@
                     <div class="min-w-max">
                         <!-- Kopfzeile: Zeitleiste -->
                         <div class="flex sticky top-0 z-30 bg-artwork-navigation-background shadow-sm text-sm font-medium text-white">
-                            <div class="sticky left-0 z-20 bg-artwork-navigation-background px-4 py-2  font-medium w-[200px] min-w-[200px] flex items-center">Artikel</div>
+                            <div class="sticky left-0 z-20 bg-artwork-navigation-background px-4 py-2  font-medium w-[200px] min-w-[200px] flex items-center">{{ $t('Article') }}</div>
                             <div v-for="date in dates" :key="date.date" class="flex-1 px-4 py-2 text-center font-lexend text-xs min-w-24 max-w-24 w-24 flex items-center justify-center">
                                 {{ formatDate(date.date) }}
                             </div>

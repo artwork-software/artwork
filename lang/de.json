@@ -1,4 +1,6 @@
 {
+    "End date cannot be earlier than start date": "Enddatum darf nicht vor dem Startdatum liegen",
+    "Return date cannot be earlier than issue date": "Rückgabedatum darf nicht vor dem Ausgabedatum liegen",
     "Add Event": "Veranstaltung hinzufügen",
     "Add Shift": "Schicht hinzufügen",
     "Dismiss": "Schließen",
@@ -2932,7 +2934,6 @@
     "Shows stored notes on appointments in the calendar, handy for having additional information directly in view.": "Zeigt gespeicherte Notizen zu Terminen im Kalender an, praktisch, um zusätzliche Informationen direkt im Blick zu haben.",
     "Allows you to show and hide specific calendar contents, ideal for quickly finding the relevant information.": "Erlaubt es dir, bestimmte Kalenderinhalte anzuzeigen und auszublenden, ideal um schnell die relevanten Informationen zu finden.",
     "Artist Name Display Component": "Künstlername-Anzeige-Komponente",
-    "Project Artist": "Projektkünstler*in",
     "Convert to planning events": "In Planungstermine umwandeln",
     "Shift warnings - rules": "Schichtwarnungen - Regeln",
     "Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies. You can create, edit, and delete shift warning rules here.": "Schichtwarnungen werden verwendet, um die Einhaltung von Arbeitsvorschriften und internen Richtlinien zu überwachen und durchzusetzen. Du kannst hier Schichtwarnungsregeln erstellen, bearbeiten und löschen.",
@@ -2948,6 +2949,9 @@
     "Create a new shift warning rule.": "Erstelle eine neue Schichtwarnungsregel.",
     "Contract(s)": "Vertrag(e)",
     "No assignments": "Keine Zuweisungen",
-    "Workflows Rules": "Arbeitsabläufe - Regeln"
+    "Workflows Rules": "Arbeitsabläufe - Regeln",
+    "Project Artist": "Projektkünstler*in",
+    "Article": "Artikel",
+    "Inventory Article Planning": "Artikel Inventarplanung"
 }
 

@@ -5,16 +5,16 @@
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
                     <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false" :is_planning="isPlanning"/>
                     <div class="flex items-center">
-                        <button v-if="!dailyView" class="ml-2 text-black previousTimeRange" @click="previousTimeRange">
+                        <button v-if="!dailyView" class="ml-2 text-black previousTimeRange cursor-pointer" @click="previousTimeRange">
                             <IconChevronLeft class="h-5 w-5 text-primary"/>
                         </button>
-                        <button v-else class="ml-2 text-black previousTimeRange" @click="previousDay">
+                        <button v-else class="ml-2 text-black previousTimeRange cursor-pointer" @click="previousDay">
                             <IconChevronLeft class="h-5 w-5 text-primary"/>
                         </button>
-                        <button v-if="!dailyView" class="ml-2 text-black nextTimeRange" @click="nextTimeRange">
+                        <button v-if="!dailyView" class="ml-2 text-black nextTimeRange cursor-pointer" @click="nextTimeRange">
                             <IconChevronRight class="h-5 w-5 text-primary"/>
                         </button>
-                        <button v-else class="ml-2 text-black nextTimeRange" @click="nextDay">
+                        <button v-else class="ml-2 text-black nextTimeRange cursor-pointer" @click="nextDay">
                             <IconChevronRight class="h-5 w-5 text-primary"/>
                         </button>
 

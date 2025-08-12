@@ -1,5 +1,5 @@
 <template>
-    <div class="-mx-5 py-10 px-20 bg-lightBackgroundGray">
+    <div class="-mx-5 py-10 px-20">
         <ChecklistFunctionBar
             :project-manager-ids="projectManagerIds"
             :project-can-write-ids="projectCanWriteIds"

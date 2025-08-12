@@ -225,7 +225,7 @@ function closeAssignmentModal() {
 }
 
 function saveAssignments() {
-    useForm(assignmentForm).put(`/shift-warnings/contracts/${selectedContract.value.id}/assignments`, {
+    useForm(assignmentForm).put(`/shift-rules/contracts/${selectedContract.value.id}/assignments`, {
         onSuccess: () => {
             closeAssignmentModal()
         }

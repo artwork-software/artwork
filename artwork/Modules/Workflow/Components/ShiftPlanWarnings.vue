@@ -128,7 +128,7 @@ async function validateShiftRules() {
     isValidating.value = true
     
     try {
-        const response = await fetch('/api/shift-warnings/validate', {
+        const response = await fetch('/api/shift-rules/validate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

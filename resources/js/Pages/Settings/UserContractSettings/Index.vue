@@ -94,8 +94,8 @@ const tabs = ref([
     },
     {
         name: 'Shift warnings - rules',
-        href: route('shift-warnings.rules.index'),
-        current: route().current('shift-warnings.rules.index'),
+        href: route('shift-rules.index'),
+        current: route().current('shift-rules.index'),
         show: true,
         icon: 'IconGavel'
     }

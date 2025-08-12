@@ -24,7 +24,7 @@ class ShiftRuleController extends Controller
 
     public function index(): Response
     {
-        return Inertia::render('ShiftRules/Index', [
+        return Inertia::render('ShiftWarnings/Index', [
             'rules' => ShiftRule::with(['usersToNotify', 'contracts'])->get(),
             'availableRuleTypes' => $this->getAvailableRuleTypes(),
             'contracts' => UserContract::all()
@@ -107,7 +107,7 @@ class ShiftRuleController extends Controller
 
     public function contractAssignments(): Response
     {
-        return Inertia::render('ShiftRules/ContractAssignments', [
+        return Inertia::render('ShiftWarnings/ContractAssignments', [
             'contracts' => UserContract::with(['shiftRules', 'userContractAssigns.user'])->get(),
             'rules' => ShiftRule::where('is_active', true)->get()
         ]);
@@ -159,7 +159,7 @@ class ShiftRuleController extends Controller
                 ];
             })->values();
 
-            return Inertia::render('ShiftRules/Index', [
+            return Inertia::render('ShiftWarnings/Index', [
                 'rules' => ShiftRule::with(['usersToNotify', 'contracts'])->get(),
                 'availableRuleTypes' => $this->getAvailableRuleTypes(),
                 'contracts' => UserContract::all(),
@@ -171,7 +171,7 @@ class ShiftRuleController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            return Inertia::render('ShiftRules/Index', [
+            return Inertia::render('ShiftWarnings/Index', [
                 'rules' => ShiftRule::with(['usersToNotify', 'contracts'])->get(),
                 'availableRuleTypes' => $this->getAvailableRuleTypes(),
                 'contracts' => UserContract::all(),
@@ -201,7 +201,7 @@ class ShiftRuleController extends Controller
                 ];
             })->values();
 
-            return Inertia::render('ShiftRules/Index', [
+            return Inertia::render('ShiftWarnings/Index', [
                 'rules' => ShiftRule::with(['usersToNotify', 'contracts'])->get(),
                 'availableRuleTypes' => $this->getAvailableRuleTypes(),
                 'contracts' => UserContract::all(),
@@ -209,7 +209,7 @@ class ShiftRuleController extends Controller
                 'pendingViolationsCount' => $violations->count()
             ]);
         } catch (\Exception $e) {
-            return Inertia::render('ShiftRules/Index', [
+            return Inertia::render('ShiftWarnings/Index', [
                 'rules' => ShiftRule::with(['usersToNotify', 'contracts'])->get(),
                 'availableRuleTypes' => $this->getAvailableRuleTypes(),
                 'contracts' => UserContract::all(),
@@ -226,7 +226,7 @@ class ShiftRuleController extends Controller
 
         try {
             $violation = ShiftRuleViolation::findOrFail($violationId);
-            
+
             if ($validated['status'] === 'resolved') {
                 $violation->resolve(auth()->id());
             } else {

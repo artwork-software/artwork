@@ -54,7 +54,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <div
                                         class="w-6 h-6 rounded-full border"
-                                        :style="{ backgroundColor: rule.configuration.warning_color }"
+                                        :style="{ backgroundColor: rule.warning_color }"
                                     ></div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -249,7 +249,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Modal from '@/Jetstream/Modal.vue'
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
@@ -269,7 +269,7 @@ const props = defineProps({
     contracts: Array
 })
 
-const tabs = ref([
+const tabs = computed(() => [
     {
         name: 'Shift Settings',
         href: route('shift.settings'),
@@ -300,8 +300,8 @@ const tabs = ref([
     },
     {
         name: 'Shift warnings - rules',
-        href: route('shift-warnings.rules.index'),
-        current: route().current('shift-warnings.rules.index'),
+        href: route('shift-rules.index'),
+        current: route().current('shift-rules.index'),
         show: true,
         icon: 'IconGavel'
     }
@@ -322,12 +322,12 @@ const form = useForm({
 })
 
 const triggerTypeLabels = {
-    'max_working_hours_on_day': 'Tagesmaximum an Stunden',
-    'max_consecutive_working_days': 'Maximale Tage in Folge arbeiten',
-    'weekly_max_hours': 'Wochenmaximum an Stunden',
-    'rest_time_before_workday': 'Ruhezeit vor Werktag',
-    'rest_time_before_holiday': 'Ruhezeit vor Sonder-/Sonntag',
-    'min_days_before_commit': 'Mindesttage bis zur Verbindlich-Schaltung'
+    'maxWorkingHoursOnDay': 'Tagesmaximum an Stunden',
+    'maxConsecWorkingDays': 'Maximale Tage in Folge arbeiten',
+    'maxWorkingHoursOnWeek': 'Wochenmaximum an Stunden',
+    'restTimeBeforeWorkday': 'Ruhezeit vor Werktag',
+    'restTimeBeforeHoliday': 'Ruhezeit vor Sonder-/Sonntag',
+    'minDaysBeforeCommit': 'Mindesttage bis zur Verbindlich-Schaltung'
 }
 
 function formatTriggerType(type) {
@@ -347,13 +347,13 @@ const addColor = (color) => {
 function editRule(rule) {
     editingRule.value = rule
     form.name = rule.name
-    form.description = rule.configuration?.description || ''
+    form.description = rule.description || ''
     form.trigger_type = rule.trigger_type
     form.individual_number_value = rule.individual_number_value
-    form.warning_color = rule.configuration.warning_color
-    form.notify_on_violation = rule.notify_on_violation
-    form.contract_ids = rule.contracts.map(c => c.id)
-    form.user_ids = rule.users_to_notify.map(u => u.id)
+    form.warning_color = rule.warning_color
+    form.notify_on_violation = rule.notify_on_violation || false
+    form.contract_ids = rule.contracts ? rule.contracts.map(c => c.id) : []
+    form.user_ids = rule.users_to_notify ? rule.users_to_notify.map(u => u.id) : []
     showModal.value = true
 }
 
@@ -376,8 +376,8 @@ function resetForm() {
 
 function saveRule() {
     const url = editingRule.value
-        ? route('shift-warnings.rules.update', editingRule.value.id)
-        : route('shift-warnings.rules.store')
+        ? route('shift-rules.update', editingRule.value.id)
+        : route('shift-rules.store')
 
 
     if(editingRule.value){
@@ -399,7 +399,7 @@ function saveRule() {
 
 function deleteRule(rule) {
     if (confirm('Möchten Sie diese Regel wirklich löschen?')) {
-        useForm({}).delete(route('shift-warnings.rules.destroy', rule.id))
+        useForm({}).delete(route('shift-rules.destroy', rule.id))
     }
 }
 </script>

@@ -257,6 +257,8 @@ sudo php /var/www/html/artisan scout:import Artwork\\Modules\\Inventory\\Models\
 # Scheduler (cron)
 log "Richte Scheduler ein..."
 (crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run >> /dev/null 2>&1") | sudo crontab -
+(crontab -l 2>/dev/null; echo "0 2 * * * php /var/www/html/artisan backup:run >> /dev/null 2>&1") | sudo crontab -
+(crontab -l 2>/dev/null; echo "30 2 * * * php /var/www/html/artisan backup:clean >> /dev/null 2>&1") | sudo crontab -
 
 # AppArmor-Profil für Nginx hinzufügen
 #log "Füge AppArmor-Profil für Nginx hinzu..."

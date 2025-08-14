@@ -27,7 +27,12 @@ class WorkflowInstance extends Model
 
     public function workflowDefinitionConfig(): BelongsTo
     {
-        return $this->belongsTo(WorkflowDefinitionConfig::class);
+        return $this->belongsTo(
+            WorkflowDefinitionConfig::class,
+            'workflow_definition_config_id',
+            'id',
+            'workflowDefinitionConfig'
+        );
     }
 
     public function subject(): MorphTo
@@ -82,7 +87,7 @@ class WorkflowInstance extends Model
     public function transitionTo(string $place, ?string $transition = null): void
     {
         $this->update(['current_place' => $place]);
-        
+
         $this->workflowLogs()->create([
             'transition' => $transition,
             'from_place' => $this->getOriginal('current_place'),

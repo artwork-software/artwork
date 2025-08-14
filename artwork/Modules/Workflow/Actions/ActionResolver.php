@@ -37,5 +37,6 @@ class ActionResolver
     {
         $this->register(app(NotificationAction::class));
         $this->register(app(UpdateDataAction::class));
+        $this->register(app(ShiftRuleNotificationAction::class));
     }
 }

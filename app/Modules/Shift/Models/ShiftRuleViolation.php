@@ -4,10 +4,15 @@ namespace Artwork\Modules\Shift\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
+use Artwork\Modules\Workflow\Traits\HasWorkflows;
+use Artwork\Modules\Workflow\Traits\TriggersWorkflows;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ShiftRuleViolation extends Model
+class ShiftRuleViolation extends Model implements WorkflowSubject
 {
+    use HasWorkflows, TriggersWorkflows;
+
     protected $fillable = [
         'shift_rule_id',
         'shift_id',
@@ -43,7 +48,7 @@ class ShiftRuleViolation extends Model
 
     public function resolvedByUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'resolved_by');
+        return $this->belongsTo(User::class, 'resolved_by', 'id', 'resolvedByUser');
     }
 
     public function isResolved(): bool
@@ -77,5 +82,10 @@ class ShiftRuleViolation extends Model
     public function getWarningColor(): string
     {
         return $this->shiftRule->warning_color ?? '#ff0000';
+    }
+
+    public function canHaveWorkflow(string $workflowType): bool
+    {
+        return in_array($workflowType, ['shift_violation_approval', 'shift_violation_management']);
     }
 }

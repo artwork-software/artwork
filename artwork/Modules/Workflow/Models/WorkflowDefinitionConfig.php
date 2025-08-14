@@ -21,7 +21,7 @@ class WorkflowDefinitionConfig extends Model
 
     public function workflowDefinition(): BelongsTo
     {
-        return $this->belongsTo(WorkflowDefinition::class);
+        return $this->belongsTo(WorkflowDefinition::class, 'workflow_definition_id', 'id', 'workflowDefinition');
     }
 
     public function workflowInstances(): HasMany

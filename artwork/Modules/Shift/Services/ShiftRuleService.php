@@ -360,6 +360,25 @@ class ShiftRuleService
         Carbon $date,
         array $violationData
     ): ShiftRuleViolation {
+        // Check if violation already exists for this combination
+        $existingViolation = ShiftRuleViolation::where([
+            'shift_rule_id' => $rule->id,
+            'shift_id' => $shift->id,
+            'user_id' => $user->id,
+            'violation_date' => $date->format('Y-m-d')
+        ])->first();
+
+        if ($existingViolation) {
+            // Update existing violation data if needed
+            $existingViolation->update([
+                'violation_data' => $violationData,
+                'severity' => 'warning',
+                'status' => 'active'
+            ]);
+            return $existingViolation;
+        }
+
+        // Create new violation - this will trigger the workflow automatically
         return ShiftRuleViolation::create([
             'shift_rule_id' => $rule->id,
             'shift_id' => $shift->id,

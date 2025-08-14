@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\Workflow\Actions;
 
-use Artwork\Modules\Workflow\Contracts\WorkflowAction;
+use Artwork\Modules\Workflow\Actions\WorkflowAction;
 use Artwork\Modules\Workflow\Models\WorkflowInstance;
-use Artwork\Modules\Workflow\Models\WorkflowRuleViolation;
+use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Notification;
 use Artwork\Modules\Workflow\Notifications\ShiftRuleViolationNotification;
@@ -15,12 +15,12 @@ class ShiftRuleNotificationAction implements WorkflowAction
     {
         $subject = $workflowInstance->subject;
         
-        if (!($subject instanceof WorkflowRuleViolation)) {
+        if (!($subject instanceof ShiftRuleViolation)) {
             return;
         }
 
-        $rule = $subject->workflowRule;
-        if (!$rule || !$rule->shouldNotifyOnViolation()) {
+        $rule = $subject->shiftRule;
+        if (!$rule || !$rule->is_active) {
             return;
         }
 
@@ -34,7 +34,7 @@ class ShiftRuleNotificationAction implements WorkflowAction
 
     public function canExecute(WorkflowInstance $workflowInstance, array $parameters = []): bool
     {
-        return $workflowInstance->subject instanceof WorkflowRuleViolation;
+        return $workflowInstance->subject instanceof ShiftRuleViolation;
     }
 
     public function getName(): string
@@ -58,7 +58,7 @@ class ShiftRuleNotificationAction implements WorkflowAction
         return $ruleUsers->unique('id');
     }
 
-    private function generateNotificationMessage(WorkflowRuleViolation $violation, array $parameters): string
+    private function generateNotificationMessage(ShiftRuleViolation $violation, array $parameters): string
     {
         $customMessage = $parameters['message'] ?? null;
         
@@ -66,7 +66,7 @@ class ShiftRuleNotificationAction implements WorkflowAction
             return $customMessage;
         }
 
-        $rule = $violation->workflowRule;
+        $rule = $violation->shiftRule;
         $violationData = $violation->violation_data;
         
         return "Regelverstoß erkannt: {$rule->name} am {$violation->violation_date}. " . 

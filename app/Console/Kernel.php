@@ -50,6 +50,11 @@ class Kernel extends ConsoleKernel
         $schedule->command(RemoveDatabaseNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();
+        
+        // ShiftRule validation - täglich um 02:00 für die nächsten 14 Tage
+        $schedule->command('shift-rules:validate --days=14')
+            ->dailyAt('02:00')
+            ->runInBackground();
 
         if (env('SAGE_API_ENABLED', false)) {
             $sageApiSettingsService = app(SageApiSettingsService::class);
@@ -70,6 +75,7 @@ class Kernel extends ConsoleKernel
         $this->load(__DIR__ . '/Commands');
         $this->load(dirname(__DIR__, 2) . '/artwork/Core/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Shift/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Workflow/Console/Commands', true);
 
         require base_path('routes/console.php');
     }

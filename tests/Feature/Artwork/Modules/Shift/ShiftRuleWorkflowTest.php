@@ -16,7 +16,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;

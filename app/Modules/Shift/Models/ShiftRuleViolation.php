@@ -7,11 +7,12 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
 use Artwork\Modules\Workflow\Traits\HasWorkflows;
 use Artwork\Modules\Workflow\Traits\TriggersWorkflows;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ShiftRuleViolation extends Model implements WorkflowSubject
 {
-    use HasWorkflows, TriggersWorkflows;
+    use HasFactory, HasWorkflows, TriggersWorkflows;
 
     protected $fillable = [
         'shift_rule_id',
@@ -81,7 +82,8 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
 
     public function getWarningColor(): string
     {
-        return $this->shiftRule->warning_color ?? '#ff0000';
+        $color = $this->shiftRule->warning_color ?? '#ff0000';
+        return empty($color) ? '#ff0000' : $color;
     }
 
     public function canHaveWorkflow(string $workflowType): bool

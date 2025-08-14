@@ -18,7 +18,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\EventType\Models\EventType;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Artisan;
 use PHPUnit\Framework\Attributes\Test;
 

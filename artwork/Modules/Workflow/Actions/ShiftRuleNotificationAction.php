@@ -47,7 +47,7 @@ class ShiftRuleNotificationAction implements WorkflowAction
         $userIds = $parameters['user_ids'] ?? [];
         
         // Hole Benutzer die für die Regel benachrichtigt werden sollen
-        $ruleUsers = $rule->usersToNotify;
+        $ruleUsers = $rule->usersToNotify ?? collect([]);
         
         // Zusätzliche Benutzer aus Parametern
         if (!empty($userIds)) {

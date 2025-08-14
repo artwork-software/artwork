@@ -5,13 +5,14 @@ namespace Artwork\Modules\Shift\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContract;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ShiftRule extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',

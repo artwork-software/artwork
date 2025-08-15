@@ -52,6 +52,9 @@
                     <div class="col-span-1">
                         <BaseInput id="end_time" v-model="internMaterialIssue.end_time" :label="$t('End time')" type="time" />
                     </div>
+                    <div class="col-span-full" v-if="isEndDateBeforeStartDate">
+                        <p class="text-xs text-red-500 mt-0.5">{{ $t('End date cannot be earlier than start date') }}</p>
+                    </div>
 
                     <div class="col-span-full">
                         <BaseTextarea id="notes" v-model="internMaterialIssue.notes" :label="$t('Notes')" />
@@ -235,7 +238,7 @@
         <div class="flex justify-center w-full">
             <FormButton
                 :text="issueOfMaterial?.id ? $t('Update') : $t('Save')"
-                :disabled="internMaterialIssue.processing || !internMaterialIssue.start_date || !internMaterialIssue.end_date || !internMaterialIssue.name"
+                :disabled="internMaterialIssue.processing || !internMaterialIssue.start_date || !internMaterialIssue.end_date || !internMaterialIssue.name || isEndDateBeforeStartDate"
                 type="submit"
             />
         </div>
@@ -266,7 +269,7 @@ import ArticleSearchFilterModal from "@/Pages/IssueOfMaterial/Components/Article
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {router, useForm} from "@inertiajs/vue3";
-import {onMounted, ref, watch} from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import debounce from "lodash.debounce";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -327,6 +330,17 @@ const selectedRoom = ref(props.issueOfMaterial?.room || null)
 const selectedResponsibleUsers = ref(props.issueOfMaterial?.responsible_users || [])
 const showArticleFilterModal = ref(false)
 const showSelectMaterialSetModal = ref(false)
+
+const isEndDateBeforeStartDate = computed(() => {
+    if (!internMaterialIssue.start_date || !internMaterialIssue.end_date) {
+        return false
+    }
+
+    const startDate = new Date(internMaterialIssue.start_date)
+    const endDate = new Date(internMaterialIssue.end_date)
+
+    return endDate < startDate
+})
 
 const addProject = (project) => {
     selectedProject.value = project

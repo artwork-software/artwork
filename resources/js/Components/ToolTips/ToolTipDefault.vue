@@ -59,7 +59,7 @@ export default {
 <template>
     <div class="relative flex items-center z-40">
         <!-- Button oder Icon, das den Tooltip triggert -->
-        <button @mouseover="show = true" @mouseleave="show = false" class="focus:outline-none" :class="classes">
+        <button @mouseover="show = true" @mouseleave="show = false" class="focus:outline-none cursor-pointer" :class="classes">
             <!-- Ihr SVG-Icon -->
             <IconExclamationCircle class="h-5 w-5 text-artwork-buttons-context" v-if="!showBackgroundIcon && !showDraggable && !showXIcon && !show24HIcon" :class="iconClasses" />
             <IconBackground stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="showBackgroundIcon" :class="iconClasses"/>

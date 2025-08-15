@@ -103,123 +103,103 @@
       </table>
     </div>
 
-    <div v-if="showCreateModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="showCreateModal = false"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-          <div class="absolute top-0 right-0 pt-4 pr-4">
-            <button @click="showCreateModal = false" type="button" class="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary">
-              <span class="sr-only">Close</span>
-              <XIcon class="h-6 w-6" aria-hidden="true" />
-            </button>
-          </div>
-          <div class="sm:flex sm:items-start">
-            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-              <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                {{ $t('Create New API Key') }}
-              </h3>
-              <div class="mt-4">
-                <form @submit.prevent="createToken">
-                  <div class="mb-4">
-                    <label for="name" class="block text-sm font-medium text-gray-700">
-                      {{ $t('Name') }} <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="name"
-                      v-model="form.name"
-                      type="text"
-                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-artwork-primary focus:border-artwork-primary sm:text-sm"
-                      required
-                    />
-                    <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">
-                      {{ form.errors.name }}
-                    </div>
-                  </div>
-
-                  <div class="mb-4">
-                    <label for="expires_at" class="block text-sm font-medium text-gray-700">
-                      {{ $t('Expires At') }}
-                    </label>
-                    <input
-                      id="expires_at"
-                      v-model="form.expires_at"
-                      type="date"
-                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-artwork-primary focus:border-artwork-primary sm:text-sm"
-                    />
-                    <div v-if="form.errors.expires_at" class="text-red-500 text-xs mt-1">
-                      {{ form.errors.expires_at }}
-                    </div>
-                  </div>
-                </form>
-              </div>
+    <BaseModal
+      v-if="showCreateModal"
+      @closed="showCreateModal = false"
+      modalSize="sm:max-w-lg"
+    >
+      <div>
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+          {{ $t('Create New API Key') }}
+        </h3>
+        <form @submit.prevent="createToken">
+          <div class="mb-4">
+            <label for="name" class="block text-sm font-medium text-gray-700">
+              {{ $t('Name') }} <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="name"
+              v-model="form.name"
+              type="text"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-artwork-primary focus:border-artwork-primary sm:text-sm"
+              required
+            />
+            <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">
+              {{ form.errors.name }}
             </div>
           </div>
-          <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <button
-              @click="createToken"
-              type="button"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-artwork-buttons-create text-base font-medium text-white hover:bg-artwork-buttons-create-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:ml-3 sm:w-auto sm:text-sm"
-              :disabled="form.processing"
-            >
-              {{ $t('Create') }}
-            </button>
-            <button
-              @click="showCreateModal = false"
-              type="button"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:mt-0 sm:w-auto sm:text-sm"
-            >
-              {{ $t('Cancel') }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <div v-if="selectedToken" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="selectedToken = null"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-          <div class="absolute top-0 right-0 pt-4 pr-4">
-            <button @click="selectedToken = null" type="button" class="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary">
-              <span class="sr-only">Close</span>
-              <XIcon class="h-6 w-6" aria-hidden="true" />
-            </button>
-          </div>
-          <div class="sm:flex sm:items-start">
-            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-              <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                {{ $t('API Key Details') }}
-              </h3>
-              <div class="mt-4">
-                <div v-if="selectedToken.token" class="mt-1 flex items-center bg-gray-50 p-3 rounded border border-gray-200">
-                  <code class="text-xs break-all mr-2 flex-grow">{{ selectedToken.token }}</code>
-                  <button
-                    @click="copyToken(selectedToken.token)"
-                    class="p-1 text-gray-700 hover:bg-gray-200 rounded"
-                  >
-                    <ClipboardCopyIcon class="h-5 w-5" />
-                  </button>
-                </div>
-                <p v-else class="text-sm text-gray-500 mt-2">
-                  {{ $t('Can not show token') }}
-                </p>
-              </div>
+          <div class="mb-4">
+            <label for="expires_at" class="block text-sm font-medium text-gray-700">
+              {{ $t('Expires At') }}
+            </label>
+            <input
+              id="expires_at"
+              v-model="form.expires_at"
+              type="date"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-artwork-primary focus:border-artwork-primary sm:text-sm"
+            />
+            <div v-if="form.errors.expires_at" class="text-red-500 text-xs mt-1">
+              {{ form.errors.expires_at }}
             </div>
           </div>
-          <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <button
-              @click="selectedToken = null"
-              type="button"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:mt-0 sm:w-auto sm:text-sm"
-            >
-              {{ $t('Close') }}
-            </button>
-          </div>
+        </form>
+
+        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+          <button
+            @click="createToken"
+            type="button"
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-artwork-buttons-create text-base font-medium text-white hover:bg-artwork-buttons-create-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:ml-3 sm:w-auto sm:text-sm"
+            :disabled="form.processing"
+          >
+            {{ $t('Create') }}
+          </button>
+          <button
+            @click="showCreateModal = false"
+            type="button"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:mt-0 sm:w-auto sm:text-sm"
+          >
+            {{ $t('Cancel') }}
+          </button>
         </div>
       </div>
-    </div>
+    </BaseModal>
+
+    <BaseModal
+      v-if="selectedToken"
+      @closed="selectedToken = null"
+      modalSize="sm:max-w-lg"
+    >
+      <div>
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+          {{ $t('API Key Details') }}
+        </h3>
+        <div>
+          <div v-if="selectedToken.token" class="mt-1 flex items-center bg-gray-50 p-3 rounded border border-gray-200">
+            <code class="text-xs break-all mr-2 flex-grow">{{ selectedToken.token }}</code>
+            <button
+              @click="copyToken(selectedToken.token)"
+              class="p-1 text-gray-700 hover:bg-gray-200 rounded"
+            >
+              <ClipboardCopyIcon class="h-5 w-5" />
+            </button>
+          </div>
+          <p v-else class="text-sm text-gray-500 mt-2">
+            {{ $t('Can not show token') }}
+          </p>
+        </div>
+
+        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+          <button
+            @click="selectedToken = null"
+            type="button"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:mt-0 sm:w-auto sm:text-sm"
+          >
+            {{ $t('Close') }}
+          </button>
+        </div>
+      </div>
+    </BaseModal>
 
     <confirmation-component
       v-if="tokenToDelete"
@@ -235,6 +215,7 @@
 import { defineComponent } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue'
+import BaseModal from '@/Components/Modals/BaseModal.vue'
 import {
   PlusIcon,
   CheckCircleIcon,
@@ -247,6 +228,7 @@ import dayjs from 'dayjs'
 export default defineComponent({
   components: {
     ConfirmationComponent,
+    BaseModal,
     PlusIcon,
     CheckCircleIcon,
     ClipboardCopyIcon,

@@ -96,8 +96,8 @@ class UpdatePermissionsCommand extends Command
                 'name_de' => "Planungskalender einsehen und Planen",
                 'translation_key' => "View and plan in the planning calendar",
                 'group' => 'Event management',
-                'tooltipText' => 'Ein User mit diesem Recht darf Termine ohne Anfrage direkt fest planen in allen Räumen',
-                'tooltipKey' => 'A user with this permission can schedule events directly without a request in all rooms',
+                'tooltipText' => 'Ein User mit diesem Recht darf den Planungskalender einsehen und darin planen',
+                'tooltipKey' => 'A user with this permission can view the planning calendar and plan within it',
                 'checked' => false
             ],
             [
@@ -163,7 +163,12 @@ class UpdatePermissionsCommand extends Command
                 Permission::create($permission);
                 $this->info('Permission "' . $permission['name'] . '" created.');
             } else {
-                $this->info('Permission "' . $permission['name'] . '" already exists.');
+                // Update existing permission with new tooltip texts
+                $checkPermission->update([
+                    'tooltipText' => $permission['tooltipText'],
+                    'tooltipKey' => $permission['tooltipKey']
+                ]);
+                $this->info('Permission "' . $permission['name'] . '" updated.');
             }
         }
     }

@@ -297,4 +297,9 @@ class Shift extends Model
     {
         return $this->shiftsQualifications->sum('value');
     }
+
+    public function shiftRuleViolations(): HasMany
+    {
+        return $this->hasMany(ShiftRuleViolation::class);
+    }
 }

@@ -296,7 +296,7 @@ class ShiftRuleController extends Controller
 
     private function getAvailableRuleTypes(): array
     {
-        return [
+        $ruleTypes = [
             'maxWorkingHoursOnDay' => [
                 'name' => 'Tagesmaximum an Stunden',
                 'description' => 'Maximal erlaubte Arbeitsstunden pro Tag'
@@ -318,5 +318,7 @@ class ShiftRuleController extends Controller
                 'description' => 'Mindest-Ruhezeit vor Feiertagen und Sonntagen'
             ]
         ];
+
+        return array_keys($ruleTypes);
     }
 }

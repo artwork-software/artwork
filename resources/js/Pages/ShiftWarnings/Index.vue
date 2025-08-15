@@ -10,7 +10,7 @@
 
 
 
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between w-full">
                 <TabComponent :tabs="tabs" use-translation/>
                 <GlassyIconButton text="Create new rule" icon="IconPlus" @click="openCreateModal" />
             </div>
@@ -299,7 +299,7 @@ const tabs = computed(() => [
         icon: 'IconContract'
     },
     {
-        name: 'Shift warnings - rules',
+        name: 'Shift rules',
         href: route('shift-rules.index'),
         current: route().current('shift-rules.index'),
         show: true,
@@ -326,8 +326,7 @@ const triggerTypeLabels = {
     'maxConsecWorkingDays': 'Maximale Tage in Folge arbeiten',
     'maxWorkingHoursOnWeek': 'Wochenmaximum an Stunden',
     'restTimeBeforeWorkday': 'Ruhezeit vor Werktag',
-    'restTimeBeforeHoliday': 'Ruhezeit vor Sonder-/Sonntag',
-    'minDaysBeforeCommit': 'Mindesttage bis zur Verbindlich-Schaltung'
+    'restTimeBeforeHoliday': 'Ruhezeit vor Sonder-/Sonntag'
 }
 
 function formatTriggerType(type) {

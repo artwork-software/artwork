@@ -26,6 +26,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionException;
+use Spatie\Backup\Commands\BackupCommand;
+use Spatie\Backup\Commands\CleanupCommand;
 use SplFileInfo;
 use Symfony\Component\Finder\Finder;
 
@@ -50,6 +52,11 @@ class Kernel extends ConsoleKernel
         $schedule->command(RemoveDatabaseNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();
+
+        if (env('BACKUP_ENABLED', false)) {
+            $schedule->command(BackupCommand::class)->dailyAt('01:00')->runInBackground();
+            $schedule->command(CleanupCommand::class)->dailyAt('00:30')->runInBackground();
+        }
 
         if (env('SAGE_API_ENABLED', false)) {
             $sageApiSettingsService = app(SageApiSettingsService::class);
@@ -99,7 +106,7 @@ class Kernel extends ConsoleKernel
 
             if (
                 is_subclass_of($command, Command::class) &&
-                ! (new ReflectionClass($command))->isAbstract()
+                !(new ReflectionClass($command))->isAbstract()
             ) {
                 Artisan::starting(function ($artisan) use ($command): void {
                     $artisan->resolve($command);
@@ -112,10 +119,10 @@ class Kernel extends ConsoleKernel
     {
         if (!$fromArtworkCore) {
             return $namespace . str_replace(
-                ['/', '.php'],
-                ['\\', ''],
-                Str::after($file->getRealPath(), realpath(app_path()) . DIRECTORY_SEPARATOR)
-            );
+                    ['/', '.php'],
+                    ['\\', ''],
+                    Str::after($file->getRealPath(), realpath(app_path()) . DIRECTORY_SEPARATOR)
+                );
         }
 
         return str_replace(

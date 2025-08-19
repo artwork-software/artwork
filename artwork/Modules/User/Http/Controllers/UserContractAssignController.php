@@ -7,6 +7,8 @@ use Artwork\Modules\User\Http\Requests\StoreUserContractAssignRequest;
 use Artwork\Modules\User\Http\Requests\UpdateUserContractAssignRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContractAssign;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UserContractAssignController extends Controller
 {
@@ -31,12 +33,25 @@ class UserContractAssignController extends Controller
      */
     public function store(StoreUserContractAssignRequest $request, User $user): \Illuminate\Http\RedirectResponse
     {
-        $user->contract()->updateOrCreate(
-            ['user_id' => $user->id],
-            $request->validated()
-        );
+        // Nur freigegebene Felder übernehmen – niemals user_id vom Request
+        $data = $request->safe()->except(['user_id']);
 
-        return back()->with('success', __('User contract assigned successfully.'));
+        try {
+            DB::transaction(function () use ($user, $data): void {
+                $user->contract()->updateOrCreate([], $data);
+            });
+
+            return back()->with('success', __('User contract assigned successfully.'));
+        } catch (\Throwable $e) {
+            Log::error('Failed to assign user contract', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', __('Could not assign user contract. Please try again.'));
+        }
     }
 
     /**

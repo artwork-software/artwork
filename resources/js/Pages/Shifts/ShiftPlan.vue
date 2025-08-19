@@ -774,8 +774,7 @@ import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
-import {useEvent} from "@/Composeables/Event.js";
-import {reactive, ref} from "vue";
+import {ref} from "vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
 import dayjs from "dayjs";
@@ -791,10 +790,16 @@ import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventCompon
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import DeleteCalendarMultiEditEntities from "@/Pages/Shifts/Components/DeleteCalendarMultiEditEntities.vue";
 import DeleteCalendarRoomShiftEntriesModal from "@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue";
-import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
+import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
+
 const {getSortEnumTranslation} = useSortEnumTranslation();
+
+const HEADER_H  = 100;   // Höhe des Headers/Topbars o.ä.
+const TOP_GAP   = 16;    // Fester Abstand nach oben (bleibt immer erhalten)
+const MIN_TOP   = 100;   // Mindesthöhe des oberen Paneels
+const MIN_MAIN  = 200;   // Mindesthöhe des Hauptbereichs unten
 
 export default {
     name: "ShiftPlan",
@@ -925,7 +930,11 @@ export default {
             newShiftPlanData: ref(this.shiftPlan),
             openCellMultiEditCalendarDelete: false,
             dailyViewMode: usePage().props.auth.user.daily_view ?? false,
-            showCalendarWarning: ref(this.calendarWarningText)
+            showCalendarWarning: ref(this.calendarWarningText),
+            _heightRatio: 0.4,        // Verhältnis topPane/available (initialer Guess)
+            _resizingHandler: null,
+            _stopHandler: null,
+            _resizeObs: null
         }
     },
     mounted() {
@@ -936,11 +945,23 @@ export default {
         // Listen for scroll events on both sections
         this.$refs.shiftPlan?.addEventListener('scroll', this.syncScrollShiftPlan);
         this.$refs.userOverview?.addEventListener('scroll', this.syncScrollUserOverview);
-        window.addEventListener('resize', this.updateHeight);
-        this.updateHeight();
+        //window.addEventListener('resize', this.updateHeight);
+        //this.updateHeight();
 
         this.setupInertiaNavigationGuard();
 
+        // Initial berechnen
+        this.updateLayout(true);
+
+        // Fenster-Resize: Proportional anpassen + Clamping
+        this._onWindowResize = () => {
+            const avail = this.availableHeight();
+            // Zielhöhe aus Ratio, dann clampen + Layout aktualisieren
+            this.userOverviewHeight = Math.round(avail * this._heightRatio);
+            this.updateLayout();
+        };
+
+        window.addEventListener('resize', this._onWindowResize, { passive: true });
 
         setTimeout(() => {
             this.showCalendarWarning = ''
@@ -1903,52 +1924,85 @@ export default {
                 this.closedCrafts.push(id);
             }
         },
+        availableHeight() {
+            return Math.max(0, window.innerHeight - HEADER_H);
+        },
+
+        // Helfer zum Begrenzen
+        clamp(n, min, max) {
+            return Math.min(Math.max(n, min), max);
+        },
+
+        // Kernlayout-Logik (einheitlich genutzt)
+        updateLayout(initial = false) {
+            const avail = this.availableHeight();
+
+            // Maximal zulässige Höhe für das obere Paneel so,
+            // dass unten MIN_MAIN bleibt und TOP_GAP berücksichtigt wird
+            const maxTop = Math.max(MIN_TOP, avail - MIN_MAIN - TOP_GAP);
+
+            // Sichtbarkeit: Wenn Panel versteckt ist, nimmt der Hauptbereich alles außer TOP_GAP
+            if (!this.showUserOverview) {
+                this.windowHeight = Math.max(MIN_MAIN, avail - TOP_GAP);
+                return;
+            }
+
+            // clampen der oberen Paneel-Höhe
+            this.userOverviewHeight = this.clamp(this.userOverviewHeight, MIN_TOP, maxTop);
+
+            // Unterer Bereich = Rest abzüglich TOP_GAP
+            this.windowHeight = Math.max(
+                MIN_MAIN,
+                avail - this.userOverviewHeight - TOP_GAP
+            );
+
+            // Ratio aktualisieren (nur wenn nicht in der ersten Initialisierung explizit unterdrückt)
+            // So bleibt die proportionale Aufteilung bei späterem Fenster-Resize erhalten.
+            if (!initial && avail > 0) {
+                this._heightRatio = this.clamp(this.userOverviewHeight / avail, 0.05, 0.9);
+            }
+        },
+
+        // === Resize-Interaktion ===
         startResize(event) {
             event.preventDefault();
             this.startY = event.clientY;
             this.startHeight = this.userOverviewHeight;
 
+            // Event-Listener registrieren (nur einmal)
             document.addEventListener('mousemove', this.resizing);
             document.addEventListener('mouseup', this.stopResize);
         },
+
         resizing(event) {
-            const currentY = event.clientY;
-            const diff = this.startY - currentY;
-            if (this.startHeight + diff < 100) {
-                this.userOverviewHeight = 100;
-                this.updateHeight()
-                return;
-            }
-
-            if ((window.innerHeight - 100) - (this.startHeight + diff) < 100) {
-                this.userOverviewHeight = (window.innerHeight - 100) - 200;
-                this.updateHeight()
-                return;
-            }
-
+            // diff: positive Werte => Maus nach oben -> Paneel wird größer
+            const diff = this.startY - event.clientY;
+            // Wunschhöhe setzen und dann mit den Regeln layouten
             this.userOverviewHeight = this.startHeight + diff;
-            this.updateHeight()
+            this.updateLayout();
         },
+
         stopResize(event) {
             event.preventDefault();
-            this.saveUserOverviewHeight();
+
+            // Nach dem Loslassen Ratio noch einmal „sauber“ sichern
+            const avail = this.availableHeight();
+            if (avail > 0) {
+                this._heightRatio = this.clamp(this.userOverviewHeight / avail, 0.05, 0.9);
+            }
+
+            // Listener wieder lösen
             document.removeEventListener('mousemove', this.resizing);
             document.removeEventListener('mouseup', this.stopResize);
+
+            // Persistieren (deine bestehende Methode)
+            this.saveUserOverviewHeight?.(this.userOverviewHeight);
         },
-        updateHeight() {
-            if (!this.showUserOverview) {
-                this.windowHeight = (window.innerHeight - 100);
-            } else {
-                this.windowHeight = (window.innerHeight - 100) - this.userOverviewHeight;
-            }
 
-            if (window.innerHeight - 100 < 400) {
-                this.userOverviewHeight = window.innerHeight - 200;
-            }
-
-            if (this.userOverviewHeight < 100) {
-                this.userOverviewHeight = 100;
-            }
+        // Optional: explizit aufrufen, wenn Sichtbarkeit getoggelt wird
+        onToggleUserOverview(show) {
+            this.showUserOverview = show;
+            this.updateLayout();
         },
         saveUserOverviewHeight: debounce(function () {
             this.applyUserOverviewHeight();
@@ -2040,7 +2094,7 @@ export default {
         },
     },
     beforeUnmount() {
-        window.removeEventListener('resize', this.updateHeight);
+        window.removeEventListener('resize', this._onWindowResize);
         document.removeEventListener('mousemove', this.resizing);
         document.removeEventListener('mouseup', this.stopResize);
         if (this.originalVisit) {

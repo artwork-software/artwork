@@ -1611,7 +1611,7 @@ export default {
         },
         showCloseUserOverview() {
             this.showUserOverview = !this.showUserOverview
-            //this.$emit('isOpen', this.showUserOverview)
+            //this.updateLayout()
         },
         syncScrollShiftPlan(event) {
             if (this.$refs.userOverview) {
@@ -1751,8 +1751,6 @@ export default {
         },
         closeMultiEditCellModal(bool){
             this.showCellMultiEditModal = false;
-
-
             if (bool) {
                 this.multiEditCellByDayAndUser = {};
             }
@@ -1927,37 +1925,21 @@ export default {
         availableHeight() {
             return Math.max(0, window.innerHeight - HEADER_H);
         },
-
-        // Helfer zum Begrenzen
         clamp(n, min, max) {
             return Math.min(Math.max(n, min), max);
         },
-
-        // Kernlayout-Logik (einheitlich genutzt)
         updateLayout(initial = false) {
             const avail = this.availableHeight();
-
-            // Maximal zulässige Höhe für das obere Paneel so,
-            // dass unten MIN_MAIN bleibt und TOP_GAP berücksichtigt wird
             const maxTop = Math.max(MIN_TOP, avail - MIN_MAIN - TOP_GAP);
-
-            // Sichtbarkeit: Wenn Panel versteckt ist, nimmt der Hauptbereich alles außer TOP_GAP
             if (!this.showUserOverview) {
                 this.windowHeight = Math.max(MIN_MAIN, avail - TOP_GAP);
                 return;
             }
-
-            // clampen der oberen Paneel-Höhe
             this.userOverviewHeight = this.clamp(this.userOverviewHeight, MIN_TOP, maxTop);
-
-            // Unterer Bereich = Rest abzüglich TOP_GAP
             this.windowHeight = Math.max(
                 MIN_MAIN,
                 avail - this.userOverviewHeight - TOP_GAP
             );
-
-            // Ratio aktualisieren (nur wenn nicht in der ersten Initialisierung explizit unterdrückt)
-            // So bleibt die proportionale Aufteilung bei späterem Fenster-Resize erhalten.
             if (!initial && avail > 0) {
                 this._heightRatio = this.clamp(this.userOverviewHeight / avail, 0.05, 0.9);
             }
@@ -1968,41 +1950,25 @@ export default {
             event.preventDefault();
             this.startY = event.clientY;
             this.startHeight = this.userOverviewHeight;
-
-            // Event-Listener registrieren (nur einmal)
             document.addEventListener('mousemove', this.resizing);
             document.addEventListener('mouseup', this.stopResize);
         },
 
         resizing(event) {
-            // diff: positive Werte => Maus nach oben -> Paneel wird größer
             const diff = this.startY - event.clientY;
-            // Wunschhöhe setzen und dann mit den Regeln layouten
             this.userOverviewHeight = this.startHeight + diff;
             this.updateLayout();
         },
 
         stopResize(event) {
             event.preventDefault();
-
-            // Nach dem Loslassen Ratio noch einmal „sauber“ sichern
             const avail = this.availableHeight();
             if (avail > 0) {
                 this._heightRatio = this.clamp(this.userOverviewHeight / avail, 0.05, 0.9);
             }
-
-            // Listener wieder lösen
             document.removeEventListener('mousemove', this.resizing);
             document.removeEventListener('mouseup', this.stopResize);
-
-            // Persistieren (deine bestehende Methode)
             this.saveUserOverviewHeight?.(this.userOverviewHeight);
-        },
-
-        // Optional: explizit aufrufen, wenn Sichtbarkeit getoggelt wird
-        onToggleUserOverview(show) {
-            this.showUserOverview = show;
-            this.updateLayout();
         },
         saveUserOverviewHeight: debounce(function () {
             this.applyUserOverviewHeight();
@@ -2109,7 +2075,7 @@ export default {
     watch: {
         showUserOverview: {
             handler() {
-                this.updateHeight();
+                this.updateLayout();
             },
             deep: true
         },

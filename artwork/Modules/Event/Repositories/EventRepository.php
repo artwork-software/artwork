@@ -356,15 +356,19 @@ class EventRepository extends BaseRepository
                     $allDay = $event->allDay;
 
                     if ($selectedDay && !$selectedStartTime && !$selectedEndTime) {
+                        // Day-only change: keep existing times but move to new day
                         $startTime = Carbon::parse($selectedDay)->setTimeFrom($startTime);
                         $endTime = Carbon::parse($selectedDay)->setTimeFrom($endTime);
                     } elseif ($selectedStartTime || $selectedEndTime) {
+                        // Time-only change: update times and convert to non-all-day event
                         $day = optional($startTime)->toDateString() ?? Carbon::now()->toDateString();
                         if ($selectedStartTime) $startTime = Carbon::parse("$day $selectedStartTime");
                         if ($selectedEndTime) $endTime = Carbon::parse("$day $selectedEndTime");
+                        $allDay = false; // Convert to timed event when times are provided
                     }
 
                     if ($selectedDay && $selectedStartTime && $selectedEndTime) {
+                        // Day and time change: use processEventTimes for proper handling
                         [$startTime, $endTime, $allDay] = $this->processEventTimes(
                             Carbon::parse($selectedDay),
                             $selectedStartTime,

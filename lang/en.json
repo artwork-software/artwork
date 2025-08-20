@@ -2933,5 +2933,6 @@
     "Artist Name Display Component": "Artist Name Display Component",
     "Project Artist": "Project Artist",
     "Article": "Article",
-    "Inventory Article Planning": "Inventory Article Planning"
+    "Inventory Article Planning": "Inventory Article Planning",
+    "Event name is required for this event type": "Event name is required for this event type"
 }

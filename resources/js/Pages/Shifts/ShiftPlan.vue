@@ -1910,6 +1910,11 @@ export default {
             };
             this.userToMultiEditCheckedShiftsAndEvents = [];
 
+            // Update current shifts to match the user's actual shift_ids after save
+            if (this.userForMultiEdit && !closeMultiEdit) {
+                this.userToMultiEditCurrentShifts = [...this.userForMultiEdit.shift_ids];
+            }
+
             if (closeMultiEdit) {
                 this.multiEditMode = false;
                 this.multiEditCellByDayAndUser = {};

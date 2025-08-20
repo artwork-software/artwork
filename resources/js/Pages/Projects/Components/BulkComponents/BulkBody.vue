@@ -144,7 +144,7 @@
                 </div>
                 <div>
                     <FormButton
-                        @click="hasCreateEventsPermission ? openMultiEditModal : null"
+                        @click="hasCreateEventsPermission ? openMultiEditModal() : null"
                         :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
                         class="bg-artwork-buttons-create text-white h-12"
                         :text="$t('Edit')" />

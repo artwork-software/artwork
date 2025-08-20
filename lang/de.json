@@ -2937,6 +2937,7 @@
     "Artist Name Display Component": "Künstlername-Anzeige-Komponente",
     "Project Artist": "Projektkünstler*in",
     "Article": "Artikel",
-    "Inventory Article Planning": "Artikel Inventarplanung"
+    "Inventory Article Planning": "Artikel Inventarplanung",
+    "Event name is required for this event type": "Terminname muss bei diesem Typ angegeben werden"
 }
 

@@ -15,7 +15,7 @@
     </div>
 
     <!-- Chat: fixed, aber innerhalb der Main-Grenzen offsetten -->
-    <div :class="positionClass" :style="positionStyle">
+    <div :class="positionClass" :style="positionStyle" ref="chatRoot" data-chat-root>
         <div v-if="!isChatOpen">
             <div class="rounded-full shadow-lg bg-white p-2 cursor-pointer border border-gray-200 relative" @click="openChat">
                 <component is="IconBubbleText" class="size-10" />
@@ -29,7 +29,7 @@
             </div>
         </div>
 
-        <div v-if="isChatOpen"  ref="chatRoot" data-chat-root>
+        <div v-if="isChatOpen">
             <div class="w-96">
                 <div class="card white overflow-hidden">
                     <div class="w-full px-4 py-3">
@@ -775,7 +775,7 @@ const onGlobalPointerDown = (e) => {
     if (clickedInside) return;
 
     // → außerhalb geklickt
-    closeChat();
+    //closeChat();
 };
 
 const setChatPosition = async (pos) => {

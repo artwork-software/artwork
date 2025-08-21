@@ -1749,10 +1749,18 @@ export default {
                 this.multiEditCalendarDays = [];
             }
         },
-        closeMultiEditCellModal(bool){
+        closeMultiEditCellModal(eventData){
             this.showCellMultiEditModal = false;
-            if (bool) {
+            if (eventData && eventData.saved) {
+                // Save action: reload cells, deselect cells, keep multi-edit mode active
                 this.multiEditCellByDayAndUser = {};
+                // Reload only the necessary data to refresh cell values, similar to shift assignment
+                router.reload({
+                    only: ['shifts', 'users', 'rooms', 'days', 'usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts']
+                });
+            } else {
+                // X button close: just close modal, keep cells selected, no backend action
+                // multiEditCellByDayAndUser remains unchanged to keep cells selected
             }
         },
         closeCellMultiEditDelete(boolean) {

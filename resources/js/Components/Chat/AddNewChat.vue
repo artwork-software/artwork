@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @close="$emit('close')">
+    <BaseModal @closed="$emit('close')">
         <div>
             <ModalHeader title="Neuen Chat erstellen" description="Wähle einen Namen für deinen neuen Chat." />
 

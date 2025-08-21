@@ -33,7 +33,9 @@ class NewChatMessage implements ShouldBroadcastNow
     public function broadcastWith()
     {
         return [
-            'message' => $this->message->load(['sender']),
+            'message' => $this->message
+                ->load(['sender'])
+                ->append(['created_at_iso', 'created_at_date', 'created_at_time']),
         ];
     }
 

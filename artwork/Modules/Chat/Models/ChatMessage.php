@@ -6,18 +6,24 @@ use Artwork\Core\Casts\TranslatedDateTimeCast;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class ChatMessage extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'chat_id', 'sender_id', 'cipher_for_sender', 'ciphers_json', 'type'
+        'chat_id', 'sender_id', 'message'
     ];
 
     protected $casts = [
-        'ciphers_json' => 'array',
         'created_at' => TranslatedDateTimeCast::class,
+    ];
+
+    protected $appends = [
+        'created_at_iso',
+        'created_at_date',
+        'created_at_time',
     ];
 
     public function chat(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -33,5 +39,32 @@ class ChatMessage extends Model
     public function reads(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ChatMessageRead::class, 'message_id', 'id');
+    }
+
+    // ---- Appended Attributes ----
+    public function getCreatedAtIsoAttribute(): ?string
+    {
+        $raw = $this->getRawOriginal('created_at');
+        return $raw ? Carbon::parse($raw)->toISOString() : null;
+    }
+
+    public function getCreatedAtDateAttribute(): ?string
+    {
+        $raw = $this->getRawOriginal('created_at');
+        if (!$raw) return null;
+
+        $dt = Carbon::parse($raw)->locale('de');
+        // Beispiel: Donnerstag 21.08.2025
+        return $dt->translatedFormat('l d.m.Y');
+    }
+
+    public function getCreatedAtTimeAttribute(): ?string
+    {
+        $raw = $this->getRawOriginal('created_at');
+        if (!$raw) return null;
+
+        $dt = Carbon::parse($raw)->locale('de');
+        // Beispiel: 14:37
+        return $dt->translatedFormat('H:i');
     }
 }

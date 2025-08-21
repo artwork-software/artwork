@@ -43,7 +43,7 @@
                                         :class="[
                                                 multiEditCalendarDays.length === 0 ?
                                                 'bg-gray-600' :
-                                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create',
+                                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90',
                                                 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
                                             ]">
                                     {{ $t('Create') }}
@@ -55,7 +55,7 @@
                                         :class="[
                                                 multiEditCalendarDays.length === 0 ?
                                                 'bg-gray-600' :
-                                                'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
+                                                'cursor-pointer bg-artwork-error hover:bg-artwork-error/90',
                                                 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
                                             ]">
                                     {{ $t('Delete') }}
@@ -357,7 +357,7 @@
                                             :class="[
                                                 Object.keys(multiEditCellByDayAndUser).length === 0 ?
                                                 'bg-gray-600' :
-                                                'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
+                                                'cursor-pointer bg-artwork-error hover:bg-artwork-error/90',
                                                 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
                                             ]">
                                         {{ $t('Delete Entries') }}

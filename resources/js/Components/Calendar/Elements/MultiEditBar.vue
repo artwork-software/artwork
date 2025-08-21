@@ -5,7 +5,7 @@
                 <FormButton :disabled="countOfSelectedEvents === 0" :text="countOfSelectedEvents + ' Termin(e) verschieben'" class="transition-all duration-300 ease-in-out pointer-events-auto"/>
             </div>
             <div>
-                <FormButton class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto" @click="$emit('closeMultiEdit')" :text="countOfSelectedEvents + ' ' + $t('Delete events')"/>
+                <FormButton class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto" @click="$emit('closeMultiEdit')" :text="countOfSelectedEvents + ' ' + $t('Delete events')"/>
             </div>
         </div>
 

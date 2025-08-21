@@ -63,6 +63,32 @@ class ShiftService
         ];
     }
 
+    private function convertStartEndDateByEvent(Event $event, array $data): object
+    {
+        // 1) Basis-Datum: bevorzugt $data['start_date'], dann $data['day'], sonst Event-Start-Datum
+        $baseDate = $data['start_date']
+            ?? $data['day']
+            ?? Carbon::parse($event->start_time)->toDateString();
+
+        // 2) Zeiten: bevorzugt $data['start']/$data['end'], sonst Event-Zeiten
+        $startTime = $data['start'] ?? Carbon::parse($event->start_time)->format('H:i');
+        $endTime   = $data['end']   ?? Carbon::parse($event->end_time ?? $event->start_time)->format('H:i');
+
+        // 3) Kombinieren zu konkreten DateTimes auf Basis des Basisdatums
+        $start = Carbon::parse("{$baseDate} {$startTime}");
+        $end   = Carbon::parse("{$baseDate} {$endTime}");
+
+        // 4) Über-Mitternacht-Fall (Ende < Start) -> Ende +1 Tag
+        if ($end->lessThan($start)) {
+            $end->addDay();
+        }
+
+        return (object) [
+            'start' => $start->toDateString(), // start_date
+            'end'   => $end->toDateString(),   // end_date
+        ];
+    }
+
     public function createShiftBySeriesEvent(Event $event, array $data, int $craftId): Shift|Model
     {
         $dates = $this->convertStartEndDate($data);
@@ -85,7 +111,7 @@ class ShiftService
 
     public function createShift(Event $event, Craft $craft, array $data): Shift|Model
     {
-        $dates = $this->convertStartEndDate($data);
+        $dates = $this->convertStartEndDateByEvent($event, $data);
 
         $shift = new Shift([
             'start_date' => $dates->start,
@@ -113,7 +139,8 @@ class ShiftService
 
     public function createAutomatic(Event $event, int $craftId, array $data): Shift|Model
     {
-        $dates = $this->convertStartEndDate($data);
+        //dd($event, $data);
+        $dates = $this->convertStartEndDateByEvent($event, $data);
 
         $shift = new Shift([
             'start_date' => $dates->start,

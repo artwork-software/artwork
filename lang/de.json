@@ -2955,6 +2955,7 @@
     "Delete selection": "Lösche Auswahl",
     "Do not change": "Nicht ändern",
     "Property": "Eigenschaft",
-    "Property value": "Eigenschaftswert"
+    "Property value": "Eigenschaftswert",
+    "Event name is required for this event type": "Terminname muss bei diesem Typ angegeben werden"
 }
 

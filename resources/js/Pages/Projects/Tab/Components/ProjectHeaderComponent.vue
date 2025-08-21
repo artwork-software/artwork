@@ -45,10 +45,10 @@
                         <div class="flex items-center justify-center gap-x-4">
                             <ToolTipComponent :tooltip-text="$t('Select print layout')" icon="IconPrinter" :direction="'bottom'" @click="showPrintLayoutSelectorModal = true" stroke="2" />
 
-                            <BaseMenu menu-width="!w-fit" white-menu-background v-if="can('write projects') || is('artwork admin') || headerObject.projectManagerIds.includes(this.$page.props.auth.user.id) || headerObject.projectWriteIds.includes(this.$page.props.auth.user.id)">
+                            <BaseMenu menu-width="!w-fit" white-menu-background v-if="can('write projects') || is('artwork admin') || headerObject.projectManagerIds.includes(usePage().props.auth.user.id) || headerObject.projectWriteIds.includes(usePage().props.auth.user.id)">
                                 <BaseMenuItem
                                     white-menu-background
-                                    v-if="is('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.auth.user.id) || headerObject.projectManagerIds.includes(this.$page.props.auth.user.id) || can('write projects')"
+                                    v-if="is('artwork admin') || headerObject.projectWriteIds.includes(usePage().props.auth.user.id) || headerObject.projectManagerIds.includes(usePage().props.auth.user.id) || can('write projects')"
                                     @click="openEditProjectModal"
                                     title="Edit basic data"
                                     />
@@ -56,13 +56,13 @@
                                     <BaseMenuItem
                                         white-menu-background
                                         @click="showAddProjectToGroup = true"
-                                        v-if="is('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.auth.user.id) || headerObject.projectManagerIds.includes(this.$page.props.auth.user.id) || can('write projects')"
+                                        v-if="is('artwork admin') || headerObject.projectWriteIds.includes(usePage().props.auth.user.id) || headerObject.projectManagerIds.includes(usePage().props.auth.user.id) || can('write projects')"
                                         icon="IconCirclePlus"
                                         title="Add projects to group"
                                     />
                                     <BaseMenuItem
                                         white-menu-background
-                                        @click="openCreateNewProjectInGroupModal" v-if="is('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.auth.user.id) || headerObject.projectManagerIds.includes(this.$page.props.auth.user.id) || can('write projects')"
+                                        @click="openCreateNewProjectInGroupModal" v-if="is('artwork admin') || headerObject.projectWriteIds.includes(usePage().props.auth.user.id) || headerObject.projectManagerIds.includes(usePage().props.auth.user.id) || can('write projects')"
                                         icon="IconCirclePlus"
                                         title="Create project in this group"
                                     />
@@ -75,7 +75,7 @@
                                 />
                                 <BaseMenuItem
                                     white-menu-background
-                                    v-if="headerObject.projectDeleteIds.includes(this.$page.props.auth.user.id) || is('artwork admin')"
+                                    v-if="headerObject.projectDeleteIds.includes(usePage().props.auth.user.id) || is('artwork admin')"
                                     @click="openEditProjectModal"
                                     icon="IconTrash"
                                     title="Put in the trash"
@@ -231,7 +231,7 @@
 <script setup>
 import {ref, computed, nextTick} from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
-import { Link, router } from "@inertiajs/vue3";
+import {Link, router, usePage} from "@inertiajs/vue3";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
@@ -307,7 +307,7 @@ function openCreateNewProjectInGroupModal() {
 }
 
 function hasBudgetAccess() {
-    return props.headerObject.project.access_budget.filter((user) => user.id === window.Laravel?.user?.id).length > 0;
+    return props.headerObject.project.access_budget.filter((user) => user.id === usePage().props.auth.user?.id).length > 0;
 }
 
 function openProjectHistoryModal() {

@@ -2951,5 +2951,6 @@
     "Delete selection": "Delete selection",
     "Do not change": "Do not change",
     "Property": "Property",
-    "Property value": "Property value"
+    "Property value": "Property value",
+    "Event name is required for this event type": "Event name is required for this event type"
 }

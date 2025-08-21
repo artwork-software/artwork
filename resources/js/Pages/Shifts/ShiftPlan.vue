@@ -774,8 +774,7 @@ import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
-import {useEvent} from "@/Composeables/Event.js";
-import {reactive, ref} from "vue";
+import {ref} from "vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
 import dayjs from "dayjs";
@@ -791,10 +790,16 @@ import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventCompon
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import DeleteCalendarMultiEditEntities from "@/Pages/Shifts/Components/DeleteCalendarMultiEditEntities.vue";
 import DeleteCalendarRoomShiftEntriesModal from "@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue";
-import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
+import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
+
 const {getSortEnumTranslation} = useSortEnumTranslation();
+
+const HEADER_H  = 100;   // Höhe des Headers/Topbars o.ä.
+const TOP_GAP   = 16;    // Fester Abstand nach oben (bleibt immer erhalten)
+const MIN_TOP   = 100;   // Mindesthöhe des oberen Paneels
+const MIN_MAIN  = 200;   // Mindesthöhe des Hauptbereichs unten
 
 export default {
     name: "ShiftPlan",
@@ -925,7 +930,11 @@ export default {
             newShiftPlanData: ref(this.shiftPlan),
             openCellMultiEditCalendarDelete: false,
             dailyViewMode: usePage().props.auth.user.daily_view ?? false,
-            showCalendarWarning: ref(this.calendarWarningText)
+            showCalendarWarning: ref(this.calendarWarningText),
+            _heightRatio: 0.4,        // Verhältnis topPane/available (initialer Guess)
+            _resizingHandler: null,
+            _stopHandler: null,
+            _resizeObs: null
         }
     },
     mounted() {
@@ -936,11 +945,23 @@ export default {
         // Listen for scroll events on both sections
         this.$refs.shiftPlan?.addEventListener('scroll', this.syncScrollShiftPlan);
         this.$refs.userOverview?.addEventListener('scroll', this.syncScrollUserOverview);
-        window.addEventListener('resize', this.updateHeight);
-        this.updateHeight();
+        //window.addEventListener('resize', this.updateHeight);
+        //this.updateHeight();
 
         this.setupInertiaNavigationGuard();
 
+        // Initial berechnen
+        this.updateLayout(true);
+
+        // Fenster-Resize: Proportional anpassen + Clamping
+        this._onWindowResize = () => {
+            const avail = this.availableHeight();
+            // Zielhöhe aus Ratio, dann clampen + Layout aktualisieren
+            this.userOverviewHeight = Math.round(avail * this._heightRatio);
+            this.updateLayout();
+        };
+
+        window.addEventListener('resize', this._onWindowResize, { passive: true });
 
         setTimeout(() => {
             this.showCalendarWarning = ''
@@ -1590,7 +1611,7 @@ export default {
         },
         showCloseUserOverview() {
             this.showUserOverview = !this.showUserOverview
-            //this.$emit('isOpen', this.showUserOverview)
+            //this.updateLayout()
         },
         syncScrollShiftPlan(event) {
             if (this.$refs.userOverview) {
@@ -1730,8 +1751,6 @@ export default {
         },
         closeMultiEditCellModal(bool){
             this.showCellMultiEditModal = false;
-
-
             if (bool) {
                 this.multiEditCellByDayAndUser = {};
             }
@@ -1891,6 +1910,11 @@ export default {
             };
             this.userToMultiEditCheckedShiftsAndEvents = [];
 
+            // Update current shifts to match the user's actual shift_ids after save
+            if (this.userForMultiEdit && !closeMultiEdit) {
+                this.userToMultiEditCurrentShifts = [...this.userForMultiEdit.shift_ids];
+            }
+
             if (closeMultiEdit) {
                 this.multiEditMode = false;
                 this.multiEditCellByDayAndUser = {};
@@ -1903,52 +1927,53 @@ export default {
                 this.closedCrafts.push(id);
             }
         },
+        availableHeight() {
+            return Math.max(0, window.innerHeight - HEADER_H);
+        },
+        clamp(n, min, max) {
+            return Math.min(Math.max(n, min), max);
+        },
+        updateLayout(initial = false) {
+            const avail = this.availableHeight();
+            const maxTop = Math.max(MIN_TOP, avail - MIN_MAIN - TOP_GAP);
+            if (!this.showUserOverview) {
+                this.windowHeight = Math.max(MIN_MAIN, avail - TOP_GAP);
+                return;
+            }
+            this.userOverviewHeight = this.clamp(this.userOverviewHeight, MIN_TOP, maxTop);
+            this.windowHeight = Math.max(
+                MIN_MAIN,
+                avail - this.userOverviewHeight - TOP_GAP
+            );
+            if (!initial && avail > 0) {
+                this._heightRatio = this.clamp(this.userOverviewHeight / avail, 0.05, 0.9);
+            }
+        },
+
+        // === Resize-Interaktion ===
         startResize(event) {
             event.preventDefault();
             this.startY = event.clientY;
             this.startHeight = this.userOverviewHeight;
-
             document.addEventListener('mousemove', this.resizing);
             document.addEventListener('mouseup', this.stopResize);
         },
+
         resizing(event) {
-            const currentY = event.clientY;
-            const diff = this.startY - currentY;
-            if (this.startHeight + diff < 100) {
-                this.userOverviewHeight = 100;
-                this.updateHeight()
-                return;
-            }
-
-            if ((window.innerHeight - 100) - (this.startHeight + diff) < 100) {
-                this.userOverviewHeight = (window.innerHeight - 100) - 200;
-                this.updateHeight()
-                return;
-            }
-
+            const diff = this.startY - event.clientY;
             this.userOverviewHeight = this.startHeight + diff;
-            this.updateHeight()
+            this.updateLayout();
         },
+
         stopResize(event) {
             event.preventDefault();
-            this.saveUserOverviewHeight();
+            const avail = this.availableHeight();
+            if (avail > 0) {
+                this._heightRatio = this.clamp(this.userOverviewHeight / avail, 0.05, 0.9);
+            }
             document.removeEventListener('mousemove', this.resizing);
             document.removeEventListener('mouseup', this.stopResize);
-        },
-        updateHeight() {
-            if (!this.showUserOverview) {
-                this.windowHeight = (window.innerHeight - 100);
-            } else {
-                this.windowHeight = (window.innerHeight - 100) - this.userOverviewHeight;
-            }
-
-            if (window.innerHeight - 100 < 400) {
-                this.userOverviewHeight = window.innerHeight - 200;
-            }
-
-            if (this.userOverviewHeight < 100) {
-                this.userOverviewHeight = 100;
-            }
+            this.saveUserOverviewHeight?.(this.userOverviewHeight);
         },
         saveUserOverviewHeight: debounce(function () {
             this.applyUserOverviewHeight();
@@ -2040,7 +2065,7 @@ export default {
         },
     },
     beforeUnmount() {
-        window.removeEventListener('resize', this.updateHeight);
+        window.removeEventListener('resize', this._onWindowResize);
         document.removeEventListener('mousemove', this.resizing);
         document.removeEventListener('mouseup', this.stopResize);
         if (this.originalVisit) {
@@ -2055,7 +2080,7 @@ export default {
     watch: {
         showUserOverview: {
             handler() {
-                this.updateHeight();
+                this.updateLayout();
             },
             deep: true
         },

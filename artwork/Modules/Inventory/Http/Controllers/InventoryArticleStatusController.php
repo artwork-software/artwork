@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleStatusRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleStatusRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
+use Inertia\Inertia;
 
 class InventoryArticleStatusController extends Controller
 {
@@ -14,7 +15,9 @@ class InventoryArticleStatusController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('InventorySetting/ArticleStatusSettings', [
+            'statuses' => InventoryArticleStatus::all(),
+        ]);
     }
 
     /**
@@ -54,7 +57,8 @@ class InventoryArticleStatusController extends Controller
      */
     public function update(UpdateInventoryArticleStatusRequest $request, InventoryArticleStatus $inventoryArticleStatus)
     {
-        //
+        $inventoryArticleStatus->update($request->validated());
+        return redirect()->back()->with('success', 'Status updated successfully.');
     }
 
     /**

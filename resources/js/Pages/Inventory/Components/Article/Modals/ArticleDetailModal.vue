@@ -1,11 +1,37 @@
 <template>
     <BaseModal @closed="$emit('close')" modal-size="max-w-6xl">
-        <div class="mt-10">
+        <div class="">
             <!-- Product -->
-            <div class="">
-                <!-- Image gallery -->
-                <TabGroup as="div" class="flex flex-row-reverse gap-4" v-if="article.images.length > 0">
-                    <!-- Image Selector -->
+            <div class="mb-5">
+
+                <div class="card flex justify-center">
+                    <Galleria v-model:activeIndex="activeIndex" v-model:visible="displayCustom" :value="article.images" :responsiveOptions="responsiveOptions" :numVisible="7"
+                              :pt="{ mask: { onClick: onMaskClick } }"
+                              containerStyle="max-width: 850px" :circular="true" :fullScreen="true" :showItemNavigators="true" :showThumbnails="false">
+                        <template #item="slotProps">
+                            <img :src="'/storage/' + slotProps.item.image" alt="" :alt="slotProps.item.alt" style="width: 100%; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
+                        </template>
+                        <template #thumbnail="slotProps">
+                            <img :src="'/storage/' + slotProps.item.image" alt="" style="display: block" :alt="slotProps.item.alt" @error="(e) => e.target.src = usePage().props.big_logo" class="w-20 max-w-20" />
+                        </template>
+                    </Galleria>
+
+                    <div v-if="article.images" class="grid grid-cols-12 gap-4" style="max-width: 400px">
+                        <div v-for="(image, index) of article.images" :key="index" class="col-span-4 border border-gray-300 rounded-lg shadow relative hover:shadow-lg transition duration-200 ease-in-out group">
+                            <!-- lupe icon -->
+                            <div class="absolute inset-0 bg-black/50 z-10 rounded-lg group-hover:opacity-100 opacity-0 cursor-pointer transition duration-200 ease-in-out" @click="imageClick(index)">
+                                <div class="flex items-center justify-center w-full h-full">
+                                    <component is="IconWindowMaximize" class="w-5 h-5 text-white" />
+                                </div>
+                            </div>
+                            <img :src="'/storage/' + image.image" alt="" style="cursor: pointer" class="cursor-pointer rounded-lg" @click="imageClick(index)" />
+                        </div>
+                    </div>
+                </div>
+
+                <!--
+                <TabGroup as="div" class="flex flex-row-reverse gap-4 !hidden" v-if="article.images.length > 0">
+
                     <div class="mx-auto w-full flex">
                         <TabList v-if="article.images?.length > 1"
                                  class="grid grid-cols-2 sm:grid-cols-3 gap-2 items-center overflow-y-scroll overflow-x-hidden max-h-[30vh] p-2">
@@ -25,8 +51,6 @@
                             </Tab>
                         </TabList>
                     </div>
-
-                    <!-- Main Image Viewer -->
                     <TabPanels class=" w-full max-w-6xl">
                         <TabPanel v-for="image in article.images" :key="image.id"
                                   class="flex justify-center items-center rounded-lg py-4 pl-2 sm:py-6">
@@ -42,6 +66,7 @@
                     <img :src="usePage().props.big_logo" alt=""
                          class="aspect-square w-full object-contain sm:rounded-lg"/>
                 </div>
+                -->
             </div>
             <!-- Product info -->
             <div>
@@ -194,7 +219,7 @@
                                         {{ detailedArticle.name }}
                                     </span>
                                     <span class="ml-6 flex items-center gap-x-3">
-                                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-lexend font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset">
+                                        <span class="inline-flex items-center rounded-md  px-2 py-1 text-xs font-lexend font-medium border" :style="{backgroundColor: detailedArticle.status.color + '33', borderColor: detailedArticle.status.color + '66', color: detailedArticle.status.color}">
                                             {{ detailedArticle.status?.name }} - {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
                                         </span>
                                         <component is="IconPlus" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
@@ -264,19 +289,13 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {
     Disclosure,
     DisclosureButton, DisclosurePanel,
-    Tab,
-    TabGroup,
-    TabList,
-    TabPanel,
-    TabPanels
 } from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
-import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
-import {nextTick, ref, computed} from "vue";
-import {IconEdit, IconPhoto} from "@tabler/icons-vue";
+import {ref} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {can, is} from "laravel-permission-to-vuejs";
+import Galleria from 'primevue/galleria';
 
 const $t = useTranslation()
 
@@ -293,7 +312,27 @@ const emit = defineEmits([
 ])
 
 const showConfirmDelete = ref(false);
+const activeIndex = ref(0);
+const responsiveOptions = ref([
+    {
+        breakpoint: '1024px',
+        numVisible: 5
+    },
+    {
+        breakpoint: '768px',
+        numVisible: 3
+    },
+    {
+        breakpoint: '560px',
+        numVisible: 1
+    }
+]);
+const displayCustom = ref(false);
 
+const imageClick = (index) => {
+    activeIndex.value = index;
+    displayCustom.value = true;
+};
 
 const confirmDelete = () => {
     router.delete(route('articles.destroy', props.article.id), {
@@ -349,6 +388,12 @@ const formatQuantity = (quantity) => {
     // if not return 10000 to 10.000
 
     return quantity.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+const onMaskClick = (e) => {
+    if (e.target === e.currentTarget) {
+        displayCustom.value = false
+    }
 }
 </script>
 

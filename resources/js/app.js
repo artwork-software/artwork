@@ -11,6 +11,8 @@ import * as VueI18n from 'vue-i18n';
 import en from '../../lang/en.json';
 import de from '../../lang/de.json';
 import Icons from "@/icons.js";
+import PrimeVue from 'primevue/config';
+import Aura from '@primeuix/themes/aura';
 
 const svgColors = {
     eventType0: '#A7A6B1',
@@ -65,6 +67,11 @@ createInertiaApp({
         app.use(VueMathjax);
         app.use(i18n);
         app.use(Icons);
+        app.use(PrimeVue, {
+            theme: {
+                preset: Aura
+            }
+        });
         app.use(LaravelPermissionToVueJS)
         app.mount(el);
         app.config.globalProperties.$updateLocale = function (newLocale) {

@@ -42,7 +42,7 @@
                     />
                 </div>
                 <section aria-labelledby="product-heading" class="col-span-full lg:col-span-6 2xl:w-full">
-                    <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-between">
                         <div>
                             <InventoryBreadcrumbComponent :current-category="props.currentCategory" :current-sub-category="props.currentSubCategory"/>
                         </div>
@@ -51,8 +51,14 @@
                             <InventoryLayoutSwitchComponent :grid-layout="gridLayout" @update:gridLayout="updateGridLayout" />
                         </div>
                     </div>
+
+                    <div class="mb-3">
+                        <StatusOverview :counts-by-status="props.countsByStatus" />
+                    </div>
                     <div class="mb-3" v-if="filterableProperties?.length > 0">
                         <InventoryFilterComponent :filterableProperties="filterableProperties" />
+
+
                     </div>
                     <div v-if="props.articles.data.length > 0">
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-8 gap-4" v-if="gridLayout">
@@ -132,6 +138,7 @@ import {IconIdBadge} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {can, is} from "laravel-permission-to-vuejs";
+import StatusOverview from "@/Pages/Inventory/Components/StatusOverview.vue";
 const props = defineProps({
     categories: {
         type: Object,
@@ -173,6 +180,10 @@ const props = defineProps({
     },
     statuses: {
         type: Object,
+        required: true
+    },
+    countsByStatus: {
+        type: Array,
         required: true
     }
 })

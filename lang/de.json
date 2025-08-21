@@ -394,7 +394,7 @@
     "Weak": "Schwach",
     "Strong": "Stark",
     "The password must be at least 8 characters long, contain at least 1 digit, upper and lower case letters and special characters.": "Das Passwort muss mind. 8 Zeichen lang sein, mind. 1 Ziffer, Groß- und Kleinbuchstaben und Sonderzeichen beinhalten.",
-    "The password must be at least 10 characters long." : "Das Passwort muss mind. 10 Zeichen lang sein.",
+    "The password must be at least 10 characters long.": "Das Passwort muss mind. 10 Zeichen lang sein.",
     "Not in any team": "In keinem Team",
     "Edit team membership": "Teamzugehörigkeit bearbeiten",
     "Remove user from all teams": "Nutzer*in aus allen Teams entfernen",
@@ -2311,7 +2311,7 @@
     "No permissions": "Keine Berechtigung",
     "Contact your administrator so that you can plan the inventory.": "Wende dich an deinen Administrator damit du das Inventar planen kannst.",
     "Daily view": "Tagesansicht",
-    "Delete {0}" : "{0} löschen",
+    "Delete {0}": "{0} löschen",
     "Are you sure you want to delete the selected component from the project?": "Möchtest du die ausgewählte Komponente wirklich aus dem Projekt löschen?",
     "Set up the project overview for your artwork. To do this, drag and drop the components from the lower area into the project overview. You can also adjust the order of the components using drag & drop.": "Richte die Projektübersicht für dein Artwork ein. Ziehe dazu die Komponenten aus dem unteren Bereich in die Projektübersicht. Du kannst die Reihenfolge der Komponenten auch per Drag & Drop anpassen.",
     "Drop here": "Hier ablegen",
@@ -2937,6 +2937,19 @@
     "Artist Name Display Component": "Künstlername-Anzeige-Komponente",
     "Project Artist": "Projektkünstler*in",
     "Article": "Artikel",
-    "Inventory Article Planning": "Artikel Inventarplanung"
+    "Inventory Article Planning": "Artikel Inventarplanung",
+    "All properties are already added to the category.": "Alle Eigenschaften sind bereits der Kategorie hinzugefügt worden.",
+    "All properties are already added to the sub-category.": "Alle Eigenschaften sind bereits der Unterkategorie hinzugefügt worden.",
+    "Please select a Manufacturer": "Bitte wähle einen Hersteller",
+    "Search for detailed articles": "Suche nach detaillierten Artikeln",
+    "Add Detailed Article": "Detailierten Artikel hinzufügen",
+    "Across-article properties": "Übergreifende Artikel-Eigenschaften",
+    "These properties are shared across all detailed articles and can be edited here once": "Diese Eigenschaften werden über alle detaillierten Artikel hinweg geteilt und können hier einmalig bearbeitet werden",
+    "Please select a Room": "Bitte wähle einen Raum",
+    "These properties apply to each individual article. Select the desired article from the list on the left or add new ones and maintain their individual properties on the right.": "Diese Eigenschaften gelten für jeden Artikel individuell. Wähle den gewünschten Artikel aus der Liste auf der linken Seite oder füge neue hinzu und pflege deren individuelle Eigenschaften auf der rechten Seite.",
+    "Status Settings": "Status-Einstellungen",
+    "Manage your article status settings here.": "Verwalte hier deine Artikel-Status-Einstellungen.",
+    "Edit Article Status": "Artikelstatus bearbeiten",
+    "Edit the details of the article status.": "Bearbeite die Details des Artikelstatus."
 }
 

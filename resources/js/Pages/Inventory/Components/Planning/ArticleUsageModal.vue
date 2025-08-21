@@ -34,16 +34,10 @@
                         :key="status.id"
                         class="flex flex-col items-center"
                     >
-                        <div
-                            class="w-full h-12 flex items-center justify-center rounded-lg font-medium text-xl mb-2 border-2 shadow-sm"
-                            :class="[
-                                statusMap[status.name]?.bgColor || 'bg-gray-100',
-                                statusMap[status.name]?.borderColor || 'border-gray-200'
-                            ]"
-                        >
+                        <div class="w-full h-12 flex items-center justify-center rounded-lg font-medium text-xl mb-2 border shadow-sm" :style="{backgroundColor: status.color + '33', borderColor: status.color + '66', color: status.color}">
                             {{ status.value }}
                         </div>
-                        <span class="text-xs font-medium text-gray-700">{{ status.name }}</span>
+                        <span class="text-xs font-medium">{{ status.name }}</span>
                     </div>
                 </div>
             </li>

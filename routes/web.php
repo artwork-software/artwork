@@ -84,6 +84,7 @@ use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleStatusController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowRequestsController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
@@ -1825,6 +1826,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');
+
+            Route::get('/status', [InventoryArticleStatusController::class, 'index'])
+                ->name('inventory-management.settings.status');
+
+            Route::put('/status/{inventoryArticleStatus}', [InventoryArticleStatusController::class, 'update'])
+                ->name('inventory.article-status.update');
 
             Route::get('/properties', [InventoryArticlePropertiesController::class, 'index'])
                 ->name('inventory-management.settings.properties');

@@ -1,5 +1,5 @@
 <template>
-    <div class="select-none border-b" :class="showFilter ? 'pb-4' : ''">
+    <div class="select-none border-b border-gray-300" :class="showFilter ? 'pb-4' : ''">
         <div class="flex items-start gap-x-4 cursor-pointer hover:text-artwork-buttons-hover" @click="showFilter = !showFilter">
             <TinyPageHeadline
                 title="Filter"

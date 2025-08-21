@@ -252,6 +252,7 @@ class InventoryPlanningService
                 'status' => $article->statusValues->map(fn ($statusValue) => [
                     'id' => $statusValue->id,
                     'name' => $statusValue->name,
+                    'color' => $statusValue->color,
                     'value' => $statusCounts[$statusValue->id] ?? 0,
                 ])->toArray(),
             ],

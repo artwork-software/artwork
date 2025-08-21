@@ -2946,5 +2946,10 @@
     "Status Settings": "Status Settings",
     "Manage your article status settings here.": "Manage your article status settings here.",
     "Edit Article Status": "Edit Article Status",
-    "Edit the details of the article status.": "Edit the details of the article status."
+    "Edit the details of the article status.": "Edit the details of the article status.",
+    "Edit selection": "Edit selection",
+    "Delete selection": "Delete selection",
+    "Do not change": "Do not change",
+    "Property": "Property",
+    "Property value": "Property value"
 }

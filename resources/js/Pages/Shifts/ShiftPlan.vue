@@ -275,7 +275,7 @@
                                                 icon="IconPencil"
                                                 icon-size="h-4 w-4"
                                                 :tooltip-text="$t('Edit')"
-                                                direction="right"
+                                                direction="top"
                                             />
                                         </span>
                                         <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
@@ -283,7 +283,7 @@
                                                 icon="IconPencil"
                                                 icon-size="h-4 w-4"
                                                 :tooltip-text="$t('Edit')"
-                                                direction="right"
+                                                direction="top"
                                             />
                                         </span>
                                     </span>
@@ -356,8 +356,8 @@
                                             class="pointer-events-auto"
                                             :class="[
                                                 Object.keys(multiEditCellByDayAndUser).length === 0 ?
-                                                'bg-gray-600' :
-                                                'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
+                                                'bg-red-600' :
+                                                'cursor-pointer bg-artwork-error hover:bg-artwork-error/90',
                                                 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
                                             ]">
                                         {{ $t('Delete Entries') }}

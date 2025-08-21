@@ -104,7 +104,7 @@
                     </div>
                 </div>
             </div>
-            <div class="text-xs mb-1 hover:bg-gray-50 cursor-pointer px-1 py-0.5 rounded-lg w-fit" v-if="!editBreakTime" @click="editBreakTime = true">
+            <div class="text-xs mb-1 hover:bg-gray-50 cursor-pointer px-1 py-0.5 rounded-lg w-fit" v-if="!editBreakTime" @click="openEditBreakTime">
                 <span v-if="shift.break_minutes">{{ shift.break_formatted }}</span>
             </div>
             <div v-else class="pt-1">
@@ -115,7 +115,7 @@
                     type="number"
                     v-model="updateTimeForm.break_minutes"
                     :label="$t('Length of break in minutes*')"
-                    id="break"
+                    :id="'break-time-' + this.shift.id"
                     required
                     is-small
                     @focusout="saveTimeChanges"
@@ -478,6 +478,9 @@ export default defineComponent({
                         }
                     }
                 );
+            } else {
+                this.editTimes = false;
+                this.editBreakTime = false;
             }
         },
         resetForm(){
@@ -558,10 +561,27 @@ export default defineComponent({
             this.editTimes = true;
 
             nextTick(() => {
-                const container = document.getElementById('container-' + this.shift.id); // Container-Element, das beide Felder umfasst
-                container.addEventListener('focusout', this.checkFocus.bind(this));
+               // focus on :id="'shift-start' + this.shift.id"
+                const startField = document.getElementById('shift-start' + this.shift.id);
+                if (startField) {
+                    startField.focus();
+                }
             })
 
+        },
+        openEditBreakTime() {
+            if(!this.$can('can plan shifts') || !this.hasAdminRole()){
+                return;
+            }
+            this.editBreakTime = true;
+
+            nextTick(() => {
+                // focus on :id="'break-time-' + this.shift.id"
+                const breakField = document.getElementById('break-time-' + this.shift.id);
+                if (breakField) {
+                    breakField.focus();
+                }
+            })
         },
         wantsFreshPlacements() {
             this.$emit('wantsFreshPlacements');

@@ -486,7 +486,7 @@
                     />
                 </div>
 
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-[0.8fr_2fr] items-stretch">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.8fr] items-stretch">
                     <div class="h-full min-h-0 flex flex-col bg-gray-50 rounded-lg border border-gray-200 insert-shadow-md">
                         <div class="space-y-2 p-4">
                             <div>
@@ -495,58 +495,248 @@
                                     id="search_detailed_article"
                                     :label="$t('Search for detailed articles')"/>
                             </div>
+
+                            <!-- NEU: Auswahl- und Multi-Action-Leiste -->
+                            <div class="flex items-center justify-between mt-1">
+                                <div class="flex gap-1.5">
+                                    <div class="flex h-6 shrink-0 items-center">
+                                        <div class="group grid size-4 grid-cols-1">
+                                            <input
+                                                id="allVisibleSelected"
+                                                aria-describedby="allVisibleSelected-description"
+                                                name="comments"
+                                                type="checkbox"
+                                                :checked="allVisibleSelected"
+                                                @change="toggleSelectAllVisible($event.target.checked)"
+                                                class="aw-checklist-input" />
+                                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
+                                                <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm/6">
+                                        <label for="allVisibleSelected" class="text-xs text-gray-900 dark:text-white">{{ $t('Select all') }}</label>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3" v-if="hasSelection">
+                                    <span class="text-xs text-gray-500">{{ selectionCount }}</span>
+                                    <button
+                                        type="button"
+                                        class="text-artwork-buttons-create text-xs hover:text-artwork-buttons-hover duration-200 ease-in-out cursor-pointer"
+                                        @click="openBulkEdit"
+                                    >
+                                        {{ $t('Edit selection') }}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="text-red-600 text-xs hover:text-red-700 duration-200 ease-in-out cursor-pointer"
+                                        @click="bulkDeleteSelected"
+                                    >
+                                        {{ $t('Delete selection') }}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- NEU: Bulk-Edit-Panel -->
+                            <div v-if="bulkEdit.open" class="mt-2 border border-gray-200 rounded-md bg-white p-3">
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div class="col-span-full">
+                                        <div
+                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
+                                            <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
+                                                {{ $t('Status') }}
+                                            </label>
+                                            <select class="focus:outline-hidden w-full"
+                                                    v-model="bulkEdit.status">
+                                                <option :value="null">{{ $t('Do not change') }}</option>
+                                                <option v-for="status in statuses" :value="status" :key="status.id">
+                                                    {{ status.name }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-span-full">
+                                        <BaseInput
+                                            type="number"
+                                            id="bulk_quantity"
+                                            v-model="bulkEdit.quantity"
+                                            :label="$t('Quantity')"
+                                            :max="10000000"
+                                            :maxlength="1000000"
+                                        />
+                                    </div>
+
+                                    <!-- NEU: Property-Auswahl (nur nicht-across_articles, Schnittmenge der Auswahl) -->
+                                    <div class="col-span-full" v-if="bulkEditableProperties.length">
+                                        <div
+                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
+                                            <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
+                                                {{ $t('Property') }}
+                                            </label>
+                                            <select class="focus:outline-hidden w-full"
+                                                    v-model="bulkEdit.propertyId">
+                                                <option :value="null">{{ $t('Do not change') }}</option>
+                                                <option v-for="p in bulkEditableProperties" :key="p.id" :value="p.id">
+                                                    {{ p.name }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- NEU: Property-Wert-Eingabe je nach Prop-Typ -->
+                                    <div class="col-span-full" v-if="selectedBulkProp">
+                                        <div
+                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
+                                            <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
+                                                {{ $t('Property value') }}
+                                            </label>
+
+                                            <!-- Checkbox -->
+                                            <div v-if="selectedBulkProp.type === 'checkbox'" class="px-1">
+                                                <input type="checkbox"
+                                                       class="aw-checklist-input"
+                                                       :checked="Boolean(bulkEdit.propertyValue)"
+                                                       @change="bulkEdit.propertyValue = $event.target.checked" />
+                                            </div>
+
+                                            <!-- Selection -->
+                                            <div v-else-if="selectedBulkProp.type === 'selection'">
+                                                <select class="focus:outline-hidden w-full"
+                                                        v-model="bulkEdit.propertyValue">
+                                                    <option v-for="val in selectedBulkProp.select_values" :key="val" :value="val">
+                                                        {{ val }}
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Room -->
+                                            <InventoryStylelessCombobox
+                                                v-else-if="selectedBulkProp.type === 'room'"
+                                                v-model="bulkEdit.propertyValue"
+                                                :items="rooms"
+                                                :returnObject="false"
+                                                by="id"
+                                                option-label="name"
+                                                option-key="id"
+                                                :placeholder="$t('Please select a Room')"
+                                                :search-fields="['name']"
+                                                coerce="number"
+                                            />
+
+                                            <!-- Manufacturer -->
+                                            <InventoryStylelessCombobox
+                                                v-else-if="selectedBulkProp.type === 'manufacturer'"
+                                                v-model="bulkEdit.propertyValue"
+                                                :items="manufacturers"
+                                                :returnObject="false"
+                                                by="id"
+                                                option-label="name"
+                                                option-key="id"
+                                                :placeholder="$t('Please select a Manufacturer')"
+                                                :search-fields="['name']"
+                                                coerce="number"
+                                            />
+
+                                            <!-- Default Input -->
+                                            <BaseInput
+                                                v-else
+                                                :type="selectedBulkProp.type"
+                                                id="bulk_property_value"
+                                                v-model="bulkEdit.propertyValue"
+                                                :label="$t('Value')"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-span-full flex justify-end gap-2">
+                                        <button type="button"
+                                                class="text-xs text-gray-500 hover:text-gray-700"
+                                                @click="cancelBulkEdit">
+                                            {{ $t('Cancel') }}
+                                        </button>
+                                        <button type="button"
+                                                class="text-xs text-artwork-buttons-create hover:text-artwork-buttons-hover"
+                                                @click="applyBulkEdit">
+                                            {{ $t('Apply') }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="flex-1 min-h-0 flex flex-col">
                             <!-- Liste -->
                             <ul class="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 divide-dashed" role="list">
                                 <li v-for="(item, idx) in filteredDetailedArticles" :key="item.id ?? item._key ?? `idx-${idx}`" class="">
-                                    <button
-                                        type="button"
-                                        class="group flex w-full items-center justify-between cursor-pointer hover:text-artwork-buttons-create hover:bg-gray-200 focus:text-artwork-buttons-create focus:outline-hidden px-4 py-2"
-                                        :class="isActiveDetailedArticle(item) ? 'text-blue-500 bg-gray-100' : 'text-gray-900'"
-                                        @click="changeActiveDetailedArticleForEditing(item)"
-                                        @keydown.enter.prevent="changeActiveDetailedArticleForEditing(item)"
-                                        @keydown.space.prevent="changeActiveDetailedArticleForEditing(item)"
-                                        :aria-pressed="isActiveDetailedArticle(item)">
-                                      <span class="text-sm font-medium truncate flex items-center gap-x-3">
-                                        {{ item.name }}
-                                      </span>
+                                    <!-- NEU: Checkbox + Button nebeneinander -->
+                                    <div class="flex items-center group w-full cursor-pointer hover:text-artwork-buttons-create hover:bg-gray-200 focus:text-artwork-buttons-create focus:outline-hidden gap-1.5 px-4 py-2" :class="isActiveDetailedArticle(item) || isSelected(item) ? 'text-blue-500 bg-gray-100' : 'text-gray-900'">
 
-                                        <span class="flex items-center gap-x-2">
-                                        <!-- Hover/Fokus-Actions -->
-                                            <span class="opacity-0 group-hover:opacity-100 group-focus:opacity-100 ease-in-out duration-200 flex items-center gap-x-2">
-                                              <!-- Kopieren -->
-                                              <button
-                                                  type="button"
-                                                  class="text-gray-400 hover:text-gray-600 duration-200 ease-in-out"
-                                                  aria-label="Kopieren"
-                                                  @click.stop="copyDetailedArticle(item)"
-                                              >
-                                                <component is="IconCopy" class="h-4 w-4" aria-hidden="true"/>
-                                              </button>
+                                        <div class="flex gap-1.5">
+                                            <div class="flex h-6 shrink-0 items-center">
+                                                <div class="group grid size-4 grid-cols-1">
+                                                    <input
+                                                        id="allVisibleSelected"
+                                                        aria-describedby="allVisibleSelected-description"
+                                                        name="comments"
+                                                        type="checkbox"
+                                                        :checked="isSelected(item)"
+                                                        @change.stop="toggleSelection(item, $event.target.checked)"
+                                                        class="aw-checklist-input" />
+                                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
+                                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            class="flex items-center justify-between w-full"
+                                            @click="changeActiveDetailedArticleForEditing(item)"
+                                            @keydown.enter.prevent="changeActiveDetailedArticleForEditing(item)"
+                                            @keydown.space.prevent="changeActiveDetailedArticleForEditing(item)"
+                                            :aria-pressed="isActiveDetailedArticle(item)">
+                                          <span class="text-sm font-medium truncate flex items-center gap-x-3">
+                                            {{ item.name }}
+                                          </span>
 
-                                                <!-- Löschen -->
-                                              <button
-                                                  type="button"
-                                                  class="text-gray-400 hover:text-red-600 duration-200 ease-in-out"
-                                                  aria-label="Löschen"
-                                                  @click.stop="removeDetailedArticle(idx)"
-                                              >
-                                                <component is="IconTrash" class="h-4 w-4" aria-hidden="true"/>
-                                              </button>
-                                            </span>
+                                            <span class="flex items-center gap-x-2">
+                                            <!-- Hover/Fokus-Actions -->
+                                                <span class="opacity-0 group-hover:opacity-100 group-focus:opacity-100 ease-in-out duration-200 flex items-center gap-x-2">
+                                                  <!-- Kopieren -->
+                                                  <button
+                                                      type="button"
+                                                      class="text-gray-400 hover:text-gray-600 duration-200 ease-in-out"
+                                                      aria-label="Kopieren"
+                                                      @click.stop="copyDetailedArticle(item)"
+                                                  >
+                                                    <component is="IconCopy" class="h-4 w-4" aria-hidden="true"/>
+                                                  </button>
 
-                                            <!-- Menge -->
-                                            <span v-if="Number(item.quantity) > 0" class="text-xs border rounded-lg px-3 py-0.5" :style="{backgroundColor: item.status.color + '20', borderColor: item.status.color + '50', color: item.status.color}">
-                                              {{ item.quantity }}
-                                            </span>
-                                      </span>
-                                    </button>
+                                                    <!-- Löschen -->
+                                                  <button
+                                                      type="button"
+                                                      class="text-gray-400 hover:text-red-600 duration-200 ease-in-out"
+                                                      aria-label="Löschen"
+                                                      @click.stop="removeDetailedArticle(idx)"
+                                                  >
+                                                    <component is="IconTrash" class="h-4 w-4" aria-hidden="true"/>
+                                                  </button>
+                                                </span>
+
+                                                <!-- Menge -->
+                                                <span v-if="Number(item.quantity) > 0" class="text-xs border rounded-lg px-3 py-0.5" :style="{backgroundColor: item.status.color + '20', borderColor: item.status.color + '50', color: item.status.color}">
+                                                  {{ item.quantity }}
+                                                </span>
+                                          </span>
+                                        </button>
+                                    </div>
                                 </li>
 
                                 <!-- Empty State -->
                                 <li v-if="articleForm.detailed_article_quantities.length === 0"
-                                    class="text-gray-500 text-sm">
+                                    class="text-red-500 text-sm px-4">
                                     {{ $t('No detailed articles found') }}
                                 </li>
                             </ul>
@@ -566,7 +756,8 @@
                         </div>
                     </div>
                     <div>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
+                        <!-- NEU: Panel nur anzeigen, wenn ein aktiver Detailed-Artikel existiert -->
+                        <div v-if="activeDetailedArticleForEditing" class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
                             <div class="col-span-full">
                                 <BaseInput
                                     :id="'name-' + activeDetailedArticleForEditing.name"
@@ -766,7 +957,10 @@ const storedDetailedArticleQuantities = ref([])
 
 
 const filteredPeople = computed(() => query.value ? rooms.filter(r => r.name.toLowerCase().includes(query.value.toLowerCase())) : rooms)
-const filteredDetailedArticles = computed(() => (articleForm.detailed_article_quantities || []).filter(d => d.name.toLowerCase().includes(searchDetailedArticleQuery.value.toLowerCase())))
+const filteredDetailedArticles = computed(() =>
+  (articleForm.detailed_article_quantities || [])
+    .filter(d => (d?.name ?? '').toLowerCase().includes(searchDetailedArticleQuery.value.toLowerCase()))
+)
 const filteredManufacturers = computed(() => queryManufacturer.value ? manufacturers.filter(m => m.name.toLowerCase().includes(queryManufacturer.value.toLowerCase())) : manufacturers)
 const itemsDetailed = computed(() => articleForm.detailed_article_quantities ?? [])
 
@@ -1044,7 +1238,27 @@ const addNewDetailedArticle = () => {
 }
 
 const removeDetailedArticle = (index) => {
-    if (articleForm.detailed_article_quantities.length > 1) articleForm.detailed_article_quantities.splice(index, 1)
+    const arr = articleForm.detailed_article_quantities
+    if (!Array.isArray(arr) || index < 0 || index >= arr.length) return
+    const removed = arr[index]
+    arr.splice(index, 1)
+
+    // Auswahl bereinigen
+    const k = itemKey(removed)
+    if (k != null && selectedDetailedKeys.value.has(k)) {
+        const next = new Set(selectedDetailedKeys.value)
+        next.delete(k)
+        selectedDetailedKeys.value = next
+    }
+
+    // Aktiven Eintrag neu setzen
+    activeDetailedArticleForEditing.value = arr.length ? arr[Math.min(index, arr.length - 1)] : null
+
+    // Wenn nichts mehr übrig ist: Auswahl und Bulk-Edit schließen
+    if (!arr.length) {
+        clearSelection()
+        cancelBulkEdit()
+    }
 }
 
 const copyDetailedArticle = (d) => {
@@ -1177,6 +1391,9 @@ watch(() => articleForm.is_detailed_quantity, (isDetailed) => {
         for (const p of firstProps) if (p.across_articles) init[p.id] = p.value ?? ''
         acrossValues.value = init
         syncAcrossValuesToDetailedArticles()
+        // NEU: Auswahl/Bulk-Edit beim Umschalten initialisieren
+        clearSelection()
+        cancelBulkEdit()
     } else {
         storedDetailedArticleQuantities.value = [...articleForm.detailed_article_quantities]
         articleForm.properties = articleForm.detailed_article_quantities[0]?.properties?.length
@@ -1195,6 +1412,9 @@ watch(() => articleForm.is_detailed_quantity, (isDetailed) => {
             : []
         articleForm.detailed_article_quantities = []
         activeDetailedArticleForEditing.value = null
+        // NEU: Auswahl/Bulk-Edit beim Verlassen bereinigen
+        clearSelection()
+        cancelBulkEdit()
     }
 })
 
@@ -1290,8 +1510,145 @@ onMounted(() => {
         for (const p of firstProps) if (p.across_articles) init[p.id] = p.value ?? ''
         acrossValues.value = init
         syncAcrossValuesToDetailedArticles()
+        // NEU: Auswahl initial leeren
+        clearSelection()
     }
 })
+
+// NEU: Auswahl- und Bulk-Edit-States
+const selectedDetailedKeys = ref(new Set())
+const bulkEdit = ref({ open: false, status: null, quantity: '', propertyId: null, propertyValue: null })
+
+// NEU: Helper für Keys/Selection
+const itemKey = (it) => {
+  if (!it) return null
+  if (it.id != null) return it.id
+  if (it._key == null) it._key = uid()
+  return it._key
+}
+const isSelected = (it) => selectedDetailedKeys.value.has(itemKey(it))
+
+const visibleKeys = computed(() => {
+  ensureKeys(articleForm.detailed_article_quantities || [])
+  return filteredDetailedArticles.value.map(itemKey).filter(k => k != null)
+})
+
+const selectionCount = computed(() => selectedDetailedKeys.value.size)
+const hasSelection = computed(() => selectionCount.value > 0)
+const allVisibleSelected = computed(() =>
+  visibleKeys.value.length > 0 &&
+  visibleKeys.value.every(k => selectedDetailedKeys.value.has(k))
+)
+
+// NEU: Ausgewählte Detailed-Artikel
+const selectedDetailedItems = computed(() => {
+  const keys = selectedDetailedKeys.value
+  if (!keys.size) return []
+  const arr = articleForm.detailed_article_quantities || []
+  ensureKeys(arr)
+  return arr.filter(da => keys.has(itemKey(da)))
+})
+
+// NEU: Schnittmenge editierbarer Properties (nicht across_articles) über die Selektion
+const bulkEditableProperties = computed(() => {
+  const sel = selectedDetailedItems.value
+  if (!sel.length) return []
+  const count = sel.length
+  const map = new Map()
+  for (const da of sel) {
+    for (const p of (da.properties || [])) {
+      if (p.across_articles) continue
+      const entry = map.get(p.id)
+      if (!entry) {
+        map.set(p.id, { id: p.id, name: p.name, type: p.type, select_values: p.select_values ?? [], seen: 1 })
+      } else {
+        entry.seen++
+      }
+    }
+  }
+  return Array.from(map.values()).filter(e => e.seen === count).map(({seen, ...rest}) => rest)
+})
+
+// NEU: aktuell gewählte Bulk-Property
+const selectedBulkProp = computed(() =>
+  bulkEditableProperties.value.find(p => p.id === bulkEdit.value.propertyId) || null
+)
+
+const toggleSelection = (it, checked = null) => {
+  const k = itemKey(it)
+  if (k == null) return
+  const next = new Set(selectedDetailedKeys.value)
+  const shouldSelect = checked == null ? !next.has(k) : !!checked
+  if (shouldSelect) next.add(k); else next.delete(k)
+  selectedDetailedKeys.value = next
+}
+
+const toggleSelectAllVisible = (checked) => {
+  const next = new Set(selectedDetailedKeys.value)
+  for (const k of visibleKeys.value) checked ? next.add(k) : next.delete(k)
+  selectedDetailedKeys.value = next
+}
+
+const clearSelection = () => { selectedDetailedKeys.value = new Set() }
+
+// NEU: Bulk-Edit-Steuerung
+const openBulkEdit = () => { bulkEdit.value.open = true }
+const cancelBulkEdit = () => { bulkEdit.value = { open: false, status: null, quantity: '', propertyId: null, propertyValue: null } }
+
+// NEU: Selektion ändert sich -> ungültige Property-Auswahl zurücksetzen
+watch(selectedDetailedKeys, () => {
+  if (!bulkEditableProperties.value.find(p => p.id === bulkEdit.value.propertyId)) {
+    bulkEdit.value.propertyId = null
+    bulkEdit.value.propertyValue = null
+  }
+})
+
+// NEU: applyBulkEdit um Property-Update erweitern
+const applyBulkEdit = () => {
+  const arr = articleForm.detailed_article_quantities || []
+  const qRaw = bulkEdit.value.quantity
+  const hasQ = qRaw !== '' && qRaw != null && !isNaN(parseInt(qRaw, 10))
+  const qVal = hasQ ? parseInt(qRaw, 10) : null
+  const statusVal = bulkEdit.value.status
+  const propId = bulkEdit.value.propertyId
+  const propValRaw = bulkEdit.value.propertyValue
+  const propMeta = selectedBulkProp.value
+
+  for (const da of arr) {
+    const k = itemKey(da)
+    if (!selectedDetailedKeys.value.has(k)) continue
+
+    if (statusVal) da.status = statusVal
+    if (hasQ) da.quantity = qVal
+
+    if (propId && propMeta) {
+      const p = (da.properties || []).find(pp => pp.id === propId && !pp.across_articles)
+      if (p) {
+        if (propMeta.type === 'checkbox') {
+          p.value = Boolean(propValRaw)
+        } else if (propMeta.type === 'room' || propMeta.type === 'manufacturer') {
+          p.value = propValRaw === '' || propValRaw == null ? '' : Number(propValRaw)
+        } else {
+          p.value = propValRaw
+        }
+      }
+    }
+  }
+
+  cancelBulkEdit()
+}
+
+const bulkDeleteSelected = () => {
+  const keys = selectedDetailedKeys.value
+  if (!keys.size) return
+  const arr = articleForm.detailed_article_quantities
+  for (let i = arr.length - 1; i >= 0; i--) {
+    const k = itemKey(arr[i])
+    if (keys.has(k)) arr.splice(i, 1)
+  }
+  clearSelection()
+  activeDetailedArticleForEditing.value = arr.length ? arr[0] : null
+}
 
 </script>
 

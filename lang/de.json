@@ -2950,6 +2950,11 @@
     "Status Settings": "Status-Einstellungen",
     "Manage your article status settings here.": "Verwalte hier deine Artikel-Status-Einstellungen.",
     "Edit Article Status": "Artikelstatus bearbeiten",
-    "Edit the details of the article status.": "Bearbeite die Details des Artikelstatus."
+    "Edit the details of the article status.": "Bearbeite die Details des Artikelstatus.",
+    "Edit selection": "Auswahl bearbeiten",
+    "Delete selection": "Lösche Auswahl",
+    "Do not change": "Nicht ändern",
+    "Property": "Eigenschaft",
+    "Property value": "Eigenschaftswert"
 }
 

@@ -13,6 +13,8 @@ import de from '../../lang/de.json';
 import Icons from "@/icons.js";
 import PrimeVue from 'primevue/config';
 import Aura from '@primeuix/themes/aura';
+import Tooltip from 'primevue/tooltip';
+
 
 const svgColors = {
     eventType0: '#A7A6B1',
@@ -72,7 +74,8 @@ createInertiaApp({
                 preset: Aura
             }
         });
-        app.use(LaravelPermissionToVueJS)
+        app.use(LaravelPermissionToVueJS);
+        app.directive('tooltip', Tooltip);
         app.mount(el);
         app.config.globalProperties.$updateLocale = function (newLocale) {
             this.$i18n.locale = newLocale;

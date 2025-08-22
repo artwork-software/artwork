@@ -147,6 +147,7 @@ export default defineComponent({
                     this.uploadDocumentFeedback = this.$t('Upload failed');
                 }
             }
+        },
         async validateTypeAndUpload(files) {
             this.documentForm.errors = {};
                 await this.uploadDocumentToProject(file);

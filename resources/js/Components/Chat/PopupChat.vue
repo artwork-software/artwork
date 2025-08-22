@@ -21,7 +21,7 @@
                 <component is="IconBubbleText" class="size-10" />
 
                 <span v-if="totalUnreadCount > 0" class="absolute inline-flex items-center w-6 h-6 -top-2 -right-2">
-                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                    <!--<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>-->
                     <span class="relative inline-flex items-center justify-center w-6 h-6 text-xs font-bold leading-none text-red-700 border-red-100 border bg-red-50 rounded-full">
                         {{ totalUnreadCount }}
                     </span>
@@ -163,10 +163,11 @@
                                                 :chat="chatPartner"
                                             />
                                         </template>
-
-                                        <div ref="scrollBottom"></div>
+                                        <!-- Scroll-Anker am Ende -->
+                                        <div ref="scrollAnchor" style="height: 1px;"></div>
                                     </div>
                                 </div>
+
                             </div>
 
 
@@ -288,7 +289,6 @@ const isLoading = ref(true);
 const isChatOpen = ref(false)
 const chatPartner = ref([])
 const newMessage = ref('')
-const scrollBottom = ref(null);
 const scrollContainer = ref(null);
 // NEU: Root-Ref deklarieren (wird im Template genutzt)
 const chatRoot = ref(null);
@@ -301,10 +301,26 @@ const searchChat = ref('')
 const currentUserId = usePage().props.auth.user.id
 const status = ref(null)
 const userIdForStatus = ref(null)
+const isAutoScrolling = ref(false);
 // Wenn sich chatPartner  ändert, Status neu laden
 const closeChat = () => {
-    isChatOpen.value = false
-    chatPartner.value = null
+    isChatOpen.value = false;
+    // Prüfe, ob ein Chat ausgewählt war
+    if (chatPartner.value && chatPartner.value.id) {
+        // Finde den Chat in der Übersicht
+        const target = chats.value.find(c => c.id === chatPartner.value.id);
+        if (target) {
+            // Prüfe, ob alle Nachrichten gelesen sind
+            const unread = chatPartner.value.messages?.filter(msg =>
+                msg.sender_id !== currentUserId &&
+                !msg.reads?.some(r => r.user_id === currentUserId)
+            );
+            if (!unread || unread.length === 0) {
+                target.unread_count = 0;
+            }
+        }
+    }
+    chatPartner.value = null;
 }
 
 const closeAddNewChat = (chatId) => {
@@ -318,21 +334,39 @@ const closeAddNewChat = (chatId) => {
     scrollToBottom(true);
 }
 
-// Robuste Scroll-Funktion: erst nach DOM-Update, bevorzugt den Anker
-const scrollToBottom = async (instant = false) => {
+// NEUE vereinfachte Scroll-Funktion
+const scrollToBottom = async (force = false) => {
+    // Verhindern von konkurrierenden Scrolls
+    if (isAutoScrolling.value && !force) return;
+
+    isAutoScrolling.value = true;
+
     await nextTick();
-    await new Promise(r => requestAnimationFrame(r)); // Layout abwarten
-    const c = scrollContainer.value;
-    if (!c) return;
 
-    const behavior = instant ? 'auto' : 'smooth';
-    const anchor = scrollBottom.value || c.lastElementChild;
+    // Warte auf DOM-Rendering
+    await new Promise(resolve => requestAnimationFrame(resolve));
 
-    if (anchor?.scrollIntoView) {
-        anchor.scrollIntoView({ behavior, block: 'end' });
+    const container = scrollContainer.value;
+    const anchor = scrollAnchor.value;
+
+    if (!container) {
+        isAutoScrolling.value = false;
+        return;
     }
-    // Sicher ganz ans Ende "nudgen"
-    c.scrollTop = c.scrollHeight;
+
+    // Verwende scrollIntoView für den Anker, falls vorhanden
+    if (anchor && anchor.scrollIntoView) {
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    // Zusätzlich sicherstellen, dass wir wirklich ganz unten sind
+    container.scrollTop = container.scrollHeight;
+
+    // Kurze Verzögerung für Layout-Stabilisierung
+    setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+        isAutoScrolling.value = false;
+    }, 100);
 };
 
 const isNearBottom = () => {
@@ -346,7 +380,11 @@ watch(
     () => chatPartner.value?.messages?.length,
     (n, o) => {
         if (!o) return;          // initialer Load → handled in openChatPage
-        if (isNearBottom()) {
+        if (shouldScrollToBottom.value) {
+            scrollToBottom(true);
+            initialScrollDone.value = true;
+            shouldScrollToBottom.value = false;
+        } else if (isNearBottom()) {
             scrollToBottom();
         }
     }
@@ -396,12 +434,13 @@ const openChatPage = async (chatId) => {
         // von alt→neu sortieren
         chatPartner.value.messages = response.data.messages.data.reverse();
 
-        // einmalig Reads markieren (die Funktion filtert intern selbst)
+        // einmalig Reads markieren
         await markMessagesAsRead(chatPartner.value.messages);
 
         isLoading.value = false;
 
-        // jetzt DOM + Layout abwarten und an's Ende springen
+        // WICHTIG: Warte bis DOM aktualisiert ist, dann scrolle
+        await nextTick();
         await scrollToBottom(true);
         initialScrollDone.value = true;
 
@@ -415,14 +454,13 @@ const openChatPage = async (chatId) => {
     }
 };
 
-
 const sendMessage = async () => {
     const plainText = newMessage.value?.trim();
     if (!plainText) return;
 
     const payload = {
         chat_id: chatPartner.value.id,
-        message: plainText, // nur noch Plaintext
+        message: plainText,
     };
 
     try {
@@ -442,17 +480,16 @@ const sendMessage = async () => {
             reads: [],
         });
 
-        // Chat-Preview in der Übersicht aktualisieren und nach oben schieben
+        // Chat-Preview in der Übersicht aktualisieren
         const target = chats.value.find(c => c.id === chatPartner.value.id);
         if (target) {
             target.last_message = result.message;
             moveChatToTop(target.id);
         }
 
-        // Wichtig: nach DOM-Update scrollen
-        await nextTick();
-        forceScrollToBottom(true);     // harte Initial-Position
-        initialScrollDone.value = true;
+        // Nach dem Senden immer nach unten scrollen
+        await scrollToBottom(true);
+
     } catch (e) {
         console.error("Fehler beim Senden der Nachricht:", e);
     } finally {
@@ -534,6 +571,9 @@ onBeforeUnmount(() => {
 });
 
 const handleScroll = async () => {
+    // Verhindere Scroll-Handler während Auto-Scroll
+    if (isAutoScrolling.value) return;
+
     if (
         !initialScrollDone.value ||
         !scrollContainer.value ||
@@ -543,9 +583,7 @@ const handleScroll = async () => {
 
     if (!chatPartner.value || !chatPartner.value.id) return;
 
-
-
-    // Nur wenn der User *manuell hochscrollt*
+    // Nur wenn der User manuell hochscrollt
     if (scrollContainer.value.scrollTop <= 30) {
         isLoadingMore.value = true;
         paginationPage.value += 1;
@@ -557,15 +595,14 @@ const handleScroll = async () => {
             }));
 
             const newMessages = response.data.messages.data.reverse();
-
             const previousHeight = scrollContainer.value.scrollHeight;
 
             chatPartner.value.messages = [...newMessages, ...chatPartner.value.messages];
 
-            nextTick(() => {
-                const newHeight = scrollContainer.value.scrollHeight;
-                scrollContainer.value.scrollTop = newHeight - previousHeight;
-            });
+            await nextTick();
+
+            const newHeight = scrollContainer.value.scrollHeight;
+            scrollContainer.value.scrollTop = newHeight - previousHeight;
 
             if (!response.data.messages.next_page_url) {
                 hasMoreMessages.value = false;
@@ -649,6 +686,19 @@ watch(
     },
     { immediate: true, deep: true } // auch beim ersten Laden ausführen
 )
+
+// Watcher: Immer nach Chat-Wechsel nach unten scrollen
+watch(
+    () => chatPartner.value?.id,
+    async (newId, oldId) => {
+        if (newId) {
+            await nextTick();
+            scrollToBottom(true); // Sofort nach unten scrollen
+            initialScrollDone.value = true;
+            shouldScrollToBottom.value = false;
+        }
+    }
+);
 
 const filteredChats = computed(() => {
     if (!searchChat.value) return chats.value;
@@ -793,7 +843,7 @@ const setChatPosition = async (pos) => {
 // NEU: Listener-Registrierung für einen Chat
 const registerChatListeners = (chat) => {
     window.Echo.private(`chat.${chat.id}`)
-        .listen('.new.message', (e) => {
+        .listen('.new.message', async (e) => {
             const target = chats.value.find(c => c.id === chat.id);
             if (target) {
                 target.unread_count = (target.unread_count || 0) + 1;
@@ -806,16 +856,26 @@ const registerChatListeners = (chat) => {
             if (isChatOpen.value && checkIfChatIsSelected.value && chatPartner.value.id === chat.id) {
                 const alreadyExists = chatPartner.value.messages.some(m => m.id === e.message.id);
                 if (!alreadyExists) {
-                    const shouldStick = isNearBottom(); // Zustand VOR dem push merken
+                    // Prüfe Position VOR dem Hinzufügen
+                    const container = scrollContainer.value;
+                    const wasNearBottom = container &&
+                        (container.scrollHeight - container.scrollTop - container.clientHeight) < 100;
+
                     chatPartner.value.messages.push(e.message);
                     chatPartner.value.messages.sort((a, b) => {
                         const da = new Date(a.created_at_iso || a.created_at);
                         const db = new Date(b.created_at_iso || b.created_at);
                         return da.getTime() - db.getTime();
                     });
-                    nextTick(() => { if (shouldStick) scrollToBottom(); });
+
+                    // Nur scrollen wenn wir vorher schon unten waren
+                    if (wasNearBottom) {
+                        await nextTick();
+                        await scrollToBottom();
+                    }
+
+                    await markMessagesAsRead([e.message]);
                 }
-                markMessagesAsRead(chatPartner.value.messages);
             }
 
             if (e.message.sender_id !== usePage().props.auth.user.id) {
@@ -934,6 +994,8 @@ const moveChatToTop = (chatId) => {
         chats.value.unshift(item);
     }
 };
+
+
 
 </script>
 

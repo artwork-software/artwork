@@ -6,11 +6,14 @@ use Artwork\Core\Casts\TranslatedDateTimeCast;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 class ChatMessage extends Model
 {
     use HasFactory;
+    use Prunable;
 
     protected $fillable = [
         'chat_id', 'sender_id', 'message'
@@ -66,5 +69,13 @@ class ChatMessage extends Model
         $dt = Carbon::parse($raw)->locale('de');
         // Beispiel: 14:37
         return $dt->translatedFormat('H:i');
+    }
+
+    /**
+     * Get the prunable model query.
+     */
+    public function prunable(): Builder
+    {
+        return static::where('created_at', '<=', now()->subMonths(3));
     }
 }

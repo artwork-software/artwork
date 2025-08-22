@@ -1274,7 +1274,7 @@ class ShiftController extends Controller
 
             // find room shift by date
             $roomShifts = $room->shifts()
-                ->where('start_date', Carbon::parse($entity['day'])->format('Y-m-d'))
+                ->where('shifts.start_date', Carbon::parse($entity['day'])->format('Y-m-d'))
                 ->get();
 
             $roomShifts->each(function ($roomShift) use ($entity): void {

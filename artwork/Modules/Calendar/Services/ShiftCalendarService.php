@@ -71,11 +71,11 @@ class ShiftCalendarService
 
         $shifts = Shift::where('event_id', null)->whereIn('room_id', $roomIds)
             ->where(function ($query) use ($startDate, $endDate): void {
-                $query->whereBetween('start_date', [$startDate, $endDate])
-                    ->orWhereBetween('end_date', [$startDate, $endDate])
+                $query->whereBetween('shifts.start_date', [$startDate, $endDate])
+                    ->orWhereBetween('shifts.end_date', [$startDate, $endDate])
                     ->orWhere(function ($q) use ($startDate, $endDate): void {
-                        $q->where('start_date', '<', $startDate)
-                            ->where('end_date', '>', $endDate);
+                        $q->where('shifts.start_date', '<', $startDate)
+                            ->where('shifts.end_date', '>', $endDate);
                     });
             })->get();
 

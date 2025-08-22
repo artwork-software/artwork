@@ -106,12 +106,23 @@
                         />
                     </div>
                     <div class="col-span-3">
-                        <div class="flex gap-3 w-full" v-if="selectedCategory">
+                        <div class="mb-4">
+                            <BaseCheckbox
+                                v-model="articleForm.is_detailed_quantity"
+                                :label="$t('Single inventory capable')"
+                                :description="$t('If activated, each individual piece of this article can be provided with its own properties')"
+                            />
+                        </div>
+                        <!--<div class="flex gap-3 w-full" v-if="selectedCategory">
                             <div class="flex h-6 shrink-0 items-center">
                                 <div class="group grid size-4 grid-cols-1">
                                     <input id="is_detailed_quantity" aria-describedby="is_detailed_quantity-description"
                                            v-model="articleForm.is_detailed_quantity" name="is_detailed_quantity"
-                                           type="checkbox" class="input-checklist"/>
+                                           type="checkbox" class="aw-checklist-input"/>
+                                    <svg class="aw-input-svg" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
                                 </div>
                             </div>
                             <div class="text-sm/6">
@@ -124,7 +135,7 @@
                                     }}
                                 </p>
                             </div>
-                        </div>
+                        </div>-->
                     </div>
                 </div>
 
@@ -299,10 +310,10 @@
                                             </div>
                                         </div>
 
+
                                         <div v-if="property.type === 'checkbox'" class="px-3">
                                             <input type="checkbox" :checked="booleanValue(property.value)"
-                                                   @change="property.value = $event.target.checked"
-                                                   class="input-checklist"/>
+                                                   @change="property.value = $event.target.checked" class="input-checklist"/>
                                         </div>
 
 
@@ -531,7 +542,7 @@
                                     <button
                                         type="button"
                                         class="text-red-600 text-xs hover:text-red-700 duration-200 ease-in-out cursor-pointer"
-                                        @click="bulkDeleteSelected"
+                                        @click="confirmMultiEditDeleteModalOpen = true"
                                     >
                                         {{ $t('Delete selection') }}
                                     </button>
@@ -719,7 +730,7 @@
                                                       type="button"
                                                       class="text-gray-400 hover:text-red-600 duration-200 ease-in-out"
                                                       aria-label="Löschen"
-                                                      @click.stop="removeDetailedArticle(idx)"
+                                                      @click.stop="removeOpenDetailedArticle(idx)"
                                                   >
                                                     <component is="IconTrash" class="h-4 w-4" aria-hidden="true"/>
                                                   </button>
@@ -909,17 +920,32 @@
                             :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''"/>
             </div>
         </form>
+
+        <ConfirmDeleteModal
+            v-if="confirmMultiEditDeleteModalOpen"
+            :title="$t('Delete selected articles')"
+            :description="$t('Are you sure you want to delete the selected articles? This action cannot be undone.')"
+            @delete="bulkDeleteSelected"
+            @closed="confirmMultiEditDeleteModalOpen = false"
+        />
+
+        <!-- delete Single Article -->
+        <ConfirmDeleteModal
+            v-if="confirmSingleDeleteModalOpen"
+            :title="$t('Delete Detailed Article')"
+            :description="$t('Are you sure you want to delete this detailed article? This action cannot be undone.')"
+            @delete="removeDetailedArticle"
+            @closed="confirmSingleDeleteModalOpen = null"
+        />
     </ArtworkBaseModal>
+
+
 </template>
 
 <script setup>
 
 import {useForm} from '@inertiajs/vue3'
 import {computed, inject, onMounted, ref, watch, nextTick} from 'vue'
-import {
-    Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions,
-    Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
-} from '@headlessui/vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import TinyPageHeadline from '@/Components/Headlines/TinyPageHeadline.vue'
@@ -932,8 +958,12 @@ import ArtworkBaseListbox from "@/Artwork/ArtworkBaseListbox.vue";
 import InventoryStylelessCombobox
     from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryStylelessCombobox.vue";
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
+
 const acrossValues = ref({})
 const props = defineProps({article: {type: Object, required: false, default: null}})
+
 const properties = inject('properties')
 const categories = inject('categories')
 const rooms = inject('rooms')
@@ -943,6 +973,9 @@ const statuses = inject('statuses')
 const emits = defineEmits(['close'])
 
 const articleImageInput = ref(null)
+const articleToDelete = ref(null)
+const confirmMultiEditDeleteModalOpen = ref(false)
+const confirmSingleDeleteModalOpen = ref(false)
 const selectedCategory = ref(props.article ? categories.find(c => c.id === props.article.inventory_category_id) : null)
 const selectedSubCategory = ref(props.article ? categories.find(c => c.id === props.article.inventory_category_id)?.subcategories.find(s => s.id === props.article.inventory_sub_category_id) : null)
 const currentMainImage = ref(0)
@@ -1034,6 +1067,10 @@ const articleForm = useForm({
     main_image_index: 0,
 })
 
+const removeOpenDetailedArticle = (idx) => {
+    articleToDelete.value = idx
+    confirmSingleDeleteModalOpen.value = true
+}
 
 const buildProp = (src, existing = null) => {
     const isSel = src.type === 'selection'
@@ -1237,7 +1274,8 @@ const addNewDetailedArticle = () => {
     syncAcrossValuesToDetailedArticles()
 }
 
-const removeDetailedArticle = (index) => {
+const removeDetailedArticle = () => {
+    let index = articleToDelete.value
     const arr = articleForm.detailed_article_quantities
     if (!Array.isArray(arr) || index < 0 || index >= arr.length) return
     const removed = arr[index]
@@ -1258,7 +1296,10 @@ const removeDetailedArticle = (index) => {
     if (!arr.length) {
         clearSelection()
         cancelBulkEdit()
+
     }
+    // close all confirm modals
+    confirmSingleDeleteModalOpen.value = false
 }
 
 const copyDetailedArticle = (d) => {
@@ -1647,6 +1688,7 @@ const bulkDeleteSelected = () => {
     if (keys.has(k)) arr.splice(i, 1)
   }
   clearSelection()
+    confirmMultiEditDeleteModalOpen.value = false
   activeDetailedArticleForEditing.value = arr.length ? arr[0] : null
 }
 

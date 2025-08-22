@@ -2965,6 +2965,10 @@
     "Add new Chat": "Neuen Chat hinzufügen",
     "Change Chat position": "Chat-Position ändern",
     "Set chat position": "Chat-Position festlegen",
-    "Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.": "Klicke auf eines der markierten Felder (Ecken, Seiten oder Mitte), um die Position des Chatfensters auszuwählen. Du kannst dies später jederzeit ändern."
+    "Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.": "Klicke auf eines der markierten Felder (Ecken, Seiten oder Mitte), um die Position des Chatfensters auszuwählen. Du kannst dies später jederzeit ändern.",
+    "Delete selected articles": "Lösche ausgewählte Artikel",
+    "Are you sure you want to delete the selected articles? This action cannot be undone.": "Möchtest du die ausgewählten Artikel wirklich löschen? Diese Aktion kann nicht rückgängig",
+    "Delete Detailed Article": "Detaillierten Artikel löschen",
+    "Are you sure you want to delete this detailed article? This action cannot be undone.": "Möchtest du diesen detaillierten Artikel wirklich löschen? Diese Aktion kann nicht rückgängig"
 }
 

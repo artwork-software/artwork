@@ -2961,5 +2961,8 @@
     "Add new Chat": "Add new Chat",
     "Change Chat position": "Change Chat position",
     "Set chat position": "Set chat position",
-    "Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.": "Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time."
+    "Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.": "Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.",
+    "Delete selected articles": "Delete selected articles",
+    "Are you sure you want to delete the selected articles? This action cannot be undone.": "Are you sure you want to delete the selected articles? This action cannot be undone.",
+    "Delete Detailed Article": "Delete Detailed Article"
 }

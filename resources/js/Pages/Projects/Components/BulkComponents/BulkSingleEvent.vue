@@ -233,9 +233,6 @@
                             <IconCircleCheckFilled @click="createCopyByEventWithData(event)"
                                                    class="w-8 h-8 min-w-6 min-h-6 text-artwork-buttons-create cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
                                                    stroke-width="2"/>
-                            <IconX @click="event.copy = false"
-                                   class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                                   stroke-width="2"/>
                         </div>
                     </BaseMenu>
                     <BaseMenu has-no-offset white-menu-background menu-width="!w-fit" v-if="!isInModal">

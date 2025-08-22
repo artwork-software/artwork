@@ -2956,6 +2956,15 @@
     "Do not change": "Nicht ändern",
     "Property": "Eigenschaft",
     "Property value": "Eigenschaftswert",
-    "Event name is required for this event type": "Terminname muss bei diesem Typ angegeben werden"
+    "Event name is required for this event type": "Terminname muss bei diesem Typ angegeben werden",
+    "Info about chat": "Info über Chat",
+    "away": "abwesend",
+    "online": "online",
+    "offline": "offline",
+    "Back to Chat List": "Zurück zur Chat-Liste",
+    "Add new Chat": "Neuen Chat hinzufügen",
+    "Change Chat position": "Chat-Position ändern",
+    "Set chat position": "Chat-Position festlegen",
+    "Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.": "Klicke auf eines der markierten Felder (Ecken, Seiten oder Mitte), um die Position des Chatfensters auszuwählen. Du kannst dies später jederzeit ändern."
 }
 

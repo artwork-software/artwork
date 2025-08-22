@@ -761,6 +761,26 @@ class UserController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * Speichert die Popup-Chat-Position pro Nutzer.
+     */
+    public function updateChatPopupSettings(Request $request, User $user): void
+    {
+        // gleiche Berechtigungslogik wie bei updateUserDetails
+        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
+            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
+        }
+
+        $request->validate([
+            'chat_popup_position' => [
+                'required',
+                'in:top-left,top-right,bottom-left,bottom-right,middle-left,middle-right,top-center,bottom-center'
+            ],
+        ]);
+
+        $user->update($request->only('chat_popup_position'));
+    }
+
     public function updateUserPermissionsAndRoles(Request $request, User $user): RedirectResponse
     {
         //only add permissions which are also existing to the array which gets synced with user

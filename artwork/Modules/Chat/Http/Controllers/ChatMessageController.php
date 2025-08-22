@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Chat\Http\Requests\StoreChatMessageRequest;
 use Artwork\Modules\Chat\Http\Requests\UpdateChatMessageRequest;
 use Artwork\Modules\Chat\Models\ChatMessage;
+use App\Events\NewChatMessage;
 
 class ChatMessageController extends Controller
 {
@@ -30,7 +31,19 @@ class ChatMessageController extends Controller
      */
     public function store(StoreChatMessageRequest $request)
     {
-        //
+        $data = $request->validated();
+
+        $message = ChatMessage::create([
+            'chat_id'   => $data['chat_id'],
+            'sender_id' => auth()->id(),
+            'message'   => $data['message'], // Plaintext
+        ])->load(['sender', 'reads']);
+
+        broadcast(new NewChatMessage($message))->toOthers();
+
+        return response()->json([
+            'message' => $message,
+        ]);
     }
 
     /**

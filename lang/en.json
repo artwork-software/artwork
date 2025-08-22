@@ -2934,6 +2934,7 @@
     "Project Artist": "Project Artist",
     "Article": "Article",
     "Inventory Article Planning": "Inventory Article Planning",
+    "Event name is required for this event type": "Event name is required for this event type",
     "All properties are already added to the category.": "All properties are already added to the category.",
     "All properties are already added to the sub-category.": "All properties are already added to the sub-category.",
     "Please select a Manufacturer": "Please select a Manufacturer",
@@ -2952,5 +2953,13 @@
     "Do not change": "Do not change",
     "Property": "Property",
     "Property value": "Property value",
-    "Event name is required for this event type": "Event name is required for this event type"
+    "Info about chat": "Info about chat",
+    "away": "away",
+    "online": "online",
+    "offline": "offline",
+    "Back to Chat List": "Back to Chat List",
+    "Add new Chat": "Add new Chat",
+    "Change Chat position": "Change Chat position",
+    "Set chat position": "Set chat position",
+    "Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.": "Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time."
 }

@@ -4,6 +4,7 @@ namespace Artwork\Modules\Chat\Http\Controllers;
 
 use App\Events\MessageRead;
 use App\Events\NewChatMessage;
+use App\Events\ChatCreated;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Chat\Http\Requests\StoreChatRequest;
 use Artwork\Modules\Chat\Http\Requests\UpdateChatRequest;
@@ -13,6 +14,7 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Auth\AuthManager;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Crypt;
 
 class ChatController extends Controller
 {
@@ -86,6 +88,10 @@ class ChatController extends Controller
             $chat->update(['is_group' => true]);
         }
 
+        // NEU: Nutzer laden und Broadcast senden
+        $chat->load('users');
+        broadcast(new ChatCreated($chat));
+
         return response()->json(['chat' => $chat]);
     }
 
@@ -150,12 +156,19 @@ class ChatController extends Controller
                     ->where('sender_id', '!=', $user->id);
             }])
             ->orderByDesc('updated_at')
-            ->get()
-            ->map(function ($chat) {
-                $chat->last_message = $chat->messages->first();
-                unset($chat->messages);
-                return $chat;
-            });
+            ->get();
+
+        // KORREKT: letzte Nachricht entschlüsseln, als Relation setzen und messages-Relation entfernen
+        foreach ($chats as $chat) {
+            $last = $chat->messages->first();
+            if ($last) {
+                $last->setAttribute('message', $this->decryptMessage($last->message));
+                $chat->setRelation('last_message', $last);
+            } else {
+                $chat->setRelation('last_message', null);
+            }
+            $chat->unsetRelation('messages');
+        }
 
         return response()->json([
             'chats' => $chats,
@@ -167,7 +180,6 @@ class ChatController extends Controller
         /** @var User $user */
         $user = $this->auth->user();
 
-        // Nachrichten + Sender + Reads paginiert holen (neueste zuerst)
         $messagesPaginator = $chat->messages()
             ->with(['sender', 'reads.user'])
             ->orderByDesc('created_at')
@@ -186,6 +198,12 @@ class ChatController extends Controller
         // Chat ohne große Messages laden
         $chat->load('users');
 
+        // Entschlüsselte Inhalte für die aktuelle Seite bereitstellen
+        $messagesPaginator->getCollection()->transform(function ($message) {
+            $message->message = $this->decryptMessage($message->message);
+            return $message;
+        });
+
         return response()->json([
             'chat' => $chat,
             'messages' => $messagesPaginator,
@@ -194,20 +212,26 @@ class ChatController extends Controller
 
     public function sendMessage(Chat $chat, Request $request)
     {
+        // Ursprünglichen Text (mit aktuellem nl2br-Verhalten) holen
+        $plain = nl2br($request->get('message'));
+
         /** @var ChatMessage $message */
         $message = $chat->messages()->create([
             'sender_id' => auth()->id(),
-            'cipher_for_sender' => $request->get('cipher_for_sender'),
-            'ciphers_json' => $request->get('ciphers_json'),
+            // Verschlüsselt ablegen
+            'message' => $this->encryptMessage($plain),
         ]);
 
-
-        // wichtig: Chat neu laden, um last_message zu aktualisieren
+        // Chat neu laden (Preview/Reads)
         $chat->load(['messages.reads', 'messages.reads.user', 'lastMessage.sender']);
 
-        broadcast(new NewChatMessage($message))->toOthers();
-
+        // updated_at aktualisieren, damit Sortierung stimmt
         $chat->touch();
+
+        // Für Broadcast/Response Klartext in-memory setzen (DB bleibt verschlüsselt)
+        $message->setAttribute('message', $plain);
+
+        broadcast(new NewChatMessage($message))->toOthers();
 
         return response()->json([
             'message' => $message,
@@ -261,4 +285,22 @@ class ChatController extends Controller
     }
 
 
+    // --- Verschlüsselungs-Helfer ---
+    private function encryptMessage(?string $text): string
+    {
+        return Crypt::encryptString($text ?? '');
+    }
+
+    private function decryptMessage(?string $ciphertext): string
+    {
+        if ($ciphertext === null) {
+            return '';
+        }
+        try {
+            return Crypt::decryptString($ciphertext);
+        } catch (\Throwable $e) {
+            // Fallback für Altbestände (bereits Klartext)
+            return $ciphertext;
+        }
+    }
 }

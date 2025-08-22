@@ -11,7 +11,7 @@ class UpdateChatMessageRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,7 @@ class UpdateChatMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'message' => ['sometimes', 'string', 'max:10000'],
         ];
     }
 }

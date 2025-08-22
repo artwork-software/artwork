@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @closed="$emit('close')">
+    <BaseModal @closed="$emit('close', { saved: false })">
         <ModalHeader title="Mehrfacheintrag"  />
 
         <div v-show="showSaveSuccess" class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg">
@@ -126,11 +126,8 @@ const submitForm = () => {
         preserveState: true,
         onSuccess: () => {
             showSaveSuccess.value = true;
-            setTimeout(() => {
-                showSaveSuccess.value = false;
-                emit('close', true);
-            }, 2500)
-
+            // Close modal immediately after successful save
+            emit('close', { saved: true });
         }
     })
 }

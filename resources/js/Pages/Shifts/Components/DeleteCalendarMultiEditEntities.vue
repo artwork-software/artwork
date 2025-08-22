@@ -8,7 +8,7 @@
             <button
                 type="button"
                 @click="handleSubmit(false)"
-                class="bg-artwork-messages-error hover:bg-artwork-messages-error/90 rounded-md px-14 py-3 text-sm font-semibold text-white shadow-sm focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create"
+                class="bg-artwork-error hover:bg-artwork-error/90 rounded-md px-14 py-3 text-sm font-semibold text-white shadow-sm focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create"
             >
                 {{ $t('Delete Entries') }}
             </button>

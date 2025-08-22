@@ -290,7 +290,7 @@ class Shift extends Model
 
     public function scopeOrderedByStart(Builder $builder, string $direction = 'asc'): Builder
     {
-        return $builder->orderBy('start', $direction);
+        return $builder->orderBy('shifts.start', $direction);
     }
 
     public function getMaxUsersAttribute(): int

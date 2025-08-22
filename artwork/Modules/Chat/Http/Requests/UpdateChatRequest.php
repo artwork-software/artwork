@@ -11,7 +11,20 @@ class UpdateChatRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        $chat = $this->route('chat');
+        $user = $this->user();
+
+        // Check if user is a member of the chat
+        if (!$chat->users()->where('users.id', $user->id)->exists()) {
+            return false;
+        }
+
+        // Only allow updating group chats
+        if (!$chat->is_group) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -22,7 +35,7 @@ class UpdateChatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:255',
         ];
     }
 }

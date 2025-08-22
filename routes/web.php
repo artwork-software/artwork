@@ -2057,6 +2057,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         // post chat-system.send-message
         Route::post('/send-message/{chat}', [ChatController::class, 'sendMessage'])->name('chat-system.send-message');
+
+        // patch chat-system.update-chat (rename group chat)
+        Route::patch('/update-chat/{chat}', [ChatController::class, 'update'])->name('chat-system.update-chat');
+
+        // delete chat-system.delete-chat (delete group chat)
+        Route::delete('/delete-chat/{chat}', [ChatController::class, 'destroy'])->name('chat-system.delete-chat');
     });
 
     Route::resource('holidays', HolidayController::class)

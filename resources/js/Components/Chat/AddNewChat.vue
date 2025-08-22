@@ -1,14 +1,14 @@
 <template>
     <BaseModal @closed="$emit('close')">
         <div>
-            <ModalHeader title="Neuen Chat erstellen" description="Wähle einen Namen für deinen neuen Chat." />
+            <ModalHeader :title="$t('Create new Chat')" :description="$t('Select users to start a chat. When multiple users are selected, a group chat will be created and you will automatically be included as a member.')" />
 
         </div>
 
         <div class="">
             <UserSearch
                 @userSelected="addUserToChat"
-                label="Benutzer hinzufügen"
+                :label="$t('Add users')"
                 :only-use-chat-users="true"
                 :without-self="true"
             />
@@ -42,7 +42,7 @@
                     </div>
                     <div class="ml-3">
                         <p class="text-sm font-medium text-yellow-800">
-                            Du hast mehr als einen Benutzer hinzugefügt. Dieser Chat wird nun ein Gruppenchat. Gebe bitte für die Gruppe einen Namen an.
+                            {{ $t('You have selected multiple users. This will create a group chat. You will automatically be included as a member. Please provide a name for the group.') }}
                         </p>
                     </div>
                 </div>
@@ -116,7 +116,6 @@ const createChat = async () => {
         const isJson = contentType && contentType.includes('application/json')
         const data = isJson ? await response.json() : null
         if (!response.ok || !data?.chat) {
-            console.error('Chat konnte nicht erstellt werden:', data)
             return
         }
         emit('close', data.chat.id)

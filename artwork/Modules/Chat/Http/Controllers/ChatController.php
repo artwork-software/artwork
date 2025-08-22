@@ -117,7 +117,18 @@ class ChatController extends Controller
      */
     public function update(UpdateChatRequest $request, Chat $chat)
     {
-        //
+        // Authorization and validation are now handled by UpdateChatRequest
+        $chat->update([
+            'name' => $request->validated()['name'],
+        ]);
+
+        // Reload the chat with relationships
+        $chat->load('users');
+
+        return response()->json([
+            'message' => 'Group chat renamed successfully',
+            'chat' => $chat,
+        ]);
     }
 
     /**
@@ -125,7 +136,45 @@ class ChatController extends Controller
      */
     public function destroy(Chat $chat)
     {
-        //
+        /** @var User $user */
+        $user = $this->auth->user();
+
+        // Check if user is a member of the chat
+        if (!$chat->users()->where('users.id', $user->id)->exists()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Only allow deleting group chats
+        if (!$chat->is_group) {
+            return response()->json(['error' => 'Can only delete group chats'], 400);
+        }
+
+        // Store chat ID for response
+        $chatId = $chat->id;
+
+        // Delete related data first (cascade)
+        // Delete message reads
+        \DB::table('chat_message_reads')
+            ->whereIn('message_id', function($query) use ($chatId) {
+                $query->select('id')
+                    ->from('chat_messages')
+                    ->where('chat_id', $chatId);
+            })
+            ->delete();
+
+        // Delete messages
+        $chat->messages()->delete();
+
+        // Delete chat-user relationships
+        $chat->users()->detach();
+
+        // Delete the chat itself
+        $chat->delete();
+
+        return response()->json([
+            'message' => 'Group chat deleted successfully',
+            'chat_id' => $chatId,
+        ]);
     }
 
     public function setPublicKey(Request $request)

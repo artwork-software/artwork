@@ -21,7 +21,7 @@
                 <component is="IconBubbleText" class="size-10" />
 
                 <span v-if="totalUnreadCount > 0" class="absolute inline-flex items-center w-6 h-6 -top-2 -right-2">
-                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                    <!--<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>-->
                     <span class="relative inline-flex items-center justify-center w-6 h-6 text-xs font-bold leading-none text-red-700 border-red-100 border bg-red-50 rounded-full">
                         {{ totalUnreadCount }}
                     </span>
@@ -35,15 +35,30 @@
                     <div class="w-full px-4 py-3">
                         <div class="flex items-center justify-between w-full">
                             <div class="text-sm font-bold">
-                                Chat
+                                {{ $t('Chat') }}
                             </div>
                             <div class="flex items-center gap-x-2">
-                                <BaseMenu white-menu-background has-no-offset>
-                                    <BaseMenuItem white-menu-background title="Add new Chat" icon="IconPlus" v-if="!checkIfChatIsSelected" @click="openAddNewChat = true" />
-                                    <!--<BaseMenuItem white-menu-background title="Info about chat" icon="IconInfoCircle" v-if="checkIfChatIsSelected" @click="openShowChatInfo = true" />-->
-                                    <!-- Neuer Menüpunkt: Position ändern -->
-                                    <BaseMenuItem white-menu-background title="Change Chat position" icon="IconArrowsMove" @click="showPositionPicker = true" />
-                                </BaseMenu>
+                                <!-- Add new Chat Button -->
+                                <div v-if="!checkIfChatIsSelected" @click="openAddNewChat = true">
+                                    <ToolTipComponent
+                                        direction="top"
+                                        icon="IconPlus"
+                                        :tooltip-text="$t('Add new Chat')"
+                                        class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200"
+                                        icon-class="size-5"
+                                    />
+                                </div>
+
+                                <!-- Change Chat position Button -->
+                                <div @click="showPositionPicker = true">
+                                    <ToolTipComponent
+                                        direction="top"
+                                        icon="IconArrowsMove"
+                                        :tooltip-text="$t('Change Chat position')"
+                                        class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200"
+                                        icon-class="size-5"
+                                    />
+                                </div>
 
                                 <div class="" @click="closeChat">
                                     <component is="IconX" class="size-5 cursor-pointer transition-colors duration-200 ease-in-out" aria-hidden="true" />
@@ -55,7 +70,7 @@
                         <div class="">
                             <div v-if="!checkIfChatIsSelected" class="px-3 py-1">
                                 <div class="grid grid-cols-1">
-                                    <input v-model="searchChat" type="text" name="account-number" id="account-number" class="col-start-1 border border-gray-200 row-start-1 block w-full rounded-md bg-white py-3 pr-10 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-100 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:pr-9 sm:text-sm/6" placeholder="Suche Chat Partner" />
+                                    <input v-model="searchChat" type="text" name="account-number" id="account-number" class="col-start-1 border border-gray-200 row-start-1 block w-full rounded-md bg-white py-3 pr-10 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-100 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:pr-9 sm:text-sm/6" :placeholder="$t('Search in chats')" />
                                     <component is="IconSearch" class="pointer-events-none col-start-1 row-start-1 mr-3 size-5 self-center justify-self-end text-gray-400 sm:size-4" aria-hidden="true" />
                                 </div>
                             </div>
@@ -75,24 +90,48 @@
                                         </span>
                                         <div class="ml-3">
                                             <p class="text-sm font-bold text-gray-900">{{ chatPartner.users.find(user => user.id !== usePage().props.auth.user.id)?.full_name }}</p>
-                                            <p class="text-xs text-gray-500 first-letter:capitalize">{{ $t(status) }}</p>
+                                            <p class="text-xs text-gray-500 first-letter:capitalize">{{ status ? $t(status) : '' }}</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div v-else class="py-2">
-                                    <div class="flex items-center">
-                                        <div class="mr-1 cursor-pointer" @click="goBackToChatList">
-                                            <ToolTipComponent
-                                                direction="top"
-                                                icon="IconChevronLeft"
-                                                :tooltip-text="$t('Back to Chat List')"
-                                                use-translation
-                                            />
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <div class="mr-1 cursor-pointer" @click="goBackToChatList">
+                                                <ToolTipComponent
+                                                    direction="top"
+                                                    icon="IconChevronLeft"
+                                                    :tooltip-text="$t('Back to Chat List')"
+                                                    use-translation
+                                                />
+                                            </div>
+                                            <component is="IconUsersGroup" class="size-10 rounded-full object-cover p-3 bg-blue-50 text-blue-500 border border-blue-100" />
+                                            <div class="ml-3">
+                                                <p class="text-sm text-gray-900">{{ chatPartner.name }}</p>
+                                                <p class="text-[9px] text-gray-500">{{ chatPartner.users.map((user) => user.full_name).join(', ') }}</p>
+                                            </div>
                                         </div>
-                                        <component is="IconUsersGroup" class="size-10 rounded-full object-cover p-3 bg-blue-50 text-blue-500 border border-blue-100" />
-                                        <div class="ml-3">
-                                            <p class="text-sm text-gray-900">{{ chatPartner.name }}</p>
-                                            <p class="text-[9px] text-gray-500">{{ chatPartner.users.map((user) => user.full_name).join(', ') }}</p>
+                                        <div class="flex items-center gap-x-1">
+                                            <!-- Rename Group Chat Button -->
+                                            <div @click="showRenameModal = true">
+                                                <ToolTipComponent
+                                                    direction="top"
+                                                    icon="IconEdit"
+                                                    :tooltip-text="$t('Rename Group Chat')"
+                                                    class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200 chat-tooltip-black-icon"
+                                                    icon-size="size-4"
+                                                />
+                                            </div>
+                                            <!-- Delete Group Chat Button -->
+                                            <div @click="showDeleteConfirm = true">
+                                                <ToolTipComponent
+                                                    direction="top"
+                                                    icon="IconTrash"
+                                                    :tooltip-text="$t('Delete Group Chat')"
+                                                    class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200 chat-tooltip-black-icon"
+                                                    icon-size="size-4"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -132,7 +171,7 @@
                                                 </div>
                                                 <div class="ml-3">
                                                     <p class="text-xs font-lexend font-medium text-red-800">
-                                                        Du hast noch keine Chats. Klicke auf das Plus-Symbol, um einen neuen Chat zu starten.
+                                                        {{ $t("No chats found. Click the plus icon to start a new chat.") }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -147,7 +186,7 @@
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
                                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
                                             </svg>
-                                            Nachrichten werden geladen...
+                                            {{ $t('Messages are loading...') }}
                                         </div>
 
                                         <!-- Nachrichten + Datumstrenner -->
@@ -163,10 +202,11 @@
                                                 :chat="chatPartner"
                                             />
                                         </template>
-
-                                        <div ref="scrollBottom"></div>
+                                        <!-- Scroll-Anker am Ende -->
+                                        <div ref="scrollAnchor" style="height: 1px;"></div>
                                     </div>
                                 </div>
+
                             </div>
 
 
@@ -178,7 +218,7 @@
                         <div class="flex items-center gap-2">
                             <textarea
                                 class="w-full border resize-none border-gray-200 rounded-xl bg-white py-1.5 pr-10 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-100 placeholder:text-gray-400 focus:outline-1 focus:-outline-offset-1 focus:outline-artwork-buttons-create sm:pr-9 sm:text-xs font-lexend"
-                                placeholder="Schreibe eine Nachricht"
+                                :placeholder="$t('Write a message')"
                                 v-model="newMessage"
                                 rows="1"
                                 @keydown.enter.exact.prevent="sendMessage"
@@ -213,46 +253,46 @@
             <!-- vier Targets -->
             <button
                 class="absolute top-4 left-4 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                title="Oben links"
+                :title="$t('Top left')"
                 @click="setChatPosition('top-left')"
             />
             <button
                 class="absolute top-4 right-4 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                title="Oben rechts"
+                :title="$t('Top right')"
                 @click="setChatPosition('top-right')"
             />
             <button
                 class="absolute bottom-4 left-4 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                title="Unten links"
+                :title="$t('Bottom left')"
                 @click="setChatPosition('bottom-left')"
             />
             <button
                 class="absolute bottom-4 right-4 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                title="Unten rechts"
+                :title="$t('Bottom right')"
                 @click="setChatPosition('bottom-right')"
             />
             <!-- NEU: Mitte links -->
             <button
                 class="absolute top-1/2 left-4 -translate-y-1/2 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                title="Mitte links"
+                :title="$t('Middle left')"
                 @click="setChatPosition('middle-left')"
             />
             <!-- NEU: Mitte rechts -->
             <button
                 class="absolute top-1/2 right-4 -translate-y-1/2 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                title="Mitte rechts"
+                :title="$t('Middle right')"
                 @click="setChatPosition('middle-right')"
             />
             <!-- NEU: Oben zentriert -->
             <button
                 class="absolute top-4 left-1/2 -translate-x-1/2 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                title="Oben zentriert"
+                :title="$t('Top center')"
                 @click="setChatPosition('top-center')"
             />
             <!-- NEU: Unten zentriert -->
             <button
                 class="absolute bottom-4 left-1/2 -translate-x-1/2 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                title="Unten zentriert"
+                :title="$t('Bottom center')"
                 @click="setChatPosition('bottom-center')"
             />
             <!-- Schließen -->
@@ -261,6 +301,22 @@
             </div>
         </div>
     </div>
+
+    <!-- Rename Group Chat Modal -->
+    <RenameGroupChatModal
+        v-if="showRenameModal"
+        :chat="chatPartner"
+        @close="showRenameModal = false"
+        @renamed="handleChatRenamed"
+    />
+
+    <!-- Delete Group Chat Confirmation Modal -->
+    <DeleteGroupChatModal
+        v-if="showDeleteConfirm"
+        :chat="chatPartner"
+        @close="showDeleteConfirm = false"
+        @deleted="handleChatDeleted"
+    />
 
     <AddNewChat
         v-if="openAddNewChat"
@@ -276,9 +332,9 @@ import SingleChatInOverview from "@/Components/Chat/Components/SingleChatInOverv
 import SingleMessageInChat from "@/Components/Chat/Components/SingleMessageInChat.vue";
 import ChatToastNotification from "@/Components/Chat/Components/ChatToastNotification.vue";
 import {useUserStatus} from "@/Composeables/useUserStatus.js";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import RenameGroupChatModal from "@/Components/Chat/Modals/RenameGroupChatModal.vue";
+import DeleteGroupChatModal from "@/Components/Chat/Modals/DeleteGroupChatModal.vue";
 const { getUserStatus } = useUserStatus()
 
 const props = defineProps({})
@@ -288,7 +344,6 @@ const isLoading = ref(true);
 const isChatOpen = ref(false)
 const chatPartner = ref([])
 const newMessage = ref('')
-const scrollBottom = ref(null);
 const scrollContainer = ref(null);
 // NEU: Root-Ref deklarieren (wird im Template genutzt)
 const chatRoot = ref(null);
@@ -301,10 +356,29 @@ const searchChat = ref('')
 const currentUserId = usePage().props.auth.user.id
 const status = ref(null)
 const userIdForStatus = ref(null)
+const isAutoScrolling = ref(false);
+const scrollAnchor = ref(null);
+const showRenameModal = ref(false);
+const showDeleteConfirm = ref(false);
 // Wenn sich chatPartner  ändert, Status neu laden
 const closeChat = () => {
-    isChatOpen.value = false
-    chatPartner.value = null
+    isChatOpen.value = false;
+    // Prüfe, ob ein Chat ausgewählt war
+    if (chatPartner.value && chatPartner.value.id) {
+        // Finde den Chat in der Übersicht
+        const target = chats.value.find(c => c.id === chatPartner.value.id);
+        if (target) {
+            // Prüfe, ob alle Nachrichten gelesen sind
+            const unread = chatPartner.value.messages?.filter(msg =>
+                msg.sender_id !== currentUserId &&
+                !msg.reads?.some(r => r.user_id === currentUserId)
+            );
+            if (!unread || unread.length === 0) {
+                target.unread_count = 0;
+            }
+        }
+    }
+    chatPartner.value = null;
 }
 
 const closeAddNewChat = (chatId) => {
@@ -318,21 +392,15 @@ const closeAddNewChat = (chatId) => {
     scrollToBottom(true);
 }
 
-// Robuste Scroll-Funktion: erst nach DOM-Update, bevorzugt den Anker
-const scrollToBottom = async (instant = false) => {
+// Simple and reliable scroll-to-bottom function
+const scrollToBottom = async (force = false) => {
     await nextTick();
-    await new Promise(r => requestAnimationFrame(r)); // Layout abwarten
-    const c = scrollContainer.value;
-    if (!c) return;
 
-    const behavior = instant ? 'auto' : 'smooth';
-    const anchor = scrollBottom.value || c.lastElementChild;
+    const container = scrollContainer.value;
+    if (!container) return;
 
-    if (anchor?.scrollIntoView) {
-        anchor.scrollIntoView({ behavior, block: 'end' });
-    }
-    // Sicher ganz ans Ende "nudgen"
-    c.scrollTop = c.scrollHeight;
+    // Simple scroll to bottom - most reliable approach
+    container.scrollTop = container.scrollHeight;
 };
 
 const isNearBottom = () => {
@@ -344,8 +412,8 @@ const isNearBottom = () => {
 // Bei neuen Nachrichten nur folgen, wenn der User ohnehin unten ist
 watch(
     () => chatPartner.value?.messages?.length,
-    (n, o) => {
-        if (!o) return;          // initialer Load → handled in openChatPage
+    (newLength, oldLength) => {
+        if (!oldLength) return; // initialer Load → handled in openChatPage
         if (isNearBottom()) {
             scrollToBottom();
         }
@@ -396,12 +464,13 @@ const openChatPage = async (chatId) => {
         // von alt→neu sortieren
         chatPartner.value.messages = response.data.messages.data.reverse();
 
-        // einmalig Reads markieren (die Funktion filtert intern selbst)
+        // einmalig Reads markieren
         await markMessagesAsRead(chatPartner.value.messages);
 
         isLoading.value = false;
 
-        // jetzt DOM + Layout abwarten und an's Ende springen
+        // WICHTIG: Warte bis DOM aktualisiert ist, dann scrolle
+        await nextTick();
         await scrollToBottom(true);
         initialScrollDone.value = true;
 
@@ -415,14 +484,13 @@ const openChatPage = async (chatId) => {
     }
 };
 
-
 const sendMessage = async () => {
     const plainText = newMessage.value?.trim();
     if (!plainText) return;
 
     const payload = {
         chat_id: chatPartner.value.id,
-        message: plainText, // nur noch Plaintext
+        message: plainText,
     };
 
     try {
@@ -442,17 +510,16 @@ const sendMessage = async () => {
             reads: [],
         });
 
-        // Chat-Preview in der Übersicht aktualisieren und nach oben schieben
+        // Chat-Preview in der Übersicht aktualisieren
         const target = chats.value.find(c => c.id === chatPartner.value.id);
         if (target) {
             target.last_message = result.message;
             moveChatToTop(target.id);
         }
 
-        // Wichtig: nach DOM-Update scrollen
-        await nextTick();
-        forceScrollToBottom(true);     // harte Initial-Position
-        initialScrollDone.value = true;
+        // Nach dem Senden immer nach unten scrollen
+        await scrollToBottom(true);
+
     } catch (e) {
         console.error("Fehler beim Senden der Nachricht:", e);
     } finally {
@@ -534,6 +601,9 @@ onBeforeUnmount(() => {
 });
 
 const handleScroll = async () => {
+    // Verhindere Scroll-Handler während Auto-Scroll
+    if (isAutoScrolling.value) return;
+
     if (
         !initialScrollDone.value ||
         !scrollContainer.value ||
@@ -543,9 +613,7 @@ const handleScroll = async () => {
 
     if (!chatPartner.value || !chatPartner.value.id) return;
 
-
-
-    // Nur wenn der User *manuell hochscrollt*
+    // Nur wenn der User manuell hochscrollt
     if (scrollContainer.value.scrollTop <= 30) {
         isLoadingMore.value = true;
         paginationPage.value += 1;
@@ -557,15 +625,14 @@ const handleScroll = async () => {
             }));
 
             const newMessages = response.data.messages.data.reverse();
-
             const previousHeight = scrollContainer.value.scrollHeight;
 
             chatPartner.value.messages = [...newMessages, ...chatPartner.value.messages];
 
-            nextTick(() => {
-                const newHeight = scrollContainer.value.scrollHeight;
-                scrollContainer.value.scrollTop = newHeight - previousHeight;
-            });
+            await nextTick();
+
+            const newHeight = scrollContainer.value.scrollHeight;
+            scrollContainer.value.scrollTop = newHeight - previousHeight;
 
             if (!response.data.messages.next_page_url) {
                 hasMoreMessages.value = false;
@@ -649,6 +716,18 @@ watch(
     },
     { immediate: true, deep: true } // auch beim ersten Laden ausführen
 )
+
+// Watcher: Immer nach Chat-Wechsel nach unten scrollen
+watch(
+    () => chatPartner.value?.id,
+    async (newId, oldId) => {
+        if (newId) {
+            await nextTick();
+            scrollToBottom(); // Sofort nach unten scrollen
+            initialScrollDone.value = true;
+        }
+    }
+);
 
 const filteredChats = computed(() => {
     if (!searchChat.value) return chats.value;
@@ -793,7 +872,7 @@ const setChatPosition = async (pos) => {
 // NEU: Listener-Registrierung für einen Chat
 const registerChatListeners = (chat) => {
     window.Echo.private(`chat.${chat.id}`)
-        .listen('.new.message', (e) => {
+        .listen('.new.message', async (e) => {
             const target = chats.value.find(c => c.id === chat.id);
             if (target) {
                 target.unread_count = (target.unread_count || 0) + 1;
@@ -806,16 +885,26 @@ const registerChatListeners = (chat) => {
             if (isChatOpen.value && checkIfChatIsSelected.value && chatPartner.value.id === chat.id) {
                 const alreadyExists = chatPartner.value.messages.some(m => m.id === e.message.id);
                 if (!alreadyExists) {
-                    const shouldStick = isNearBottom(); // Zustand VOR dem push merken
+                    // Prüfe Position VOR dem Hinzufügen
+                    const container = scrollContainer.value;
+                    const wasNearBottom = container &&
+                        (container.scrollHeight - container.scrollTop - container.clientHeight) < 100;
+
                     chatPartner.value.messages.push(e.message);
                     chatPartner.value.messages.sort((a, b) => {
                         const da = new Date(a.created_at_iso || a.created_at);
                         const db = new Date(b.created_at_iso || b.created_at);
                         return da.getTime() - db.getTime();
                     });
-                    nextTick(() => { if (shouldStick) scrollToBottom(); });
+
+                    // Nur scrollen wenn wir vorher schon unten waren
+                    if (wasNearBottom) {
+                        await nextTick();
+                        await scrollToBottom();
+                    }
+
+                    await markMessagesAsRead([e.message]);
                 }
-                markMessagesAsRead(chatPartner.value.messages);
             }
 
             if (e.message.sender_id !== usePage().props.auth.user.id) {
@@ -934,6 +1023,29 @@ const moveChatToTop = (chatId) => {
         chats.value.unshift(item);
     }
 };
+
+// Event handlers for modal components
+const handleChatRenamed = (updatedChat) => {
+    // Update the current chat partner name
+    chatPartner.value.name = updatedChat.name;
+
+    // Update the name in the chats list
+    const chatInList = chats.value.find(c => c.id === chatPartner.value.id);
+    if (chatInList) {
+        chatInList.name = updatedChat.name;
+    }
+};
+
+const handleChatDeleted = (chatId) => {
+    // Remove chat from chats list
+    chats.value = chats.value.filter(c => c.id !== chatId);
+
+    // Go back to chat list
+    chatPartner.value = null;
+};
+
+
+
 
 </script>
 

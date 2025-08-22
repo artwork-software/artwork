@@ -287,13 +287,41 @@ const getEventStyle = (event, day, hour, zoom_factor) => {
         height = (24 * (zoom_factor * 115)) + 25 + 'px';
     } else if (isStartDay) {
         const startHour = parseInt(event.startHour, 10);
-        const startMinute = parseInt(event.startHour, 10) || 0;
-        const totalHours = event.eventLengthInHours > 0
-            ? event.eventLengthInHours
-            : Math.min(
+        // Fix: Extract minutes from the actual time string, not from startHour
+        const startMinute = event.startHour.toString().includes(':')
+            ? parseInt(event.startHour.toString().split(':')[1], 10) || 0
+            : 0;
+
+        // Use eventLengthInHours as primary source, with better fallback logic
+        let totalHours;
+        if (event.eventLengthInHours > 0) {
+            totalHours = event.eventLengthInHours;
+        } else if (event.end && event.daysOfEvent.length === 1) {
+            // For single-day events, calculate duration from start to end
+            const eventEnd = event.end ? String(event.end) : null;
+            if (eventEnd) {
+                const timePart = eventEnd.split(' ')[1] || eventEnd.split('T')[1];
+                if (timePart && timePart.includes(':')) {
+                    const endTime = timePart.split(':');
+                    const endHour = parseInt(endTime[0], 10) || 0;
+                    const endMinute = parseInt(endTime[1], 10) || 0;
+                    const endTimeInHours = endHour + endMinute / 60;
+                    const startTimeInHours = startHour + startMinute / 60;
+                    totalHours = Math.max(0.5, endTimeInHours - startTimeInHours); // Minimum 30 minutes
+                } else {
+                    totalHours = 1; // Default to 1 hour if end time format is unclear
+                }
+            } else {
+                totalHours = 1; // Default to 1 hour if no end time
+            }
+        } else {
+            // For multi-day events or when no end time, calculate remaining hours in day
+            totalHours = Math.min(
                 24 - startHour - startMinute / 60,
-                (event.end ? 24 : 0)
+                24
             );
+        }
+
         const minusHeight = event.daysOfEvent.length > 1 ? event.minutesFormStartHourToStart * (zoom_factor * 1.91) - 40 : 0;
         height = ((totalHours * (zoom_factor * 115)) - minusHeight) + 'px';
         marginTop = event.minutesFormStartHourToStart * (zoom_factor * 1.91) + 'px';

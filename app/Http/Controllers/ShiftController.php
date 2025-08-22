@@ -1209,7 +1209,7 @@ class ShiftController extends Controller
 
                 $entityModel->shiftPlanComments()->where('date', $day)->delete();
 
-                $dayShifts = $entityModel->shifts()->where('start_date', $day)->get();
+                $dayShifts = $entityModel->shifts()->where('shifts.start_date', $day)->get();
                 $this->shiftService->detachFromShifts($dayShifts, $modelClass, $entityModel);
 
                 $shifts = $shifts->merge($dayShifts); // Merge neue Shifts mit den vorherigen

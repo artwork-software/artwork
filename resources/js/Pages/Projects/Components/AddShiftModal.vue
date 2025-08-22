@@ -193,11 +193,18 @@
                     <div v-for="(computedShiftQualification, index) in this.computedShiftQualifications"
                          v-show="this.canComputedShiftQualificationBeShown(computedShiftQualification)">
                         <div class="w-full">
-                            <BaseInput type="number" v-if="this.canComputedShiftQualificationBeShown(computedShiftQualification)"
-                                             v-model="computedShiftQualification.value"
-                                             :id="'shift-qualification-' + index"
-                                             :label="$t('Amount {0}', [computedShiftQualification.name])"
-                                             @change="this.validateShiftsQualification(computedShiftQualification)" without-translation/>
+                            <BaseInput
+                                type="number"
+                                v-if="this.canComputedShiftQualificationBeShown(computedShiftQualification)"
+                                v-model.number="computedShiftQualification.value"
+                                :id="'shift-qualification-' + index"
+                                :name="'shift-qualification-' + index"
+                                :min="0"
+                                :max="1000"
+                                :label="$t('Amount {0}', [computedShiftQualification.name])"
+                                @change="onQualificationChange(computedShiftQualification)"
+                                without-translation
+                            />
                         </div>
                         <div v-if="computedShiftQualification.warning || computedShiftQualification.error"
                              class="space-y-2">
@@ -228,7 +235,7 @@
                 </div>
             </div>
             <div class="flex w-full items-center px-6" :class="!shift?.roomId ? 'justify-center' : 'justify-between'">
-                <ArtworkBaseModalButton variant="primary" type="submit" :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !shiftForm.break_minutes || !selectedCraft">
+                <ArtworkBaseModalButton variant="primary" type="submit" :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft">
                     {{ $t('Save') }}
                 </ArtworkBaseModalButton>
 
@@ -437,6 +444,12 @@ export default defineComponent({
                     }
                 }
             );
+        },
+        onQualificationChange(qualification) {
+            if (qualification.value < 0) {
+                qualification.value = 0
+            }
+            this.validateShiftsQualification(qualification)
         },
         canComputedShiftQualificationBeShown(computedShiftQualification) {
             //computedShiftQualification is shown if its either available or the modal is opened for edit and the
@@ -655,7 +668,7 @@ export default defineComponent({
                         this.shiftForm.patch(
                             route('event.shift.update', this.shift.id), {
                                 preserveScroll: true,
-                                preserveState: true,
+                                preserveState: false,
                                 onSuccess: () => {
                                     this.shiftForm.reset();
                                     router.reload({

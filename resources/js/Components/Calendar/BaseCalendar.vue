@@ -190,14 +190,14 @@
             </div>
             <div>
                 <FormButton
-                    class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="openDeleteSelectedEventsModal = true"
                     :disabled="computedCheckedEventsForMultiEditCount === 0"
                     :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Delete events')"/>
             </div>
             <div>
                 <FormButton
-                    class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="cancelMultiEditDuplicateSelection"
                     :disabled="computedCheckedEventsForMultiEditCount === 0"
                     :text="$t('Cancel selection')"/>
@@ -218,7 +218,7 @@
             </div>
             <div v-if="can('can edit planning calendar') || hasAdminRole()">
                 <FormButton
-                    class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="showRejectEventVerificationModal = true"
                     :disabled="computedCheckedEventsForMultiEditCount === 0"
                     :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Reject events')"/>

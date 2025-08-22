@@ -34,7 +34,7 @@
                 <div class="card white overflow-hidden">
                     <div class="w-full px-4 py-3">
                         <div class="flex items-center justify-between w-full">
-                            <div class="text-artwork-buttons-create text-xs font-bold">
+                            <div class="text-sm font-bold">
                                 Chat
                             </div>
                             <div class="flex items-center gap-x-2">

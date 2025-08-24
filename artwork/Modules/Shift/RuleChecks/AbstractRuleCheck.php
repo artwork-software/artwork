@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\RuleChecks;
 
+use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Shift\Contracts\ShiftRuleCheckInterface;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftRule;
@@ -107,7 +108,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
 
             // Calculate end time of current shift (may go into next day)
             $currentShiftEnd = Carbon::parse($currentShift->end_date)->setTimeFromTimeString($currentShift->end);
-            
+
             // Calculate start time of next shift
             $nextShiftStart = Carbon::parse($nextShift->start_date)->setTimeFromTimeString($nextShift->start);
 
@@ -150,8 +151,50 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
             return true;
         }
 
-        // TODO: Check against actual holiday database table
-        // For now, just return false for non-Sundays
+        $query = Holiday::query();
+
+        // Check for holidays that match the exact date
+        $exactDateMatch = $query->where('date', '<=', $date->format('Y-m-d'))
+            ->where('end_date', '>=', $date->format('Y-m-d'))
+            ->exists();
+
+        if ($exactDateMatch) {
+            return true;
+        }
+
+        // Check for yearly recurring holidays
+        $yearlyHolidays = Holiday::where('yearly', true)->get();
+
+        foreach ($yearlyHolidays as $holiday) {
+            if (!$holiday->date || !$holiday->end_date) {
+                continue;
+            }
+
+            $holidayStart = Carbon::parse($holiday->date);
+            $holidayEnd = Carbon::parse($holiday->end_date);
+
+            // Create dates for this year with the same month/day as the holiday
+            $thisYearStart = Carbon::create(
+                $date->year,
+                $holidayStart->month,
+                $holidayStart->day
+            );
+            $thisYearEnd = Carbon::create(
+                $date->year,
+                $holidayEnd->month,
+                $holidayEnd->day
+            );
+
+            // Handle end date in next year (e.g. Dec 31 - Jan 2)
+            if ($thisYearEnd->lt($thisYearStart)) {
+                $thisYearEnd->addYear();
+            }
+
+            if ($date->between($thisYearStart, $thisYearEnd)) {
+                return true;
+            }
+        }
+
         return false;
     }
 

@@ -7,6 +7,7 @@ use Artwork\Modules\User\Services\UserStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftRuleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,4 +60,11 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/inventory', [InventoryCategoryApiController::class, 'index']);
     Route::get('/inventory/articles', [InventoryArticleApiController::class, 'index']);
     Route::get('/inventory/articles/{article}', [InventoryArticleApiController::class, 'show']);
+});
+
+// Shift Rules API routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/shift-rules/validate', [ShiftRuleController::class, 'validateRules'])->name('api.shift-rules.validate');
+    Route::get('/shift-rules/pending', [ShiftRuleController::class, 'getPendingViolations'])->name('api.shift-rules.pending');
+    Route::patch('/shift-rules/violations/{violationId}/status', [ShiftRuleController::class, 'updateViolationStatus'])->name('api.shift-rules.update-status');
 });

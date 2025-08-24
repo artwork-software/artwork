@@ -159,7 +159,7 @@ class ShiftRuleControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
-            ->component('ShiftRules/ContractAssignments')
+            ->component('ShiftWarnings/ContractAssignments')
             ->has('contracts')
             ->has('rules')
         );

@@ -15,14 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->enum('trigger_type', [
-                'maxWorkingHoursOnDay',
-                'maxConsecWorkingDays', 
-                'weeklyMaxHours',
-                'restTimeBeforeWorkday',
-                'restTimeBeforeHoliday',
-                'minDaysBeforeCommit'
-            ]);
+            $table->string('trigger_type');
             $table->decimal('individual_number_value', 8, 2);
             $table->string('warning_color', 7)->default('#ff0000');
             $table->boolean('is_active')->default(true);

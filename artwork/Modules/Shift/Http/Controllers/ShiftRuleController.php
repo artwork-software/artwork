@@ -36,7 +36,7 @@ class ShiftRuleController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'trigger_type' => 'required|string|in:maxWorkingHoursOnDay,maxConsecWorkingDays,maxWorkingHoursOnWeek,restTimeBeforeWorkday,restTimeBeforeHoliday',
+            'trigger_type' => 'required|string',
             'individual_number_value' => 'required|numeric|min:0.1',
             'warning_color' => 'required|string',
             'contract_ids' => 'nullable|array',

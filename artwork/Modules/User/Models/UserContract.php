@@ -4,6 +4,7 @@ namespace Artwork\Modules\User\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  *
@@ -42,4 +43,32 @@ class UserContract extends Model
         'compensation_period' => 'integer',
         'free_sundays_per_season' => 'integer'
     ];
+
+    /**
+     * @deprecated Use shiftRules() instead
+     */
+    public function workflowRules(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \Artwork\Modules\Workflow\Models\WorkflowRule::class,
+            'workflow_rule_contract_assignments',
+            'contract_id',
+            'workflow_rule_id'
+        )->withTimestamps();
+    }
+
+    public function userContractAssigns(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserContractAssign::class, 'user_contract_id');
+    }
+
+    public function shiftRules(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \Artwork\Modules\Shift\Models\ShiftRule::class,
+            'shift_rule_contract_assignments',
+            'contract_id',
+            'shift_rule_id'
+        )->withTimestamps();
+    }
 }

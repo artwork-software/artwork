@@ -44,129 +44,104 @@
     />
 </template>
 
-<script>
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import IconLib from "@/Mixins/IconLib.vue";
+<script setup lang="ts">
+import { ref, computed, watch, getCurrentInstance } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
-const booleanDefaultFalseCfg = {
-    type: Boolean,
-    default: false
+type User = {
+    id: number;
+    name?: string;
+    first_name?: string;
+    last_name?: string;
+    provider_name?: string;
+    profile_photo_url?: string;
+    project_manager_permission?: boolean;
+    use_chat?: boolean;
+    manager_type?: any;
 };
-export default {
-    name: "UserSearch",
-    mixins: [IconLib],
-    components: {BaseInput, AlertComponent, TextInputComponent, TeamIconCollection},
-    data() {
-        return {
-            user_search_query: '',
-            users: [],
-            blockSearchWorkers: false,
+
+type Craft = {
+    managersToBeAssigned?: Array<{ id: number; manager_type?: any }>;
+};
+
+const props = defineProps<{
+    teamMember?: number[];
+    label?: string;
+    onlyManager?: boolean;
+    onlyTeam?: boolean;
+    searchWorkers?: boolean;
+    dontCloseOnSelect?: boolean;
+    onlyUseChatUsers?: boolean;
+    withoutSelf?: boolean;
+    currentCraft?: Craft;
+    disabled?: boolean;
+}>();
+const emit = defineEmits(['user-selected']);
+
+const user_search_query = ref<string>('');
+const users = ref<User[]>([]);
+const blockSearchWorkers = ref<boolean>(false);
+const page = usePage();
+
+const { proxy } = getCurrentInstance()!;
+const $t = proxy.$t as (key: string) => string;
+
+const projectManagementText = computed(() => {
+    return $t
+        ? $t('Only users who have the "Project management" right are displayed')
+        : 'Only users who have the "Project management" right are displayed';
+});
+
+function selectUser(user: User) {
+    emit('user-selected', user);
+    if (props.dontCloseOnSelect) return;
+    user_search_query.value = '';
+}
+
+function checkIfOnlyProp(user: User) {
+        if (props.onlyManager) return user.project_manager_permission;
+        if (props.onlyTeam && props.teamMember) return props.teamMember.includes(user.id);
+        if (props.onlyUseChatUsers) return user.use_chat;
+        if (props.withoutSelf) {
+            const authUserId = (page.props as any)?.auth?.user?.id;
+            return user.id !== authUserId;
         }
-    },
-    props: {
-        teamMember: {
-            type: Object,
-            required: false,
-            default: []
-        },
-        label: {
-            type: String,
-            default: 'Search for users'
-        },
-        onlyManager: booleanDefaultFalseCfg,
-        onlyTeam: booleanDefaultFalseCfg,
-        searchWorkers: booleanDefaultFalseCfg,
-        dontCloseOnSelect: booleanDefaultFalseCfg,
-        onlyUseChatUsers: booleanDefaultFalseCfg,
-        withoutSelf: booleanDefaultFalseCfg,
-        currentCraft: {
-            type: Object,
-            required: false
-        },
-        disabled: {
-            type: Boolean,
-            default: false
-        }
-    },
-    computed: {
-        projectManagementText() {
-            return this.$t('Only users who have the "Project management" right are displayed');
-        }
-    },
-    emits: ['user-selected'],
-    methods: {
-        selectUser(user) {
-            this.$emit('user-selected', user);
-            if (this.dontCloseOnSelect) {
-                return;
-            }
-            this.user_search_query = '';
-        },
-        checkIfOnlyProp(user) {
-            if (this.onlyManager) {
-                return user.project_manager_permission;
-            }
+        return true;
+}
 
-            if (this.onlyTeam) {
-                return this.teamMember.includes(user.id)
-            }
-
-            if (this.onlyUseChatUsers) {
-                return user.use_chat;
-            }
-
-            if (this.withoutSelf) {
-                return user.id !== this.$page.props.auth.user.id;
-            }
-
-            return true;
-        },
-        closeSearch() {
-            this.user_search_query = '';
-
-            if (this.searchWorkers) {
-                this.blockSearchWorkers = true;
-                this.users = [];
-            }
-        }
-    },
-    watch: {
-        user_search_query: {
-            handler() {
-                if (this.blockSearchWorkers) {
-                    this.blockSearchWorkers = false;
-                    return;
-                }
-                let desiredRoute = this.searchWorkers ? route('worker.scoutSearch') : route('user.scoutSearch');
-
-                axios.post(
-                    desiredRoute,
-                    {
-                        user_search: this.user_search_query,
-                        wantsJson: true,
-                    }
-                ).then(
-                    response => {
-                        this.users = response.data;
-                        if (this.searchWorkers) {
-                            this.users = response.data.filter(user => {
-                                return this.currentCraft.managersToBeAssigned.find(
-                                    (currentManagingWorker) => {
-                                        currentManagingWorker.id === user.id && user.manager_type === currentManagingWorker
-                                    }
-                                );
-                            });
-                        }
-
-                        return this.users;
-                    }
-                );
-            },
-            deep: true
-        }
+function closeSearch() {
+    user_search_query.value = '';
+    if (props.searchWorkers) {
+        blockSearchWorkers.value = true;
+        users.value = [];
     }
 }
+
+watch(user_search_query, async (newVal) => {
+    if (blockSearchWorkers.value) {
+        blockSearchWorkers.value = false;
+        return;
+    }
+    let desiredRoute = props.searchWorkers ? route('worker.scoutSearch') : route('user.scoutSearch');
+    try {
+        const response = await axios.post(desiredRoute, {
+            user_search: newVal,
+            wantsJson: true,
+        });
+        let resultUsers: User[] = response.data;
+        if (props.searchWorkers && props.currentCraft?.managersToBeAssigned) {
+            resultUsers = resultUsers.filter(user => {
+                return props.currentCraft.managersToBeAssigned?.find(
+                    (currentManagingWorker) => currentManagingWorker.id === user.id && user.manager_type === currentManagingWorker
+                );
+            });
+        }
+        users.value = resultUsers;
+    } catch (e) {
+        users.value = [];
+    }
+}, { deep: true });
 </script>

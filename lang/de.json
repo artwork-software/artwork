@@ -2991,6 +2991,6 @@
     "Enter a new name for this group chat": "Gib einen neuen Namen für diesen Gruppenchat ein",
     "Group Name": "Gruppenname",
     "Enter group name": "Gruppenname eingeben",
-    "Are you sure you want to delete this group chat? This action cannot be undone and all messages will be permanently deleted.": "Möchtest du diesen Gruppenchat wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden und alle Nachrichten werden dauerhaft gelöscht."
+    "Are you sure you want to delete this group chat? This action cannot be undone and all messages will be permanently deleted.": "Möchtest du diesen Gruppenchat wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden und alle Nachrichten werden dauerhaft gelöscht.",
+    "Responsible Users": "Verantwortliche Nutzer*innen"
 }
-

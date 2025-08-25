@@ -34,7 +34,10 @@
             <div class="relative">
                 <BaseCard class="p-4">
                     <div class="sticky top-0 z-10 mb-4 rounded-lg bg-white w-full">
-                        <div class="grid px-3 py-3 grid-cols-9 gap-4 w-full">
+                        <div class="grid px-3 py-3 grid-cols-10 gap-4 w-full">
+                            <div class="flex items-center">
+                                <h3 class="xsDark">{{ $t('Name') }}</h3>
+                            </div>
                             <div class="flex items-center">
                                 <h3 class="xsDark">{{ $t('Material value') }}</h3>
                             </div>

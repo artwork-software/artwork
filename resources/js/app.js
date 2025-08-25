@@ -56,10 +56,9 @@ const pages = import.meta.glob('./Pages/**/*.vue');
 
 createInertiaApp({
     title: (title) => `${title}`,
-    resolve: async (name) => {
-        const pagePath = `./Pages/${name}.vue`;
-        const { default: component } = await pages[pagePath]();
-        return component;
+    resolve: (name) => {
+        const pages = import.meta.glob('./Pages/**/*.vue')
+        return pages[`./Pages/${name}.vue`]();
     },
     setup({ el, App: inertiaApp, props, plugin }) {
         const app = createApp({ render: () => h(inertiaApp, props) })

@@ -55,10 +55,8 @@ class ExternalIssueController extends Controller
 
     public function store(StoreExternalIssueRequest $request)
     {
-        /** @var User $user */
-        $user = $this->auth->user();
-        $issue = $this->externalIssueService->store($request->validated(), $user, $request->file('files', []));
-
+    
+        $issue = $this->externalIssueService->store($request->validated(), $request->file('files', []));
     }
 
     public function update(UpdateExternalIssueRequest $request, ExternalIssue $externalIssue)

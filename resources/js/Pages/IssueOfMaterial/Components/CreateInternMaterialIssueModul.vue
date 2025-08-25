@@ -61,7 +61,7 @@
                     </div>
 
                     <div class="col-span-full">
-                        <UserSearch @user-selected="addResponsibleUser"/>
+                        <UserSearch @user-selected="addResponsibleUser" :label="$t('Responsible Users')" />
 
                         <div class="mt-4" v-if="selectedResponsibleUsers.length > 0">
                             <div class="text-sm font-bold mb-3">{{ $t('Selected responsible users') }}:</div>

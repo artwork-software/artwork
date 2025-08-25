@@ -4,9 +4,15 @@
             <div>
                 <div class="grid gird-cols-1 md:grid-cols-2 gap-4">
                     <div class="col-span-full">
+                        <BaseInput id="name" type="text" v-model="externMaterialIssueForm.name" :label="$t('Name')" />
+                        <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.name">{{ externMaterialIssueForm.errors.name }}</p>
+                    </div>
+
+                    <div class="col-span-full">
                         <BaseInput id="material_value" type="number" :step="0.01" v-model="externMaterialIssueForm.material_value" :label="$t('Material Value')" />
                         <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.material_value">{{ externMaterialIssueForm.errors.material_value }}</p>
                     </div>
+
 
                     <div class="col-span-full">
                         <BaseInput id="issue_date" v-model="externMaterialIssueForm.issue_date" :label="$t('Issue Date')" type="date" />
@@ -34,6 +40,31 @@
                         <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.external_address">{{ externMaterialIssueForm.errors.external_address }}</p>
                     </div>
 
+                    <div class="col-span-full">
+                        <UserSearch
+                            @user-selected="selectIssueBy"
+                            :label="$t('Issued By')"
+                            v-if="!issueBy"
+                        />
+
+                        <div v-else>
+                            <div class="flex items-center">
+                                <div class="flex items-center cursor-pointer">
+                                    <div class="relative flex items-center">
+                                        <img class="inline-block size-9 rounded-full object-cover" :src="issueBy.profile_photo_url" alt="" />
+                                    </div>
+                                    <div class="mx-2">
+                                            <p class="xsDark">{{ issueBy.name}}</p>
+                                     </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <button type="button" @click="issueBy = null">
+                                        <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="col-span-full">
                         <BaseTextarea id="return_remarks" v-model="externMaterialIssueForm.return_remarks" :label="$t('Defects after return')" />
@@ -158,17 +189,20 @@
                     <div class="bg-backgroundGray px-4 py-3 rounded-lg border border-gray-200 min-h-60 max-h-60 overflow-scroll">
                         <div class="divide-y divide-gray-200 divide-dashed">
                             <div class="py-2" v-for="(article, index) in externMaterialIssueForm.special_items" :key="index">
-                                <div class="flex items-center gap-x-4 justify-between">
-                                    <div class="w-full">
+                                <div class="grid grid-cols-1 md:grid-cols-9 gap-4">
+                                    <div class="col-span-6">
                                         <BaseInput :id="'special-article-name-' + index" type="text" v-model="article.name" :label="$t('Article Name')" />
                                     </div>
-                                    <div class="w-28">
+                                    <div class="col-span-2">
                                         <BaseInput :id="'special-article-quantity' + index" type="number" v-model="article.quantity" :label="$t('Quantity')" />
                                     </div>
                                     <div class="flex items-center justify-end">
                                         <button type="button" class="text-xs text-red-500" @click="removeSpecialArticle(index)">
                                             <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
                                         </button>
+                                    </div>
+                                    <div class="col-span-full">
+                                        <BaseTextarea :id="'special-article-description-' + index" v-model="article.description" rows="1" :label="$t('Description')" />
                                     </div>
                                 </div>
                             </div>
@@ -231,6 +265,7 @@ const props = defineProps({
         required: false,
         default: () => ({
             material_value: 0.00,
+            name: '',
             issue_date: '',
             return_date: '',
             return_remarks: '',
@@ -241,7 +276,8 @@ const props = defineProps({
             files: [],
             articles: [],
             special_items: [],
-            special_items_done: false
+            special_items_done: false,
+            issued_by_id: null
         })
     },
 })
@@ -249,6 +285,7 @@ const props = defineProps({
 
 const externMaterialIssueForm = useForm({
     id: props.externMaterialIssue.id ?? null,
+    name: props.externMaterialIssue.name,
     material_value: props.externMaterialIssue.material_value,
     issue_date: props.externMaterialIssue.issue_date,
     return_date: props.externMaterialIssue.return_date,
@@ -262,10 +299,12 @@ const externMaterialIssueForm = useForm({
     articles: props.externMaterialIssue?.articles || [],
     special_items: props.externMaterialIssue?.special_items || [],
     special_items_done: props.externMaterialIssue?.special_items_done || false,
+    issued_by_id: props.externMaterialIssue?.issued_by_id || null
 })
 
 const showArticleFilterModal = ref(false)
 const showSelectMaterialSetModal = ref(false)
+const issueBy = ref(null)
 
 const isReturnDateBeforeIssueDate = computed(() => {
     if (!externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date) {
@@ -330,6 +369,10 @@ const submit = () => {
     // Create a list of existing file IDs to preserve them during update
     if (props.externMaterialIssue?.files) {
         externMaterialIssueForm.existing_file_ids = props.externMaterialIssue.files.map(file => file.id)
+    }
+
+    if (issueBy.value) {
+        externMaterialIssueForm.issued_by_id = issueBy.value.id
     }
 
     if(props.externMaterialIssue?.id){
@@ -415,6 +458,9 @@ const removeFile = (id) => {
     })
 }
 
+const selectIssueBy = (user) => {
+    issueBy.value = user
+}
 
 watch(
     () => [externMaterialIssueForm.issue_date, externMaterialIssueForm.return_date],

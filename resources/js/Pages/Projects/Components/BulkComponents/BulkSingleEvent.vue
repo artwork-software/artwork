@@ -116,6 +116,9 @@
                        @focusout="updateEventInDatabase"
                        :disabled="canEditComponent === false"
                 />
+                <div v-if="event.nameError && !event.name" class="text-xs mt-1 text-artwork-error">
+                    {{ $t('Event name is mandatory') }}
+                </div>
             </div>
             <div :style="getColumnSize(4)">
                 <Listbox :id="'room-' + index"
@@ -242,9 +245,6 @@
                     </BaseMenu>
                 </div>
             </div>
-        </div>
-        <div v-if="event.nameError && !event.name" class="text-xs mt-1 text-artwork-messages-error">
-            {{ $t('Event name is mandatory') }}
         </div>
         <confirmation-component
             v-if="showDeleteEventConfirmModal"
@@ -411,9 +411,9 @@ const updateEventInDatabase = async () => {
             props.event.nameError = true;
             isUpdating.value = false;
             return;
+        } else {
+            props.event.nameError = false;
         }
-        if (!window.__bulkSaveRunning) {
-            window.__bulkSaveRunning = true;
         router.patch(route('event.update.single.bulk', {event: props.event.id}), {
             data: props.event
         }, {
@@ -431,19 +431,16 @@ const updateEventInDatabase = async () => {
                             if (field) type === 'listbox' ? field.click() : field.focus();
                         }
                         isUpdating.value = false;
-                        window.__bulkSaveRunning = false;
                     }, 300);
                 })
 
             },
             onError: () => {
                 isUpdating.value = false;
-                window.__bulkSaveRunning = false;
 
             }
         });
         }
-    }
 }
 
 const lastFocusedField = ref(null);

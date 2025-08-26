@@ -118,7 +118,7 @@ const tooltipBinding = computed(() => ({
     useTranslation: props.useTranslation,
     position: props.direction, // Fallback, wenn kein Modifier genutzt wird
     pt: {
-        text: '!bg-primary !text-primary-contrast !font-medium !text-xs !px-2 !py-1 !border !border-gray-800 !rounded-lg !shadow-lg !rounded-md',
+        text: '!bg-primary !text-primary-contrast !font-medium !text-xs !px-2 !py-1 !border !border-gray-800 !rounded-lg !shadow-lg !rounded-md !w-auto !min-w-max !max-w-xs !whitespace-nowrap',
     },
 }))
 </script>

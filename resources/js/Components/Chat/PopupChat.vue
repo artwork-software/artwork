@@ -764,72 +764,37 @@ const positionClass = computed(() => {
 });
 
 const SIDE_OFFSET = 20; // entspricht top-5/right-5/...
-const mainRect = ref({ left: 0, right: window.innerWidth, width: window.innerWidth });
-
-let ro = null;
-const updateMainRect = () => {
-    const el = document.getElementById('main-content-wrapper');
-    if (el) {
-        const rect = el.getBoundingClientRect();
-        mainRect.value = { left: rect.left, right: rect.right, width: rect.width };
-    } else {
-        mainRect.value = { left: 0, right: window.innerWidth, width: window.innerWidth };
-    }
-};
 
 const positionStyle = computed(() => {
     const gap = `${SIDE_OFFSET}px`;
-    const leftPx = (px) => `${px}px`;
-    const rightInset = (px) => `${px}px`;
-    const rightGap = window.innerWidth - mainRect.value.right + SIDE_OFFSET;
-    const leftGap = mainRect.value.left + SIDE_OFFSET;
 
     switch (chatPosition.value) {
         case 'top-left':
-            return { top: gap, left: leftPx(leftGap) };
+            return { top: gap, left: gap };
         case 'top-right':
-            return { top: gap, right: rightInset(rightGap) };
+            return { top: gap, right: gap };
         case 'bottom-left':
-            return { bottom: gap, left: leftPx(leftGap) };
+            return { bottom: gap, left: gap };
         case 'bottom-right':
-            return { bottom: gap, right: rightInset(rightGap) };
+            return { bottom: gap, right: gap };
         case 'middle-left':
-            return { top: '50%', left: leftPx(leftGap), transform: 'translateY(-50%)' };
+            return { top: '50%', left: gap, transform: 'translateY(-50%)' };
         case 'middle-right':
-            return { top: '50%', right: rightInset(rightGap), transform: 'translateY(-50%)' };
-        case 'top-center': {
-            const center = mainRect.value.left + mainRect.value.width / 2;
-            return { top: gap, left: leftPx(center), transform: 'translateX(-50%)' };
-        }
-        case 'bottom-center': {
-            const center = mainRect.value.left + mainRect.value.width / 2;
-            return { bottom: gap, left: leftPx(center), transform: 'translateX(-50%)' };
-        }
+            return { top: '50%', right: gap, transform: 'translateY(-50%)' };
+        case 'top-center':
+            return { top: gap, left: '50%', transform: 'translateX(-50%)' };
+        case 'bottom-center':
+            return { bottom: gap, left: '50%', transform: 'translateX(-50%)' };
         default:
-            return { bottom: gap, right: rightInset(rightGap) };
+            return { bottom: gap, right: gap };
     }
 });
 
 onMounted(() => {
-    updateMainRect();
-    window.addEventListener('resize', updateMainRect);
-    // NEU: bei Scroll ebenfalls aktualisieren (auch in verschachtelten Scrollern)
-    window.addEventListener('scroll', updateMainRect, true);
-
-    const el = document.getElementById('main-content-wrapper');
-    if (el && 'ResizeObserver' in window) {
-        ro = new ResizeObserver(() => updateMainRect());
-        ro.observe(el);
-    }
-
     document.addEventListener('mousedown', onGlobalPointerDown);
 });
 
 onBeforeUnmount(() => {
-    window.removeEventListener('resize', updateMainRect);
-    window.removeEventListener('scroll', updateMainRect, true);
-    if (ro) ro.disconnect();
-
     document.removeEventListener('mousedown', onGlobalPointerDown);
 });
 

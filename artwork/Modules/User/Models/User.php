@@ -286,6 +286,14 @@ class User extends Model implements
 
     //protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
+        /**
+         * Beziehung zum InventoryUserFilter
+         */
+        public function inventoryUserFilter()
+        {
+            return $this->hasOne(\Artwork\Modules\Inventory\Models\InventoryUserFilter::class, 'user_id');
+        }
+
     public function getTypeAttribute(): string
     {
         return 'user';

@@ -9,13 +9,19 @@ use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\InternalIssue\Services\InternalIssueService;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
+use Illuminate\Auth\AuthManager;
 
 class InternalIssueController extends Controller
 {
-    public function __construct(protected InternalIssueService $internalIssueService) {}
+    public function __construct(
+        protected InternalIssueService $internalIssueService,
+        protected InventoryUserFilterShareService $inventoryUserFilterShareService,
+        protected AuthManager $authManger
+    ) {}
 
     public function index(): \Inertia\Response
     {
@@ -38,11 +44,26 @@ class InternalIssueController extends Controller
                 ->paginate($entitiesPerPage);
         }
 
+        
+
         return Inertia::render('IssueOfMaterial/IssueOfMaterialManagement', [
             'issues' => $issues,
             'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
                 ->get() : [],
             'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
+            'detailedArticle' => Inertia::optional(fn () => 
+                InventoryArticle::with([
+                    'category',
+                    'subCategory',
+                    'properties',
+                    'images' => function ($query) {
+                        $query->orderBy('is_main_image', 'desc')->orderBy('id');
+                    },
+                    'statusValues',
+                    'detailedArticleQuantities.status',
+                ])->find(request()?->get('articleId'))
+                ),
+                $this->inventoryUserFilterShareService->getFilterDataForUser($this->authManger->user())
         ]);
     }
 

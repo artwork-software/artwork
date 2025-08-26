@@ -4,7 +4,7 @@
             <BaseInput
                 :id="id"
                 v-model="article_search_query"
-                :label="label"
+                :label="label || 'Search for an article...'"
             />
         </div>
         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">

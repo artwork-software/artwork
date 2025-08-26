@@ -25,23 +25,38 @@
                                     <div class="flex items-center gap-x-3">
                                         <div class="text-gray-800 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
                                             <div @click="showBackdrop = !showBackdrop">
-                                                <ToolTipDefault top show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
+                                                <ToolTipComponent 
+                                                    icon="IconBackground"
+                                                    :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"
+                                                    classes="text-gray-800"
+                                                    direction="top"
+                                                />
                                             </div>
                                         </div>
                                         <div ref="dragHandleRef" class="text-gray-800 hover:text-yellow-400 transition-all duration-150 ease-in-out cursor-grab dragHandle">
                                             <div>
-                                                <ToolTipDefault top show-draggable :tooltip-text="$t('Hold here to move')"/>
+                                                <ToolTipComponent 
+                                                    icon="IconDragDrop"
+                                                    :tooltip-text="$t('Hold here to move')"
+                                                    classes="text-gray-800"
+                                                    direction="top"
+                                                />
                                             </div>
                                         </div>
                                         <div class="text-gray-800 hover:text-artwork-error transition-all duration-150 ease-in-out cursor-pointer">
                                             <div @click="$emit('close')">
-                                                <ToolTipDefault top show-x-icon :tooltip-text="$t('Close Window')"/>
+                                                <ToolTipComponent 
+                                                    icon="IconX"
+                                                    :tooltip-text="$t('Close Window')"
+                                                    classes="text-gray-800"
+                                                    direction="top"
+                                                />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="p-5">
-                                    <div class="card white p-5 relative">
+                                    <div class="card white p-5 relative" :class="[classesInWhiteBackground ? classesInWhiteBackground : '']">
                                         <slot/>
                                     </div>
                                 </div>
@@ -61,6 +76,7 @@ import {nextTick, onMounted, ref} from "vue";
 import {Dialog, DialogPanel, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import { createDraggable } from 'animejs';
 import CardHeadline from "@/Artwork/Cards/CardHeadline.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const props = defineProps({
     modalSize: {
@@ -82,7 +98,7 @@ const props = defineProps({
     title: {
         type: String,
         default: 'Artwork Modal'
-    },
+    },  
     description: {
         type: String,
         default: 'This is a description'
@@ -90,6 +106,10 @@ const props = defineProps({
     showBackdrop: {
         type: Boolean,
         default: true
+    },
+    classesInWhiteBackground: {
+        type: String,
+        default: false
     }
 })
 const open = ref(true)

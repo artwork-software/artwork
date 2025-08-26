@@ -6,6 +6,7 @@
                     title="My ToDo-Lists"
                     :filters="filters"
                     :checklist_templates="checklist_templates"
+                    :tab_id="first_project_tasks_tab_id"
                     is-in-own-task-management
                 >
                     <template #search>

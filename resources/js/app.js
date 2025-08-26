@@ -11,6 +11,10 @@ import * as VueI18n from 'vue-i18n';
 import en from '../../lang/en.json';
 import de from '../../lang/de.json';
 import Icons from "@/icons.js";
+import PrimeVue from 'primevue/config';
+import Aura from '@primeuix/themes/aura';
+import Tooltip from 'primevue/tooltip';
+
 
 const svgColors = {
     eventType0: '#A7A6B1',
@@ -52,10 +56,9 @@ const pages = import.meta.glob('./Pages/**/*.vue');
 
 createInertiaApp({
     title: (title) => `${title}`,
-    resolve: async (name) => {
-        const pagePath = `./Pages/${name}.vue`;
-        const { default: component } = await pages[pagePath]();
-        return component;
+    resolve: (name) => {
+        const pages = import.meta.glob('./Pages/**/*.vue')
+        return pages[`./Pages/${name}.vue`]();
     },
     setup({ el, App: inertiaApp, props, plugin }) {
         const app = createApp({ render: () => h(inertiaApp, props) })
@@ -65,7 +68,13 @@ createInertiaApp({
         app.use(VueMathjax);
         app.use(i18n);
         app.use(Icons);
-        app.use(LaravelPermissionToVueJS)
+        app.use(PrimeVue, {
+            theme: {
+                preset: Aura
+            }
+        });
+        app.use(LaravelPermissionToVueJS);
+        app.directive('tooltip', Tooltip);
         app.mount(el);
         app.config.globalProperties.$updateLocale = function (newLocale) {
             this.$i18n.locale = newLocale;

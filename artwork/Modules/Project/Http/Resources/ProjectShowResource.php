@@ -52,7 +52,7 @@ class ProjectShowResource extends JsonResource
             'write_auth' => $this->writeUsers,
             'curr_user_is_related' => $this->users->contains(Auth::id()),
             'key_visual_path' => $this->key_visual_path,
-            'state' => $this->state()->first(),
+            'state' => $this->status()->first(),
             'cost_center' => $this->costCenter,
             'moneySources' => $this->money_sources,
             'project_history' => $historyArray,
@@ -61,10 +61,43 @@ class ProjectShowResource extends JsonResource
             'contracts' => ContractResource::collection($this->contracts),
             'isMemberOfADepartment' => $this->departments
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),
-            'public_checklists' => ChecklistIndexResource::collection($this->checklists->whereNull('user_id'))
-                ->resolve(),
-            'private_checklists' => ChecklistIndexResource::collection($this->checklists->where('user_id', Auth::id()))
-                ->resolve(),
+            'public_checklists' => ChecklistIndexResource::collection(
+                $this->checklists->where('private', false)->filter(function ($checklist) {
+                    $userId = Auth::id();
+                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
+                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
+
+                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
+                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
+                        return $task->task_users->contains('id', $userId);
+                    });
+
+                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
+                    $isCreator = $checklist->user_id === $userId;
+
+                    //Prüfen, ob der Benutzer im Projektteam ist
+                    $isInProjectTeam = $checklist->project->users->contains('id', $userId);
+
+                    return $isInChecklistUsers || $isInTaskUsers || $isCreator || $isInProjectTeam;
+                })
+            )->resolve(),
+            'private_checklists' => ChecklistIndexResource::collection(
+                $this->checklists->where('private', true)->filter(function ($checklist) {
+                    $userId = Auth::id();
+                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
+                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
+
+                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
+                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
+                        return $task->task_users->contains('id', $userId);
+                    });
+
+                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
+                    $isCreator = $checklist->user_id === $userId;
+
+                    return $isInChecklistUsers || $isInTaskUsers || $isCreator;
+                })
+            )->resolve(),
             'comments' => $this->comments->map(fn ($comment) => [
                 'id' => $comment->id,
                 'text' => $comment->text,

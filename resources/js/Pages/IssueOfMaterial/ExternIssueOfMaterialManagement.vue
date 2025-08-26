@@ -68,7 +68,7 @@
 
                     <div class="">
                         <WhiteInnerCard class="my-3 group/issueOfMaterial" :key="issueOfMaterial.id" v-for="issueOfMaterial in issues.data">
-                            <SingleExternMaterialIssue :extern-material-issue="issueOfMaterial" />
+                            <SingleExternMaterialIssue :extern-material-issue="issueOfMaterial" :detailed-article="detailedArticle" />
                         </WhiteInnerCard>
                     </div>
 
@@ -117,6 +117,10 @@ const props = defineProps({
     materialSets: {
         type: Object,
         required: true
+    },
+    detailedArticle: {
+        type: Object,
+        required: false
     }
 })
 

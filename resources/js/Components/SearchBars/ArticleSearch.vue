@@ -8,7 +8,7 @@
             />
         </div>
         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-            <div v-if="articles.length > 0" class="absolute rounded-lg z-10 w-full max-h-60 bg-white shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+            <div v-if="articles.length > 0" class="absolute rounded-lg z-10 w-full max-h-60 bg-white shadow-lg text-base border border-gray-300 overflow-auto focus:outline-none sm:text-sm">
                 <div class="border-gray-200 py-4">
                     <div v-for="(article, index) in articles" :key="index" class="flex items-center cursor-pointer">
                         <div class="flex-1 text-sm" @click="selectArticle(article)">
@@ -27,67 +27,59 @@
     </div>
 </template>
 
-<script>
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import debounce from "lodash.debounce";
+<script setup lang="ts">
+import { ref, watch, getCurrentInstance } from 'vue';
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
+import debounce from 'lodash.debounce';
+import axios from 'axios';
 
-export default {
-    name: "ArticleSearch",
-    mixins: [IconLib],
-    components: {BaseInput, AlertComponent, TextInputComponent, TeamIconCollection},
-    data() {
-        return {
-            article_search_query: '',
-            articles: [],
-            showLoading: false,
-        }
-    },
-    props: {
-        label: {
-            type: String,
-            default: 'Search for Articles'
-        },
-        id: {
-            type: String,
-            default: 'article_search_input'
-        }
-    },
-    emits: ['article-selected'],
-    methods: {
-        selectArticle(selectedArticle) {
-            this.$emit('article-selected', selectedArticle);
-            this.article_search_query = '';
-            this.articles = [];
-            this.showLoading = false;
-        },
-        searchArticles() {
-            if (this.article_search_query.length >= 2) {
-                axios.post(route('inventory.articles.search'),{
-                    article_search: this.article_search_query,
-                    wantsJson: true,
-                }).then(response => {
-                    this.showLoading = false;
-                    this.articles = response.data;
-                });
-            } else {
-                this.articles = [];
-            }
-        }
-    },
-    watch: {
-        article_search_query: {
-            handler() {
-                this.article_search_query.length >= 2 ? this.showLoading = true : this.showLoading = false;
-                debounce(() => {
-                    this.searchArticles();
-                }, 300)();
-            },
-            deep: true
-        }
-    }
+type Article = {
+    name: string;
+    category: { name: string };
+    sub_category?: { name: string };
+};
+
+const props = defineProps<{
+    label?: string;
+    id?: string;
+}>();
+const emit = defineEmits(['article-selected']);
+
+const article_search_query = ref<string>('');
+const articles = ref<Article[]>([]);
+const showLoading = ref<boolean>(false);
+
+const { proxy } = getCurrentInstance()!;
+const $t = proxy.$t as (key: string, args?: any[]) => string;
+
+function selectArticle(selectedArticle: Article) {
+    emit('article-selected', selectedArticle);
+    article_search_query.value = '';
+    articles.value = [];
+    showLoading.value = false;
 }
+
+const searchArticles = debounce(async () => {
+    if (article_search_query.value.length >= 2) {
+        try {
+            const response = await axios.post(route('inventory.articles.search'), {
+                article_search: article_search_query.value,
+                wantsJson: true,
+            });
+            showLoading.value = false;
+            articles.value = response.data;
+        } catch {
+            articles.value = [];
+            showLoading.value = false;
+        }
+    } else {
+        articles.value = [];
+        showLoading.value = false;
+    }
+}, 300);
+
+watch(article_search_query, () => {
+    showLoading.value = article_search_query.value.length >= 2;
+    searchArticles();
+}, { deep: true });
 </script>

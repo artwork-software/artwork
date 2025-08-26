@@ -80,7 +80,7 @@
         :external-issue="externMaterialIssue"
         />
 
-    <ExternalMaterialIssueDetailModal :issue="externMaterialIssue" @close="showIssueOfMaterialDetailModal = false" v-if="showIssueOfMaterialDetailModal" />
+    <ExternalMaterialIssueDetailModal :issue="externMaterialIssue" @close="showIssueOfMaterialDetailModal = false" v-if="showIssueOfMaterialDetailModal" :detailed-article="detailedArticle" />
 </template>
 
 <script setup>
@@ -114,6 +114,10 @@ const props = defineProps({
             special_items: [],
         })
     },
+    detailedArticle: {
+        type: Object,
+        required: false
+    }
 })
 
 const showIssueOfMaterialModal = ref(false);

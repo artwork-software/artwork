@@ -120,6 +120,10 @@ const props = defineProps({
     materialSets: {
         type: Object,
         required: false,
+    },
+    detailedArticle: {
+        type: Object,
+        required: false
     }
 })
 const showIssueOfMaterialModal = ref(false);

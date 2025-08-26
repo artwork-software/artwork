@@ -43,9 +43,12 @@
             <div>
                 <p class="text-gray-500">{{ $t('Articles')}}</p>
                 <div v-if="issue.articles?.length">
-                    <ul class="divide-y border rounded overflow-hidden">
+                    <ul class="divide-y border border-gray-300 rounded overflow-hidden">
                         <li v-for="a in issue.articles" :key="a.id" class="p-3 flex justify-between items-center">
-                            <span class="font-medium">{{ a.name }}</span>
+                            <div class="flex items-center gap-x-2">
+                                <span class="font-medium">{{ a.name }}</span>
+                                <component is="IconSearch" @click="openArticleDetailModal(a.id)" class="size-4 cursor-pointer hover:text-artwork-buttons-create duration-300 ease-in-out"/>
+                            </div>
                             <span class="text-sm text-gray-500">{{$t('Quantity')}}: {{ a.pivot.quantity }}</span>
                         </li>
                     </ul>
@@ -55,7 +58,7 @@
 
             <div v-if="issue.special_items?.length">
                 <p class="text-gray-500">{{ $t('Special article')}}</p>
-                <ul class="divide-y border rounded overflow-hidden">
+                <ul class="divide-y border border-gray-300 rounded overflow-hidden">
                     <li v-for="s in issue.special_items" :key="s.id" class="p-3 flex justify-between items-center">
                         <span class="font-medium">{{ s.name }}</span>
                         <span class="text-sm text-gray-500">{{$t('Quantity')}}: {{ s.quantity }}</span>
@@ -85,6 +88,14 @@
                 </ArtworkBaseModalButton>
             </div>
         </div>
+        
+
+        <ArticleDetailModal
+            v-if="showDetailArticleModal"
+            :article="detailedArticle"
+            @close="showDetailArticleModal = false"
+            :show-button-for-edit-and-delete="false"
+        />
 
     </ArtworkBaseModal>
 </template>
@@ -93,11 +104,35 @@
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import { defineAsyncComponent, ref } from "vue";
+import { router } from '@inertiajs/vue3';
 
-defineProps({
+const props = defineProps({
     issue: {
         type: Object,
         required: true,
     },
+    detailedArticle: {
+        type: Object,
+        required: false
+    }
 });
+
+const showDetailArticleModal = ref(false);
+
+const openArticleDetailModal = (articleId) => {
+    router.reload({
+        data: { articleId },
+        only: ['detailedArticle'],
+        onSuccess: () => {
+            showDetailArticleModal.value = true;
+            console.log(props.detailedArticle);
+        }
+    })
+}
+
+const ArticleDetailModal = defineAsyncComponent(() => {
+    return import('@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue');
+});
+
 </script>

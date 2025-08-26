@@ -83,7 +83,7 @@
                                     </span>
                             </div>
                         </div>
-                        <div class="flex gap-x-2 px-2">
+                        <div class="flex gap-x-2 px-2" v-if="showButtonForEditAndDelete">
                             <component is="IconEdit" class="w-5 h-5 rounded-full cursor-pointer hover:text-artwork-buttons-create duration-200 ease-in-out"
                                       @click="openArticleEditModal" v-if="can('inventory.create_edit') || is('artwork admin')" />
                             <component is="IconTrash" class="w-5 h-5 rounded-full cursor-pointer hover:text-red-500 duration-200 ease-in-out"
@@ -303,6 +303,10 @@ const props = defineProps({
     article: {
         type: Object,
         required: true
+    },
+    showButtonForEditAndDelete: {
+        type: Boolean,
+        default: true
     }
 })
 

@@ -31,7 +31,7 @@ class ExternalIssueController extends Controller
 
         // if articleIds is provided, filter issues by articles
         if (!empty($articleIds)) {
-            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy'])
+            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy', 'articles.images'])
                 ->whereHas('articles', function ($query) use ($articleIds) {
                     $query->whereIn('inventory_articles.id', [$articleIds]);
                 })
@@ -39,7 +39,7 @@ class ExternalIssueController extends Controller
                 ->orderBy('return_date')
                 ->paginate($entitiesPerPage);
         } else {
-            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy'])
+            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy', 'articles.images'])
                 ->orderBy('issue_date')
                 ->orderBy('return_date')
                 ->paginate($entitiesPerPage);
@@ -50,6 +50,18 @@ class ExternalIssueController extends Controller
             'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
                 ->get() : [],
             'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
+            'detailedArticle' => Inertia::optional(fn () => 
+                InventoryArticle::with([
+                    'category',
+                    'subCategory',
+                    'properties',
+                    'images' => function ($query) {
+                        $query->orderBy('is_main_image', 'desc')->orderBy('id');
+                    },
+                    'statusValues',
+                    'detailedArticleQuantities.status',
+                ])->find(request()?->get('articleId'))
+            )
         ]);
     }
 

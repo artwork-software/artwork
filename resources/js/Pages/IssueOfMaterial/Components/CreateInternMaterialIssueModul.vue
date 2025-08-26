@@ -150,7 +150,7 @@
 
             <div>
                 <div class="flex items-center w-full gap-x-4">
-                    <ArticleSearch @article-selected="addArticleToIssue" id="articleSearchInModal" class="w-full"/>
+                    <ArticleSearch @article-selected="addArticleToIssue" id="articleSearchInModal" class="w-full" :label="$t('Search Articles')"/>
                     <button type="button" @click="showArticleFilterModal = true" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <ToolTipComponent icon="IconListSearch" :tooltip-text="$t('Search for articles')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                     </button>
@@ -162,9 +162,14 @@
                     <div class="bg-backgroundGray px-4 py-3 rounded-lg border border-gray-200 max-h-96 overflow-scroll">
                         <div class="divide-y divide-gray-200 divide-dashed" v-if="internMaterialIssue.articles.length > 0">
                             <div class="flex items-center gap-x-4 justify-between py-2 border-dashed" v-for="(article, index) in internMaterialIssue.articles" :key="index">
+                                <pre class="hidden">
+                                    {{  article }}
+                                </pre>
                                 <div class="w-full">
-                                    <h2 class="text-sm font-bold">
+                                    <h2 class="text-sm font-bold flex items-center gap-x-1">
                                         {{ article.name }}
+
+                                        <component is="IconInfoCircle" class="h-4 w-4"></component>
                                     </h2>
                                     <p class="text-xs">
                                         {{ article.description }}
@@ -207,17 +212,20 @@
                     <div class="bg-backgroundGray px-4 py-3 rounded-lg border border-gray-200 min-h-60 max-h-60 overflow-scroll">
                         <div class="divide-y divide-gray-200 divide-dashed">
                             <div class="py-2" v-for="(article, index) in internMaterialIssue.special_items" :key="index">
-                                <div class="flex items-center gap-x-4 justify-between">
-                                    <div class="w-full">
+                                <div class="grid grid-cols-1 md:grid-cols-9 gap-4">
+                                    <div class="col-span-6">
                                         <BaseInput :id="'special-article-name-' + index" type="text" v-model="article.name" :label="$t('Article Name')" />
                                     </div>
-                                    <div class="w-28">
+                                    <div class="col-span-2">
                                         <BaseInput :id="'special-article-quantity' + index" type="number" v-model="article.quantity" :label="$t('Quantity')" />
                                     </div>
                                     <div class="flex items-center justify-end">
                                         <button type="button" class="text-xs text-red-500" @click="removeSpecialArticle(index)">
                                             <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
                                         </button>
+                                    </div>
+                                    <div class="col-span-full">
+                                        <BaseTextarea :id="'special-article-description-' + index" v-model="article.description" rows="1" :label="$t('Description')" />
                                     </div>
                                 </div>
                             </div>
@@ -417,6 +425,10 @@ const addArticleToIssue = (article) => {
             quantity: 1,
             availableStock: 0,
             availableStockRequestIsLoading: true,
+            detailedArticleQuantities: article.detailed_article_quantities || [],
+            category: article.category || null,
+            subCategory: article.sub_category || null,
+            images: article.images || [],
         })
     } else {
         // Article exists, don't modify its quantity

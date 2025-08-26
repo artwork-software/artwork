@@ -437,6 +437,13 @@ const openChat = async () => {
         chats.value = response.data.chats
         // Neu: sicherheitshalber sortieren (neueste oben)
         resortChats()
+
+        // Set up Echo listeners when chat is first opened
+        if (!echoListenersInitialized.value) {
+            setupEchoListeners()
+            echoListenersInitialized.value = true
+        }
+
         isChatOpen.value = true
         isLoading.value = false
     } catch (error) {
@@ -549,38 +556,37 @@ const totalUnreadCount = computed(() => {
     return chats.value.reduce((sum, chat) => sum + (chat.unread_count || 0), 0);
 });
 
-onMounted(() => {
+// Flag to track if Echo listeners have been initialized
+const echoListenersInitialized = ref(false);
+
+// Setup Echo listeners for chats and new chat creation
+const setupEchoListeners = () => {
     const userId = usePage().props.auth.user.id;
 
-    // Nur abonnieren, aber Chat nicht öffnen
-    axios.get(route('chat-system.get-chats')).then(response => {
-        chats.value = response.data.chats;
-        // NEU: beim Initialisieren sortieren
-        resortChats();
-
-        // ALT: Direkt hier Listener definieren
-        // NEU: für jeden Chat registrieren
-        chats.value.forEach(chat => {
-            registerChatListeners(chat);
-        });
-
-        // Neuer Chat kommt rein
-        window.Echo.private(`user.${userId}`)
-            .listen('.chat.created', (e) => {
-                if (!chats.value.some(c => c.id === e.chat.id)) {
-                    // NEU: oben einfügen
-                    chats.value.unshift(e.chat);
-                    registerChatListeners(e.chat);
-                } else {
-                    // Falls bereits vorhanden, nach oben schieben
-                    moveChatToTop(e.chat.id);
-                }
-            });
+    // Register listeners for each existing chat
+    chats.value.forEach(chat => {
+        registerChatListeners(chat);
     });
 
+    // Listen for new chats being created
+    window.Echo.private(`user.${userId}`)
+        .listen('.chat.created', (e) => {
+            if (!chats.value.some(c => c.id === e.chat.id)) {
+                // NEU: oben einfügen
+                chats.value.unshift(e.chat);
+                registerChatListeners(e.chat);
+            } else {
+                // Falls bereits vorhanden, nach oben schieben
+                moveChatToTop(e.chat.id);
+            }
+        });
+};
+
+onMounted(() => {
+    // Only set up user status listener on mount
+    // Chat loading and chat-related Echo listeners will be set up when chat is opened
     window.Echo.channel('users.status')
         .listen('UserStatusUpdated', (data) => {
-
             const userId = data?.userId;
             const newStatus = data?.status;
 
@@ -593,11 +599,17 @@ onMounted(() => {
 
 
 onBeforeUnmount(() => {
-    chats.value.forEach(chat => {
-        window.Echo.leave(`chat.${chat.id}`);
-    });
+    // Only clean up chat-related listeners if they were initialized
+    if (echoListenersInitialized.value) {
+        chats.value.forEach(chat => {
+            window.Echo.leave(`chat.${chat.id}`);
+        });
 
-    window.Echo.leave(`user.${usePage().props.auth?.user?.id}`);
+        window.Echo.leave(`user.${usePage().props.auth?.user?.id}`);
+    }
+
+    // Always clean up user status listener
+    window.Echo.leave('users.status');
 });
 
 const handleScroll = async () => {

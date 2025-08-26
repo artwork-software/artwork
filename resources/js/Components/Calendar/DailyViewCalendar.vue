@@ -1,5 +1,5 @@
 <template>
-    <div class="w-max mx-5">
+    <div class="w-max -ml-3">
         <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[71px] rounded-lg">
             <div :style="{minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}"></div>
             <div v-for="room in $page.props.rooms" :key="room.id" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">

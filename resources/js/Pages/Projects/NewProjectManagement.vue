@@ -26,7 +26,7 @@
                                     <div class="w-full">
                                         <div class="flex justify-end mb-3">
                                         <span class="xxsLight cursor-pointer text-right w-full" @click="resetFilter">
-                                            {{ $t('Reset') }}
+                                            {{ $t('Deselect all') }}
                                         </span>
                                         </div>
                                         <SwitchGroup as="div" class="flex items-center">
@@ -530,6 +530,20 @@ const applyFiltersAndSort = (resetPage = true) => {
 };
 
 const resetFilter = () => {
+    // Reset all local reactive filter variables
+    showOnlyMyProjects.value = false;
+    showProjectGroups.value = false;
+    showProjects.value = false;
+    showExpiredProjects.value = false;
+    showFutureProjects.value = false;
+    showProjectsWithoutEvents.value = false;
+    showOnlyProjectsWithoutGroup.value = false;
+
+    // Reset project state checkboxes
+    props.states.forEach((state) => {
+        state.clicked = false;
+    });
+
     router.post(route('projects.filter'), {
         page: 1,
         entitiesPerPage: perPage.value,

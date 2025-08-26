@@ -437,6 +437,13 @@ const openChat = async () => {
         chats.value = response.data.chats
         // Neu: sicherheitshalber sortieren (neueste oben)
         resortChats()
+
+        // Set up Echo listeners when chat is first opened
+        if (!echoListenersInitialized.value) {
+            setupEchoListeners()
+            echoListenersInitialized.value = true
+        }
+
         isChatOpen.value = true
         isLoading.value = false
     } catch (error) {
@@ -549,38 +556,37 @@ const totalUnreadCount = computed(() => {
     return chats.value.reduce((sum, chat) => sum + (chat.unread_count || 0), 0);
 });
 
-onMounted(() => {
+// Flag to track if Echo listeners have been initialized
+const echoListenersInitialized = ref(false);
+
+// Setup Echo listeners for chats and new chat creation
+const setupEchoListeners = () => {
     const userId = usePage().props.auth.user.id;
 
-    // Nur abonnieren, aber Chat nicht öffnen
-    axios.get(route('chat-system.get-chats')).then(response => {
-        chats.value = response.data.chats;
-        // NEU: beim Initialisieren sortieren
-        resortChats();
-
-        // ALT: Direkt hier Listener definieren
-        // NEU: für jeden Chat registrieren
-        chats.value.forEach(chat => {
-            registerChatListeners(chat);
-        });
-
-        // Neuer Chat kommt rein
-        window.Echo.private(`user.${userId}`)
-            .listen('.chat.created', (e) => {
-                if (!chats.value.some(c => c.id === e.chat.id)) {
-                    // NEU: oben einfügen
-                    chats.value.unshift(e.chat);
-                    registerChatListeners(e.chat);
-                } else {
-                    // Falls bereits vorhanden, nach oben schieben
-                    moveChatToTop(e.chat.id);
-                }
-            });
+    // Register listeners for each existing chat
+    chats.value.forEach(chat => {
+        registerChatListeners(chat);
     });
 
+    // Listen for new chats being created
+    window.Echo.private(`user.${userId}`)
+        .listen('.chat.created', (e) => {
+            if (!chats.value.some(c => c.id === e.chat.id)) {
+                // NEU: oben einfügen
+                chats.value.unshift(e.chat);
+                registerChatListeners(e.chat);
+            } else {
+                // Falls bereits vorhanden, nach oben schieben
+                moveChatToTop(e.chat.id);
+            }
+        });
+};
+
+onMounted(() => {
+    // Only set up user status listener on mount
+    // Chat loading and chat-related Echo listeners will be set up when chat is opened
     window.Echo.channel('users.status')
         .listen('UserStatusUpdated', (data) => {
-
             const userId = data?.userId;
             const newStatus = data?.status;
 
@@ -593,11 +599,17 @@ onMounted(() => {
 
 
 onBeforeUnmount(() => {
-    chats.value.forEach(chat => {
-        window.Echo.leave(`chat.${chat.id}`);
-    });
+    // Only clean up chat-related listeners if they were initialized
+    if (echoListenersInitialized.value) {
+        chats.value.forEach(chat => {
+            window.Echo.leave(`chat.${chat.id}`);
+        });
 
-    window.Echo.leave(`user.${usePage().props.auth?.user?.id}`);
+        window.Echo.leave(`user.${usePage().props.auth?.user?.id}`);
+    }
+
+    // Always clean up user status listener
+    window.Echo.leave('users.status');
 });
 
 const handleScroll = async () => {
@@ -764,72 +776,37 @@ const positionClass = computed(() => {
 });
 
 const SIDE_OFFSET = 20; // entspricht top-5/right-5/...
-const mainRect = ref({ left: 0, right: window.innerWidth, width: window.innerWidth });
-
-let ro = null;
-const updateMainRect = () => {
-    const el = document.getElementById('main-content-wrapper');
-    if (el) {
-        const rect = el.getBoundingClientRect();
-        mainRect.value = { left: rect.left, right: rect.right, width: rect.width };
-    } else {
-        mainRect.value = { left: 0, right: window.innerWidth, width: window.innerWidth };
-    }
-};
 
 const positionStyle = computed(() => {
     const gap = `${SIDE_OFFSET}px`;
-    const leftPx = (px) => `${px}px`;
-    const rightInset = (px) => `${px}px`;
-    const rightGap = window.innerWidth - mainRect.value.right + SIDE_OFFSET;
-    const leftGap = mainRect.value.left + SIDE_OFFSET;
 
     switch (chatPosition.value) {
         case 'top-left':
-            return { top: gap, left: leftPx(leftGap) };
+            return { top: gap, left: gap };
         case 'top-right':
-            return { top: gap, right: rightInset(rightGap) };
+            return { top: gap, right: gap };
         case 'bottom-left':
-            return { bottom: gap, left: leftPx(leftGap) };
+            return { bottom: gap, left: gap };
         case 'bottom-right':
-            return { bottom: gap, right: rightInset(rightGap) };
+            return { bottom: gap, right: gap };
         case 'middle-left':
-            return { top: '50%', left: leftPx(leftGap), transform: 'translateY(-50%)' };
+            return { top: '50%', left: gap, transform: 'translateY(-50%)' };
         case 'middle-right':
-            return { top: '50%', right: rightInset(rightGap), transform: 'translateY(-50%)' };
-        case 'top-center': {
-            const center = mainRect.value.left + mainRect.value.width / 2;
-            return { top: gap, left: leftPx(center), transform: 'translateX(-50%)' };
-        }
-        case 'bottom-center': {
-            const center = mainRect.value.left + mainRect.value.width / 2;
-            return { bottom: gap, left: leftPx(center), transform: 'translateX(-50%)' };
-        }
+            return { top: '50%', right: gap, transform: 'translateY(-50%)' };
+        case 'top-center':
+            return { top: gap, left: '50%', transform: 'translateX(-50%)' };
+        case 'bottom-center':
+            return { bottom: gap, left: '50%', transform: 'translateX(-50%)' };
         default:
-            return { bottom: gap, right: rightInset(rightGap) };
+            return { bottom: gap, right: gap };
     }
 });
 
 onMounted(() => {
-    updateMainRect();
-    window.addEventListener('resize', updateMainRect);
-    // NEU: bei Scroll ebenfalls aktualisieren (auch in verschachtelten Scrollern)
-    window.addEventListener('scroll', updateMainRect, true);
-
-    const el = document.getElementById('main-content-wrapper');
-    if (el && 'ResizeObserver' in window) {
-        ro = new ResizeObserver(() => updateMainRect());
-        ro.observe(el);
-    }
-
     document.addEventListener('mousedown', onGlobalPointerDown);
 });
 
 onBeforeUnmount(() => {
-    window.removeEventListener('resize', updateMainRect);
-    window.removeEventListener('scroll', updateMainRect, true);
-    if (ro) ro.disconnect();
-
     document.removeEventListener('mousedown', onGlobalPointerDown);
 });
 

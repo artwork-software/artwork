@@ -22,6 +22,7 @@
             <button
                 type="button"
                 @click="model = ''"
+                tabindex="-1"
                 class="text-gray-500 hover:text-artwork-messages-error transition duration-200 ease-in-out"
             >
                 <component is="IconX" class="size-4" />

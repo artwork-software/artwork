@@ -116,6 +116,9 @@
                        @focusout="updateEventInDatabase"
                        :disabled="canEditComponent === false"
                 />
+                <div v-if="event.nameError && !event.name" class="text-xs mt-1 text-artwork-error">
+                    {{ $t('Event name is mandatory') }}
+                </div>
             </div>
             <div :style="getColumnSize(4)">
                 <Listbox :id="'room-' + index"
@@ -233,9 +236,6 @@
                             <IconCircleCheckFilled @click="createCopyByEventWithData(event)"
                                                    class="w-8 h-8 min-w-6 min-h-6 text-artwork-buttons-create cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
                                                    stroke-width="2"/>
-                            <IconX @click="event.copy = false"
-                                   class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                                   stroke-width="2"/>
                         </div>
                     </BaseMenu>
                     <BaseMenu has-no-offset white-menu-background menu-width="!w-fit" v-if="!isInModal">
@@ -245,9 +245,6 @@
                     </BaseMenu>
                 </div>
             </div>
-        </div>
-        <div v-if="event.nameError && !event.name" class="text-xs mt-1 text-artwork-messages-error">
-            {{ $t('Event name is mandatory') }}
         </div>
         <confirmation-component
             v-if="showDeleteEventConfirmModal"
@@ -414,9 +411,9 @@ const updateEventInDatabase = async () => {
             props.event.nameError = true;
             isUpdating.value = false;
             return;
+        } else {
+            props.event.nameError = false;
         }
-        if (!window.__bulkSaveRunning) {
-            window.__bulkSaveRunning = true;
         router.patch(route('event.update.single.bulk', {event: props.event.id}), {
             data: props.event
         }, {
@@ -434,19 +431,16 @@ const updateEventInDatabase = async () => {
                             if (field) type === 'listbox' ? field.click() : field.focus();
                         }
                         isUpdating.value = false;
-                        window.__bulkSaveRunning = false;
                     }, 300);
                 })
 
             },
             onError: () => {
                 isUpdating.value = false;
-                window.__bulkSaveRunning = false;
 
             }
         });
         }
-    }
 }
 
 const lastFocusedField = ref(null);

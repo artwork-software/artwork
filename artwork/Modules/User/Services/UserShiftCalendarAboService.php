@@ -48,8 +48,8 @@ readonly class UserShiftCalendarAboService
     public function getFilteredShifts($calendarAbo, $shifts)
     {
         if ($calendarAbo->date_range) {
-            $shifts = $shifts->whereBetween('start_date', [$calendarAbo->start_date, $calendarAbo->end_date])
-                ->whereBetween('end_date', [$calendarAbo->start_date, $calendarAbo->end_date]);
+            $shifts = $shifts->whereBetween('shifts.start_date', [$calendarAbo->start_date, $calendarAbo->end_date])
+                ->whereBetween('shifts.end_date', [$calendarAbo->start_date, $calendarAbo->end_date]);
         }
         return $shifts->sortBy('start_date');
     }

@@ -165,7 +165,10 @@ readonly class ChecklistService
                     // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
                     $isCreator = $checklist->user_id === $userId;
 
-                    return $isInChecklistUsers || $isInTaskUsers || $isCreator;
+                    //Prüfen, ob der Benutzer im Projektteam ist
+                    $isInProjectTeam = $checklist->project->users->contains('id', $userId);
+
+                    return $isInChecklistUsers || $isInTaskUsers || $isCreator || $isInProjectTeam;
                 })
         );
         return $headerObject;
@@ -191,7 +194,10 @@ readonly class ChecklistService
                     // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
                     $isCreator = $checklist->user_id === $userId;
 
-                    return $isInChecklistUsers || $isInTaskUsers || $isCreator;
+                    //Prüfen, ob der Benutzer im Projektteam ist
+                    $isInProjectTeam = $checklist->project->users->contains('id', $userId);
+
+                    return $isInChecklistUsers || $isInTaskUsers || $isCreator || $isInProjectTeam;
                 })
         );
         $headerObject->project->private_all_checklists = ChecklistIndexResource::collection(
@@ -209,7 +215,10 @@ readonly class ChecklistService
                     // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
                     $isCreator = $checklist->user_id === $userId;
 
-                    return $isInChecklistUsers || $isInTaskUsers || $isCreator;
+                    //Prüfen, ob der Benutzer im Projektteam ist
+                    $isInProjectTeam = $checklist->project->users->contains('id', $userId);
+
+                    return $isInChecklistUsers || $isInTaskUsers || $isCreator || $isInProjectTeam;
                 })
         );
         return $headerObject;

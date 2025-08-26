@@ -180,26 +180,6 @@
                             </p>
                         </div>
                     </div>
-                    <div class="rounded-md bg-red-50 p-4 mt-3">
-                        <div class="flex items-center">
-                            <div class="shrink-0">
-                                <component is="IconInfoSquareRoundedFilled" class="size-6 text-red-400" aria-hidden="true" />
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-xs font-lexend font-medium text-red-800">
-                                    <span class="font-bold text-sm">Achtung: Chat-Nachrichten sind Ende-zu-Ende verschlüsselt.</span><br>
-                                    Das bedeutet, dass nur die Teilnehmer des Chats die Inhalte lesen können.
-                                    Der Server hat keinen Zugriff auf den Nachrichteninhalt.
-                                    Solltest du deinen Schlüssel verlieren, sind die Nachrichten für immer verloren.
-                                    Achte darauf, dass du deinen Schlüssel sicher aufbewahrst und nicht deinen Lokalen Speicher leerst.
-                                    <br>
-                                    <span class="font-bold">Nur der Browser, mit dem der Chat erstmals geöffnet wird, kann die Nachrichteninhalte entschlüsseln!</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Button to save chat_private_key -->
-                    <SaveChatKeyButton />
                 </div>
                 <div class="sm:col-span-6">
                     <div class="mt-1">

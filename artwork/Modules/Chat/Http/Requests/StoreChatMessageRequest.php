@@ -11,7 +11,7 @@ class StoreChatMessageRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,8 @@ class StoreChatMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'chat_id' => ['required', 'integer', 'exists:chats,id'],
+            'message' => ['required', 'string', 'max:10000'],
         ];
     }
 }

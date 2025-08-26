@@ -29,7 +29,7 @@ class NotifyCraftIfShiftDeadlineReached extends Command
 
     private function processCraft($craft, NotificationService $notificationService): void
     {
-        $shifts = $craft->shifts()->whereDate('start_date', now()->addDays($craft->notify_days))->get();
+        $shifts = $craft->shifts()->whereDate('shifts.start_date', now()->addDays($craft->notify_days))->get();
 
         foreach ($shifts as $shift) {
             $this->processShift($shift, $craft, $notificationService);

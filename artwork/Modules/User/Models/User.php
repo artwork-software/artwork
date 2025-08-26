@@ -235,7 +235,8 @@ class User extends Model implements
         'bulk_column_size',
         'chat_public_key',
         'use_chat',
-        'work_time_balance'
+        'work_time_balance',
+        'chat_popup_position',
     ];
 
     protected $casts = [

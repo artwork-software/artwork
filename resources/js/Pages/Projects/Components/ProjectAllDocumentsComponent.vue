@@ -149,10 +149,11 @@ export default defineComponent({
             }
         },
         async validateTypeAndUpload(files) {
-            this.uploadDocumentFeedback = "";
             this.documentForm.errors = {};
-            for (let file of files) {
                 await this.uploadDocumentToProject(file);
+            this.uploadDocumentFeedback = "";
+            for (let file of files) {
+                this.uploadDocumentToProject(file);
             }
         },
         selectNewFiles() {

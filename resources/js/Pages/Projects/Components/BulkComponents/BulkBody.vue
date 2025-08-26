@@ -88,7 +88,39 @@
             <BulkHeader v-model="timeArray" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
             <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
                 <div v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
-                    <div :id="index" :class="(events[index]?.day !== events[index + 1]?.day) && usePage().props.auth.user.bulk_sort_id === 3 ? 'border-b-2 border-dashed pb-3' : ''">
+                    <!-- Day Divider for first event -->
+                    <div v-if="index === 0 && usePage().props.auth.user.bulk_sort_id === 3"
+                         class="relative flex items-center mb-6">
+                        <div class="flex-grow border-t border-gray-300"></div>
+                        <div class="px-4 py-2 bg-white text-sm font-medium text-gray-600 border border-gray-300 rounded-full">
+                            {{ new Date(event.day).toLocaleDateString('de-DE', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            }) }}
+                        </div>
+                        <div class="flex-grow border-t border-gray-300"></div>
+                    </div>
+                    <!-- Room Divider for first event -->
+                    <div v-if="index === 0 && usePage().props.auth.user.bulk_sort_id === 1"
+                         class="relative flex items-center mb-6">
+                        <div class="flex-grow border-t border-gray-300"></div>
+                        <div class="px-4 py-2 bg-white text-sm font-medium text-gray-600 border border-gray-300 rounded-full">
+                            {{ event.room?.name }}
+                        </div>
+                        <div class="flex-grow border-t border-gray-300"></div>
+                    </div>
+                    <!-- Event Type Divider for first event -->
+                    <div v-if="index === 0 && usePage().props.auth.user.bulk_sort_id === 2"
+                         class="relative flex items-center mb-6">
+                        <div class="flex-grow border-t border-gray-300"></div>
+                        <div class="px-4 py-2 bg-white text-sm font-medium text-gray-600 border border-gray-300 rounded-full">
+                            {{ event.type?.name }}
+                        </div>
+                        <div class="flex-grow border-t border-gray-300"></div>
+                    </div>
+                    <div :id="index">
                         <BulkSingleEvent
                             :can-edit-component="canEditComponent && hasCreateEventsPermission"
                             :rooms="rooms"
@@ -105,6 +137,38 @@
                             :multi-edit="multiEdit"
                             :has-permission="hasCreateEventsPermission"
                         />
+                    </div>
+                    <!-- Day Divider -->
+                    <div v-if="(events[index]?.day !== events[index + 1]?.day) && usePage().props.auth.user.bulk_sort_id === 3 && index < events.length - 1"
+                         class="relative flex items-center my-6">
+                        <div class="flex-grow border-t border-gray-300"></div>
+                        <div class="px-4 py-2 bg-white text-sm font-medium text-gray-600 border border-gray-300 rounded-full">
+                            {{ new Date(events[index + 1].day).toLocaleDateString('de-DE', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            }) }}
+                        </div>
+                        <div class="flex-grow border-t border-gray-300"></div>
+                    </div>
+                    <!-- Room Divider -->
+                    <div v-if="(events[index]?.room?.id !== events[index + 1]?.room?.id) && usePage().props.auth.user.bulk_sort_id === 1 && index < events.length - 1"
+                         class="relative flex items-center my-6">
+                        <div class="flex-grow border-t border-gray-300"></div>
+                        <div class="px-4 py-2 bg-white text-sm font-medium text-gray-600 border border-gray-300 rounded-full">
+                            {{ events[index + 1].room?.name }}
+                        </div>
+                        <div class="flex-grow border-t border-gray-300"></div>
+                    </div>
+                    <!-- Event Type Divider -->
+                    <div v-if="(events[index]?.type?.id !== events[index + 1]?.type?.id) && usePage().props.auth.user.bulk_sort_id === 2 && index < events.length - 1"
+                         class="relative flex items-center my-6">
+                        <div class="flex-grow border-t border-gray-300"></div>
+                        <div class="px-4 py-2 bg-white text-sm font-medium text-gray-600 border border-gray-300 rounded-full">
+                            {{ events[index + 1].type?.name }}
+                        </div>
+                        <div class="flex-grow border-t border-gray-300"></div>
                     </div>
                 </div>
                 <div v-else class="flex items-center h-24 print:hidden">
@@ -144,7 +208,7 @@
                 </div>
                 <div>
                     <FormButton
-                        @click="hasCreateEventsPermission ? openMultiEditModal : null"
+                        @click="hasCreateEventsPermission ? openMultiEditModal() : null"
                         :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
                         class="bg-artwork-buttons-create text-white h-12"
                         :text="$t('Edit')" />

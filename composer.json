@@ -32,6 +32,7 @@
         "laravel/sanctum": "^v4",
         "laravel/scout": "^v10.9.0",
         "laravel/tinker": "^v2.7.3",
+        "league/flysystem-aws-s3-v3": "^3.29",
         "maatwebsite/excel": "^3.1",
         "meilisearch/meilisearch-php": "^v1.13.0",
         "noahnxt/laravel-open-holidays-api": "dev-main",

@@ -2,13 +2,13 @@
 
 namespace App\Events;
 
-
 use Artwork\Modules\Chat\Models\Chat;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Queue\SerializesModels;
 
-class ChatCreated implements ShouldBroadcast
+class ChatCreated implements ShouldBroadcastNow
 {
     use SerializesModels;
 
@@ -31,8 +31,13 @@ class ChatCreated implements ShouldBroadcast
 
     public function broadcastWith()
     {
+        // NEU: Felder für Listeneintrag konsistent mitsenden
+        $chat = $this->chat;
+        $chat->setAttribute('last_message', null);
+        $chat->setAttribute('unread_count', 0);
+
         return [
-            'chat' => $this->chat,
+            'chat' => $chat,
         ];
     }
 }

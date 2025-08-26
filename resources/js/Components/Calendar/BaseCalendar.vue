@@ -47,7 +47,7 @@
                                     </div>
                                     <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.auth.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px', minHeight: usePage().props.auth.user.calendar_settings.expand_days ? zoom_factor * 115 + 'px' : '' }"
                                          :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
-                                         class="group/container border-t border-gray-300 border-dashed" :id="'scroll_container-' + day.withoutFormat">
+                                         class="group/container border-t border-gray-300 border-dashed relative" :id="'scroll_container-' + day.withoutFormat">
                                         <div v-if="usePage().props.auth.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
                                             <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: first_project_tab_id })"  class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1">
                                                 <component :is="group.icon" class="size-4" aria-hidden="true"/>
@@ -78,7 +78,9 @@
                                                 />
                                             </div>
                                         </div>
-                                        <div class="absolute left-2 bottom-3 hidden group-hover/container:block">
+                                        <!-- Invisible hover area to ensure button is always accessible when hovering over the container -->
+                                        <div class="absolute inset-0 pointer-events-none" v-if="usePage().props.auth.user.calendar_settings.expand_days"></div>
+                                        <div class="absolute left-2 bottom-3 hidden group-hover/container:block z-10">
 
                                             <ToolTipComponent
                                                 :tooltip-text="isPlanning ? $t('Add new planned event') : $t('Add new event on this day')"
@@ -190,14 +192,14 @@
             </div>
             <div>
                 <FormButton
-                    class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="openDeleteSelectedEventsModal = true"
                     :disabled="computedCheckedEventsForMultiEditCount === 0"
                     :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Delete events')"/>
             </div>
             <div>
                 <FormButton
-                    class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="cancelMultiEditDuplicateSelection"
                     :disabled="computedCheckedEventsForMultiEditCount === 0"
                     :text="$t('Cancel selection')"/>
@@ -218,7 +220,7 @@
             </div>
             <div v-if="can('can edit planning calendar') || hasAdminRole()">
                 <FormButton
-                    class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="showRejectEventVerificationModal = true"
                     :disabled="computedCheckedEventsForMultiEditCount === 0"
                     :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Reject events')"/>

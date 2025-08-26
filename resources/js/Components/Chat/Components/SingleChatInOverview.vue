@@ -1,25 +1,41 @@
 <template>
-    <div class="flex items-center cursor-pointer" :key="chat.id">
+    <div class="flex items-center cursor-pointer w-full" :key="chat.id">
         <div class="mr-4 shrink-0">
-            <img class="size-14 min-h-14 min-w-14 rounded-full object-cover" v-if="!props.chat.is_group" :src="getUserWhereAreNotMe?.profile_photo_url" alt="Jese image">
-            <component v-else is="IconUsersGroup" class="size-14 min-h-15 min-w-14 rounded-full object-cover p-3 bg-blue-50 text-blue-900 border border-blue-100" />
+            <img
+                v-if="!props.chat.is_group"
+                class="size-10 rounded-full object-cover"
+                :src="getUserWhereAreNotMe?.profile_photo_url"
+                alt="Profilbild"
+            >
+            <component
+                v-else
+                is="IconUsersGroup"
+                class="size-10 rounded-full object-cover p-3 bg-blue-50 text-blue-900 border border-blue-100"
+            />
         </div>
-        <div>
-            <h4 class="font-lexend text-sm font-bold">{{ chat.is_group ? chat.name : getUserWhereAreNotMe?.full_name }}</h4>
-            <div class="mt-1 font-lexend text-gray-500 text-xs">
-                <div class="font-bold text-gray-900 flex items-center gap-x-1" v-if="chat.last_message">
-                    <img class="size-4 rounded-full object-cover" :src="chat.last_message.sender?.profile_photo_url" alt="Jese image">
-                    <span>
-                        {{ chat.last_message.sender_id === usePage().props.auth.user.id ? $t('You') : chat.last_message.sender?.full_name }}:
-                    </span>
-                    <span class="text-xs text-gray-500 font-normal truncate">
-                        {{ lastMessageText }}
-                    </span>
-                </div>
 
+        <!-- WICHTIG: flex-1 + min-w-0 erlaubt korrektes Abschneiden -->
+        <div class="flex-1 min-w-0">
+            <h4 class="text-xs font-semibold truncate">
+                {{ chat.is_group ? chat.name : getUserWhereAreNotMe?.full_name }}
+            </h4>
+
+            <div class="mt-1 text-gray-500 text-xs">
+                <!-- overflow-hidden verhindert horizontales Scrollen -->
+                <div v-if="chat.last_message" class="text-gray-900 gap-x-1 overflow-hidden">
+                    <span class="shrink-0">
+                      {{ chat.last_message.sender_id === usePage().props.auth.user.id ? $t('You') : chat.last_message.sender?.full_name }}:
+                    </span>
+
+                    <!-- Entweder line-clamp ODER truncate – hier 2 Zeilen ohne Scroll -->
+                    <p class="text-xs text-gray-500 font-normal break-words line-clamp-1" v-html="lastMessageText">
+
+                    </p>
+                </div>
             </div>
         </div>
     </div>
+
 </template>
 
 <script setup>
@@ -28,15 +44,6 @@ import {computed, ref, watchEffect} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import useCrypto from "@/Composeables/useCrypto.js";
 
-const {
-    publicKey,
-    privateKey,
-    hasKeypair,
-    generateKeypair,
-    encrypt,
-    decrypt,
-    clearKeys,
-} = useCrypto()
 
 const props = defineProps({
     chat: {
@@ -60,10 +67,10 @@ const lastMessageText = ref('')
 watchEffect(async () => {
     if (!props.chat.last_message) return 'no messages yet'
 
-    if (props.chat.last_message.sender_id === usePage().props.auth.user.id && hasKeypair.value) {
-        lastMessageText.value = await decrypt(props.chat.last_message.cipher_for_sender)
+    if (props.chat.last_message.sender_id === usePage().props.auth.user.id) {
+        lastMessageText.value = props.chat.last_message.message
     } else {
-        lastMessageText.value = await decrypt(props.chat.last_message.ciphers_json[usePage().props.auth.user.id])
+        lastMessageText.value = props.chat.last_message.message
     }
 })
 

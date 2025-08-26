@@ -5,7 +5,7 @@
              :style="{backgroundColor: backgroundColorWithOpacity(event.event_type.hex_code, 50), color: TextColorWithDarken(event.event_type.hex_code, 100)}">
             <div class="flex items-center">
                 <span v-if="!event.event.allDay">
-                    {{ event.event?.formatted_dates.start }} - {{ event.event?.formatted_dates.end }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
+                    {{ event.event?.formatted_dates.start }} - {{ event.event?.formatted_dates.end }} | {{ event.event.start_time_without_day }} - {{ event.event.end_time_without_day }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
                 </span>
 
                 <span v-else>
@@ -28,6 +28,7 @@
                 </BaseMenu>
             </div>
         </div>
+
         <ConfirmDeleteModal
             v-if="showConfirmDeleteModal"
             :title="$t('Delete shift planning')"

@@ -70,8 +70,11 @@ createInertiaApp({
         app.use(Icons);
         app.use(PrimeVue, {
             theme: {
-                preset: Aura
-            }
+                preset: Aura,
+                options: {
+                    darkModeSelector: '.fake-dark-selector', // trying to also force a non-usage of the dark mode
+                },
+            },
         });
         app.use(LaravelPermissionToVueJS);
         app.directive('tooltip', Tooltip);

@@ -2915,7 +2915,6 @@
     "Daily Target Hours": "Tagessollstunden pro Tag",
     "Collisions with shifts:": "Kollisionen mit Schichten:",
     "The new project status is marked as planned. Do you want to convert all events of the project to planning events?": "Der neu ausgewählte Projektstatus ist als 'in Planung' markiert. Möchtest du alle Termine des Projekts in Planungstermine umwandeln?",
-    "Convert to planning events": "In Planungstermine umwandeln",
     "Configure your calendar settings here.": "Konfiguriere hier deine Kalendereinstellungen.",
     "Increases the color intensity in the calendar to make texts and elements more clearly visible, ideal for better readability and accessibility.": "Erhöht die Farbintensität im Kalender, um Texte und Elemente deutlicher sichtbar zu machen, ideal für bessere Lesbarkeit und Barrierefreiheit.",
     "Shows the artists involved in the project in the calendar, helpful for an overview of who is involved and when.": "Zeigt die beteiligten Künstler*innen im Projekt im Kalender an, hilfreich für einen Überblick darüber, wer beteiligt ist und wann.",
@@ -2935,6 +2934,22 @@
     "Shows stored notes on appointments in the calendar, handy for having additional information directly in view.": "Zeigt gespeicherte Notizen zu Terminen im Kalender an, praktisch, um zusätzliche Informationen direkt im Blick zu haben.",
     "Allows you to show and hide specific calendar contents, ideal for quickly finding the relevant information.": "Erlaubt es dir, bestimmte Kalenderinhalte anzuzeigen und auszublenden, ideal um schnell die relevanten Informationen zu finden.",
     "Artist Name Display Component": "Künstlername-Anzeige-Komponente",
+    "Convert to planning events": "In Planungstermine umwandeln",
+    "Shift warnings - rules": "Schichtwarnungen - Regeln",
+    "Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies. You can create, edit, and delete shift warning rules here.": "Schichtwarnungen werden verwendet, um die Einhaltung von Arbeitsvorschriften und internen Richtlinien zu überwachen und durchzusetzen. Du kannst hier Schichtwarnungsregeln erstellen, bearbeiten und löschen.",
+    "Create new rule": "Neue Regel erstellen",
+    "Contract(s) selected": "Vertrag(e) ausgewählt",
+    "Assign contracts": "Verträge zuweisen",
+    "Notification of rule violation": "Benachrichtigung bei Regelverletzung",
+    "No contracts selected": "Keine Verträge ausgewählt",
+    "Warning color": "Warnfarbe",
+    "Rule type": "Regeltyp",
+    "Edit Rule": "Regel bearbeiten",
+    "Edit the selected rule.": "Bearbeite die ausgewählte Regel.",
+    "Create a new shift warning rule.": "Erstelle eine neue Schichtwarnungsregel.",
+    "Contract(s)": "Vertrag(e)",
+    "No assignments": "Keine Zuweisungen",
+    "Workflows Rules": "Arbeitsabläufe - Regeln",
     "Project Artist": "Projektkünstler*in",
     "Article": "Artikel",
     "Inventory Article Planning": "Artikel Inventarplanung",
@@ -2989,7 +3004,8 @@
     "Group Name": "Gruppenname",
     "Enter group name": "Gruppenname eingeben",
     "Rename": "Umbenennen",
-    "Are you sure you want to delete this group chat? This action cannot be undone and all messages will be permanently deleted.": "Möchtest du diesen Gruppenchat wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden und alle Nachrichten werden dauerhaft gelöscht."
-
+    "Are you sure you want to delete this group chat? This action cannot be undone and all messages will be permanently deleted.": "Möchtest du diesen Gruppenchat wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden und alle Nachrichten werden dauerhaft gelöscht.",
+    "Inventory Article Planning": "Artikel Inventarplanung",
+    "Shift rules": "Schichtregeln"
 }
 

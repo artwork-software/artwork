@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Http\Controllers;
 
+use Antonrom\ModelChangesHistory\Models\Change;
 use App\Http\Controllers\Controller;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Calendar\Services\CalendarService;
@@ -10,6 +11,7 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
@@ -17,6 +19,8 @@ use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
@@ -52,6 +56,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Session\SessionManager;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
@@ -65,6 +70,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\Models\Role;
 use Throwable;
+use App\Models\User as LaravelUser;
 
 class UserController extends Controller
 {
@@ -336,7 +342,6 @@ class UserController extends Controller
 
     public function editUserWorkTime(User $user): Response|ResponseFactory
     {
-
         return inertia('Users/UserWorkTimePatternPage', [
             'userToEdit' => new UserShowResource($user),
             'currentTab' => 'workTimePattern',
@@ -434,10 +439,10 @@ class UserController extends Controller
             $weekKey = "KW" . $current->isoWeek();
 
             $userWorkTime = $user->workTimes()
-                ->where(function ($q) use ($current) {
+                ->where(function ($q) use ($current): void {
                     $q->whereNull('valid_from')->orWhere('valid_from', '<=', $current);
                 })
-                ->where(function ($q) use ($current) {
+                ->where(function ($q) use ($current): void {
                     $q->whereNull('valid_until')->orWhere('valid_until', '>=', $current);
                 })
                 ->orderByDesc('valid_from')
@@ -467,7 +472,9 @@ class UserController extends Controller
                             'user' => $booking->booker,
                             'date' => $booking->created_at->locale(session('locale', config('app.fallback_locale')))
                                 ->isoFormat('D. MMMM YYYY'),
-                            'work_time_change' => $this->convertMinutesToHoursAndMinutes($booking->work_time_balance_change),
+                            'work_time_change' => $this->convertMinutesToHoursAndMinutes(
+                                $booking->work_time_balance_change
+                            ),
                         ];
                     }
                 }
@@ -524,7 +531,6 @@ class UserController extends Controller
     }
 
 
-
     private function getPlannedShiftMinutesForDay(User $user, Carbon $day): int
     {
         $total = 0;
@@ -554,7 +560,7 @@ class UserController extends Controller
             }
         }
 
-        return (int) round($total);
+        return (int)round($total);
     }
 
 
@@ -919,104 +925,126 @@ class UserController extends Controller
         User $user,
         RoomService $roomService,
         EventService $eventService,
-        UserService $userService
+        UserService $userService,
     ): RedirectResponse {
         // Get the authenticated user ID for reassigning ownership
         $authUserId = $userService->getAuthUserId();
 
         // Handle belongsToMany relationships - detach the user
-        $user->departments()->detach();
-        $user->projects()->detach();
-        $user->adminRooms()->detach();
-        $user->crafts()->detach();
-        $user->assignedCrafts()->detach();
-        $user->managingCrafts()->detach();
-        $user->shiftQualifications()->detach();
-        $user->chats()->detach();
-        $user->verifiableEventTypes()->detach();
-        $user->accessMoneySources()->detach();
+        DB::beginTransaction();
+        try {
+            $user->departments()->detach();
+            $user->projects()->detach();
+            $user->adminRooms()->detach();
+            $user->crafts()->detach();
+            $user->assignedCrafts()->detach();
+            $user->managingCrafts()->detach();
+            $user->shiftQualifications()->detach();
+            $user->chats()->detach();
+            $user->verifiableEventTypes()->detach();
+            $user->accessMoneySources()->detach();
 
-        // Handle hasMany relationships - reassign or delete
-        // Reassign created rooms to authenticated user
-        $user->createdRooms()->withTrashed()->each(
-            fn(Room $room) => $roomService->update(
-                $room,
-                ['user_id' => $authUserId]
-            )
-        );
+            // Handle hasMany relationships - reassign or delete
+            // Reassign created rooms to authenticated user
+            $user->createdRooms()->withTrashed()->each(
+                fn(Room $room) => $roomService->update(
+                    $room,
+                    ['user_id' => $authUserId]
+                )
+            );
 
-        // Reassign events to authenticated user
-        $user->events()->withTrashed()->each(
-            fn(Event $event) => $eventService->update(
-                $event,
-                ['user_id' => $authUserId]
-            )
-        );
+            // Reassign events to authenticated user
+            $user->events()->withTrashed()->each(
+                fn(Event $event) => $eventService->update(
+                    $event,
+                    ['user_id' => $authUserId]
+                )
+            );
 
-        // Delete or reassign other hasMany relationships
-        $user->project_files()->update(['user_id' => $authUserId]);
-        $user->notificationSettings()->delete();
-        $user->comments()->update(['user_id' => $authUserId]);
-        $user->private_checklists()->update(['user_id' => $authUserId]);
-        $user->doneTasks()->update(['user_id' => $authUserId]);
-        $user->globalNotification()->delete();
-        $user->money_sources()->update(['creator_id' => $authUserId]);
-        $user->moneySourceTasks()->update(['user_id' => $authUserId]);
-        $user->tasks()->update(['user_id' => $authUserId]);
-        $user->eventVerifications()->delete();
-        $user->workTimeBookings()->delete();
+            // Delete or reassign other hasMany relationships
+            $user->notificationSettings()->delete();
+            $user->comments()->update(['user_id' => $authUserId]);
+            $user->private_checklists()->update(['user_id' => $authUserId]);
+            $user->doneTasks()->update(['user_id' => $authUserId]);
+            $user->project_files()->update(['user_id' => $authUserId]);
+            $user->globalNotification()->delete();
+            $user->money_sources()->update(['creator_id' => $authUserId]);
+            $user->tasks()->update(['user_id' => $authUserId]);
+            Project::where('user_id', $user->id)->update(['user_id' => $authUserId]);
+            $user->eventVerifications()->delete();
+            $user->workTimeBookings()->delete();
 
-        // Handle hasOne relationships - delete
-        if ($user->calendarAbo) {
-            $user->calendarAbo->delete();
+            // Handle hasOne relationships - delete
+            if ($user->calendarAbo) {
+                $user->calendarAbo->delete();
+            }
+
+            if ($user->shiftCalendarAbo) {
+                $user->shiftCalendarAbo->delete();
+            }
+
+            if ($user->calendar_settings) {
+                $user->calendar_settings->delete();
+            }
+
+            if ($user->calendar_filter) {
+                $user->calendar_filter->delete();
+            }
+
+            if ($user->shift_calendar_filter) {
+                $user->shift_calendar_filter->delete();
+            }
+
+            if ($user->commentedBudgetItemsSetting) {
+                $user->commentedBudgetItemsSetting->delete();
+            }
+
+            if ($user->workerShiftPlanFilter) {
+                $user->workerShiftPlanFilter->delete();
+            }
+
+            if ($user->inventoryArticlePlanFilter) {
+                $user->inventoryArticlePlanFilter->delete();
+            }
+
+            if ($user->inventoryManagementFilter) {
+                $user->inventoryManagementFilter->delete();
+            }
+
+            if ($user->projectFilterAndSortSetting) {
+                $user->projectFilterAndSortSetting->delete();
+            }
+
+            if ($user->userFilterAndSortSetting) {
+                $user->userFilterAndSortSetting->delete();
+            }
+
+            if ($user->contract) {
+                $user->contract->delete();
+            }
+            Change::query()
+                ->where(function ($query) use ($user): void {
+                    $query->where('changer_id', $user->id)
+                        ->orWhere('changes', 'LIKE', '"changed_by": {"id": ' . $user->id . '%');
+                })
+                ->whereIn('changer_type', [User::class, LaravelUser::class])
+                ->each(function ($change) use ($user, $authUserId): void {
+                    $change->changer_id = $authUserId;
+                    $change->changes = str_replace(
+                        ' "changed_by": {"id": ' . $user->id,
+                        ' "changed_by": {"id": ' . $authUserId,
+                        $change->changes
+                    );
+                    $change->save();
+                });
+            SubEvent::where('user_id', $user->id)->update(['user_id' => $authUserId]);
+            // Now delete the user
+            $user->delete();
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
-
-        if ($user->shiftCalendarAbo) {
-            $user->shiftCalendarAbo->delete();
-        }
-
-        if ($user->calendar_settings) {
-            $user->calendar_settings->delete();
-        }
-
-        if ($user->calendar_filter) {
-            $user->calendar_filter->delete();
-        }
-
-        if ($user->shift_calendar_filter) {
-            $user->shift_calendar_filter->delete();
-        }
-
-        if ($user->commentedBudgetItemsSetting) {
-            $user->commentedBudgetItemsSetting->delete();
-        }
-
-        if ($user->workerShiftPlanFilter) {
-            $user->workerShiftPlanFilter->delete();
-        }
-
-        if ($user->inventoryArticlePlanFilter) {
-            $user->inventoryArticlePlanFilter->delete();
-        }
-
-        if ($user->inventoryManagementFilter) {
-            $user->inventoryManagementFilter->delete();
-        }
-
-        if ($user->projectFilterAndSortSetting) {
-            $user->projectFilterAndSortSetting->delete();
-        }
-
-        if ($user->userFilterAndSortSetting) {
-            $user->userFilterAndSortSetting->delete();
-        }
-
-        if ($user->contract) {
-            $user->contract->delete();
-        }
-
-        // Now delete the user
-        $user->delete();
 
         broadcast(new UserUpdated())->toOthers();
 

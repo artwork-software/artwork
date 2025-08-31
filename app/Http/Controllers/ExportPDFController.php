@@ -108,10 +108,10 @@ class ExportPDFController extends Controller
                 'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
                 'user_filters' => $showCalendar['user_filters'],
                 'events' => CalendarEventDto::newInstance()
-                    ->setAreas($showCalendar['filterOptions']['areas'])
-                    ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
-                    ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
-                    ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
+                    ->setAreas($showCalendar['filterOptions']['area_ids'])
+                    ->setEventTypes($showCalendar['filterOptions']['event_type_ids'])
+                    ->setRoomCategories($showCalendar['filterOptions']['room_attribute_ids'])
+                    ->setRoomAttributes($showCalendar['filterOptions']['room_attribute_ids'])
                     ->setProjects(new Collection())
                     ->setEvents(new Collection())
             ]

@@ -91,6 +91,13 @@ const tabs = ref([
         current: route().current('user-contract-settings.index'),
         show: true,
         icon: 'IconContract'
+    },
+    {
+        name: 'Shift warnings - rules',
+        href: route('shift-rules.index'),
+        current: route().current('shift-rules.index'),
+        show: true,
+        icon: 'IconGavel'
     }
 ])
 </script>

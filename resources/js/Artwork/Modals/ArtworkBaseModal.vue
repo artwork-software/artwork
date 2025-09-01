@@ -56,7 +56,7 @@
                                     </div>
                                 </div>
                                 <div class="p-5">
-                                    <div class="card white p-5 relative" :class="[classesInWhiteBackground ? classesInWhiteBackground : '']">
+                                    <div class="card white p-5 relative" :class="[classesInWhiteBackground]">
                                         <slot/>
                                     </div>
                                 </div>
@@ -109,7 +109,7 @@ const props = defineProps({
     },
     classesInWhiteBackground: {
         type: String,
-        default: false
+        default: ''
     }
 })
 const open = ref(true)

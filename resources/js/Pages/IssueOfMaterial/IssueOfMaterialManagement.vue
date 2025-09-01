@@ -69,7 +69,7 @@
                     <div class="">
                         <div v-if="issues.data.length > 0">
                             <WhiteInnerCard class="my-3 group/issueOfMaterial" :key="issueOfMaterial.id" v-for="issueOfMaterial in issues.data">
-                                <SingleInternMaterialIssue :issue-of-material="issueOfMaterial" />
+                                <SingleInternMaterialIssue :issue-of-material="issueOfMaterial" :detailed-article="detailedArticle" />
                             </WhiteInnerCard>
                         </div>
                         <div v-else>
@@ -87,10 +87,6 @@
             @close="showIssueOfMaterialModal = false"
             :issue-of-material="null"
         />
-
-        <pre>
-            {{  filterData  }}
-        </pre>
 
     </AppLayout>
 </template>
@@ -130,9 +126,19 @@ const props = defineProps({
         type: Object,
         required: false
     },
-    filterData: {
+    categories: {
         type: Object,
         required: false
+    },
+    filterable_properties: {
+        type: Array,
+        required: false,
+        default: () => []
+    },
+    articles: {
+        type: Object,
+        required: false,
+        default: () => []
     }
 })
 const showIssueOfMaterialModal = ref(false);

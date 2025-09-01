@@ -183,7 +183,7 @@ const props = defineProps({
         required: true
     },
     countsByStatus: {
-        type: Array,
+        type: Object,
         required: true
     }
 })

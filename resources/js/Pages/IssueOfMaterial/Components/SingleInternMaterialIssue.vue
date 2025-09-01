@@ -25,7 +25,7 @@
             <div class="flex items-center text-xs">
                 <div class="flex items-center print:hidden">
                     <div class="flex -space-x-2 overflow-hidden items-center">
-                        <UserPopoverTooltip v-for="user in issueOfMaterial.responsible_users" :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
+                        <UserPopoverTooltip v-for="user in issueOfMaterial.responsible_users" :key="user.id" :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
                     </div>
                 </div>
             </div>
@@ -70,7 +70,7 @@
         @delete="deleteIssue"
     />
 
-    <DetailModalInternMaterialModal :issue="issueOfMaterial" v-if="showIssueOfMaterialDetailModal" @close="showIssueOfMaterialDetailModal = false" />
+    <DetailModalInternMaterialModal :issue="issueOfMaterial" v-if="showIssueOfMaterialDetailModal" @close="showIssueOfMaterialDetailModal = false" :detailed-article="detailedArticle" />
 </template>
 
 <script setup>
@@ -104,6 +104,11 @@ const props = defineProps({
             articles: [],
             special_items: []
         })
+    },
+    detailedArticle: {
+        type: Object,
+        required: false,
+        default: () => ({})
     }
 })
 

@@ -3,7 +3,7 @@
         <div
             v-for="issue in issues"
             :key="issue.id"
-            class="rounded-lg border p-4 shadow-sm bg-white"
+            class="rounded-lg border border-gray-300 p-4 shadow-sm bg-white"
         >
             <div class="font-medium text-gray-800">{{ issue.name }}</div>
             <div class="text-xs text-gray-500">{{ issue.start_date_time }} – {{ issue.end_date_time }}</div>

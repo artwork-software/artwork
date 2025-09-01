@@ -19,7 +19,7 @@
                             <div class="stickyHeader">
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-100 relative" style="width:192px;"></th>
-                                    <th v-for="day in days"
+                                    <th v-for="day in days" :key="day.full_day"
                                         :style="{ width: '200px' }"
                                         :id="day.full_day"
                                         class="z-20 h-14 py-3 border-r-4 border-secondaryHover truncate">
@@ -35,7 +35,7 @@
                             <TableBody>
                                 <tr v-for="(room, index) in calendar"
                                     class="w-full h-full flex border-b border-dashed"
-                                    :id="'roomHeight' + index">
+                                    :id="'roomHeight' + index" :key="'roomHeight' + index">
                                     <th class="xsDark flex items-center w-48"
                                         :style="{ height: roomHeights[index] + 'px' }"
                                         :class="[
@@ -49,8 +49,8 @@
                                     <td v-for="day in days"
                                         :style="{ width: day.week_separator ? '40px' : '200px' }"
                                         class="overflow-y-auto cell border-r-2 border-dotted"
-                                        :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
-                                        <div v-for="(events, index) in groupEventsInDayByProject(room[day.full_day]?.events)" class="mb-1">
+                                        :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']" :key="day.full_day">
+                                        <div v-for="(events, index) in groupEventsInDayByProject(room[day.full_day]?.events)" class="mb-1" :key="index">
                                             <div class="bg-gray-300 py-1.5 px-2 rounded-t-lg text-sm mb-1">
                                                 <span>
                                                     {{ index === 'null' ? $t('No Project') : index }}
@@ -62,6 +62,7 @@
                                                 :multi-edit="multiEditMode"
                                                 :day="day.full_day"
                                                 v-for="event in events"
+                                                :key="event.id"
                                                 :event="event"
                                                 :is-last-event="checkIfLastEventInEventData(event, events)"
                                             />
@@ -195,7 +196,7 @@
                     <div class="pt-20">
                         <table class="w-full text-white overflow-y-scroll">
                             <div class="w-full">
-                                <tbody class="w-full pt-3" v-for="craft in filteredCrafts">
+                                <tbody class="w-full pt-3" v-for="craft in filteredCrafts" :key="craft.id">
                                     <SingleCraftInUserOverview :multi-edit="multiEditMode" :days="days" :craft="craft" />
                                 </tbody>
                             </div>

@@ -10,6 +10,7 @@ use Artwork\Modules\ExternalIssue\Models\ExternalIssueFile;
 use Artwork\Modules\ExternalIssue\Services\ExternalIssueService;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Artwork\Modules\User\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -21,7 +22,8 @@ class ExternalIssueController extends Controller
 {
     public function __construct(
         protected ExternalIssueService $externalIssueService,
-        protected AuthManager $auth
+        protected AuthManager $auth,
+        protected InventoryUserFilterShareService $inventoryUserFilterShareService,
     ) {}
 
     public function index()
@@ -45,12 +47,14 @@ class ExternalIssueController extends Controller
                 ->paginate($entitiesPerPage);
         }
 
+        $this->inventoryUserFilterShareService->getFilterDataForUser($this->auth->user());
+
         return Inertia::render('IssueOfMaterial/ExternIssueOfMaterialManagement', [
             'issues' => $issues,
             'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
                 ->get() : [],
             'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
-            'detailedArticle' => Inertia::optional(fn () => 
+            'detailedArticle' => Inertia::optional(fn () =>
                 InventoryArticle::with([
                     'category',
                     'subCategory',
@@ -67,7 +71,7 @@ class ExternalIssueController extends Controller
 
     public function store(StoreExternalIssueRequest $request)
     {
-    
+
         $issue = $this->externalIssueService->store($request->validated(), $request->file('files', []));
     }
 

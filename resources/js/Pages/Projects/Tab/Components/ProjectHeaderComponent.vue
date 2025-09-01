@@ -8,7 +8,7 @@
                     <div v-if="project?.groups?.length > 0" class="bg-secondaryHover text-sm shadow-sm border border-gray-200 px-3 py-1 rounded-lg -mb-2 z-20 w-fit pr-6 pb-0.5">
                         <div class="flex items-center">
                             <span v-if="!project?.is_group">
-                                <img alt="default_image" src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
+                                <img alt="default_image" src="/Svgs/IconSvgs/icon_group_black.svg" @error="(e) => e.target.src = usePage().props.big_logo" class="h-4 w-4 mr-2" aria-hidden="true"/>
                             </span>
                             {{ $t('Belongs to') }}
                             <span v-for="group in project.groups">
@@ -20,10 +20,10 @@
                     </div>
                     <div class="hidden">
                         <div class="flex z-10" v-if="project?.key_visual_path !== null">
-                            <img :src="'/storage/keyVisual/' + project?.key_visual_path" :alt="$t('Current key visual')" class="rounded-md mx-auto h-[200px]">
+                            <img :src="'/storage/keyVisual/' + project?.key_visual_path" @error="(e) => e.target.src = usePage().props.big_logo" :alt="$t('Current key visual')" class="rounded-md mx-auto h-[200px]">
                         </div>
                         <div v-else class="w-full h-40 bg-gray-200 flex justify-center items-center">
-                            <img src="/images/place.png" :alt="$t('Current key visual')" class="rounded-md h-[200px]">
+                            <img src="/images/place.png" @error="(e) => e.target.src = usePage().props.big_logo" :alt="$t('Current key visual')" class="rounded-md h-[200px]">
                         </div>
                     </div>
                     <div class="flex justify-between items-center mt-4">
@@ -33,7 +33,7 @@
                                     <img alt="default_image" src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
                                 </div>
                                 <div v-if="project?.key_visual_path !== null">
-                                    <img :src="'/storage/keyVisual/' + project?.key_visual_path" :alt="$t('Current key visual')" class="mx-auto size-10 rounded-full object-cover mr-2 hover:size-24 duration-300 ease-in-out">
+                                    <img :src="'/storage/keyVisual/' + project?.key_visual_path" @error="(e) => e.target.src = usePage().props.big_logo" :alt="$t('Current key visual')" class="mx-auto size-10 rounded-full object-cover mr-2 hover:size-24 duration-300 ease-in-out">
                                 </div>
                                 {{ project?.name }}
                             </div>

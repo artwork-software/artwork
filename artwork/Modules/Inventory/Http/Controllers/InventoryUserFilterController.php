@@ -35,6 +35,6 @@ class InventoryUserFilterController extends Controller
         $user = Auth::user();
         $data = $request->only(['category_ids', 'sub_category_ids', 'property_filters']);
         $filter = $this->filterRepo->saveForUser($user, $data);
-        return response()->json($filter);
+        //return response()->json($filter);
     }
 }

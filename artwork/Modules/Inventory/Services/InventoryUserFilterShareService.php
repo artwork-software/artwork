@@ -6,7 +6,10 @@ use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Repositories\InventoryUserFilterRepository;
+use Artwork\Modules\Manufacturer\Models\Manufacturer;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
+use Inertia\Inertia;
 
 class InventoryUserFilterShareService
 {
@@ -20,7 +23,7 @@ class InventoryUserFilterShareService
     /**
      * Gibt alle Filtermöglichkeiten und User-Filter für Inertia:share zurück
      */
-    public function getFilterDataForUser(User $user): array
+    public function getFilterDataForUser(User $user): void
     {
         $categories = InventoryCategory::select('id', 'name')->with([
             'subCategories:id,name,inventory_category_id'
@@ -54,10 +57,12 @@ class InventoryUserFilterShareService
             'property_filters' => $userFilter?->property_filters ?? [],
         ];
 
-        return [
+        Inertia::share([
             'categories' => $categories,
             'filterable_properties' => $filterableProperties,
             'user_filter' => $userFilterArr,
-        ];
+            'rooms' => Room::all(),
+            'manufacturers' => Manufacturer::all(),
+        ]);
     }
 }

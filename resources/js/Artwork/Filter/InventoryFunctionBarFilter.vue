@@ -16,33 +16,27 @@
     <teleport to="body">
         <InventoryFilterModal
             v-if="showInventoryFilterModal"
-            @close="showInventoryFilterModal = false"
-            :filter-options="filterOptions"
-            :user-filter="userFilter"
+            @close="closeFilterModal"
+
         />
     </teleport>
 </template>
 
 <script setup>
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
+import { usePage } from '@inertiajs/vue3';
 import { computed, defineAsyncComponent, ref } from 'vue';
 
 const props = defineProps({
-    filterOptions: {
-        type: Object,
-        required: true
-    },
-    userFilter: {
-        type: Object,
-        required: true
-    }
+
 });
 
 const showInventoryFilterModal = ref(false);
+const emit = defineEmits(['close']);
 
 const checkIfAnyFilterIsActive = computed(() => {
     const ignoredKeys = ['created_at', 'updated_at', 'id', 'user_id'];
-    return Object.entries(props.userFilter || {}).some(([key, value]) => {
+    return Object.entries(usePage().props.user_filter || {}).some(([key, value]) => {
         if (ignoredKeys.includes(key)) return false;
         if (Array.isArray(value)) return value.length > 0;
         return value !== null && value !== '';
@@ -54,6 +48,11 @@ const InventoryFilterModal = defineAsyncComponent({
     delay: 200,
     timeout: 5000
 });
+
+const closeFilterModal = () => {
+    showInventoryFilterModal.value = false;
+    emit('close');
+};
 </script>
 
 <style scoped>

@@ -1,398 +1,397 @@
 <template>
-    <form @submit.prevent="submit" class="mx-4">
-        <div class="mb-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
-                <div class="">
-                    <BaseInput id="name" v-model="internMaterialIssue.name" :label="$t('Name')" />
+    <form @submit.prevent="submit" class="mx-auto max-w-7xl px-4 md:px-6">
+        <!-- Page Title -->
+        <header class="mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <div class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-100 to-indigo-100 px-3 py-1 ring-1 ring-inset ring-sky-200">
+                        <span class="inline-block size-1.5 rounded-full bg-sky-500"></span>
+                        <span class="text-[11px] font-semibold text-sky-800 tracking-wide">{{ $t('Intern Material Issue') }}</span>
+                    </div>
+                    <h1 class="mt-2 text-xl md:text-2xl font-bold tracking-tight text-zinc-900">
+                        {{ $t('Create material issue') }}
+                    </h1>
+                    <p class="text-sm text-zinc-500">
+                        {{ $t('Here you can capture the basic information for the material issue. Fields marked with * are required.') }}
+                    </p>
                 </div>
-
-                <div class="">
-                    <ProjectSearch @project-selected="addProject" v-if="!selectedProject"
-                        :label="$t('Project assignment (optional)')" />
-
-                    <div class="mt-2" v-if="selectedProject">
-                        <span class="text-sm font-bold">{{ $t("Selected project") }}:</span>
-                        <div class="flex items-start justify-between">
-                            <div class="">
-                                <span class="text-sm text-secondary font-bold">{{ selectedProject?.name }}</span>
-                            </div>
-                            <div>
-                                <button type="button" class="text-blue-500 underline text-xs font-lexend"
-                                    @click="selectedProject = null">
-                                    {{ $t("Remove assignment") }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="flex items-center gap-2">
+          <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200">
+            {{ internMaterialIssue.articles?.length || 0 }} {{ $t('articles') }}
+          </span>
+                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+            {{ internMaterialIssue.files?.length || 0 }} {{ $t('files') }}
+          </span>
                 </div>
-                <div class="">
-                    <RoomSearch @room-selected="addRoom" v-if="!selectedRoom"
-                        :label="$t('Room allocation (optional)')" />
-                    <div class="mt-2" v-if="selectedRoom">
-                        <span class="text-sm font-bold">{{ $t("Selected Room") }}:</span>
-                        <div class="flex items-start justify-between">
-                            <div class="">
-                                <span class="text-sm text-secondary font-bold">{{ selectedRoom?.name }}</span>
-                            </div>
-                            <div>
-                                <button type="button" class="text-blue-500 underline text-xs font-lexend"
-                                    @click="selectedRoom = null">
-                                    {{ $t("Remove assignment") }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            </div>
+        </header>
 
-                <div class="grid grid-cols-2 gap-y-1 gap-x-4">
-                    <div class="col-span-1">
-                        <BaseInput id="start_date" v-model="internMaterialIssue.start_date" :label="$t('Start date')"
-                            type="date" />
-                    </div>
-                    <div class="col-span-1">
-                        <BaseInput id="start_time" v-model="internMaterialIssue.start_time" :label="$t('Start time')"
-                            type="time" />
-                    </div>
-
-                    <div class="col-span-1">
-                        <BaseInput id="end_date" v-model="internMaterialIssue.end_date" :label="$t('End date')"
-                            type="date" />
-                    </div>
-                    <div class="col-span-1">
-                        <BaseInput id="end_time" v-model="internMaterialIssue.end_time" :label="$t('End time')"
-                            type="time" />
-                    </div>
-                    <div class="col-span-full" v-if="isEndDateBeforeStartDate">
-                        <p class="text-xs text-red-500 mt-0.5">
-                            {{
-                                $t("End date cannot be earlier than start date")
-                            }}
+        <!-- Konflikt-Leiste: Zeigt Überbuchungen im Zeitraum an -->
+        <section v-if="hasConflicts" class="mb-6 rounded-2xl border border-red-200 bg-red-50/70 p-4 ring-1 ring-inset ring-red-200">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-start gap-3">
+                    <div class="grid size-8 place-items-center rounded-full bg-red-600 text-white text-xs font-bold">!</div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-red-900">{{ $t('Conflicts regarding availability') }}</h3>
+                        <p class="text-xs text-red-800/90">
+                            {{ $t('There are') }} <strong>{{ conflicts.length }}</strong> {{ $t('Items with a quantity higher than available in the selected period.') }}
                         </p>
                     </div>
                 </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" class="inline-flex items-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-300 hover:bg-red-100" @click="scrollToFirstConflict">
+                        {{ $t('Show first conflict') }}
+                    </button>
+                    <button type="button" class="inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700" @click="fixAllConflicts">
+                        {{ $t('Automatically adjust quantities') }}
+                    </button>
+                </div>
+            </div>
 
-                <div class="col-span-2 items-stretch h-full">
-                    <BaseTextarea id="notes" v-model="internMaterialIssue.notes" :label="$t('Notes')" />
+
+            <!-- Konfliktliste (kompakt) -->
+            <div class="mt-3 grid gap-2 md:grid-cols-2">
+                <div v-for="c in conflicts" :key="c.id" class="flex items-center justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-zinc-200">
+                    <div class="min-w-0 pr-2">
+                        <p class="truncate text-xs font-medium text-zinc-900">{{ c.name }}</p>
+                        <p class="text-[11px] text-zinc-500">{{ $t('Requested') }}: {{ c.wanted }} • {{ $t('Available') }}: {{ c.available }}</p>
+                    </div>
+                    <button type="button" class="text-xs font-medium text-blue-700 underline shrink-0" @click="openLightbox(0, internMaterialIssue.articles[c.index]?.images || [])">{{ $t('details') }}</button>
+                </div>
+            </div>
+        </section>
+
+        <div class="space-y-8">
+            <!-- Stammdaten -->
+            <section class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                <div class="border-b border-zinc-100 bg-gradient-to-r from-sky-50 via-sky-50/60 to-transparent px-6 py-4 rounded-t-2xl">
+                    <h2 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
+                        <span class="inline-block size-2 rounded-full bg-sky-500"></span>
+                        {{ $t('Base data') }}
+                    </h2>
+                    <p class="text-xs text-zinc-500">{{ $t('Capture name, time period and responsibilities.') }}</p>
                 </div>
 
-                <div class="col-span-full">
-                    <UserSearch @user-selected="addResponsibleUser" :label="$t('Responsible Users')" />
+                <div class="p-6 grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <!-- Name -->
+                    <BaseInput id="name" v-model="internMaterialIssue.name" :label="$t('Name') + ' *'" class="md:col-span-1" />
 
-                    <div class="mt-4" v-if="selectedResponsibleUsers.length > 0">
-                        <div class="text-sm font-bold mb-3">
-                            {{ $t("Selected responsible users") }}:
+                    <!-- Project -->
+                    <div class="md:col-span-1">
+                        <ProjectSearch v-if="!selectedProject" @project-selected="addProject" :label="$t('Project assignment (optional)')" />
+                        <div v-else class="mt-1">
+                            <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
+                            <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2">
+                                <div class="text-sm font-semibold text-blue-800">{{ selectedProject?.name }}</div>
+                                <button type="button" class="text-xs font-medium text-blue-700 underline" @click="selectedProject = null">
+                                    {{ $t('Remove assignment') }}
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-4 mt-3">
-                            <div v-for="(user, index) in selectedResponsibleUsers" :key="index"
-                                class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">
-                                <div class="flex items-center">
-                                    <div>
-                                        <img class="inline-block size-9 rounded-full object-cover"
-                                            :src="user.profile_photo_url" alt="" />
+                    </div>
+
+                    <!-- Room -->
+                    <div class="md:col-span-1">
+                        <RoomSearch v-if="!selectedRoom" @room-selected="addRoom" :label="$t('Room assignment (optional)')" />
+                        <div v-else class="mt-1">
+                            <span class="text-xs font-medium text-zinc-500">{{ $t('Selected room') }}</span>
+                            <div class="mt-1 flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/60 px-3 py-2">
+                                <div class="text-sm font-semibold text-indigo-800">{{ selectedRoom?.name }}</div>
+                                <button type="button" class="text-xs font-medium text-indigo-700 underline" @click="selectedRoom = null">
+                                    {{ $t('Remove assignment') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Zeitraum -->
+                    <div class="md:col-span-3">
+                        <div class="rounded-xl border border-zinc-200/80 bg-zinc-50 p-4">
+                            <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+                                <BaseInput id="start_date" v-model="internMaterialIssue.start_date" :label="$t('Start date') + ' *'" type="date" />
+                                <BaseInput id="start_time" v-model="internMaterialIssue.start_time" :label="$t('Start time')" type="time" />
+                                <BaseInput id="end_date" v-model="internMaterialIssue.end_date" :label="$t('End date') + ' *'" type="date" />
+                                <BaseInput id="end_time" v-model="internMaterialIssue.end_time" :label="$t('End time')" type="time" />
+                            </div>
+                            <p v-if="isEndDateBeforeStartDate" class="mt-2 text-xs font-medium text-red-600 flex items-center gap-1">
+                                <span class="inline-block size-1.5 rounded-full bg-red-500"></span>
+                                {{ $t('The end date cannot be before the start date') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <BaseTextarea id="notes" v-model="internMaterialIssue.notes" :label="$t('Notes')" class="md:col-span-3" />
+
+                    <!-- Verantwortliche -->
+                    <div class="md:col-span-3">
+                        <UserSearch @user-selected="addResponsibleUser" :label="$t('Responsible Users')" />
+
+                        <div v-if="selectedResponsibleUsers.length" class="mt-3 flex flex-wrap gap-3">
+                            <div v-for="(user, index) in selectedResponsibleUsers" :key="index" class="group flex items-center gap-2 rounded-full border border-zinc-200 bg-white pr-2 shadow-sm">
+                                <img class="size-8 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
+                                <span class="text-sm font-medium text-zinc-800">{{ user?.full_name ?? user.name }}</span>
+                                <button type="button" class="text-zinc-400 hover:text-red-500" @click="removeUserFromIssue(index)">
+                                    <XIcon class="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Artikel: Suche & Auswahl -->
+            <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <!-- Linke Spalte: Suche/Filter/Liste -->
+                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1">
+                    <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl">
+                        <div class="flex items-center w-full gap-x-3">
+                            <ArticleSearch id="articleSearchInModal" class="w-full" :label="$t('Search Articles')" @article-selected="addArticleToIssue" />
+                            <ToolTipComponent @click="showSelectMaterialSetModal = true" icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
+                            <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
+                        </div>
+                    </div>
+
+                    <div class="px-5 py-3 flex items-center justify-between">
+                        <h3 class="font-semibold flex items-center gap-2">
+                            <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
+                            {{ $t('Found Articles') }}
+                        </h3>
+                        <div v-if="articles && articles.length" class="text-sm text-zinc-500">
+                            {{ articles.length }} {{ articles.length === 1 ? $t('article found') : $t('articles found') }}
+                        </div>
+                    </div>
+
+                    <div ref="scrollContainer" class="max-h-[28rem] overflow-y-auto px-5 pb-5">
+                        <div v-for="article in articles" :key="article.id" class="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 shadow-sm hover:bg-zinc-50 transition">
+                            <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
+                                <div class="flex items-start gap-3">
+                                    <img v-if="article?.images?.[0]?.image" :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="h-12 w-12 rounded-lg border border-zinc-200 object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                    <div class="min-w-0">
+                                        <div class="font-medium truncate">{{ article.name }}</div>
+                                        <div class="text-xs text-zinc-500 line-clamp-2" v-if="article.description">{{ article.description }}</div>
+                                        <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                                            <template v-for="(status, i) in article.status_values" :key="i">
+                                                <div v-if="status.name === 'Ready for use' || status.name === 'Einsatzbereit'" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
+                                                    <span class="inline-block size-1.5 rounded-full" :style="{ backgroundColor: status.color }"></span>
+                                                    <span class="tabular-nums">{{ status.name }}</span>
+                                                    <span class="tabular-nums">{{ article.availableStock?.ready ?? status.pivot.value ?? 0 }}</span>
+                                                </div>
+                                            </template>
+                                            <span class="ml-auto text-zinc-500">{{ $t('Category') }}: {{ article.category.name }}<span v-if="article.sub_category"> • {{ $t('Subcategory') }}: {{ article.sub_category.name }}</span></span>
+                                        </div>
                                     </div>
-                                    <div class="mx-2">
-                                        <p class="xsDark group-hover:text-gray-900">
-                                            {{ user?.full_name ?? user.name }}
-                                        </p>
+                                </div>
+                            </button>
+                        </div>
+
+                        <div v-if="articles" class="flex justify-center pt-4">
+                            <button type="button" @click="loadMoreArticles" :disabled="loadingMore" class="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50">
+                                <span v-if="loadingMore" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                                {{ $t('Load more items') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rechte Spalte: Auswahl -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Ausgewählte Artikel -->
+                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                        <div class="border-b border-zinc-100 px-6 py-4 rounded-t-2xl">
+                            <h3 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
+                                <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
+                                {{ $t('Selected Articles') }}
+                            </h3>
+                            <p class="text-xs text-zinc-500">{{ $t('Here you can see the items you have selected for the material issue. Adjust the quantity or remove items.') }}</p>
+                        </div>
+
+                        <div class="p-5">
+                            <div v-if="internMaterialIssue.articles.length" class="divide-y divide-zinc-200/80">
+                                <div v-for="(article, index) in internMaterialIssue.articles" :key="index" :data-article-row="index" class="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
+                                    <div class="flex w-full items-start gap-4">
+                                        <!-- Single preview with zoom overlay -->
+                                        <div v-if="article?.images?.length" class="shrink-0" style="max-width: 120px">
+                                            <div class="group relative cursor-zoom-in overflow-hidden rounded-lg border border-zinc-200 shadow-sm" @click="openLightbox(0, article.images)">
+                                                <img :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="block h-auto w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                                <div class="pointer-events-none absolute inset-0 grid place-items-center bg-black/0 transition group-hover:bg-black/30">
+                                                    <component is="IconWindowMaximize" class="h-4 w-4 text-white opacity-0 transition group-hover:opacity-100" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="min-w-0">
+                                            <h4 class="text-sm font-semibold text-zinc-900 flex items-center gap-1">
+                                                {{ article.name }}
+                                                <component is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="articleForDetailModal = article" />
+                                            </h4>
+                                            <div class="mt-0.5 text-xs text-zinc-600 flex items-center gap-1">
+                                                {{ $t('Available stock in period') }}:
+                                                <span v-if="!article.availableStockRequestIsLoading" class="tabular-nums inline-flex items-center gap-1" :class="{
+                          'text-emerald-600': (article.availableStock?.available ?? 0) > 0,
+                          'text-red-600': (article.availableStock?.available ?? 0) === 0
+                        }">{{ article.availableStock?.available ?? 0 }}
+                          <button type="button" class="underline" @click="getArticleDataForUsage(article)">
+                            <component is="IconInfoCircle" class="h-3.5 w-3.5" stroke-width="1.5" />
+                          </button>
+                        </span>
+                                                <span v-else class="inline-flex items-center gap-1 text-zinc-500">
+                          {{ $t('Fetching') }}
+                          <component is="IconLoader" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
+                        </span>
+                                            </div>
+                                            <div v-if="article.quantity > (article.availableStock?.available ?? 0) && internMaterialIssue.start_date && internMaterialIssue.end_date" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
+                                                <span>{{ $t('You have selected more items than are available.') }}</span>
+                                                <button type="button" class="underline" @click="getArticleDataForUsage(article)">{{ $t('Show usage') }}</button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center">
-                                        <button type="button" @click="removeUserFromIssue(index)">
-                                            <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+
+                                    <div class="flex items-center gap-4 md:gap-6">
+                                        <div class="w-28">
+                                            <BaseInput :id="'article-quantity-' + index" type="number" v-model="article.quantity" :label="$t('Menge')" />
+                                        </div>
+                                        <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeArticle(index)">
+                                            <component is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-span-1">
-                    <div>
-                        <button @click="$refs.internMaterialIssueFiles.click()" type="button"
-                            class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
-                            <component is="IconFile" class="mx-auto size-12 text-gray-400" stroke-width="1" />
-                            <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t("File storage") }}</span>
-                            <input @change="upload" class="hidden" ref="internMaterialIssueFiles" id="file" type="file"
-                                multiple />
-                        </button>
-                    </div>
-                </div>
-                <div class="col-span-2">
-                    <div class="bg-zinc-100 p-5 rounded-lg max-h-44 min-h-44 overflow-y-scroll inset-shadow-xs border border-zinc-200">
-                            <div class="">
-                                <div class="divide-y divide-gray-200 divide-dashed">
-                                    <div class="py-2" v-for="(file, index) in props
-                                        .issueOfMaterial?.files" :key="index">
-                                        <div class="flex items-center gap-x-4 justify-between">
-                                            <ul class="list-disc list-inside space-y-1">
-                                                <li :key="file.id">
-                                                    <a :href="'/storage/' +
-                                                        file.file_path
-                                                        " target="_blank" download class="text-blue-600 hover:underline">
-                                                        {{ file.original_name }}
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                            <div>
-                                                <div class="flex items-center justify-end">
-                                                    <button type="button" class="text-xs text-red-500"
-                                                        @click="removeFile(file.id)">
-                                                        <component is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="divide-y divide-gray-200 divide-dashed">
-                                    <div class="py-2" v-for="(file, index) in internMaterialIssue.files" :key="index">
-                                        <div class="flex items-center gap-x-4 justify-between">
-                                            <div class="w-full">
-                                                <h2 class="text-sm font-bold">
-                                                    {{
-                                                        file.name ??
-                                                        file.original_name
-                                                    }}
-                                                </h2>
-                                                <p class="text-xs" v-if="file.size">
-                                                    {{
-                                                        (
-                                                            file.size /
-                                                            1024 /
-                                                            1024
-                                                        ).toFixed(2)
-                                                    }}
-                                                    MB
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <div class="flex items-center justify-end">
-                                                    <button type="button" class="text-xs text-red-500" @click="
-                                                        internMaterialIssue.files.splice(
-                                                            index,
-                                                            1
-                                                        )
-                                                        ">
-                                                        <component is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div v-else>
+                                <BaseAlertComponent :message="$t('No items selected')" type="info" class="text-center" />
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3 items-stretch mb-5">
-                <div class="col-span-full">
-                    <div class="flex items-center w-full gap-x-4">
-                        <ArticleSearch @article-selected="addArticleToIssue" id="articleSearchInModal" class="w-full"
-                            :label="$t('Search Articles')" />
-                        <button type="button" @click="showArticleFilterModal = true"
-                            class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                            <ToolTipComponent icon="IconListSearch" :tooltip-text="$t('Search for articles')"
-                                icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
-                        </button>
-                        <button type="button" @click="showSelectMaterialSetModal = true"
-                            class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                            <ToolTipComponent icon="IconParentheses" :tooltip-text="$t('Select material sets')"
-                                icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
-                        </button>
-                    </div>
-                </div>
-                <div class="bg-zinc-100 p-5 rounded-lg min-h-44 overflow-y-scroll inset-shadow-xs border border-zinc-200 col-span-1">
-                    <InventoryFunctionBarFilter :filter-options="filterData" :user-filter="filterData?.user_filter" />
-                </div>
-
-                <div class="col-span-2">
-                    <div class="bg-zinc-100 p-5 rounded-lg min-h-44 overflow-y-scroll inset-shadow-xs border border-zinc-200 col-span-1 mb-4">
-
-                    </div>
-
-                    <div class="bg-zinc-100 rounded-lg inset-shadow-xs border border-zinc-200 col-span-1 overflow-hidden">
-                        <div class="flex items-center justify-between px-5 py-2.5">
+                    <!-- Sonderartikel -->
+                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                        <div class="flex items-center justify-between gap-3 border-b border-zinc-100 px-6 py-4 rounded-t-2xl">
                             <div>
-                                <h2 class="font-lexend font-bold">
-                                    {{ $t("Special article") }}
-                                </h2>
+                                <h3 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
+                                    <span class="inline-block size-2 rounded-full bg-violet-500"></span>
+                                    {{ $t('Sonderartikel') }}
+                                </h3>
+                                <p class="text-xs text-zinc-500">{{ $t('Hier können Sie Artikel erfassen, die nicht im System gelistet sind.') }}</p>
                             </div>
-                            <button type="button" class="text-blue-500 underline text-xs font-lexend cursor-pointer hover:text-artwork-buttons-create duration-300 ease-in-out"
-                                @click="addSpecialItem">
-                                {{ $t("Add special article") }}
-                            </button>
+                            <div class="flex items-center gap-3">
+                                <label class="flex items-center gap-2 text-xs text-zinc-700">
+                                    <input type="checkbox" v-model="internMaterialIssue.special_items_done" class="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500" />
+                                    <span>{{ $t('Special items done') }}</span>
+                                </label>
+                                <button type="button" class="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700" @click="addSpecialItem">
+                                    <component is="IconPlus" class="h-3.5 w-3.5" />
+                                    {{ $t('Sonderartikel hinzufügen') }}
+                                </button>
+                            </div>
                         </div>
-                        <div class="max-h-96 overflow-y-scroll p-5">
-                            <div class="divide-y divide-gray-200 divide-dashed">
-                                <div class="py-2" v-for="(article, index) in internMaterialIssue.special_items" :key="index">
-                                    <div class="grid grid-cols-1 md:grid-cols-9 gap-4">
-                                        <div class="col-span-6">
-                                            <BaseInput :id="'special-article-name-' + index
-                                                " type="text" v-model="article.name" :label="$t('Article Name')" />
-                                        </div>
-                                        <div class="col-span-2">
-                                            <BaseInput :id="'special-article-quantity' +
-                                                index
-                                                " type="number" v-model="article.quantity" :label="$t('Quantity')" />
-                                        </div>
+
+                        <div class="max-h-[26rem] overflow-y-auto p-6">
+                            <div class="divide-y divide-dashed divide-zinc-200">
+                                <div v-for="(article, index) in internMaterialIssue.special_items" :key="index" class="py-3">
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-9">
+                                        <BaseInput :id="'special-article-name-' + index" type="text" v-model="article.name" :label="$t('Artikelname')" class="md:col-span-6" />
+                                        <BaseInput :id="'special-article-quantity' + index" type="number" v-model="article.quantity" :label="$t('Menge')" class="md:col-span-2" />
                                         <div class="flex items-center justify-center">
-                                            <button type="button" class="text-xs text-red-500 hover:text-red-700 duration-300 ease-in-out cursor-pointer"
-                                                @click="removeSpecialArticle(index)">
-                                                <component is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
+                                            <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeSpecialArticle(index)">
+                                                <component is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
                                             </button>
                                         </div>
-                                        <div class="col-span-full">
-                                            <BaseTextarea :id="'special-article-description-' +
-                                                index
-                                                " v-model="article.description" rows="1" :label="$t('Description')" />
-                                        </div>
+                                        <BaseTextarea :id="'special-article-description-' + index" v-model="article.description" rows="1" :label="$t('Beschreibung')" class="md:col-span-9" />
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
+                    <!-- Dateien -->
+                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                        <div class="border-b border-zinc-100 px-6 py-4 rounded-t-2xl">
+                            <h3 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
+                                <span class="inline-block size-2 rounded-full bg-emerald-500"></span>
+                                {{ $t('Dateien zur Materialausgabe') }}
+                            </h3>
+                            <p class="text-xs text-zinc-500">{{ $t('Hier können Sie Dateien zur Materialausgabe hochladen und verwalten.') }}</p>
+                        </div>
 
-        <div class="grid gird-cols-1 md:grid-cols-2 gap-x-4 mb-4 hidden">
-    
-                    
-            <div>
-                
-                <div class="mt-4">
-                    <div class="bg-backgroundGray px-4 py-3 rounded-lg border border-gray-200 max-h-96 overflow-scroll">
-                        <div class="divide-y divide-gray-200 divide-dashed"
-                            v-if="internMaterialIssue.articles.length > 0">
-                            <div class="flex items-center gap-x-4 justify-between py-2 border-dashed" v-for="(
-article, index
-                                ) in internMaterialIssue.articles" :key="index">
-                                <pre class="hidden">
-                                    {{ article }}
-                                </pre>
-                                <div class="w-full">
-                                    <h2 class="text-sm font-bold flex items-center gap-x-1">
-                                        {{ article.name }}
-
-                                        <component is="IconInfoCircle" class="h-4 w-4"></component>
-                                    </h2>
-                                    <p class="text-xs">
-                                        {{ article.description }}
-                                    </p>
-                                    <p class="text-xs flex items-center gap-x-1">
-                                        {{
-                                            $t(
-                                                "Available stock for issue period"
-                                            )
-                                        }}:
-                                        <span v-if="
-                                            !article.availableStockRequestIsLoading
-                                        ">{{
-                                                article.availableStock
-                                                    ?.available
-                                            }}</span>
-                                        <span v-else class="flex items-center gap-x-1">{{ $t("Is queried") }}
-                                            <component is="IconLoader"
-                                                class="inline-block h-4 w-4 animate-spin text-gray-400"
-                                                stroke-width="1.5" />
-                                        </span>
-                                    </p>
-                                    <p v-if="
-                                        article.quantity >
-                                        article.availableStock?.available
-                                    ">
-                                        <span class="text-red-500 text-xs">
-                                            {{
-                                                $t(
-                                                    "You have selected more items than available in stock."
-                                                )
-                                            }}
-                                        </span>
-                                    </p>
-                                </div>
-                                <div class="w-28">
-                                    <BaseInput :id="'article-quantity-' + index" type="number"
-                                        v-model="article.quantity" :label="$t('Quantity')" />
-                                </div>
-                                <div class="flex items-center justify-end w-5">
-                                    <button type="button" class="text-xs text-red-500" @click="removeArticle(index)">
-                                        <component is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
-                                    </button>
-                                </div>
+                        <div class="p-6 grid grid-cols-1 gap-6 md:grid-cols-2 items-stretch">
+                            <!-- Dropzone -->
+                            <div>
+                                <button @click="$refs.internMaterialIssueFiles.click()" type="button" class="relative block w-full max-h-56 min-h-56 rounded-2xl border-2 border-dashed border-emerald-300/70 p-10 text-center hover:border-emerald-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
+                                    <component is="IconFile" class="mx-auto size-12 text-emerald-600" stroke-width="1" />
+                                    <span class="mt-2 block text-sm font-semibold text-emerald-800">{{ $t('Datei auswählen') }}</span>
+                                    <input ref="internMaterialIssueFiles" id="file" type="file" class="hidden" multiple @change="upload" />
+                                </button>
                             </div>
-                        </div>
-                        <div v-else>
-                            <BaseAlertComponent :message="$t('No articles found')" type="info"
-                                class="text-center -mb-3" />
-                        </div>
-                    </div>
-                </div>
 
-                <div>
-                    <div class="flex items-center justify-between my-4">
-                        <div>
-                            <h2 class="font-lexend font-bold">
-                                {{ $t("Special article") }}
-                            </h2>
-                        </div>
-                        <button type="button" class="text-blue-500 underline text-xs font-lexend"
-                            @click="addSpecialItem">
-                            {{ $t("Add special article") }}
-                        </button>
-                    </div>
-                    <div
-                        class="bg-backgroundGray px-4 py-3 rounded-lg border border-gray-200 min-h-60 max-h-60 overflow-scroll">
-                        <div class="divide-y divide-gray-200 divide-dashed">
-                            <div class="py-2" v-for="(article, index) in internMaterialIssue.special_items" :key="index">
-                                <div class="grid grid-cols-1 md:grid-cols-9 gap-4">
-                                    <div class="col-span-6">
-                                        <BaseInput :id="'special-article-name-' + index
-                                            " type="text" v-model="article.name" :label="$t('Article Name')" />
-                                    </div>
-                                    <div class="col-span-2">
-                                        <BaseInput :id="'special-article-quantity' +
-                                            index
-                                            " type="number" v-model="article.quantity" :label="$t('Quantity')" />
-                                    </div>
-                                    <div class="flex items-center justify-end">
-                                        <button type="button" class="text-xs text-red-500"
-                                            @click="removeSpecialArticle(index)">
+                            <!-- File Lists -->
+                            <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 max-h-56 min-h-56 overflow-y-auto">
+                                <!-- Bestehende Dateien -->
+                                <div v-if="props.issueOfMaterial?.files?.length" class="space-y-2">
+                                    <div v-for="(file, index) in props.issueOfMaterial.files" :key="'existing-' + index" class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+                                        <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-blue-700 hover:underline">
+                                            {{ file.original_name }}
+                                        </a>
+                                        <button type="button" class="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeFile(file.id)">
                                             <component is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
                                         </button>
                                     </div>
-                                    <div class="col-span-full">
-                                        <BaseTextarea :id="'special-article-description-' +
-                                            index
-                                            " v-model="article.description" rows="1" :label="$t('Description')" />
+                                </div>
+
+                                <!-- Neu ausgewählte Dateien -->
+                                <div v-if="internMaterialIssue.files?.length" class="mt-3 space-y-2">
+                                    <div v-for="(file, index) in internMaterialIssue.files" :key="'new-' + index" class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+                                        <div class="min-w-0">
+                                            <h4 class="truncate text-sm font-medium">{{ file.name ?? file.original_name }}</h4>
+                                            <p v-if="file.size" class="text-[11px] text-zinc-500">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</p>
+                                        </div>
+                                        <button type="button" class="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="internMaterialIssue.files.splice(index, 1)">
+                                            <component is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
+                                        </button>
                                     </div>
+                                </div>
+
+                                <div v-if="!props.issueOfMaterial?.files?.length && !internMaterialIssue.files?.length" class="grid h-full place-items-center text-xs text-zinc-500">
+                                    {{ $t('Keine Dateien ausgewählt') }}
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+        </div>
 
-                    <!-- checkbox for special_items_done -->
-                    <div class="mt-4">
-                        <label class="flex items-center gap-x-2">
-                            <input type="checkbox" v-model="internMaterialIssue.special_items_done"
-                                class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                            <span class="text-sm">{{
-                                $t("Special items done")
-                                }}</span>
-                        </label>
+        <!-- Sticky Action Bar -->
+        <div class="sticky bottom-0 z-40 mt-8 -mx-4 md:-mx-6 bg-gradient-to-t from-white via-white/80 to-transparent pt-4">
+            <div class="mx-auto max-w-7xl px-4 md:px-6">
+                <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white/90 p-3 backdrop-blur shadow-sm">
+                    <div class="text-xs text-zinc-600">
+                        {{ $t('Selected') }}: <span class="font-medium">{{ internMaterialIssue.articles?.length || 0 }}</span> {{ $t('articles') }} • {{ $t('Files') }}: <span class="font-medium">{{ internMaterialIssue.files?.length || 0 }}</span>
                     </div>
+                    <FormButton :text="issueOfMaterial?.id ? $t('Aktualisieren') : $t('Speichern')" :disabled="internMaterialIssue.processing || !internMaterialIssue.start_date || !internMaterialIssue.end_date || !internMaterialIssue.name || isEndDateBeforeStartDate" type="submit" />
                 </div>
             </div>
         </div>
 
-        <div class="flex justify-center w-full">
-            <FormButton :text="issueOfMaterial?.id ? $t('Update') : $t('Save')" :disabled="internMaterialIssue.processing ||
-                !internMaterialIssue.start_date ||
-                !internMaterialIssue.end_date ||
-                !internMaterialIssue.name ||
-                isEndDateBeforeStartDate
-                " type="submit" />
-        </div>
+        <!-- Single global Galleria for lightbox -->
+        <Galleria
+            v-model:activeIndex="activeIndex"
+            v-model:visible="displayCustom"
+            :value="lightboxImages"
+            :responsiveOptions="responsiveOptions"
+            :numVisible="7"
+            :pt="{ mask: { onClick: onMaskClick } }"
+            :circular="true"
+            :fullScreen="true"
+            :showItemNavigators="true"
+            :showThumbnails="true"
+        >
+            <template #item="slotProps">
+                <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" style="width: 100%; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
+            </template>
+            <template #thumbnail="slotProps">
+                <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" class="w-20 max-w-20" style="display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
+            </template>
+        </Galleria>
     </form>
 
     <ArticleSearchFilterModal v-if="showArticleFilterModal" @close="showArticleFilterModal = false"
@@ -400,6 +399,10 @@ article, index
 
     <SelectMaterialSetModal v-if="showSelectMaterialSetModal" @close="showSelectMaterialSetModal = false"
         @add-material-set="addMaterialSetToIssue" />
+
+    <ArticleDetailModal :article="articleForDetailModal" v-if="articleForDetailModal" @close="articleForDetailModal = null" :show-button-for-edit-and-delete="false" />
+
+    <ArticleUsageModal :details-for-modal="articleForUsageModal" v-if="articleForUsageModal" @close="articleForUsageModal = null" />
 </template>
 
 <script setup>
@@ -412,13 +415,17 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArticleSearchFilterModal from "@/Pages/IssueOfMaterial/Components/ArticleSearchFilterModal.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import { router, useForm } from "@inertiajs/vue3";
-import { computed, onMounted, ref, watch } from "vue";
+import {router, useForm, usePage} from "@inertiajs/vue3";
+import {computed, nextTick, onMounted, ref, watch} from "vue";
 import debounce from "lodash.debounce";
+import axios from "axios";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SelectMaterialSetModal from "@/Pages/IssueOfMaterial/Components/SelectMaterialSetModal.vue";
 import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFilter.vue";
+import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
+import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
+import Galleria from "primevue/galleria";
 
 const props = defineProps({
     issueOfMaterial: {
@@ -476,7 +483,14 @@ const selectedResponsibleUsers = ref(
 );
 const showArticleFilterModal = ref(false);
 const showSelectMaterialSetModal = ref(false);
-
+// Artikel Pagination State
+const articles = ref([]);
+const loadingMore = ref(false);
+const scrollContainer = ref(null);
+const articleForDetailModal = ref(null);
+const articleForUsageModal = ref(null);
+const hasMoreArticles = ref(true);
+const paginationPage = ref(1);
 const isEndDateBeforeStartDate = computed(() => {
     if (!internMaterialIssue.start_date || !internMaterialIssue.end_date) {
         return false;
@@ -487,6 +501,88 @@ const isEndDateBeforeStartDate = computed(() => {
 
     return endDate < startDate;
 });
+
+const conflicts = computed(() => {
+    const arts = (internMaterialIssue?.articles ?? [])
+    const hasPeriod = !!(internMaterialIssue?.start_date && internMaterialIssue?.end_date)
+    if (!hasPeriod) return []
+    return arts
+        .map((a, index) => {
+            const available = a?.availableStock?.available ?? 0
+            const wanted = Number(a?.quantity ?? 0)
+            return wanted > available
+                ? { index, id: a?.id ?? index, name: a?.name ?? ('#' + index), wanted, available }
+                : null
+        })
+        .filter(Boolean)
+})
+
+const hasConflicts = computed(() => conflicts.value.length > 0)
+
+// Scrollt zur ersten konfliktbehafteten Zeile und hebt sie kurz hervor
+function scrollToFirstConflict () {
+    if (!conflicts.value.length) return
+    nextTick(() => {
+        const idx = conflicts.value[0].index
+        const el = document.querySelector(`[data-article-row="${idx}"]`) | null
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            el.classList.add('ring-2','ring-red-400','rounded-xl')
+            setTimeout(() => el.classList.remove('ring-2','ring-red-400','rounded-xl'), 1400)
+        }
+    })
+}
+
+// Setzt alle Konflikt-Mengen auf „max. verfügbar“
+function fixAllConflicts () {
+    conflicts.value.forEach(c => {
+        const art = internMaterialIssue.articles[c.index]
+        if (!art) return
+        const avail = Number(c.available ?? 0)
+        art.quantity = Math.max(0, avail)
+    })
+}
+
+const activeIndex = ref(0);
+const responsiveOptions = ref([
+    {
+        breakpoint: '1024px',
+        numVisible: 5
+    },
+    {
+        breakpoint: '768px',
+        numVisible: 3
+    },
+    {
+        breakpoint: '560px',
+        numVisible: 1
+    }
+]);
+const displayCustom = ref(false);
+
+const imageClick = (index) => {
+    activeIndex.value = index;
+    displayCustom.value = true;
+};
+
+const lightboxImages = ref([])
+
+function openLightbox(startIndex, images) {
+    lightboxImages.value = images || []
+    // @ts-ignore
+    activeIndex.value = startIndex || 0
+    // @ts-ignore
+    displayCustom.value = true
+}
+
+
+
+const onMaskClick = (e) => {
+    if (e.target === e.currentTarget) {
+        displayCustom.value = false
+    }
+}
+
 
 const addProject = (project) => {
     selectedProject.value = project;
@@ -516,6 +612,28 @@ const addSpecialItem = () => {
         name: "",
         quantity: 1,
     });
+};
+
+const getArticleDataForUsage = async (article) => {
+    if (!article?.id || !internMaterialIssue.start_date || !internMaterialIssue.end_date) {
+        return;
+    }
+    article.availableStockRequestIsLoading = true;
+    try {
+        const response = await axios.get(route('inventory.articles.usage'), {
+            params: {
+                article_id: article.id,
+                start_date: internMaterialIssue.start_date,
+                end_date: internMaterialIssue.end_date,
+            }
+        });
+        // Die Nutzungsdaten werden im Modal angezeigt
+        articleForUsageModal.value = response.data.data;
+    } catch (error) {
+        console.error('Fehler beim Abrufen der Artikel-Nutzungsdaten:', error);
+    } finally {
+        article.availableStockRequestIsLoading = false;
+    }
 };
 
 const addMaterialSetToIssue = (materialSet) => {
@@ -575,6 +693,10 @@ const addArticleToIssue = (article) => {
             category: article.category || null,
             subCategory: article.sub_category || null,
             images: article.images || [],
+            properties: article.properties || [],
+            room: article.room || null,
+            manufacturer: article.manufacturer || null,
+            status_values: article.status_values || [],
         });
     } else {
         // Article exists, don't modify its quantity
@@ -590,6 +712,44 @@ const addArticleToIssue = (article) => {
     // after add check the available stock
     checkAvailableStock();
 };
+
+const loadMoreArticles = async () => {
+    loadingMore.value = true;
+
+    try {
+        const response = await axios.get(route('inventory.articles.api', {
+            page: paginationPage.value,
+            start_date: internMaterialIssue.start_date,
+            end_date: internMaterialIssue.end_date,
+        }));
+
+        const newArticles = response.data.articles.data.reverse();
+
+        for (const article of newArticles) {
+            const exists = articles.value.find((a) => a.id === article.id);
+            if (!exists) {
+                articles.value.push(article);
+            }
+        }
+
+        if (!response.data.articles.next_page_url) {
+            hasMoreArticles.value = false;
+            paginationPage.value = 1;
+        }
+    } catch (e) {
+        console.error('Fehler beim Nachladen von Nachrichten:', e);
+    }
+    paginationPage.value += 1;
+    loadingMore.value = false;
+};
+
+const reloadArticlesWithNewFilter = async () => {
+    articles.value = [];
+    loadingMore.value = true;
+    paginationPage.value = 1;
+
+    await loadMoreArticles()
+}
 
 const removeArticle = (index) => {
     internMaterialIssue.articles.splice(index, 1);
@@ -724,6 +884,7 @@ watch(
     () => [internMaterialIssue.start_date, internMaterialIssue.end_date],
     debounce(() => {
         checkAvailableStock();
+        reloadArticlesWithNewFilter(); // Artikelliste neu laden bei Datumswechsel
     }, 300)
 );
 
@@ -731,7 +892,25 @@ onMounted(() => {
     if (props.issueOfMaterial?.articles?.length > 0) {
         checkAvailableStock();
     }
+
+    loadMoreArticles();
 });
+
+// Anpassung der Artikelsuche
+const searchArticles = async (searchTerm) => {
+    try {
+        const response = await axios.get(route('inventory.articles.api'), {
+            params: {
+                article_search: searchTerm,
+                start_date: internMaterialIssue.start_date,
+                end_date: internMaterialIssue.end_date,
+            }
+        });
+        articles.value = response.data.articles.data || [];
+    } catch (e) {
+        console.error('Fehler bei der Artikelsuche:', e);
+    }
+};
 </script>
 
 <style scoped></style>

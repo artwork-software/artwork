@@ -4,6 +4,7 @@
         :by="returnObject ? by : undefined"
         :disabled="disabled"
         as="div"
+        class="w-full"
     >
         <ComboboxLabel v-if="label" :class="labelClass">
             <slot name="label">{{ label }}</slot>

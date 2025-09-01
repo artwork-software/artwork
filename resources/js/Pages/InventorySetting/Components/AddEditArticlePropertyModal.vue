@@ -6,7 +6,7 @@
             />
         </div>
 
-        <div>
+        <div class="artwork">
             <form @submit.prevent="addEditProperty">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="col-span-full">
@@ -78,7 +78,7 @@
                             <div class="flex h-6 shrink-0 items-center">
                                 <div class="group grid size-4 grid-cols-1">
                                     <input id="is_filterable" aria-describedby="is_filterable-description" v-model="propertyForm.is_filterable" name="is_filterable" type="checkbox" class="aw-checklist-input" />
-                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
+                                    <svg class="aw-input-svg" viewBox="0 0 14 14" fill="none">
                                         <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                         <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -97,7 +97,7 @@
                             <div class="flex h-6 shrink-0 items-center">
                                 <div class="group grid size-4 grid-cols-1">
                                     <input id="show_in_list" aria-describedby="show_in_list-description" v-model="propertyForm.show_in_list" name="show_in_list" type="checkbox" class="aw-checklist-input" />
-                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
+                                    <svg class="aw-input-svg" viewBox="0 0 14 14" fill="none">
                                         <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                         <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -116,7 +116,7 @@
                             <div class="flex h-6 shrink-0 items-center">
                                 <div class="group grid size-4 grid-cols-1">
                                     <input id="is_required" aria-describedby="is_required-description" v-model="propertyForm.is_required" name="is_required" type="checkbox" class="aw-checklist-input" />
-                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
+                                    <svg class="aw-input-svg" viewBox="0 0 14 14" fill="none">
                                         <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                         <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -135,7 +135,7 @@
                             <div class="flex h-6 shrink-0 items-center">
                                 <div class="group grid size-4 grid-cols-1">
                                     <input id="across_articles" aria-describedby="across_articles-description" v-model="propertyForm.across_articles" name="across_articles" type="checkbox" class="aw-checklist-input" />
-                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
+                                    <svg class="aw-input-svg" viewBox="0 0 14 14" fill="none">
                                         <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                         <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -156,7 +156,7 @@
                             <div class="flex h-6 shrink-0 items-center">
                                 <div class="group grid size-4 grid-cols-1">
                                     <input id="individual_value" aria-describedby="individual_value-description" v-model="propertyForm.individual_value" name="individual_value" type="checkbox" class="aw-checklist-input" />
-                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
+                                    <svg class="aw-input-svg" viewBox="0 0 14 14" fill="none">
                                         <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                         <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>

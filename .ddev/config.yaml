@@ -9,6 +9,7 @@ additional_fqdns: []
 database:
     type: mariadb
     version: "10.11"
+performance_mode: mutagen
 use_dns_when_possible: true
 composer_version: "2"
 web_environment: []
@@ -39,6 +40,8 @@ ddev_version_constraint: '>=v1.23.0'
 
 # name: <projectname> # Name of the project, automatically provides
 #   http://projectname.ddev.site and https://projectname.ddev.site
+# If the name is omitted, the project will take the name of the enclosing directory,
+# which is useful if you want to have a copy of the project side by side with this one.
 
 # type: <projecttype>  # backdrop, cakephp, craftcms, drupal, drupal6, drupal7, drupal8, drupal9, drupal10, drupal11, generic, laravel, magento, magento2, php, shopware6, silverstripe, symfony, typo3, wordpress
 # See https://ddev.readthedocs.io/en/stable/users/quickstart/ for more
@@ -57,9 +60,9 @@ ddev_version_constraint: '>=v1.23.0'
 # database:
 #   type: <dbtype> # mysql, mariadb, postgres
 #   version: <version> # database version, like "10.11" or "8.0"
-#   MariaDB versions can be 5.5-10.8, 10.11, and 11.4.
-#   MySQL versions can be 5.5-8.0.
-#   PostgreSQL versions can be 9-17.
+#   MariaDB versions can be 5.5-10.8, 10.11, 11.4, 11.8
+#   MySQL versions can be 5.5-8.0, 8.4
+#   PostgreSQL versions can be 9-17
 
 # router_http_port: <port>  # Port to be used for http (defaults to global configuration, usually 80)
 # router_https_port: <port> # Port for https (defaults to global configuration, usually 443)
@@ -234,7 +237,7 @@ ddev_version_constraint: '>=v1.23.0'
 
 # ngrok_args: --basic-auth username:pass1234
 # Provide extra flags to the "ngrok http" command, see
-# https://ngrok.com/docs/ngrok-agent/config or run "ngrok http -h"
+# https://ngrok.com/docs/agent/config/v3/#agent-configuration or run "ngrok http -h"
 
 # disable_settings_management: false
 # If true, DDEV will not create CMS-specific settings files like

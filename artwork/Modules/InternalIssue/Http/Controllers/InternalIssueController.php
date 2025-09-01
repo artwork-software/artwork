@@ -9,6 +9,7 @@ use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\InternalIssue\Services\InternalIssueService;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,8 @@ class InternalIssueController extends Controller
     public function __construct(
         protected InternalIssueService $internalIssueService,
         protected InventoryUserFilterShareService $inventoryUserFilterShareService,
-        protected AuthManager $authManger
+        protected AuthManager $authManger,
+        protected InventoryUserFilterService $inventoryUserFilterService
     ) {}
 
     public function index(): \Inertia\Response
@@ -43,15 +45,14 @@ class InternalIssueController extends Controller
                 ->orderBy('start_time')
                 ->paginate($entitiesPerPage);
         }
-
-        
+        $this->inventoryUserFilterShareService->getFilterDataForUser($this->authManger->user());
 
         return Inertia::render('IssueOfMaterial/IssueOfMaterialManagement', [
             'issues' => $issues,
             'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
                 ->get() : [],
             'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
-            'detailedArticle' => Inertia::optional(fn () => 
+            'detailedArticle' => Inertia::optional(fn () =>
                 InventoryArticle::with([
                     'category',
                     'subCategory',
@@ -62,10 +63,11 @@ class InternalIssueController extends Controller
                     'statusValues',
                     'detailedArticleQuantities.status',
                 ])->find(request()?->get('articleId'))
-                ),
-                $this->inventoryUserFilterShareService->getFilterDataForUser($this->authManger->user())
+            ),
         ]);
     }
+
+
 
     public function store(StoreInternalIssueRequest $request)
     {

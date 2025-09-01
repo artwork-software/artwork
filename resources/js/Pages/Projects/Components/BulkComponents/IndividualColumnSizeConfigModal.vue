@@ -131,12 +131,12 @@ const getColumnSize = (column) => {
 
 const setColumnSizeToDefault = () => {
    columnSizeForm.bulk_column_size = {
-         1: 146,
-         2: 146,
-         3: 146,
-         4: 146,
-         5: 146,
-         6: 308,
+         1: 144,
+         2: 144,
+         3: 144,
+         4: 144,
+         5: 144,
+         6: 250,
    }
 
    submit();

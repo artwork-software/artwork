@@ -3,6 +3,33 @@
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
+                    <!-- Date Shortcuts - 3 vertical icons -->
+                    <div class="flex flex-col justify-between mr-2 h-10">
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t('Today')"
+                            :icon="IconCalendar"
+                            icon-size="w-4 h-4"
+                            @click="jumpToToday"
+                            class="flex-1 flex items-center justify-center"
+                        />
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t('Current week')"
+                            :icon="IconCalendarWeek"
+                            icon-size="w-4 h-4"
+                            @click="jumpToCurrentWeek"
+                            class="flex-1 flex items-center justify-center"
+                        />
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t('Current month')"
+                            :icon="IconCalendarMonth"
+                            icon-size="w-4 h-4"
+                            @click="jumpToCurrentMonth"
+                            class="flex-1 flex items-center justify-center"
+                        />
+                    </div>
                     <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false" :is_planning="isPlanning"/>
                     <div class="flex items-center">
                         <button v-if="!dailyView" class="ml-2 text-black previousTimeRange cursor-pointer" @click="previousTimeRange">
@@ -233,7 +260,7 @@
 <script setup>
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import {computed, defineAsyncComponent, inject, nextTick, ref, watch} from "vue";
-import {IconChevronLeft, IconChevronRight} from "@tabler/icons-vue";
+import {IconChevronLeft, IconChevronRight, IconCalendar, IconCalendarWeek, IconCalendarMonth} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
 import {Switch} from "@headlessui/vue";
@@ -499,6 +526,73 @@ const updateTimes = () => {
 
 const jumpToDayOfMonth = (day) => {
     emits('jumpToDayOfMonth', day);
+}
+
+// Shortcut functions for the three icons
+const jumpToToday = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    dateValueCopy.value[0] = today;
+    dateValueCopy.value[1] = today;
+
+    // Switch to daily mode if not already in daily mode
+    if (!dailyViewMode.value) {
+        dailyViewMode.value = true;
+        router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
+            daily_view: true
+        }, {
+            preserveScroll: false,
+            preserveState: false
+        });
+    } else {
+        // If already in daily mode, just update the dates
+        updateTimes();
+    }
+}
+
+const jumpToCurrentWeek = () => {
+    const today = new Date();
+    const currentWeekStart = new Date(today);
+    const currentWeekEnd = new Date(today);
+
+    // Calculate start of week (Monday)
+    const dayOfWeek = today.getDay();
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday is 0, Monday is 1
+    currentWeekStart.setDate(today.getDate() - daysToMonday);
+
+    // Calculate end of week (Sunday)
+    const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+    currentWeekEnd.setDate(today.getDate() + daysToSunday);
+
+    dateValueCopy.value[0] = currentWeekStart.toISOString().slice(0, 10);
+    dateValueCopy.value[1] = currentWeekEnd.toISOString().slice(0, 10);
+    updateTimes();
+}
+
+const jumpToCurrentMonth = () => {
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    dateValueCopy.value[0] = monthStart.toISOString().slice(0, 10);
+    dateValueCopy.value[1] = monthEnd.toISOString().slice(0, 10);
+
+    // Switch to normal mode (not daily mode) if in daily mode
+    if (dailyViewMode.value) {
+        dailyViewMode.value = false;
+        router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
+            daily_view: false
+        }, {
+            preserveScroll: false,
+            preserveState: false,
+            onSuccess: () => {
+                // Update dates only after the mode change is completed
+                updateTimes();
+            }
+        });
+    } else {
+        // If already in normal mode, just update the dates
+        updateTimes();
+    }
 }
 
 

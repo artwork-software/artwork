@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Models;
 
+use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,7 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|UserFilter planningCalendarFilter()
  */
 
-class UserFilter extends Model
+class UserFilter extends CalendarFilter
 {
     /** @use HasFactory<\Database\Factories\UserFilterFactory> */
     use HasFactory;

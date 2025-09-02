@@ -1,7 +1,7 @@
 <template>
     <div class="print:w-full group w-full">
         <!-- Row-Wrapper mit modernem Card-Look + kontextabhängigen Outlines -->
-        <div class="flex items-center gap-4 bg-white/70 dark:bg-zinc-900/50 backdrop-blur transition px-3 py-2 rounded-lg"
+        <div class="flex items-center gap-4 bg-white/70 backdrop-blur transition px-3 py-2 rounded-lg"
             :class="[
                 event?.isNew ? 'outline-2 outline-pink-400/60 outline-dashed' : '',
                 usePage()?.props?.headerObject?.project.lastEditEventIds?.includes(event.id)
@@ -536,10 +536,12 @@ const updateEventInDatabase = async () => {
         } else {
             props.event.nameError = false;
         }
+
+
         router.patch(route('event.update.single.bulk', {event: props.event.id}), {
             data: props.event
         }, {
-            preserveState: false,
+            preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
                 props.event.isNew = true;
@@ -562,7 +564,7 @@ const updateEventInDatabase = async () => {
 
             }
         });
-        }
+    }
 }
 
 const lastFocusedField = ref(null);

@@ -2,11 +2,11 @@
     <!-- Sticky / Glass Header -->
     <div class="sticky top-0 z-30 print:static">
         <div
-            class="rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80
-             bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl
+            class="rounded-2xl border border-zinc-200/80
+             bg-white/70 backdrop-blur-xl
               px-6 sm:px-4 mt-5 mb-3"
         >
-            <div class="flex items-center gap-3 sm:gap-4 py-2 sm:py-3 text-[11px] sm:text-xs text-zinc-600 dark:text-zinc-300 print:xsDark">
+            <div class="flex items-center gap-3 sm:gap-4 py-2 sm:py-3 text-[11px] sm:text-xs text-zinc-600 print:xsDark">
                 <!-- left spacer when multiEdit -->
                 <div v-if="multiEdit" class="w-8 h-4 shrink-0"></div>
 
@@ -18,35 +18,35 @@
                         class="shrink-0 min-w-0"
                         :style="getColumnSize(1)"
                     >
-            <span class="uppercase tracking-wider font-semibold text-zinc-700 dark:text-zinc-200">
+            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
               {{ $t('Event Status') }}
             </span>
                     </div>
 
                     <!-- Type -->
                     <div class="shrink-0 min-w-0" :style="getColumnSize(2)">
-            <span class="uppercase tracking-wider font-semibold text-zinc-700 dark:text-zinc-200">
+            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
               {{ $t('Event type') }}
             </span>
                     </div>
 
                     <!-- Name -->
                     <div class="shrink-0 min-w-0" :style="getColumnSize(3)">
-            <span class="uppercase tracking-wider font-semibold text-zinc-700 dark:text-zinc-200">
+            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
               {{ $t('Event name') }}
             </span>
                     </div>
 
                     <!-- Room -->
                     <div class="shrink-0 min-w-0" :style="getColumnSize(4)">
-            <span class="uppercase tracking-wider font-semibold text-zinc-700 dark:text-zinc-200">
+            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
               {{ $t('Room') }}
             </span>
                     </div>
 
                     <!-- Day -->
                     <div class="shrink-0 min-w-0 print:col-span-2" :style="getColumnSize(5)">
-            <span class="uppercase tracking-wider font-semibold text-zinc-700 dark:text-zinc-200">
+            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
               {{ $t('Day') }}
             </span>
                     </div>
@@ -71,14 +71,14 @@
                     ]"
                   />
                                 </Switch>
-                                <SwitchLabel as="span" class="ml-3 select-none uppercase tracking-wider font-semibold text-zinc-700 dark:text-zinc-200">
+                                <SwitchLabel as="span" class="ml-3 select-none uppercase tracking-wider font-semibold text-zinc-700 ">
                                     {{ $t('Period') }}
                                 </SwitchLabel>
                             </SwitchGroup>
                         </div>
 
                         <div v-else class="flex items-center gap-2">
-              <span class="uppercase tracking-wider font-semibold text-zinc-700 dark:text-zinc-200">
+              <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
                 {{ $t('Period') }}
               </span>
                             <ToolTipComponent

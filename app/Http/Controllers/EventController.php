@@ -3062,7 +3062,7 @@ class EventController extends Controller
     public function updateSingleBulkEvent(
         Request $request,
         Event $event
-    ): RedirectResponse {
+    ) {
         $data =  $request->collect('data');
         $this->eventService->updateBulkEvent(
             $data,
@@ -3075,7 +3075,9 @@ class EventController extends Controller
             $event->room_id
         ));
 
-        return Redirect::back();
+
+
+        //return Redirect::back();
     }
 
     public function createSingleBulkEvent(

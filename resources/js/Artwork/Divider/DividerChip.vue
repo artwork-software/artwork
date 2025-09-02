@@ -55,11 +55,11 @@ const sizeMap = {
 const variantMap = {
     neutral: {
         pill: 'bg-white text-zinc-700 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700 shadow-sm',
-        line: 'from-transparent via-zinc-300 to-transparent dark:via-zinc-700'
+        line: 'bg-zinc-300'
     },
     brand: {
         pill: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-900',
-        line: 'from-transparent via-zinc-300 to-transparent dark:via-zinc-700'
+        line: 'bg-zinc-300'
     },
     success: {
         pill: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900',

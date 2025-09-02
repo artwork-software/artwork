@@ -20,15 +20,14 @@
         <!-- Top bar -->
         <div class="flex items-center justify-between gap-x-4 print:hidden" v-if="!isInModal">
             <div
-                class="flex items-center gap-5 sm:gap-6 text-[11px] sm:text-xs text-zinc-600 dark:text-zinc-300"
+                class="flex items-center gap-5 sm:gap-6 text-[11px] sm:text-xs text-zinc-600"
                 role="list"
             >
                 <!-- Last edited -->
                 <div class="flex items-center gap-2" role="listitem">
     <span
         aria-hidden="true"
-        class="h-4 w-10 rounded-full border-2 border-dashed border-blue-500/70
-             bg-blue-50/40 dark:bg-blue-950/20"
+        class="h-4 w-10 rounded-full border-2 border-dashed border-blue-500/70 bg-blue-50/40"
     ></span>
                     <span class="uppercase tracking-wide font-medium">
       {{ $t('Last edited events') }}
@@ -39,8 +38,7 @@
                 <div class="flex items-center gap-2" role="listitem">
                     <span
                         aria-hidden="true"
-                        class="h-4 w-10 rounded-full border-2 border-dashed border-pink-500/70
-                             bg-pink-50/40 dark:bg-rose-950/20"
+                        class="h-4 w-10 rounded-full border-2 border-dashed border-pink-500/70 bg-pink-50/40"
                     ></span>
                                     <span class="uppercase tracking-wide font-medium">
                       {{ $t('Most recently created events') }}
@@ -51,8 +49,7 @@
                                 <div class="flex items-center gap-2" role="listitem">
                     <span
                         aria-hidden="true"
-                        class="block h-4 w-1.5 rounded-full bg-gradient-to-b from-blue-400 to-blue-600
-                             dark:from-blue-500 dark:to-blue-400"
+                        class="block h-4 w-1.5 rounded-full bg-gradient-to-b from-blue-400 to-blue-600"
                     ></span>
                                     <span class="uppercase tracking-wide font-medium">
                       {{ $t('Planned Event') }}

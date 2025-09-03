@@ -41,6 +41,7 @@ export default {
     <component is="IconCornerDownRightDouble" class="w-6 h-6" v-if="type === 'GroupProjectDisplayComponent'" />
     <component is="IconDeviceProjector" class="w-6 h-6" v-if="type === 'ProjectGroupDisplayComponent'" />
     <component is="IconLayoutNavbarCollapse" class="w-6 h-6" v-if="type === 'DisclosureComponent'" />
+    <component is="IconLink" class="w-6 h-6" v-if="type === 'Link'" />
 
     <!-- TextField, Checkbox, TextArea, Title, DropDown -->
 </template>

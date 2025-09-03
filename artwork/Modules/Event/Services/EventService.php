@@ -1587,7 +1587,7 @@ readonly class EventService
         ))->toOthers();*/
 
         broadcast(new EventCreated(
-            $event->load(['event_type']),
+            $event->load(['event_type', 'project']),
             $event->room_id
         ));
         return $event;

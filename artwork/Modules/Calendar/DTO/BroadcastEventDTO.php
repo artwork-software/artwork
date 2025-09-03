@@ -60,7 +60,7 @@ class BroadcastEventDTO extends Data
             end: Carbon::parse($event->end_time)->format('Y-m-d H:i'),
             eventName: $event->eventName,
             description: $event->description,
-            project: $event->project_id ? ProjectDTO::fromModel($event->project, null) : null,
+            project: $event->project_id && $event->project ? ProjectDTO::fromModel($event->project, null) : null,
             eventType: $event->event_type ?? null,
             shifts: MinimalShiftPlanShiftResource::collection($event->shifts),
             allDay: $event->allDay,

@@ -60,10 +60,12 @@ class InternalIssueController extends Controller
             ->update($internalIssue, $request->validated(), $request->file('files', []));
     }
 
-    public function destroy(InternalIssue $internalIssue): JsonResponse
+    public function destroy(InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
     {
         $this->internalIssueService
             ->delete($internalIssue);
+
+        return redirect()->route('issue-of-material.index');
     }
 
     public function fileDelete(InternalIssueFile $internalIssueFile): void

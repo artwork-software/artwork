@@ -165,7 +165,6 @@ const props = defineProps({
 const floatOptionsClass = [
     // KEIN 'absolute' mehr hier!
     'z-50 max-h-60 overflow-auto rounded-md bg-white py-1 text-xs shadow-lg ring-1 ring-black/5 sm:text-sm',
-    'dark:bg-zinc-900 dark:ring-white/10'
 ].join(' ')
 
 const emit = defineEmits<{

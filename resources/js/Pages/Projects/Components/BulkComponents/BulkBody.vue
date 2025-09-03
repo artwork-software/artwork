@@ -25,13 +25,13 @@
             >
                 <!-- Last edited -->
                 <div class="flex items-center gap-2" role="listitem">
-    <span
-        aria-hidden="true"
-        class="h-4 w-10 rounded-full border-2 border-dashed border-blue-500/70 bg-blue-50/40"
-    ></span>
-                    <span class="uppercase tracking-wide font-medium">
-      {{ $t('Last edited events') }}
-    </span>
+                    <span
+                        aria-hidden="true"
+                        class="h-4 w-10 rounded-full border-2 border-dashed border-blue-500/70 bg-blue-50/40"
+                    ></span>
+                                    <span class="uppercase tracking-wide font-medium">
+                      {{ $t('Last edited events') }}
+                    </span>
                 </div>
 
                 <!-- Most recently created -->
@@ -172,6 +172,7 @@
                             :event-statuses="eventStatuses"
                             :multi-edit="multiEdit"
                             :has-permission="hasCreateEventsPermission"
+                            :last-edit-event-ids="lastEditEventIds"
                         />
                     </div>
 
@@ -344,12 +345,12 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BulkMultiEditModal from "@/Pages/Projects/Components/BulkComponents/BulkMultiEditModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import IndividualColumnSizeConfigModal from "@/Pages/Projects/Components/BulkComponents/IndividualColumnSizeConfigModal.vue";
 import DividerChip from "@/Artwork/Divider/DividerChip.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import { useBulkEventsBroadcastUpdater } from '@/Composeables/Listener/useBulkEventsBroadcastUpdater.js';
 
 const exportTabEnums = useExportTabEnums();
 const {hasAdminRole, can} = usePermission(usePage().props);
@@ -389,6 +390,7 @@ const isLoading = ref(true);
 const eventComponentIsVisible = ref(false);
 const eventToEdit = ref(null);
 const showExportModal = ref(false);
+const lastEditEventIds = ref(usePage()?.props?.headerObject?.project.lastEditEventIds || []);
 
 const copyTypes = ref([
     { id: 1, name: 'Täglich', type: 'daily' },
@@ -399,6 +401,28 @@ const copyTypes = ref([
 
 // BESSER: ref statt reactive([]) für zuverlässiges Re-Rendering bei Reassign/Filter
 const events = ref([]);
+
+// --- BulkEventsBroadcastUpdater Integration
+useBulkEventsBroadcastUpdater(events, {
+    onEvent: (event, action) => {
+        // add event id if not existing in lastEditEventIds
+        if (action === 'updated' || action === 'created') {
+            if (!lastEditEventIds.value.includes(event.id)) {
+                lastEditEventIds.value.push(event.id);
+            }
+        }
+
+        // if created set event.isNew to true for highlighting
+        if (action === 'created') {
+            event.isNew = true;
+        }
+
+        // if updated remove isNew flag
+        if (action === 'updated') {
+            event.isNew = false;
+        }
+    }
+});
 
 // globally provided
 const focusRegistry = ref({ id: null, type: null });
@@ -454,7 +478,7 @@ const onEventComponentClosed = () => {
 };
 
 const addEmptyEvent = () => {
-    isLoading.value = true;
+    //isLoading.value = true;
 
     events.value.forEach(e => { e.isNew = false; });
 
@@ -489,30 +513,33 @@ const addEmptyEvent = () => {
     }
 
     // Persist, wenn nicht im Modal
-    router.post(route('event.store.bulk.single', {project: props.project}), { event: base }, {
+    /*router.post(route('event.store.bulk.single', {project: props.project}), { event: base }, {
         preserveState: false,
         preserveScroll: true,
         onFinish: () => { isLoading.value = false; },
-    });
+    });*/
+
+    axios.post(route('event.store.bulk.single', {project: props.project}), { event: base })
+        .finally(() => {
+            //isLoading.value = false;
+        });
 };
 
 const deleteCurrentEvent = (event) => {
-    isLoading.value = true;
-
-    const removeLocal = () => {
-        events.value = events.value.filter(e => e !== event);
-    };
-
     if (event.id) {
-        router.delete(route('event.bulk.delete', {event: event.id}), {
+        /*router.delete(route('event.bulk.delete', {event: event.id}), {
             preserveScroll: true,
             preserveState: true,
-            onFinish: () => { isLoading.value = false; },
-        });
-        removeLocal();
-    } else {
-        isLoading.value = false;
-        removeLocal();
+            onFinish: () => {
+                isLoading.value = false;
+            },
+        });*/
+
+        // new in axios
+        axios.delete(route('event.bulk.delete', {event: event.id}))
+            .finally(() => {
+                //isLoading.value = false;
+            });
     }
 };
 

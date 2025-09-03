@@ -4,7 +4,7 @@
         <div class="flex items-center gap-4 bg-white/70 backdrop-blur transition px-3 py-2 rounded-lg"
             :class="[
                 event?.isNew ? 'outline-2 outline-pink-400/60 outline-dashed' : '',
-                usePage()?.props?.headerObject?.project.lastEditEventIds?.includes(event.id)
+                lastEditEventIds.includes(event.id)
                   ? 'outline-2 outline-blue-400/60 outline-dashed' : '',
                 (event.isSelectedForMultiEdit && multiEdit) ? 'ring-2 ring-emerald-400/40' : ''
               ]"
@@ -38,15 +38,6 @@
                         </div>
                     </div>
                 </div>
-               <!-- <input
-                    v-model="event.isSelectedForMultiEdit"
-                    aria-describedby="candidates-description"
-                    name="candidates"
-                    type="checkbox"
-                    :id="event.id"
-                    class="input-checklist"
-                    :disabled="!hasPermission"
-                />-->
             </div>
 
             <!-- Status -->
@@ -113,56 +104,6 @@
                     :search-fields="['name']"
                     coerce="number"
                 />
-                <!--<Listbox
-                    v-model="event.type"
-                    @update:model-value="updateEventInDatabase"
-                    :id="'type-'+ index"
-                    as="div"
-                    class="relative w-full"
-                    :disabled="canEditComponent === false"
-                >
-                    <Float auto-placement :offset="4" class="relative w-fit" floating-as="div">
-                        <ListboxButton
-                            :id="'type-'+ index + 'button'"
-                            @click="storeFocus('type-' + index + 'button', 'listbox')"
-                            :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']"
-                            class="print:border-0 rounded-lg active:ring-primary active:ring-1"
-                        >
-              <span class="flex items-center gap-x-2">
-                <span class="block w-5 h-5 rounded-full" :style="{ backgroundColor: event.type?.hex_code }" />
-                <span class="truncate print:w-full flex items-center" :style="getColumnTextSize(2)">
-                  {{ event.type?.name }}
-                </span>
-                <ToolTipComponent
-                    v-if="event.is_planning"
-                    icon="IconCalendarCog"
-                    class="-ml-8"
-                    :tooltip-text="'Dies ist ein geplanter Termin'"
-                />
-              </span>
-                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true" />
-                        </ListboxButton>
-
-                        <ListboxOptions
-                            class="w-fit rounded-xl border border-zinc-200/60 dark:border-zinc-800/60
-                     bg-primary/95 backdrop-blur max-h-56 overflow-y-auto text-sm z-50 shadow-lg"
-                        >
-                            <ListboxOption
-                                v-for="eventType in sortedEventTypes"
-                                :key="eventType.name"
-                                :value="eventType"
-                                v-slot="{ selected }"
-                                class="hover:bg-indigo-800/90 text-secondary cursor-pointer px-3 py-2 flex justify-between"
-                            >
-                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex items-center gap-x-2']">
-                                    <div class="block w-3 h-3 rounded-full" :style="{ backgroundColor: eventType?.hex_code }" />
-                                    {{ eventType.name }}
-                                </div>
-                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true" />
-                            </ListboxOption>
-                        </ListboxOptions>
-                    </Float>
-                </Listbox>-->
             </div>
 
             <!-- Name -->
@@ -196,46 +137,7 @@
                     :search-fields="['name']"
                     coerce="number"
                 />
-                <!--<Listbox
-                    :id="'room-' + index"
-                    as="div"
-                    class="relative"
-                    v-model="event.room"
-                    @update:model-value="updateEventInDatabase"
-                    :disabled="canEditComponent === false"
-                >
-                    <Float auto-placement :offset="4" class="relative w-fit" floating-as="div">
-                        <ListboxButton
-                            :id="'room-'+ index + 'button'"
-                            @click="storeFocus('room-' + index + 'button', 'listbox')"
-                            :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']"
-                            class="print:border-0 rounded-lg"
-                        >
-              <span :style="getColumnTextSize(4)" class="truncate">
-                {{ event.room?.name }}
-              </span>
-                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true" />
-                        </ListboxButton>
 
-                        <ListboxOptions
-                            class="w-fit rounded-xl border border-zinc-200/60 dark:border-zinc-800/60
-                     bg-primary/95 backdrop-blur max-h-56 overflow-y-auto text-sm z-30 shadow-lg"
-                        >
-                            <ListboxOption
-                                v-for="room in sortedRooms"
-                                :key="room.name"
-                                :value="room"
-                                v-slot="{ selected }"
-                                class="hover:bg-indigo-800/90 text-secondary cursor-pointer px-3 py-2 flex justify-between"
-                            >
-                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                    {{ room.name }}
-                                </div>
-                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true" />
-                            </ListboxOption>
-                        </ListboxOptions>
-                    </Float>
-                </Listbox>-->
             </div>
 
             <!-- Day -->
@@ -324,16 +226,13 @@
                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true" />
                                 </ListboxButton>
                                 <ListboxOptions
-                                    class="w-44 rounded-xl border border-zinc-200/60 dark:border-zinc-800/60
-                         bg-primary/95 backdrop-blur max-h-32 overflow-y-auto text-sm absolute z-30 shadow-lg"
-                                >
+                                    class="w-44 rounded-xl border border-zinc-200/60 dark:border-zinc-800/60bg-primary/95 backdrop-blur max-h-32 overflow-y-auto text-sm absolute z-30 shadow-lg">
                                     <ListboxOption
                                         v-for="copyType in copyTypes"
                                         :key="copyType.name"
                                         :value="copyType"
                                         v-slot="{ selected }"
-                                        class="hover:bg-indigo-800/90 text-secondary cursor-pointer px-3 py-2 flex justify-between"
-                                    >
+                                        class="hover:bg-indigo-800/90 text-secondary cursor-pointer px-3 py-2 flex justify-between">
                                         <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                             {{ copyType.name }}
                                         </div>
@@ -381,30 +280,18 @@
 
 <script setup>
 import {
-    IconCalendarCog,
     IconCheck,
     IconChevronDown,
     IconCircleCheckFilled,
-    IconCopy,
-    IconDotsVertical,
-    IconEdit,
     IconPlus,
-    IconTrash,
-    IconX
 } from "@tabler/icons-vue";
 import {
-    Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions,
     Listbox,
     ListboxButton,
     ListboxOption,
     ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems
 } from "@headlessui/vue";
-import Input from "@/Layouts/Components/InputComponent.vue";
-import {router, usePage} from "@inertiajs/vue3";
+import {usePage} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {computed, nextTick, onMounted, ref} from "vue";
@@ -416,183 +303,144 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Float} from "@headlessui-float/vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseCombobox from "@/Artwork/Inputs/BaseCombobox.vue";
+import axios from "axios";
 
 const focusRegistry  = inject('focusRegistry');      // { id, type }
 const storeFocus     = inject('storeFocusGlobal');
 
 const props = defineProps({
-    event: {
-        type: Object,
-        required: true
-    },
-    timeArray: {
-        type: Boolean,
-        required: true
-    },
-    event_types: {
-        type: Object,
-        required: true
-    },
-    rooms: {
-        type: Object,
-        required: true
-    },
-    copyTypes: {
-        type: Array,
-        required: true
-    },
-    index: {
-        type: Number,
-        required: true
-    },
-    isInModal: {
-        type: Boolean,
-        required: false,
-        default: false
-    },
-    canEditComponent: {
-        type: Boolean,
-        required: true
-    },
-    eventStatuses: {
-        type: Object,
-        required: true
-    },
-    multiEdit: {
-        type: Boolean,
-        required: false,
-        default: false
-    },
-    hasPermission: {
-        type: Boolean,
-        required: false,
-        default: true
-    }
+    event: { type: Object, required: true },
+    timeArray: { type: Boolean, required: true },
+    event_types: { type: Object, required: true },
+    rooms: { type: Object, required: true },
+    copyTypes: { type: Array, required: true },
+    index: { type: Number, required: true },
+    isInModal: { type: Boolean, required: false, default: false },
+    canEditComponent: { type: Boolean, required: true },
+    eventStatuses: { type: Object, required: true },
+    multiEdit: { type: Boolean, required: false, default: false },
+    hasPermission: { type: Boolean, required: false, default: true },
+    lastEditEventIds: { type: Array, required: false, default: () => [] }
 });
+
+const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent']);
+const openEventComponent = (eventId) => emit('openEventComponent', eventId);
 
 const showMenu = ref(false);
 const dayString = ref(null);
 const openNoteModal = ref(false);
 const event_properties = inject('event_properties');
-
-const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent']);
-const openEventComponent = (eventId) => {
-    emit.call(this, 'openEventComponent', eventId)
-};
-
-const getColumnSize = (column) => {
-    return {
-        minWidth: usePage().props.auth.user.bulk_column_size[column] + 'px',
-        width: usePage().props.auth.user.bulk_column_size[column] + 'px',
-        maxWidth: usePage().props.auth.user.bulk_column_size[column] + 'px'
-    }
-}
-const getColumnTextSize = (column) => {
-    return {
-        minWidth: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px',
-        width: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px',
-        maxWidth: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px'
-    }
-}
-
-const createCopyByEventWithData = (event) => {
-    emit('createCopyByEventWithData', event);
-}
-
 const showDeleteEventConfirmModal = ref(false);
 
-const openDeleteEventConfirmModal = () => {
-    showDeleteEventConfirmModal.value = true;
-};
+const getColumnSize = (column) => ({
+    minWidth: usePage().props.auth.user.bulk_column_size[column] + 'px',
+    width: usePage().props.auth.user.bulk_column_size[column] + 'px',
+    maxWidth: usePage().props.auth.user.bulk_column_size[column] + 'px'
+});
+const getColumnTextSize = (column) => ({
+    minWidth: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px',
+    width: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px',
+    maxWidth: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px'
+});
 
-const onCloseDeleteEventConfirmModal = (closedOnPurpose) => {
-    if (closedOnPurpose) {
-        emit('deleteCurrentEvent', props.event);
-    }
+const createCopyByEventWithData = (event) => emit('createCopyByEventWithData', event);
+const openDeleteEventConfirmModal = () => showDeleteEventConfirmModal.value = true;
+const onCloseDeleteEventConfirmModal = (closedOnPurpose) => { if (closedOnPurpose) emit('deleteCurrentEvent', props.event); showDeleteEventConfirmModal.value = false; };
 
-    showDeleteEventConfirmModal.value = false;
-};
+// helpers for snapshot comparison
+const getComparableEvent = (ev) => ({
+    id: ev.id,
+    name: ev.name ?? null,
+    typeId: ev.type?.id ?? null,
+    roomId: ev.room?.id ?? null,
+    day: ev.day ?? null,
+    start_time: ev.start_time ?? null,
+    end_time: ev.end_time ?? null,
+    is_planning: ev.is_planning ?? false,
+    statusId: ev.status?.id ?? null,
+});
+const isEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
-const updateEventInDatabase = async () => {
-    if (props.event.id && !isUpdating.value) {
-        isUpdating.value = true;
-
-        if (props.event.start_time && !props.event.end_time) {
-            const startTime = new Date(`01/01/2000 ${props.event.start_time}`);
-            startTime.setMinutes(startTime.getMinutes() + 30);
-            props.event.end_time = startTime.toTimeString().slice(0, 5);
-        }
-
-        if (!props.event.start_time && props.event.end_time) {
-            const endTime = new Date(`01/01/2000 ${props.event.end_time}`);
-            endTime.setMinutes(endTime.getMinutes() - 30);
-            props.event.start_time = endTime.toTimeString().slice(0, 5);
-        }
-
-        if (props.event.type?.individual_name && !props.event.name) {
-            props.event.nameError = true;
-            isUpdating.value = false;
-            return;
-        } else {
-            props.event.nameError = false;
-        }
-
-
-        router.patch(route('event.update.single.bulk', {event: props.event.id}), {
-            data: props.event
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                props.event.isNew = true;
-            },
-            onFinish: () => {
-                nextTick(() => {
-                    setTimeout(() => {
-                        const { id, type } = focusRegistry;
-                        if(id) {
-                            const field = document.getElementById(id);
-                            if (field) type === 'listbox' ? field.click() : field.focus();
-                        }
-                        isUpdating.value = false;
-                    }, 300);
-                })
-
-            },
-            onError: () => {
-                isUpdating.value = false;
-
-            }
-        });
-    }
-}
-
-const lastFocusedField = ref(null);
 const isUpdating = ref(false);
 
+const updateEventInDatabase = async () => {
+    await nextTick(); // v-model Werte sicherstellen
 
-const sortedRooms = computed(() => {
-    return props.rooms.sort((a, b) => a.name.localeCompare(b.name));
-})
-
-const sortedEventTypes = computed(() => {
-    return props.event_types.sort((a, b) => a.name.localeCompare(b.name));
-})
-
-const removeTime = () => {
-    props.event.start_time = null;
-    props.event.end_time = null;
-    if (!isUpdating.value) {
-        updateEventInDatabase();
+    // Autofill direkt auf props.event anwenden
+    if (props.event.start_time && !props.event.end_time) {
+        const s = new Date(`01/01/2000 ${props.event.start_time}`);
+        s.setMinutes(s.getMinutes() + 30);
+        props.event.end_time = s.toTimeString().slice(0,5);
     }
-}
+    if (!props.event.start_time && props.event.end_time) {
+        const e = new Date(`01/01/2000 ${props.event.end_time}`);
+        e.setMinutes(e.getMinutes() - 30);
+        props.event.start_time = e.toTimeString().slice(0,5);
+    }
+
+    // Validierung
+    if (props.event.type?.individual_name && !props.event.name) {
+        props.event.nameError = true;
+        return;
+    }
+    props.event.nameError = false;
+
+    // Snapshot-Vergleich auf Basis der aktuellen Props
+    if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+    const snapshotKey = `event-snapshot-${props.event.id}`;
+    const currentComparable = getComparableEvent(props.event);
+    const lastComparable = window.__bulkEventSnapshots[snapshotKey] ?? null;
+
+    // Wenn nichts geändert wurde, abbrechen
+    if (lastComparable && isEqual(currentComparable, lastComparable)) {
+        return;
+    }
+
+    if (!props.event.id || isUpdating.value) return;
+    isUpdating.value = true;
+
+    try {
+        // Payload normalisieren
+        const payload = JSON.parse(JSON.stringify(props.event));
+        if (payload.room && typeof payload.room === 'object' && payload.room.id) payload.room = { id: payload.room.id };
+        if (payload.type && typeof payload.type === 'object' && payload.type.id) payload.type = { id: payload.type.id };
+        if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
+
+        await axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload });
+
+        // Snapshot nach erfolgreichem Patch aktualisieren
+        window.__bulkEventSnapshots[snapshotKey] = getComparableEvent(props.event);
+    } catch (err) {
+        console.error('bulk:patch-failed', props.event.id, err);
+        await nextTick();
+        setTimeout(() => {
+            const { id, type } = focusRegistry || {};
+            if (id) {
+                const field = document.getElementById(id);
+                if (field) type === 'listbox' ? field.click() : field.focus();
+            }
+        }, 300);
+    } finally {
+        isUpdating.value = false;
+    }
+};
+
+
+const sortedRooms = computed(() => props.rooms.sort((a,b) => a.name.localeCompare(b.name)));
+const sortedEventTypes = computed(() => props.event_types.sort((a,b) => a.name.localeCompare(b.name)));
+
 
 const getDayOfWeek = (date) => {
+    const d = new Date(date);
     const days = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
-    return days[date.getDay()];
-}
+    return days[d.getDay()];
+};
 
 onMounted(() => {
-    dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '')
+    dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '');
+    // initialize snapshot so first change is detected
+    if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+    const snapshotKey = `event-snapshot-${props.event.id}`;
+    window.__bulkEventSnapshots[snapshotKey] = getComparableEvent(props.event);
 });
 </script>

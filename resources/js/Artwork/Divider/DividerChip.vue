@@ -54,24 +54,24 @@ const sizeMap = {
 
 const variantMap = {
     neutral: {
-        pill: 'bg-white text-zinc-700 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700 shadow-sm',
+        pill: 'bg-white text-zinc-700 ring-1 ring-zinc-200 shadow-sm',
         line: 'bg-zinc-300'
     },
     brand: {
-        pill: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-900',
+        pill: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
         line: 'bg-zinc-300'
     },
     success: {
-        pill: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900',
-        line: 'from-transparent via-zinc-300 to-transparent dark:via-zinc-700'
+        pill: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+        line: 'from-transparent via-zinc-300 to-transparent'
     },
     warning: {
-        pill: 'bg-amber-50 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900',
-        line: 'from-transparent via-zinc-300 to-transparent dark:via-zinc-700'
+        pill: 'bg-amber-50 text-amber-800 ring-1 ring-amber-200',
+        line: 'from-transparent via-zinc-300 to-transparent'
     },
     danger: {
-        pill: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-900',
-        line: 'from-transparent via-zinc-300 to-transparent dark:via-zinc-700'
+        pill: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200',
+        line: 'from-transparent via-zinc-300 to-transparent'
     }
 }
 

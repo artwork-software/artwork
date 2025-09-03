@@ -219,7 +219,7 @@
             </div>
 
             <!-- STICKY TABS -->
-            <div class="artwork-container !pb-0 sticky top-0 z-40 mt-4 border-b border-zinc-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur w-full mx-auto scroll-shadow-sm">
+            <div class="artwork-container !pb-0 sticky top-0 z-40 mt-3 bg-white/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur w-full mx-auto scroll-shadow-sm">
                 <nav class="relative flex gap-6 px-1 pt-3 pb-2 text-sm tracking-wide" aria-label="Tabs">
 
                     <Link
@@ -227,13 +227,12 @@
                         :key="tab?.id"
                         :href="route('projects.tab', { project: headerObject.project.id, projectTab: tab.id })"
                         :aria-current="tab.id === headerObject.currentTabId ? 'page' : undefined"
-                        class="relative whitespace-nowrap px-1 py-2 font-semibold transition-colors snap-start font-lexend"
+                        class="relative whitespace-nowrap px-1 py-2 font-semibold transition-colors snap-start font-lexend group"
                         :class="tab.id === headerObject.currentTabId ? 'text-artwork-buttons-hover' : 'text-artwork-context-dark hover:text-zinc-700'"
                     >
                         <span class="px-0.5">{{ tab.name }}</span>
-                        <span
-                            class="tab-ink absolute left-0 right-0 -bottom-[9px] h-1.5 rounded-full transition-all duration-300"
-                            :class="tab.id === headerObject.currentTabId ? 'bg-gradient-to-r from-blue-400 to-blue-600 scale-x-100' : 'bg-transparent scale-x-0'"
+                        <span class="tab-ink absolute left-0 right-0 -bottom-[9px] h-1.5 rounded-full transition-all duration-300"
+                            :class="tab.id === headerObject.currentTabId ? 'bg-gradient-to-r from-blue-400 to-blue-600 scale-x-100' : ' group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-blue-600 group-hover:scale-x-100'"
                         ></span>
                     </Link>
                 </nav>

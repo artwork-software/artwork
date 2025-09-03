@@ -914,7 +914,7 @@ class EventController extends Controller
         }
 
         broadcast(new EventCreated(
-            $firstEvent->load(['event_type']),
+            $firstEvent->load(['event_type', 'project']),
             $firstEvent->room_id
         ));
 
@@ -944,7 +944,10 @@ class EventController extends Controller
         $event->eventProperties()
             ->sync($request->get('event_properties', []));
 
-        broadcast(new EventCreated($event, $event->room_id));
+        broadcast(new EventCreated(
+            $event->load(['event_type', 'project']),
+            $event->room_id
+        ));
     }
 
     public function commitShifts(Request $request): void

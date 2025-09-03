@@ -1,6 +1,6 @@
 <template>
     <!-- Sticky / Glass Header -->
-    <div class="sticky top-0 z-30 print:static">
+    <div class="sticky top-0 z-30 print:static w-max">
         <div
             class="rounded-2xl border border-zinc-200/80
              bg-white/70 backdrop-blur-xl

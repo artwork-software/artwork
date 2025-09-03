@@ -3058,14 +3058,19 @@ class EventController extends Controller
         $events = $request->input('events', []);
 
         foreach ($events as $event) {
-            $this->eventService->createBulkEvent(
+            $storedEvent = $this->eventService->createBulkEvent(
                 $event,
                 $project,
                 $this->authManager->id()
             );
+
+            broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
+                $storedEvent->fresh(),
+                'created'
+            ));
         }
 
-        return Redirect::back();
+        //return Redirect::back();
     }
 
     public function updateSingleBulkEvent(

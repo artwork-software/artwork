@@ -426,6 +426,12 @@ const updateEventInDatabase = async () => {
 };
 
 
+const removeTime = () => {
+    props.event.start_time = null;
+    props.event.end_time = null;
+    updateEventInDatabase();
+};
+
 const sortedRooms = computed(() => props.rooms.sort((a,b) => a.name.localeCompare(b.name)));
 const sortedEventTypes = computed(() => props.event_types.sort((a,b) => a.name.localeCompare(b.name)));
 

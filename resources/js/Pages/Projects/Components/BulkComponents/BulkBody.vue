@@ -128,7 +128,7 @@
         </div>
 
         <!-- Header + Events -->
-        <div class="overflow-x-scroll relative">
+        <div class="overflow-x-scroll relative w-max">
             <BulkHeader v-model="timeArray" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
             <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
                 <div v-if="sortedEvents.length > 0" v-for="(event, index) in sortedEvents" :key="event.id ?? `tmp-${index}`" class="mb-2">
@@ -406,20 +406,16 @@ const events = ref([]);
 useBulkEventsBroadcastUpdater(events, {
     onEvent: (event, action) => {
         // add event id if not existing in lastEditEventIds
-        if (action === 'updated' || action === 'created') {
-            if (!lastEditEventIds.value.includes(event.id)) {
-                lastEditEventIds.value.push(event.id);
-            }
-        }
-
-        // if created set event.isNew to true for highlighting
-        if (action === 'created') {
-            event.isNew = true;
-        }
-
-        // if updated remove isNew flag
         if (action === 'updated') {
-            event.isNew = false;
+            lastEditEventIds.value = [];
+
+            // add all event ids in lastEditEventIds where are the same update_at timestamp as the updated event
+            const sameUpdatedEvents = events.value.filter(e => e.updated_at === event.updated_at);
+            sameUpdatedEvents.forEach(e => {
+                if (!lastEditEventIds.value.includes(e.id)) {
+                    lastEditEventIds.value.push(e.id);
+                }
+            });
         }
     }
 });
@@ -544,7 +540,7 @@ const deleteCurrentEvent = (event) => {
 };
 
 const createCopyByEventWithData = (event) => {
-    isLoading.value = true;
+    //isLoading.value = true;
     lastUsedCopyCount.value = event.copyCount;
 
     let cursor = new Date(event.day);
@@ -582,13 +578,18 @@ const createCopyByEventWithData = (event) => {
     event.copyType = copyTypes.value[0];
 
     if (!props.isInModal) {
-        router.post(route('events.bulk.store', {project: props.project}), { events: createdEvents }, {
+        /*router.post(route('events.bulk.store', {project: props.project}), { events: createdEvents }, {
             preserveState: false,
             preserveScroll: true,
             onFinish: () => { isLoading.value = false; },
-        });
+        });*/
+
+        axios.post(route('events.bulk.store', {project: props.project}), { events: createdEvents })
+            .finally(() => {
+                //isLoading.value = false;
+            });
     } else {
-        isLoading.value = false;
+       // isLoading.value = false;
     }
 };
 
@@ -607,10 +608,13 @@ const submit = () => {
         return;
     }
 
-    router.post(route('events.bulk.store', {project: props.project}), { events: events.value }, {
+    /*router.post(route('events.bulk.store', {project: props.project}), { events: events.value }, {
         preserveScroll: true,
         onSuccess: () => { emits('closed'); }
-    });
+    });*/
+
+    axios.post(route('events.bulk.store', {project: props.project}), { events: events.value })
+        .then(() => { emits('closed'); });
 };
 
 const updateUserSortId = (id) => {

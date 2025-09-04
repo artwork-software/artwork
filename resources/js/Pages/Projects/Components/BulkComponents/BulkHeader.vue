@@ -1,44 +1,103 @@
 <template>
-    <div class="flex items-center gap-4 mb-3 text-gray-400 text-sm print:xsDark mt-5">
-        <div v-if="multiEdit" class="w-8 h-4 block px-4">
+    <!-- Sticky / Glass Header -->
+    <div class="sticky top-0 z-30 print:static w-max">
+        <div
+            class="rounded-2xl border border-zinc-200/80
+             bg-white/70 backdrop-blur-xl
+              px-6 sm:px-4 mt-5 mb-3"
+        >
+            <div class="flex items-center gap-3 sm:gap-4 py-2 sm:py-3 text-[11px] sm:text-xs text-zinc-600 print:xsDark">
+                <!-- left spacer when multiEdit -->
+                <div v-if="multiEdit" class="w-8 h-4 shrink-0"></div>
 
-        </div>
-        <div class="font-bold" v-if="usePage().props.event_status_module" :style="getColumnSize(1)">
-            {{ $t('Event Status') }}
-        </div>
-        <div class="font-bold" :style="getColumnSize(2)">
-            {{ $t('Event type') }}
-        </div>
-        <div class="font-bold" :style="getColumnSize(3)">
-            {{ $t('Event name') }}
-        </div>
-        <div class="font-bold" :style="getColumnSize(4)">
-            {{ $t('Room') }}
-        </div>
-        <div class="font-bold print:col-span-2" :style="getColumnSize(5)">
-            {{ $t('Day') }}
-        </div>
-        <div class="font-bold col-span-1" :style="getColumnSize(6)">
-            <SwitchGroup as="div" class="flex items-center" v-if="isInModal">
-                <Switch v-model="localValue"
-                        @change="$emit('update:modelValue', localValue)"
-                        :class="[localValue ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-4 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-0 focus:ring-indigo-600 focus:ring-offset-2']">
-                    <span aria-hidden="true"
-                          :class="[localValue ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
-                </Switch>
-                <SwitchLabel as="span" class="ml-3">
-                    <div>
-                        {{ $t('Period') }}
+                <!-- columns -->
+                <div class="flex items-center gap-3 sm:gap-4 w-full overflow-x-auto">
+                    <!-- Status -->
+                    <div
+                        v-if="usePage().props.event_status_module"
+                        class="shrink-0 min-w-0"
+                        :style="getColumnSize(1)"
+                    >
+            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
+              {{ $t('Event Status') }}
+            </span>
                     </div>
-                </SwitchLabel>
-            </SwitchGroup>
-            <div v-else class="flex items-center gap-x-4">
+
+                    <!-- Type -->
+                    <div class="shrink-0 min-w-0" :style="getColumnSize(2)">
+            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
+              {{ $t('Event type') }}
+            </span>
+                    </div>
+
+                    <!-- Name -->
+                    <div class="shrink-0 min-w-0" :style="getColumnSize(3)">
+            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
+              {{ $t('Event name') }}
+            </span>
+                    </div>
+
+                    <!-- Room -->
+                    <div class="shrink-0 min-w-0" :style="getColumnSize(4)">
+            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
+              {{ $t('Room') }}
+            </span>
+                    </div>
+
+                    <!-- Day -->
+                    <div class="shrink-0 min-w-0 print:col-span-2" :style="getColumnSize(5)">
+            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
+              {{ $t('Day') }}
+            </span>
+                    </div>
+
+                    <!-- Period -->
+                    <div class="shrink-0 min-w-0 col-span-1" :style="getColumnSize(6)">
+                        <div v-if="isInModal" class="flex items-center gap-2">
+                            <SwitchGroup as="div" class="flex items-center">
+                                <Switch
+                                    v-model="localValue"
+                                    @change="$emit('update:modelValue', localValue)"
+                                    :class="[
+                    localValue ? 'bg-artwork-buttons-hover' : 'bg-zinc-200 dark:bg-zinc-800',
+                    'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-artwork-buttons-create/50'
+                  ]"
+                                >
+                  <span
+                      aria-hidden="true"
+                      :class="[
+                      localValue ? 'translate-x-5' : 'translate-x-0',
+                      'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white dark:bg-zinc-100 shadow ring-0 transition duration-200 ease-in-out'
+                    ]"
+                  />
+                                </Switch>
+                                <SwitchLabel as="span" class="ml-3 select-none uppercase tracking-wider font-semibold text-zinc-700 ">
+                                    {{ $t('Period') }}
+                                </SwitchLabel>
+                            </SwitchGroup>
+                        </div>
+
+                        <div v-else class="flex items-center gap-2">
+              <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
                 {{ $t('Period') }}
-                <ToolTipComponent icon="IconExclamationCircle" icon-size="h-5 w-5" direction="bottom" :tooltip-text="$t('If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.')" tooltipCssClass="w-64"/>
+              </span>
+                            <ToolTipComponent
+                                icon="IconExclamationCircle"
+                                icon-size="h-5 w-5"
+                                direction="bottom"
+                                :tooltip-text="$t('If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.')"
+                                tooltipCssClass="w-64"
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
+
         </div>
     </div>
 </template>
+
+
 
 <script setup>
 import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";

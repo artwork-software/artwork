@@ -383,6 +383,11 @@ class EventRepository extends BaseRepository
                     ]);
                 }
 
+                broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
+                    $event->fresh(),
+                    'updated'
+                ));
+
                 broadcast(new EventCreated($event->fresh(), $event->room_id));
             }
         });

@@ -131,74 +131,49 @@
         <div class="overflow-x-scroll relative w-max">
             <BulkHeader v-model="timeArray" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
             <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
-                <div v-if="sortedEvents.length > 0" v-for="(event, index) in sortedEvents" :key="event.id ?? `tmp-${index}`" class="mb-2">
-                    <!-- Day Divider for first event -->
-                    <DividerChip
-                        v-if="index === 0 && usePage().props.auth.user.bulk_sort_id === 3"
-                        class="mb-6"
-                        variant="brand"
-                        :label="new Date(event.day).toLocaleDateString('de-DE', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})"
-                    />
-
-                    <!-- Room Divider for first event -->
-                    <DividerChip
-                        v-if="index === 0 && usePage().props.auth.user.bulk_sort_id === 1"
-                        class="mb-6"
-                        variant="brand"
-                        :label="event.room?.name"
-                    />
-
-                    <!-- Event Type Divider for first event -->
-                    <DividerChip
-                        v-if="index === 0 && usePage().props.auth.user.bulk_sort_id === 2"
-                        class="mb-6"
-                        variant="brand"
-                        :label="event.type?.name"
-                    />
-
-                    <div :id="index" class="mx-1">
-                        <BulkSingleEvent
-                            :can-edit-component="canEditComponent && hasCreateEventsPermission"
-                            :rooms="rooms"
-                            :event_types="eventTypes"
-                            :time-array="timeArray"
-                            :event="event"
-                            :copy-types="copyTypes"
-                            :index="index"
-                            :is-in-modal="isInModal"
-                            @open-event-component="onOpenEventComponent"
-                            @delete-current-event="deleteCurrentEvent"
-                            @create-copy-by-event-with-data="createCopyByEventWithData"
-                            :event-statuses="eventStatuses"
-                            :multi-edit="multiEdit"
-                            :has-permission="hasCreateEventsPermission"
-                            :last-edit-event-ids="lastEditEventIds"
+                <div v-if="sortedEvents.length > 0">
+                    <!-- Render events by groups -->
+                    <div v-for="(group, groupIndex) in getEventGroups()" :key="group.key" class="mb-6">
+                        <!-- Group Divider -->
+                        <DividerChip
+                            v-if="group.label && usePage().props.auth.user.bulk_sort_id !== 0"
+                            class="mb-6"
+                            variant="brand"
+                            :label="group.label"
                         />
+
+                        <!-- Events in this group -->
+                        <div v-for="(event, eventIndex) in group.events" :key="event.id ?? `tmp-${event.index || eventIndex}`" class="mb-2">
+                            <div :id="eventIndex" class="mx-1">
+                                <BulkSingleEvent
+                                    :can-edit-component="canEditComponent && hasCreateEventsPermission"
+                                    :rooms="rooms"
+                                    :event_types="eventTypes"
+                                    :time-array="timeArray"
+                                    :event="event"
+                                    :copy-types="copyTypes"
+                                    :index="eventIndex"
+                                    :is-in-modal="isInModal"
+                                    @open-event-component="onOpenEventComponent"
+                                    @delete-current-event="deleteCurrentEvent"
+                                    @create-copy-by-event-with-data="createCopyByEventWithData"
+                                    :event-statuses="eventStatuses"
+                                    :multi-edit="multiEdit"
+                                    :has-permission="hasCreateEventsPermission"
+                                    :last-edit-event-ids="lastEditEventIds"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Add Event Button for this group -->
+                        <div v-if="canEditComponent && hasCreateEventsPermission && !multiEdit" class="flex justify-center mt-4 mb-2">
+                            <IconCirclePlus
+                                @click="addEmptyEventForGroup(group)"
+                                class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                stroke-width="2"
+                            />
+                        </div>
                     </div>
-
-                    <!-- Day Divider -->
-                    <DividerChip
-                        v-if="(events[index]?.day !== events[index + 1]?.day) && usePage().props.auth.user.bulk_sort_id === 3 && index < events.length - 1"
-                        class="my-6"
-                        variant="brand"
-                        :label="new Date(events[index + 1].day).toLocaleDateString('de-DE', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})"
-                    />
-
-                    <!-- Room Divider -->
-                    <DividerChip
-                        v-if="(events[index]?.room?.id !== events[index + 1]?.room?.id)&& usePage().props.auth.user.bulk_sort_id === 1 && index < events.length - 1"
-                        class="my-6"
-                        variant="brand"
-                        :label="events[index + 1].room?.name"
-                    />
-
-                    <!-- Event Type Divider -->
-                    <DividerChip
-                        v-if="(events[index]?.type?.id !== events[index + 1]?.type?.id) && usePage().props.auth.user.bulk_sort_id === 2 && index < events.length - 1"
-                        class="my-6"
-                        variant="brand"
-                        :label="events[index + 1].type?.name"
-                    />
                 </div>
 
                 <div v-else class="flex items-center h-24 print:hidden">
@@ -208,17 +183,20 @@
                         show-icon icon-size="h-5 w-5"
                         classes="!items-center"
                     />
+                    <!-- Add Event Button when no events exist -->
+                    <div v-if="canEditComponent && hasCreateEventsPermission && !multiEdit" class="flex justify-center mt-4">
+                        <IconCirclePlus
+                            @click="addEmptyEvent"
+                            class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                            stroke-width="2"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Bottom actions -->
-        <div class="flex items-center justify-between pointer-events-none print:hidden" v-if="!multiEdit">
-            <IconCirclePlus v-if="canEditComponent && hasCreateEventsPermission"
-                            @click="addEmptyEvent"
-                            class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out pointer-events-auto"
-                            stroke-width="2"/>
-
+        <div class="flex items-center justify-end pointer-events-none print:hidden" v-if="!multiEdit">
             <div class="flex items-center gap-x-4">
                 <div v-if="invalidEvents.length > 0" class="text-artwork-messages-error text-xs">
                     {{ $t('The name is not given for {0} event(s)', [invalidEvents.length]) }}
@@ -436,6 +414,79 @@ const formatFullDate = (iso) => new Date(iso).toLocaleDateString('de-DE', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
 });
 
+// Group events by current sorting criteria
+const getEventGroups = () => {
+    const groups = [];
+    const sortId = usePage().props.auth.user?.bulk_sort_id;
+
+    if (sortedEvents.value.length === 0) return groups;
+
+    if (sortId === 0 || !sortId) {
+        // No sorting - all events in one group
+        groups.push({
+            key: 'all',
+            label: null,
+            events: [...sortedEvents.value]
+        });
+    } else if (sortId === 1) {
+        // Group by room
+        let currentRoomId = null;
+        let currentGroup = null;
+
+        sortedEvents.value.forEach(event => {
+            if (event.room?.id !== currentRoomId) {
+                if (currentGroup) groups.push(currentGroup);
+                currentRoomId = event.room?.id;
+                currentGroup = {
+                    key: `room_${currentRoomId}`,
+                    label: event.room?.name,
+                    events: []
+                };
+            }
+            currentGroup.events.push(event);
+        });
+        if (currentGroup) groups.push(currentGroup);
+    } else if (sortId === 2) {
+        // Group by event type
+        let currentTypeId = null;
+        let currentGroup = null;
+
+        sortedEvents.value.forEach(event => {
+            if (event.type?.id !== currentTypeId) {
+                if (currentGroup) groups.push(currentGroup);
+                currentTypeId = event.type?.id;
+                currentGroup = {
+                    key: `type_${currentTypeId}`,
+                    label: event.type?.name,
+                    events: []
+                };
+            }
+            currentGroup.events.push(event);
+        });
+        if (currentGroup) groups.push(currentGroup);
+    } else if (sortId === 3) {
+        // Group by day
+        let currentDay = null;
+        let currentGroup = null;
+
+        sortedEvents.value.forEach(event => {
+            if (event.day !== currentDay) {
+                if (currentGroup) groups.push(currentGroup);
+                currentDay = event.day;
+                currentGroup = {
+                    key: `day_${currentDay}`,
+                    label: currentDay ? new Date(currentDay).toLocaleDateString('de-DE', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}) : null,
+                    events: []
+                };
+            }
+            currentGroup.events.push(event);
+        });
+        if (currentGroup) groups.push(currentGroup);
+    }
+
+    return groups;
+};
+
 // Nur bei Sortierung nach Tag (3) lokal sortieren – sonst Server-Reihenfolge belassen.
 const sortedEvents = computed(() => {
     const list = [...events.value];
@@ -515,6 +566,54 @@ const addEmptyEvent = () => {
         onFinish: () => { isLoading.value = false; },
     });*/
 
+    axios.post(route('event.store.bulk.single', {project: props.project}), { event: base })
+        .finally(() => {
+            //isLoading.value = false;
+        });
+};
+
+const addEmptyEventForGroup = (group) => {
+    events.value.forEach(e => { e.isNew = false; });
+
+    let newDate = new Date();
+    let baseEvent = null;
+
+    if (group.events.length > 0) {
+        // Find the last event in this group (last in the array)
+        const lastEventInGroup = group.events[group.events.length - 1];
+        baseEvent = lastEventInGroup;
+        newDate = new Date(lastEventInGroup.day);
+
+        // When sorting by day, create event on the same day, otherwise add +1 day
+        const sortId = usePage().props.auth.user?.bulk_sort_id;
+        if (sortId !== 3) {
+            newDate.setDate(newDate.getDate() + 1);
+        }
+    }
+
+    const base = {
+        index: events.value.length + 1,
+        status: baseEvent?.status || props.eventStatuses?.find(s => s.default) || null,
+        type: baseEvent?.type || props.eventTypes?.[0] || null,
+        name: props.isInModal ? '' : 'Blocker',
+        room: baseEvent?.room || props.rooms?.[0] || null,
+        day: toISO(newDate),
+        start_time: baseEvent?.start_time || '',
+        end_time: baseEvent?.end_time || '',
+        copy: false,
+        copyCount: 1,
+        copyType: copyTypes.value[0],
+        description: baseEvent?.description || '',
+        isNew: true,
+        is_planning: isPlanningEvent.value,
+    };
+
+    if (props.isInModal) {
+        events.value.push(base);
+        return;
+    }
+
+    // Persist, wenn nicht im Modal
     axios.post(route('event.store.bulk.single', {project: props.project}), { event: base })
         .finally(() => {
             //isLoading.value = false;

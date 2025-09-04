@@ -279,7 +279,7 @@ const submit = () => {
         multiEditForm.selectedEndTime = `${endTime.getHours()}:${endTime.getMinutes()}`;
     }
 
-    multiEditForm.post(route('events.bulk-multi-edit'), {
+    /*multiEditForm.post(route('events.bulk-multi-edit'), {
         preserveScroll: true,
         preserveState: false,
         onSuccess: () => {
@@ -289,7 +289,19 @@ const submit = () => {
             // Handle server-side validation errors
             validationErrors.value = Object.values(errors).flat();
         }
-    });
+    });*/
+
+    axios.post(route('events.bulk-multi-edit'), multiEditForm)
+        .then(response => {
+            emits('close');
+        })
+        .catch(error => {
+            if (error.response && error.response.data && error.response.data.errors) {
+                validationErrors.value = Object.values(error.response.data.errors).flat();
+            } else {
+                validationErrors.value.push(t('An unexpected error occurred. Please try again.'));
+            }
+        });
 }
 
 </script>

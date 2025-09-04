@@ -2157,11 +2157,16 @@ class ProjectController extends Controller
                     }
                     $eventsSorted = $eventsSorted->values();
                     $headerObject->project->events = $eventsSorted;
-                    // $lastEditEventIds all Event IDs that were edited in the last 5 minutes
-                    $lastEditEventIds = $project->events()
-                        ->where('updated_at', '>=', now()->subMinutes(5))
-                        ->pluck('id')
-                        ->toArray();
+                    // $lastEditEventIds all Event IDs that are the same updated_at timestamp as the latest updated event in this project or the lasted updated event itself
+                    $lastUpdatedEvent = $project->events()->orderBy('updated_at', 'DESC')->first();
+                    $lastEditEventIds = [];
+                    if ($lastUpdatedEvent) {
+                        $lastEditEventIds = $project->events()
+                            ->where('updated_at', $lastUpdatedEvent->updated_at)
+                            ->pluck('id')
+                            ->toArray();
+                    }
+
 
                     $headerObject->project->lastEditEventIds = $lastEditEventIds;
 

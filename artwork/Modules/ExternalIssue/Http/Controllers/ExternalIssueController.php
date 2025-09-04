@@ -53,35 +53,44 @@ class ExternalIssueController extends Controller
         ]);
     }
 
-    public function store(StoreExternalIssueRequest $request)
+    public function store(StoreExternalIssueRequest $request): \Illuminate\Http\RedirectResponse
     {
         /** @var User $user */
         $user = $this->auth->user();
         $issue = $this->externalIssueService->store($request->validated(), $user, $request->file('files', []));
 
+        return redirect()->route('extern-issue-of-material.index');
     }
 
-    public function update(UpdateExternalIssueRequest $request, ExternalIssue $externalIssue)
+    public function update(UpdateExternalIssueRequest $request, ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
     {
         $issue = $this->externalIssueService->update($externalIssue, $request->validated(), $request->file('files', []));
+
+        return redirect()->route('extern-issue-of-material.index');
     }
 
-    public function destroy(ExternalIssue $externalIssue)
+    public function destroy(ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
     {
         $this->externalIssueService->delete($externalIssue);
+
+        return redirect()->route('extern-issue-of-material.index');
     }
 
-    public function returnExternal(ExternalIssue $externalIssue, Request $request)
+    public function returnExternal(ExternalIssue $externalIssue, Request $request): \Illuminate\Http\RedirectResponse
     {
         $externalIssue->update([
             'received_by_id' => $this->auth->user()->id,
             'return_remarks' => $request->input('return_remarks'),
         ]);
+
+        return redirect()->route('extern-issue-of-material.index');
     }
 
-    public function setSpecialItemsDone(ExternalIssue $externalIssue)
+    public function setSpecialItemsDone(ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
     {
         $externalIssue->update(['special_items_done' => true]);
+
+        return redirect()->route('extern-issue-of-material.index');
     }
 
     public function print(ExternalIssue $externalIssue)
@@ -92,9 +101,11 @@ class ExternalIssueController extends Controller
         return $pdf->download('leihschein_' . $externalIssue->id . '.pdf');
     }
 
-    public function fileDelete(ExternalIssueFile $externalIssueFile): void
+    public function fileDelete(ExternalIssueFile $externalIssueFile): \Illuminate\Http\JsonResponse
     {
         $this->externalIssueService
             ->deleteFile($externalIssueFile);
+
+        return response()->json(['message' => 'File deleted successfully'], 200);
     }
 }

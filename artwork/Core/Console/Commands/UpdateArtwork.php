@@ -2,6 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
 use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
@@ -43,6 +44,7 @@ class UpdateArtwork extends Command
         $this->setupPassport();
         $this->removeOldCalendarComponent();
         $this->migrateFilterToNewFilterStructure();
+        $this->addRoomTypes();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -304,6 +306,20 @@ class UpdateArtwork extends Command
             'event_properties' => 'event_property_ids',
             default => $field,
         };
+    }
+    /**
+     * Wandelt interne Felder zu DB-Feldern um.
+     */
+    private function addRoomTypes(): void
+    {
+        $this->section('Adding Room Types');
+        $roomTypes = TypOfRoom::cases();
+
+        foreach ($roomTypes as $roomType) {
+            \Artwork\Modules\Accommodation\Models\AccommodationRoomType::create([
+                'name' => $roomType->value,
+            ]);
+        }
     }
 
 }

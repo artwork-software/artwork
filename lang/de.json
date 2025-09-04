@@ -3001,6 +3001,10 @@
     "Build and order components for this tab": "Baue und sortiere Komponenten für diesen Tab",
     "Multi-Edit": "Mehrfachbearbeitung",
     "Temporary": "Temporär",
-    "Project URL has been copied": "Projekt-URL wurde kopiert"
+    "Project URL has been copied": "Projekt-URL wurde kopiert",
+    "Room types": "Raumtypen",
+    "Select the room types that are available at this accommodation.": "Wähle die Raumtypen aus, die in dieser Unterkunft verfügbar sind.",
+    "Select room types": "Select room types",
+    "artist selection": "Künstlerauswahl"
 }
 

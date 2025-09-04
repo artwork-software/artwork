@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Accommodation\Http\Requests\StoreAccommodationRequest;
 use Artwork\Modules\Accommodation\Http\Requests\UpdateAccommodationRequest;
 use Artwork\Modules\Accommodation\Models\Accommodation;
+use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\Accommodation\Services\AccommodationService;
 use Inertia\Inertia;
 
@@ -23,7 +24,8 @@ class AccommodationController extends Controller
     public function index()
     {
         return Inertia::render('Accommodation/index', [
-            'accommodations' => Accommodation::all(),
+            'accommodations' => Accommodation::with(['roomTypes'])->get(),
+            'roomTypes' => AccommodationRoomType::all(),
         ]);
     }
 
@@ -42,6 +44,8 @@ class AccommodationController extends Controller
     {
         $accommodation = $this->accommodationService->store($request->validated());
 
+        $accommodation->roomTypes()->sync($request->input('room_types', []));
+
         return redirect()->route('accommodation.show', $accommodation);
     }
 
@@ -51,7 +55,8 @@ class AccommodationController extends Controller
     public function show(Accommodation $accommodation)
     {
         return Inertia::render('Accommodation/Show', [
-            'accommodation' => $accommodation->load(['contacts']),
+            'accommodation' => $accommodation->load(['contacts', 'roomTypes']),
+            'roomTypes' => AccommodationRoomType::all(),
         ]);
     }
 
@@ -69,6 +74,8 @@ class AccommodationController extends Controller
     public function update(UpdateAccommodationRequest $request, Accommodation $accommodation)
     {
         $accommodation = $this->accommodationService->update($accommodation, $request->validated());
+
+        $accommodation->roomTypes()->sync($request->input('room_types', []));
     }
 
     /**

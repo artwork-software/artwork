@@ -25,6 +25,21 @@
                 </div>
             </div>
 
+            <div>
+                <div class="my-4">
+                    <h2 class="text-md font-semibold mb-2">{{ $t('Room types')}}</h2>
+                    <p class="text-sm text-zinc-600 mb-3">{{ $t('Select the room types that are available at this accommodation.') }}</p>
+                </div>
+                <ArtworkBaseListbox
+                    v-model="selectedRoomTypes"
+                    :items="roomTypes"
+                    multiple
+                    use-translations
+                    placeholder=""
+                    :selectedFormatter="(items) => `${items.length} ausgewählt`"
+                />
+            </div>
+
             <div v-if="!accommodationForm.id">
                 <BaseAlertComponent message="After creating the accommodation, you can add contacts to it." use-translation type="info" class="mt-4" />
             </div>
@@ -46,10 +61,13 @@
 import ArtworkBaseButton from "@/Artwork/Buttons/ArtworkBaseButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import {computed, ref, watch} from "vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import {ListboxButton, ListboxOption, ListboxOptions, Listbox} from "@headlessui/vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 
 const props = defineProps({
     accommodation: {
@@ -63,8 +81,14 @@ const props = defineProps({
             street: '',
             zip_code: '',
             location: '',
-            note: ''
+            note: '',
+            room_types: []
         })
+    },
+    roomTypes: {
+        type: Object,
+        required: false,
+        default: () => []
     }
 })
 
@@ -79,10 +103,28 @@ const accommodationForm = useForm({
     zip_code: props.accommodation.zip_code,
     location: props.accommodation.location,
     note: props.accommodation.note,
+    room_types: props.accommodation.room_types ?? []
 })
 
+const selectedRoomTypes = ref([])
+const selectedRoomTypeIds = computed(() => selectedRoomTypes.value.map(rt => rt.id))
+watch(
+    () => [props.accommodation?.id, props.roomTypes], // neu laden, wenn Unterkunft oder die Liste wechselt
+    () => {
+        const accTypeIds = new Set(
+            (props.accommodation?.room_types ?? []).map((rt) => rt.id)
+        )
+        selectedRoomTypes.value = (props.roomTypes ?? []).filter((rt) =>
+            accTypeIds.has(rt.id)
+        )
+    },
+    { immediate: true }
+)
 
 const updateOrCreateAccommodation = () => {
+
+    accommodationForm.room_types = selectedRoomTypeIds;
+
     if (accommodationForm.id) {
         accommodationForm.patch(route('accommodation.update', accommodationForm.id), {
             preserveState: true,

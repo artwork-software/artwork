@@ -31,13 +31,28 @@
                     </div>
                 </div>
 
+                <div>
+                    <div class="my-4">
+                        <h2 class="text-md font-semibold mb-2">{{ $t('Room types')}}</h2>
+                        <p class="text-sm text-zinc-600 mb-3">{{ $t('Select the room types that are available at this accommodation.') }}</p>
+                    </div>
+                    <ArtworkBaseListbox
+                        v-model="selectedRoomTypes"
+                        :items="roomTypes"
+                        multiple
+                        use-translations
+                        placeholder=""
+                        :selectedFormatter="(items) => `${items.length} ausgewählt`"
+                    />
+                </div>
+
                 <div class="mt-10">
                     <div>
                         <div class="flex items-center justify-between mb-5">
                             <PageTitle :title="$t('Contacts')" :description="$t('You can view and edit all accommodation contacts here')" />
-                            <ArtworkBaseButton size="sm" variant="primary" type="button" @click="showCreateOrUpdateContactModal = true">
+                            <ArtworkBaseModalButton size="sm" variant="primary" type="button" @click="showCreateOrUpdateContactModal = true">
                                 {{ $t('Add Contact') }}
-                            </ArtworkBaseButton>
+                            </ArtworkBaseModalButton>
                         </div>
 
 
@@ -78,10 +93,12 @@ import PageTitle from "@/Artwork/Titles/PageTitle.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {useForm} from "@inertiajs/vue3";
-import {defineAsyncComponent, ref} from "vue";
+import {computed, defineAsyncComponent, ref, watch} from "vue";
 import ArtworkBaseButton from "@/Artwork/Buttons/ArtworkBaseButton.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import ArtworkSingleContact from "@/Artwork/Contact/ArtworkSingleContact.vue";
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 
 const props = defineProps({
     accommodation: {
@@ -95,8 +112,14 @@ const props = defineProps({
             street: '',
             zip_code: '',
             location: '',
-            note: ''
+            note: '',
+            room_types: [],
         })
+    },
+    roomTypes: {
+        type: Object,
+        required: false,
+        default: () => []
     }
 })
 const showCreateOrUpdateContactModal = ref(false)
@@ -128,11 +151,28 @@ const accommodationForm = useForm({
     zip_code: props.accommodation.zip_code,
     location: props.accommodation.location,
     note: props.accommodation.note,
+    room_types: props.accommodation.room_types ?? []
 })
 
 
+const selectedRoomTypes = ref([])
+const selectedRoomTypeIds = computed(() => selectedRoomTypes.value.map(rt => rt.id))
+watch(
+    () => [props.accommodation?.id, props.roomTypes], // neu laden, wenn Unterkunft oder die Liste wechselt
+    () => {
+        const accTypeIds = new Set(
+            (props.accommodation?.room_types ?? []).map((rt) => rt.id)
+        )
+        selectedRoomTypes.value = (props.roomTypes ?? []).filter((rt) =>
+            accTypeIds.has(rt.id)
+        )
+    },
+    { immediate: true }
+)
+
 const updateAccommodation = () => {
     if ( accommodationForm.isDirty ) {
+        accommodationForm.room_types = selectedRoomTypeIds;
         accommodationForm.patch(route('accommodation.update', props.accommodation.id), {
             preserveState: true,
             preserveScroll: true,

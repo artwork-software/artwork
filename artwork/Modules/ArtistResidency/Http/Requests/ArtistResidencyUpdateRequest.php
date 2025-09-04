@@ -25,7 +25,7 @@ class ArtistResidencyUpdateRequest extends FormRequest
             'arrival_time' => 'nullable|date_format:H:i',
             'departure_date' => 'nullable|date|after_or_equal:arrival_date',
             'departure_time' => 'nullable|date_format:H:i',
-            'type_of_room' => 'nullable|string|max:255',
+            'type_of_room' => 'nullable|integer|exists:accommodation_room_types,id',
             'cost_per_night' => 'required|numeric|min:0',
             'daily_allowance' => 'required|numeric|min:0',
             'additional_daily_allowance' => 'nullable|numeric|min:0',

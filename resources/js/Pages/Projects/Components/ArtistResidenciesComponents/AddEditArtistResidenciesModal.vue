@@ -17,20 +17,36 @@
                                 <h3 class="text-sm font-semibold text-zinc-900 pl-3 border-l-4 border-artwork-buttons-hover">
                                     {{ $t('Artist') }}
                                 </h3>
-                                <span class="inline-flex items-center rounded-full border border-artwork-navigation-color/30 bg-artwork-navigation-color/10 px-2 py-0.5 text-[11px] font-medium text-artwork-buttons-hover">
-                  {{ project?.name }}
-                </span>
+                                <div class="flex items-center gap-x-3">
+                                    <div class="text-xs text-blue-500 cursor-pointer hover:underline" @click="selectArtist = !selectArtist">
+                                        {{ $t('artist selection') }}
+                                    </div>
+                                    <span class="inline-flex items-center rounded-full border border-artwork-navigation-color/30 bg-artwork-navigation-color/10 px-2 py-0.5 text-[11px] font-medium text-artwork-buttons-hover">
+                                      {{ project?.name }}
+                                    </span>
+                                </div>
                             </header>
                             <div class="p-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" v-if="!selectArtist">
                                     <BaseInput v-model="artistResidency.name" :label="$t('Artist name')" id="name" no-margin-top required />
                                     <BaseInput v-model="artistResidency.civil_name" :label="$t('Civil name')" id="civil_name" no-margin-top />
                                     <BaseInput v-model="artistResidency.phone_number" :label="$t('phone number')" id="phone_number" />
                                     <BaseInput v-model="artistResidency.position" label="Position" id="position" />
                                 </div>
+
+                                <div v-else>
+                                    <ArtworkBaseListbox
+                                        v-model="selectedArtist"
+                                        :items="usePage().props.artists"
+                                        by="id"
+                                        use-translations
+                                        label="Select artist"
+                                        placeholder="Select artist"
+                                        :selectedFormatter="(item) => item ? `${item.name}` : ''"
+                                    />
+                                </div>
                             </div>
                         </section>
-
                         <!-- Accommodation & Room -->
                         <section class="rounded-xl border border-zinc-200 bg-white shadow-sm">
                             <header class="px-4 pt-4">
@@ -39,87 +55,21 @@
                                 </h3>
                             </header>
                             <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Accommodation -->
-                                <div>
-                                    <Listbox as="div" v-model="selectedAccommodation">
-                                        <ListboxLabel class="xsLight">{{ $t('Accommodation') }}</ListboxLabel>
-                                        <div class="relative mt-1">
-                                            <ListboxButton
-                                                class="relative h-11 w-full cursor-default rounded-lg bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 ring-1 ring-inset ring-zinc-200 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-hover sm:text-sm"
-                                            >
-                                                <span class="block truncate">{{ selectedAccommodation?.name }}</span>
-                                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <component is="IconCaretUpDown" stroke-width="1.5" class="size-5 text-gray-400" aria-hidden="true" />
-                        </span>
-                                            </ListboxButton>
+                                <ArtworkBaseListbox
+                                    v-model="selectedAccommodation"
+                                    :items="usePage().props.accommodations"
+                                    by="id"
+                                    label="Accommodation"
+                                />
 
-                                            <ListboxOptions
-                                                class="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-md ring-1 ring-black/5 focus:outline-none sm:text-sm"
-                                            >
-                                                <ListboxOption
-                                                    as="template"
-                                                    v-for="accommodation in usePage().props.accommodations"
-                                                    :key="accommodation.id"
-                                                    :value="accommodation"
-                                                    v-slot="{ selected }"
-                                                >
-                                                    <li class="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900">
-                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
-                              {{ accommodation.name }}
-                            </span>
-                                                        <span
-                                                            v-if="selected"
-                                                            class="absolute inset-y-0 right-0 flex items-center pr-4 text-artwork-buttons-hover"
-                                                        >
-                              <component is="IconCheck" class="size-5" aria-hidden="true" />
-                            </span>
-                                                    </li>
-                                                </ListboxOption>
-                                            </ListboxOptions>
-                                        </div>
-                                    </Listbox>
-                                </div>
-
-                                <!-- Room type -->
-                                <div>
-                                    <Listbox as="div" v-model="selectedRoomType">
-                                        <ListboxLabel class="xsLight">{{ $t('Room type') }}</ListboxLabel>
-                                        <div class="relative mt-1">
-                                            <ListboxButton
-                                                class="relative h-11 w-full cursor-default rounded-lg bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 ring-1 ring-inset ring-zinc-200 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-hover sm:text-sm"
-                                            >
-                                                <span class="block truncate">{{ $t(selectedRoomType) }}</span>
-                                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <component is="IconCaretUpDown" stroke-width="1.5" class="size-5 text-gray-400" aria-hidden="true" />
-                        </span>
-                                            </ListboxButton>
-
-                                            <ListboxOptions
-                                                class="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-md ring-1 ring-black/5 focus:outline-none sm:text-sm"
-                                            >
-                                                <ListboxOption
-                                                    as="template"
-                                                    v-for="roomType in usePage().props.roomTypes"
-                                                    :key="roomType"
-                                                    :value="roomType"
-                                                    v-slot="{ selected }"
-                                                >
-                                                    <li class="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900">
-                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
-                              {{ $t(roomType) }}
-                            </span>
-                                                        <span
-                                                            v-if="selected"
-                                                            class="absolute inset-y-0 right-0 flex items-center pr-4 text-artwork-buttons-hover"
-                                                        >
-                              <component is="IconCheck" class="size-5" aria-hidden="true" />
-                            </span>
-                                                    </li>
-                                                </ListboxOption>
-                                            </ListboxOptions>
-                                        </div>
-                                    </Listbox>
-                                </div>
+                                <ArtworkBaseListbox
+                                    v-model="selectedRoomType"
+                                    v-if="selectedAccommodation"
+                                    :items="selectedAccommodation.room_types"
+                                    by="id"
+                                    use-translations
+                                    label="Room Type"
+                                />
                             </div>
                         </section>
 
@@ -280,19 +230,21 @@
                             <p class="mt-3 text-[11px] text-zinc-500">
                                 {{ $t('Values update automatically when dates or rates change.') }}
                             </p>
+
+                            <div class="my-6 flex w-full items-center justify-center">
+                                <ArtworkBaseModalButton
+                                    type="submit"
+                                    :loading="artistResidency.processing"
+                                    class="w-full"
+                                    :disabled="artistResidency.processing"
+                                    variant="primary"
+                                >
+                                    {{ artistResidency.id ? $t('Save') : $t('Create') }}
+                                </ArtworkBaseModalButton>
+                            </div>
+
                         </div>
                         <!-- SUBMIT -->
-                        <div class="my-6 flex w-full items-center justify-center">
-                            <ArtworkBaseModalButton
-                                type="submit"
-                                :loading="artistResidency.processing"
-                                class="w-full"
-                                :disabled="artistResidency.processing"
-                                variant="primary"
-                            >
-                                {{ artistResidency.id ? $t('Save') : $t('Create') }}
-                            </ArtworkBaseModalButton>
-                        </div>
 
                     </aside>
                 </div>
@@ -329,6 +281,7 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import CountUp from "@/Artwork/Visual/CountUp.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 
 
 const props = defineProps({
@@ -355,14 +308,17 @@ const formatDate = (date) => {
 
 const emit = defineEmits(['close'])
 const selectedAccommodation = ref(usePage().props.accommodations.find(accommodation => accommodation.id === props.artist_residency?.accommodation_id) || usePage().props.accommodations[0])
-const selectedRoomType = ref(props.artist_residency?.type_of_room || usePage().props.roomTypes[0])
+const selectedRoomType = ref(selectedAccommodation.value?.room_types.find(room => room.id === parseInt(props.artist_residency?.type_of_room)) || null)
+const selectArtist = ref(false)
+const selectedArtist = ref(props.artist_residency?.artist || null)
 
 const artistResidency = useForm({
     id: props.artist_residency ? props.artist_residency.id : null,
-    name: props.artist_residency ? props.artist_residency.name : '',
-    civil_name: props.artist_residency ? props.artist_residency.civil_name : '',
-    phone_number: props.artist_residency ? props.artist_residency.phone_number : '',
-    position: props.artist_residency ? props.artist_residency.position : '',
+    name: '',
+    civil_name: '',
+    phone_number: '',
+    position: '',
+    artist_id: props.artist_residency?.artist ? props.artist_residency.artist.id : null,
     accommodation_id: null,
     project_id: props.project.id,
     arrival_date: props.artist_residency ? formatDate(props.artist_residency.arrival_date) : '',
@@ -418,8 +374,9 @@ const createOrUpdateArtistResidency = () => {
     }
 
     artistResidency.days = calculateTotalNights();
-    artistResidency.type_of_room = selectedRoomType.value;
+    artistResidency.type_of_room = selectedRoomType.value.id;
     artistResidency.accommodation_id = selectedAccommodation.value.id;
+    artistResidency.artist_id = selectedArtist.value ? selectedArtist.value.id : null;
 
     if(artistResidency.id){
         artistResidency.patch(route('artist-residencies.update', {artistResidency: artistResidency.id}), {

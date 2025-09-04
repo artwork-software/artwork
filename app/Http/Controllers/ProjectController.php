@@ -7,6 +7,7 @@ use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
+use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Exports\BudgetExport;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
@@ -2116,10 +2117,11 @@ class ProjectController extends Controller
                     break;
                 case ProjectTabComponentEnum::ARTIST_RESIDENCIES->value:
                     Inertia::share([
-                        'roomTypes' => TypOfRoom::cases(),
-                        'accommodations' => Accommodation::all(),
+                        //'roomTypes' => TypOfRoom::cases(),
+                        'artists' => Artist::all(),
+                        'accommodations' => Accommodation::with('roomTypes')->get(),
                         'artist_residencies' => $project->artistResidencies()
-                            ->with(['accommodation'])->get(),
+                            ->with(['accommodation', 'accommodation.roomTypes', 'artist'])->get(),
                     ]);
                     break;
                 case ProjectTabComponentEnum::BULK_EDIT->value:

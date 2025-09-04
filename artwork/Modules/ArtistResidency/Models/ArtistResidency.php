@@ -32,10 +32,7 @@ class ArtistResidency extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'civil_name',
-        'phone_number',
-        'position',
+        'artist_id',
         'accommodation_id',
         'project_id',
         'arrival_date',
@@ -66,6 +63,17 @@ class ArtistResidency extends Model
             'accommodation_id',
             'id',
             'accommodation'
+        );
+    }
+
+    // artist
+    public function artist(): BelongsTo
+    {
+        return $this->belongsTo(
+            Artist::class,
+            'artist_id',
+            'id',
+            'artist'
         );
     }
 

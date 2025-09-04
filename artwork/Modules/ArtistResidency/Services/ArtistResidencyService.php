@@ -4,6 +4,9 @@ namespace Artwork\Modules\ArtistResidency\Services;
 
 use Artwork\Core\Enums\ExportType;
 use Artwork\Modules\ArtistResidency\Exports\ArtistResidencyExcelExport;
+use Artwork\Modules\ArtistResidency\Models\Artist;
+use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
+use Artwork\Modules\ArtistResidency\Repositories\ArtistRepository;
 use Artwork\Modules\ArtistResidency\Repositories\ArtistResidencyRepository;
 use Artwork\Modules\Project\Models\Project;
 use Barryvdh\DomPDF\PDF;
@@ -15,6 +18,9 @@ use Illuminate\Support\Carbon;
 use Inertia\ResponseFactory as InertiaResponseFactory;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 readonly class ArtistResidencyService
 {
@@ -24,10 +30,134 @@ readonly class ArtistResidencyService
         private FilesystemManager $filesystemManager,
         private InertiaResponseFactory $inertiaResponseFactory,
         private ResponseFactory $responseFactory,
-        private AuthManager $authManager
+        private AuthManager $authManager,
+        protected ArtistResidencyRepository $residencies,
+        protected ArtistRepository $artists,
     ) {
     }
 
+
+    /** Erstellen + sichere Artist-Verknüpfung/Neuanlage */
+    public function create(array $payload): ArtistResidency
+    {
+        return DB::transaction(function () use ($payload) {
+            [$artistInput, $resData] = $this->splitPayload($payload);
+
+            $residency = $this->residencies->create($resData);
+
+            $artist = $this->resolveArtistStrict($artistInput);
+
+            if ($artist instanceof Artist) {
+                $this->residencies->associateArtist($residency, $artist);
+            }
+
+            return $residency->refresh();
+        });
+    }
+
+    /** Update + sichere Artist-Verknüpfung/Neuanlage/Dissociate */
+    public function update(ArtistResidency $residency, array $payload): ArtistResidency
+    {
+        return DB::transaction(function () use ($residency, $payload) {
+            [$artistInput, $resData] = $this->splitPayload($payload);
+
+            if (!empty($resData)) {
+                $this->residencies->update($residency, $resData);
+            }
+
+            if (!empty($artistInput) || $this->wantsDissociate($artistInput)) {
+                $artist = $this->resolveArtistStrict($artistInput);
+
+                if ($artist instanceof Artist) {
+                    $this->residencies->associateArtist($residency, $artist);
+                } elseif ($artist === null && $this->wantsDissociate($artistInput)) {
+                    $this->residencies->dissociateArtist($residency);
+                }
+            }
+
+            return $residency->refresh();
+        });
+    }
+
+    // ---------- Hilfen ----------
+
+    /** Trennt Artist-Felder von Residency-Feldern */
+    private function splitPayload(array $payload): array
+    {
+        $artistKeys = ['artist_id', 'name', 'civil_name', 'phone_number', 'position'];
+        $artistInput = Arr::only($payload, $artistKeys);
+        $residencyData = Arr::except($payload, $artistKeys);
+
+        return [$artistInput, $residencyData];
+    }
+
+    private function wantsDissociate(array $artistInput): bool
+    {
+        return array_key_exists('artist_id', $artistInput)
+            && is_null($artistInput['artist_id'] ?? null)
+            && empty(trim((string)($artistInput['name'] ?? '')));
+    }
+
+    /**
+     * Liefert:
+     *  - Artist:   wenn verknüpft/gefunden/neu angelegt werden soll
+     *  - null:     wenn explizit dissociate gewünscht ist
+     *  - wirft ValidationException bei Konflikten oder inkonsistenten Eingaben
+     * @throws ValidationException
+     */
+    private function resolveArtistStrict(array $artistInput): ?Artist
+    {
+        $hasId   = array_key_exists('artist_id', $artistInput);
+        $id      = $artistInput['artist_id'] ?? null;
+        $nameRaw = (string)($artistInput['name'] ?? '');
+        $name    = trim($nameRaw);
+
+        $extraUpdates = collect($artistInput)
+            ->only(['civil_name', 'phone_number', 'position'])
+            ->filter(fn($v) => !is_null($v) && $v !== '')
+            ->all();
+
+        // explizites Dissociate
+        if ($this->wantsDissociate($artistInput)) {
+            return null;
+        }
+
+        // Fall A: ID vorhanden (Name optional)
+        if ($hasId && $id) {
+            $artist = $this->artists->findById((int)$id, lockForUpdate: true);
+            if (!$artist) {
+                // Sollte die Request-Rule eigentlich abfangen (exists)
+                throw ValidationException::withMessages([
+                    'artist_id' => __('Selected artist does not exist.'),
+                ]);
+            }
+
+            // Konflikterkennung: Name mitgegeben aber passt nicht zum gefundenen Artist
+            if ($name !== '') {
+                $providedNorm = $this->artists->normalizeName($name);
+                $existingNorm = $this->artists->normalizeName($artist->name);
+                if ($providedNorm !== $existingNorm) {
+                    throw ValidationException::withMessages([
+                        'artist_id' => __('Artist conflict: provided name does not match the selected artist.'),
+                        'name'      => __('Artist conflict: provided name does not match the selected artist.'),
+                    ]);
+                }
+            }
+
+            // vorsichtig aktualisieren (nur nicht-leere Felder)
+            $this->artists->update($artist, $extraUpdates);
+            return $artist->refresh();
+        }
+
+        // Fall B: keine ID, aber Name vorhanden → finden oder erstellen
+        if ($name !== '') {
+            // Robust per Lock + Unique-Fallback
+            return $this->artists->getOrCreateByNameForUpdate($name, $extraUpdates);
+        }
+
+        // Fall C: weder ID noch Name → nichts zu tun (Residency ohne Artist)
+        return null;
+    }
     /**
      * Exports artist residency data based on project and type.
      */

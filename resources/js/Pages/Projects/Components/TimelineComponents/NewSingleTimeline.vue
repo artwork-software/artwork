@@ -1,9 +1,9 @@
 <template>
     <div :id="'timeline-container-' + event.id + '-' + timeLineForm.id"
-         class="flex flex-col relative h-full mb-1"
+         class="flex flex-col relative h-full mb-2"
          :class="{'cursor-pointer': can('can plan shifts') || hasAdminRole()}"
          v-if="timeLineForm.start !== null && timeLineForm.end !== null">
-        <div class="text-xs bg-neutral-300 p-2 h-full rounded-lg" :class="time.clicked || editDescription ? '' : 'group flex justify-between'" >
+        <div class="text-xs bg-zinc-100 border border-zinc-200 shadow-sm p-2 h-full rounded-lg" :class="time.clicked || editDescription ? '' : 'group flex justify-between'" >
             <div>
                 <div v-if="time.clicked" class="mb-3 mx-1">
                     <SwitchGroup as="div" class="flex items-center">

@@ -1,130 +1,181 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_project_history.svg">
-            <div class="mx-4">
-                <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                    {{ $t('Project process') }}
-                </div>
-                <div class="text-secondary subpixel-antialiased">
-                    {{ $t('Here you can see what was changed by whom and when.') }}
-                </div>
-                <div class="mb-4">
-                    <div class="hidden sm:block">
-                        <div class="border-gray-200">
-                            <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
-                                 aria-label="Tabs">
-                                <a @click="changeHistoryTabs(tab)" v-for="tab in historyTabs" href="#"
-                                   :key="tab.name"
-                                   :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
-                                   :aria-current="tab.current ? 'page' : undefined">
-                                    {{ tab.name }}
-                                </a>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex  w-full flex-wrap mt-4 max-h-96 overflow-x-scroll" v-if="showProjectHistoryTab">
-                    <div v-for="(historyItem, index) in project_history">
-                        <div class="flex w-full my-1" v-if="historyItem?.changes !== null && historyItem.changes[0]?.type === 'project' || historyItem.changes[0]?.type === 'public_changes'">
-                            <div class="flex w-full">
-                                    <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
-                                        {{ historyItem.created_at }}:
-                                    </span>
-                                <UserPopoverTooltip :user="historyItem.changer"
-                                                    :id="index"
-                                                    height="7"
-                                                    width="7"/>
+    <ArtworkBaseModal @close="closeModal" :title="$t('Project process')" :description="$t('Here you can see what was changed by whom and when.')">
+        <div class="mx-4">
+            <!-- Header -->
 
-                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
-                                    {{
-                                        $t(
-                                            historyItem.changes[0].translationKey,
-                                            historyItem.changes[0].translationKeyPlaceholderValues
-                                        )
-                                    }}
+            <!-- Tabs (Pill/Segmented) -->
+            <div class="mb-4 pt-3">
+                <nav class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-zinc-50/70 p-1 shadow-sm ring-1 ring-white/40"
+                     aria-label="Tabs" role="tablist">
+                    <button
+                        v-for="tab in historyTabs"
+                        :key="tab.id"
+                        role="tab"
+                        type="button"
+                        @click="changeHistoryTabs(tab.id)"
+                        :aria-selected="currentTab === tab.id"
+                        :class="[
+              'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold uppercase transition',
+              currentTab === tab.id
+                ? 'bg-white text-artwork-buttons-hover shadow-sm'
+                : 'text-zinc-600 hover:text-zinc-800'
+            ]"
+                    >
+                        <span>{{ $t(tab.name) }}</span>
+                        <span
+                            class="inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] tabular-nums"
+                            :class="currentTab === tab.id
+                ? 'border-artwork-navigation-color/30 text-artwork-buttons-hover bg-artwork-navigation-color/10'
+                : 'border-zinc-300 text-zinc-600 bg-white/70'"
+                        >
+              {{ tab.id === 'project' ? (projectItems?.length || 0) : (budgetItems?.length || 0) }}
+            </span>
+                    </button>
+                </nav>
+            </div>
+
+            <div class="mb-5 pb-5">
+                <!-- Timeline: Project -->
+                <div v-if="currentTab === 'project'" class="mt-2 max-h-96 overflow-y-auto pr-1.5" role="region" :aria-label="$t('Project')">
+                    <div v-if="projectItems.length === 0" class="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4 text-sm text-zinc-600">
+                        {{ $t('No entries found') }}
+                    </div>
+
+                    <ol
+                        v-else
+                        role="list"
+                        class="relative pl-8 space-y-2
+           before:content-[''] before:absolute before:left-3 before:top-0 before:bottom-0 before:w-px
+           before:bg-artwork-buttons-hover/60 before:z-0"
+                    >
+                        <li v-for="(historyItem, index) in projectItems" :key="index" class="relative">
+                            <!-- Dot exakt auf der Linie (Linie bei 12px = left-3, Dot-Radius 5px => 12-5 = 7px) -->
+                            <span
+                                class="absolute -left-6 top-5 block h-2.5 w-2.5 rounded-full bg-artwork-buttons-hover ring-2 ring-white z-10"
+                                aria-hidden="true"
+                            ></span>
+
+                            <!-- Card rechts der Linie (weggerückt) -->
+                            <div class="rounded-xl border border-zinc-200 bg-white/85 p-3">
+                                <div class="flex flex-wrap items-center gap-2">
+                                      <span class="inline-flex h-6 items-center rounded-full border border-artwork-navigation-color/25 bg-artwork-navigation-color/10 px-2 text-[11px] font-medium text-artwork-buttons-hover tabular-nums">
+                                        {{ historyItem.created_at }}
+                                      </span>
+
+                                    <UserPopoverTooltip :user="historyItem.changer" :id="`project-${index}`" height="6" width="6" />
+
+                                    <div class="min-w-0 grow text-xs text-zinc-700 subpixel-antialiased">
+                                        {{ $t(historyItem.changes[0].translationKey, historyItem.changes[0].translationKeyPlaceholderValues) }}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </li>
+                    </ol>
                 </div>
-                <div class="flex w-full flex-wrap mt-4 max-h-96 overflow-x-scroll" v-if="showBudgetHistoryTab">
-                    <div class="flex w-full my-1" v-for="(historyItem, index) in project_history">
-                        <div v-if="historyItem.changes[0].type === 'budget'" class="flex w-full ">
-                            <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
-                                {{ historyItem.created_at }}:
-                            </span>
-                            <UserPopoverTooltip :user="historyItem.changer"
-                                                :id="index"
-                                                height="7"
-                                                width="7"/>
-                            <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
-                                {{
-                                    $t(
-                                        historyItem.changes[0].translationKey,
-                                        historyItem.changes[0].translationKeyPlaceholderValues
-                                    )
-                                }}
-                            </div>
-                        </div>
+
+                <!-- Timeline: Budget -->
+                <div v-else-if="currentTab === 'budget'" class="mt-2 max-h-96 overflow-y-auto" role="region" :aria-label="$t('Budget')">
+                    <div v-if="budgetItems.length === 0" class="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4 text-sm text-zinc-600">
+                        {{ $t('No entries found') }}
+                    </div>
+
+                    <div
+                        v-else
+                        class="relative pl-8
+                       before:content-[''] before:absolute before:left-3 before:top-0 before:bottom-0 before:w-px
+                       before:bg-amber-500/60"
+                    >
+                        <ol role="list" class="space-y-2">
+                            <li v-for="(historyItem, index) in budgetItems" :key="index" class="relative">
+                                <span
+                                    class="absolute -left-6 top-1/2 -translate-y-1/2 block h-2.5 w-2.5 rounded-full
+                                         bg-amber-500 ring-2 ring-white"
+                                    aria-hidden="true"
+                                ></span>
+
+                                <div class="rounded-xl border border-amber-200/70 bg-amber-50/70 p-3">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="inline-flex h-6 items-center rounded-full border border-amber-300/70 bg-amber-100/70 px-2 text-[11px] font-medium text-amber-800 tabular-nums">
+                                          {{ historyItem.created_at }}
+                                        </span>
+                                        <UserPopoverTooltip :user="historyItem.changer" :id="`budget-${index}`" height="6" width="6" />
+                                        <div class="min-w-0 grow text-xs text-amber-900 subpixel-antialiased">
+                                            {{ $t(historyItem.changes[0].translationKey, historyItem.changes[0].translationKeyPlaceholderValues) }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ol>
                     </div>
                 </div>
             </div>
-        </BaseModal>
+        </div>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import 'vue-cal/dist/vuecal.css'
-import {XIcon} from '@heroicons/vue/outline';
-import {CheckIcon} from "@heroicons/vue/solid";
-import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
 
-export default {
-    name: 'ProjectHistoryComponent',
-    mixins: [Permissions],
-    components: {
-        BaseModal,
-        UserPopoverTooltip,
-        NewUserToolTip,
-        XIcon,
-        CheckIcon
-    },
-    props: ['project_history','access_budget'],
-    emits: ['closed'],
-    computed: {
-        historyTabs() {
-            if (this.hasAdminRole() || this.access_budget?.includes(this.$page.props.auth.user.id)) {
-                return [
-                    {name: this.$t('Project'), href: '#', current: this.showProjectHistoryTab},
-                    {name: this.$t('Budget'), href: '#', current: this.showBudgetHistoryTab},
-                ]
-            } else {
-                return [
-                    {name: this.$t('Project'), href: '#', current: this.showProjectHistoryTab},
-                ]
-            }
-        },
-    },
-    data() {
-        return {
-            showProjectHistoryTab: true,
-            showBudgetHistoryTab: false,
-        }
-    },
-    methods: {
-        closeModal(bool) {
-            this.$emit('closed', bool);
-        },
-        changeHistoryTabs(selectedTab) {
-            this.showProjectHistoryTab = false;
-            this.showBudgetHistoryTab = false;
-            if (selectedTab.name === this.$t('Project')) {
-                this.showProjectHistoryTab = true;
-            } else {
-                this.showBudgetHistoryTab = true;
-            }
-        },
-    },
+<script setup>
+import { computed, ref } from 'vue'
+import { usePage } from '@inertiajs/vue3'
+import BaseModal from '@/Components/Modals/BaseModal.vue'
+import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+
+defineOptions({ name: 'ProjectHistoryComponent' })
+
+const props = defineProps({
+    project_history: { type: Array, required: true },
+    access_budget: { type: Array, required: false, default: () => [] },
+})
+
+const emit = defineEmits(['closed'])
+
+const page = usePage()
+const userId = computed(() => page?.props?.auth?.user?.id)
+const userRoles = computed(() => page?.props?.auth?.user?.roles ?? page?.props?.auth?.roles ?? [])
+
+// robustes Admin-Check (string/objekt)
+const isAdmin = computed(() => {
+    return (userRoles.value || []).some(r => {
+        const name = typeof r === 'string' ? r : r?.name
+        return name?.toLowerCase() === 'artwork admin'
+    })
+})
+
+const canSeeBudgetTab = computed(() => {
+    return isAdmin.value || (Array.isArray(props.access_budget) && props.access_budget.includes?.(userId.value))
+})
+
+const currentTab = ref('project')
+
+// Tabs-Quelle (i18n im Template)
+const historyTabs = computed(() => {
+    const tabs = [{ id: 'project', name: 'Project' }]
+    if (canSeeBudgetTab.value) tabs.push({ id: 'budget', name: 'Budget' })
+    return tabs
+})
+
+function changeHistoryTabs(id) {
+    currentTab.value = id
 }
+
+function closeModal(bool) {
+    emit('closed', bool)
+}
+
+// gefilterte Items (mit Guards)
+const projectItems = computed(() =>
+    (props.project_history ?? []).filter(h => {
+        const t = h?.changes?.[0]?.type
+        return t === 'project' || t === 'public_changes'
+    })
+)
+
+const budgetItems = computed(() =>
+    (props.project_history ?? []).filter(h => h?.changes?.[0]?.type === 'budget')
+)
 </script>
+
+<style scoped>
+.tabular-nums { font-variant-numeric: tabular-nums; }
+</style>

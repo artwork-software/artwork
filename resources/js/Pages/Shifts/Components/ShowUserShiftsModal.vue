@@ -24,7 +24,7 @@
             <div class="space-y-2">
                 <div v-for="shift in user.element.shifts" class="pb-1">
                     <div v-show="shift.days_of_shift?.includes(day.fullDay)" class="flex items-center justify-between group border-b border-dashed border-gray-300 py-2" :id="'shift-' + shift.id">
-                        <SingleShiftInShiftOverviewUser :user="user" :shift="shift" />
+                        <SingleShiftInShiftOverviewUser :user="user" :shift="shift" @shiftDeleted="handleShiftDeleted" />
                         <!--<SingleEntityInShift :shift="shift" :person="user.element" :shift-qualifications="shiftQualifications" />-->
                         <!--
                         <div>
@@ -332,6 +332,11 @@ export default defineComponent({
         },
         closeConfirmDeleteModal() {
             this.showConfirmDeleteModal = false;
+        },
+        handleShiftDeleted(deletedShiftId) {
+            // Remove the deleted shift from the user.element.shifts array
+            // This prevents stale pivot IDs from causing issues on subsequent deletions
+            this.user.element.shifts = this.user.element.shifts.filter(shift => shift.id !== deletedShiftId);
         },
         sendIndividualTimes() {
             axios.post(route('add.update.individualTimesAndShiftPlanComment'), {

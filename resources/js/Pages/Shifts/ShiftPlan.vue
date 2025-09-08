@@ -667,7 +667,7 @@
             </div>
             <show-user-shifts-modal
                 v-if="showUserShifts"
-                @close="showUserShifts = false"
+                @closed="showUserShifts = false"
                 :user="userToShow"
                 :day="dayToShow"
                 :shift-qualifications="shiftQualifications"

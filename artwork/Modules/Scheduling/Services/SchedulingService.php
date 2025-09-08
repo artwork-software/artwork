@@ -203,7 +203,7 @@ class SchedulingService
                         1 => [
                             'type' => 'link',
                             'title' => $room ? $room->name : '',
-                            'href' => route('rooms.show', $room ? $room->id : null)
+                            'href' => $room ? route('rooms.show', $room->id) : null
                         ],
                         2 => [
                             'type' => 'string',

@@ -161,7 +161,7 @@ class Room extends Model
     {
         return static::where('deleted_at', '<=', now()->subMonth())->withTrashed()
             ->orWhere('temporary', true)
-            ->where('end_date', '<=', now());
+            ->where('end_date', '<=', now()->subDays(14));
     }
 
     public function pruning(): int

@@ -351,10 +351,8 @@ export default defineComponent({
 
                 this.sendCheckVacation(); // wichtig für Freigabe etc.
             }).catch(() => {
-                return false;
+                // Handle error case - could add error handling here if needed
             });
-
-            return false;
             /*router.post(route('add.update.individualTimesAndShiftPlanComment'), {
                 modelId: this.user.element.id,
                 modelType: this.user.type,
@@ -410,10 +408,12 @@ export default defineComponent({
             }
         },
         checkVacation() {
-            let callback = (afterRequest) => {
-                this.closeModal(true);
-            };
+            // Clear previous validation errors
+            for (let individualTime of this.user.individual_times) {
+                delete individualTime.error;
+            }
 
+            // Validate individual times
             for (let individualTime of this.user.individual_times) {
                 if (individualTime.start_time && !individualTime.end_time) {
                     individualTime.error = $t('Please also enter an end time here.');
@@ -426,7 +426,6 @@ export default defineComponent({
             }
 
             this.sendIndividualTimes();
-
         },
         openRequestWorkTimeChangeModal(shift) {
             this.selectedShift = shift;

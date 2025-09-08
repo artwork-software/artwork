@@ -79,8 +79,13 @@ export default defineComponent({
             }
 
             if(dropElement.master && dropElement.type === 0 && this.freeMasterCount > 0){
-                this.$inertia.post(route('add.shift.master', {shift: this.shiftId, user: dropElement.id}), {
-                        chooseData: this.buffer
+                this.$inertia.post(route('shift.assignUserByType', {shift: this.shiftId}), {
+                        userId: dropElement.id,
+                        userType: dropElement.type,
+                        shiftQualificationId: null,
+                        craft_abbreviation: '',
+                        seriesShiftData: this.buffer,
+                        isShiftTab: false
                     }, {
                         preserveState: true,
                         preserveScroll: true,
@@ -88,8 +93,13 @@ export default defineComponent({
                 )
 
             } else if (dropElement.type === 0 && !dropElement.master || this.freeMasterCount === 0 && dropElement.master ) {
-                this.$inertia.post(route('add.shift.user', {shift: this.shiftId, user: dropElement.id}), {
-                        chooseData: this.buffer
+                this.$inertia.post(route('shift.assignUserByType', {shift: this.shiftId}), {
+                        userId: dropElement.id,
+                        userType: dropElement.type,
+                        shiftQualificationId: null,
+                        craft_abbreviation: '',
+                        seriesShiftData: this.buffer,
+                        isShiftTab: false
                     }, {
                         preserveState: true,
                         preserveScroll: true,
@@ -98,17 +108,26 @@ export default defineComponent({
             }
 
             if(dropElement.type === 1 && !dropElement.master){
-                this.$inertia.post(route('add.shift.freelancer', {shift: this.shiftId, freelancer: dropElement.id}), {
-                        chooseData: this.buffer
+                this.$inertia.post(route('shift.assignUserByType', {shift: this.shiftId}), {
+                        userId: dropElement.id,
+                        userType: dropElement.type,
+                        shiftQualificationId: null,
+                        craft_abbreviation: '',
+                        seriesShiftData: this.buffer,
+                        isShiftTab: false
                     }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
                 )
             } else if (dropElement.type === 1 && dropElement.master) {
-                this.$inertia.post(route('add.shift.freelancer.master', {shift: this.shiftId, freelancer: dropElement.id}), {
-                        freelancer_id: dropElement.id,
-                        chooseData: this.buffer
+                this.$inertia.post(route('shift.assignUserByType', {shift: this.shiftId}), {
+                        userId: dropElement.id,
+                        userType: dropElement.type,
+                        shiftQualificationId: null,
+                        craft_abbreviation: '',
+                        seriesShiftData: this.buffer,
+                        isShiftTab: false
                     }, {
                         preserveState: true,
                         preserveScroll: true,
@@ -117,17 +136,26 @@ export default defineComponent({
             }
 
             if(dropElement.type === 2 && dropElement.master){
-                this.$inertia.post(route('add.shift.provider.master', {shift: this.shiftId, serviceProvider: dropElement.id}), {
-                        service_provider_id: dropElement.id,
-                        chooseData: this.buffer
+                this.$inertia.post(route('shift.assignUserByType', {shift: this.shiftId}), {
+                        userId: dropElement.id,
+                        userType: dropElement.type,
+                        shiftQualificationId: null,
+                        craft_abbreviation: '',
+                        seriesShiftData: this.buffer,
+                        isShiftTab: false
                     }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
                 )
             } else if (dropElement.type === 2 && !dropElement.master) {
-                this.$inertia.post(route('add.shift.provider', {shift: this.shiftId, serviceProvider: dropElement.id}), {
-                        chooseData: this.buffer
+                this.$inertia.post(route('shift.assignUserByType', {shift: this.shiftId}), {
+                        userId: dropElement.id,
+                        userType: dropElement.type,
+                        shiftQualificationId: null,
+                        craft_abbreviation: '',
+                        seriesShiftData: this.buffer,
+                        isShiftTab: false
                     }, {
                         preserveState: true,
                         preserveScroll: true,

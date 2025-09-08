@@ -1001,9 +1001,21 @@ class ShiftController extends Controller
             default => null
         };
 
-        $shift = $serviceToUse->getShiftByUserPivotId($usersPivotId);
-
         if ($serviceToUse === null) {
+            return $isShiftTab ? $this->redirector->back() : null;
+        }
+
+        // Check if the pivot record still exists before proceeding
+        try {
+            $shift = $serviceToUse->getShiftByUserPivotId($usersPivotId);
+        } catch (\Exception $e) {
+            // Pivot record doesn't exist anymore (likely already deleted)
+            // Return success response since the goal (removing user from shift) is already achieved
+            return $isShiftTab ? $this->redirector->back() : null;
+        }
+
+        // Additional check in case the method returns null instead of throwing exception
+        if (!$shift) {
             return $isShiftTab ? $this->redirector->back() : null;
         }
 

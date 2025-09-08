@@ -116,6 +116,8 @@ const props = defineProps({
     },
 })
 
+const emit = defineEmits(['shiftDeleted'])
+
 const showConfirmDeleteModal = ref(false);
 const showRequestWorkTimeChangeModal = ref(false);
 const isDeletingUser = ref(false);
@@ -145,7 +147,9 @@ const submitDeleteUserFromShift = (shiftId, pivotId) => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
-            closeConfirmDeleteModal()
+            closeConfirmDeleteModal();
+            // Emit event to parent to remove shift from user.element.shifts array
+            emit('shiftDeleted', shiftId);
         },
         onFinish: () => {
             isDeletingUser.value = false;

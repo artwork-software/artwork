@@ -84,6 +84,7 @@ use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\ArtistResidency\Http\Controllers\ArtistController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowRequestsController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
@@ -2323,6 +2324,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/change-request/{workTimeChangeRequest}/decline',
             [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'decline']
         )->name('worktime.change-request.decline');
+    });
+
+
+    Route::group(['prefix' => 'artist'], function (): void {
+        Route::get('/', [ArtistController::class, 'index'])->name('artist.index');
+        Route::post('/store', [ArtistController::class, 'store'])->name('artist.store');
+        Route::patch('/{artist}/update', [ArtistController::class, 'update'])->name('artist.update');
+        Route::delete('/{artist}/destroy', [ArtistController::class, 'destroy'])->name('artist.destroy');
+        // artist.toggle-active
+        Route::patch('/{artist}/toggle-active', [ArtistController::class, 'toggleActive'])->name('artist.toggle-active');
     });
 });
 

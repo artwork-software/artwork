@@ -130,7 +130,7 @@ const updateOrCreateAccommodation = () => {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
-                accommodationForm.reset();
+                //accommodationForm.reset();
                 emits('close');
             },
             onError: () => {
@@ -142,7 +142,7 @@ const updateOrCreateAccommodation = () => {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
-                accommodationForm.reset();
+                //accommodationForm.reset();
                 emits('close');
             },
             onError: () => {

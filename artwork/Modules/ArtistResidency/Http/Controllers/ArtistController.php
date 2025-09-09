@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\ArtistResidency\Http\Requests\StoreArtistRequest;
 use Artwork\Modules\ArtistResidency\Http\Requests\UpdateArtistRequest;
 use Artwork\Modules\ArtistResidency\Models\Artist;
+use Inertia\Inertia;
 
 class ArtistController extends Controller
 {
@@ -14,7 +15,9 @@ class ArtistController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Artist/Index', [
+            'artists' => Artist::all()
+        ]);
     }
 
     /**

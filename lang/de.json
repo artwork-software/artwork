@@ -2484,7 +2484,7 @@
     "Search Articles": "Artikel suchen",
     "No properties were specified for this article": "Es wurden keine Eigenschaften für diesen Artikel angegeben",
     "Room not found": "Raum nicht gefunden",
-    "Manufacturers": "Hersteller",
+    "Manufacturers": "Hersteller*innen",
     "Edit and create manufacturers for your inventory.": "Bearbeite und erstelle Hersteller für dein Inventar.",
     "Customer Number": "Kundennummer",
     "Out of stock": "Nicht auf Lager",
@@ -2604,7 +2604,7 @@
     "Activate this field if the room is to be included in the calendars.": "Aktiviere dieses Feld, wenn der Raum in den Kalendern angezeigt werden soll.",
     "Accommodations": "Unterkünfte",
     "Invite new users or edit an existing user": "Neue Nutzer*innen einladen oder bestehenden Nutzer*innen bearbeiten",
-    "Freelancers & Service Providers": "Freelancer & Dienstleister",
+    "Freelancers & Service Providers": "Freelancer*innen & Dienstleister",
     "Manage your freelancers and service providers": "Verwalte deine Freelancer und Dienstleister",
     "Manage your manufacturers": "Verwalte deine Hersteller",
     "Departments": "Abteilungen",
@@ -3005,6 +3005,8 @@
     "Room types": "Raumtypen",
     "Select the room types that are available at this accommodation.": "Wähle die Raumtypen aus, die in dieser Unterkunft verfügbar sind.",
     "Select room types": "Select room types",
-    "artist selection": "Künstlerauswahl"
+    "artist selection": "Künstlerauswahl",
+    "Add artist": "Künstler*in hinzufügen",
+    "A list of all the artists in the system including their name, title and more": "Eine Liste aller Künstler*innen im System, einschließlich Name, Titel und mehr"
 }
 

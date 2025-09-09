@@ -11,7 +11,8 @@ class InventoryArticleStatus extends Model
 
     protected $fillable = [
         'name',
-        'color'
+        'color',
+        'order'
     ];
 
     protected $casts = [

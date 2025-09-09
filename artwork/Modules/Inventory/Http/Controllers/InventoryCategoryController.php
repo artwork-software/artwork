@@ -96,7 +96,7 @@ class InventoryCategoryController extends Controller
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::select('id', 'name')->orderBy('name')->get(),
             'manufacturers' => Manufacturer::select('id', 'name')->orderBy('name')->get(),
-            'statuses' => InventoryArticleStatus::select('id', 'name', 'color')->orderBy('name')->get(),
+            'statuses' => InventoryArticleStatus::select('id', 'name', 'color')->orderBy('order')->get(),
             'countsByStatus' => $this->articleService->getCountsByStatus($articles),
         ]);
     }

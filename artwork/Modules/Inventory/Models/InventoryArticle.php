@@ -87,7 +87,7 @@ class InventoryArticle extends Model
             'inventory_article_status_values',
             'inventory_article_id',
             'inventory_article_status_id'
-        )->withPivot('value');
+        )->withPivot('value')->orderBy('order');
     }
 
     public function internalIssues(): \Illuminate\Database\Eloquent\Relations\MorphToMany

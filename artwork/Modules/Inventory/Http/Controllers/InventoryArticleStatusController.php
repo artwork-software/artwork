@@ -16,7 +16,7 @@ class InventoryArticleStatusController extends Controller
     public function index()
     {
         return Inertia::render('InventorySetting/ArticleStatusSettings', [
-            'statuses' => InventoryArticleStatus::all(),
+            'statuses' => InventoryArticleStatus::orderBy('order')->get(),
         ]);
     }
 

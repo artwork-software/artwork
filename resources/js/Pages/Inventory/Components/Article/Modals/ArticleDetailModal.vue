@@ -172,17 +172,17 @@
                             </dl>
 
                             <div v-else>
-                                <div class="rounded-md bg-red-50 p-4">
+                                <div class="rounded-md bg-blue-50 p-4">
                                     <div class="flex">
                                         <div class="shrink-0">
                                             <component
                                                 is="IconAlertSquareRoundedFilled"
-                                                class="size-5 text-red-400"
+                                                class="size-5 text-blue-400"
                                                 aria-hidden="true"
                                             />
                                         </div>
                                         <div class="ml-3">
-                                            <p class="text-sm font-medium text-red-800">
+                                            <p class="text-sm font-medium text-blue-800">
                                                 {{ $t('No properties were specified for this article') }}
                                             </p>
                                         </div>
@@ -222,8 +222,8 @@
                                         <span class="inline-flex items-center rounded-md  px-2 py-1 text-xs font-lexend font-medium border" :style="{backgroundColor: detailedArticle.status.color + '33', borderColor: detailedArticle.status.color + '66', color: detailedArticle.status.color}">
                                             {{ detailedArticle.status?.name }} - {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
                                         </span>
-                                        <component is="IconPlus" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
-                                        <component is="IconMinus" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>
+                                        <component is="IconChevronDown" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
+                                        <component is="IconChevronUp" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>
                                     </span>
                                 </DisclosureButton>
                             </h3>

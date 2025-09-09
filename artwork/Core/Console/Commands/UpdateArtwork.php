@@ -2,6 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
@@ -43,6 +44,7 @@ class UpdateArtwork extends Command
         $this->setupPassport();
         $this->removeOldCalendarComponent();
         $this->migrateFilterToNewFilterStructure();
+        $this->addOrderInInventoryStatus();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -237,6 +239,59 @@ class UpdateArtwork extends Command
                 }
             }
         });
+    }
+
+    private function addOrderInInventoryStatus(): void
+    {
+        $this->section('Add Order in Inventory Status');
+
+        $dataSet = [
+            [
+                'name' => 'Einsatzbereit',
+                'default' => true,
+                'deletable' => false,
+                'color' => '#16A34A',
+                'order' => 1,
+            ],
+            [
+                'name' => 'Defekt',
+                'deletable' => false,
+                'color' => '#EF4444',
+                'order' => 2,
+            ],
+            [
+                'name' => 'Ausgesondert',
+                'deletable' => false,
+                'color' => '#F59E0B',
+                'order' => 4,
+            ],
+            [
+                'name' => 'Nicht auffindbar',
+                'deletable' => false,
+                'color' => '#6B7280',
+                'order' => 3,
+            ],
+            [
+                'name' => 'fest verbaut',
+                'deletable' => false,
+                'color' => '#3B82F6',
+                'order' => 5,
+            ],
+        ];
+
+        foreach ($dataSet as $data) {
+            InventoryArticleStatus::updateOrCreate(
+                [
+                    'name' => $data['name'],
+                ],
+                [
+                    'default' => $data['default'] ?? false,
+                    'deletable' => $data['deletable'] ?? true,
+                    'color' => $data['color'] ?? null,
+                    'order' => $data['order'] ?? 1
+                ]
+            );
+        }
     }
 
     /**

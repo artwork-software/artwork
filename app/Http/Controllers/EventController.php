@@ -2368,8 +2368,12 @@ class EventController extends Controller
         NotificationService $notificationService,
         ProjectTabService $projectTabService
     ): void {
+        //$eventBeforeDelete = $event->replicate();
         $this->authorize('delete', $event);
-
+        broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
+            $event,
+            'deleted'
+        ));
         $this->eventService->delete(
             $event,
             $shiftsQualificationsService,
@@ -2388,6 +2392,8 @@ class EventController extends Controller
         if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
             $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
         }
+
+
     }
 
     /**
@@ -3052,20 +3058,25 @@ class EventController extends Controller
         $events = $request->input('events', []);
 
         foreach ($events as $event) {
-            $this->eventService->createBulkEvent(
+            $storedEvent = $this->eventService->createBulkEvent(
                 $event,
                 $project,
                 $this->authManager->id()
             );
+
+            broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
+                $storedEvent->fresh(),
+                'created'
+            ));
         }
 
-        return Redirect::back();
+        //return Redirect::back();
     }
 
     public function updateSingleBulkEvent(
         Request $request,
         Event $event
-    ): RedirectResponse {
+    ) {
         $data =  $request->collect('data');
         $this->eventService->updateBulkEvent(
             $data,
@@ -3073,21 +3084,18 @@ class EventController extends Controller
         );
 
         $freshEvent = $event->fresh();
-        broadcast(new EventCreated(
-            $event->load(['project', 'event_type']),
-            $event->room_id
+        broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
+            $event,
+            'updated'
         ));
-
-        return Redirect::back();
     }
 
     public function createSingleBulkEvent(
         Request $request,
         Project $project
-    ): RedirectResponse {
+    ): void
+    {
         $data =  $request->input('event', []);
-
-
 
         $event = $this->eventService->createBulkEvent(
             $data,
@@ -3095,13 +3103,10 @@ class EventController extends Controller
             $this->authManager->id()
         );
 
-
-        broadcast(new EventCreated(
-            $event,
-            $event->room_id
+        broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
+            $event->fresh(),
+            'created'
         ));
-
-        return Redirect::back();
     }
 
     public function updateDescription(Request $request, Event $event): RedirectResponse
@@ -3139,5 +3144,7 @@ class EventController extends Controller
     public function bulkDeleteEvent(Request $request): void
     {
         $this->eventService->bulkDeleteEvent($request->collect('eventIds'));
+
+
     }
 }

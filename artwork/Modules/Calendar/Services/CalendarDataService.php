@@ -298,7 +298,7 @@ readonly class CalendarDataService
                     });
                 }
             )
-            ->orderBy('order')
+            ->orderBy('position')
             ->get();
 
         // Filter out temporary rooms that don't overlap with the displayed time period

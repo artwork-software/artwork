@@ -2,7 +2,7 @@ import './bootstrap';
 import '../css/app.css';
 import '../css/global.css';
 
-import {createApp, h, reactive, provide} from 'vue';
+import {createApp, h} from 'vue';
 import {createInertiaApp} from '@inertiajs/vue3';
 import LaravelPermissionToVueJS from 'laravel-permission-to-vuejs'
 import VueMathjax from 'vue-mathjax-next';
@@ -15,29 +15,10 @@ import PrimeVue from 'primevue/config';
 import Aura from '@primeuix/themes/aura';
 import Tooltip from 'primevue/tooltip';
 
-
-const svgColors = {
-    eventType0: '#A7A6B1',
-    eventType1: '#641A54',
-    eventType2: '#DA3F87',
-    eventType3: '#EB7A3D',
-    eventType4: '#F1B640',
-    eventType5: '#86C554',
-    eventType6: '#2EAA63',
-    eventType7: '#3DC3CB',
-    eventType8: '#168FC3',
-    eventType9: '#4D908E',
-    eventType10: '#21485C'
-};
-
 const messages = {
     en: en,
     de: de
 };
-
-// Globaler Zustand für Dragging
-
-
 
 
 const i18n = VueI18n.createI18n({
@@ -64,7 +45,6 @@ createInertiaApp({
         const app = createApp({ render: () => h(inertiaApp, props) })
             .use(plugin)
             .mixin({ methods: { route }});
-        app.config.globalProperties.$svgColors = svgColors;
         app.use(VueMathjax);
         app.use(i18n);
         app.use(Icons);

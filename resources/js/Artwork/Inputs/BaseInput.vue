@@ -4,82 +4,138 @@
             :id="id"
             :type="type"
             v-model="model"
-            :placeholder="focused ? placeholder : ' '"
-            @focus="focused = true"
-            @blur="onBlur"
+            :placeholder="' '"
             :disabled="disabled"
             :required="required"
             :step="type === 'number' ? step : undefined"
+            :aria-invalid="String(Boolean(error))"
+            :aria-required="String(required)"
             :class="[
-        'peer block w-full font-lexend shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create',
-        disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white',
-        label ? isSmall ? 'px-2 pt-3 pb-1 text-xs' : 'px-4 pt-6 pb-2 text-sm' : 'px-4 py-3 text-sm',
-        type === 'number' ? 'appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none' : ''
-      ]"
+            inputBaseClass,
+            disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white',
+            inputPaddingClass,
+            type === 'number'? 'appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none': '']"
         />
 
-        <div v-if="model?.length > 0 && type !== 'date' && type !== 'time' && type !== 'number' && !showLoading" class="absolute right-1 top-0 bottom-0 flex items-center pr-2">
+        <!-- Clear Button -->
+        <div
+            v-if="isClearable"
+            class="absolute right-1 top-0 bottom-0 flex items-center pr-2"
+        >
             <button
                 type="button"
                 @click="model = ''"
                 tabindex="-1"
                 class="text-gray-500 hover:text-artwork-messages-error transition duration-200 ease-in-out"
+                :aria-label="$t ? $t('Clear input') : 'Clear input'"
             >
                 <component is="IconX" class="size-4" />
             </button>
         </div>
 
-        <div v-if="model?.length > 0 && type !== 'date' && type !== 'time' && type !== 'number' && showLoading" class="absolute right-1 top-0 bottom-0 flex items-center pr-2">
+        <!-- Loading Spinner -->
+        <div
+            v-if="isLoadingIcon"
+            class="absolute right-1 top-0 bottom-0 flex items-center pr-2"
+        >
             <div class="animate-spin">
                 <component is="IconLoader" class="size-4 text-gray-500" />
             </div>
         </div>
-        <label v-if="label"
+
+        <!-- Floating Label -->
+        <label
+            v-if="label"
             :for="id"
             :class="[
-        'absolute text-gray-500 text-[10px] transition-all duration-300 font-lexend peer-placeholder-shown:text-xs peer-placeholder-shown:text-gray-500 peer-focus:text-[10px] peer-focus:text-artwork-buttons-create',
-        isSmall
-          ? 'top-0 left-2 peer-placeholder-shown:top-[7px] peer-focus:top-0'
-          : 'top-1.5 peer-focus:top-1.5 left-4 peer-placeholder-shown:top-[19px]'
+        labelBaseClass,
+        isSmall ? labelPosSmall : labelPosDefault
       ]"
         >
-            {{ withoutTranslation ? label : $t(label) }}
+            {{ withoutTranslation ? label : ($t ? $t(label) : label) }}
         </label>
+
+        <!-- Optional Error-Text -->
+        <p v-if="error" class="mt-1 text-xs text-artwork-messages-error">
+            {{ error }}
+        </p>
     </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed } from 'vue'
 
-// 📦 v-model compatibility using defineModel
-const model = defineModel()
+// v-model (Composition API)
+const model = defineModel({ default: '' })
 
 const props = defineProps({
-    label: String,
+    label: { type: String, default: '' },
     type: { type: String, default: 'text' },
     id: { type: String, required: true },
+    // der sichtbare Placeholder-Text (wir rendern ihn NICHT mehr in das input,
+//  damit das Label nicht springt; du kannst ihn optional als title nutzen)
     placeholder: { type: String, default: '' },
+
     disabled: { type: Boolean, default: false },
     required: { type: Boolean, default: false },
     isSmall: { type: Boolean, default: false },
     withoutTranslation: { type: Boolean, default: false },
+
     step: { type: Number, default: 1 },
-    showLoading: { type: Boolean, default: false }
+    showLoading: { type: Boolean, default: false },
+
+    // optionaler Fehlertext (neu, für bessere UX)
+    error: { type: String, default: '' }
 })
 
-const focused = ref(false)
+// --- Klassen sauber getrennt
+const inputBaseClass = [
+    'peer block w-full font-lexend shadow-sm',
+    'border border-gray-200 rounded-md',
+    'focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create',
+    // nicer transitions
+    'transition-[box-shadow,border-color] duration-150 ease-in-out'
+].join(' ')
 
-const onBlur = () => {
-    setTimeout(() => {
-        focused.value = !!model
-    }, 100) // Verzögert damit Button-Klicks zuerst verarbeitet werden
-}
+// Padding abhängig davon, ob Label existiert
+const inputPaddingClass = computed(() => {
+    if (!props.label) return 'px-4 py-3 text-sm'
+    return props.isSmall ? 'px-2 pt-3 pb-1 text-xs' : 'px-4 pt-6 pb-2 text-sm'
+})
 
-watch(
-    () => model,
-    (val) => {
-        focused.value = !!val
-    },
-    { immediate: true }
+// Label-Basis: default ist FLOATED (klein/oben).
+// Wenn das input LEER ist (placeholder-shown), fährt es runter und wird größer.
+const labelBaseClass = [
+    'absolute font-lexend pointer-events-none',
+    'text-gray-500 transition-all duration-200',
+    // floated (default)
+    'text-[10px] peer-focus:text-artwork-buttons-create',
+    // wenn leer -> runterfahren & größer
+    'peer-placeholder-shown:text-xs peer-placeholder-shown:text-gray-500'
+].join(' ')
+
+const labelPosDefault = [
+    // floated position
+    'left-4 top-1.5',
+    // wenn leer -> runter
+    'peer-placeholder-shown:top-[19px]'
+].join(' ')
+
+const labelPosSmall = [
+    'left-2 top-0',
+    'peer-placeholder-shown:top-[7px]'
+].join(' ')
+
+// Clear-/Loading-Logik: nur für Texteingaben etc.
+const canShowAffordances = computed(() =>
+    !props.disabled && ['text', 'email', 'password', 'search', 'tel', 'url'].includes(props.type)
 )
+
+const hasValue = computed(() => {
+    // Template entpackt Refs automatisch, hier sicherheitshalber:
+    return !!(typeof model === 'string' ? model : (model?.value ?? '')).toString().length
+})
+
+const isClearable = computed(() => canShowAffordances.value && hasValue.value && !props.showLoading)
+const isLoadingIcon = computed(() => canShowAffordances.value && hasValue.value && props.showLoading)
 </script>

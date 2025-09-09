@@ -667,7 +667,7 @@
             </div>
             <show-user-shifts-modal
                 v-if="showUserShifts"
-                @close="showUserShifts = false"
+                @closed="showUserShifts = false"
                 :user="userToShow"
                 :day="dayToShow"
                 :shift-qualifications="shiftQualifications"
@@ -938,8 +938,10 @@ export default {
         }
     },
     mounted() {
-        const shiftPlanData = ref(this.shiftPlan);
-        const ShiftCalendarListener = useShiftCalendarListener(shiftPlanData);
+        // Convert the Proxy object to a proper array for the listener
+        const shiftPlanArray = Object.values(this.newShiftPlanData);
+        const shiftPlanDataRef = ref(shiftPlanArray);
+        const ShiftCalendarListener = useShiftCalendarListener(shiftPlanDataRef);
         ShiftCalendarListener.init();
 
         // Listen for scroll events on both sections

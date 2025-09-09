@@ -82,6 +82,7 @@
     <ConfirmDeleteModal
         :title="$t('Delete user from shift')"
         :description="$t('Are you sure you want to delete the user from this shift?')"
+        :loading="isDeletingUser"
         @closed="closeConfirmDeleteModal"
         @delete="submitDeleteUserFromShift(shift.id, shift.pivotId)"
         v-if="showConfirmDeleteModal"
@@ -115,8 +116,11 @@ const props = defineProps({
     },
 })
 
+const emit = defineEmits(['shiftDeleted'])
+
 const showConfirmDeleteModal = ref(false);
 const showRequestWorkTimeChangeModal = ref(false);
+const isDeletingUser = ref(false);
 
 const closeConfirmDeleteModal = () => {
     showConfirmDeleteModal.value = false;
@@ -135,6 +139,7 @@ const RequestWorkTimeChangeModal = defineAsyncComponent({
 });
 
 const submitDeleteUserFromShift = (shiftId, pivotId) => {
+    isDeletingUser.value = true;
     router.delete(route('shift.removeUserByType', {usersPivotId: pivotId, userType: props.user.type}), {
         data: {
             removeFromSingleShift: true
@@ -142,9 +147,12 @@ const submitDeleteUserFromShift = (shiftId, pivotId) => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
-            closeConfirmDeleteModal()
+            closeConfirmDeleteModal();
+            // Emit event to parent to remove shift from user.element.shifts array
+            emit('shiftDeleted', shiftId);
         },
         onFinish: () => {
+            isDeletingUser.value = false;
             document.getElementById('shift-' + shiftId)?.remove();
         }
     });

@@ -695,6 +695,15 @@
 }
 
 .artwork {
+    .chip {
+        @apply inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset
+        bg-white/10 ring-white/20;
+    }
+    .chip-strong {
+        @apply bg-white/15 ring-white/30;
+    }
+
+
     .artwork-container {
         @apply mx-auto container px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 mt-5 pb-20;
     }

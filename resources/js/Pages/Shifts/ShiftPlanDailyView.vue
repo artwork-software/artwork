@@ -17,8 +17,37 @@
             </transition>
             <!-- topbar with date range selector -->
             <div class="card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none">
-                <div class="flex items-center px-5 gap-x-5 justify-between">
-                    <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
+                <div class="flex items-center pr-5 gap-x-5 justify-between">
+                    <div class="flex items-center gap-x-4">
+                        <!-- Date Shortcuts - 3 vertical icons -->
+                        <div class="flex flex-col justify-between mr-2 h-10">
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t('Today')"
+                                :icon="IconCalendar"
+                                icon-size="w-4 h-4"
+                                @click="jumpToToday"
+                                class="flex-1 flex items-center justify-center"
+                            />
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t('Current week')"
+                                :icon="IconCalendarWeek"
+                                icon-size="w-4 h-4"
+                                @click="jumpToCurrentWeek"
+                                class="flex-1 flex items-center justify-center"
+                            />
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t('Current month')"
+                                :icon="IconCalendarMonth"
+                                icon-size="w-4 h-4"
+                                @click="jumpToCurrentMonth"
+                                class="flex-1 flex items-center justify-center"
+                            />
+                        </div>
+                        <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
+                    </div>
 
                     <div class="flex items-center gap-x-5 ">
                         <Switch @click="changeDailyViewMode" v-model="dailyViewMode" :class="[dailyViewMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
@@ -174,7 +203,7 @@ import {Switch} from "@headlessui/vue";
 import SingleShiftInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
-import { IconAlertSquareRounded } from "@tabler/icons-vue";
+import { IconAlertSquareRounded, IconCalendar, IconCalendarWeek, IconCalendarMonth } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 
@@ -313,6 +342,99 @@ const filterShiftsByCraft = (shifts) => {
 
     // If no craft_ids filter is set, return all shifts
     return shifts;
+};
+
+// Daily view mode management
+const changeDailyViewModeValue = (newValue) => {
+    dailyViewMode.value = newValue;
+    router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
+        daily_view: dailyViewMode.value
+    }, {
+        preserveScroll: false,
+        preserveState: false
+    });
+};
+
+// Shortcut functions for the three icons (adapted from ShiftPlanFunctionBar)
+const jumpToToday = () => {
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Switch to daily mode if not already in daily mode
+    if (!dailyViewMode.value) {
+        changeDailyViewModeValue(true);
+        // Update dates after mode change
+        setTimeout(() => {
+            router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+                start_date: today,
+                end_date: today,
+            }, {
+                preserveScroll: true,
+                preserveState: false
+            });
+        }, 100);
+    } else {
+        // If already in daily mode, just update the dates
+        router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+            start_date: today,
+            end_date: today,
+        }, {
+            preserveScroll: true,
+            preserveState: false
+        });
+    }
+};
+
+const jumpToCurrentWeek = () => {
+    const today = new Date();
+    const currentWeekStart = new Date(today);
+    const currentWeekEnd = new Date(today);
+
+    // Calculate start of week (Monday)
+    const dayOfWeek = today.getDay();
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday is 0, Monday is 1
+    currentWeekStart.setDate(today.getDate() - daysToMonday);
+
+    // Calculate end of week (Sunday)
+    const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+    currentWeekEnd.setDate(today.getDate() + daysToSunday);
+
+    router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+        start_date: currentWeekStart.toISOString().slice(0, 10),
+        end_date: currentWeekEnd.toISOString().slice(0, 10),
+    }, {
+        preserveScroll: true,
+        preserveState: false
+    });
+};
+
+const jumpToCurrentMonth = () => {
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    // Switch to normal mode (not daily mode) if in daily mode (month is longer than 7 days)
+    if (dailyViewMode.value) {
+        changeDailyViewModeValue(false);
+        // Update dates after mode change
+        setTimeout(() => {
+            router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+                start_date: monthStart.toISOString().slice(0, 10),
+                end_date: monthEnd.toISOString().slice(0, 10),
+            }, {
+                preserveScroll: true,
+                preserveState: false
+            });
+        }, 100);
+    } else {
+        // If already in normal mode, just update the dates
+        router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+            start_date: monthStart.toISOString().slice(0, 10),
+            end_date: monthEnd.toISOString().slice(0, 10),
+        }, {
+            preserveScroll: true,
+            preserveState: false
+        });
+    }
 };
 
 

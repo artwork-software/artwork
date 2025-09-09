@@ -46,7 +46,7 @@ class AccommodationController extends Controller
 
         $accommodation->roomTypes()->sync($request->input('room_types', []));
 
-        return redirect()->route('accommodation.show', $accommodation);
+        return redirect()->route('accommodation.index');
     }
 
     /**

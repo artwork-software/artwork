@@ -30,7 +30,13 @@ class AccommodationRoomTypeController extends Controller
      */
     public function store(StoreAccommodationRoomTypeRequest $request)
     {
-        //
+        $roomType = AccommodationRoomType::create($request->validated());
+
+        return back()->with([
+            'success' => true,
+            'room_type' => $roomType,
+            'message' => 'Room type created successfully.'
+        ]);
     }
 
     /**

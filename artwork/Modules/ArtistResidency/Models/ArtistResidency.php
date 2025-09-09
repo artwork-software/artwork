@@ -5,6 +5,8 @@ namespace Artwork\Modules\ArtistResidency\Models;
 use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Accommodation\Models\Accommodation;
+use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
+use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -74,6 +76,16 @@ class ArtistResidency extends Model
             'artist_id',
             'id',
             'artist'
+        );
+    }
+
+    public function roomType(): BelongsTo
+    {
+        return $this->belongsTo(
+            AccommodationRoomType::class,
+            'type_of_room',
+            'id',
+            'roomType'
         );
     }
 

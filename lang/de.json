@@ -2179,6 +2179,7 @@
     "Artist name": "Künstlername",
     "Civil name": "Bürgerlicher Name",
     "Room type": "Zimmertyp",
+    "Total cost": "Gesamtkosten",
     "Arrival time": "Ankunftszeit",
     "Departure time": "Abreisezeit",
     "Cost per night": "Kosten pro Nacht",
@@ -2212,7 +2213,7 @@
     "Edit the event description below.": "Bearbeite die Terminbeschreibung unten.",
     "Edit the description": "Beschreibung bearbeiten",
     "Jump to month": "Springe zu Monat",
-    "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency": "Du musst zuerst mindestens eine Unterkunft in der Benutzerverwaltung unter „Adressen“ anlegen, bevor du einen Künstleraufenthalt pflegen kannst",
+    "You must first create at least one accommodation in the user administration under “Accommodations” before you can maintain an artist residency": "Du musst zuerst mindestens eine Unterkunft in der Benutzerverwaltung unter „Unterkünfte“ anlegen, bevor du einen Künstleraufenthalt pflegen kannst",
     "Attention": "Achtung",
     "Costs of daily allowances": "Kosten Tagegelder",
     "Invalid URL (Example: https://google.com)": "Ungültige URL (Beispiel: https://google.com)",
@@ -2611,6 +2612,10 @@
     "Manage your departments": "Verwalte deine Abteilungen",
     "Edit and create permission presets": "Berechtigungspresets bearbeiten und erstellen",
     "Manage your accommodations.": "Verwalte deine Unterkünfte.",
+    "Please select a room type": "Bitte wähle einen Raumtyp",
+    "Please select an accommodation": "Bitte wähle eine Unterkunft",
+    "Create an individual room type": "Erstelle einen individuellen Raumtyp",
+    "Export artist management": "Künstlerverwaltung exportieren",
     "Add new accommodation": "Neue Unterkunft hinzufügen",
     "Fill in the details below to add a new accommodation.": "Fülle die Details unten aus, um eine neue Unterkunft hinzuzufügen.",
     "Accommodation Name": "Unterkunftsname",
@@ -3004,6 +3009,8 @@
     "Project URL has been copied": "Projekt-URL wurde kopiert",
     "Room types": "Raumtypen",
     "Select the room types that are available at this accommodation.": "Wähle die Raumtypen aus, die in dieser Unterkunft verfügbar sind.",
+    "At least one room type must be selected.": "Mindestens ein Raumtyp muss ausgewählt sein.",
+    "An error occurred while creating the room type.": "Beim Erstellen des Raumtyps ist ein Fehler aufgetreten.",
     "Select room types": "Select room types",
     "artist selection": "Künstlerauswahl",
     "Add artist": "Künstler*in hinzufügen",
@@ -3018,6 +3025,8 @@
     "All the artists in the system": "Alle Künstler*innen im System",
     "Remove artist": "Künstler*in entfernen",
     "Room Type": "Raumtyp",
-    "Search artist": "Künstler*in suchen"
+    "Search artist": "Künstler*in suchen",
+    "Assign existing artist": "Bestehende Künstler*in zuweisen",
+    "Close artist selection": "Künstler*innenauswahl schließen"
 }
 

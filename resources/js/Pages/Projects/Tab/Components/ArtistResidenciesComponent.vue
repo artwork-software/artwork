@@ -34,6 +34,8 @@
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Arrival date') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Date departure') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Accommodation') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Room type') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Total cost') }}</th>
                             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0"></th>
                         </tr>
                         </thead>

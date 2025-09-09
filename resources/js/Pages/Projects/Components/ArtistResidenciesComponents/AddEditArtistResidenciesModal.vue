@@ -10,7 +10,7 @@
             <div class="px-6 pb-2">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- FORM -->
-                    <div class="md:col-span-2 space-y-6">
+                    <div class="md:col-span-2 space-y-6 ">
                         <!-- Artist -->
                         <section class="rounded-xl border border-zinc-200 bg-white shadow-sm">
                             <header class="flex items-center justify-between px-4 pt-4">
@@ -19,7 +19,7 @@
                                 </h3>
                                 <div class="flex items-center gap-x-3">
                                     <div class="text-xs text-blue-500 cursor-pointer hover:underline" @click="selectArtist = !selectArtist">
-                                        {{ $t('artist selection') }}
+                                        {{ selectArtist ? $t('Close artist selection') : $t('Assign existing artist') }}
                                     </div>
                                     <span class="inline-flex items-center rounded-full border border-artwork-navigation-color/30 bg-artwork-navigation-color/10 px-2 py-0.5 text-[11px] font-medium text-artwork-buttons-hover">
                                       {{ project?.name }}
@@ -51,7 +51,7 @@
                                 </div>
 
                                 <!-- Wenn kein Artist gewählt ist und selectArtist = false, zeige leeres Formular -->
-                                <div v-else-if="!selectArtist" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div v-else-if="!selectArtist" class=" grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <BaseInput v-model="artistResidency.name" :label="$t('Artist name')" id="name" no-margin-top required />
                                     <BaseInput v-model="artistResidency.civil_name" :label="$t('Civil name')" id="civil_name" no-margin-top />
                                     <BaseInput v-model="artistResidency.phone_number" :label="$t('phone number')" id="phone_number" />
@@ -69,12 +69,12 @@
                                     />
 
                                     <!-- Künstler-Auswahl als Card-Grid -->
-                                    <div class="mt-4 max-h-[360px] overflow-y-auto rounded-xl border border-zinc-200 bg-white p-3">
+                                    <div class="mt-4 max-h-[360px] overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50 p-3">
                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             <div
                                                 v-for="artist in filteredArtists"
                                                 :key="artist.id"
-                                                @click="selectedArtist = artist"
+                                                @click="selectedArtist = artist; selectArtist = false"
                                                 class="group relative flex cursor-pointer items-center gap-4 rounded-xl border border-zinc-300 p-4 transition-all duration-150 ease-in-out"
                                                 :class="{
                                                     'border-artwork-buttons-hover bg-artwork-buttons-hover/10 ring-2 ring-artwork-buttons-hover/50':
@@ -119,21 +119,31 @@
                                 </h3>
                             </header>
                             <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <ArtworkBaseListbox
-                                    v-model="selectedAccommodation"
-                                    :items="usePage().props.accommodations"
-                                    by="id"
-                                    label="Accommodation"
-                                />
+                                <div>
+                                    <ArtworkBaseListbox
+                                        v-model="selectedAccommodation"
+                                        :items="usePage().props.accommodations"
+                                        by="id"
+                                        label="Accommodation"
+                                    />
+                                    <div v-if="showValidationErrors && validationErrors.accommodation" class="mt-1 text-sm text-red-600">
+                                        {{ $t(validationErrors.accommodation) }}
+                                    </div>
+                                </div>
 
-                                <ArtworkBaseListbox
-                                    v-model="selectedRoomType"
-                                    v-if="selectedAccommodation"
-                                    :items="selectedAccommodation.room_types"
-                                    by="id"
-                                    use-translations
-                                    label="Room Type"
-                                />
+                                <div>
+                                    <ArtworkBaseListbox
+                                        v-model="selectedRoomType"
+                                        v-if="selectedAccommodation"
+                                        :items="selectedAccommodation.room_types"
+                                        by="id"
+                                        use-translations
+                                        label="Room Type"
+                                    />
+                                    <div v-if="showValidationErrors && validationErrors.roomType" class="mt-1 text-sm text-red-600">
+                                        {{ $t(validationErrors.roomType) }}
+                                    </div>
+                                </div>
                             </div>
                         </section>
 
@@ -318,7 +328,7 @@
         </form>
 
         <!-- EMPTY STATE -->
-        <div v-else class="mx-10 my-10 -mt-5 rounded-xl border border-red-200 bg-red-500/10 px-4 py-5">
+        <div v-else class="mx-10 my-10 -mt-2 rounded-xl border border-red-200 bg-red-500/10 px-4 py-5">
             <h4 class="mb-1 text-sm font-bold text-red-500">
                 {{ $t('Attention') }}
             </h4>
@@ -375,6 +385,8 @@ const selectedAccommodation = ref(usePage().props.accommodations.find(accommodat
 const selectedRoomType = ref(selectedAccommodation.value?.room_types.find(room => room.id === parseInt(props.artist_residency?.type_of_room)) || null)
 const selectArtist = ref(false)
 const selectedArtist = ref(props.artist_residency?.artist || null)
+const validationErrors = ref({})
+const showValidationErrors = ref(false)
 
 const artistResidency = useForm({
     id: props.artist_residency ? props.artist_residency.id : null,
@@ -432,8 +444,23 @@ const formattedDepartureDate = computed(() => {
 })
 
 const createOrUpdateArtistResidency = () => {
+    // Clear previous validation errors
+    validationErrors.value = {}
+    showValidationErrors.value = false
 
-    if(!selectedAccommodation.value || !selectedRoomType.value){
+    // Validate required fields
+    if(!selectedAccommodation.value) {
+        validationErrors.value.accommodation = 'Please select an accommodation'
+        showValidationErrors.value = true
+    }
+
+    if(!selectedRoomType.value) {
+        validationErrors.value.roomType = 'Please select a room type'
+        showValidationErrors.value = true
+    }
+
+    // If validation fails, don't proceed
+    if(showValidationErrors.value) {
         return
     }
 

@@ -2121,7 +2121,7 @@ class ProjectController extends Controller
                         'artists' => Artist::all(),
                         'accommodations' => Accommodation::with('roomTypes')->get(),
                         'artist_residencies' => $project->artistResidencies()
-                            ->with(['accommodation', 'accommodation.roomTypes', 'artist'])->get(),
+                            ->with(['accommodation', 'accommodation.roomTypes', 'artist', 'roomType'])->get(),
                     ]);
                     break;
                 case ProjectTabComponentEnum::BULK_EDIT->value:

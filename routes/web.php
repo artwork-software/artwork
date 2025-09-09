@@ -99,6 +99,7 @@ use Artwork\Modules\User\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
+use Artwork\Modules\Accommodation\Http\Controllers\AccommodationRoomTypeController;
 use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
@@ -2187,6 +2188,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/store', [AccommodationController::class, 'store'])->name('accommodation.store');
         Route::patch('/update/{accommodation}', [AccommodationController::class, 'update'])->name('accommodation.update');
         Route::delete('/destroy/{accommodation}', [AccommodationController::class, 'destroy'])->name('accommodation.destroy');
+    });
+
+    Route::group(['prefix' => 'accommodation-room-types'], function (): void {
+        Route::post('/store', [AccommodationRoomTypeController::class, 'store'])->name('accommodation-room-types.store');
     });
 
     Route::group(['prefix' => 'contact'], function (): void {

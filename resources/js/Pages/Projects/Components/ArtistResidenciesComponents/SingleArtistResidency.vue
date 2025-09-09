@@ -6,6 +6,8 @@
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.arrival_date }} {{ artist_residency.formatted_dates.arrival_time }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.departure_date }} {{ artist_residency.formatted_dates.departure_time }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.accommodation?.name ?? $t('Deleted') }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.room_type?.name ?? '-' }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ calculateTotalCost(artist_residency) }} €</td>
         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
             <BaseMenu dots-size="h-5 w-5" has-no-offset white-menu-background>
                 <BaseMenuItem white-menu-background icon="IconEdit" title="Edit" @click="$emit('editResidency', artist_residency)"/>
@@ -66,6 +68,13 @@ const deleteArtistResidency = () => {
 const sendDelete = () => {
     router.delete(route('artist-residency.destroy', {artistResidency: props.artist_residency.id}), {
     });
+}
+
+const calculateTotalCost = (artist_residency) => {
+    const accommodationCost = artist_residency.cost_per_night * artist_residency.days;
+    const allowanceCost = (artist_residency.daily_allowance * artist_residency.days) + artist_residency.additional_daily_allowance;
+    const totalCost = accommodationCost + allowanceCost;
+    return totalCost.toFixed(2);
 }
 </script>
 

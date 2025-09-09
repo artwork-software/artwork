@@ -27,8 +27,8 @@
 
     <ConfirmDeleteModal
         v-if="showConfirmDeleteModal"
-        title="Delete artist"
-        description="Are you sure you want to delete this artist?"
+        :title="$t('Delete artist')"
+        :description="$t('Are you sure you want to delete this artist?')"
         @closed="showConfirmDeleteModal = false"
         @delete="deleteArtist"
     />

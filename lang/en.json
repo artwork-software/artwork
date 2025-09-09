@@ -3003,5 +3003,15 @@
     "Select room types": "Select room types",
     "artist selection": "artist selection",
     "Add artist": "Add artist",
-    "A list of all the artists in the system including their name, title and more": "A list of all the artists in the system including their name, title and more"
+    "A list of all the artists in the system including their name, title and more": "A list of all the artists in the system including their name, title and more",
+    "Delete artist": "Delete artist",
+    "Are you sure you want to delete this artist?": "Are you sure you want to delete this artist?",
+    "Edit artist": "Edit artist",
+    "Create artist": "Create artist",
+    "Edit the artist information": "Edit the artist information",
+    "Create a new artist": "Create a new artist",
+    "Export artists": "Export artists",
+    "All the artists in the system": "All the artists in the system",
+    "Remove artist": "Remove artist",
+    "Room Type": "Room Type"
 }

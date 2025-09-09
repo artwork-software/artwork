@@ -27,7 +27,31 @@
                                 </div>
                             </header>
                             <div class="p-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" v-if="!selectArtist">
+                                <!-- Wenn ein Künstler ausgewählt ist (z. B. aus vorherigem Residency), zeige nur diesen -->
+                                <div v-if="selectedArtist && !selectArtist" class="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                                    <!-- Avatar + Name -->
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-artwork-buttons-hover text-white font-semibold text-sm">
+                                            {{ selectedArtist.name.slice(0, 2).toUpperCase() }}
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium text-zinc-900">{{ selectedArtist.name }}</span>
+                                            <span v-if="selectedArtist.civil_name" class="text-xs text-zinc-500">{{ selectedArtist.civil_name }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Entfernen Button -->
+                                    <button
+                                        type="button"
+                                        @click="selectedArtist = null; selectArtist = true"
+                                        class="text-xs font-medium text-red-600 hover:underline"
+                                    >
+                                        {{ $t('Remove artist') }}
+                                    </button>
+                                </div>
+
+                                <!-- Wenn kein Artist gewählt ist und selectArtist = false, zeige leeres Formular -->
+                                <div v-else-if="!selectArtist" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <BaseInput v-model="artistResidency.name" :label="$t('Artist name')" id="name" no-margin-top required />
                                     <BaseInput v-model="artistResidency.civil_name" :label="$t('Civil name')" id="civil_name" no-margin-top />
                                     <BaseInput v-model="artistResidency.phone_number" :label="$t('phone number')" id="phone_number" />
@@ -35,16 +59,56 @@
                                 </div>
 
                                 <div v-else>
-                                    <ArtworkBaseListbox
-                                        v-model="selectedArtist"
-                                        :items="usePage().props.artists"
-                                        by="id"
-                                        use-translations
-                                        label="Select artist"
-                                        placeholder="Select artist"
-                                        :selectedFormatter="(item) => item ? `${item.name}` : ''"
+                                    <!-- Suchfeld -->
+                                    <BaseInput
+                                        v-model="artistSearch"
+                                        id="search_artist"
+                                        :label="$t('Search artist')"
+                                        placeholder="Name eingeben..."
+                                        no-margin-top
                                     />
+
+                                    <!-- Künstler-Auswahl als Card-Grid -->
+                                    <div class="mt-4 max-h-[360px] overflow-y-auto rounded-xl border border-zinc-200 bg-white p-3">
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <div
+                                                v-for="artist in filteredArtists"
+                                                :key="artist.id"
+                                                @click="selectedArtist = artist"
+                                                class="group relative flex cursor-pointer items-center gap-4 rounded-xl border border-zinc-300 p-4 transition-all duration-150 ease-in-out"
+                                                :class="{
+                                                    'border-artwork-buttons-hover bg-artwork-buttons-hover/10 ring-2 ring-artwork-buttons-hover/50':
+                                                        selectedArtist?.id === artist.id,
+                                                    'hover:border-artwork-buttons-hover/40 hover:bg-artwork-buttons-hover/5':
+                                                        selectedArtist?.id !== artist.id
+                                                }"
+                                            >
+                                                <!-- Avatar -->
+                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-artwork-buttons-hover text-white font-bold text-sm">
+                                                    {{ artist.name.slice(0, 2).toUpperCase() }}
+                                                </div>
+
+                                                <!-- Name + Civil -->
+                                                <div class="flex flex-col overflow-hidden">
+                                                    <span class="truncate font-medium text-sm text-zinc-900">{{ artist.name }}</span>
+                                                    <span class="truncate text-xs text-zinc-500" v-if="artist.civil_name">{{ artist.civil_name }}</span>
+                                                </div>
+
+                                                <!-- Check -->
+                                                <div v-if="selectedArtist?.id === artist.id" class="absolute right-3 top-3 text-artwork-buttons-hover">
+                                                    <component is="IconCheck" class="h-5 w-5" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div v-if="filteredArtists.length === 0" class="text-center text-sm text-zinc-500 py-4">
+                                            {{ $t('No matching artist found.') }}
+                                        </div>
+                                    </div>
                                 </div>
+
+
+
                             </div>
                         </section>
                         <!-- Accommodation & Room -->
@@ -394,6 +458,18 @@ const createOrUpdateArtistResidency = () => {
         })
     }
 }
+
+
+const artistSearch = ref('')
+const allArtists = usePage().props.artists
+
+const filteredArtists = computed(() => {
+    if (!artistSearch.value) return allArtists
+    return allArtists.filter(a =>
+        a.name.toLowerCase().includes(artistSearch.value.toLowerCase()) ||
+        (a.civil_name && a.civil_name.toLowerCase().includes(artistSearch.value.toLowerCase()))
+    )
+})
 
 
 </script>

@@ -15,10 +15,11 @@ class ArtistResidencyUpdateRequest extends FormRequest
     {
         return [
             'id' => 'required|integer|exists:artist_residencies,id',
-            'name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
             'civil_name' => 'nullable|string|max:255',
             'phone_number' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:255',
+            'artist_id' => 'nullable|integer|exists:artists,id',
             'accommodation_id' => 'required|integer|exists:accommodations,id',
             'project_id' => 'required|integer|exists:projects,id',
             'arrival_date' => 'nullable|date',

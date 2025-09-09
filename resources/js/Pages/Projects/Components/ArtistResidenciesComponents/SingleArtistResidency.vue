@@ -1,8 +1,8 @@
 <template>
     <tr :key="artist_residency.id">
-        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{{ artist_residency.artist.name }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.artist.position }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.artist.phone_number }}</td>
+        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{{ artist_residency?.artist?.name ?? '' }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency?.artist?.position }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency?.artist?.phone_number }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.arrival_date }} {{ artist_residency.formatted_dates.arrival_time }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.departure_date }} {{ artist_residency.formatted_dates.departure_time }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.accommodation?.name ?? $t('Deleted') }}</td>

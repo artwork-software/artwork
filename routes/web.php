@@ -2332,6 +2332,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/store', [ArtistController::class, 'store'])->name('artist.store');
         Route::patch('/{artist}/update', [ArtistController::class, 'update'])->name('artist.update');
         Route::delete('/{artist}/destroy', [ArtistController::class, 'destroy'])->name('artist.destroy');
+        // export artists
+        Route::get('/export', [ArtistController::class, 'export'])->name('artist.export');
         // artist.toggle-active
         Route::patch('/{artist}/toggle-active', [ArtistController::class, 'toggleActive'])->name('artist.toggle-active');
     });

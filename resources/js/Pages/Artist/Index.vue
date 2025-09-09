@@ -15,8 +15,14 @@
                             {{ $t('A list of all the artists in the system including their name, title and more') }}
                         </p>
                     </div>
-                    <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-                        <ArtworkBaseModalButton variant="primary" href="{{ route('artists.create') }}">
+                    <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none flex items-center gap-x-4">
+                        <ToolTipComponent
+                            icon="IconFileExport"
+                            :tooltip-text="$t('Export artists')"
+                            direction="bottom"
+                            @click="exportArtist"
+                        />
+                        <ArtworkBaseModalButton variant="primary" @click="showCreateOrUpdateArtistModal = true">
                             {{ $t('Add artist') }}
                         </ArtworkBaseModalButton>
                     </div>
@@ -36,18 +42,7 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white dark:divide-white/10 dark:bg-gray-900">
                                 <tr v-for="artist in artists" :key="artist.id" class="divide-x divide-gray-200 dark:divide-white/10">
-                                    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 dark:text-white">{{ artist.name }}</td>
-                                    <td class="p-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-300">{{ artist.position }}</td>
-                                    <td class="p-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-300">{{ artist.phone_number }}</td>
-                                    <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0 dark:text-gray-300">
-                                        <a href="">
-                                            <ToolTipComponent
-                                                icon="IconEdit"
-                                                :tooltip-text="$t('Edit artist')"
-                                                direction="bottom"
-                                            />
-                                        </a>
-                                    </td>
+                                    <SingleArtistInTable :artist="artist" />
                                 </tr>
                                 </tbody>
                             </table>
@@ -55,15 +50,21 @@
                     </div>
                 </div>
             </div>
+
+            <CreateOrUpdateArtistModal
+                v-if="showCreateOrUpdateArtistModal"
+                @close="showCreateOrUpdateArtistModal = false"
+            />
+
+
         </template>
     </UserHeader>
 </template>
 
 <script setup>
-import AppLayout from "@/Layouts/AppLayout.vue";
 import UserHeader from "@/Pages/Users/UserHeader.vue";
-import ArtworkBaseButton from "@/Artwork/Buttons/ArtworkBaseButton.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import {defineAsyncComponent, ref} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const props = defineProps({
@@ -73,6 +74,30 @@ const props = defineProps({
         default: () => []
     }
 })
+
+const showCreateOrUpdateArtistModal = ref(false)
+
+const SingleArtistInTable = defineAsyncComponent({
+    loader: () => import('@/Pages/Artist/Components/SingleArtistInTable.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const CreateOrUpdateArtistModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Artist/Components/CreateOrUpdateArtistModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const exportArtist = () => {
+    window.open(
+        route(
+            'artist.export',
+        ),
+        '_blank',
+        'noopener'
+    );
+}
 </script>
 
 <style scoped>

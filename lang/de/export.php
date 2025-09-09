@@ -69,5 +69,9 @@ return [
     'total' => 'Gesamt',
     'get_sum' => 'Betrag erhalten',
     'total_sum' => 'Gesamtbetrag',
-    'total_days' => 'Gesamt Tage'
+    'total_days' => 'Gesamt Tage',
+    'name_artist' => 'Name Künstler',
+    'civil_name' => 'Zivilname',
+    'phone_number' => 'Telefonnummer',
+    'position' => 'Position',
 ];

@@ -3007,6 +3007,16 @@
     "Select room types": "Select room types",
     "artist selection": "Künstlerauswahl",
     "Add artist": "Künstler*in hinzufügen",
-    "A list of all the artists in the system including their name, title and more": "Eine Liste aller Künstler*innen im System, einschließlich Name, Titel und mehr"
+    "A list of all the artists in the system including their name, title and more": "Eine Liste aller Künstler*innen im System, einschließlich Name, Titel und mehr",
+    "Delete artist": "Künstler*in löschen",
+    "Are you sure you want to delete this artist?": "Möchtest du diese*n Künstler*in wirklich löschen?",
+    "Edit artist": "Künstler*in bearbeiten",
+    "Create artist": "Künstler*in erstellen",
+    "Edit the artist information": "Bearbeite die Künstlerinformationen",
+    "Create a new artist": "Erstelle eine*n neue*n Künstler*in",
+    "Export artists": "Künstler*innen exportieren",
+    "All the artists in the system": "Alle Künstler*innen im System",
+    "Remove artist": "Künstler*in entfernen",
+    "Room Type": "Raumtyp"
 }
 

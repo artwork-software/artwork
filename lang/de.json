@@ -1030,7 +1030,7 @@
     "Next 30 days": "Nächste 30 Tage",
     "Next 90 days": "Nächste 90 Tage",
     "Next 12 months": "Nächste 12 Monate",
-    "The end date must be after the start date.": "Das Enddatum muss nach dem Startdatum liegen.",
+    "The date only changes when the end date is the same date or later than the start date.": "Das Datum ändert sich nur, wenn das Enddatum dasselbe Datum oder später als das Startdatum ist.",
     "Sage API data sets": "Sage-API Datensätze",
     "Move to the trash": "In den Papierkorb verschieben",
     "Do you really want to put the data set in the trash?": "Willst du den Datensatz: \"{0}\" wirklich in den Papierkorb legen?",

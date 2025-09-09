@@ -231,6 +231,12 @@ export function useShiftCalendarListener(newShiftPlanData) {
     }
 
     function init() {
+        // Check if newShiftPlanData.value is iterable before attempting to iterate
+        if (!newShiftPlanData.value || !Array.isArray(newShiftPlanData.value)) {
+            console.warn('useShiftCalendarListener: newShiftPlanData.value is not an array or is null/undefined:', newShiftPlanData.value);
+            return;
+        }
+
         // Set up listeners for each room
         for (const room of newShiftPlanData.value) {
             // Shift plan room events

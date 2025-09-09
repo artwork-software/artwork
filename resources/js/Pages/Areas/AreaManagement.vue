@@ -304,47 +304,16 @@
                                             {{ $t('No rooms yet') }}.
                                         </div>
 
-                                        <draggable
-                                            v-else
-                                            :list="area.rooms"
-                                            item-key="id"
-                                            handle=".drag-handle"
-                                            ghost-class="drag-ghost"
-                                            :animation="180"
-                                            @start="dragging = true"
-                                            @end="dragging = false"
-                                            @change="updateRoomOrder(area.rooms)"
-                                        >
-                                            <template #item="{ element }" :key="element.id">
+                                        <div v-else v-for="element in area.rooms">
                                                 <div v-show="!element.temporary" class="relative group mt-3">
                                                     <div
                                                         class="relative rounded-2xl border border-zinc-200 bg-white/90 p-4 pl-5 shadow-sm ring-1 ring-transparent transition
                hover:border-artwork-navigation-color/30 hover:shadow-md focus-within:ring-2 focus-within:ring-artwork-navigation-color/30"
-                                                        @mouseover="showMenu = element.id"
-                                                        @mouseout="showMenu = null"
                                                     >
-                                                        <div
-                                                            v-if="element?.event_type?.hex_code"
-                                                            class="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-2xl"
-                                                            :style="{ backgroundColor: element.event_type.hex_code }"
-                                                        ></div>
-
                                                         <div class="flex items-start justify-between gap-4">
                                                             <!-- Titel & Meta -->
                                                             <div class="min-w-0">
                                                                 <div class="flex items-center gap-2">
-                                                                    <!-- Drag-Handle -->
-                                                                    <button
-                                                                        type="button"
-                                                                        class="drag-handle inline-flex items-center rounded-lg p-1.5 text-zinc-400
-                       hover:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-300"
-                                                                        :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
-                                                                        aria-label="Reorder"
-                                                                    >
-                                                                        <component is="IconGripVertical" class="h-4 w-4"
-                                                                                   stroke-width="1.75"/>
-                                                                    </button>
-
                                                                     <Link
                                                                         :href="route('rooms.show', { room: element.id })"
                                                                         class="xsDark block truncate hover:underline decoration-artwork-buttons-hover/50"
@@ -408,9 +377,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </template>
-                                        </draggable>
-
+                                        </div>
                                     </div>
 
                                     <!-- Temporäre Räume (einklappbar) -->
@@ -437,20 +404,10 @@
 
                                         <Transition name="fade">
                                             <div v-show="showTemporaryRooms.includes(area.id)">
-                                                <draggable
-                                                    ghost-class="drag-ghost-amber"
-                                                    key="draggableKey-temp"
-                                                    item-key="id"
-                                                    :list="area.rooms"
-                                                    handle=".drag-handle"
-                                                    :animation="180"
-                                                    @start="dragging = true"
-                                                    @end="dragging = false"
-                                                    @change="updateRoomOrder(area.rooms)"
+                                                <div v-for="element in area.rooms.filter(r => r.temporary)"
                                                     class="mt-2"
                                                 >
-                                                    <template #item="{ element }" :key="element.id">
-                                                        <div v-show="element.temporary" class="relative group mt-3">
+                                                        <div class="relative group mt-3">
                                                             <div
                                                                 class="relative rounded-2xl border border-amber-200/80 bg-amber-50/70 p-4 pl-5 shadow-sm ring-1 ring-transparent transition hover:border-amber-300 hover:shadow-md focus-within:ring-2 focus-within:ring-amber-300/50"
                                                                 @mouseover="showMenu = element.id"
@@ -461,17 +418,6 @@
                                                                     <!-- Titel & Meta -->
                                                                     <div class="min-w-0">
                                                                         <div class="flex items-center gap-2">
-                                                                            <!-- Drag-Handle -->
-                                                                            <button
-                                                                                type="button"
-                                                                                class="drag-handle inline-flex items-center rounded-lg p-1.5 text-amber-600/80hover:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-300/60"
-                                                                                :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
-                                                                                aria-label="Reorder"
-                                                                            >
-                                                                                <component is="IconGripVertical"
-                                                                                           class="h-4 w-4"
-                                                                                           stroke-width="1.75"/>
-                                                                            </button>
 
                                                                             <Link
                                                                                 :href="route('rooms.show', { room: element.id })"
@@ -479,6 +425,19 @@
                                                                             >
                                                                                 {{ element.name }}
                                                                             </Link>
+                                                                            <!-- Temporary-Status -->
+                                                                            <span
+                                                                                class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-amber-400/60 bg-amber-100/80 text-amber-800 ring-1 ring-inset ring-white/50"
+                                                                                :title="$t('Temporary rooms')"
+                                                                            >
+                                                                            <span class="relative flex h-2 w-2">
+                                                                              <span
+                                                                                  class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500/40"></span>
+                                                                              <span
+                                                                                  class="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+                                                                            </span>
+                                                                            {{ $t('Temporary') }}
+                                                                          </span>
                                                                         </div>
 
                                                                         <!-- Chips: Zeitraum + Temporary -->
@@ -501,20 +460,6 @@
                                                                             <span class="tabular-nums">{{
                                                                                     element.end_date
                                                                                 }}</span>
-                                                                          </span>
-
-                                                                            <!-- Temporary-Status -->
-                                                                            <span
-                                                                                class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-amber-400/60 bg-amber-100/80 text-amber-800 ring-1 ring-inset ring-white/50"
-                                                                                :title="$t('Temporary rooms')"
-                                                                            >
-                                                                            <span class="relative flex h-2 w-2">
-                                                                              <span
-                                                                                  class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500/40"></span>
-                                                                              <span
-                                                                                  class="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
-                                                                            </span>
-                                                                            {{ $t('Temporary') }}
                                                                           </span>
                                                                         </div>
 
@@ -578,8 +523,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </template>
-                                                </draggable>
+                                                </div>
 
                                             </div>
                                         </Transition>
@@ -1193,7 +1137,6 @@ import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton.vue";
 import {Link, router, useForm} from "@inertiajs/vue3";
-import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -1259,7 +1202,6 @@ export default defineComponent({
         XCircleIcon,
         Link,
         DuplicateIcon,
-        draggable,
         DocumentTextIcon,
         Disclosure,
         DisclosureButton,
@@ -1271,7 +1213,6 @@ export default defineComponent({
         return {
             roomCategoryInput: '',
             roomAttributeInput: '',
-            dragging: false,
             showMenu: null,
             showAddAreaModal: false,
             showAddRoomModal: false,
@@ -1461,19 +1402,6 @@ export default defineComponent({
                     preserveState: true
                 });
             }
-        },
-        updateRoomOrder(rooms) {
-            rooms.map((room, index) => {
-                room.order = index + 1
-            })
-
-            router.put('/rooms/order', {
-                rooms
-            }, {
-                preserveState: true,
-                preserveScroll: true
-            })
-
         },
         openAddAreaModal() {
             this.showAddAreaModal = true;

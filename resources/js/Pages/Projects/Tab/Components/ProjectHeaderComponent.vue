@@ -176,7 +176,7 @@
                                     <BaseMenuItem
                                         white-menu-background
                                         v-if="headerObject.projectDeleteIds.includes(usePage().props.auth.user.id) || is('artwork admin')"
-                                        @click="openEditProjectModal"
+                                        @click="openDeleteProjectModal(project)"
                                         icon="IconTrash"
                                         title="Put in the trash"
                                     />

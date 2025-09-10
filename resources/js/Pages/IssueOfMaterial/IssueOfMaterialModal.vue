@@ -9,7 +9,7 @@
 
         <div class="w-full mb-5 bg-zinc-100 rounded-t-lg p-5">
             <div class="w-fit px-5">
-                <SwitchGroup as="div" class="flex items-center justify-between gap-x-8">
+                <SwitchGroup as="div" class="flex items-center justify-between gap-x-8" >
                     <span class="flex grow flex-col">
                       <SwitchLabel as="span" class="text-sm/6 font-medium text-gray-900" passive>
                           {{ $t('Internal material issue') }}
@@ -18,7 +18,7 @@
                           {{ $t('Create an internal material issue for employees') }}
                       </SwitchDescription>
                     </span>
-                <Switch v-model="internOrExternal" :class="[internOrExternal ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex h-6 w-16 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-hidden']">
+                <Switch v-model="internOrExternal" :disabled="checkIfEditMode" :class="[internOrExternal ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex h-6 w-16 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors disabled:bg-gray-500 duration-200 ease-in-out focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-hidden']">
                     <span aria-hidden="true" :class="[internOrExternal ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-8 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out']" />
                 </Switch>
                 <span class="flex grow flex-col">
@@ -44,7 +44,7 @@
 </template>
 <script setup>
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
-import {defineAsyncComponent, ref} from "vue";
+import {computed, defineAsyncComponent, ref} from "vue";
 import {Switch, SwitchDescription, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 
 
@@ -116,4 +116,10 @@ const ExternMaterialIssueModul = defineAsyncComponent({
     delay: 0,
     timeout: 3000,
 })
+
+const checkIfEditMode = computed(() => {
+    return !!(props.issueOfMaterial?.id || props.externMaterialIssue?.id);
+
+    
+});
 </script>

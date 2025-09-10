@@ -206,14 +206,14 @@ class InventoryPlanningService
 
         $internal = InternalIssue::with(['articles' => function ($query) use ($articleId) {
             $query->where('inventory_article_id', $articleId);
-        }])
+        }, 'specialItems', 'files', 'responsibleUsers'])
             ->whereDate('start_date', '<=', $date)
             ->whereDate('end_date', '>=', $date)
             ->get();
 
         $external = ExternalIssue::with(['articles' => function ($query) use ($articleId) {
             $query->where('inventory_article_id', $articleId);
-        }])
+        }, 'issuedBy', 'receivedBy', 'files', 'specialItems'])
             ->whereDate('issue_date', '<=', $date)
             ->whereDate('return_date', '>=', $date)
             ->get();

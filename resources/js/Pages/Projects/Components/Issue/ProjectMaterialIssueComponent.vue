@@ -67,7 +67,8 @@
                         <ToolTipComponent
                             icon="IconAlertTriangle"
                             v-if="isPeriodDeviating(issue)"
-                            class="size-4 text-amber-500"
+                            classes="!text-red-500"
+                            icon-size="!size-4"
                             :tooltip-text="$t('Material issue period differs from project period')"
                         />
                     </div>
@@ -90,7 +91,7 @@
                             class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1"
                             :class="issue.special_items_done ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'"
                         >
-                          <component :is="issue.special_items_done ? IconCircleCheck : IconAlertTriangle" class="size-4" />
+                          <component :is="issue.special_items_done ? IconCircleCheck : IconAlertTriangle" class="size-4"  />
                           {{ issue.special_items_done ? $t('Special items Completed') : $t('Special items not completed') }}
                         </span>
                     </div>

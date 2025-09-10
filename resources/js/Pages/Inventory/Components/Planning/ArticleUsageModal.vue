@@ -91,7 +91,7 @@
                                 <UsageTable :issues="props.detailsForModal.internal || []" />
                             </TabPanel>
                             <TabPanel>
-                                <UsageTable :issues="props.detailsForModal.external || []" />
+                                <UsageTable :issues="props.detailsForModal.external || []" extern />
                             </TabPanel>
                         </TabPanels>
                     </TabGroup>

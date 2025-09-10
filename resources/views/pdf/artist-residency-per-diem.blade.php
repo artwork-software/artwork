@@ -75,7 +75,7 @@
                 @endphp
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $artistResidency->name }}</td>
+                    <td>{{ $artistResidency?->artist?->name }}</td>
                     <td>{{ $artistResidency->formatted_dates['arrival_date'] }} {{ $artistResidency->formatted_dates['arrival_time'] }}</td>
                     <td>{{ $artistResidency->formatted_dates['departure_date'] }} {{ $artistResidency->formatted_dates['departure_time'] }}</td>
                     <td style="text-align: center">{{ $artistResidency->days }}</td>
@@ -107,6 +107,8 @@
             </tr>
         </tbody>
     </table>
+
+
 </div>
 
 

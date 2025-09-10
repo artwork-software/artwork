@@ -52,7 +52,7 @@
         isSmall ? labelPosSmall : labelPosDefault
       ]"
         >
-            {{ withoutTranslation ? label : ($t ? $t(label) : label) }}
+            {{ withoutTranslation ? label : $t(label) }}
         </label>
 
         <!-- Optional Error-Text -->

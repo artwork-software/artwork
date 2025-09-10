@@ -28,6 +28,7 @@
 
     <UpdateOrCreateAccommodation
         v-if="showCreateOrUpdateModal"
+        :room-types="roomTypes"
         @close="showCreateOrUpdateModal = false"
         :accommodation="accommodation"
     />
@@ -54,6 +55,11 @@ const props = defineProps({
         type: Object,
         required: true
     },
+    roomTypes: {
+        type: Object,
+        required: false,
+        default: () => []
+    }
 })
 
 const showCreateOrUpdateModal = ref(false)

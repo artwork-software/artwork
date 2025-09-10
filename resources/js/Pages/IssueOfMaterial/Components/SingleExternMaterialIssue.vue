@@ -1,7 +1,7 @@
 <template>
     <div class="p-4 font-lexend" :class="{ 'border-2 border-pink-500 rounded-lg': usePage().props.urlParameters.issue === externMaterialIssue.id.toString() }">
         <div class="grid grid-cols-1 md:grid-cols-10 gap-4">
-            <div @click="showIssueOfMaterialDetailModal = true" class="flex items-center w-full cursor-pointer group-hover/issueOfMaterial:text-artwork-buttons-create text-sm">
+            <div @click="showIssueOfMaterialModal = true" class="flex items-center w-full cursor-pointer group-hover/issueOfMaterial:text-artwork-buttons-create text-sm">
                 {{externMaterialIssue.name}}
             </div>
             <div @click="showIssueOfMaterialDetailModal = true" class="flex items-center w-full cursor-pointer group-hover/issueOfMaterial:text-artwork-buttons-create text-sm">

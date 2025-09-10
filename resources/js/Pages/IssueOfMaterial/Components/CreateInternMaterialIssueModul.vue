@@ -16,12 +16,12 @@
                     </p>
                 </div>
                 <div class="flex items-center gap-2">
-          <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200">
-            {{ internMaterialIssue.articles?.length || 0 }} {{ $t('articles') }}
-          </span>
-                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
-            {{ internMaterialIssue.files?.length || 0 }} {{ $t('files') }}
-          </span>
+                  <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200">
+                    {{ internMaterialIssue.articles?.length || 0 }} {{ $t('articles') }}
+                  </span>
+                  <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                    {{ internMaterialIssue.files?.length || 0 }} {{ $t('files') }}
+                  </span>
                 </div>
             </div>
         </header>
@@ -78,7 +78,7 @@
 
                     <!-- Project -->
                     <div class="md:col-span-1">
-                        <ProjectSearch v-if="!selectedProject" @project-selected="addProject" :label="$t('Project assignment (optional)')" />
+                        <ProjectSearch v-if="!selectedProject" @project-selected="addProject" :get-first-last-event="true" :label="$t('Project assignment (optional)')" />
                         <div v-else class="mt-1">
                             <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
                             <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2">
@@ -405,7 +405,7 @@
     <ArticleUsageModal :details-for-modal="articleForUsageModal" v-if="articleForUsageModal" @close="articleForUsageModal = null" />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import RoomSearch from "@/Components/SearchBars/RoomSearch.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
@@ -584,9 +584,45 @@ const onMaskClick = (e) => {
 }
 
 
-const addProject = (project) => {
-    selectedProject.value = project;
+// Optional: Typ grob skizzieren (anpassbar)
+type ProjectLike = {
+    id: number;
+    name?: string;
+    is_group?: boolean
+    first_event?: { formatted_dates?: { start_without_time?: string; startTime?: string } };
+    last_event?: { formatted_dates?: { end_without_time?: string; endTime?: string } };
 };
+
+const DEFAULT_START = '00:00';
+const DEFAULT_END   = '23:59';
+
+const isEmpty = (v: unknown) => v === '' || v === null || v === undefined;
+
+const addProject = (project?: ProjectLike) => {
+    // Auswahl setzen (oder nullen)
+    selectedProject.value = project ?? null;
+    if (!project) return;
+
+    // Name nur setzen, wenn leer
+    if (isEmpty(internMaterialIssue.name) && project.name) {
+        internMaterialIssue.name = project.name;
+    }
+
+    // Start: nur wenn Datum leer
+    const fdStart = project.first_event?.formatted_dates;
+    if (isEmpty(internMaterialIssue.start_date) && fdStart?.start_without_time) {
+        internMaterialIssue.start_date = fdStart.start_without_time;
+        internMaterialIssue.start_time = fdStart.startTime ?? DEFAULT_START;
+    }
+
+    // Ende: nur wenn Datum leer
+    const fdEnd = project.last_event?.formatted_dates;
+    if (isEmpty(internMaterialIssue.end_date) && fdEnd?.end_without_time) {
+        internMaterialIssue.end_date = fdEnd.end_without_time;
+        internMaterialIssue.end_time = fdEnd.endTime ?? DEFAULT_END;
+    }
+};
+
 
 const addRoom = (room) => {
     selectedRoom.value = room;

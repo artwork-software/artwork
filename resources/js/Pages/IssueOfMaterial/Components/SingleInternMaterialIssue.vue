@@ -1,10 +1,10 @@
 <template>
     <div class="p-4 font-lexend" :class="{ 'border-2 border-pink-500 rounded-lg': usePage().props.urlParameters.issue === issueOfMaterial.id.toString() }">
         <div class="grid grid-cols-1 md:grid-cols-9 gap-4">
-            <div @click="showIssueOfMaterialDetailModal = true" class="flex items-center w-full cursor-pointer group-hover/issueOfMaterial:text-artwork-buttons-create text-sm">
+            <div @click="showIssueOfMaterialModal = true" class="flex items-center w-full cursor-pointer group-hover/issueOfMaterial:text-artwork-buttons-create text-sm">
                 {{issueOfMaterial.name}}
             </div>
-            <div class="text-xs flex items-center ">
+            <div class="text-xs flex items-center cursor-pointer group-hover/issueOfMaterial:text-artwork-buttons-create" @click="showIssueOfMaterialDetailModal = true">
                 {{issueOfMaterial.start_date_time }} - {{issueOfMaterial.end_date_time}}
             </div>
             <div class="flex items-center text-xs">

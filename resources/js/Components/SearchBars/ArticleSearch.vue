@@ -8,7 +8,7 @@
             />
         </div>
         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-            <div v-if="articles.length > 0" class="absolute rounded-lg z-10 w-full max-h-60 bg-white shadow-lg text-base border border-gray-300 overflow-auto focus:outline-none sm:text-sm">
+            <div v-if="articles.length > 0" class="absolute rounded-lg z-50 w-full max-h-60 bg-white shadow-lg text-base border border-gray-300 overflow-auto focus:outline-none sm:text-sm">
                 <div class="border-gray-200 py-4">
                     <div v-for="(article, index) in articles" :key="index" class="flex items-center cursor-pointer">
                         <div class="flex-1 text-sm" @click="selectArticle(article)">

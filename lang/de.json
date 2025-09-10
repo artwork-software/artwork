@@ -3049,5 +3049,13 @@
     "No active filters": "Keine aktiven Filter",
     "Multi-Edit": "Mehrfachbearbeitung",
     "Temporary": "Temporär",
-    "Project URL has been copied": "Projekt-URL wurde kopiert"
+    "Project URL has been copied": "Projekt-URL wurde kopiert",
+    "Clear all": "Alles löschen",
+    "Items": "Artikel",
+    "Total qty": "Gesamtmenge",
+    "Basic information": "Basisinformationen",
+    "Give your material set a clear name and optional description.": "Gib deinem Material-Set einen klaren Namen und eine optionale Beschreibung.",
+    "in set": "im Set",
+    "No more items": "Keine weiteren Artikel",
+    "Search material sets…": "Material-Sets suchen…"
 }

@@ -3716,13 +3716,13 @@ class ProjectController extends Controller
         ) {
             $projects = Project::search($request->string('project_search'))
                 ->get()
-                ->map(function ($project) use ($request) {
+                ->map(function (Project $project) use ($request) {
                     $returnProject =  [
                         'id' => $project->id,
                         'name' => $project->name,
                         'key_visual_path' => $project->key_visual_path,
                         'is_group' => $project->is_group,
-                        'marked_as_done' => $project->marked_as_done,
+                        'marked_as_done' => $project->getAttribute('marked_as_done'),
                     ];
 
                     $addEventsToReturnProject = [];

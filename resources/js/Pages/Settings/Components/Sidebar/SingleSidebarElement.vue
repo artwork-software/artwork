@@ -1,169 +1,215 @@
-<script>
-
-
-import IconLib from "@/Mixins/IconLib.vue";
+<script setup>
+import { ref, computed } from "vue";
+import { router } from "@inertiajs/vue3";
 import draggable from "vuedraggable";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
+
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import DropNewComponent from "@/Pages/Settings/Components/DropNewComponent.vue";
 import AddEditSidebarTab from "@/Pages/Settings/Components/Sidebar/AddEditSidebarTab.vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
+import { MenuItem } from "@headlessui/vue";
 
-export default {
-    name: "SingleSidebarElement",
-    mixins: [IconLib],
-    components: {
-        BaseMenu,
-        AddEditSidebarTab,
-        DropNewComponent, ComponentIcons,
-        draggable,
-        Menu,
-        MenuButton,
-        MenuItems,
-        MenuItem,
-    },
-    props: ['tab', 'sidebarTab'],
-    data() {
-        return {
-            tabClosed: false,
-            dragging: false,
-            showMenu: null,
-            showAddEditModal: false,
-        }
-    },
-    methods: {
-        onDragStart(event) {
-            // Only send minimal data to reduce payload size
-            const minimalData = {
-                id: this.sidebarTab.id,
-                name: this.sidebarTab.name,
-                order: this.sidebarTab.order
-            };
+import {
+    IconChevronDown,
+    IconChevronUp,
+    IconEdit,
+    IconTrash,
+    IconDragDrop,
+} from "@tabler/icons-vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
-            event.dataTransfer.setData(
-                'application/json',
-                JSON.stringify(minimalData)
-            );
-        },
-        removeComponentFromSidebar(id) {
-            this.$inertia.delete(route('sidebar.component.remove', {sidebarTabComponent: id}), {
-                preserveState: true,
-                preserveScroll: true,
-            })
-        },
-        updateComponentOrder(components) {
-            // Update local order
-            components.map((component, index) => {
-                component.order = index + 1
-            })
+const props = defineProps({
+    tab: { type: Object, required: true },
+    sidebarTab: { type: Object, required: true },
+});
 
-            // Create a minimal payload with only necessary data (id and order)
-            const minimalComponents = components.map(component => ({
-                id: component.id,
-                order: component.order
-            }));
+const tabClosed = ref(false);
+const dragging = ref(false);
+const showMenu = ref(null);
+const showAddEditModal = ref(false);
 
-            this.$inertia.post(route('sidebar.tab.update.component.order', {projectTabSidebarTab: this.sidebarTab.id}), {
-                components: minimalComponents,
-            }, {
-                preserveScroll: true
-            });
-        },
-        openTab(){
-            this.tabClosed = false;
-        },
-        editTab(){
-            this.showAddEditModal = true;
-        },
-    }
+const componentCount = computed(
+    () => props.sidebarTab?.components_in_sidebar?.length ?? 0
+);
+
+function onDragStart(event) {
+    const minimalData = {
+        id: props.sidebarTab.id,
+        name: props.sidebarTab.name,
+        order: props.sidebarTab.order,
+    };
+    const json = JSON.stringify(minimalData);
+    event.dataTransfer?.setData("application/json", json);
+    event.dataTransfer?.setData("text/plain", json); // Fallback
+    event.dataTransfer.effectAllowed = "copyMove";
+}
+
+function removeComponentFromSidebar(id) {
+    router.delete(route("sidebar.component.remove", { sidebarTabComponent: id }), {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}
+
+function updateComponentOrder(components) {
+    components.forEach((c, i) => (c.order = i + 1));
+    const minimal = components.map((c) => ({ id: c.id, order: c.order }));
+    router.post(
+        route("sidebar.tab.update.component.order", {
+            projectTabSidebarTab: props.sidebarTab.id,
+        }),
+        { components: minimal },
+        { preserveScroll: true }
+    );
+}
+
+function openTab() {
+    tabClosed.value = false;
+}
+
+function editTab() {
+    showAddEditModal.value = true;
+}
+
+function removeTab() {
+    router.delete(
+        route("sidebar.tab.destroy", { projectTabSidebarTab: props.sidebarTab.id })
+    );
 }
 </script>
 
 <template>
-    <div class="mb-3" draggable="true" @dragstart="onDragStart">
-        <div class="flex items-center justify-between hover:cursor-grab">
-            <div class="flex items-center gap-2 cursor-pointer" @click="tabClosed = !tabClosed">
-                <h3 class="headline3">{{ sidebarTab.name }}</h3>
-                <IconChevronDown v-if="tabClosed" class="h-5 w-5 text-gray-600" />
-                <IconChevronUp v-else class="h-5 w-5 text-gray-600" />
-            </div>
-            <BaseMenu>
-                <MenuItem v-slot="{ active }">
-                    <a href="#" @click="editTab"
-                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                        <IconEdit stroke-width="1.5"
-                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                  aria-hidden="true"/>
-                        {{ $t('Edit') }}
-                    </a>
-                </MenuItem>
-                <MenuItem v-slot="{ active }">
-                    <a href="#" @click="removeTab"
-                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                        <IconTrash stroke-width="1.5"
-                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                   aria-hidden="true"/>
-                        {{ $t('Delete') }}
-                    </a>
-                </MenuItem>
+    <!-- Gesamt-Card (Sidebar-Tab) -->
+    <div
+        class="mb-3 rounded-2xl border border-zinc-200/80 bg-white/70 backdrop-blur p-4 shadow-sm transition"
+        draggable="true"
+        @dragstart="onDragStart"
+        :class="dragging ? 'ring-2 ring-emerald-400/30' : ''"
+    >
+        <!-- Header -->
+        <div
+            class="flex items-center justify-between gap-3 pb-3 border-b border-dashed border-zinc-200"
+            :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
+        >
+            <button
+                type="button"
+                class="group/button inline-flex items-center gap-2 px-2 py-1.5 transition focus:outline-none focus:ring-2 focus:ring-indigo-400/30 focus:ring-offset-0"
+                @click="tabClosed = !tabClosed"
+                :aria-expanded="!tabClosed"
+                :aria-controls="`sidebar-panel-${sidebarTab.id}`">
+                <h3
+                    class="text-xs font-medium text-zinc-800 truncate max-w-[12rem]"
+                    :title="sidebarTab.name">
+                    {{ sidebarTab.name }}
+                </h3>
+
+                <!-- Ein Icon, rotiert je nach State -->
+                <IconChevronDown
+                    class="h-4 w-4 text-zinc-600 transition-transform duration-200"
+                    :class="{'-rotate-180': !tabClosed}"
+                    aria-hidden="true"
+                />
+
+                <!-- Counter-Badge (extra kompakt) -->
+                <span class="ml-1 inline-flex whitespace-nowrap items-center rounded-full border px-1.5 py-0.5 text-[8px] leading-4 border-zinc-200 bg-white/80 text-zinc-600">
+                    {{ componentCount }} {{ $t('items') }}
+                </span>
+            </button>
+
+            <BaseMenu has-no-offset white-menu-background>
+                <BaseMenuItem white-menu-background icon="IconEdit" title="Edit" @click="editTab" />
+                <BaseMenuItem white-menu-background icon="IconTrash" title="Delete" @click="removeTab" />
             </BaseMenu>
+
         </div>
-        <DropNewComponent :is-sidebar="true" :all-tabs="null" :tab="sidebarTab" :order="1" @tab-opened="openTab" />
-        <div v-if="!tabClosed">
-            <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="sidebarTab.components_in_sidebar" @start="dragging=true" @end="dragging=false" @change="updateComponentOrder(sidebarTab.components_in_sidebar)">
-                <template #item="{element}" :key="element.id">
-                    <div v-show="!element.temporary" class="" @mouseover="showMenu = element.id" :key="element.id" @mouseout="showMenu = null">
-                        <div class="flex group w-full items-center">
-                            <div class="flex items-center bg-artwork-project-background py-5 px-4 my-1 rounded-lg flex-wrap w-full" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                <div class="flex justify-between w-full items-center">
-                                    <div class="w-full">
-                                        <div class="grid gird-cols-1 md:grid-cols-12">
-                                            <div class="col-span-6 flex items-center gap-x-3">
-                                                <ComponentIcons :type="element.component.type" />
-                                                <div class="">
-                                                   <div class="flex items-center gap-4">
-                                                       {{element.component.name }}
-                                                       <div class="text-[10px] text-gray-500 font-light" v-if="element.component.data.height">
-                                                           {{ element.component.data.height }} Pixel <span v-if="element.component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
-                                                       </div>
-                                                   </div>
-                                                    <div class="col-span-2 text-xs flex items-center">
-                                                        {{ $t(element.component.type)}}
-                                                    </div>
-                                                </div>
 
-                                            </div>
+        <!-- Dropzone oben -->
+        <DropNewComponent
+            :is-sidebar="true"
+            :all-tabs="null"
+            :tab="sidebarTab"
+            :order="1"
+            @tab-opened="openTab"
+            class="mt-3"
+        />
 
-                                        </div>
+        <!-- Inhalt -->
+        <div v-if="!tabClosed" class="mt-2">
+            <draggable
+                ghost-class="opacity-50"
+                key="draggableKey"
+                item-key="id"
+                :list="sidebarTab.components_in_sidebar"
+                @start="dragging = true"
+                @end="dragging = false"
+                @change="updateComponentOrder(sidebarTab.components_in_sidebar)"
+            >
+                <template #item="{ element }">
+                    <div
+                        v-show="!element.temporary"
+                        :key="element.id"
+                        class="group my-1"
+                        @mouseover="showMenu = element.id"
+                        @mouseout="showMenu = null"
+                    >
+                        <div
+                            class="flex items-center justify-between gap-3 rounded-xl border border-zinc-200/80 bg-white/60 px-4 py-4 transition"
+                            :class="dragging ? 'ring-2 ring-emerald-400/30' : ''"
+                        >
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="grid place-items-center size-9 rounded-lg border border-zinc-200/80 bg-white/70 shrink-0">
+                                    <ComponentIcons :type="element.component.type" />
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-sm font-semibold text-zinc-900 truncate">
+                                        {{ element.component.name }}
                                     </div>
-                                    <IconDragDrop class="xsDark h-5 w-5 hidden group-hover:block"/>
-                                    <div  class="hidden group-hover:block">
-                                        <BaseMenu>
-                                            <MenuItem v-slot="{ active }">
-                                                <a href="#" @click="removeComponentFromSidebar(element.id)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconTrash stroke-width="1.5"
-                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                               aria-hidden="true"/>
-                                                    {{ $t('Delete') }}
-                                                </a>
-                                            </MenuItem>
-                                        </BaseMenu>
+                                    <div class="text-[11px] text-zinc-500">
+                                        {{ $t(element.component.type) }}
+                                        <template v-if="element.component?.data?.height !== undefined">
+                                            · {{ element.component.data.height }} px
+                                        </template>
+                                        <template v-if="element.component?.data?.showLine === true">
+                                            · {{ $t('Show a separator line') }}
+                                        </template>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="flex items-center gap-2 shrink-0">
+                                <IconDragDrop class="h-5 w-5 text-zinc-400 invisible group-hover:visible" aria-hidden="true" />
+                                <div class="invisible group-hover:visible">
+                                    <BaseMenu has-no-offset white-menu-background>
+                                        <BaseMenuItem white-menu-background icon="IconTrash" title="Delete" @click="removeComponentFromSidebar(element.id)" />
+                                    </BaseMenu>
+                                </div>
+                            </div>
                         </div>
-                        <DropNewComponent :is-sidebar="true" :all-tabs="null" :tab="sidebarTab" :order="element.order + 1" @tab-opened="openTab" />
+
+                        <!-- Dropzone zwischen Items -->
+                        <DropNewComponent
+                            :is-sidebar="true"
+                            :all-tabs="null"
+                            :tab="sidebarTab"
+                            :order="element.order + 1"
+                            @tab-opened="openTab"
+                            class="mt-2"
+                        />
                     </div>
                 </template>
             </draggable>
         </div>
     </div>
 
-    <AddEditSidebarTab :tab="null" :tab-to-edit="sidebarTab" v-if="showAddEditModal" @close="showAddEditModal = false" />
-
+    <!-- Modal: Add/Edit Sidebar-Tab -->
+    <AddEditSidebarTab
+        v-if="showAddEditModal"
+        :tab="null"
+        :tab-to-edit="sidebarTab"
+        @close="showAddEditModal = false"
+    />
 </template>
 
 <style scoped>
-
+/* Dezent, Fokus-/Drag-States übernehmen die Hervorhebung */
 </style>

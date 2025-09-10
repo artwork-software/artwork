@@ -80,9 +80,24 @@ use App\Http\Controllers\System\FileSettingsController;
 use App\Http\Controllers\ProjectTabSidebarTabController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ProjectComponentValueController;
-use Artwork\Modules\Chat\Http\Controllers\ChatController;
-use Artwork\Modules\User\Http\Controllers\UserController;
+use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\ArtistResidency\Http\Controllers\ArtistController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowRequestsController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
+use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
+use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
+use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
+use Artwork\Modules\User\Http\Controllers\UserContractController;
+use Artwork\Modules\User\Http\Controllers\UserController;
+use Artwork\Modules\User\Http\Controllers\UserFilterController;
+use Artwork\Modules\User\Http\Controllers\UserFilterTemplateController;
+use Artwork\Modules\User\Http\Controllers\UserShiftCalendarAboController;
+use Artwork\Modules\User\Http\Controllers\UserShiftCalendarFilterController;
+use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
+use Artwork\Modules\Accommodation\Http\Controllers\AccommodationRoomTypeController;
+use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
+use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use App\Http\Controllers\BudgetAccountManagementController;
 use App\Http\Controllers\BudgetManagementAccountController;
 use App\Http\Controllers\CraftInventoryItemEventController;
@@ -92,39 +107,25 @@ use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use App\Http\Controllers\BudgetManagementCostUnitController;
 use App\Http\Controllers\ProjectManagementBuilderController;
-use Artwork\Modules\User\Http\Controllers\UserFilterController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
-use Artwork\Modules\User\Http\Controllers\UserContractController;
-use Artwork\Modules\User\Http\Controllers\UserWorkTimeController;
 use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
-use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
-use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
-use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
-use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
-use Artwork\Modules\User\Http\Controllers\UserFilterTemplateController;
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
-use Artwork\Modules\User\Http\Controllers\UserShiftCalendarAboController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
-use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
 use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
 use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
-use Artwork\Modules\User\Http\Controllers\UserShiftCalendarFilterController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryUserFilterController;
-use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
 use Artwork\Modules\Inventory\Http\Controllers\InventorySubCategoryController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleStatusController;
-use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowRequestsController;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
-use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
@@ -2208,6 +2209,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/destroy/{accommodation}', [AccommodationController::class, 'destroy'])->name('accommodation.destroy');
     });
 
+    Route::group(['prefix' => 'accommodation-room-types'], function (): void {
+        Route::post('/store', [AccommodationRoomTypeController::class, 'store'])->name('accommodation-room-types.store');
+    });
+
     Route::group(['prefix' => 'contact'], function (): void {
         Route::post('/store/{model}/{modelId}', [ContactController::class, 'store'])->name('contact.store');
         Route::patch('/update/{contact}', [ContactController::class, 'update'])->name('contact.update');
@@ -2343,6 +2348,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/change-request/{workTimeChangeRequest}/decline',
             [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'decline']
         )->name('worktime.change-request.decline');
+    });
+
+
+    Route::group(['prefix' => 'artist'], function (): void {
+        Route::get('/', [ArtistController::class, 'index'])->name('artist.index');
+        Route::post('/store', [ArtistController::class, 'store'])->name('artist.store');
+        Route::patch('/{artist}/update', [ArtistController::class, 'update'])->name('artist.update');
+        Route::delete('/{artist}/destroy', [ArtistController::class, 'destroy'])->name('artist.destroy');
+        // export artists
+        Route::get('/export', [ArtistController::class, 'export'])->name('artist.export');
+        // artist.toggle-active
+        Route::patch('/{artist}/toggle-active', [ArtistController::class, 'toggleActive'])->name('artist.toggle-active');
     });
 });
 

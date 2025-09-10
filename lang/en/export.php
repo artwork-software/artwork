@@ -70,4 +70,8 @@ return [
     'get_sum' => 'Amount received',
     'total_sum' => 'Total Amount',
     'total_days' => 'Total Days',
+    'name_artist' => 'Name Artist',
+    'civil_name' => 'Civil Name',
+    'phone_number' => 'Phone Number',
+    'position' => 'Position',
 ];

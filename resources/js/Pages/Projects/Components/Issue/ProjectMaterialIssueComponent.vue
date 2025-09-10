@@ -10,19 +10,19 @@
             <div class="flex items-center gap-2">
                 <button
                     type="button"
-                    class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 active:translate-y-px"
+                    class="new-button"
                     @click="toggleAll(false)">
                     {{ $t('Close all')}}
                 </button>
                 <button
                     type="button"
-                    class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 active:translate-y-px"
+                    class="new-button"
                     @click="toggleAll(true)">
                     {{ $t('Expand all')}}
                 </button>
                 <button
                     type="button"
-                    class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 active:translate-y-px"
+                    class="new-button"
                     @click="openCreateMaterialIssue">
                     <IconPlus class="size-4" />
                     {{ $t('New')}}
@@ -52,7 +52,7 @@
                     <div class="flex items-center gap-2">
                         <button
                             type="button"
-                            class="inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white p-1.5 hover:bg-zinc-50"
+                            class="new-button"
                             :aria-label="isOpen(issue.id) ? 'Zuklappen' : 'Aufklappen'"
                             @click="toggle(issue.id)"
                         >
@@ -86,12 +86,12 @@
                               <IconClock class="size-4" />
                               ~ {{ diffDays(issue) }} {{ $t('Days')}}
                             </span>
-                        <span
+                        <span v-if="issue.special_items?.length > 0"
                             class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1"
                             :class="issue.special_items_done ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'"
                         >
                           <component :is="issue.special_items_done ? IconCircleCheck : IconAlertTriangle" class="size-4" />
-                          {{ $t('Special items')}} {{ issue.special_items_done ? $t('Completed') : $t('Special items not completed') }}
+                          {{ issue.special_items_done ? $t('Special items Completed') : $t('Special items not completed') }}
                         </span>
                     </div>
                 </div>
@@ -99,7 +99,7 @@
                 <div class="flex shrink-0 items-center gap-2">
                     <button
                         type="button"
-                        class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 active:translate-y-px"
+                        class="new-button"
                         @click="openEditIssue(issue)">
                         <IconEdit class="size-4" />
                         {{ $t('Edit')}}
@@ -278,8 +278,8 @@
 
                                 <button
                                     type="button"
-                                    class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 active:translate-y-px"
-                                    @click="$emit('download-file', f)"
+                                    class="new-button"
+                                    @click="downloadFile(f)"
                                 >
                                     <IconDownload class="size-4" />
                                     {{ $t('Download') }}
@@ -623,7 +623,9 @@ function onKey(e: KeyboardEvent) {
 
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
-
+const downloadFile = (file: FileItem) => {
+    window.open(fileUrl(file), '_blank')
+}
 </script>
 
 <style scoped>

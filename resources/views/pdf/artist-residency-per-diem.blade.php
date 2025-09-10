@@ -1,6 +1,8 @@
 <html lang="en">
 <head>
-    <title>Donation Log</title>
+    <title>
+        {{ __('export.per_diem_list', [], $language) }}
+    </title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
     <style>

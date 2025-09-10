@@ -703,6 +703,9 @@
         @apply bg-white/15 ring-white/30;
     }
 
+    .new-button {
+        @apply inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 active:translate-y-px cursor-pointer;
+    }
 
     .artwork-container {
         @apply mx-auto container px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 mt-5 pb-20;

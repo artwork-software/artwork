@@ -3085,5 +3085,20 @@
     "All the artists in the system": "All the artists in the system",
     "Remove artist": "Remove artist",
     "Room Type": "Room Type",
-    "Search artist": "Search artist"
+    "Search artist": "Search artist",
+    "Days": "Days",
+    "Material Issue": "Material Issue",
+    "Linked material issues for this project.": "Linked material issues for this project.",
+    "Close all": "Close all",
+    "Expand all": "Expand all",
+    "No material expenses": "No material expenses",
+    "Create a material issue via “New.”": "Create a material issue via “New.”",
+    "Material issue period differs from project period": "Material issue period differs from project period",
+    "Total demand": "Total demand",
+    "Total inventory": "Total inventory",
+    "No articles assigned.": "No articles assigned.",
+    "Demand": "Demand",
+    "In stock": "In stock",
+    "No files assigned.": "No files assigned.",
+    "No special items assigned.": "No special items assigned."
 }

@@ -1056,3 +1056,15 @@
     @apply !font-lexend !px-4 !py-4
 }
 
+.kpi {
+    @apply rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-right;
+}
+.kpi-label {
+    @apply text-[11px] font-medium text-zinc-500;
+}
+.kpi-value {
+    @apply text-xl font-semibold text-zinc-900;
+}
+.badge {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-0.5 text-[11px] text-zinc-700 ring-1 ring-zinc-200;
+}

@@ -72,7 +72,7 @@ class InternalIssueController extends Controller
         $issue = $this->internalIssueService
             ->store($request->validated(), $request->file('files', []));
 
-        return redirect()->route('issue-of-material.index');
+        return redirect()->back();
     }
 
     public function update(UpdateInternalIssueRequest $request, InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
@@ -81,7 +81,7 @@ class InternalIssueController extends Controller
         $issue = $this->internalIssueService
             ->update($internalIssue, $request->validated(), $request->file('files', []));
 
-        return redirect()->route('issue-of-material.index');
+        return redirect()->back();
     }
 
     public function destroy(InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
@@ -89,22 +89,22 @@ class InternalIssueController extends Controller
         $this->internalIssueService
             ->delete($internalIssue);
 
-        return redirect()->route('issue-of-material.index');
+        return redirect()->back();
     }
 
-    public function fileDelete(InternalIssueFile $internalIssueFile): \Illuminate\Http\JsonResponse
+    public function fileDelete(InternalIssueFile $internalIssueFile): \Illuminate\Http\RedirectResponse
     {
         $this->internalIssueService
             ->deleteFile($internalIssueFile);
 
-        return response()->json(['message' => 'File deleted successfully'], 200);
+        return redirect()->back();
     }
 
     public function setSpecialItemsDone(InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
     {
         $internalIssue->update(['special_items_done' => true]);
 
-        return redirect()->route('issue-of-material.index');
+        return redirect()->back();
     }
 }
 

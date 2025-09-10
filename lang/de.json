@@ -3092,5 +3092,20 @@
     "Room Type": "Raumtyp",
     "Search artist": "Künstler*in suchen",
     "Assign existing artist": "Bestehende Künstler*in zuweisen",
-    "Close artist selection": "Künstler*innenauswahl schließen"
+    "Close artist selection": "Künstler*innenauswahl schließen",
+    "Days": "Tage",
+    "Material Issue": "Materialausgabe",
+    "Linked material issues for this project.": "Verknüpfte Materialausgaben für dieses Projekt.",
+    "Close all": "Alle schließen",
+    "Expand all": "Alle erweitern",
+    "No material expenses": "Keine Materialausgaben",
+    "Create a material issue via “New.”": "Erstelle eine Materialausgabe über „Neu.“",
+    "Material issue period differs from project period": "Materialausgabezeitraum weicht vom Projektzeitraum ab",
+    "Total demand": "Gesamtnachfrage",
+    "Total inventory": "Gesamtbestand",
+    "No articles assigned.": "Keine Artikel zugewiesen.",
+    "Demand": "Nachfrage",
+    "In stock": "Auf Lager",
+    "No files assigned.": "Keine Dateien zugewiesen.",
+    "No special items assigned.": "Keine Sonderartikel zugewiesen."
 }

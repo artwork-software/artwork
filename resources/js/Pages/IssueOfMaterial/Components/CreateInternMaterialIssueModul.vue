@@ -449,6 +449,16 @@ const props = defineProps({
             responsible_users: [],
         }),
     },
+    project: {
+        type: Object,
+        required: false,
+        default: null,
+    },
+    isInProjectComponent: {
+        type: Boolean,
+        required: false,
+        default: false,
+    }
 });
 
 const internMaterialIssue = useForm({
@@ -474,6 +484,7 @@ const internMaterialIssue = useForm({
         availableStockRequestIsLoading: true,
     })), // [{ id, quantity }]
     special_items: props.issueOfMaterial?.special_items || [], // [{...}]
+    isInProjectComponent: props.isInProjectComponent || false
 });
 
 const selectedProject = ref(props.issueOfMaterial?.project ?? null);
@@ -927,6 +938,10 @@ watch(
 onMounted(() => {
     if (props.issueOfMaterial?.articles?.length > 0) {
         checkAvailableStock();
+    }
+
+    if(props.project) {
+        addProject(props.project);
     }
 
     loadMoreArticles();

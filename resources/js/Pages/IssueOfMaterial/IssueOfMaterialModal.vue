@@ -36,9 +36,10 @@
                 <ExternMaterialIssueModul :extern-material-issue="externMaterialIssue" @close="$emit('close')" />
             </div>
             <div v-else>
-                <CreateInternMaterialIssueModul :issue-of-material="issueOfMaterial" @close="$emit('close')" />
+                <CreateInternMaterialIssueModul :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" @close="$emit('close')" />
             </div>
         </div>
+
     </ArtworkBaseModal>
 </template>
 <script setup>
@@ -88,6 +89,16 @@ const props = defineProps({
     isExternOrIntern: {
         type: Boolean,
         required: false,
+    },
+    project: {
+        type: Object,
+        required: false,
+        default: () => ({}),
+    },
+    isInProjectComponent: {
+        type: Boolean,
+        required: false,
+        default: false,
     }
 })
 

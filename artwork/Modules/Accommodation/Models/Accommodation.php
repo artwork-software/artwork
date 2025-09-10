@@ -47,4 +47,14 @@ class Accommodation extends Model
             ? asset('storage/' . $this->profile_image)
             : route('generate-avatar-image', ['letters' => $this->name[0]]);
     }
+
+    public function roomTypes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            AccommodationRoomType::class,
+            'accommodation_accommodation_room_type',
+            'accommodation_id',
+            'accommodation_room_type_id'
+        );
+    }
 }

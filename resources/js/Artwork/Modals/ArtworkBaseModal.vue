@@ -15,33 +15,34 @@
                                          @after-enter="initDraggable"
                                          leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
                             <DialogPanel class="card glassy draggableModal w-full" :class="[modalSize, showBackdrop ? '' : '!border-gray-200 shadow-glass']"  ref="containerRef">
-                                <div class="flex items-start justify-between px-5 pt-5 pb-2">
-                                    <div class="text-left">
-                                        <h3 class="font-lexend font-bold">{{ $t(props.title) }}</h3>
-                                        <p class="text-sm xsDark mt-0.5">
-                                            {{ $t(props.description) }}
-                                        </p>
-                                    </div>
-                                    <div class="flex items-center gap-x-3">
-                                        <div class="text-gray-800 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
-                                            <div @click="showBackdrop = !showBackdrop">
-                                                <ToolTipDefault top show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
-                                            </div>
-                                        </div>
-                                        <div ref="dragHandleRef" class="text-gray-800 hover:text-yellow-400 transition-all duration-150 ease-in-out cursor-grab dragHandle">
-                                            <div>
-                                                <ToolTipDefault top show-draggable :tooltip-text="$t('Hold here to move')"/>
-                                            </div>
-                                        </div>
-                                        <div class="text-gray-800 hover:text-artwork-error transition-all duration-150 ease-in-out cursor-pointer">
-                                            <div @click="$emit('close')">
-                                                <ToolTipDefault top show-x-icon :tooltip-text="$t('Close Window')"/>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+
                                 <div class="p-5">
                                     <div class="card white p-5 relative">
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div class="text-left">
+                                                <h3 class="font-lexend font-bold">{{ $t(props.title) }}</h3>
+                                                <p class="text-sm xsDark mt-0.5">
+                                                    {{ $t(props.description) }}
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center gap-x-3">
+                                                <div class="text-gray-800 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
+                                                    <div @click="showBackdrop = !showBackdrop">
+                                                        <ToolTipDefault top show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
+                                                    </div>
+                                                </div>
+                                                <div ref="dragHandleRef" class="text-gray-800 hover:text-yellow-400 transition-all duration-150 ease-in-out cursor-grab dragHandle">
+                                                    <div>
+                                                        <ToolTipDefault top show-draggable :tooltip-text="$t('Hold here to move')"/>
+                                                    </div>
+                                                </div>
+                                                <div class="text-gray-800 hover:text-artwork-error transition-all duration-150 ease-in-out cursor-pointer">
+                                                    <div @click="$emit('close')">
+                                                        <ToolTipDefault top show-x-icon :tooltip-text="$t('Close Window')"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <slot/>
                                     </div>
                                 </div>

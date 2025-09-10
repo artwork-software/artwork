@@ -12,7 +12,7 @@ class ArtistResidencyRepository
 
     public function getArtistResidencyByProjectId(int $projectId): Collection
     {
-        return ArtistResidency::where('project_id', $projectId)->get();
+        return ArtistResidency::where('project_id', $projectId)->with(['artist'])->get();
     }
 
     public function create(array $data): ArtistResidency

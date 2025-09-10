@@ -120,6 +120,6 @@ const ExternMaterialIssueModul = defineAsyncComponent({
 const checkIfEditMode = computed(() => {
     return !!(props.issueOfMaterial?.id || props.externMaterialIssue?.id);
 
-    
+
 });
 </script>

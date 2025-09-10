@@ -131,53 +131,58 @@ class InventoryArticleController extends Controller
 
     public function availableStockBatch(Request $request)
     {
-        $articleIds = $request->get('article_ids', []);
-        $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date');
-        $type = $request->get('type');
-        $issueId = $request->get('issue_id');
 
-        // Optimiere durch Eager Loading aller benötigten Daten
+        $validated = $request->validate([
+            'article_ids'   => ['required', 'array', 'min:1'],
+            'article_ids.*' => ['integer', 'distinct', 'exists:inventory_articles,id'],
+            'start_date'    => ['required', 'date'],
+            'end_date'      => ['required', 'date', 'after_or_equal:start_date'],
+            'type'          => ['nullable', 'in:intern,extern'],
+            'issue_id'      => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $articleIds = array_map('intval', $validated['article_ids']);
+        $startDate  = $validated['start_date'];
+        $endDate    = $validated['end_date'];
+        $type       = $validated['type'] ?? null;
+        $issueId    = $validated['issue_id'] ?? null;
+
+
         $articles = InventoryArticle::whereIn('id', $articleIds)
             ->with([
-                'internalIssues' => function ($query) use ($issueId, $type, $startDate, $endDate) {
-                    $query->where(function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('start_date', [$startDate, $endDate])
-                          ->orWhereBetween('end_date', [$startDate, $endDate]);
-                    })
-                    // schließe den aktuellen Issue aus, wenn ein Typ und eine Issue-ID angegeben sind
-                    ->when($type && $issueId, function ($q) use ($type, $issueId) {
-                        if ($type === 'intern') {
-                            $q->where('id', '!=', $issueId);
-                        }
-                        // Bei externen Issues wird dies im anderen Eager Load behandelt
-                    });
-                },
-                'externalIssues' => function ($query) use ($issueId, $type, $startDate, $endDate) {
-                    $query->where(function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('issue_date', [$startDate, $endDate])
-                          ->orWhereBetween('return_date', [$startDate, $endDate]);
-                    })
-                        ->when($type && $issueId, function ($q) use ($type, $issueId) {
-                            if ($type === 'extern') {
-                                $q->where('id', '!=', $issueId);
-                            }
-                            // Bei externen Issues wird dies im anderen Eager Load behandelt
+                'internalIssues' => function ($q) use ($startDate, $endDate) {
+                    $q->whereDate('start_date', '<=', $endDate)
+                        ->where(function ($qq) use ($startDate) {
+                            $qq->whereDate('end_date', '>=', $startDate)
+                                ->orWhereNull('end_date');
                         });
-                }
+                },
+                'externalIssues' => function ($q) use ($startDate, $endDate) {
+                    $q->whereDate('issue_date', '<=', $endDate)
+                        ->where(function ($qq) use ($startDate) {
+                            $qq->whereDate('return_date', '>=', $startDate)
+                                ->orWhereNull('return_date');
+                        });
+                },
             ])
             ->get()
             ->keyBy('id');
 
         $results = [];
         foreach ($articleIds as $id) {
-            if ($articles->has($id)) {
-                $results[$id] = $articles[$id]->getAvailableStock($startDate, $endDate);
+            if (isset($articles[$id])) {
+                $results[$id] = $articles[$id]->getAvailableStock(
+                    $startDate,
+                    $endDate,
+                    $issueId,
+                    $type
+                );
             }
         }
 
         return response()->json(['data' => $results]);
     }
+
 
     public function search(Request $request): \Illuminate\Http\JsonResponse
     {

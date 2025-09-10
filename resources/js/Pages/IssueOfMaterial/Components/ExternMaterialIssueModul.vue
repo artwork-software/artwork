@@ -755,6 +755,8 @@ const checkAvailableStock = async () => {
             route('inventory.articles.available-stock.batch'),
             {
                 article_ids: ids,
+                type: 'extern',
+                issue_id: externMaterialIssueForm?.id || null,
                 start_date: externMaterialIssueForm.issue_date,
                 end_date: externMaterialIssueForm.return_date,
             }

@@ -134,21 +134,36 @@ class InventoryArticleController extends Controller
         $articleIds = $request->get('article_ids', []);
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
+        $type = $request->get('type');
+        $issueId = $request->get('issue_id');
 
         // Optimiere durch Eager Loading aller benötigten Daten
         $articles = InventoryArticle::whereIn('id', $articleIds)
             ->with([
-                'internalIssues' => function ($query) use ($startDate, $endDate) {
+                'internalIssues' => function ($query) use ($issueId, $type, $startDate, $endDate) {
                     $query->where(function ($q) use ($startDate, $endDate) {
                         $q->whereBetween('start_date', [$startDate, $endDate])
                           ->orWhereBetween('end_date', [$startDate, $endDate]);
+                    })
+                    // schließe den aktuellen Issue aus, wenn ein Typ und eine Issue-ID angegeben sind
+                    ->when($type && $issueId, function ($q) use ($type, $issueId) {
+                        if ($type === 'intern') {
+                            $q->where('id', '!=', $issueId);
+                        }
+                        // Bei externen Issues wird dies im anderen Eager Load behandelt
                     });
                 },
-                'externalIssues' => function ($query) use ($startDate, $endDate) {
+                'externalIssues' => function ($query) use ($issueId, $type, $startDate, $endDate) {
                     $query->where(function ($q) use ($startDate, $endDate) {
                         $q->whereBetween('issue_date', [$startDate, $endDate])
                           ->orWhereBetween('return_date', [$startDate, $endDate]);
-                    });
+                    })
+                        ->when($type && $issueId, function ($q) use ($type, $issueId) {
+                            if ($type === 'extern') {
+                                $q->where('id', '!=', $issueId);
+                            }
+                            // Bei externen Issues wird dies im anderen Eager Load behandelt
+                        });
                 }
             ])
             ->get()

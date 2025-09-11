@@ -2,6 +2,9 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from "@tailwindcss/vite";
+import viteCompression from 'vite-plugin-compression'
+
+
 const port = 5173;
 const origin = `${process.env.DDEV_PRIMARY_URL}:${port}`;
 
@@ -42,5 +45,7 @@ export default defineConfig({
             },
         }),
         tailwindcss(),
+        viteCompression({ algorithm: 'brotliCompress', ext: '.br', deleteOriginFile: false }),
+        viteCompression({ algorithm: 'gzip', ext: '.gz', deleteOriginFile: false })
     ],
 });

@@ -3027,6 +3027,16 @@
     "Room Type": "Raumtyp",
     "Search artist": "Künstler*in suchen",
     "Assign existing artist": "Bestehende Künstler*in zuweisen",
-    "Close artist selection": "Künstler*innenauswahl schließen"
+    "Close artist selection": "Künstler*innenauswahl schließen",
+    "Tip: Keep titles short and descriptive—this helps everyone find the right event faster.": "Tipp: Halte Titel kurz und prägnant – das hilft allen, den richtigen Termin schneller zu finden.",
+    "If enabled, the event will block the whole day.": "Wenn aktiviert, blockiert der Termin den ganzen Tag.",
+    "Enable if this event should repeat automatically.": "Aktivieren, wenn dieser Termin automatisch wiederholt werden soll.",
+    "Pick a room for this event.": "Wähle einen Raum für diesen Termin aus.",
+    "Search for Rooms": "Suche nach Räumen",
+    "Helpful for reporting and project timelines.": "Hilfreich für Berichte und Projektzeitpläne.",
+    "Enable project assignment": "Projektzuweisung aktivieren",
+    "Currently assigned": "Derzeit zugewiesen",
+    "No project selected": "Kein Projekt ausgewählt",
+    "Repeat": "Wiederholen"
 }
 

@@ -720,6 +720,40 @@
         }
     }
 
+
+    /* --- Cards / Sections --- */
+    .card-event-container {
+        @apply rounded-xl border border-zinc-200/70 bg-white/90 shadow-sm p-4 space-y-3;
+    }
+    .card-header {
+        @apply flex items-center gap-2 -mt-1;
+    }
+    .card-dot {
+        @apply inline-block size-2 rounded-full;
+    }
+    .card-title {
+        @apply text-[13px] font-semibold text-zinc-900;
+    }
+
+    /* --- Helpers --- */
+    .hint { @apply text-[12px] text-zinc-500; }
+    .err  { @apply text-[12px] text-rose-600; }
+
+    /* --- Consistent field grids --- */
+    .form-grid-2 { @apply grid grid-cols-1 md:grid-cols-2 gap-3; }
+    .form-grid-3 { @apply grid grid-cols-1 md:grid-cols-3 gap-3; }
+
+    /* --- Listbox button (compact) --- */
+    .lbb {
+        @apply grid grid-cols-[1fr_auto] items-center h-11 px-3 py-2  text-left;
+    }
+    .lbb-text { @apply truncate pr-6; }
+    .lbb-label { @apply text-[11px] text-zinc-500; }
+    .lbb-value { @apply mt-0.5 flex items-center gap-2 text-sm text-zinc-900; }
+    .lbb-icon { @apply size-5 text-zinc-400 sm:size-4; }
+
+    /* --- Listbox default classes via props (keine globalen Änderungen nötig) --- */
+
     .border-color {
         &.soft-green {
             @apply border-[#edf5ef];

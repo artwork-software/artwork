@@ -40,10 +40,9 @@
 <script setup>
 import {Head, router, usePage} from "@inertiajs/vue3"
 import SubMenu from "@/Layouts/SubMenu.vue";
-import {onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
+import {defineAsyncComponent, onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
-import PopupChat from "@/Components/Chat/PopupChat.vue";
 const { locale } = useI18n();
 
 const props = defineProps({
@@ -97,6 +96,12 @@ onMounted(() => {
         });
 
 
+})
+
+const PopupChat = defineAsyncComponent({
+    loader: () => import('@/Components/Chat/PopupChat.vue'),
+    delay: 0,
+    timeout: 3000,
 })
 
 </script>

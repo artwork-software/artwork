@@ -3021,5 +3021,15 @@
     "All the artists in the system": "All the artists in the system",
     "Remove artist": "Remove artist",
     "Room Type": "Room Type",
-    "Search artist": "Search artist"
+    "Search artist": "Search artist",
+    "Tip: Keep titles short and descriptive—this helps everyone find the right event faster.": "Tip: Keep titles short and descriptive—this helps everyone find the right event faster.",
+    "If enabled, the event will block the whole day.": "If enabled, the event will block the whole day.",
+    "Enable if this event should repeat automatically.": "Enable if this event should repeat automatically.",
+    "Pick a room for this event.": "Pick a room for this event.",
+    "Search for Rooms": "Search for Rooms",
+    "Helpful for reporting and project timelines.": "Helpful for reporting and project timelines.",
+    "Enable project assignment": "Enable project assignment",
+    "Currently assigned": "Currently assigned",
+    "No project selected": "No project selected",
+    "Repeat": "Repeat"
 }

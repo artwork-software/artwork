@@ -3,9 +3,12 @@
 namespace Artwork\Core\Console\Commands;
 
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
@@ -31,7 +34,7 @@ class UpdateContainerCommand extends Command
         tap($freshConnection->unprepared(
             sprintf('CREATE DATABASE IF NOT EXISTS `%s` ', env('DB_DATABASE'))
         ), function (): void {
-                DB::purge('mysql');
+            DB::purge('mysql');
         });
         config(['database.connections.mysql.database' => env('DB_DATABASE')]);
 
@@ -41,12 +44,14 @@ class UpdateContainerCommand extends Command
         $this->line('Adding meili-indexes');
         foreach (
             [
-            'departments' => Department::class,
-            'moneysources' => MoneySource::class,
-            'shifpresets' => ShiftPreset::class,
-            'projects' => Project::class,
-            'users' => User::class,
-                ] as $key => $model
+                'departments' => Department::class,
+                'moneysources' => MoneySource::class,
+                'projects' => Project::class,
+                'users' => User::class,
+                'freelancers' => Freelancer::class,
+                'serviceproviders' => ServiceProvider::class,
+                'inventoryarticles' => InventoryArticle::class
+            ] as $key => $model
         ) {
             Artisan::call(sprintf('scout:index %s', $key));
             Artisan::call(sprintf('scout:import %s', str_replace('\\', '\\\\', $model)));

@@ -224,7 +224,7 @@
                                             role="status"
                                             aria-live="polite"
                                         >
-                                        <component is="IconLayoutGrid" class="h-3.5 w-3.5 opacity-75"
+                                        <component :is="IconLayoutGrid" class="h-3.5 w-3.5 opacity-75"
                                                    stroke-width="1.75" aria-hidden="true"/>
                                         <span class="tabular-nums">
                                           {{ area.rooms?.filter(r => !r.temporary).length || 0 }}
@@ -467,7 +467,7 @@
                                                                         <div
                                                                             class="mt-2 flex flex-wrap items-center gap-2 text-[11px] leading-tight text-amber-800/90">
                                                                           <span class="inline-flex items-center gap-1">
-                                                                            <component is="IconClock"
+                                                                            <component :is="IconClock"
                                                                                        class="h-3.5 w-3.5"
                                                                                        stroke-width="1.5"/>
                                                                             {{
@@ -1156,6 +1156,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import {IconClock, IconLayoutGrid} from "@tabler/icons-vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
@@ -1301,6 +1302,8 @@ export default defineComponent({
         }
     },
     methods: {
+        IconClock,
+        IconLayoutGrid,
         afterSoftDeleteAllRoomsConfirm(confirmed) {
             if (confirmed) {
                 this.softDeleteAllRooms()

@@ -4,13 +4,13 @@
         <transition name="fade" appear>
             <div class="pointer-events-none fixed z-50 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCopyUrl">
                 <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
-                    <component is="IconClipboard" class="size-5 text-blue-400" aria-hidden="true" />
+                    <component :is="IconClipboard" class="size-5 text-blue-400" aria-hidden="true" />
                     <p class="text-sm/6 text-white">
                         {{ $t('Project URL has been copied') }}
                     </p>
                     <button type="button" class="-m-1.5 flex-none p-1.5">
                         <span class="sr-only">Dismiss</span>
-                        <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCopyUrl = false" />
+                        <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCopyUrl = false" />
                     </button>
                 </div>
             </div>
@@ -120,7 +120,7 @@
                                             class="ml-4 inline-flex items-center gap-1 text-artwork-buttons-create hover:text-artwork-buttons-hover transition"
                                             @click="openProjectHistoryModal()"
                                         >
-                                            <component is="IconChevronRight" class="-mr-0.5 h-4 w-4" aria-hidden="true" />
+                                            <component :is="IconChevronRight" class="-mr-0.5 h-4 w-4" aria-hidden="true" />
                                             {{ $t('View history') }}
                                         </button>
                                     </div>
@@ -131,7 +131,7 @@
                             <div class="flex items-center gap-3">
                                 <ToolTipComponent
                                     :tooltip-text="$t('Select print layout')"
-                                    icon="IconPrinter"
+                                    :icon="IconPrinter"
                                     :direction="'bottom'"
                                     @click="showPrintLayoutSelectorModal = true"
                                     stroke="2"
@@ -139,7 +139,7 @@
                                 <!-- Copy Link -->
                                 <ToolTipComponent
                                     :tooltip-text="$t('Copy link')"
-                                    icon="IconLink"
+                                    :icon="IconLink"
                                     :direction="'bottom'"
                                     @click="copyProjectUrlToClipboard"
                                     stroke="2"
@@ -161,14 +161,14 @@
                                             white-menu-background
                                             @click="showAddProjectToGroup = true"
                                             v-if="is('artwork admin') || headerObject.projectWriteIds.includes(usePage().props.auth.user.id) || headerObject.projectManagerIds.includes(usePage().props.auth.user.id) || can('write projects')"
-                                            icon="IconCirclePlus"
+                                            :icon="IconCirclePlus"
                                             title="Add projects to group"
                                         />
                                         <BaseMenuItem
                                             white-menu-background
                                             @click="openCreateNewProjectInGroupModal"
                                             v-if="is('artwork admin') || headerObject.projectWriteIds.includes(usePage().props.auth.user.id) || headerObject.projectManagerIds.includes(usePage().props.auth.user.id) || can('write projects')"
-                                            icon="IconCirclePlus"
+                                            :icon="IconCirclePlus"
                                             title="Create project in this group"
                                         />
                                     </div>
@@ -333,7 +333,15 @@ import {can, is} from "laravel-permission-to-vuejs";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ProjectPlanningStateChangeModal from "@/Layouts/Components/ProjectPlanningStateChangeModal.vue";
-import {IconAlertSquareRounded} from "@tabler/icons-vue";
+import {
+    IconAlertSquareRounded,
+    IconChevronRight,
+    IconCirclePlus,
+    IconClipboard,
+    IconLink,
+    IconPrinter,
+    IconX
+} from "@tabler/icons-vue";
 
 const props = defineProps({
     headerObject: {

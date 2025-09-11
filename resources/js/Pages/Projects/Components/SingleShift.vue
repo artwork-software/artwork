@@ -79,7 +79,7 @@
                     @click="resetForm"
                     :aria-label="$t('Cancel')"
                 >
-                    <component is="IconX" class="h-4 w-4" />
+                    <component :is="IconX" class="h-4 w-4" />
                 </button>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2" :id="`container-${shift.id}`">
@@ -149,7 +149,7 @@
                     @click="resetForm"
                     :aria-label="$t('Cancel')"
                 >
-                    <component is="IconX" class="h-4 w-4" />
+                    <component :is="IconX" class="h-4 w-4" />
                 </button>
 
                 <BaseInput
@@ -309,6 +309,7 @@ import ShiftsQualificationsDropElement from '@/Pages/Projects/Components/ShiftsQ
 import AddShiftModal from '@/Pages/Projects/Components/AddShiftModal.vue'
 import AddShiftQualificationToShiftModel from '@/Pages/Projects/Components/AddShiftQualificationToShiftModel.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import {IconX} from "@tabler/icons-vue";
 
 defineOptions({ name: 'SingleShift' })
 

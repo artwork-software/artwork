@@ -50,7 +50,7 @@
 
                             <div class="flex item-center justify-end px-5 pb-5">
                                 <a :href="route('events')" class="text-artwork-buttons-create font-lexend text-xs flex items-center gap-x-1">
-                                    <component is="IconCalendarMonth" class="size-4" />
+                                    <component :is="IconCalendarMonth" class="size-4" />
                                     {{ $t("to calendar") }}
                                 </a>
                             </div>
@@ -82,7 +82,7 @@
 
                             <div class="flex item-center justify-end px-5 pb-5" v-if="this.$can('can view shift plan') || this.hasAdminRole()">
                                 <a :href="route('shifts.plan')" class="text-artwork-buttons-create font-lexend text-xs flex items-center gap-x-1">
-                                    <component is="IconCalendarUser" class="size-4" />
+                                    <component :is="IconCalendarUser" class="size-4" />
                                     {{ $t("to the shift plan") }}
                                 </a>
                             </div>
@@ -136,7 +136,7 @@
                             </div>
                             <div class="flex item-center justify-end px-5 py-5">
                                 <a :href="route('notifications.index')" class="text-artwork-buttons-create font-lexend text-xs flex items-center gap-x-1">
-                                    <component is="IconBell" class="size-4" />
+                                    <component :is="IconBell" class="size-4" />
                                     {{ $t("Go to the notifications")}}
                                 </a>
                             </div>
@@ -184,7 +184,7 @@
                             </div>
                             <div class="flex item-center justify-end px-5 py-5">
                                 <a :href="route('tasks.own')" class="text-artwork-buttons-create font-lexend text-xs flex items-center gap-x-1">
-                                    <component is="IconListCheck" class="size-4" />
+                                    <component :is="IconListCheck" class="size-4" />
                                     {{ $t("To the task overview")}}
                                 </a>
                             </div>
@@ -233,6 +233,7 @@ import SinglePlannedEventInVerificationPage
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
 import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
+import {IconBell, IconCalendarMonth, IconCalendarUser, IconListCheck} from "@tabler/icons-vue";
 export default defineComponent({
     mixins: [Permissions],
     props: [
@@ -296,6 +297,10 @@ export default defineComponent({
             });
     },
     methods: {
+        IconListCheck,
+        IconBell,
+        IconCalendarUser,
+        IconCalendarMonth,
         usePage,
         backgroundColorWithOpacity(event){
             const color = event.event_type?.hex_code;

@@ -28,7 +28,7 @@
                                             </div>
                                             <div class="flex items-center gap-x-2">
                                                 <span v-if="category?.subcategories?.length > 0">
-                                                    <component is="IconChevronDown" class="size-5" stroke-width="1" aria-hidden="true"  :class="[category.id === currentCategory?.id ? 'rotate-180' : '']" />
+                                                    <component :is="IconChevronDown" class="size-5" stroke-width="1" aria-hidden="true"  :class="[category.id === currentCategory?.id ? 'rotate-180' : '']" />
                                                 </span>
                                                 <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 ring-1 ring-blue-500/10 ring-inset">{{ category.articles?.length || 0 }}</span>
                                             </div>
@@ -44,7 +44,7 @@
                                                         }) ? 'text-artwork-buttons-create font-semibold' : '']">
                                                     <div class="first-letter:capitalize text-xs pl-2 py-1 flex items-center justify-between w-full">
                                                         <div class="flex items-center gap-x-0.5">
-                                                            <component is="IconPointFilled" class="size-4" stroke-width="1" aria-hidden="true" />
+                                                            <component :is="IconPointFilled" class="size-4" stroke-width="1" aria-hidden="true" />
                                                             <span class="first-letter:capitalize">
                                                                 {{ subCategory.name }}
                                                             </span>
@@ -70,6 +70,7 @@
 import {Link} from "@inertiajs/vue3";
 import BaseCard from "@/Artwork/Cards/BaseCard.vue";
 import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
+import {IconChevronDown, IconPointFilled} from "@tabler/icons-vue";
 
 const props = defineProps({
     categories: {

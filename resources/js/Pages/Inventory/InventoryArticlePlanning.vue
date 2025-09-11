@@ -25,7 +25,7 @@
                                 <!-- Kategorie (sticky in erster Spalte) -->
                                 <div class="flex font-bold bg-gray-200">
                                     <div class="sticky left-0 z-20 font-bold font-lexend text-xs px-4 py-3 min-w-[200px] w-[200px] flex items-center gap-x-1">
-                                        <component is="IconCategoryFilled" class="inline-block size-4" />
+                                        <component :is="IconCategoryFilled" class="inline-block size-4" />
                                         {{ group.category }}
                                     </div>
                                     <div class="flex-1"></div>
@@ -48,8 +48,8 @@
                                     <div class="flex border-t bg-gray-200 font-bold text-gray-800">
                                         <div class="sticky left-0 z-20  font-lexend text-xs px-4 py-3 min-w-[200px] w-[200px] flex items-center gap-x-1 border-r">
                                             <div class="relative">
-                                                <component is="IconRadiusBottomLeft" class="inline-block size-3 absolute" />
-                                                <component is="IconCategory2" class="inline-block size-4 ml-4" />
+                                                <component :is="IconRadiusBottomLeft" class="inline-block size-3 absolute" />
+                                                <component :is="IconCategory2" class="inline-block size-4 ml-4" />
                                                 {{ sub.name }}
                                             </div>
                                         </div>
@@ -90,6 +90,7 @@ import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import {router} from "@inertiajs/vue3";
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import {ref} from "vue";
+import {IconCategory2, IconCategoryFilled, IconRadiusBottomLeft} from "@tabler/icons-vue";
 
 const props = defineProps({
     groupedArticles: {

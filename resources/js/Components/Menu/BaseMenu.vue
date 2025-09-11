@@ -61,7 +61,7 @@
 
 </template>
 
-<script>
+<script lang="ts">
 import { defineComponent } from 'vue';
 import { Menu, MenuButton, MenuItems } from '@headlessui/vue';
 import IconLib from '@/Mixins/IconLib.vue';
@@ -115,9 +115,9 @@ export default defineComponent({
             default: false,
         },
         icon: {
-            type: String,
-            required: false,
-            default: 'IconEdit',
+            // erlaubt String oder echte Komponente (Function/Object)
+            type: [String, Function, Object] as PropType<string | Component>,
+            default: null,
         },
         translationKey: {
             type: String,

@@ -10,7 +10,7 @@
                     </p>
                     <button type="button" class="-m-1.5 flex-none p-1.5">
                         <span class="sr-only">Dismiss</span>
-                        <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
+                        <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
                     </button>
                 </div>
             </div>
@@ -36,7 +36,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import {usePage} from "@inertiajs/vue3";
 import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
 import {computed, onMounted, onUnmounted, provide, ref} from "vue";
-import { IconAlertSquareRounded } from "@tabler/icons-vue";
+import {IconAlertSquareRounded, IconX} from "@tabler/icons-vue";
 
 const props = defineProps({
     period: {

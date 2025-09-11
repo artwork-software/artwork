@@ -43,12 +43,12 @@
                             <BaseInput type="time" id="end_time" v-model="individual_time.end_time" classes="border-l-0 rounded-l-none" label="Endzeit" :show-label="false" no-margin-top />
                         </div>
                         <div class="flex items-center">
-                            <component is="IconTrash" class="h-6 w-6 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5" @click="deleteIndividualTimeByIndex(index)" />
+                            <component :is="IconTrash" class="h-6 w-6 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5" @click="deleteIndividualTimeByIndex(index)" />
                         </div>
                     </div>
                     <div v-if="individual_time.error" class="text-xs text-red-500 -mt-2">{{ individual_time.error }}</div>
                 </div>
-                <component is="IconCirclePlus" class="h-6 w-6 xsLight cursor-pointer hover:text-artwork-buttons-hover transition-all duration-300 ease-in-out" stroke-width="2" @click="addIndividualTime" />
+                <component :is="IconCirclePlus" class="h-6 w-6 xsLight cursor-pointer hover:text-artwork-buttons-hover transition-all duration-300 ease-in-out" stroke-width="2" @click="addIndividualTime" />
             </div>
             <div v-else class="cursor-pointer mt-3" @click="addIndividualTime">
                 <div class="w-full px-3 py-4 bg-blue-400/30 rounded-lg">
@@ -80,6 +80,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import { CheckIcon, ChevronDownIcon } from "@heroicons/vue/solid";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import {IconCirclePlus, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     multiEditCellByDayAndUser: {

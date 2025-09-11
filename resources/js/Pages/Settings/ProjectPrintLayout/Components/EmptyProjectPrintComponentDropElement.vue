@@ -8,7 +8,7 @@
                      class="p-5 w-full rounded-lg border-2 cursor-pointer border-dashed flex items-center justify-center hover:border-artwork-buttons-create duration-200 ease-in-out group"
                      :class="[isDragging ? 'border-artwork-buttons-create' : 'border-gray-300', dropOver ? 'bg-artwork-buttons-create/10' : '']">
                     <div class="flex flex-col items-center justify-between">
-                        <component is="IconCircleDashedPlus" class="h-8 w-8 group-hover:text-artwork-buttons-create duration-200 ease-in-out" :class="[isDragging ? 'text-artwork-buttons-create' : 'text-gray-300']" stroke-width="1.5" />
+                        <component :is="IconCircleDashedPlus" class="h-8 w-8 group-hover:text-artwork-buttons-create duration-200 ease-in-out" :class="[isDragging ? 'text-artwork-buttons-create' : 'text-gray-300']" stroke-width="1.5" />
                         <p v-if="isDragging" class="xsDark mt-1">{{ $t('Drop here') }}</p>
                     </div>
                 </div>
@@ -64,6 +64,7 @@ import DragComponentElement from "@/Pages/Settings/Components/DragComponentEleme
 import DropComponentsToolTip from "@/Components/ToolTips/DropComponentsToolTip.vue";
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 import {Float} from "@headlessui-float/vue";
+import {IconCircleDashedPlus} from "@tabler/icons-vue";
 
 
 const { isDragging, addEventListenerForDraggingStart, removeEventListenerForDraggingStart } = EventListenerForDragging();

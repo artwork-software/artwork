@@ -3,7 +3,7 @@
         <td>
             <div class="px-2 py-1.5 bg-gray-50/10 w-full" :class="group.closed ? 'rounded-b-lg' : ''">
                 <div class="stickyYAxisNoMarginLeft w-48 flex items-center gap-x-1">
-                    <component is="IconCornerDownRight" class="h-4 w-4"/>
+                    <component :is="IconCornerDownRight" class="h-4 w-4"/>
                     {{ group.name }}
                     <ChevronDownIcon
                         :class="group.closed ? '' : 'rotate-180 transform'"
@@ -22,6 +22,7 @@
 import {ChevronDownIcon} from "@heroicons/vue/outline";
 import SingleItemInGroup from "@/Pages/Inventory/Components/SingleItemInGroup.vue";
 import SingleFolderInGroup from "@/Pages/Inventory/Components/SingleFolderInGroup.vue";
+import {IconCornerDownRight} from "@tabler/icons-vue";
 
 const props = defineProps({
     group: {

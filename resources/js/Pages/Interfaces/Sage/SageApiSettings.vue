@@ -10,7 +10,7 @@
             <div class="flex items-center justify-end col-span-3">
                 <div class="flex items-center mr-2">
                     <span class="ml-1 my-auto hind">{{ $t('Execute data retrieval from Sage again') }}&nbsp;</span>
-                    <component is="IconArrowCurveRight" class="h-6 w-6 ml-1 mr-1 rotate-90 hind" stroke-width="1.7"/>
+                    <component :is="IconArrowCurveRight" class="h-6 w-6 ml-1 mr-1 rotate-90 hind" stroke-width="1.7"/>
                 </div>
                 <div class="flex flex-row gap-1">
                     <RefreshIcon :class="[
@@ -153,7 +153,7 @@
 import { defineComponent } from "vue";
 import { useForm, router } from "@inertiajs/vue3";
 import { InformationCircleIcon, RefreshIcon, TrashIcon } from "@heroicons/vue/solid";
-import { IconDragDrop } from "@tabler/icons-vue";
+import {IconArrowCurveRight, IconDragDrop} from "@tabler/icons-vue";
 import draggable from "vuedraggable";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -197,6 +197,7 @@ export default defineComponent({
         }
     },
     methods: {
+        IconArrowCurveRight,
         sageInterfaceIsConfigured() {
             return this.sageSettings?.host &&
                 this.sageSettings?.endpoint &&

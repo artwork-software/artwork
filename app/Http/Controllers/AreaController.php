@@ -34,7 +34,7 @@ class AreaController extends Controller
                 'name' => $area->name,
                 // showContent declares if the area should be showing all details when loading the page
                 'showContent' => true,
-                'rooms' => RoomIndexResource::collection($area->rooms()->orderBy('order')->get())->resolve(),
+                'rooms' => RoomIndexResource::collection($area->rooms()->orderBy('position')->get())->resolve(),
             ]),
             'opened_areas' => User::where('id', Auth::id())->first()->opened_areas,
             'room_categories' => RoomCategory::all(),

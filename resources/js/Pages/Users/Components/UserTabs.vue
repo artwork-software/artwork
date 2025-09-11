@@ -47,6 +47,13 @@ export default defineComponent({
                     icon: 'IconHome'
                 },
                 {
+                    name: 'Artists',
+                    href: route('artist.index'),
+                    current: route().current('artist.index'),
+                    permission: true,
+                    icon: 'IconUsers'
+                },
+                {
                     name: 'Teams',
                     href: route('departments'),
                     current: route().current('departments'),

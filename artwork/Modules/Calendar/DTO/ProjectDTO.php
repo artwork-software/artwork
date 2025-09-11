@@ -15,7 +15,7 @@ class ProjectDTO extends Data
     public function __construct(
         public int $id,
         public string $name,
-        public Lazy|ProjectState|null $status,
+        public ProjectState|null $status,
         public ?string $artistNames,
         public Lazy|Collection $leaders,
         public ?string $color = null,
@@ -33,7 +33,7 @@ class ProjectDTO extends Data
         return new self(
             $project->id,
             $project->name,
-            $userCalendarSettings?->project_status ? $project->status : Lazy::inertia(fn() => $project->status),
+            $project->status,
             $project->artists,
             $userCalendarSettings?->project_management ?
                 $project->managerUsers :

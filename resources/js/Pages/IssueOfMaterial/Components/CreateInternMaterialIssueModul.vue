@@ -175,6 +175,18 @@
                                                     <span class="tabular-nums">{{ article.availableStock?.ready ?? status.pivot.value ?? 0 }}</span>
                                                 </div>
                                             </template>
+
+                                            <!-- Period availability bubble -->
+                                            <div v-if="internMaterialIssue.start_date && internMaterialIssue.end_date" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 border-blue-300 bg-blue-50" :title="$t('Available in period')">
+                                                <span class="inline-block size-1.5 rounded-full bg-blue-500"></span>
+                                                <span class="text-blue-700 font-medium">{{ $t('in period') }}</span>
+                                                <span v-if="!article.periodAvailabilityLoading" class="tabular-nums text-blue-700" :class="{
+                                                    'text-emerald-600': (article.periodAvailability?.available ?? 0) > 0,
+                                                    'text-red-600': (article.periodAvailability?.available ?? 0) === 0
+                                                }">{{ article.periodAvailability?.available ?? 0 }}</span>
+                                                <span v-else class="inline-block h-3 w-3 animate-spin rounded-full border border-blue-500 border-t-transparent"></span>
+                                            </div>
+
                                             <span class="ml-auto text-zinc-500">{{ $t('Category') }}: {{ article.category.name }}<span v-if="article.sub_category"> • {{ $t('Subcategory') }}: {{ article.sub_category.name }}</span></span>
                                         </div>
                                     </div>
@@ -768,6 +780,9 @@ const loadMoreArticles = async () => {
             hasMoreArticles.value = false;
             paginationPage.value = 1;
         }
+
+        // Check availability for newly loaded articles
+        await checkFoundArticlesAvailability();
     } catch (e) {
         console.error('Fehler beim Nachladen von Nachrichten:', e);
     }
@@ -786,7 +801,7 @@ const reloadArticlesWithNewFilter = async () => {
 const removeArticle = (index) => {
     internMaterialIssue.articles.splice(index, 1);
 };
-const emits = defineEmits(["close"]);
+const emits = defineEmits(["close", "saved"]);
 
 const submit = () => {
     if (selectedProject.value) {
@@ -822,13 +837,27 @@ const submit = () => {
             route("issue-of-material.update", props.issueOfMaterial.id),
             {
                 onSuccess: () => {
+                    emits("saved", {
+                        issueId: props.issueOfMaterial.id,
+                        updatedArticles: internMaterialIssue.articles.map(article => ({
+                            id: article.id,
+                            quantity: article.quantity
+                        }))
+                    });
                     emits("close");
                 },
             }
         );
     } else {
         internMaterialIssue.post(route("issue-of-material.store"), {
-            onSuccess: () => {
+            onSuccess: (response) => {
+                emits("saved", {
+                    issueId: response.props?.issueOfMaterial?.id || null,
+                    updatedArticles: internMaterialIssue.articles.map(article => ({
+                        id: article.id,
+                        quantity: article.quantity
+                    }))
+                });
                 emits("close");
             },
         });
@@ -890,6 +919,50 @@ const checkAvailableStock = async () => {
     }
 };
 
+const checkFoundArticlesAvailability = async () => {
+    if (
+        !internMaterialIssue.start_date ||
+        !internMaterialIssue.end_date ||
+        !articles.value.length
+    ) {
+        return;
+    }
+
+    const ids = articles.value.map((a) => a.id).filter(Boolean);
+
+    // Set loading for all found articles
+    for (const article of articles.value) {
+        article.periodAvailabilityLoading = true;
+        article.periodAvailability = null;
+    }
+
+    try {
+        const response = await axios.post(
+            route("inventory.articles.available-stock.batch"),
+            {
+                article_ids: ids,
+                type: 'intern',
+                issue_id: internMaterialIssue?.id || null,
+                start_date: internMaterialIssue.start_date,
+                end_date: internMaterialIssue.end_date,
+            }
+        );
+
+        const resultMap = response.data.data;
+
+        for (const article of articles.value) {
+            const stock = resultMap[article.id];
+            article.periodAvailabilityLoading = false;
+            article.periodAvailability = stock;
+        }
+    } catch (error) {
+        for (const article of articles.value) {
+            article.periodAvailabilityLoading = false;
+            article.periodAvailability = null;
+        }
+    }
+};
+
 const upload = (event) => {
     const files = event.target.files;
     if (files.length > 0) {
@@ -917,6 +990,7 @@ watch(
     () => [internMaterialIssue.start_date, internMaterialIssue.end_date],
     debounce(() => {
         checkAvailableStock();
+        checkFoundArticlesAvailability(); // Check availability for found articles
         reloadArticlesWithNewFilter(); // Artikelliste neu laden bei Datumswechsel
     }, 300)
 );

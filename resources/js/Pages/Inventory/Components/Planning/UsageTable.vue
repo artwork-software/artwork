@@ -36,6 +36,7 @@
     <IssueOfMaterialModal
         v-if="showIssueOfMaterialModal"
         @close="closeIssueOfMaterialModal"
+        @saved="handleDataSaved"
         :issue-of-material="extern ? null : issueForModal"
         :is-extern-or-intern="extern"
         :extern-material-issue="extern ? issueForModal : null"
@@ -58,6 +59,8 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['dataChanged', 'quantityUpdated']);
+
 
 const showIssueOfMaterialModal = ref(false);
 const issueForModal = ref(null);
@@ -74,6 +77,17 @@ const openMaterialIssueModal = (issueId) => {
 const closeIssueOfMaterialModal = () => {
     showIssueOfMaterialModal.value = false;
     issueForModal.value = null;
+    // Emit event to trigger data refresh in parent components
+    emit('dataChanged');
+};
+
+const handleDataSaved = (quantityData) => {
+    // Emit event with quantity data to directly update quantities in parent modal
+    if (quantityData && quantityData.updatedArticles) {
+        emit('quantityUpdated', quantityData);
+    }
+    // Also emit general data changed event for fallback
+    emit('dataChanged');
 };
 </script>
 

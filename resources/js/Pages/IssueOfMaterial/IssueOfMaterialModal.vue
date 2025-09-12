@@ -36,7 +36,7 @@
                 <ExternMaterialIssueModul :extern-material-issue="externMaterialIssue" @close="$emit('close')" />
             </div>
             <div v-else>
-                <CreateInternMaterialIssueModul :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" @close="$emit('close')" />
+                <CreateInternMaterialIssueModul :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" @close="$emit('close')" @saved="handleSaved" />
             </div>
         </div>
 
@@ -117,6 +117,12 @@ const ExternMaterialIssueModul = defineAsyncComponent({
     delay: 0,
     timeout: 3000,
 })
+
+const emit = defineEmits(['close', 'saved']);
+
+const handleSaved = (quantityData) => {
+    emit('saved', quantityData);
+};
 
 const checkIfEditMode = computed(() => {
     return !!(props.issueOfMaterial?.id || props.externMaterialIssue?.id);

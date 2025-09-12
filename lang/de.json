@@ -3115,5 +3115,9 @@
     "individual value": "Individueller Wert",
     "If active, this property will not be duplicated when duplicating an article and individual values can not be edited with multiedit-functions. This is useful for properties like serial numbers that should be unique for each article.": "Wenn diese Option aktiviert ist, wird diese Eigenschaft beim Duplizieren nicht mitkopiert. Zudem können individuelle Werte nicht mit der Multi-Edit-Funktion bearbeitet werden. Diese Einstellung ist sinnvoll bei Eigenschaften, die für jeden Artikel einzigartig sein sollten, wie z.B. Seriennummern.",
     "Selected room" : "Ausgewählter Raum",
-    "Show images": "Bilder anzeigen"
+    "Show images": "Bilder anzeigen",
+    "Status composition": "Aufteilung nach Status",
+    "in period": "im Zeitraum",
+    "of which available": "davon einsatzbereit",
+    "available after usage": "Verfügbar nach Nutzung"
 }

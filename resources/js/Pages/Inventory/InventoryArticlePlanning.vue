@@ -193,6 +193,7 @@
         <ArticleUsageModal
             :details-for-modal="detailsForModal"
             @close="showArticleUsageModal = false"
+            @refreshData="refreshModalData"
             v-if="showArticleUsageModal"
         />
     </AppLayout>
@@ -212,6 +213,8 @@ const props = defineProps({
 });
 
 const showArticleUsageModal = ref(false);
+const currentModalArticleId = ref(null);
+const currentModalDate = ref(null);
 
 /** --- Collapsible state --- */
 const catOpen = reactive({}); // key: category -> boolean
@@ -258,6 +261,8 @@ const isToday = (date) => {
 };
 
 const openDetailModal = (articleId, date) => {
+    currentModalArticleId.value = articleId;
+    currentModalDate.value = date;
     router.reload({
         data: { article_id: articleId, date },
         preserveState: true,
@@ -267,6 +272,20 @@ const openDetailModal = (articleId, date) => {
             showArticleUsageModal.value = true;
         }
     });
+};
+
+const refreshModalData = () => {
+    if (currentModalArticleId.value && currentModalDate.value) {
+        router.reload({
+            data: {
+                article_id: currentModalArticleId.value,
+                date: currentModalDate.value
+            },
+            preserveState: true,
+            preserveScroll: true,
+            only: ["detailsForModal", "availability"]
+        });
+    }
 };
 
 const DatePickerComponent = defineAsyncComponent({

@@ -150,6 +150,7 @@ class InventoryArticleController extends Controller
 
         $articles = InventoryArticle::whereIn('id', $articleIds)
             ->with([
+                'statusValues',
                 'internalIssues' => function ($q) use ($startDate, $endDate) {
                     $q->whereDate('start_date', '<=', $endDate)
                         ->where(function ($qq) use ($startDate) {

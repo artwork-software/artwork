@@ -3107,5 +3107,9 @@
     "Only relevant for single inventory capable articles. A property with this active will always be set for all articles and is made for properties that are the same for all articles.": "Only relevant for single inventory capable articles. A property with this active will always be set for all articles and is made for properties that are the same for all articles.",
     "individual value": "individual value",
     "If active, this property will not be duplicated when duplicating an article and individual values can not be edited with multiedit-functions. This is useful for properties like serial numbers that should be unique for each article.": "If active, this property will not be duplicated when duplicating an article and individual values can not be edited with multiedit-functions. This is useful for properties like serial numbers that should be unique for each article.",
-    "Show images": "Show images"
+    "Show images": "Show images",
+    "Status composition": "Status composition",
+    "in period": "in period",
+    "of which available": "of which available",
+    "available after usage": "available after usage"
 }

@@ -270,9 +270,9 @@
                           </div>
                       </div>
 
-                      <div v-if="sections.properties.open" class="grid gird-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 my-3">
-                          <div v-for="prop in ui.properties" :key="`prop-${prop.id}`" class="flex items-center gap-2 w-full">
-                              <label class="text-sm text-gray-900 min-w-36 hidden">{{ prop.name }}</label>
+                      <div v-if="sections.properties.open" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 my-3">
+                          <div v-for="prop in ui.properties" :key="`prop-${prop.id}`" class="flex items-center gap-2 w-full flex-wrap">
+                              <label class="text-sm text-gray-900 min-w-36">{{ prop.name }}</label>
 
                               <!-- Spezielle Properties: ROOM -->
                               <InventoryCombobox
@@ -306,7 +306,7 @@
                               <select
                                   v-else-if="prop.select_values && prop.select_values.length"
                                   v-model="prop.value"
-                                  class="border rounded px-2 py-1 text-xs w-full"
+                                  class="border border-gray-300 bg-white shadow-md rounded px-2 py-3 text-xs w-full"
                               >
                                   <option value="">{{ $t('Any') }}</option>
                                   <option v-for="v in prop.select_values" :key="`${prop.id}-${v}`" :value="v">

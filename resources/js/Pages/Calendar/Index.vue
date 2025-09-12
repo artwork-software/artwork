@@ -23,7 +23,7 @@
 
         <!-- Kalender -->
         <div class="w-full">
-            <!-- Wenn 'calendar' synchron vorhanden ist, direkt rendern -->
+            <!-- synchron (calendar bereits vorhanden) -->
             <template v-if="!isCalendarLazy">
                 <BaseCalendar
                     v-memo="[rooms, period, calendar]"
@@ -37,13 +37,11 @@
                 />
             </template>
 
-            <!-- Falls 'calendar' als Lazy-Prop kommt: erst laden, wenn sichtbar -->
+            <!-- lazy (calendar ist Lazy-Prop von Inertia v2) -->
             <WhenVisible v-else data="calendar">
                 <template #fallback>
                     <div class="mt-6 text-sm text-zinc-500">{{ $t('Loading calendar…') }}</div>
                 </template>
-
-                <!-- Async-Komponente mit Fallback (Code-Splitting) -->
                 <Suspense>
                     <template #default>
                         <BaseCalendar
@@ -67,53 +65,28 @@
 </template>
 
 <script setup lang="ts">
-import AppLayout from "@/Layouts/AppLayout.vue";
-import { WhenVisible } from "@inertiajs/vue3";
-import {
-    computed,
-    defineAsyncComponent,
-    onMounted,
-    onUnmounted,
-    provide,
-    ref,
-    type PropType,
-} from "vue";
-import { IconAlertSquareRounded, IconX } from "@tabler/icons-vue";
+import AppLayout from '@/Layouts/AppLayout.vue'
+import { WhenVisible } from '@inertiajs/vue3'
+import { defineAsyncComponent, onMounted, onUnmounted, provide, ref, computed, type PropType } from 'vue'
+import { IconAlertSquareRounded, IconX } from '@tabler/icons-vue'
 
-// --- Async Code-Splitting für schnelleren Initial-Load
-const BaseCalendar = defineAsyncComponent(() => import("@/Components/Calendar/BaseCalendar.vue"));
+// Async Code-Splitting
+const BaseCalendar = defineAsyncComponent(() => import('@/Components/Calendar/BaseCalendar.vue'))
 
 type PeriodItem = {
-    day: string;
-    dayString: string;
-    fullDay: string;
-    withoutFormat: string;
-    shortDay: string;
-    weekNumber: number;
-    isMonday: boolean;
-    isSunday?: boolean;
-    isWeekend: boolean;
-    isFirstDayOfMonth: boolean;
-    addWeekSeparator?: boolean;
-    hoursOfDay?: string[];
-    isExtraRow?: boolean;
-    holidays?: unknown[];
-};
-
-type Room = {
-    id: number;
-    name: string;
-    has_events: boolean;
-    admins: number[];
-};
+    day: string; dayString: string; fullDay: string; withoutFormat: string; shortDay: string;
+    weekNumber: number; isMonday: boolean; isWeekend: boolean; isFirstDayOfMonth: boolean;
+    isSunday?: boolean; addWeekSeparator?: boolean; hoursOfDay?: string[]; isExtraRow?: boolean; holidays?: unknown[];
+}
+type Room = { id:number; name:string; has_events:boolean; admins:number[] }
 
 const props = defineProps({
     period: { type: Array as PropType<PeriodItem[]>, required: true },
     rooms: { type: Array as PropType<Room[]>, required: true },
-    months: { type: Object as PropType<Record<string, { first_day_in_period: string; month: string; year: string }>>, required: true },
+    months: { type: Object as PropType<Record<string,{ first_day_in_period:string; month:string; year:string }>>, required: true },
     calendar: { type: [Array, Object] as PropType<any>, required: false, default: undefined },
     eventStatuses: { type: [Array, Object] as PropType<any>, required: true },
-    dateValue: { type: Array as PropType<[string, string]>, required: true },
+    dateValue: { type: Array as PropType<[string,string]>, required: true },
     personalFilters: { type: [Array, Object] as PropType<any>, required: true },
     filterOptions: { type: [Array, Object] as PropType<any>, required: true },
     user_filters: { type: Object as PropType<any>, required: true },
@@ -121,48 +94,38 @@ const props = defineProps({
     event_properties: { type: [Array, Object] as PropType<any>, required: true },
     first_project_tab_id: { type: Number, required: true },
     first_project_calendar_tab_id: { type: Number, required: true },
-    first_project_shift_tab_id: { type: Number, required: true }, // <-- hinzugefügt
+    first_project_shift_tab_id: { type: Number, required: true },
     eventsWithoutRoom: { type: [Array, Object] as PropType<any[]>, required: false, default: () => [] },
-    projectNameUsedForProjectTimePeriod: { type: String as PropType<string | null>, required: false, default: null },
+    projectNameUsedForProjectTimePeriod: { type: String as PropType<string|null>, required: false, default: null },
     areas: { type: [Array, Object] as PropType<any>, required: true },
-    calendarWarningText: { type: String, required: false, default: "" },
-});
+    calendarWarningText: { type: String, required: false, default: '' },
+})
 
-// Injection (beibehalten – keine Design-/API-Änderung)
-provide("eventTypes", props.eventTypes);
-provide("dateValue", props.dateValue);
-provide("first_project_tab_id", props.first_project_tab_id);
-provide("first_project_calendar_tab_id", props.first_project_calendar_tab_id);
-provide("user_filters", props.user_filters);
-provide("personalFilters", props.personalFilters);
-provide("filterOptions", props.filterOptions);
-provide("rooms", props.rooms);
-provide("eventStatuses", props.eventStatuses);
-provide("months", props.months);
-provide("event_properties", props.event_properties);
-provide("areas", props.areas);
+// provide (bestehend lassen)
+provide('eventTypes', props.eventTypes)
+provide('dateValue', props.dateValue)
+provide('first_project_tab_id', props.first_project_tab_id)
+provide('first_project_calendar_tab_id', props.first_project_calendar_tab_id)
+provide('user_filters', props.user_filters)
+provide('personalFilters', props.personalFilters)
+provide('filterOptions', props.filterOptions)
+provide('rooms', props.rooms)
+provide('eventStatuses', props.eventStatuses)
+provide('months', props.months)
+provide('event_properties', props.event_properties)
+provide('areas', props.areas)
 
 // Warnleiste
-const showCalendarWarning = ref<string>(props.calendarWarningText);
-const dismissTimer = ref<number | undefined>(undefined);
+const showCalendarWarning = ref<string>(props.calendarWarningText)
+let timer:number|undefined
+onMounted(() => { if (showCalendarWarning.value) timer = window.setTimeout(() => (showCalendarWarning.value = ''), 5000) })
+onUnmounted(() => { if (timer) clearTimeout(timer) })
 
-onMounted(() => {
-    if (showCalendarWarning.value) {
-        dismissTimer.value = window.setTimeout(() => {
-            showCalendarWarning.value = "";
-        }, 5000);
-    }
-});
-
-onUnmounted(() => {
-    if (dismissTimer.value) {
-        clearTimeout(dismissTimer.value);
-    }
-});
-
-// Unterstützt Lazy-Props (Inertia v2) und synchrones Rendering
-const isCalendarLazy = computed(() => typeof props.calendar === "undefined");
-const calendar = computed(() => props.calendar ?? []);
+// Lazy?
+const isCalendarLazy = computed(() => typeof props.calendar === 'undefined')
+const calendar = computed(() => props.calendar ?? [])
+const rooms = computed(() => props.rooms)
+const period = computed(() => props.period)
 </script>
 
 <style scoped>

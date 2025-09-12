@@ -12,7 +12,7 @@
                             <div class="absolute top-0 left-full flex w-16 justify-center pt-5">
                                 <button type="button" class="-m-2.5 p-2.5" @click="sidebarOpen = false">
                                     <span class="sr-only">Close sidebar</span>
-                                    <component is="IconX" class="size-6 text-white" aria-hidden="true" />
+                                    <component :is="IconX" class="size-6 text-white" aria-hidden="true" />
                                 </button>
                             </div>
                         </TransitionChild>
@@ -51,8 +51,8 @@
                     <div class="group relative">
                         <div class="cursor-pointer absolute group-hover:block hidden bg-artwork-navigation-background/70 z-10 h-full w-full" @click="isFullSideBar = !isFullSideBar">
                             <div class="flex items-center justify-center h-full w-full">
-                                <component is="IconChevronsRight" v-if="!isFullSideBar" class="h-6 w-6 text-white" aria-hidden="true"/>
-                                <component is="IconChevronsLeft" v-else class="h-6 w-6 text-white" aria-hidden="true"/>
+                                <component :is="IconChevronsRight" v-if="!isFullSideBar" class="h-6 w-6 text-white" aria-hidden="true"/>
+                                <component :is="IconChevronsLeft" v-else class="h-6 w-6 text-white" aria-hidden="true"/>
                             </div>
                         </div>
                         <div class="font-bold text-secondaryHover block">
@@ -209,7 +209,7 @@ import {
     IconCalendarCog,
     IconCalendarExclamation, IconCalendarMonth,
     IconCalendarTime,
-    IconCalendarUser,
+    IconCalendarUser, IconChevronsLeft, IconChevronsRight,
     IconCurrencyEuro,
     IconDoor,
     IconFileText,
@@ -220,7 +220,7 @@ import {
     IconParentheses,
     IconSettings, IconTicket,
     IconTimelineEventPlus, IconTrash, IconUserCircle,
-    IconUsers
+    IconUsers, IconX
 } from "@tabler/icons-vue";
 const { locale } = useI18n();
 

@@ -85,7 +85,7 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 
 const props = defineProps({
@@ -96,7 +96,11 @@ const props = defineProps({
     },
     tooltipText: { type: String, default: '' },
     classes: { type: [String, Array], default: '' },
-    icon: { type: [String, Object, Function], default: null },
+    icon: {
+        // erlaubt String oder echte Komponente (Function/Object)
+        type: [String, Function, Object] as PropType<string | Component>,
+        default: null,
+    },
     iconSize: { type: String, default: 'w-6 h-6' },
     disabled: { type: Boolean, default: false },
     stroke: { type: [String, Number], default: '1' },

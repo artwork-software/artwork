@@ -263,13 +263,13 @@
                                 <!-- Aktionen Bereich -->
                                 <div class="ml-auto">
                                     <BaseMenu white-menu-background has-no-offset>
-                                        <BaseMenuItem icon="IconEdit" title="Edit" white-menu-background
+                                        <BaseMenuItem :icon="IconEdit" title="Edit" white-menu-background
                                                       @click="openEditAreaModal(area)"/>
-                                        <BaseMenuItem icon="IconCopy" title="Duplicate" white-menu-background
+                                        <BaseMenuItem :icon="IconCopy" title="Duplicate" white-menu-background
                                                       @click="duplicateArea(area)"/>
-                                        <BaseMenuItem icon="IconRecycle" title="Remove all rooms" white-menu-background
+                                        <BaseMenuItem :icon="IconRecycle" title="Remove all rooms" white-menu-background
                                                       @click="openDeleteAllRoomsModal(area)"/>
-                                        <BaseMenuItem icon="IconTrash" title="In the recycle bin" white-menu-background
+                                        <BaseMenuItem :icon="IconTrash" title="In the recycle bin" white-menu-background
                                                       @click="openSoftDeleteAreaModal(area)"/>
                                     </BaseMenu>
                                 </div>
@@ -362,13 +362,13 @@
 
                                                                 <!-- Mehr (Kontextmenü) -->
                                                                 <BaseMenu white-menu-background has-no-offset>
-                                                                    <BaseMenuItem icon="IconEdit" title="Edit"
+                                                                    <BaseMenuItem :icon="IconEdit" title="Edit"
                                                                                   white-menu-background
                                                                                   @click="openEditRoomModal(element)"/>
-                                                                    <BaseMenuItem icon="IconCopy" title="Duplicate"
+                                                                    <BaseMenuItem :icon="IconCopy" title="Duplicate"
                                                                                   white-menu-background
                                                                                   @click="duplicateRoom(element)"/>
-                                                                    <BaseMenuItem icon="IconTrash"
+                                                                    <BaseMenuItem :icon="IconTrash"
                                                                                   title="In the recycle bin"
                                                                                   white-menu-background
                                                                                   @click="openSoftDeleteRoomModal(element)"/>
@@ -507,14 +507,14 @@
 
                                                                         <!-- Kontextmenü -->
                                                                         <BaseMenu white-menu-background has-no-offset>
-                                                                            <BaseMenuItem icon="IconEdit" title="Edit"
+                                                                            <BaseMenuItem :icon="IconEdit" title="Edit"
                                                                                           white-menu-background
                                                                                           @click="openEditRoomModal(element)"/>
-                                                                            <BaseMenuItem icon="IconCopy"
+                                                                            <BaseMenuItem :icon="IconCopy"
                                                                                           title="Duplicate"
                                                                                           white-menu-background
                                                                                           @click="duplicateRoom(element)"/>
-                                                                            <BaseMenuItem icon="IconTrash"
+                                                                            <BaseMenuItem :icon="IconTrash"
                                                                                           title="In the recycle bin"
                                                                                           white-menu-background
                                                                                           @click="openSoftDeleteRoomModal(element)"/>
@@ -1156,7 +1156,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
-import {IconClock, IconLayoutGrid} from "@tabler/icons-vue";
+import {IconClock, IconCopy, IconEdit, IconLayoutGrid, IconRecycle, IconTrash} from "@tabler/icons-vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
@@ -1302,6 +1302,10 @@ export default defineComponent({
         }
     },
     methods: {
+        IconTrash,
+        IconRecycle,
+        IconCopy,
+        IconEdit,
         IconClock,
         IconLayoutGrid,
         afterSoftDeleteAllRoomsConfirm(confirmed) {

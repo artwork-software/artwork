@@ -19,7 +19,7 @@
                     <ToolTipComponent
                         direction="right"
                         :tooltip-text="$t('Select time')"
-                        icon="IconCalendar"
+                        :icon="IconCalendar"
                         icon-size="h-5 w-5 mr-3"
                         class="cursor-pointer"
                     />
@@ -100,7 +100,7 @@
                 <p class="text-sm/6 text-white"> {{ errorMessage }} </p>
                 <button type="button" class="-m-1.5 flex-none p-1.5">
                     <span class="sr-only">Dismiss</span>
-                    <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="hasError = false" />
+                    <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="hasError = false" />
                 </button>
             </div>
         </div>
@@ -116,7 +116,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import {useTranslation} from "@/Composeables/Translation.js";
-import {IconAlertSquareRounded, IconCalendar} from '@tabler/icons-vue';
+import {IconAlertSquareRounded, IconCalendar, IconX} from '@tabler/icons-vue';
 const $t = useTranslation()
 // Props
 const props = defineProps({

@@ -27,7 +27,7 @@
                         <span class="flex items-center justify-between w-full">
                             <span class="block truncate">{{ bookingForm.plus_minus }}</span>
                         </span>
-                            <component is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
+                            <component :is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
                         </ListboxButton>
                         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                             <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-gray-300 ring-opacity-5 focus:outline-none sm:text-sm">
@@ -77,6 +77,7 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import {IconChevronDown} from "@tabler/icons-vue";
 
 const props = defineProps({
     user: {

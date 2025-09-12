@@ -6,7 +6,6 @@ import '../css/global.css'
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
 import { createI18n } from 'vue-i18n'
-import VueMathjax from 'vue-mathjax-next'
 import LaravelPermissionToVueJS from 'laravel-permission-to-vuejs'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
@@ -36,14 +35,14 @@ createInertiaApp({
         if (!page) throw new Error(`Page not found: ${name}`)
         return page()
     },
-    setup({ el, App: InertiaRoot, props, plugin }) {
-        const app = createApp({ render: () => h(InertiaRoot, props) })
+    setup({el, App: InertiaRoot, props, plugin}) {
+        const app = createApp({render: () => h(InertiaRoot, props)})
         app.use(plugin)
-        if (typeof route !== 'undefined') app.mixin({ methods: { route } })
+        if (typeof route !== 'undefined') app.mixin({methods: {route}})
 
         app.use(i18n)
         app.use(PrimeVue, {
-            theme: { preset: Aura, options: { darkModeSelector: '.fake-dark-selector' } },
+            theme: {preset: Aura, options: {darkModeSelector: '.fake-dark-selector'}},
             ripple: true,
         })
         app.directive('tooltip', Tooltip)
@@ -60,5 +59,5 @@ createInertiaApp({
         if (import.meta.env.DEV) app.config.performance = true
         app.mount(el)
     },
-    progress: { color: '#3017AD', showSpinner: false, includeCss: true },
-})
+    progress: {color: '#3017AD', showSpinner: false, includeCss: true},
+}).then(r => {})

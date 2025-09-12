@@ -353,7 +353,7 @@
                     </div>
                     <div class="text-sm/6">
                         <label for="is_detailed_quantity" class="font-medium text-gray-900">
-                            {{ $t('Single inventory capable') }}
+                            {{ $t('Single inventory capable')}}
                         </label>
                         <p id="is_required-description" class="text-gray-500">
                             {{
@@ -416,9 +416,8 @@
                                     :search-fields="['name']"
                                     coerce="number"
                                 />
-
                                 <!-- selection -->
-                                <div v-else-if="prop.type === 'selection'" class="">
+                                <div v-else-if="prop.type === 'selection'">
                                     <div class="grid grid-cols-1 p-2">
                                         <select
                                             v-model="acrossValues[prop.id]"
@@ -892,11 +891,11 @@
                                     </div>
 
                                     <div v-else-if="property.type === 'selection'" class="">
-                                        <div class="grid grid-cols-1 p-2">
+                                        <div class="relative w-full">
                                             <select id="location" name="location" v-model="property.value"
                                                     :required="property.is_required"
-                                                    class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
-                                                <option v-if="property.is_required" value="" disabled selected>
+                                                    class="block w-full font-lexend shadow-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create transition-[box-shadow,border-color] duration-150 ease-in-out pl-4 pr-8 py-3 text-sm bg-white cursor-pointer">
+                                                <option v-if="property.is_required" disabled selected>
                                                     {{ $t('Please select') }}*
                                                 </option>
                                                 <option v-for="value in property.select_values" :value="value" :key="value">
@@ -1041,7 +1040,7 @@ const articleForm = useForm({
         name: p.name,
         tooltip_text: p.tooltip_text,
         type: p.type,
-        value: getValue(p),
+        value: p.individual_value ? '' : getValue(p),
         is_required: p.is_required,
         categoryProperty: getIsDeletable(p.id),
         select_values: p.select_values,
@@ -1055,7 +1054,7 @@ const articleForm = useForm({
             name: p.name,
             tooltip_text: p.tooltip_text,
             type: p.type,
-            value: getValue(p),
+            value: p.individual_value ? '' : getValue(p),
             is_required: p.is_required,
             categoryProperty: getIsDeletable(p.id),
             select_values: p.select_values,
@@ -1303,7 +1302,7 @@ const removeDetailedArticle = () => {
 }
 
 const copyDetailedArticle = (d) => {
-    const copiedProps = d.properties.map(p => ({...p, value: p.across_articles ? p.value : ''}))
+    const copiedProps = d.properties.map(p => ({...p, value: p.individual_value ? '' : p.value}))
     const newItem = {
         _key: uid(),
         name: d.name + ' (Copy)',

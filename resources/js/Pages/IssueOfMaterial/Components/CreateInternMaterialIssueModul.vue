@@ -1,7 +1,7 @@
 <template>
     <form @submit.prevent="submit" class="mx-auto max-w-7xl px-4 md:px-6">
         <!-- Page Title -->
-        <header class="mb-6">
+        <header v-if="!props.issueOfMaterial?.id" class="mb-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <div class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-100 to-indigo-100 px-3 py-1 ring-1 ring-inset ring-sky-200">
@@ -39,9 +39,6 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button type="button" class="inline-flex items-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-300 hover:bg-red-100" @click="scrollToFirstConflict">
-                        {{ $t('Show first conflict') }}
-                    </button>
                     <button type="button" class="inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700" @click="fixAllConflicts">
                         {{ $t('Automatically adjust quantities') }}
                     </button>
@@ -56,7 +53,7 @@
                         <p class="truncate text-xs font-medium text-zinc-900">{{ c.name }}</p>
                         <p class="text-[11px] text-zinc-500">{{ $t('Requested') }}: {{ c.wanted }} • {{ $t('Available') }}: {{ c.available }}</p>
                     </div>
-                    <button type="button" class="text-xs font-medium text-blue-700 underline shrink-0" @click="openLightbox(0, internMaterialIssue.articles[c.index]?.images || [])">{{ $t('details') }}</button>
+                    <button v-if="internMaterialIssue.articles[c.index]?.images?.length > 0" type="button" class="text-xs font-medium text-blue-700 underline shrink-0" @click="openLightbox(0, internMaterialIssue.articles[c.index]?.images || [])">{{ $t('Show images') }}</button>
                 </div>
             </div>
         </section>
@@ -71,31 +68,31 @@
                     </h2>
                     <p class="text-xs text-zinc-500">{{ $t('Capture name, time period and responsibilities.') }}</p>
                 </div>
-
+                <!-- Project -->
+                <div class="px-6 pt-2">
+                    <ProjectSearch v-if="!selectedProject" @project-selected="addProject" :get-first-last-event="true" :label="$t('Project assignment (optional)')" />
+                    <div v-else class="mt-1">
+                        <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
+                        <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-1">
+                            <div class="text-sm font-semibold text-blue-800">{{ selectedProject.name }}</div>
+                            <button type="button" class="text-xs font-medium text-blue-700 underline" @click="selectedProject = null">
+                                {{ $t('Remove assignment') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div class="p-6 grid grid-cols-1 gap-6 md:grid-cols-3">
                     <!-- Name -->
                     <BaseInput id="name" v-model="internMaterialIssue.name" :label="$t('Name') + ' *'" class="md:col-span-1" />
 
-                    <!-- Project -->
-                    <div class="md:col-span-1">
-                        <ProjectSearch v-if="!selectedProject" @project-selected="addProject" :get-first-last-event="true" :label="$t('Project assignment (optional)')" />
-                        <div v-else class="mt-1">
-                            <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
-                            <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2">
-                                <div class="text-sm font-semibold text-blue-800">{{ selectedProject?.name }}</div>
-                                <button type="button" class="text-xs font-medium text-blue-700 underline" @click="selectedProject = null">
-                                    {{ $t('Remove assignment') }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+
 
                     <!-- Room -->
                     <div class="md:col-span-1">
                         <RoomSearch v-if="!selectedRoom" @room-selected="addRoom" :label="$t('Room assignment (optional)')" />
-                        <div v-else class="mt-1">
+                        <div v-else class="">
                             <span class="text-xs font-medium text-zinc-500">{{ $t('Selected room') }}</span>
-                            <div class="mt-1 flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/60 px-3 py-2">
+                            <div class="mt-1 flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/60 px-3 py-1">
                                 <div class="text-sm font-semibold text-indigo-800">{{ selectedRoom?.name }}</div>
                                 <button type="button" class="text-xs font-medium text-indigo-700 underline" @click="selectedRoom = null">
                                     {{ $t('Remove assignment') }}
@@ -386,7 +383,7 @@
             :showThumbnails="true"
         >
             <template #item="slotProps">
-                <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" style="width: 100%; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
+                <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" style="width: 60%; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
             </template>
             <template #thumbnail="slotProps">
                 <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" class="w-20 max-w-20" style="display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
@@ -465,6 +462,7 @@ const internMaterialIssue = useForm({
     id: props.issueOfMaterial?.id || null,
     name: props.issueOfMaterial?.name || "",
     project_id: props.issueOfMaterial?.project_id || null,
+    project: props.issueOfMaterial?.project || null,
     start_date: props.issueOfMaterial?.start_date || "",
     start_time: props.issueOfMaterial?.start_time || "00:00",
     end_date: props.issueOfMaterial?.end_date || "",
@@ -482,12 +480,13 @@ const internMaterialIssue = useForm({
         quantity: article.pivot?.quantity || article.quantity || 1,
         availableStock: 0,
         availableStockRequestIsLoading: true,
+        images: article.images || [],
     })), // [{ id, quantity }]
     special_items: props.issueOfMaterial?.special_items || [], // [{...}]
     isInProjectComponent: props.isInProjectComponent || false
 });
 
-const selectedProject = ref(props.issueOfMaterial?.project ?? null);
+const selectedProject = ref(null);
 const selectedRoom = ref(props.issueOfMaterial?.room || null);
 const selectedResponsibleUsers = ref(
     props.issueOfMaterial?.responsible_users || []
@@ -529,20 +528,6 @@ const conflicts = computed(() => {
 })
 
 const hasConflicts = computed(() => conflicts.value.length > 0)
-
-// Scrollt zur ersten konfliktbehafteten Zeile und hebt sie kurz hervor
-function scrollToFirstConflict () {
-    if (!conflicts.value.length) return
-    nextTick(() => {
-        const idx = conflicts.value[0].index
-        const el = document.querySelector(`[data-article-row="${idx}"]`) | null
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            el.classList.add('ring-2','ring-red-400','rounded-xl')
-            setTimeout(() => el.classList.remove('ring-2','ring-red-400','rounded-xl'), 1400)
-        }
-    })
-}
 
 // Setzt alle Konflikt-Mengen auf „max. verfügbar“
 function fixAllConflicts () {
@@ -897,7 +882,6 @@ const checkAvailableStock = async () => {
             }
         }
     } catch (error) {
-        console.error("Fehler bei Verfügbarkeitsabfrage (Batch):", error);
         for (const article of internMaterialIssue.articles) {
             article.availableStockRequestIsLoading = false;
             article.availableStock = null;
@@ -938,12 +922,15 @@ watch(
 );
 
 onMounted(() => {
+
     if (props.issueOfMaterial?.articles?.length > 0) {
         checkAvailableStock();
     }
 
-    if(props.project) {
-        addProject(props.project);
+
+
+    if(props.issueOfMaterial?.project) {
+        addProject(props.issueOfMaterial?.project);
     }
 
     loadMoreArticles();

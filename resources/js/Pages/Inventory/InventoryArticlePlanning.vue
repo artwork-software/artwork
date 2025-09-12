@@ -2,13 +2,10 @@
     <AppLayout :title="$t('Inventory Article Planning')">
         <div class="-ml-4">
             <!-- Topbar -->
-            <div class="sticky top-0 z-40 border-b bg-gradient-to-r from-sky-50 via-indigo-50/50 to-transparent backdrop-blur">
+            <div class="sticky top-0 z-40 border-b ">
                 <div class="flex items-center gap-3 px-4 py-3 overflow-x-auto whitespace-nowrap">
           <span class="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold text-sky-800 ring-1 ring-inset ring-sky-200">
             {{ $t('Planning timeline') }}
-          </span>
-                    <span class="text-xs text-zinc-600">
-            {{ $t('Click a cell to open usage details') }}
           </span>
                     <span class="mx-1 inline-block size-1 rounded-full bg-zinc-300"></span>
 

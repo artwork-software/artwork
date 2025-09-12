@@ -32,7 +32,7 @@ class InternalIssueController extends Controller
 
         // if articleIds is provided, filter issues by articles
         if (!empty($articleIds)) {
-            $issues = InternalIssue::with(['files', 'articles', 'specialItems', 'room', 'project', 'responsibleUsers'])
+            $issues = InternalIssue::with(['files', 'articles.images', 'specialItems', 'room', 'project', 'responsibleUsers'])
                 ->whereHas('articles', function ($query) use ($articleIds) {
                     $query->whereIn('inventory_articles.id', [$articleIds]);
                 })
@@ -40,7 +40,7 @@ class InternalIssueController extends Controller
                 ->orderBy('start_time')
                 ->paginate($entitiesPerPage);
         } else {
-            $issues = InternalIssue::with(['files', 'articles', 'specialItems', 'room', 'project', 'responsibleUsers'])
+            $issues = InternalIssue::with(['files', 'articles.images', 'specialItems', 'room', 'project', 'responsibleUsers'])
                 ->orderBy('start_date')
                 ->orderBy('start_time')
                 ->paginate($entitiesPerPage);

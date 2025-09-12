@@ -7,7 +7,7 @@
         classes-in-white-background="!p-0"
     >
 
-        <div class="w-full mb-5 bg-zinc-100 rounded-t-lg p-5">
+        <div class="w-full mb-5 bg-zinc-100 rounded-t-lg p-5" v-if="!checkIfEditMode">
             <div class="w-fit px-5">
                 <SwitchGroup as="div" class="flex items-center justify-between gap-x-8" >
                     <span class="flex grow flex-col">
@@ -56,6 +56,7 @@ const props = defineProps({
             id: null,
             name: '',
             project_id: null,
+            project: null,
             start_date: '',
             start_time: '00:00',
             end_date: '',

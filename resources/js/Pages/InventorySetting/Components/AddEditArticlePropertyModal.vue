@@ -85,10 +85,16 @@
                                 </div>
                             </div>
                             <div class="text-sm/6">
-                                <label for="is_filterable" class="font-medium text-gray-900">Filterbar</label>
-                                <p id="is_filterable-description" class="text-gray-500">
-                                    Soll nach dieser Eigenschaft gefiltert werden können?
-                                </p>
+                                <div class="flex items-center">
+                                    <label for="is_filterable" class="font-medium text-gray-900">Filterbar</label>
+                                    <ToolTipComponent
+                                        class="ml-2"
+                                        icon="IconInfoCircle"
+                                        icon-size="size-4"
+                                        tooltip-text="Soll nach dieser Eigenschaft gefiltert werden können?"
+                                        direction="right"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -104,10 +110,16 @@
                                 </div>
                             </div>
                             <div class="text-sm/6">
-                                <label for="show_in_list" class="font-medium text-gray-900">In Artikelübersicht</label>
-                                <p id="show_in_list-description" class="text-gray-500">
-                                    Soll diese Eigenschaft in der Artikelübersicht angezeigt werden?
-                                </p>
+                                <div class="flex items-center">
+                                    <label for="show_in_list" class="font-medium text-gray-900">In Artikelübersicht</label>
+                                    <ToolTipComponent
+                                        class="ml-2"
+                                        icon="IconInfoCircle"
+                                        icon-size="size-4"
+                                        tooltip-text="Soll diese Eigenschaft in der Artikelübersicht angezeigt werden?"
+                                        direction="right"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -123,10 +135,16 @@
                                 </div>
                             </div>
                             <div class="text-sm/6">
-                                <label for="is_required" class="font-medium text-gray-900">Wert verpflichtend</label>
-                                <p id="is_required-description" class="text-gray-500">
-                                    Muss dieser Wert bei der Artikelanlage angegeben werden?
-                                </p>
+                                <div class="flex items-center">
+                                    <label for="is_required" class="font-medium text-gray-900">Wert verpflichtend</label>
+                                    <ToolTipComponent
+                                        class="ml-2"
+                                        icon="IconInfoCircle"
+                                        icon-size="size-4"
+                                        tooltip-text="Muss dieser Wert bei der Artikelanlage angegeben werden?"
+                                        direction="right"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -142,12 +160,18 @@
                                 </div>
                             </div>
                             <div class="text-sm/6">
-                                <label for="across_articles" class="font-medium text-gray-900">
-                                    Artikelübergreifend
-                                </label>
-                                <p id="across_articles-description" class="text-gray-500">
-                                    Soll dieser Wert über alle Artikel hinweg gleich sein? (z.B. Hersteller, Raum)
-                                </p>
+                                <div class="flex items-center">
+                                    <label for="across_articles" class="font-medium text-gray-900">
+                                        {{$t('across all articles')}}
+                                    </label>
+                                    <ToolTipComponent
+                                        class="ml-2"
+                                        icon="IconInfoCircle"
+                                        icon-size="size-4"
+                                        :tooltip-text="$t('Only relevant for single inventory capable articles. A property with this active will always be set for all articles and is made for properties that are the same for all articles.')"
+                                        direction="right"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -163,10 +187,16 @@
                                 </div>
                             </div>
                             <div class="text-sm/6">
-                                <label for="individual_value" class="font-medium text-gray-900">Individueller Wert</label>
-                                <p id="individual_value-description" class="text-gray-500">
-                                    Soll dieser Wert individuell für jeden Artikel gesetzt werden können? (z.B. Raum, Hersteller)
-                                </p>
+                                <div class="flex items-center">
+                                    <label for="individual_value" class="font-medium text-gray-900">{{$t('individual value')}}</label>
+                                    <ToolTipComponent
+                                        class="ml-2"
+                                        icon="IconInfoCircle"
+                                        icon-size="size-4"
+                                        :tooltip-text="$t('If active, this property will not be duplicated when duplicating an article and individual values can not be edited with multiedit-functions. This is useful for properties like serial numbers that should be unique for each article.')"
+                                        direction="right"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -190,6 +220,7 @@ import {computed, ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const props = defineProps({
     property: {

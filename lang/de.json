@@ -3109,5 +3109,11 @@
     "No files assigned.": "Keine Dateien zugewiesen.",
     "No special items assigned.": "Keine Sonderartikel zugewiesen.",
     "Special items Completed": "Sonderartikel abgeschlossen",
-    "Prev": "Zurück"
+    "Prev": "Zurück",
+    "across all articles": "Artikelübergreifend",
+    "Only relevant for single inventory capable articles. A property with this active will always be set for all articles and is made for properties that are the same for all articles.": "Nur relevant für Einzelbestandsfähige-Artikel. Eine Artikel-Eigenschaft, die als 'artikelübergreifend' markiert ist, wird immer für alle Artikel zusammen gesetzt und ist für Eigenschaften gedacht, die für alle individuellen Artikel gleich sind.",
+    "individual value": "Individueller Wert",
+    "If active, this property will not be duplicated when duplicating an article and individual values can not be edited with multiedit-functions. This is useful for properties like serial numbers that should be unique for each article.": "Wenn diese Option aktiviert ist, wird diese Eigenschaft beim Duplizieren nicht mitkopiert. Zudem können individuelle Werte nicht mit der Multi-Edit-Funktion bearbeitet werden. Diese Einstellung ist sinnvoll bei Eigenschaften, die für jeden Artikel einzigartig sein sollten, wie z.B. Seriennummern.",
+    "Selected room" : "Ausgewählter Raum",
+    "Show images": "Bilder anzeigen"
 }

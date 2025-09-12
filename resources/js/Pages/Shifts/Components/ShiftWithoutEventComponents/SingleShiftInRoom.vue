@@ -20,15 +20,12 @@
 <script setup>
 
 import ShiftDropElement from "@/Layouts/Components/ShiftPlanComponents/ShiftDropElement.vue";
-import { IconLock } from "@tabler/icons-vue";
 import {usePage} from "@inertiajs/vue3";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 const percentage = usePage().props.high_contrast_percent;
 const {
     backgroundColorWithOpacity,
-    detectParentBackgroundColor,
     getTextColorBasedOnBackground,
-    parentBackgroundColor
 } = useColorHelper();
 
 // Define emits

@@ -88,7 +88,7 @@
 
                         <!-- Zeit + Optionen -->
                         <div class="flex items-center gap-x-1 mt-1 w-28">
-                            <component is="IconClock" class="size-3.5" stroke-width="2" v-if="!event.allDay && sameDay" />
+                            <component :is="IconClock" class="size-3.5" stroke-width="2" v-if="!event.allDay && sameDay" />
 
                             <div :style="timeTextStyle" :class="[zoom_factor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']" class="flex">
                                 <div v-if="sameDay && !project && !atAGlance" class="items-center">
@@ -126,7 +126,7 @@
 
                         <!-- Wiederkehrend -->
                         <div v-if="settings.repeating_events && event.is_series" class="uppercase flex items-center font-semibold" :style="repeatTextStyle">
-                            <component is="IconRepeat" class="mr-1 min-h-3 min-w-3" stroke-width="2"/>
+                            <component :is="IconRepeat" class="mr-1 min-h-3 min-w-3" stroke-width="2"/>
                             {{ $t('Repeat event') }}
                         </div>
 
@@ -193,15 +193,15 @@
 
                 <div class="invisible group-hover/singleEvent:visible flex w-full items-start justify-end" :class="event.isPlanning ? 'pt-2' : ''">
                     <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="settings.high_contrast ? 'text-white' : ''" white-menu-background>
-                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" icon="IconLock" title="Request verification" />
-                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" icon="IconLockOpen" title="Withdraw verification request" />
-                        <BaseMenuItem white-menu-background v-if="event.hasVerification && (verifierForEventTypIds?.includes(event.eventType.id) || false)" @click="approveRequest" icon="IconChecks" title="Approve verification" />
-                        <BaseMenuItem white-menu-background v-if="event.hasVerification && (verifierForEventTypIds?.includes(event.eventType.id) || false)" @click="showRejectEventVerificationModal = true" icon="IconCircleX" title="Reject verification" />
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" title="Request verification" />
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
+                        <BaseMenuItem white-menu-background v-if="event.hasVerification && (verifierForEventTypIds?.includes(event.eventType.id) || false)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
+                        <BaseMenuItem white-menu-background v-if="event.hasVerification && (verifierForEventTypIds?.includes(event.eventType.id) || false)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
 
-                        <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" icon="IconEdit" title="edit" />
-                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" @click="$emit('openAddSubEventModal', event, 'create', null)" icon="IconCirclePlus" title="Add Sub-Event" />
-                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" icon="IconX" title="Decline event" />
-                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" icon="IconTrash" title="Delete" />
+                        <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" :icon="IconEdit" title="edit" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" @click="$emit('openAddSubEventModal', event, 'create', null)" :icon="IconCirclePlus" title="Add Sub-Event" />
+                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" :icon="IconX" title="Decline event" />
+                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
                     </BaseMenu>
                 </div>
             </div>
@@ -212,7 +212,7 @@
             <Popover class="relative">
                 <Float auto-placement portal :offset="{  5 : -10}">
                     <PopoverButton class="flex items-center justify-start gap-1 ring-0 focus:ring-0">
-                        <component is="IconInfoCircle" class="size-6" stroke-width="1.5"/>
+                        <component :is="IconInfoCircle" class="size-6" stroke-width="1.5"/>
                         <div class="w-16 max-w-16 xsDark text-left" v-if="zoom_factor > 0.4">
                             <div v-if="settings.event_name && event.eventName" class="truncate">{{ event.eventName }}</div>
                             <a v-if="event.project?.id" :href="projectHref" class="truncate block">{{ event.project?.name }}</a>

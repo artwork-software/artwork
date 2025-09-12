@@ -124,10 +124,10 @@
 
                                         <!-- Hover Add -->
                                         <div v-if="settings.expand_days" class="absolute inset-0 pointer-events-none"></div>
-                                        <div class="absolute left-2 bottom-3 hidden group-hover/container:block z-10">
+                                        <div class="absolute left-2 bottom-3 hidden group-hover/container:block z-50">
                                             <ToolTipComponent
                                                 :tooltip-text="isPlanning ? $t('Add new planned event') : $t('Add new event on this day')"
-                                                icon="IconCircleDashedPlus"
+                                                :icon="IconCircleDashedPlus"
                                                 classes="cursor-pointer card glassy text-artwork-buttons-create h-8 w-8 flex items-center justify-center rounded-full"
                                                 @click="openNewEventModalWithBaseData(day.withoutFormat, (room.roomId ?? room.id))"
                                             />
@@ -373,7 +373,7 @@
 import { computed, defineAsyncComponent, inject, onMounted, ref, shallowRef } from "vue";
 import { router, usePage, Link } from "@inertiajs/vue3";
 import axios from "axios";
-import { IconExclamationCircle, IconAlertTriangle, IconChevronDown } from "@tabler/icons-vue";
+import {IconExclamationCircle, IconAlertTriangle, IconChevronDown, IconCircleDashedPlus} from "@tabler/icons-vue";
 
 import { usePermission } from "@/Composeables/Permission.js";
 import { useTranslation } from "@/Composeables/Translation.js";

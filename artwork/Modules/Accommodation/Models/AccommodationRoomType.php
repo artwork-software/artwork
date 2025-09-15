@@ -20,7 +20,7 @@ class AccommodationRoomType extends Model
         return $this->belongsToMany(
             Accommodation::class,
             'accommodation_accommodation_room_type',
-            'room_type_id',
+            'accommodation_room_type_id',
             'accommodation_id'
         );
     }

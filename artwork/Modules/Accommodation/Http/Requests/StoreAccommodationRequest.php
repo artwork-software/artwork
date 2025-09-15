@@ -23,6 +23,8 @@ class StoreAccommodationRequest extends FormRequest
             'note' => 'nullable|string',
             'room_types' => 'required|array|min:1',
             'room_types.*' => 'exists:accommodation_room_types,id',
+            'room_type_costs' => 'nullable|array',
+            'room_type_costs.*' => 'nullable|numeric|min:0|max:50000',
         ];
     }
 }

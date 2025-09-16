@@ -182,7 +182,7 @@
                                 v-for="(event, index) in (events?.events ?? [])"
                                 :key="event.id ?? `${events?.date}-${index}`"
                                 :style="{ minWidth: cellWidthPx, maxWidth: cellWidthPx, width: cellWidthPx }"
-                                class="mb-0.5"
+                                class="mb-0.5 h-full"
                                 :id="'scroll_container-' + (events?.date ?? k)"
                             >
                                 <div class="py-0.5">
@@ -377,6 +377,7 @@ import {IconExclamationCircle, IconAlertTriangle, IconChevronDown, IconCircleDas
 
 import { usePermission } from "@/Composeables/Permission.js";
 import { useTranslation } from "@/Composeables/Translation.js";
+import { lazyLoadComponentIfVisible } from "@/Composeables/utils.js";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -399,10 +400,9 @@ const $t = useTranslation();
 const page = usePage();
 const { hasAdminRole } = usePermission(page.props);
 
-// Async children
-const AsyncSingleEventInCalendar = defineAsyncComponent({
-    loader: () => import("@/Components/Calendar/Elements/SingleEventInCalendar.vue"),
-    loadingComponent: CalendarPlaceholder
+const AsyncSingleEventInCalendar = lazyLoadComponentIfVisible({
+    componentLoader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
+    loadingComponent: CalendarPlaceholder,
 });
 const AsyncEventComponent = defineAsyncComponent({ loader: () => import("@/Layouts/Components/EventComponent.vue") });
 const FunctionBarCalendar = defineAsyncComponent({ loader: () => import("@/Components/FunctionBars/FunctionBarCalendar.vue") });

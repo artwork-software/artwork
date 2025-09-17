@@ -55,6 +55,6 @@ class Accommodation extends Model
             'accommodation_accommodation_room_type',
             'accommodation_id',
             'accommodation_room_type_id'
-        );
+        )->withPivot('cost_per_night');
     }
 }

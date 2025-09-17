@@ -346,7 +346,7 @@
 
 import {useForm, usePage} from "@inertiajs/vue3";
 import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
@@ -497,6 +497,21 @@ const filteredArtists = computed(() => {
         (a.civil_name && a.civil_name.toLowerCase().includes(artistSearch.value.toLowerCase()))
     )
 })
+
+// Auto-fill cost_per_night when accommodation and room type are selected
+watch(
+    [selectedAccommodation, selectedRoomType],
+    ([newAccommodation, newRoomType]) => {
+        if (newAccommodation && newRoomType) {
+            // Find the room type in the accommodation's room_types with pivot data
+            const roomTypeWithCost = newAccommodation.room_types?.find(rt => rt.id === newRoomType.id)
+            if (roomTypeWithCost && roomTypeWithCost.pivot && roomTypeWithCost.pivot.cost_per_night) {
+                artistResidency.cost_per_night = roomTypeWithCost.pivot.cost_per_night
+            }
+        }
+    },
+    { deep: true }
+)
 
 
 </script>

@@ -349,11 +349,48 @@ class EventController extends Controller
         ]);
     }
 
-    public function allEventsAPI(): JsonResponse
+    public function allEventsAPI(Request $request): JsonResponse
     {
-        $events = Event::all();
+        $user = $this->authManager->user();
 
-        return response()->json($events);
+        $userCalendarFilter   = $user->userFilters()->calendarFilter()->first();
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        $isPlanning           = $request->boolean('isPlanning', false);
+
+        // Abo/Shared Daten (leichtgewichtig lassen)
+        $this->userService->shareCalendarAbo('calendar');
+
+        // Datum bestimmen
+        $dateRangeRequested = $request->filled(['start_date','end_date']);
+        if ($dateRangeRequested) {
+            $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
+            $endDate   = Carbon::parse($request->input('end_date'))->endOfDay();
+        } else {
+            [$startDate, $endDate] = $this->calendarDataService
+                ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, null);
+        }
+
+        $rooms = $this->roomService->getFilteredRooms($startDate, $endDate, $userCalendarFilter);
+
+        $calendar = ($isPlanning
+            ? $this->eventPlanningCalendarService
+            : $this->eventCalendarService
+        )->mapRoomsToContentForCalendar(
+            ($isPlanning
+                ? $this->eventPlanningCalendarService
+                : $this->eventCalendarService
+            )->filterRoomsEvents(
+                $rooms,
+                $userCalendarFilter,
+                $startDate,
+                $endDate,
+                $userCalendarSettings
+            ),
+            $startDate,
+            $endDate
+        );
+
+        return response()->json(['calendar' => $calendar->rooms]);
     }
 
     public function viewPlanningCalendar(Request $request, ?Project $project = null): Response

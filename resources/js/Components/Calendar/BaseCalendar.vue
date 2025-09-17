@@ -22,11 +22,7 @@
                 <div class="flex items-center justify-center w-full h-full gap-x-1">
                     <IconAlertTriangle class="size-4 text-white" aria-hidden="true" />
                     <div class="text-white text-sm font-bold">
-                        {{
-                            eventsWithoutRoomLen === 1
-                                ? $t('{0} Event without room!', [eventsWithoutRoomLen])
-                                : $t('{0} Events without room!', [eventsWithoutRoomLen])
-                        }}
+                        {{eventsWithoutRoomLen === 1 ? $t('{0} Event without room!', [eventsWithoutRoomLen]) : $t('{0} Events without room!', [eventsWithoutRoomLen]) }}
                     </div>
                 </div>
             </div>
@@ -39,7 +35,11 @@
                 <div class="w-max -ml-3">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white'">
                         <CalendarHeader :rooms="rooms" :filtered-events-length="eventsWithoutRoomLen" />
-                        <div class="w-fit events-by-days-container" :class="[isFullscreen ? 'mt-4' : '']" ref="calendarToCalculate">
+                        <div
+                            class="w-fit events-by-days-container"
+                            :class="[isFullscreen ? 'mt-4' : '']"
+                            ref="calendarToCalculate"
+                        >
                             <div
                                 v-for="day in days"
                                 :key="day.fullDay"
@@ -48,152 +48,65 @@
                                 :style="dayRowStyle"
                                 :data-day="day.fullDay"
                                 :data-day-to-jump="day.withoutFormat"
+                                :data-month="monthKeyFromDay(day)"
+                                :ref="el => registerMonthSentinel(el, day)"
                             >
                                 <SingleDayInCalendar v-if="!day.isExtraRow" :isFullscreen="isFullscreen" :day="day" />
 
+                                <pre>{{ newCalendarData }}</pre>
                                 <!-- Räume -->
                                 <template v-if="!day.isExtraRow">
-                                    <template v-for="(room, roomIdx) in rooms" :key="room.id ?? room.roomId ?? roomIdx">
-                                        <!-- Zelle (nur 1 Wrapper pro Raum) -->
+                                    <template v-for="(room, roomIdx) in newCalendarData" :key="room.id ?? room.roomId ?? roomIdx">
+                                        <!-- Eine Cell (Tag × Raum) -->
                                         <section
                                             :style="cellStyle"
                                             :class="containerClass"
                                             :id="`scroll_container-${day.withoutFormat}`"
                                             :data-room-id="room.roomId ?? room.id"
+                                            :ref="el => registerCell(el, day, room)"
                                         >
-                                            <!-- Projektgruppen (ein Block, ohne zusätzliche Wrapper) -->
-
-
-                                            <!-- Events (KEIN zusätzlicher div je Event) -->
-                                            <AsyncSingleEventInCalendar
-                                                v-for="(evt, idx) in events"
-                                                :key="evt.id"
-                                                v-memo="[evt.id, evt.updated_at, multiEdit, textStyle.fontSize, textStyle.lineHeight, cardWidthNum]"
-                                                class="py-0.5"
-                                                :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
-                                                :event="evt"
-                                                :multi-edit="multiEdit"
-                                                :font-size="textStyle.fontSize"
-                                                :line-height="textStyle.lineHeight"
-                                                :rooms="rooms"
-                                                :has-admin-role="hasAdminRole()"
-                                                :width="cardWidthNum"
-                                                :first_project_tab_id="first_project_tab_id"
-                                                :firstProjectShiftTabId="firstProjectShiftTabId"
-                                                :verifierForEventTypIds="verifierForEventTypIds"
-                                                :is-planning="isPlanning"
-                                                @edit-event="showEditEventModel"
-                                                @edit-sub-event="openAddSubEventModal"
-                                                @open-add-sub-event-modal="openAddSubEventModal"
-                                                @open-confirm-modal="openDeleteEventModal"
-                                                @show-decline-event-modal="openDeclineEventModal"
-                                                @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                                            />
-
-                                            <!-- Hover Add: ohne Overlay-Div; Pointer-Blocker via CSS-Klasse -->
-
+                                            <!-- Nur rendern, wenn Cell (Tag×Raum) in/nahe Viewport -->
+                                            <template v-if="isCellVisible(cellKey(day, room))">
+                                                <pre>
+                                                    {{ room.content?.[dayKey(day)]?.events }}
+                                                </pre>
+                                                <SingleEventInCalendar
+                                                    v-for="(evt, idx) in (room.content?.[dayKey(day)]?.events ?? [])"
+                                                    :key="evt.id"
+                                                    v-memo="[evt.id, evt.updated_at, multiEdit, textStyle.fontSize, textStyle.lineHeight, cardWidthNum]"
+                                                    class="py-0.5"
+                                                    :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
+                                                    :event="evt"
+                                                    :multi-edit="multiEdit"
+                                                    :font-size="textStyle.fontSize"
+                                                    :line-height="textStyle.lineHeight"
+                                                    :rooms="rooms"
+                                                    :has-admin-role="hasAdminRole()"
+                                                    :width="cardWidthNum"
+                                                    :first_project_tab_id="first_project_tab_id"
+                                                    :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                    :verifierForEventTypIds="verifierForEventTypIds"
+                                                    :is-planning="isPlanning"
+                                                    @edit-event="showEditEventModel"
+                                                    @edit-sub-event="openAddSubEventModal"
+                                                    @open-add-sub-event-modal="openAddSubEventModal"
+                                                    @open-confirm-modal="openDeleteEventModal"
+                                                    @show-decline-event-modal="openDeclineEventModal"
+                                                    @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                                />
+                                            </template>
                                         </section>
                                     </template>
                                 </template>
-
-
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Optional: Tagesansicht -->
+            <AsyncDailyViewCalendar v-else />
         </div>
-        <!-- Tagesansicht -->
-        <!--<div v-else-if="isDaily && !atAGlance">
-            <AsyncDailyViewCalendar
-                :multi-edit="multiEdit"
-                :rooms="rooms"
-                :days="days"
-                :calendarData="newCalendarData"
-                :project="project"
-                :eventStatuses="eventStatuses"
-                :eventTypes="eventTypes"
-                :eventsWithoutRoom="eventsWithoutRoom"
-                :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                :firstProjectShiftTabId="firstProjectShiftTabId"
-                :first-project-tab-id="first_project_tab_id"
-                :verifierForEventTypIds="verifierForEventTypIds"
-                :is-planning="isPlanning"
-                @edit-event="showEditEventModel"
-                @edit-sub-event="openAddSubEventModal"
-                @open-add-sub-event-modal="openAddSubEventModal"
-                @open-confirm-modal="openDeleteEventModal"
-                @show-decline-event-modal="openDeclineEventModal"
-                @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-            />
-        </div>-->
-
-        <!-- At-a-glance -->
-        <!--<div class="mt-[4.5rem] w-max" v-else>
-            <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
-                <div v-for="(room, rIdx) in newCalendarData" :key="room.id ?? room.roomId ?? rIdx">
-                    <div :style="{ minWidth: cellWidthPx, maxWidth: cellWidthPx, width: cellWidthPx }" class="flex items-center h-full truncate">
-                        <SingleRoomInHeader :room="room" is-light />
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex gap-0.5">
-                <div v-for="(room, rIdx) in newCalendarData" :key="'agl-'+(room.id ?? room.roomId ?? rIdx)">
-                    <div v-for="(events, k) in room.content" :key="events?.date ?? k" class="flex flex-col">
-                        <div
-                            v-for="(event, index) in (events?.events ?? [])"
-                            :key="event.id ?? `${events?.date}-${index}`"
-                            :style="{ minWidth: cellWidthPx, maxWidth: cellWidthPx, width: cellWidthPx }"
-                            class="mb-0.5 h-full"
-                            :id="'scroll_container-' + (events?.date ?? k)"
-                        >
-                            <div class="py-0.5">
-                                <AsyncSingleEventInCalendar
-                                    :event="event"
-                                    :multi-edit="multiEdit"
-                                    :font-size="textStyle.fontSize"
-                                    :line-height="textStyle.lineHeight"
-                                    :rooms="rooms"
-                                    :has-admin-role="hasAdminRole()"
-                                    :width="cardWidthNum"
-                                    :first_project_tab_id="first_project_tab_id"
-                                    :firstProjectShiftTabId="firstProjectShiftTabId"
-                                    :verifierForEventTypIds="verifierForEventTypIds"
-                                    :is-planning="isPlanning"
-                                    @edit-event="showEditEventModel"
-                                    @edit-sub-event="openAddSubEventModal"
-                                    @open-add-sub-event-modal="openAddSubEventModal"
-                                    @open-confirm-modal="openDeleteEventModal"
-                                    @show-decline-event-modal="openDeclineEventModal"
-                                    @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    -->
-
-        <!-- Hinweis, wenn Projektzeitraum aktiv & leer -->
-        <!--<div v-if="!checkIfAnyRoomHasAnEventOrShift && settings.use_project_time_period">
-            <div class="mt-24 ml-4">
-                <div class="border-l-4 border-red-400 bg-red-50 p-4 w-fit">
-                    <div class="flex">
-                        <div class="shrink-0">
-                            <IconExclamationCircle class="h-5 w-5 text-red-400" stroke-width="2" aria-hidden="true" />
-                        </div>
-                        <div class="ml-1">
-                            <p class="text-sm text-red-700 font-bold">
-                                {{ $t('The selected project has no dates') }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>-->
 
         <!-- Multi-Edit Bottom Bar -->
         <div class="fixed bottom-0 w-full h-32 bg-artwork-navigation-background/30 z-40 pointer-events-none" v-if="multiEdit">
@@ -326,7 +239,7 @@
         />
 
         <RejectEventVerificationRequestModal
-            v-if="showRejectEventVerificationModal"
+            v-if="showRejectEventVerificationRequestModal"
             @close="closeShowRejectEventVerificationModal"
             :event-ids="editEvents"
         />
@@ -334,18 +247,16 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, inject, onMounted, ref, shallowRef } from "vue";
-import { router, usePage, Link } from "@inertiajs/vue3";
+import { computed, defineAsyncComponent, inject, onMounted, onBeforeUnmount, ref, shallowRef } from "vue";
+import { router, usePage } from "@inertiajs/vue3";
 import axios from "axios";
-import {IconExclamationCircle, IconAlertTriangle, IconChevronDown, IconCircleDashedPlus} from "@tabler/icons-vue";
+import { IconAlertTriangle } from "@tabler/icons-vue";
 
 import { usePermission } from "@/Composeables/Permission.js";
 import { useTranslation } from "@/Composeables/Translation.js";
-import { lazyLoadComponentIfVisible } from "@/Composeables/utils.js";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
-import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
-import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import { can } from "laravel-permission-to-vuejs";
+import SingleEventInCalendar from "@/Components/Calendar/Elements/SingleEventInCalendar.vue";
 
 const props = defineProps({
     rooms: { type: Object, required: true },
@@ -364,23 +275,18 @@ const $t = useTranslation();
 const page = usePage();
 const { hasAdminRole } = usePermission(page.props);
 
-const AsyncSingleEventInCalendar = defineAsyncComponent({
-    loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
-    loadingComponent: CalendarPlaceholder,
-});
 const AsyncEventComponent = defineAsyncComponent({ loader: () => import("@/Layouts/Components/EventComponent.vue") });
 const FunctionBarCalendar = defineAsyncComponent({ loader: () => import("@/Components/FunctionBars/FunctionBarCalendar.vue") });
 const CalendarHeader = defineAsyncComponent({ loader: () => import("@/Components/Calendar/Elements/CalendarHeader.vue") });
 const AsyncEventsWithoutRoomComponent = defineAsyncComponent({ loader: () => import("@/Layouts/Components/EventsWithoutRoomComponent.vue") });
 const AsyncDailyViewCalendar = defineAsyncComponent({ loader: () => import("@/Components/Calendar/DailyViewCalendar.vue") });
-const SingleRoomInHeader = defineAsyncComponent({ loader: () => import("@/Components/Calendar/Elements/SingleRoomInHeader.vue") });
+const SingleDayInCalendar = defineAsyncComponent({ loader: () => import("@/Components/Calendar/Elements/SingleDayInCalendar.vue") });
 const MultiDuplicateModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/MultiDuplicateModal.vue") });
 const AddSubEventModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/AddSubEventModal.vue") });
 const DeclineEventModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/DeclineEventModal.vue") });
 const ConfirmDeleteModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/ConfirmDeleteModal.vue") });
 const FormButton = defineAsyncComponent({ loader: () => import("@/Layouts/Components/General/Buttons/FormButton.vue") });
 const MultiEditModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/MultiEditModal.vue") });
-const SingleDayInCalendar = defineAsyncComponent({ loader: () => import("@/Components/Calendar/Elements/SingleDayInCalendar.vue") });
 const RejectEventVerificationRequestModal = defineAsyncComponent({
     loader: () => import("@/Pages/EventVerification/Components/RejectEventVerificationRequestModal.vue"),
     delay: 200,
@@ -408,7 +314,7 @@ const cellStyle = computed(() => ({
     height: settings.value.expand_days ? "" : rowHeightPx.value,
     minHeight: settings.value.expand_days ? rowHeightPx.value : ""
 }));
-const cellClass = computed(() => (zoom_factor.value > 0.4 ? "cell" : "overflow-hidden"));
+const containerClass = computed(() => ['group/container border-t border-gray-300 border-dashed relative overflow-scroll', (zoom_factor.value > 0.4 ? "cell" : "overflow-hidden")]);
 
 // Topbar count
 const eventsWithoutRoomLen = computed(() =>
@@ -420,8 +326,6 @@ const multiEdit = ref(false);
 const isFullscreen = ref(false);
 const showMultiEditModal = ref(false);
 const editEvents = ref([]);
-const editEventsRoomIds = ref([]);
-const editEventsRoomsDesiredDays = ref([]);
 const openDeleteSelectedEventsModal = ref(false);
 const showEventsWithoutRoomComponent = ref(false);
 const showAddSubEventModal = ref(false);
@@ -440,8 +344,7 @@ const roomCollisions = ref([]);
 const showMultiDuplicateModal = ref(false);
 const newCalendarData = shallowRef(props.calendarData);
 const wantedDate = ref(null);
-const showRejectEventVerificationModal = ref(false);
-const events = ref([]);
+const showRejectEventVerificationRequestModal = ref(false);
 
 // Injects
 const first_project_calendar_tab_id = inject("first_project_calendar_tab_id");
@@ -455,88 +358,167 @@ const textStyle = computed(() => {
     return { fontSize, lineHeight };
 });
 
-// ---- stabile Bindings
-const containerClass = computed(() => ['group/container border-t border-gray-300 border-dashed relative', props.cellClass])
-
-
-// ---- Projektgruppen performant berechnen (ersetzt projectGroups(events ?? []))
-/**
- * Deine ursprüngliche Logik – aber als reine Utility, nicht im Template aufrufen.
- * Achtung: dein bisheriger Cache keyed via Array-Referenz bringt wenig,
- * wenn `events` oft als neue Referenz kommt. Besser: computed + minimale Arbeit.
- */
-function computeProjectGroups() {
-
-    const out = []
-    const seen = new Set()
-    for (let i = 0; i < props.events.length; i++) {
-        const p = props.events[i]?.project
-        if (!p) continue
-        if (p.isGroup) {
-            if (!seen.has(p.id)) { seen.add(p.id); out.push(p) }
-        } else if (p.isInGroup && Array.isArray(p.group)) {
-            for (const g of p.group) {
-                if (!seen.has(g.id)) { seen.add(g.id); out.push(g) }
-            }
-        }
-    }
-    return out
-}
-
-const rawGroups = computed(() => props.settings.display_project_groups
-    ? computeProjectGroups()
-    : []
-)
-
-// Nur einmal Route/Disabled pro Gruppe vorberechnen
-const groups = computed(() => rawGroups.value.map(g => ({
-    ...g,
-    href: route('projects.tab', { project: g.id, projectTab: props.first_project_tab_id }),
-    disabled: groupLinkDisabled(g),
-})))
-
-
-// Click-Handler ohne neue Funktion im Template
-function onAddNew() {
-    emit('open-add-sub-event-modal', { day: props.day.withoutFormat, roomId: roomId.value })
-}
-// Projektgruppen-Cache
-const groupsCache = new WeakMap();
-function projectGroups(events = []) {
-    const cached = groupsCache.get(events);
-    if (cached) return cached;
-    const out = [];
-    const seen = new Set();
-    for (let i = 0; i < events.length; i++) {
-        const p = events[i]?.project;
-        if (!p) continue;
-        if (p.isGroup) {
-            if (!seen.has(p.id)) { seen.add(p.id); out.push(p); }
-        } else if (p.isInGroup && Array.isArray(p.group)) {
-            for (const g of p.group) {
-                if (!seen.has(g.id)) { seen.add(g.id); out.push(g); }
-            }
-        }
-    }
-    groupsCache.set(events, out);
-    return out;
-}
-function groupLinkDisabled(group) {
-    if (hasAdminRole()) return false;
-    return !group.userIds.includes(user.value.id);
-}
-
-// Scroll helper
-const scrollToNextEventInDay = (day, length, room) => {
-    const idx = Math.max(0, (length ?? 1) - 1);
-    const el = document.getElementById(`event_scroll-${idx}-day-${day}-room-${room}`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+// ---- Hilfsfunktionen: Keys & Formate
+const toGermanDate = (iso) => {
+    // 'YYYY-MM-DD' -> 'DD.MM.YYYY'
+    if (!iso || iso.length < 10) return iso;
+    const [y, m, d] = iso.split("-");
+    return `${d}.${m}.${y}`;
 };
+const dayKey = (day) => {
+    // Bevorzugt geliefertes fullDay (z.B. '01.01.2025'), fallback auf Konvertierung
+    return day.fullDay ?? toGermanDate(day.withoutFormat);
+};
+const monthKeyFromDay = (day) => (day.withoutFormat || "").slice(0, 7);
 
-// Checked Count
-const checkedCount = computed(() => editEvents.value.length);
+// ---------- Virtualisierung pro Cell ----------
+function useCellVisibility(options = {}) {
+    const { root = null, rootMargin = '1200px', threshold = 0.01 } = options;
+    const visibleKeys = ref(new Set());
+    let io = null;
+    const map = new Map();
 
-// Patch-Update (keine Deep-Mutation)
+    const isVisible = (key) => visibleKeys.value.has(key);
+
+    const observe = (el, key) => {
+        if (!el) return;
+        if (!io) {
+            io = new IntersectionObserver((entries) => {
+                let changed = false;
+                for (const entry of entries) {
+                    const k = map.get(entry.target);
+                    if (!k) continue;
+                    if (entry.isIntersecting) {
+                        if (!visibleKeys.value.has(k)) {
+                            const next = new Set(visibleKeys.value);
+                            next.add(k);
+                            visibleKeys.value = next;
+                            changed = true;
+                        }
+                    } else {
+                        if (visibleKeys.value.has(k)) {
+                            const next = new Set(visibleKeys.value);
+                            next.delete(k);
+                            visibleKeys.value = next;
+                            changed = true;
+                        }
+                    }
+                }
+                if (changed) {/* optional rAF batching */}
+            }, { root, rootMargin, threshold });
+        }
+        map.set(el, key);
+        io.observe(el);
+    };
+
+    const dispose = () => {
+        if (io) io.disconnect();
+        map.clear();
+        visibleKeys.value.clear();
+    };
+
+    return { observe, isVisible, dispose };
+}
+const { observe: observeCell, isVisible: isCellVisible, dispose: disposeCells } = useCellVisibility({
+    root: null,
+    rootMargin: '1200px',
+    threshold: 0.01
+});
+const cellKey = (day, room) => `${day.withoutFormat}:${(room.roomId ?? room.id)}`;
+const registerCell = (el, day, room) => { if (el) observeCell(el, cellKey(day, room)); };
+
+// ---------- Monatsweises Paging (sichtbarer Monat ±1) ----------
+const monthList = computed(() => {
+    const map = new Map(); // 'YYYY-MM' -> {start, end}
+    for (const d of props.days) {
+        const iso = d.withoutFormat; // 'YYYY-MM-DD'
+        if (!iso) continue;
+        const key = iso.slice(0, 7); // 'YYYY-MM'
+        if (!map.has(key)) map.set(key, { start: iso, end: iso });
+        else {
+            const rec = map.get(key);
+            if (iso < rec.start) rec.start = iso;
+            if (iso > rec.end) rec.end = iso;
+        }
+    }
+    return Array.from(map.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([key, range]) => ({ key, ...range }));
+});
+const monthIndexByKey = computed(() => {
+    const idx = new Map();
+    monthList.value.forEach((m, i) => idx.set(m.key, i));
+    return idx;
+});
+const loadedMonths = ref(new Set());
+const loadingMonths = ref(new Set());
+const monthSentinelSeen = ref(new Set());
+let monthObserver = null;
+
+async function loadMonth(key) {
+    if (!key) return;
+    if (loadedMonths.value.has(key) || loadingMonths.value.has(key)) return;
+    const rec = monthList.value.find(m => m.key === key);
+    if (!rec) return;
+
+    loadingMonths.value.add(key);
+    try {
+        const { data } = await axios.get(route("events.all"), {
+            params: {
+                start_date: rec.start,
+                end_date: rec.end,
+                isPlanning: props.isPlanning
+            }
+        });
+        applyCalendarPatch(data.calendar);
+        loadedMonths.value = new Set(loadedMonths.value).add(key);
+    } finally {
+        const next = new Set(loadingMonths.value);
+        next.delete(key);
+        loadingMonths.value = next;
+    }
+}
+async function ensureAround(key) {
+    const idx = monthIndexByKey.value.get(key);
+    if (idx == null) return;
+    const keys = [monthList.value[idx - 1]?.key, monthList.value[idx]?.key, monthList.value[idx + 1]?.key].filter(Boolean);
+    await Promise.all(keys.map(loadMonth));
+}
+function initMonthObserver() {
+    if (monthObserver) return;
+    monthObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            const key = entry.target.getAttribute('data-month');
+            if (key) ensureAround(key);
+        }
+    }, { root: null, rootMargin: '1500px 0px', threshold: 0.01 });
+}
+function registerMonthSentinel(el, day) {
+    if (!el) return;
+    const key = monthKeyFromDay(day);
+    if (!key || monthSentinelSeen.value.has(key)) return;
+    monthSentinelSeen.value.add(key);
+    initMonthObserver();
+    monthObserver.observe(el);
+}
+
+// Initial: ersten Monat ±1 laden
+onMounted(async () => {
+    const ShiftCalendarListener = useShiftCalendarListener(newCalendarData);
+    ShiftCalendarListener.init();
+    const initialKey = monthList.value[0]?.key;
+    await ensureAround(initialKey);
+});
+
+onBeforeUnmount(() => {
+    disposeCells();
+    if (monthObserver) monthObserver.disconnect();
+    monthObserver = null;
+    monthSentinelSeen.value.clear();
+});
+
+// ---------- Patch-Update (keine Deep-Mutation) ----------
 function applyCalendarPatch(patchRooms) {
     const byId = new Map(patchRooms.map(r => [r.roomId, r]));
     const next = newCalendarData.value.map(room => {
@@ -544,11 +526,11 @@ function applyCalendarPatch(patchRooms) {
         if (!inc) return room;
         const content = { ...room.content };
         let changed = false;
-        Object.entries(inc.content).forEach(([day, { events }]) => {
-            const slot = content[day];
+        Object.entries(inc.content).forEach(([dayStr, { events }]) => {
+            const slot = content[dayStr];
             if (!slot) return;
             if (slot.events !== events) {
-                content[day] = { ...slot, events };
+                content[dayStr] = { ...slot, events };
                 changed = true;
             }
         });
@@ -557,57 +539,53 @@ function applyCalendarPatch(patchRooms) {
     newCalendarData.value = next;
 }
 
-// Multi-Edit toggles (patch-basiert)
-const handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId) => {
+// ---------- Multi-Edit etc. ----------
+const checkedCount = computed(() => editEvents.value.length);
+
+function handleMultiEditEventCheckboxChange(eventId, considerOnMultiEdit, eventRoomId) {
     if (considerOnMultiEdit) {
         if (!editEvents.value.includes(eventId)) editEvents.value.push(eventId);
     } else {
         editEvents.value = editEvents.value.filter(id => id !== eventId);
-        editEventsRoomIds.value = editEventsRoomIds.value.filter(rid => rid !== eventRoomId);
     }
 
     const next = newCalendarData.value.map(room => {
         let roomChanged = false;
         const content = { ...room.content };
-        for (const [day, slot] of Object.entries(content)) {
+        for (const [d, slot] of Object.entries(content)) {
             let changed = false;
             const evts = (slot.events ?? []).map(e => {
                 if (e.id === eventId) { changed = true; return { ...e, considerOnMultiEdit }; }
                 return e;
             });
-            if (changed) { content[day] = { ...slot, events: evts }; roomChanged = true; }
+            if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
         }
         return roomChanged ? { ...room, content } : room;
     });
     newCalendarData.value = next;
-};
-
-const toggleMultiEdit = (value) => {
+}
+function toggleMultiEdit(value) {
     multiEdit.value = value;
     if (!value && editEvents.value.length) {
         const next = newCalendarData.value.map(room => {
             let roomChanged = false;
             const content = { ...room.content };
-            for (const [day, slot] of Object.entries(content)) {
+            for (const [d, slot] of Object.entries(content)) {
                 let changed = false;
                 const evts = (slot.events ?? []).map(e => {
                     if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
                     return e;
                 });
-                if (changed) { content[day] = { ...slot, events: evts }; roomChanged = true; }
+                if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
             }
             return roomChanged ? { ...room, content } : room;
         });
         newCalendarData.value = next;
         editEvents.value = [];
     }
-};
+}
+const cancelMultiEditDuplicateSelection = () => toggleMultiEdit(false);
 
-const cancelMultiEditDuplicateSelection = () => {
-    toggleMultiEdit(false);
-};
-
-// Modals / Actions
 const openDeclineEventModal = (event) => { declineEvent.value = event; showDeclineEventModal.value = true; };
 const openDeleteEventModal = (event, type) => {
     deleteType.value = type;
@@ -666,7 +644,6 @@ const deleteSelectedEvents = () => {
     axios.post(route("multi-edit.delete"), { events: editEvents.value })
         .finally(() => { openDeleteSelectedEventsModal.value = false; toggleMultiEdit(false); });
 };
-
 const jumpToDayOfMonth = (day) => {
     const dayElement = document.querySelector(`.day-container[data-day-to-jump="${day}"]`);
     if (dayElement) window.scrollTo({ top: dayElement.offsetTop - 130, behavior: "smooth" });
@@ -681,67 +658,6 @@ const requestVerification = () => {
         preserveScroll: true, preserveState: true, onSuccess: () => toggleMultiEdit(false)
     });
 };
-const closeShowRejectEventVerificationModal = () => { showRejectEventVerificationModal.value = false; toggleMultiEdit(false); };
-
-// Leerer Kalender?
-const checkIfAnyRoomHasAnEventOrShift = computed(() =>
-    newCalendarData.value.some(room =>
-        room.content && Object.values(room.content).some(slot => (slot?.events?.length ?? 0) > 0)
-    )
-);
-
-// Live-Updates
-onMounted(() => {
-    const ShiftCalendarListener = useShiftCalendarListener(newCalendarData);
-    ShiftCalendarListener.init();
-});
-
-// Monatsweises Nachladen (Patch)
-onMounted(async () => {
-    /*const dateRanges = splitByMonth();
-    for (const [start_date, end_date] of dateRanges) {
-        const { data } = await axios.get(route("events"), { params: { start_date, end_date, isPlanning: props.isPlanning } });
-        applyCalendarPatch(data.calendar);
-    }*/
-});
-
-const splitByMonth = () => {
-    const dateValues = inject("dateValue");
-    const result = [];
-    const start = new Date(dateValues[0]);
-    const end = new Date(dateValues[1]);
-    const lastDayOf = (y, m) => new Date(y, m + 1, 0).getDate();
-
-    let y = start.getFullYear(), m = start.getMonth(), d = start.getDate();
-    while (y < end.getFullYear() || m < end.getMonth()) {
-        const md = lastDayOf(y, m);
-        result.push([
-            `${y.toString().padStart(4, "0")}-${(m + 1).toString().padStart(2, "0")}-${d.toString().padStart(2, "0")}`,
-            `${y.toString().padStart(4, "0")}-${(m + 1).toString().padStart(2, "0")}-${md.toString().padStart(2, "0")}`
-        ]);
-        d = 1; m++; if (m === 12) { m = 0; y++; }
-    }
-    result.push([
-        `${y.toString().padStart(4, "0")}-${(m + 1).toString().padStart(2, "0")}-${d.toString().padStart(2, "0")}`,
-        dateValues[1]
-    ]);
-    return result;
-};
-
-const openAddSubEventModal = (desiredEvent, mode, mainEvent) => {
-    if (mode === 'create') {
-        //only set eventToEdit as base for new sub event
-        eventToEdit.value = desiredEvent;
-    } else if (mode === 'edit') {
-        //only set eventToEdit as base for new sub event
-        eventToEdit.value = mainEvent;
-        subEventToEdit.value = desiredEvent;
-    }
-
-    showAddSubEventModal.value = true;
-}
-
-
 </script>
 
 <style scoped>
@@ -756,4 +672,3 @@ const openAddSubEventModal = (desiredEvent, mode, mainEvent) => {
 .cell::-webkit-scrollbar-thumb { background-color: #d4d4d4; border-radius: 10px; }
 .cell::-webkit-scrollbar-track { background-color: #f3f3f3; }
 </style>
-

@@ -52,57 +52,26 @@
                                 <SingleDayInCalendar v-if="!day.isExtraRow" :isFullscreen="isFullscreen" :day="day" />
 
                                 <!-- Räume -->
-                                <div
-                                    v-for="(room, roomIdx) in newCalendarData"
-                                    :key="room.id ?? room.roomId ?? roomIdx"
-                                    v-if="!day.isExtraRow"
-                                    class="relative"
-                                >
-                                    <!-- Jump-to-bottom Button -->
-                                    <div
-                                        v-if="(room.content?.[day.fullDay]?.events?.length ?? 0) > 1 && !settings.expand_days"
-                                        class="absolute bottom-2 right-4 z-10"
-                                    >
-                                        <IconChevronDown
-                                            class="h-6 w-6 text-gray-400 text-hover cursor-pointer"
-                                            stroke-width="2"
-                                            @click="scrollToNextEventInDay(day.withoutFormat, room.content?.[day.fullDay]?.events?.length ?? 0, (room.roomId ?? room.id))"
-                                        />
-                                    </div>
-
-                                    <!-- Zelle -->
-                                    <div
-                                        :style="cellStyle"
-                                        :class="['group/container border-t border-gray-300 border-dashed relative', cellClass]"
-                                        :id="'scroll_container-' + day.withoutFormat"
-                                    >
-                                        <!-- Projektgruppen (memoisiert) -->
-                                        <div
-                                            v-if="settings.display_project_groups"
-                                            v-for="group in projectGroups(room.content?.[day.fullDay]?.events ?? [])"
-                                            :key="group.id"
+                                <template v-if="!day.isExtraRow">
+                                    <template v-for="(room, roomIdx) in rooms" :key="room.id ?? room.roomId ?? roomIdx">
+                                        <!-- Zelle (nur 1 Wrapper pro Raum) -->
+                                        <section
+                                            :style="cellStyle"
+                                            :class="containerClass"
+                                            :id="`scroll_container-${day.withoutFormat}`"
+                                            :data-room-id="room.roomId ?? room.id"
                                         >
-                                            <Link
-                                                :disabled="groupLinkDisabled(group)"
-                                                :href="route('projects.tab', { project: group.id, projectTab: first_project_tab_id })"
-                                                class="bg-artwork-navigation-background text-white text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1"
-                                            >
-                                                <component :is="group.icon" class="size-4" aria-hidden="true" />
-                                                <span>{{ group.name }}</span>
-                                            </Link>
-                                        </div>
+                                            <!-- Projektgruppen (ein Block, ohne zusätzliche Wrapper) -->
 
-                                        <!-- Events -->
-                                        <div
-                                            v-for="(event, index) in (room.content?.[day.fullDay]?.events ?? [])"
-                                            :key="event.id ?? `${day.fullDay}-${index}`"
-                                            class="py-0.5"
-                                            :id="`event_scroll-${index}-day-${day.withoutFormat}-room-${room.roomId ?? room.id}`"
-                                        >
-                                            <!-- Fallback-Filter: wenn event.roomId/room.roomId vorhanden sind, nur im passenden Raum anzeigen -->
+
+                                            <!-- Events (KEIN zusätzlicher div je Event) -->
                                             <AsyncSingleEventInCalendar
-                                                v-if="!event.roomId || !room.roomId || event.roomId === (room.roomId ?? room.id)"
-                                                :event="event"
+                                                v-for="(evt, idx) in events"
+                                                :key="evt.id"
+                                                v-memo="[evt.id, evt.updated_at, multiEdit, textStyle.fontSize, textStyle.lineHeight, cardWidthNum]"
+                                                class="py-0.5"
+                                                :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
+                                                :event="evt"
                                                 :multi-edit="multiEdit"
                                                 :font-size="textStyle.fontSize"
                                                 :line-height="textStyle.lineHeight"
@@ -120,101 +89,96 @@
                                                 @show-decline-event-modal="openDeclineEventModal"
                                                 @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
                                             />
-                                        </div>
 
-                                        <!-- Hover Add -->
-                                        <div v-if="settings.expand_days" class="absolute inset-0 pointer-events-none"></div>
-                                        <div class="absolute left-2 bottom-3 hidden group-hover/container:block z-50">
-                                            <ToolTipComponent
-                                                :tooltip-text="isPlanning ? $t('Add new planned event') : $t('Add new event on this day')"
-                                                :icon="IconCircleDashedPlus"
-                                                classes="cursor-pointer card glassy text-artwork-buttons-create h-8 w-8 flex items-center justify-center rounded-full"
-                                                @click="openNewEventModalWithBaseData(day.withoutFormat, (room.roomId ?? room.id))"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                                            <!-- Hover Add: ohne Overlay-Div; Pointer-Blocker via CSS-Klasse -->
 
-            <!-- Tagesansicht -->
-            <div v-else-if="isDaily && !atAGlance">
-                <AsyncDailyViewCalendar
-                    :multi-edit="multiEdit"
-                    :rooms="rooms"
-                    :days="days"
-                    :calendarData="newCalendarData"
-                    :project="project"
-                    :eventStatuses="eventStatuses"
-                    :eventTypes="eventTypes"
-                    :eventsWithoutRoom="eventsWithoutRoom"
-                    :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                    :firstProjectShiftTabId="firstProjectShiftTabId"
-                    :first-project-tab-id="first_project_tab_id"
-                    :verifierForEventTypIds="verifierForEventTypIds"
-                    :is-planning="isPlanning"
-                    @edit-event="showEditEventModel"
-                    @edit-sub-event="openAddSubEventModal"
-                    @open-add-sub-event-modal="openAddSubEventModal"
-                    @open-confirm-modal="openDeleteEventModal"
-                    @show-decline-event-modal="openDeclineEventModal"
-                    @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                />
-            </div>
+                                        </section>
+                                    </template>
+                                </template>
 
-            <!-- At-a-glance -->
-            <div class="mt-[4.5rem] w-max" v-else>
-                <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
-                    <div v-for="(room, rIdx) in newCalendarData" :key="room.id ?? room.roomId ?? rIdx">
-                        <div :style="{ minWidth: cellWidthPx, maxWidth: cellWidthPx, width: cellWidthPx }" class="flex items-center h-full truncate">
-                            <SingleRoomInHeader :room="room" is-light />
-                        </div>
-                    </div>
-                </div>
 
-                <div class="flex gap-0.5">
-                    <div v-for="(room, rIdx) in newCalendarData" :key="'agl-'+(room.id ?? room.roomId ?? rIdx)">
-                        <div v-for="(events, k) in room.content" :key="events?.date ?? k" class="flex flex-col">
-                            <div
-                                v-for="(event, index) in (events?.events ?? [])"
-                                :key="event.id ?? `${events?.date}-${index}`"
-                                :style="{ minWidth: cellWidthPx, maxWidth: cellWidthPx, width: cellWidthPx }"
-                                class="mb-0.5 h-full"
-                                :id="'scroll_container-' + (events?.date ?? k)"
-                            >
-                                <div class="py-0.5">
-                                    <AsyncSingleEventInCalendar
-                                        :event="event"
-                                        :multi-edit="multiEdit"
-                                        :font-size="textStyle.fontSize"
-                                        :line-height="textStyle.lineHeight"
-                                        :rooms="rooms"
-                                        :has-admin-role="hasAdminRole()"
-                                        :width="cardWidthNum"
-                                        :first_project_tab_id="first_project_tab_id"
-                                        :firstProjectShiftTabId="firstProjectShiftTabId"
-                                        :verifierForEventTypIds="verifierForEventTypIds"
-                                        :is-planning="isPlanning"
-                                        @edit-event="showEditEventModel"
-                                        @edit-sub-event="openAddSubEventModal"
-                                        @open-add-sub-event-modal="openAddSubEventModal"
-                                        @open-confirm-modal="openDeleteEventModal"
-                                        @show-decline-event-modal="openDeclineEventModal"
-                                        @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                                    />
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Tagesansicht -->
+        <!--<div v-else-if="isDaily && !atAGlance">
+            <AsyncDailyViewCalendar
+                :multi-edit="multiEdit"
+                :rooms="rooms"
+                :days="days"
+                :calendarData="newCalendarData"
+                :project="project"
+                :eventStatuses="eventStatuses"
+                :eventTypes="eventTypes"
+                :eventsWithoutRoom="eventsWithoutRoom"
+                :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                :firstProjectShiftTabId="firstProjectShiftTabId"
+                :first-project-tab-id="first_project_tab_id"
+                :verifierForEventTypIds="verifierForEventTypIds"
+                :is-planning="isPlanning"
+                @edit-event="showEditEventModel"
+                @edit-sub-event="openAddSubEventModal"
+                @open-add-sub-event-modal="openAddSubEventModal"
+                @open-confirm-modal="openDeleteEventModal"
+                @show-decline-event-modal="openDeclineEventModal"
+                @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+            />
+        </div>-->
+
+        <!-- At-a-glance -->
+        <!--<div class="mt-[4.5rem] w-max" v-else>
+            <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
+                <div v-for="(room, rIdx) in newCalendarData" :key="room.id ?? room.roomId ?? rIdx">
+                    <div :style="{ minWidth: cellWidthPx, maxWidth: cellWidthPx, width: cellWidthPx }" class="flex items-center h-full truncate">
+                        <SingleRoomInHeader :room="room" is-light />
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-0.5">
+                <div v-for="(room, rIdx) in newCalendarData" :key="'agl-'+(room.id ?? room.roomId ?? rIdx)">
+                    <div v-for="(events, k) in room.content" :key="events?.date ?? k" class="flex flex-col">
+                        <div
+                            v-for="(event, index) in (events?.events ?? [])"
+                            :key="event.id ?? `${events?.date}-${index}`"
+                            :style="{ minWidth: cellWidthPx, maxWidth: cellWidthPx, width: cellWidthPx }"
+                            class="mb-0.5 h-full"
+                            :id="'scroll_container-' + (events?.date ?? k)"
+                        >
+                            <div class="py-0.5">
+                                <AsyncSingleEventInCalendar
+                                    :event="event"
+                                    :multi-edit="multiEdit"
+                                    :font-size="textStyle.fontSize"
+                                    :line-height="textStyle.lineHeight"
+                                    :rooms="rooms"
+                                    :has-admin-role="hasAdminRole()"
+                                    :width="cardWidthNum"
+                                    :first_project_tab_id="first_project_tab_id"
+                                    :firstProjectShiftTabId="firstProjectShiftTabId"
+                                    :verifierForEventTypIds="verifierForEventTypIds"
+                                    :is-planning="isPlanning"
+                                    @edit-event="showEditEventModel"
+                                    @edit-sub-event="openAddSubEventModal"
+                                    @open-add-sub-event-modal="openAddSubEventModal"
+                                    @open-confirm-modal="openDeleteEventModal"
+                                    @show-decline-event-modal="openDeclineEventModal"
+                                    @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    -->
 
         <!-- Hinweis, wenn Projektzeitraum aktiv & leer -->
-        <div v-if="!checkIfAnyRoomHasAnEventOrShift && settings.use_project_time_period">
+        <!--<div v-if="!checkIfAnyRoomHasAnEventOrShift && settings.use_project_time_period">
             <div class="mt-24 ml-4">
                 <div class="border-l-4 border-red-400 bg-red-50 p-4 w-fit">
                     <div class="flex">
@@ -229,7 +193,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div>-->
 
         <!-- Multi-Edit Bottom Bar -->
         <div class="fixed bottom-0 w-full h-32 bg-artwork-navigation-background/30 z-40 pointer-events-none" v-if="multiEdit">
@@ -400,8 +364,8 @@ const $t = useTranslation();
 const page = usePage();
 const { hasAdminRole } = usePermission(page.props);
 
-const AsyncSingleEventInCalendar = lazyLoadComponentIfVisible({
-    componentLoader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
+const AsyncSingleEventInCalendar = defineAsyncComponent({
+    loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
     loadingComponent: CalendarPlaceholder,
 });
 const AsyncEventComponent = defineAsyncComponent({ loader: () => import("@/Layouts/Components/EventComponent.vue") });
@@ -477,6 +441,7 @@ const showMultiDuplicateModal = ref(false);
 const newCalendarData = shallowRef(props.calendarData);
 const wantedDate = ref(null);
 const showRejectEventVerificationModal = ref(false);
+const events = ref([]);
 
 // Injects
 const first_project_calendar_tab_id = inject("first_project_calendar_tab_id");
@@ -490,6 +455,51 @@ const textStyle = computed(() => {
     return { fontSize, lineHeight };
 });
 
+// ---- stabile Bindings
+const containerClass = computed(() => ['group/container border-t border-gray-300 border-dashed relative', props.cellClass])
+
+
+// ---- Projektgruppen performant berechnen (ersetzt projectGroups(events ?? []))
+/**
+ * Deine ursprüngliche Logik – aber als reine Utility, nicht im Template aufrufen.
+ * Achtung: dein bisheriger Cache keyed via Array-Referenz bringt wenig,
+ * wenn `events` oft als neue Referenz kommt. Besser: computed + minimale Arbeit.
+ */
+function computeProjectGroups() {
+
+    const out = []
+    const seen = new Set()
+    for (let i = 0; i < props.events.length; i++) {
+        const p = props.events[i]?.project
+        if (!p) continue
+        if (p.isGroup) {
+            if (!seen.has(p.id)) { seen.add(p.id); out.push(p) }
+        } else if (p.isInGroup && Array.isArray(p.group)) {
+            for (const g of p.group) {
+                if (!seen.has(g.id)) { seen.add(g.id); out.push(g) }
+            }
+        }
+    }
+    return out
+}
+
+const rawGroups = computed(() => props.settings.display_project_groups
+    ? computeProjectGroups()
+    : []
+)
+
+// Nur einmal Route/Disabled pro Gruppe vorberechnen
+const groups = computed(() => rawGroups.value.map(g => ({
+    ...g,
+    href: route('projects.tab', { project: g.id, projectTab: props.first_project_tab_id }),
+    disabled: groupLinkDisabled(g),
+})))
+
+
+// Click-Handler ohne neue Funktion im Template
+function onAddNew() {
+    emit('open-add-sub-event-modal', { day: props.day.withoutFormat, roomId: roomId.value })
+}
 // Projektgruppen-Cache
 const groupsCache = new WeakMap();
 function projectGroups(events = []) {
@@ -688,11 +698,11 @@ onMounted(() => {
 
 // Monatsweises Nachladen (Patch)
 onMounted(async () => {
-    const dateRanges = splitByMonth();
+    /*const dateRanges = splitByMonth();
     for (const [start_date, end_date] of dateRanges) {
         const { data } = await axios.get(route("events"), { params: { start_date, end_date, isPlanning: props.isPlanning } });
         applyCalendarPatch(data.calendar);
-    }
+    }*/
 });
 
 const splitByMonth = () => {
@@ -746,3 +756,4 @@ const openAddSubEventModal = (desiredEvent, mode, mainEvent) => {
 .cell::-webkit-scrollbar-thumb { background-color: #d4d4d4; border-radius: 10px; }
 .cell::-webkit-scrollbar-track { background-color: #f3f3f3; }
 </style>
+

@@ -190,6 +190,7 @@ class EventController extends Controller
      */
     public function viewEventIndex(Request $request, ?Project $project = null): Response|JsonResponse
     {
+
         /** @var User $user */
         $user = $this->authManager->user();
 
@@ -198,7 +199,7 @@ class EventController extends Controller
         $isPlanning           = $request->boolean('isPlanning', false);
 
         // Abo/Shared Daten (leichtgewichtig lassen)
-        app('Artwork\\Modules\\User\\Services\\UserService')->shareCalendarAbo('calendar');
+        $this->userService->shareCalendarAbo('calendar');
 
         // Datum bestimmen
         $dateRangeRequested = $request->filled(['start_date','end_date']);
@@ -258,7 +259,7 @@ class EventController extends Controller
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
 
         // Sofortige JSON-Antwort nur, wenn explizit ein Datumsbereich abgefragt wird (z.B. Planner)
-        if ($dateRangeRequested) {
+        /*if ($dateRangeRequested) {
             $calendar = ($isPlanning
                 ? $this->eventPlanningCalendarService
                 : $this->eventCalendarService
@@ -278,7 +279,7 @@ class EventController extends Controller
             );
 
             return response()->json(['calendar' => $calendar->rooms]);
-        }
+        }*/
 
         // Inertia v2 Best Practice: Schwere Props **lazy/deferred** als Closures.
         // Client lädt diese gezielt via Partial Reload / <WhenVisible />. :contentReference[oaicite:1]{index=1}
@@ -296,7 +297,7 @@ class EventController extends Controller
             'filterOptions'   => fn () => $this->filterService->getCalendarFilterDefinitions(),
 
             // **L A Z Y**: teure Event-Mappings und große Listen:
-            'calendar' => fn () => ($isPlanning
+            /*'calendar' => fn () => ($isPlanning
                 ? $this->eventPlanningCalendarService
                 : $this->eventCalendarService
             )->mapRoomsToContentForCalendar(
@@ -317,29 +318,27 @@ class EventController extends Controller
                 ),
                 $startDate,
                 $endDate
-            )->rooms,
+            )->rooms,*/
 
-            'eventsWithoutRoom' => fn () =>
-            Event::query()->hasNoRoom()->get()->map(fn($event) =>
-            \Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO::formModel(
-                $event,
-                $userCalendarSettings,
-                EventType::select(['id','name','abbreviation','hex_code'])->get()->keyBy('id')
-            )
-            ),
+            /* 'eventsWithoutRoom' => fn () =>
+             Event::query()->hasNoRoom()->get()->map(fn($event) =>
+             \Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO::formModel(
+                 $event,
+                 $userCalendarSettings,
+                 EventType::select(['id','name','abbreviation','hex_code'])->get()->keyBy('id')
+             )
+             ),*/
 
-            'areas'            => fn () => app('Artwork\\Modules\\Area\\Services\\AreaService')->getAll(),
+           // 'areas'            => fn () => app('Artwork\\Modules\\Area\\Services\\AreaService')->getAll(),
+            'areas'            => fn () => $this->areaService->getAll(),
             'eventTypes'       => fn () => EventType::select(['id','name','abbreviation','hex_code'])->orderBy('name')->get(),
             'eventStatuses'    => fn () => EventStatus::orderBy('order')->get(),
             'event_properties' => fn () => EventProperty::all(),
 
             // Projekt-Tabs (klein, aber konsistent)
-            'first_project_tab_id' => fn () => app('Artwork\\Modules\\Project\\Services\\ProjectTabService')
-                ->getDefaultOrFirstProjectTabId(),
-            'first_project_calendar_tab_id' => fn () => app('Artwork\\Modules\\Project\\Services\\ProjectTabService')
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
-            'first_project_shift_tab_id' => fn () => app('Artwork\\Modules\\Project\\Services\\ProjectTabService')
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'first_project_tab_id' => fn () => $this->projectTabService->getDefaultOrFirstProjectTabId(),
+            'first_project_calendar_tab_id' => fn () => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
+            'first_project_shift_tab_id' => fn () => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
 
             'projectNameUsedForProjectTimePeriod' => fn () =>
             $userCalendarSettings->getAttribute('time_period_project_id')
@@ -348,6 +347,13 @@ class EventController extends Controller
             )->name
                 : null,
         ]);
+    }
+
+    public function allEventsAPI(): JsonResponse
+    {
+        $events = Event::all();
+
+        return response()->json($events);
     }
 
     public function viewPlanningCalendar(Request $request, ?Project $project = null): Response

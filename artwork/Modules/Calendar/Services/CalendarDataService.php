@@ -100,7 +100,7 @@ readonly class CalendarDataService
                 'admins:id', // wir brauchen nur die IDs
             ])
             // has_events als EXISTS-Subquery (überlappend im Zeitraum)
-            ->withExists(['events as has_events' => function (Builder $q) use ($filter, $startDate, $endDate) {
+            /*->withExists(['events as has_events' => function (Builder $q) use ($filter, $startDate, $endDate) {
                 $q->when(!empty($filter->event_type_ids), fn($qq) => $qq->whereIn('events.event_type_id', $filter->event_type_ids))
                     ->where(function ($qq) use ($startDate, $endDate) {
                         $qq->whereBetween('start_time', [$startDate, $endDate])
@@ -115,7 +115,7 @@ readonly class CalendarDataService
             ->when(
                 $userCalendarSettings?->hide_unoccupied_rooms,
                 fn($q) => $q->where('has_events', true)
-            )
+            )*/
             ->orderBy('position')
             ->get()
             // temporäre Räume auf Zeitraum prüfen

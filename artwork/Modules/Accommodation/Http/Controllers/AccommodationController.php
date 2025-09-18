@@ -44,7 +44,18 @@ class AccommodationController extends Controller
     {
         $accommodation = $this->accommodationService->store($request->validated());
 
-        $accommodation->roomTypes()->sync($request->input('room_types', []));
+        // Handle room types with costs
+        $roomTypes = $request->input('room_types', []);
+        $roomTypeCosts = $request->input('room_type_costs', []);
+
+        $syncData = [];
+        foreach ($roomTypes as $roomTypeId) {
+            $syncData[$roomTypeId] = [
+                'cost_per_night' => $roomTypeCosts[$roomTypeId] ?? 0.00
+            ];
+        }
+
+        $accommodation->roomTypes()->sync($syncData);
 
         return redirect()->route('accommodation.index');
     }
@@ -55,7 +66,9 @@ class AccommodationController extends Controller
     public function show(Accommodation $accommodation)
     {
         return Inertia::render('Accommodation/Show', [
-            'accommodation' => $accommodation->load(['contacts', 'roomTypes']),
+            'accommodation' => $accommodation->load(['contacts', 'roomTypes' => function($query) {
+                $query->withPivot('cost_per_night');
+            }]),
             'roomTypes' => AccommodationRoomType::all(),
         ]);
     }
@@ -75,7 +88,21 @@ class AccommodationController extends Controller
     {
         $accommodation = $this->accommodationService->update($accommodation, $request->validated());
 
-        $accommodation->roomTypes()->sync($request->input('room_types', []));
+        // Handle room types with costs
+        $roomTypes = $request->input('room_types', []);
+        $roomTypeCosts = $request->input('room_type_costs', []);
+
+        $syncData = [];
+        foreach ($roomTypes as $roomTypeId) {
+            $syncData[$roomTypeId] = [
+                'cost_per_night' => $roomTypeCosts[$roomTypeId] ?? 0.00
+            ];
+        }
+
+        $accommodation->roomTypes()->sync($syncData);
+
+
+        return redirect()->route('accommodation.show', $accommodation);
     }
 
     /**

@@ -1707,10 +1707,21 @@ readonly class EventService
 
         $eventStatusSetting = app(EventSettings::class);
 
-        if ($eventStatusSetting->enable_status && isset($event['status']['id'])) {
-            $createdEvent->update([
-                'event_status_id' => $event['status']['id']
-            ]);
+        if ($eventStatusSetting->enable_status) {
+            if (isset($event['status']['id'])) {
+                // Use provided status
+                $createdEvent->update([
+                    'event_status_id' => $event['status']['id']
+                ]);
+            } else {
+                // Use default status if no status provided
+                $defaultStatus = EventStatus::where('default', true)->first();
+                if ($defaultStatus) {
+                    $createdEvent->update([
+                        'event_status_id' => $defaultStatus->id
+                    ]);
+                }
+            }
         }
 
         return $createdEvent;

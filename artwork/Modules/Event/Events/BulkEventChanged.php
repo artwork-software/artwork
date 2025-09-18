@@ -49,6 +49,7 @@ class BulkEventChanged implements ShouldBroadcastNow
                 'id' => $this->event->id,
                 'project_id' => $this->event->project_id,
                 'type' => $this->event->event_type,
+                'status' => $this->event->eventStatus,
                 'eventTypeName' => $this->event->event_type?->name ?? null,
                 'name' => $this->event->name,
                 'room' => $this->event->room,

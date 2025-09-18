@@ -3105,14 +3105,13 @@ class EventController extends Controller
                 $project,
                 $this->authManager->id()
             );
-
             broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
                 $storedEvent->fresh(),
                 'created'
             ));
         }
 
-        //return Redirect::back();
+        return Redirect::back();
     }
 
     public function updateSingleBulkEvent(
@@ -3144,7 +3143,6 @@ class EventController extends Controller
             $project,
             $this->authManager->id()
         );
-
         broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
             $event->fresh(),
             'created'

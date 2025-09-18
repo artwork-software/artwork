@@ -91,7 +91,7 @@
                   px-5 py-2.5 sm:rounded-xl shadow-lg ring-1 ring-inset ring-white/10">
                 <p class="text-sm">{{ $t('Timeline copied to clipboard') }}</p>
                 <button type="button" class="-m-1.5 p-1.5" @click="successCopied = false" aria-label="Dismiss">
-                    <component is="IconX" class="size-5" aria-hidden="true" />
+                    <component :is="IconX" class="size-5" aria-hidden="true" />
                 </button>
             </div>
         </div>
@@ -129,6 +129,7 @@ import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import SearchTimelinePresetModal from '@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue'
 import CreateTimelinePresetFormEvent from '@/Pages/Projects/Components/TimelineComponents/CreateTimelinePresetFormEvent.vue'
 import {is, can} from "laravel-permission-to-vuejs";
+import {IconX} from "@tabler/icons-vue";
 
 defineOptions({ name: 'Timeline' })
 

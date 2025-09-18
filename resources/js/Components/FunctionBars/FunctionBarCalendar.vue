@@ -46,8 +46,8 @@
                         </button>
 
                     </div>
-                    <BaseMenu tooltip-direction="bottom" show-custom-icon icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
-                        <BaseMenuItem icon="IconCalendarRepeat" white-menu-background without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
+                    <BaseMenu tooltip-direction="bottom" show-custom-icon :icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
+                        <BaseMenuItem :icon="IconCalendarRepeat" white-menu-background without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>
 
@@ -89,10 +89,10 @@
                     <span class="sr-only">Use project time period toggle</span>
                     <span :class="[isCalendarUsingProjectTimePeriod ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                         <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                            <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
+                            <ToolTipComponent icon-size="w-4 h-4" direction="bottom" :icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
                         </span>
                         <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                            <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
+                            <ToolTipComponent icon-size="w-4 h-4" direction="bottom" :icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
                         </span>
                     </span>
                 </Switch>
@@ -102,10 +102,10 @@
                     <span class="sr-only">Use setting</span>
                     <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                 <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconCalendarWeek" :tooltip-text="$t('Daily view')" stroke="1.5"/>
+                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" :icon="IconCalendarWeek" :tooltip-text="$t('Daily view')" stroke="1.5"/>
                                 </span>
                                 <span :class="[dailyViewMode ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconCalendarMonth" :tooltip-text="$t('Daily view')" stroke="1.5"/>
+                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" :icon="IconCalendarMonth" :tooltip-text="$t('Daily view')" stroke="1.5"/>
                                 </span>
                             </span>
                 </Switch>
@@ -129,10 +129,10 @@
                             <span class="sr-only">Use setting</span>
                             <span :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                 <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconList" :tooltip-text="$t('At a glance')" stroke="1.5"/>
+                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" :icon="IconList" :tooltip-text="$t('At a glance')" stroke="1.5"/>
                                 </span>
                                 <span :class="[atAGlance ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconList" :tooltip-text="$t('At a glance')" stroke="1.5"/>
+                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" :icon="IconList" :tooltip-text="$t('At a glance')" stroke="1.5"/>
                                 </span>
                             </span>
                         </Switch>
@@ -143,7 +143,7 @@
                     <ToolTipComponent
                         direction="bottom"
                         :tooltip-text="$t('Zoom in')"
-                        icon="IconZoomIn"
+                        :icon="IconZoomIn"
                         icon-size="h-7 w-7"
                         :disabled="zoom_factor >= 1.4"
                         @click="incrementZoomFactor"
@@ -156,7 +156,7 @@
                     <ToolTipComponent
                         direction="bottom"
                         :tooltip-text="$t('Zoom out')"
-                        icon="IconZoomOut"
+                        :icon="IconZoomOut"
                         icon-size="h-7 w-7"
                         :disabled="zoom_factor <= 0.2"
                         @click="decrementZoomFactor"
@@ -166,7 +166,7 @@
                     <ToolTipComponent
                         direction="bottom"
                         :tooltip-text="$t('Full screen')"
-                        icon="IconArrowsDiagonal"
+                        :icon="IconArrowsDiagonal"
                         icon-size="h-7 w-7"
                         @click="$emit('openFullscreenMode')"
                         v-if="!atAGlance && !isFullscreen"
@@ -212,7 +212,7 @@
                             <ToolTipComponent
                                 direction="bottom"
                                 :tooltip-text="$t('Subscribe to calendar')"
-                                icon="IconCalendarStar"
+                                :icon="IconCalendarStar"
                                 icon-size="h-7 w-7"
                             />
                         </div>
@@ -221,7 +221,7 @@
                         <ToolTipComponent
                             direction="left"
                             :tooltip-text="$t('Export calendar')"
-                            icon="IconFileExport"
+                            :icon="IconFileExport"
                             icon-size="h-7 w-7"
                         />
                     </div>
@@ -229,7 +229,7 @@
                     <ToolTipComponent
                         direction="bottom"
                         :tooltip-text="$t('Add Event')"
-                        icon="IconCirclePlus"
+                        :icon="IconCirclePlus"
                         icon-size="h-7 w-7"
                         @click="$emit('wantsToAddNewEvent');"
                     />
@@ -260,7 +260,15 @@
 <script setup>
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import {computed, defineAsyncComponent, inject, nextTick, ref, watch} from "vue";
-import {IconChevronLeft, IconChevronRight, IconCalendar, IconCalendarWeek, IconCalendarMonth} from "@tabler/icons-vue";
+import {
+    IconChevronLeft,
+    IconChevronRight,
+    IconCalendar,
+    IconCalendarWeek,
+    IconCalendarMonth,
+    IconGeometry, IconCalendarRepeat, IconList, IconZoomIn, IconZoomOut, IconArrowsDiagonal, IconCalendarStar,
+    IconFileExport, IconCirclePlus, IconReorder
+} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
 import {Switch} from "@headlessui/vue";

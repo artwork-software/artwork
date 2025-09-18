@@ -96,7 +96,7 @@
 
                                                 <!-- Check -->
                                                 <div v-if="selectedArtist?.id === artist.id" class="absolute right-3 top-3 text-artwork-buttons-hover">
-                                                    <component is="IconCheck" class="h-5 w-5" />
+                                                    <component :is="IconCheck" class="h-5 w-5" />
                                                 </div>
                                             </div>
                                         </div>
@@ -356,6 +356,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import CountUp from "@/Artwork/Visual/CountUp.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import {IconCheck} from "@tabler/icons-vue";
 
 
 const props = defineProps({

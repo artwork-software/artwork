@@ -51,7 +51,7 @@ class Benchmark2022ProjectSeeder extends Seeder
                     ->set('allDay', $faker->boolean())
                     ->set('user_id', User::find(1)->id)
                     ->set('audience', $faker->boolean())
-                    ->count(2)
+                    ->count(1)
                     ->create();
             }
         });

@@ -6,7 +6,7 @@
                 <div class="col-span-1">
                     <div @click="addImage"
                          class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
-                        <component is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true"/>
+                        <component :is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true"/>
                         <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t('Upload Images')}}</span>
                         <input type="file" accept="image/*" class="sr-only" ref="articleImageInput" multiple
                                @input="handleImageInput"/>
@@ -86,7 +86,7 @@
                                 <div class="col-start-1 row-start-1 truncate pr-6">
                                     {{ selectedCategory?.name ?? $t('Please select a Category') }}
                                 </div>
-                                <component is="IconChevronUp"
+                                <component :is="IconChevronUp"
                                            class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4"
                                            aria-hidden="true"/>
                             </ListboxButton>
@@ -105,7 +105,7 @@
 
                                             <span v-if="selected"
                                                   :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                <component is="IconCheck" class="size-5" aria-hidden="true"/>
+                                                <component :is="IconCheck" class="size-5" aria-hidden="true"/>
                                             </span>
                                         </li>
                                     </ListboxOption>
@@ -124,7 +124,7 @@
                                 <div class="col-start-1 row-start-1 truncate pr-6">
                                     {{ selectedSubCategory?.name ?? $t('Please select a Sub-Category') }}
                                 </div>
-                                <component is="IconChevronUp"
+                                <component :is="IconChevronUp"
                                            class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4"
                                            aria-hidden="true"/>
                             </ListboxButton>
@@ -143,7 +143,7 @@
 
                                             <span v-if="selected"
                                                   :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                <component is="IconCheck" class="size-5" aria-hidden="true"/>
+                                                <component :is="IconCheck" class="size-5" aria-hidden="true"/>
                                             </span>
                                         </li>
                                     </ListboxOption>
@@ -233,7 +233,7 @@
                                                         classes="text-artwork-buttons-create"
                                                         icon-right
                                                         stroke="2"
-                                                        icon="IconClick"
+                                                        :icon="IconClick"
                                                         icon-size="size-4"
                                                         :tooltip-text="$t('Click to set the article quantity to the detailed article quantity')"/>
                                                 </span>
@@ -282,7 +282,7 @@
                                                 <ToolTipComponent
                                                     v-if="property?.tooltip_text"
                                                     :tooltip-text="property?.tooltip_text"
-                                                    icon="IconInfoCircle"
+                                                    :icon="IconInfoCircle"
                                                     icon-size="size-4"
                                                     direction="top"
                                                     tooltipCssClass="break-all !text-xs"
@@ -307,7 +307,7 @@
                                                     :display-value="(person) => property.value ? rooms?.find((room) => room.id === parseInt(property.value) ).name : ''"/>
                                                 <ComboboxButton
                                                     class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                    <component is="IconSelector" class="size-5 text-gray-400"
+                                                    <component :is="IconSelector" class="size-5 text-gray-400"
                                                                aria-hidden="true"/>
                                                 </ComboboxButton>
 
@@ -323,7 +323,7 @@
                                                                 </span>
                                                             <span v-if="selected"
                                                                   :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                  <component is="IconCheck" class="size-5"
+                                                                  <component :is="IconCheck" class="size-5"
                                                                              aria-hidden="true"/>
                                                                 </span>
                                                         </li>
@@ -342,7 +342,7 @@
                                                     :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.value) ).name : ''"/>
                                                 <ComboboxButton
                                                     class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                    <component is="IconSelector" class="size-5 text-gray-400"
+                                                    <component :is="IconSelector" class="size-5 text-gray-400"
                                                                aria-hidden="true"/>
                                                 </ComboboxButton>
 
@@ -358,7 +358,7 @@
                                                                 </span>
                                                             <span v-if="selected"
                                                                   :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                  <component is="IconCheck" class="size-5"
+                                                                  <component :is="IconCheck" class="size-5"
                                                                              aria-hidden="true"/>
                                                                 </span>
                                                         </li>
@@ -758,6 +758,7 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import {IconCheck, IconChevronUp, IconClick, IconInfoCircle, IconPhotoPlus, IconSelector} from "@tabler/icons-vue";
 
 const props = defineProps({
     article: {

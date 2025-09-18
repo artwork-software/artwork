@@ -118,7 +118,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-4">
-                                <component is="IconGripVertical" class="h-5 w-5" />
+                                <component :is="IconGripVertical" class="h-5 w-5" />
                                 <BaseMenu>
                                     <MenuItem @click="updateCraft(element)"
                                               v-slot="{ active }">
@@ -225,7 +225,7 @@
                         :title="$t('Time presets for shifts')"
                         :description="$t('Create time presets for layers to be able to assign them quickly and easily later.')"
                     />
-                    <GlassyIconButton text="New time preset" icon="IconPlus" @click="showAddShiftPresetModal = true" />
+                    <GlassyIconButton text="New time preset" :icon="IconPlus" @click="showAddShiftPresetModal = true" />
                 </div>
                 <div class="mt-5">
                     <AlertComponent
@@ -345,6 +345,7 @@ import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualific
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import Button from "@/Jetstream/Button.vue";
+import {IconGripVertical, IconPlus} from "@tabler/icons-vue";
 
 export default defineComponent({
     name: "ShiftSettings",
@@ -473,6 +474,8 @@ export default defineComponent({
         }
     },
     methods: {
+        IconPlus,
+        IconGripVertical,
         addUserToWorkflow(user) {
             console.log('Adding user to workflow:', user);
             if (this.userForWorkflowForm.processing || this.userForWorkflowForm.users.includes(user.id)) {

@@ -19,7 +19,7 @@
 
         <!-- Empty -->
         <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="w-[175px] h-[144px] rounded-lg flex items-center justify-center border border-dashed border-gray-300 group btn-border-hover" @click="checkWhichModal">
-            <component is="IconCircleDashedPlus" class="h-6 w-6 text-artwork-buttons-context/30 cursor-pointer btn-group-hover" stroke-width="1.5" />
+            <component :is="IconCircleDashedPlus" class="h-6 w-6 text-artwork-buttons-context/30 cursor-pointer btn-group-hover" stroke-width="1.5" />
         </div>
     </div>
     <AddShiftModal v-if="showAddShiftModal"
@@ -50,6 +50,7 @@ import ChooseShiftSeries from "@/Pages/Projects/Components/ChooseShiftSeries.vue
 import IconLib from "@/Mixins/IconLib.vue";
 import ShiftPlanPlacementHandler from "@/Helper/ShiftPlanPlacementHandler.vue";
 import Permissions from "@/Mixins/Permissions.vue";
+import {IconCircleDashedPlus} from "@tabler/icons-vue";
 
 export default defineComponent({
     name: "TimeLineShiftsComponent",
@@ -99,6 +100,7 @@ export default defineComponent({
         }
     },
     methods: {
+        IconCircleDashedPlus,
         getPlacementHandler() {
             return new ShiftPlanPlacementHandler(
                 this.event.id,

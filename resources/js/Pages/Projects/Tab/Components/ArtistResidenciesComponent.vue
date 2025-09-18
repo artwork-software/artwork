@@ -48,11 +48,11 @@
         </div>
         <div class="flex items-center justify-end mt-3 gap-x-3">
             <div class="flex items-center gap-x-1">
-                <component is="IconBuildingSkyscraper" class="h-4 w-4"/>
+                <component :is="IconBuildingSkyscraper" class="h-4 w-4"/>
                 <span class="text-xs">{{ $t('Costs for overnight stays') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalCostOfArtistResidencies }} €</span></span>
             </div>
             <div class="flex items-center gap-x-1">
-                <component is="IconMoneybag" class="h-4 w-4"/>
+                <component :is="IconMoneybag" class="h-4 w-4"/>
                 <span class="text-xs">{{ $t('Costs of daily allowances') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalAllowanceOfArtistResidencies }} €</span></span>
             </div>
         </div>
@@ -78,7 +78,7 @@
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {IconEdit} from "@tabler/icons-vue";
+import {IconBuildingSkyscraper, IconEdit, IconMoneybag} from "@tabler/icons-vue";
 import {MenuItem} from "@headlessui/vue";
 import AddEditArtistResidenciesModal
     from "@/Pages/Projects/Components/ArtistResidenciesComponents/AddEditArtistResidenciesModal.vue";

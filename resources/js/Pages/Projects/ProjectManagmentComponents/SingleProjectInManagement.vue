@@ -9,7 +9,7 @@
                  @contextmenu.prevent="openMenu(project.id, $event)">
                 <div class="absolute -top-3" v-if="fullProject?.pinned_by_users && fullProject?.pinned_by_users.includes($page.props.auth.user.id)">
                     <div class="rounded-full p-0.5 bg-white border border-gray-100">
-                        <component is="IconPinned" class="h-6 w-6" />
+                        <component :is="IconPinned" class="h-6 w-6" />
                     </div>
                 </div>
                 <div
@@ -31,12 +31,12 @@
 
 
                     <BaseMenu has-no-offset white-menu-background v-show="showActionComponent && component.type === 'ActionsComponent'"  v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')">
-                        <BaseMenuItem white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" icon="IconFolderOpen"/>
+                        <BaseMenuItem white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" :icon="IconFolderOpen"/>
                         <BaseMenuItem white-menu-background title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')"/>
-                        <BaseMenuItem white-menu-background title="Undo pinning" icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()"/>
-                        <BaseMenuItem white-menu-background title="Pin" icon="IconPin" v-else @click="pinProject()"/>
-                        <BaseMenuItem white-menu-background title="Duplicate" icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
-                        <BaseMenuItem white-menu-background title="Put in the trash" icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')"/>
+                        <BaseMenuItem white-menu-background title="Undo pinning" :icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()"/>
+                        <BaseMenuItem white-menu-background title="Pin" :icon="IconPin" v-else @click="pinProject()"/>
+                        <BaseMenuItem white-menu-background title="Duplicate" :icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
+                        <BaseMenuItem white-menu-background title="Put in the trash" :icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')"/>
                     </BaseMenu>
                 </div>
                 <div
@@ -45,12 +45,12 @@
                     class="absolute z-50"
                 >
                     <BaseMenu white-menu-background has-no-offset :button-id="'project-invisible-menu-' + project.id" :show-icon="false" v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')">
-                        <BaseMenuItem white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" icon="IconFolderOpen"/>
+                        <BaseMenuItem white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" :icon="IconFolderOpen"/>
                         <BaseMenuItem white-menu-background title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')"/>
-                        <BaseMenuItem white-menu-background title="Undo pinning" icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()"/>
-                        <BaseMenuItem white-menu-background title="Pin" icon="IconPin" v-else @click="pinProject()"/>
-                        <BaseMenuItem white-menu-background title="Duplicate" icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
-                        <BaseMenuItem white-menu-background title="Put in the trash" icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')"/>
+                        <BaseMenuItem white-menu-background title="Undo pinning" :icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()"/>
+                        <BaseMenuItem white-menu-background title="Pin" :icon="IconPin" v-else @click="pinProject()"/>
+                        <BaseMenuItem white-menu-background title="Duplicate" :icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
+                        <BaseMenuItem white-menu-background title="Put in the trash" :icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')"/>
                     </BaseMenu>
                 </div>
             </div>
@@ -127,6 +127,7 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
 import BuilderArtistNameDisplayComponent
     from "@/Pages/Projects/BuilderComponents/BuilderArtistNameDisplayComponent.vue";
+import {IconCopy, IconFolderOpen, IconPin, IconPinned, IconPinnedOff, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     project: {

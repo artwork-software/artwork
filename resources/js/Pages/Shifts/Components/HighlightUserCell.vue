@@ -71,7 +71,7 @@
             <div class="flex items-center justify-end w-fit gap-2 absolute right-2 top-2">
                 <div v-if="type === 0 && item.is_freelancer || type === 1">
                     <ToolTipComponent
-                        icon="IconId"
+                        :icon="IconId"
                         icon-size="w-4 h-4"
                         tooltip-text="Freelancer*in"
                         direction="top"
@@ -91,7 +91,7 @@
 import {defineComponent} from 'vue'
 import ColorHelper from "@/Mixins/ColorHelper.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {IconCalendarShare} from "@tabler/icons-vue";
+import {IconCalendarShare, IconId} from "@tabler/icons-vue";
 
 export default defineComponent({
     name: "HighlightUserCell",
@@ -109,6 +109,7 @@ export default defineComponent({
     emits: ['highlightShiftsOfUser'],
     mixins: [ColorHelper],
     methods: {
+        IconId
 
     },
     computed: {

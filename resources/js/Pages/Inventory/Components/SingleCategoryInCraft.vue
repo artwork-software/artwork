@@ -3,7 +3,7 @@
        <td>
            <div class="py-1.5 bg-gray-50/20 w-full" >
                <div class="stickyYAxisNoMarginLeft w-48 flex items-center gap-x-1">
-                   <component is="IconCategory" class="h-4 w-4" />
+                   <component :is="IconCategory" class="h-4 w-4" />
                    {{ category.name }}
                    <ChevronDownIcon
                        :class="category.closed ? '' : 'rotate-180 transform'"
@@ -20,6 +20,7 @@
 
 import {ChevronDownIcon} from "@heroicons/vue/outline";
 import SingleGroupInCategory from "@/Pages/Inventory/Components/SingleGroupInCategory.vue";
+import {IconCategory} from "@tabler/icons-vue";
 
 const props = defineProps({
     category: {

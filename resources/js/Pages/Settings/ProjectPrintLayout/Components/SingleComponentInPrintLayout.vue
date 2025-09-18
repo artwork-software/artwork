@@ -3,7 +3,7 @@
         <div class="absolute bg-artwork-buttons-create/40 inset-0 rounded-md hidden group-hover:block">
             <div class="flex items-center justify-center gap-x-4 h-full">
                 <div class="rounded-full p-1 bg-red-500 shadow-md" @click="showDeleteModal = true">
-                    <component is="IconX" class="size-5 text-white" />
+                    <component :is="IconX" class="size-5 text-white" />
                 </div>
             </div>
         </div>
@@ -28,6 +28,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {ref} from "vue";
 import {router} from "@inertiajs/vue3";
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
+import {IconX} from "@tabler/icons-vue";
 
 const props = defineProps({
     component: {

@@ -10,7 +10,7 @@
                         </p>
                         <button type="button" class="-m-1.5 flex-none p-1.5">
                             <span class="sr-only">{{ $t('Dismiss') }}</span>
-                            <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
+                            <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
                         </button>
                     </div>
                 </div>
@@ -54,7 +54,7 @@
                         <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                             <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                 <ToolTipComponent
-                                    icon="IconCalendarWeek"
+                                    :icon="IconCalendarWeek"
                                     icon-size="h-4 w-4"
                                     :tooltip-text="$t('Daily view')"
                                     direction="bottom"
@@ -62,7 +62,7 @@
                             </span>
                             <span :class="[dailyViewMode ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                 <ToolTipComponent
-                                    icon="IconCalendarWeek"
+                                    :icon="IconCalendarWeek"
                                     icon-size="h-4 w-4"
                                     :tooltip-text="$t('Daily view')"
                                     direction="bottom"
@@ -123,7 +123,7 @@
                                             <div class="text-gray-300 text-center">{{ $t('No events for this day') }}</div>
                                         </div>
                                         <div class="mt-5">
-                                            <GlassyIconButton :text="$t('Add Event')" icon="IconCalendarPlus" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)" />
+                                            <GlassyIconButton :text="$t('Add Event')" :icon="IconCalendarPlus" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)" />
                                         </div>
                                     </div>
                                     <div class="card white p-5 text-xs font-lexend col-span-2">
@@ -136,7 +136,7 @@
                                             <div class="text-gray-300 text-center">{{ $t('No shifts for this day') }}</div>
                                         </div>
                                         <div class="mt-5">
-                                            <GlassyIconButton :text="$t('Add Shift')" icon="IconCalendarUser" @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)" />
+                                            <GlassyIconButton :text="$t('Add Shift')" :icon="IconCalendarUser" @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)" />
                                         </div>
                                     </div>
                                 </div>
@@ -203,7 +203,14 @@ import {Switch} from "@headlessui/vue";
 import SingleShiftInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
-import { IconAlertSquareRounded, IconCalendar, IconCalendarWeek, IconCalendarMonth } from "@tabler/icons-vue";
+import {
+    IconAlertSquareRounded,
+    IconCalendar,
+    IconCalendarWeek,
+    IconCalendarMonth,
+    IconX,
+    IconCalendarPlus, IconCalendarUser
+} from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 

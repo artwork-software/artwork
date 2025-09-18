@@ -11,7 +11,7 @@
             <div class="category-td-container">
                 <div class="name flex items-center gap-x-1"
                     @click="toggleCategoryEdit()">
-                    <component is="IconCategory" class="icon" />
+                    <component :is="IconCategory" class="icon" />
                     {{ category.name }}
                 </div>
                 <div @click="toggleCategory()"
@@ -89,6 +89,7 @@
 <script setup>
 import InventoryGroup from "@/Pages/Inventory/InventoryManagement/InventoryGroup.vue";
 import {
+    IconCategory,
     IconChevronDown,
     IconChevronUp,
     IconCopy,

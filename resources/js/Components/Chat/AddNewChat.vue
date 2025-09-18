@@ -38,7 +38,7 @@
             <div class="rounded-md bg-yellow-50 p-4">
                 <div class="flex">
                     <div class="shrink-0">
-                        <component is="IconInfoSquareRoundedFilled" class="size-5 min-w-5 min-h-5 text-yellow-400" aria-hidden="true" />
+                        <component :is="IconInfoSquareRoundedFilled" class="size-5 min-w-5 min-h-5 text-yellow-400" aria-hidden="true" />
                     </div>
                     <div class="ml-3">
                         <p class="text-sm font-medium text-yellow-800">
@@ -79,6 +79,7 @@ import {XIcon} from "@heroicons/vue/outline";
 import Button from "@/Jetstream/Button.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {ref} from "vue";
+import {IconInfoSquareRoundedFilled} from "@tabler/icons-vue";
 const props = defineProps({
 
 })

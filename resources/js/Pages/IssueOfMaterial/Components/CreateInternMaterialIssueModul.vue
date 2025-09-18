@@ -152,10 +152,10 @@
                 <div class="flex items-center w-full gap-x-4">
                     <ArticleSearch @article-selected="addArticleToIssue" id="articleSearchInModal" class="w-full"/>
                     <button type="button" @click="showArticleFilterModal = true" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                        <ToolTipComponent icon="IconListSearch" :tooltip-text="$t('Search for articles')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
+                        <ToolTipComponent :icon="IconListSearch" :tooltip-text="$t('Search for articles')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                     </button>
                     <button type="button" @click="showSelectMaterialSetModal = true" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ">
-                        <ToolTipComponent icon="IconParentheses" :tooltip-text="$t('Select material sets')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
+                        <ToolTipComponent :icon="IconParentheses" :tooltip-text="$t('Select material sets')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                     </button>
                 </div>
                 <div class="mt-4">
@@ -172,7 +172,7 @@
                                     <p class="text-xs flex items-center gap-x-1">{{ $t('Available stock for issue period') }}:
                                         <span v-if="!article.availableStockRequestIsLoading">{{ article.availableStock?.available }}</span>
                                         <span v-else class="flex items-center gap-x-1">{{ $t('Is queried') }}
-                                            <component is="IconLoader" class="inline-block h-4 w-4 animate-spin text-gray-400" stroke-width="1.5"/>
+                                            <component :is="IconLoader" class="inline-block h-4 w-4 animate-spin text-gray-400" stroke-width="1.5"/>
                                         </span>
                                     </p>
                                     <p v-if="article.quantity > article.availableStock?.available">
@@ -186,7 +186,7 @@
                                 </div>
                                 <div class="flex items-center justify-end w-5">
                                     <button type="button" class="text-xs text-red-500" @click="removeArticle(index)">
-                                        <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
+                                        <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
                                     </button>
                                 </div>
                             </div>
@@ -216,7 +216,7 @@
                                     </div>
                                     <div class="flex items-center justify-end">
                                         <button type="button" class="text-xs text-red-500" @click="removeSpecialArticle(index)">
-                                            <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
+                                            <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
                                         </button>
                                     </div>
                                 </div>
@@ -274,6 +274,7 @@ import debounce from "lodash.debounce";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SelectMaterialSetModal from "@/Pages/IssueOfMaterial/Components/SelectMaterialSetModal.vue";
+import {IconListSearch, IconLoader, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     issueOfMaterial: {

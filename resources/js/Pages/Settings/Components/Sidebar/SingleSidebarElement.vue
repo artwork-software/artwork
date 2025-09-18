@@ -117,8 +117,8 @@ function removeTab() {
             </button>
 
             <BaseMenu has-no-offset white-menu-background>
-                <BaseMenuItem white-menu-background icon="IconEdit" title="Edit" @click="editTab" />
-                <BaseMenuItem white-menu-background icon="IconTrash" title="Delete" @click="removeTab" />
+                <BaseMenuItem white-menu-background :icon="IconEdit" title="Edit" @click="editTab" />
+                <BaseMenuItem white-menu-background :icon="IconTrash" title="Delete" @click="removeTab" />
             </BaseMenu>
 
         </div>
@@ -180,7 +180,7 @@ function removeTab() {
                                 <IconDragDrop class="h-5 w-5 text-zinc-400 invisible group-hover:visible" aria-hidden="true" />
                                 <div class="invisible group-hover:visible">
                                     <BaseMenu has-no-offset white-menu-background>
-                                        <BaseMenuItem white-menu-background icon="IconTrash" title="Delete" @click="removeComponentFromSidebar(element.id)" />
+                                        <BaseMenuItem white-menu-background :icon="IconTrash" title="Delete" @click="removeComponentFromSidebar(element.id)" />
                                     </BaseMenu>
                                 </div>
                             </div>

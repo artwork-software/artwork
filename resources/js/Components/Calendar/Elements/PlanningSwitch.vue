@@ -5,7 +5,7 @@
                 <ToolTipComponent
                     direction="bottom"
                     :tooltip-text="$t('When active, newly created appointments are automatically planning appointments')"
-                    icon="IconCalendarCog"
+                    :icon="IconCalendarCog"
                     icon-size="h-4 w-4"
                 />
             </span>
@@ -13,7 +13,7 @@
                 <ToolTipComponent
                     direction="bottom"
                     :tooltip-text="$t('When active, newly created appointments are automatically planning appointments')"
-                    icon="IconCalendarCog"
+                    :icon="IconCalendarCog"
                     icon-size="h-4 w-4"
                 />
             </span>

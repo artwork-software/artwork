@@ -6,7 +6,7 @@
             </div>
             <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex items-center gap-x-4 print:hidden">
                 <ToolTipComponent
-                    icon="IconFileExport"
+                    :icon="IconFileExport"
                     :tooltip-text="$t('Export artist management')"
                     direction="bottom"
                     @click="openExportArtistResidenciesModal = true"
@@ -78,7 +78,7 @@
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {IconBuildingSkyscraper, IconEdit, IconMoneybag} from "@tabler/icons-vue";
+import {IconBuildingSkyscraper, IconEdit, IconFileExport, IconMoneybag} from "@tabler/icons-vue";
 import {MenuItem} from "@headlessui/vue";
 import AddEditArtistResidenciesModal
     from "@/Pages/Projects/Components/ArtistResidenciesComponents/AddEditArtistResidenciesModal.vue";

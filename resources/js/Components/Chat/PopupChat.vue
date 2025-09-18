@@ -18,7 +18,7 @@
     <div :class="positionClass" :style="positionStyle" ref="chatRoot" data-chat-root>
         <div v-if="!isChatOpen">
             <div class="rounded-full shadow-lg bg-white p-2 cursor-pointer border border-gray-200 relative" @click="openChat">
-                <component is="IconBubbleText" class="size-10" />
+                <component :is="IconBubbleText" class="size-10" />
 
                 <span v-if="totalUnreadCount > 0" class="absolute inline-flex items-center w-6 h-6 -top-2 -right-2">
                     <!--<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>-->
@@ -42,7 +42,7 @@
                                 <div v-if="!checkIfChatIsSelected" @click="openAddNewChat = true">
                                     <ToolTipComponent
                                         direction="top"
-                                        icon="IconPlus"
+                                        :icon="IconPlus"
                                         :tooltip-text="$t('Add new Chat')"
                                         class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200"
                                         icon-class="size-5"
@@ -53,7 +53,7 @@
                                 <div @click="showPositionPicker = true">
                                     <ToolTipComponent
                                         direction="top"
-                                        icon="IconArrowsMove"
+                                        :icon="IconArrowsMove"
                                         :tooltip-text="$t('Change Chat position')"
                                         class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200"
                                         icon-class="size-5"
@@ -61,7 +61,7 @@
                                 </div>
 
                                 <div class="" @click="closeChat">
-                                    <component is="IconX" class="size-5 cursor-pointer transition-colors duration-200 ease-in-out" aria-hidden="true" />
+                                    <component :is="IconX" class="size-5 cursor-pointer transition-colors duration-200 ease-in-out" aria-hidden="true" />
                                 </div>
                             </div>
                         </div>
@@ -71,7 +71,7 @@
                             <div v-if="!checkIfChatIsSelected" class="px-3 py-1">
                                 <div class="grid grid-cols-1">
                                     <input v-model="searchChat" type="text" name="account-number" id="account-number" class="col-start-1 border border-gray-200 row-start-1 block w-full rounded-md bg-white py-3 pr-10 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-100 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:pr-9 sm:text-sm/6" :placeholder="$t('Search in chats')" />
-                                    <component is="IconSearch" class="pointer-events-none col-start-1 row-start-1 mr-3 size-5 self-center justify-self-end text-gray-400 sm:size-4" aria-hidden="true" />
+                                    <component :is="IconSearch" class="pointer-events-none col-start-1 row-start-1 mr-3 size-5 self-center justify-self-end text-gray-400 sm:size-4" aria-hidden="true" />
                                 </div>
                             </div>
                             <div v-else class="bg-white px-4">
@@ -80,7 +80,7 @@
                                         <div class="mr-1 cursor-pointer" @click="goBackToChatList">
                                             <ToolTipComponent
                                                 direction="top"
-                                                icon="IconChevronLeft"
+                                                :icon="IconChevronLeft"
                                                 :tooltip-text="$t('Back to Chat List')"
                                             />
                                         </div>
@@ -100,12 +100,12 @@
                                             <div class="mr-1 cursor-pointer" @click="goBackToChatList">
                                                 <ToolTipComponent
                                                     direction="top"
-                                                    icon="IconChevronLeft"
+                                                    :icon="IconChevronLeft"
                                                     :tooltip-text="$t('Back to Chat List')"
                                                     use-translation
                                                 />
                                             </div>
-                                            <component is="IconUsersGroup" class="size-10 rounded-full object-cover p-3 bg-blue-50 text-blue-500 border border-blue-100" />
+                                            <component :is="IconUsersGroup" class="size-10 rounded-full object-cover p-3 bg-blue-50 text-blue-500 border border-blue-100" />
                                             <div class="ml-3">
                                                 <p class="text-sm text-gray-900">{{ chatPartner.name }}</p>
                                                 <p class="text-[9px] text-gray-500">{{ chatPartner.users.map((user) => user.full_name).join(', ') }}</p>
@@ -116,7 +116,7 @@
                                             <div @click="showRenameModal = true">
                                                 <ToolTipComponent
                                                     direction="top"
-                                                    icon="IconEdit"
+                                                    :icon="IconEdit"
                                                     :tooltip-text="$t('Rename Group Chat')"
                                                     class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200 chat-tooltip-black-icon"
                                                     icon-size="size-4"
@@ -126,7 +126,7 @@
                                             <div @click="showDeleteConfirm = true">
                                                 <ToolTipComponent
                                                     direction="top"
-                                                    icon="IconTrash"
+                                                    :icon="IconTrash"
                                                     :tooltip-text="$t('Delete Group Chat')"
                                                     class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200 chat-tooltip-black-icon"
                                                     icon-size="size-4"
@@ -140,7 +140,7 @@
                         <div v-if="isLoading">
                             <div class="flex items-center justify-center max-h-96 min-h-96 w-full h-full">
                                 <!-- loading -->
-                                <component is="IconLoaderQuarter" class="motion-safe:animate-spin" />
+                                <component :is="IconLoaderQuarter" class="motion-safe:animate-spin" />
                             </div>
                         </div>
                         <div v-else class="px-3">
@@ -167,7 +167,7 @@
                                         <div class="rounded-md bg-red-50 p-4 mb-5">
                                             <div class="flex items-center">
                                                 <div class="shrink-0">
-                                                    <component is="IconInfoSquareRoundedFilled" class="size-6 text-red-400" aria-hidden="true" />
+                                                    <component :is="IconInfoSquareRoundedFilled" class="size-6 text-red-400" aria-hidden="true" />
                                                 </div>
                                                 <div class="ml-3">
                                                     <p class="text-xs font-lexend font-medium text-red-800">
@@ -225,7 +225,7 @@
                                 @keyup.enter.exact="scrollToBottom"
                             />
                             <div @click="sendMessage" class="rounded-full p-2 bg-artwork-buttons-create cursor-pointer hover:bg-artwork-buttons-hover duration-200 ease-in-out transition-colors">
-                                <component is="IconBrandTelegram" class="size-4 cursor-pointer text-white" aria-hidden="true" />
+                                <component :is="IconBrandTelegram" class="size-4 cursor-pointer text-white" aria-hidden="true" />
                             </div>
                         </div>
                     </div>
@@ -297,7 +297,7 @@
             />
             <!-- Schließen -->
             <div class="absolute top-2 right-2">
-                <component is="IconSquareRoundedX" class="size-6 text-white cursor-pointer" @click="showPositionPicker = false" />
+                <component :is="IconSquareRoundedX" class="size-6 text-white cursor-pointer" @click="showPositionPicker = false" />
             </div>
         </div>
     </div>
@@ -335,6 +335,16 @@ import {useUserStatus} from "@/Composeables/useUserStatus.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import RenameGroupChatModal from "@/Components/Chat/Modals/RenameGroupChatModal.vue";
 import DeleteGroupChatModal from "@/Components/Chat/Modals/DeleteGroupChatModal.vue";
+import {
+    IconArrowsMove, IconBrandTelegram, IconBubbleText,
+    IconChevronLeft,
+    IconEdit, IconInfoSquareRoundedFilled,
+    IconLoaderQuarter,
+    IconPlus,
+    IconSearch, IconSquareRoundedX,
+    IconTrash, IconUsersGroup,
+    IconX
+} from "@tabler/icons-vue";
 const { getUserStatus } = useUserStatus()
 
 const props = defineProps({})

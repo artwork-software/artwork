@@ -22,7 +22,7 @@
             <div class="flex items-center gap-2">
                 <ToolTipComponent
                     v-if="canEditComponent"
-                    icon="IconClipboard"
+                    :icon="IconClipboard"
                     icon-size="w-5 h-5"
                     white-icon
                     :tooltip-text="$t('Copy timeline to clipboard')"
@@ -31,7 +31,7 @@
                 />
                 <ToolTipComponent
                     v-if="canEditComponent"
-                    icon="IconWand"
+                    :icon="IconWand"
                     icon-size="w-5 h-5"
                     white-icon
                     :tooltip-text="$t('Create new timeline')"
@@ -39,9 +39,9 @@
                     direction="bottom"
                 />
                 <BaseMenu v-if="canEditComponent" white-menu-background has-no-offset white-icon>
-                    <BaseMenuItem white-menu-background title="Read from template" icon="IconFileImport" @click="showSearchTimelinePresetModal = true" />
-                    <BaseMenuItem white-menu-background title="Save as template" icon="IconFileExport" @click="showCreateTimelinePresetModal = true" />
-                    <BaseMenuItem white-menu-background title="Edit" @click="openTimelineModal(true)" />
+                    <BaseMenuItem white-menu-background title="Read from template" :icon="IconFileImport" @click="showSearchTimelinePresetModal = true" />
+                    <BaseMenuItem white-menu-background title="Save as template" :icon="IconFileExport" @click="showCreateTimelinePresetModal = true" />
+                    <BaseMenuItem white-menu-background title="Edit" :icon="IconEdit" @click="openTimelineModal(true)" />
                 </BaseMenu>
             </div>
         </div>
@@ -68,7 +68,7 @@
                     @click="addEmptyTimeline"
                 >
                     <component
-                        is="IconCircleDashedPlus"
+                        :is="IconCircleDashedPlus"
                         class="h-6 w-6 text-artwork-buttons-context/40 group-hover:text-artwork-buttons-hover transition-colors"
                         stroke-width="1.5"
                         aria-hidden="true"
@@ -129,7 +129,15 @@ import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import SearchTimelinePresetModal from '@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue'
 import CreateTimelinePresetFormEvent from '@/Pages/Projects/Components/TimelineComponents/CreateTimelinePresetFormEvent.vue'
 import {is, can} from "laravel-permission-to-vuejs";
-import {IconX} from "@tabler/icons-vue";
+import {
+    IconCircleDashedPlus,
+    IconClipboard,
+    IconEdit,
+    IconFileExport,
+    IconFileImport,
+    IconWand,
+    IconX
+} from "@tabler/icons-vue";
 
 defineOptions({ name: 'Timeline' })
 

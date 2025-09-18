@@ -65,9 +65,9 @@
                             dots-size="h-4 w-4"
                             menu-width="w-fit"
                         >
-                            <BaseMenuItem white-menu-background title="Delete shift planning" icon="IconTrash" @click="openDeleteConfirmModal" />
-                            <BaseMenuItem white-menu-background title="Save shift planning as a template" icon="IconFilePlus" @click="saveShiftAsPreset" />
-                            <BaseMenuItem white-menu-background title="Import shift planning from template" icon="IconFileImport" @click="showImportShiftTemplateModal = true" />
+                            <BaseMenuItem white-menu-background title="Delete shift planning" :icon="IconTrash" @click="openDeleteConfirmModal" />
+                            <BaseMenuItem white-menu-background title="Save shift planning as a template" :icon="IconFilePlus" @click="saveShiftAsPreset" />
+                            <BaseMenuItem white-menu-background title="Import shift planning from template" :icon="IconFileImport" @click="showImportShiftTemplateModal = true" />
                         </BaseMenu>
                     </div>
                 </div>
@@ -125,7 +125,7 @@ import AddShiftPresetModal from '@/Pages/Projects/Components/AddShiftPresetModal
 import ImportShiftTemplate from '@/Pages/Projects/Components/ImportShiftTemplate.vue'
 import TimeLineShiftsComponent from '@/Pages/Projects/Components/TimeLineShiftsComponent.vue'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/vue/outline'
-import {IconRepeat} from '@tabler/icons-vue'// falls du ein eigenes Icon nutzt – ansonsten ersetzen/entfernen
+import {IconFileImport, IconFilePlus, IconRepeat, IconTrash} from '@tabler/icons-vue'// falls du ein eigenes Icon nutzt – ansonsten ersetzen/entfernen
 import { useColorHelper } from '@/Composeables/UseColorHelper.js' // enthält backgroundColorWithOpacity & getTextColorBasedOnBackground
 
 defineOptions({ name: 'SingleRelevantEvent' })

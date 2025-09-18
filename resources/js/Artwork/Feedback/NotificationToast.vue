@@ -26,7 +26,7 @@
                                     @click="visible = false"
                                     class="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                                     <span class="sr-only">Schließen</span>
-                                    <component is="IconX" class="size-5" aria-hidden="true" />
+                                    <component :is="IconX" class="size-5" aria-hidden="true" />
                                 </button>
                             </div>
                         </div>
@@ -39,6 +39,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import {IconX} from "@tabler/icons-vue";
 
 const props = defineProps({
     show: Boolean,

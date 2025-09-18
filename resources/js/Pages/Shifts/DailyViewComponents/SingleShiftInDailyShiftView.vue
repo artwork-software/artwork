@@ -73,7 +73,7 @@
                                         <span class="text-xs truncate w-36">{{ user.name || user.full_name }}</span>
                                         <div class="text-xs text-gray-500 flex items-center gap-x-1">
                                             <ToolTipComponent
-                                                icon="IconId"
+                                                :icon="IconId"
                                                 icon-size="w-4 h-4"
                                                 tooltip-text="Freelancer"
                                                 direction="top"
@@ -82,7 +82,7 @@
                                                 use-translation
                                             />
                                             <ToolTipComponent
-                                                icon="IconBuildingCommunity"
+                                                :icon="IconBuildingCommunity"
                                                 icon-size="w-4 h-4"
                                                 tooltip-text="ServiceProvider"
                                                 direction="top"
@@ -91,7 +91,7 @@
                                                 use-translation
                                             />
                                             <ToolTipComponent
-                                                icon="IconAlertTriangle"
+                                                :icon="IconAlertTriangle"
                                                 icon-size="w-4 h-4"
                                                 :tooltip-text="$t('User already assigned as {0}', [user.qualification])"
                                                 direction="top"
@@ -100,7 +100,7 @@
                                             />
                                             <ToolTipComponent
                                                 v-if="user.hasCollision"
-                                                icon="IconClock"
+                                                :icon="IconClock"
                                                 icon-size="w-4 h-4"
                                                 :tooltip-text="getCollisionTooltip(user)"
                                                 direction="top"
@@ -144,6 +144,7 @@ import axios from "axios";
 import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
+import {IconAlertTriangle, IconBuildingCommunity, IconClock, IconId} from "@tabler/icons-vue";
 
 const props = defineProps({
     shift: Object,

@@ -22,7 +22,7 @@
                 <ToolTipComponent
                     :tooltip-text="$t('Add new group')"
                     direction="bottom"
-                    icon="IconCirclePlus"
+                    :icon="IconCirclePlus"
                     icon-size="h-5 w-5"
                     stroke="1.5"
                     white-icon
@@ -91,7 +91,7 @@ import InventoryGroup from "@/Pages/Inventory/InventoryManagement/InventoryGroup
 import {
     IconCategory,
     IconChevronDown,
-    IconChevronUp,
+    IconChevronUp, IconCirclePlus,
     IconCopy,
     IconDotsVertical, IconEdit,
     IconTrash,

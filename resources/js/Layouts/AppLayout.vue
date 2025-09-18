@@ -18,7 +18,7 @@
                     <div class="ml-4 xsDark">{{ pushNotification.message }}</div>
                 </div>
                 <button type="button" class="-mt-4 mr-2">
-                    <component is="IconX" class="-mt-4 h-5 w-5 text-secondary hover:text-error relative"
+                    <component :is="IconX" class="-mt-4 h-5 w-5 text-secondary hover:text-error relative"
                            @click="closePushNotification(pushNotification.id)"/>
                 </button>
             </div>

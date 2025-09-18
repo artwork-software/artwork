@@ -380,7 +380,7 @@
                                                    class="sr-only"/>
                                             <div class="flex items-center gap-x-2">
                                                 <div class="flex items-center gap-x-2">
-                                                    <component is="IconPhoto" class="size-5 shrink-0 text-gray-400"
+                                                    <component :is="IconPhoto" class="size-5 shrink-0 text-gray-400"
                                                                aria-hidden="true"/>
                                                     <div class="flex">
                                                         <div class="truncate font-medium">{{
@@ -392,7 +392,7 @@
                                                 <button type="button"
                                                         class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
                                                         @click="property.value = null">
-                                                    <component is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
+                                                    <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
                                                 </button>
                                             </div>
                                         </div>
@@ -576,7 +576,7 @@
                                                                 </span>
                                                             <span v-if="selected"
                                                                   :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                  <component is="IconCheck" class="size-5"
+                                                                  <component :is="IconCheck" class="size-5"
                                                                              aria-hidden="true"/>
                                                                 </span>
                                                         </li>
@@ -611,7 +611,7 @@
                                                                 </span>
                                                             <span v-if="selected"
                                                                   :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                  <component is="IconCheck" class="size-5"
+                                                                  <component :is="IconCheck" class="size-5"
                                                                              aria-hidden="true"/>
                                                                 </span>
                                                         </li>
@@ -644,7 +644,7 @@
                                                 <button type="button"
                                                         class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
                                                         @click="property.value = null">
-                                                    <component is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
+                                                    <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
                                                 </button>
                                             </div>
                                         </div>
@@ -668,7 +668,7 @@
                                         <button type="button" v-if="articleForm.detailed_article_quantities.length > 1"
                                                 class="invisible group-hover:visible text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out absolute right-2 top-1/2 transform -translate-y-1/2"
                                                 @click="removeDetailedArticle(index)">
-                                            <component is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
+                                            <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
                                         </button>
                                     </td>
                                 </tr>
@@ -690,7 +690,7 @@
                                                         classes="text-artwork-buttons-create"
                                                         icon-right
                                                         stroke="2"
-                                                        icon="IconClick"
+                                                        :icon="IconClick"
                                                         icon-size="size-4"
                                                         :tooltip-text="$t('Click to set the article quantity to the detailed article quantity')"/>
                                                 </span>
@@ -719,7 +719,7 @@
                 <div class="pt-5">
                     <div @click="addNewDetailedArticle"
                          class="w-fit flex items-center gap-x-2 text-gray-400 font-lexend font-bold select-none cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
-                        <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true"/>
+                        <component :is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true"/>
                         <span>
                             {{ $t('Add new detailed article') }}
                         </span>
@@ -758,7 +758,15 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
-import {IconCheck, IconChevronUp, IconClick, IconInfoCircle, IconPhotoPlus, IconSelector} from "@tabler/icons-vue";
+import {
+    IconCheck,
+    IconChevronUp,
+    IconClick,
+    IconInfoCircle,
+    IconLibraryPlus, IconPhoto,
+    IconPhotoPlus,
+    IconSelector, IconTrash
+} from "@tabler/icons-vue";
 
 const props = defineProps({
     article: {

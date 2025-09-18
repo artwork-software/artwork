@@ -14,7 +14,7 @@
                                 <div class="flex items-center">
                                     <div v-if="!showSearchbar" @click="openSearchbar"
                                          class="cursor-pointer inset-y-0">
-                                        <ToolTipComponent icon="IconSearch" icon-size="h-7 w-7" :tooltip-text="$t('Search')"
+                                        <ToolTipComponent :icon="IconSearch" icon-size="h-7 w-7" :tooltip-text="$t('Search')"
                                                           direction="bottom"/>
                                     </div>
                                     <div v-else class="w-96">
@@ -127,7 +127,7 @@
                                         </div>
                                     </MenuItem>
                                 </BaseMenu>
-                                <ToolTipComponent icon="IconFileExport"
+                                <ToolTipComponent :icon="IconFileExport"
                                                   icon-size="h-7 w-7"
                                                   :tooltip-text="$t('Export project list')"
                                                   direction="bottom"
@@ -277,7 +277,16 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import {Link, router, usePage} from "@inertiajs/vue3";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {IconCheck, IconChevronDown, IconChevronUp, IconGeometry, IconPlus, IconX} from "@tabler/icons-vue";
+import {
+    IconCheck,
+    IconChevronDown,
+    IconChevronUp,
+    IconFileExport,
+    IconGeometry,
+    IconPlus,
+    IconSearch,
+    IconX
+} from "@tabler/icons-vue";
 import Input from "@/Jetstream/Input.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";

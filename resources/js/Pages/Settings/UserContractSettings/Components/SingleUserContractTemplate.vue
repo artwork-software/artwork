@@ -19,8 +19,8 @@
     </div>
     <div class="flex shrink-0 items-center gap-x-6">
         <BaseMenu has-no-offset white-menu-background>
-            <BaseMenuItem title="Edit" white-menu-background icon="IconEdit" @click="showCreateOrUpdateUserContractModal = true"/>
-            <BaseMenuItem title="Delete" white-menu-background icon="IconTrash" @click="showDeleteModal = true"/>
+            <BaseMenuItem title="Edit" white-menu-background :icon="IconEdit" @click="showCreateOrUpdateUserContractModal = true"/>
+            <BaseMenuItem title="Delete" white-menu-background :icon="IconTrash" @click="showDeleteModal = true"/>
         </BaseMenu>
     </div>
 
@@ -45,6 +45,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {defineAsyncComponent, ref} from "vue";
 import {router} from "@inertiajs/vue3";
+import {IconEdit, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     contract: {

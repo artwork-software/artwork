@@ -72,7 +72,7 @@
                         />
                     </div>
                     <div class="flex items-center justify-end">
-                        <GlassyIconButton text="New Craft" icon="IconPlus" @click="openAddCraftsModal = true" />
+                        <GlassyIconButton text="New Craft" :icon="IconPlus" @click="openAddCraftsModal = true" />
                     </div>
                 </div>
                 <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="crafts" @start="dragging=true" @end="dragging=false" @change="reorderCrafts(crafts)">
@@ -185,7 +185,7 @@
                         :title="$t('Qualifications')"
                         :description="$t('Create or edit qualifications')"
                     />
-                    <GlassyIconButton text="Neue Qualifikation" icon="IconPlus" @click="this.openShiftQualificationModal('create')" />
+                    <GlassyIconButton text="Neue Qualifikation" :icon="IconPlus" @click="this.openShiftQualificationModal('create')" />
                 </div>
                 <div class="mt-5">
                     <div class="mb-5 xsLight" v-if="shiftQualifications.length === 0">

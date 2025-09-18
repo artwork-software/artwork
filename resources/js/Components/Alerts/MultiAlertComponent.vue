@@ -10,7 +10,7 @@
         <div class="rounded-md bg-red-50 p-4">
             <div class="flex">
                 <div class="shrink-0">
-                    <component is="IconXboxX" class="size-5 text-red-400" aria-hidden="true" />
+                    <component :is="IconXboxX" class="size-5 text-red-400" aria-hidden="true" />
                 </div>
                 <div class="ml-3">
                     <h3 class="text-sm font-medium text-red-800">{{ $t('Unfortunately there were {0} errors during transmission.', [errorCount])}}</h3>
@@ -28,6 +28,8 @@
 </template>
 
 <script setup>
+
+import {IconXboxX} from "@tabler/icons-vue";
 
 const props = defineProps({
     errors: {

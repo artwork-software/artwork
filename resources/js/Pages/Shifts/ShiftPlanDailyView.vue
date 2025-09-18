@@ -97,7 +97,7 @@
                             {{ day.dayString }}, {{ day.fullDay }}
                         </div>
                     </div>
-                    <div class="grid grid-cols-[3rem_1fr] ml-1" v-for="room in shiftPlan">
+                    <div class="grid grid-cols-[3rem_1fr] ml-1" v-for="room in shiftPlanCopy">
                         <div class="flex flex-col-reverse items-center justify-between bg-artwork-navigation-background text-white py-4 border-t-2 border-dashed">
                             <!-- Raumnamen von unten nach oben -->
                             <div :key="room.roomName" class="text-xs font-bold font-lexend -rotate-90 h-full flex items-center text-center justify-center py-4">

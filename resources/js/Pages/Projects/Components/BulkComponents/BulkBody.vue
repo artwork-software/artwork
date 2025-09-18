@@ -667,8 +667,6 @@ const createCopyByEventWithData = (event) => {
             isNew: true,
             is_planning: isPlanningEvent.value,
         };
-
-        events.value.push(clone);
         createdEvents.push(clone);
     }
 
@@ -676,7 +674,8 @@ const createCopyByEventWithData = (event) => {
     event.copyCount = 1;
     event.copyType = copyTypes.value[0];
 
-    if (!props.isInModal) {
+    // Only send request if we have events to create
+    if (createdEvents.length > 0 && !props.isInModal) {
         /*router.post(route('events.bulk.store', {project: props.project}), { events: createdEvents }, {
             preserveState: false,
             preserveScroll: true,

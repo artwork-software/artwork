@@ -87,7 +87,7 @@
 
                     <div class="col-span-full">
                         <button @click="$refs.internMaterialIssueFiles.click()" type="button" class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
-                            <component is="IconFile" class="mx-auto size-12 text-gray-400" stroke-width="1" />
+                            <component :is="IconFile" class="mx-auto size-12 text-gray-400" stroke-width="1" />
                             <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t('File storage') }}</span>
                             <input
                                 @change="upload"
@@ -114,7 +114,7 @@
                                             <div>
                                                 <div class="flex items-center justify-end">
                                                     <button type="button" class="text-xs text-red-500" @click="removeFile(file.id)">
-                                                        <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
+                                                        <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
                                                     </button>
                                                 </div>
                                             </div>
@@ -135,7 +135,7 @@
                                             <div>
                                                 <div class="flex items-center justify-end">
                                                     <button type="button" class="text-xs text-red-500" @click="internMaterialIssue.files.splice(index, 1)">
-                                                        <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
+                                                        <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
                                                     </button>
                                                 </div>
                                             </div>
@@ -274,7 +274,7 @@ import debounce from "lodash.debounce";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SelectMaterialSetModal from "@/Pages/IssueOfMaterial/Components/SelectMaterialSetModal.vue";
-import {IconListSearch, IconLoader, IconTrash} from "@tabler/icons-vue";
+import {IconFile, IconListSearch, IconLoader, IconParentheses, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     issueOfMaterial: {

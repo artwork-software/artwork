@@ -25,10 +25,10 @@
                 </div>
             </div>
             <div class="flex items-center justify-end px-3 gap-x-4">
-                <component is="IconEdit"
+                <component :is="IconEdit"
                            class="size-5 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-150 ease-in-out"
                            @click.stop="showAddShiftModal = true" />
-                <component is="IconChevronDown"
+                <component :is="IconChevronDown"
                            @click.stop="toggleShiftDetails"
                            class="size-5 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-150 ease-in-out"
                            :class="{ 'rotate-180': showShiftDetails }"/>
@@ -49,14 +49,14 @@
                         <MenuButton class="flex cursor-pointer items-center gap-x-2 font-lexend rounded-lg w-full" @click="checkShiftCollision(drop.shift_qualification_id, true)">
                             <div class="py-1.5 px-3 min-w-28 w-28 rounded-l-lg bg-red-200">
                                 <div class="text-xs text-left flex items-center gap-x-1">
-                                    <component is="IconInfoTriangle" class="size-4 text-red-600" />
+                                    <component :is="IconInfoTriangle" class="size-4 text-red-600" />
                                     {{ $t('Unoccupied') }}
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 w-full gap-x-2">
                                 <p class="text-xs text-left">{{ drop.requiredDropElementsCount }} {{ findShiftQualification(drop.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }} {{ $t('Unoccupied') }}</p>
                                 <div class="flex items-center gap-x-1">
-                                    <component :is="findShiftQualification(drop.shift_qualification_id)?.icon" class="size-3" />
+                                    <PropertyIcon :name="findShiftQualification(drop.shift_qualification_id)?.icon" class="size-3" />
                                     {{ findShiftQualification(drop.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }}
                                 </div>
                             </div>
@@ -144,7 +144,15 @@ import axios from "axios";
 import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
-import {IconAlertTriangle, IconBuildingCommunity, IconClock, IconId} from "@tabler/icons-vue";
+import {
+    IconAlertTriangle,
+    IconBuildingCommunity,
+    IconChevronDown,
+    IconClock, IconEdit,
+    IconId,
+    IconInfoTriangle
+} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     shift: Object,

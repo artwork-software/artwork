@@ -5,6 +5,7 @@ import {reactive, ref} from "vue";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {Link} from "@inertiajs/vue3";
+import {IconEdit} from "@tabler/icons-vue";
 
 export default {
     name: "TextField",
@@ -30,6 +31,7 @@ export default {
         useProjectDataListener(this.projectData, this.projectId).init();
     },
     methods: {
+        IconEdit,
         updateTextData() {
             this.$inertia.patch(route('project.tab.component.update', {project: this.projectId, component: this.data.id}), {
                 data: {
@@ -64,7 +66,7 @@ export default {
                     {{ projectData.data.label }}
                 </label>
 
-                <component is="IconEdit" class="inline size-4 ml-2 cursor-pointer text-gray-400 hover:text-gray-600" v-if="canEditComponent" @click="showTextField = !showTextField" />
+                <component :is="IconEdit" class="inline size-4 ml-2 cursor-pointer text-gray-400 hover:text-gray-600" v-if="canEditComponent" @click="showTextField = !showTextField" />
             </div>
             <div class="mt-2 w-96" v-if="showTextField">
                 <BaseInput

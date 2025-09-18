@@ -5,7 +5,7 @@
                 {{ timelinePreset.name }}
             </div>
             <div class="flex items-center gap-x-2">
-                <component is="IconWand" class="h-4 w-4 rounded-full text-white hover:text-gray-300 transition-colors duration-300 ease-in-out cursor-pointer hidden" stroke-width="1.5"/>
+                <component :is="IconWand" class="h-4 w-4 rounded-full text-white hover:text-gray-300 transition-colors duration-300 ease-in-out cursor-pointer hidden" stroke-width="1.5"/>
                 <BaseMenu white-icon dots-size="h-4 w-4" has-no-offset>
                     <BaseMenuItem title="Edit" :icon="IconEdit" @click="showEditTimelinePresetModal = true" />
                     <BaseMenuItem title="Duplicate" :icon="IconCopy" @click="copyTimelinePreset" />
@@ -43,7 +43,7 @@ import {ref} from "vue";
 import SingleTimesInPreset from "@/Pages/TimelinePreset/Components/SingleTimesInPreset.vue";
 import {router} from "@inertiajs/vue3";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {IconCopy, IconEdit, IconTrash} from "@tabler/icons-vue";
+import {IconCopy, IconEdit, IconTrash, IconWand} from "@tabler/icons-vue";
 
 const props = defineProps({
     timelinePreset: {

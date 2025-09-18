@@ -560,7 +560,7 @@
                                                     :display-value="(person) => property.value ? rooms?.find((room) => room.id === parseInt(property.value) )?.name : ''"/>
                                                 <ComboboxButton
                                                     class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                    <component is="IconSelector" class="size-5 text-gray-400"
+                                                    <component :is="IconSelector" class="size-5 text-gray-400"
                                                                aria-hidden="true"/>
                                                 </ComboboxButton>
 
@@ -595,7 +595,7 @@
                                                     :display-value="(person) => property.value ? manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.value) )?.name : ''"/>
                                                 <ComboboxButton
                                                     class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                    <component is="IconSelector" class="size-5 text-gray-400"
+                                                    <component :is="IconSelector" class="size-5 text-gray-400"
                                                                aria-hidden="true"/>
                                                 </ComboboxButton>
 
@@ -632,7 +632,7 @@
                                                    class="sr-only"/>
                                             <div class="flex items-center gap-x-2">
                                                 <div class="flex items-center gap-x-2">
-                                                    <component is="IconPhoto" class="size-5 shrink-0 text-gray-400"
+                                                    <component :is="IconPhoto" class="size-5 shrink-0 text-gray-400"
                                                                aria-hidden="true"/>
                                                     <div class="flex">
                                                         <div class="truncate font-medium">{{

@@ -550,7 +550,7 @@
                                 :text="t('Set up events')"
                                 class="mt-8 inline-flex items-center"
                                 classes="!w-fit gap-x-2 h-12 bg-artwork-buttons-create">
-                                <component is="IconCalendarMonth" class="w-5 h-5" />
+                                <component :is="IconCalendarMonth" class="w-5 h-5" />
                             </BaseButton>
                             <BaseButton
                                 type="submit"
@@ -559,7 +559,7 @@
                                 class="mt-8 inline-flex items-center "
                                 classes="!w-fit gap-x-2 h-12"
                             >
-                                <component is="IconCirclePlus" class="w-5 h-5" />
+                                <component :is="IconCirclePlus" class="w-5 h-5" />
                             </BaseButton>
                         </div>
 

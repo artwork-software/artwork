@@ -720,6 +720,76 @@
         }
     }
 
+    /* Layout Helpers */
+    .ui-grid-2 { @apply grid grid-cols-1 gap-2 md:grid-cols-2; }
+    .ui-hint { @apply text-[12px] text-zinc-500; }
+    .ui-error { @apply text-[12px] text-rose-600; }
+
+    /* Card */
+    .ui-card { @apply rounded-lg border border-zinc-200 bg-white/90 p-3; }
+    .ui-card-header { @apply flex items-center gap-2 mb-2; }
+    .ui-card-title { @apply text-[13.5px] font-semibold text-zinc-900; }
+    .ui-dot { @apply inline-block size-2.5 rounded-full; }
+
+    /* Listbox Trigger (kompakt) */
+    .ui-lb-trigger { @apply flex w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 h-10 shadow-sm; }
+    .ui-lb-trigger-text { @apply min-w-0; }
+    .ui-lb-label { @apply text-[11px] text-zinc-500 leading-none mb-0.5; }
+    .ui-lb-value { @apply flex items-center gap-2 text-[13px] text-zinc-900 min-w-0; }
+    .ui-lb-icon { @apply size-4 text-zinc-400; }
+
+    /* Inputs kompakt */
+    .ui-input :deep(input),
+    .ui-input { @apply h-10; }
+
+    /* Checkbox kompakt */
+    .ui-checkbox { @apply size-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500; }
+    .ui-checkbox-emerald { @apply text-emerald-600 focus:ring-emerald-500; }
+    .ui-checkbox-amber { @apply text-amber-600 focus:ring-amber-500; }
+
+    /* Project Chip */
+    .ui-project-chip { @apply flex items-center justify-between gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2; }
+    .ui-project-link { @apply inline-block max-w-[28rem] truncate text-indigo-600 hover:underline; }
+
+
+    /* Segment-Schalter */
+    .ui-segment {
+        @apply inline-flex rounded-md border border-zinc-200 bg-white p-0.5 shadow-sm;
+    }
+    .ui-segment-btn {
+        @apply relative inline-flex items-center justify-center rounded-[6px] px-3 py-1.5 text-[12.5px] text-zinc-700 transition;
+    }
+    .ui-segment-btn.is-active {
+        @apply bg-zinc-100 text-zinc-900;
+    }
+
+    /* Buttons */
+    .ui-link-btn {
+        @apply text-[12.5px] text-indigo-600 hover:text-indigo-700 underline-offset-2 hover:underline;
+    }
+    .ui-icon-btn {
+        @apply inline-flex items-center justify-center rounded-md border border-transparent text-zinc-400 hover:text-rose-600;
+    }
+    .ui-btn-primary {
+        @apply inline-flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-[13px] font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500;
+    }
+
+    /* Transition */
+    .fade-enter-active, .fade-leave-active { transition: opacity .15s ease, transform .15s ease; }
+    .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-2px); }
+
+    /* Buttons */
+    .ui-btn-secondary {
+        @apply inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-[13px] text-zinc-700 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-indigo-500;
+    }
+
+    /* Sticky Footer innerhalb des Modals */
+    .ui-footer {
+        @apply sticky bottom-0 left-0 w-full bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-zinc-200 pt-2 pb-2 mt-2;
+    }
+
+    .ui-lb-btn { /* placeholder, falls extern benötigt */ }
+
 
     /* --- Cards / Sections --- */
     .card-event-container {

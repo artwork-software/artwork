@@ -1,41 +1,40 @@
 <template>
     <ArtworkBaseModal
         :title="modalTitle"
-        :description="$t('Please make sure that you allow for preparation and follow-up time.')"
+        :description="modalDescription"
         modal-size="max-w-4xl"
         @close="closeModal"
     >
-        <div class="space-y-5">
+        <div class="space-y-4">
 
-            <!-- Created by -->
-            <div
-                v-if="(isRoomAdmin || hasAdminRole()) && event?.id"
-                class="flex items-center gap-2 text-[12px] text-zinc-500"
-            >
-                {{ $t('Created by') }}
-                <UserPopoverTooltip
-                    :user="event?.created_by"
-                    :id="event?.created_by?.id ?? 'deletedUserTooltip'"
-                    height="6"
-                    width="6"
-                />
+            <!-- Top Meta + Tip -->
+            <div class="flex flex-col gap-2">
+                <!-- Created by -->
+                <div
+                    v-if="(isRoomAdmin || hasAdminRole()) && event?.id"
+                    class="flex items-center gap-2 text-[12px] text-zinc-500"
+                >
+                    {{ $t('Created by') }}
+                    <UserPopoverTooltip
+                        :user="event?.created_by"
+                        :id="event?.created_by?.id ?? 'deletedUserTooltip'"
+                        height="5"
+                        width="5"
+                    />
+                </div>
             </div>
 
-            <!-- Small tip -->
-            <p class="rounded-lg bg-indigo-50/70 px-3 py-2 text-[12px] text-indigo-700">
-                {{ $t('Tip: Keep titles short and descriptive—this helps everyone find the right event faster.') }}
-            </p>
-
             <!-- EDIT MODE -->
-            <div v-if="canEdit" class="space-y-5">
-                <!-- Type / Status / Title -->
-                <section class="card-event-container">
-                    <header class="card-header">
-                        <span class="card-dot bg-indigo-400"></span>
-                        <h3 class="card-title">{{ $t('Basics') }}</h3>
+            <div v-if="canEdit" class="space-y-4">
+
+                <!-- Basics -->
+                <section class="ui-card">
+                    <header class="ui-card-header">
+                        <span class="ui-dot bg-indigo-400"></span>
+                        <h3 class="ui-card-title">{{ $t('Basics') }}</h3>
                     </header>
 
-                    <div class="grid grid-cols-1 items-end gap-x-4" :class="statusModule ? 'md:grid-cols-3' : 'md:grid-cols-2'">
+                    <div class="ui-grid-2">
                         <ArtworkBaseListbox
                             v-model="selectedEventType"
                             :items="eventTypes"
@@ -44,44 +43,9 @@
                             option-key="id"
                             label="Event type"
                             :use-translations="false"
+                            :button-class="uiLbBtn"
+                            :options-class="uiLbOpts"
                         />
-                        <!--<ArtworkBaseListbox
-                            v-model="selectedEventType"
-                            :items="eventTypes"
-                            by="id"
-                            option-label="name"
-                            option-key="id"
-                            label="Event type"
-                            :use-translations="false"
-                            :button-class="lbBtn"
-                            :options-class="lbOpts"
-                        >
-                            <template #button="{ selected, placeholder }">
-                                <div class="lbb">
-                                    <div class="lbb-text">
-                                        <div class="lbb-label">{{ $t('Event type') }}</div>
-                                        <div class="lbb-value">
-                                  <span
-                                      v-if="selected"
-                                      class="inline-block size-3 rounded-full"
-                                      :style="{ backgroundColor: selected?.hex_code }"
-                                  />
-                                                        <span class="truncate">{{ selected ? selected?.name : placeholder }}</span>
-                                                    </div>
-                                                </div>
-                                                <IconChevronUp class="lbb-icon" />
-                                            </div>
-                                        </template>
-                                        <template #option="{ item, selected }">
-                                            <div class="flex items-center gap-2">
-                                                <span class="inline-block size-2.5 rounded-full" :style="{ backgroundColor: item.hex_code }" />
-                                                <span :class="selected ? 'font-semibold' : ''" class="truncate">
-                                {{ item.name }}
-                              </span>
-                                </div>
-                            </template>
-                        </ArtworkBaseListbox>-->
-
                         <ArtworkBaseListbox
                             v-if="statusModule"
                             v-model="selectedEventStatus"
@@ -91,31 +55,25 @@
                             option-key="id"
                             label="Event Status"
                             :use-translations="false"
-                            :button-class="lbBtn"
-                            :options-class="lbOpts"
+                            :button-class="uiLbBtn"
+                            :options-class="uiLbOpts"
                         >
                             <template #button="{ selected, placeholder }">
-                                <div class="lbb">
-                                    <div class="lbb-text">
-                                        <div class="lbb-label">{{ $t('Event Status') }}</div>
-                                        <div class="lbb-value">
-                      <span
-                          v-if="selected"
-                          class="inline-block size-3 rounded-full"
-                          :style="{ backgroundColor: selected?.color }"
-                      />
+                                <div class="ui-lb-trigger">
+                                    <div class="ui-lb-trigger-text">
+                                        <div class="ui-lb-label">{{ $t('Event Status') }}</div>
+                                        <div class="ui-lb-value">
+                                            <span v-if="selected" class="inline-block size-2.5 rounded-full" :style="{ backgroundColor: selected?.color }" />
                                             <span class="truncate">{{ selected ? selected?.name : placeholder }}</span>
                                         </div>
                                     </div>
-                                    <IconChevronUp class="lbb-icon" />
+                                    <IconChevronUp class="ui-lb-icon" />
                                 </div>
                             </template>
                             <template #option="{ item, selected }">
                                 <div class="flex items-center gap-2">
-                                    <span class="inline-block size-2.5 rounded-full" :style="{ backgroundColor: item.color }" />
-                                    <span :class="selected ? 'font-semibold' : ''" class="truncate">
-                    {{ item.name }}
-                  </span>
+                                    <span class="inline-block size-2 rounded-full" :style="{ backgroundColor: item.color }" />
+                                    <span :class="selected ? 'font-medium' : ''" class="truncate">{{ item.name }}</span>
                                 </div>
                             </template>
                         </ArtworkBaseListbox>
@@ -124,38 +82,37 @@
                             v-model="eventName"
                             id="eventTitle"
                             :label="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
+                            class="ui-input"
                         />
                     </div>
 
-                    <div class="grid grid-cols-1 gap-1 md:grid-cols-3 mt-1">
-                        <p class="err" v-if="errorMsg('eventType')" v-html="errorMsg('eventType')" />
+                    <div class="ui-grid-2 mt-0.5">
+                        <p class="ui-error" v-if="errorMsg('eventType')" v-html="errorMsg('eventType')" />
                         <span />
-                        <p class="err" v-if="selectedEventType?.individual_name && errorMsg('eventName')" v-html="errorMsg('eventName')" />
+                        <p class="ui-error" v-if="selectedEventType?.individual_name && errorMsg('eventName')" v-html="errorMsg('eventName')" />
                     </div>
                 </section>
 
-                <!-- Time -->
-                <section class="card-event-container">
-                    <header class="card-header">
-                        <span class="card-dot bg-sky-400"></span>
-                        <h3 class="card-title">{{ $t('Date & Time') }}</h3>
+                <!-- Date & Time -->
+                <section class="ui-card">
+                    <header class="ui-card-header">
+                        <span class="ui-dot bg-sky-400"></span>
+                        <h3 class="ui-card-title">{{ $t('Date & Time') }}</h3>
                     </header>
 
-                    <div class="flex flex-wrap items-center gap-3">
-                        <label class="inline-flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                v-model="allDayEvent"
-                                class="size-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
-                                @change="checkChanges"
-                            />
-                            <span class="text-sm text-zinc-700">{{ $t('Full day') }}</span>
-                        </label>
-                    </div>
+                    <label class="inline-flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            v-model="allDayEvent"
+                            class="ui-checkbox"
+                            @change="checkChanges"
+                        />
+                        <span class="text-[13px] text-zinc-700">{{ $t('Full day') }}</span>
+                    </label>
 
-                    <div class="mt-3 form-grid-2">
-                        <div class="flex gap-3 items-end">
-                            <BaseInput type="date" id="startDate" v-model="startDate" :label="$t('Start')" @change="checkChanges" class="h-11" />
+                    <div class="ui-grid-2 mt-2">
+                        <div class="flex gap-2 items-end">
+                            <BaseInput type="date" id="startDate" v-model="startDate" :label="$t('Start')" @change="checkChanges" class="ui-input" />
                             <BaseInput
                                 v-if="!allDayEvent"
                                 type="time"
@@ -163,11 +120,11 @@
                                 v-model="startTime"
                                 :label="$t('Start time')"
                                 @change="checkChanges"
-                                class="h-11"
+                                class="ui-input"
                             />
                         </div>
-                        <div class="flex gap-3 items-end">
-                            <BaseInput type="date" id="endDate" v-model="endDate" :label="$t('End')" @change="checkChanges" class="h-11" />
+                        <div class="flex gap-2 items-end">
+                            <BaseInput type="date" id="endDate" v-model="endDate" :label="$t('End')" @change="checkChanges" class="ui-input" />
                             <BaseInput
                                 v-if="!allDayEvent"
                                 type="time"
@@ -175,35 +132,35 @@
                                 v-model="endTime"
                                 :label="$t('End time')"
                                 @change="checkChanges"
-                                class="h-11"
+                                class="ui-input"
                             />
                         </div>
                     </div>
 
-                    <div class="mt-1 form-grid-2">
-                        <p class="err" v-if="errorMsg('start')" v-html="errorMsg('start')" />
-                        <p class="err" v-if="errorMsg('end')" v-html="errorMsg('end')" />
+                    <div class="ui-grid-2">
+                        <p class="ui-error" v-if="errorMsg('start')" v-html="errorMsg('start')" />
+                        <p class="ui-error" v-if="errorMsg('end')" v-html="errorMsg('end')" />
                     </div>
 
-                    <p v-if="helpTextLengthRoom" class="mt-2 err">{{ helpTextLengthRoom }}</p>
+                    <p v-if="helpTextLengthRoom" class="ui-error mt-1">{{ helpTextLengthRoom }}</p>
                 </section>
 
                 <!-- Repeat -->
-                <section class="card-event-container">
-                    <header class="card-header">
-                        <span class="card-dot bg-amber-400"></span>
-                        <h3 class="card-title">{{ $t('Repeat') }}</h3>
+                <section class="ui-card">
+                    <header class="ui-card-header">
+                        <span class="ui-dot bg-amber-400"></span>
+                        <h3 class="ui-card-title">{{ $t('Repeat') }}</h3>
                     </header>
 
-                    <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex flex-wrap items-center gap-2">
                         <label class="inline-flex items-center gap-2">
-                            <input type="checkbox" v-model="series" class="size-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500" />
-                            <span class="text-sm text-zinc-700">{{ $t('Repeat event') }}</span>
+                            <input type="checkbox" v-model="series" class="ui-checkbox" />
+                            <span class="text-[13px] text-zinc-700">{{ $t('Repeat event') }}</span>
                         </label>
-                        <span class="hint">{{ $t('Enable if this event should repeat automatically.') }}</span>
+                        <span class="ui-hint">{{ $t('Enable if this event should repeat automatically.') }}</span>
                     </div>
 
-                    <div v-show="series" class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
+                    <div v-show="series" class="mt-2 ui-grid-2 items-end">
                         <ArtworkBaseListbox
                             v-model="selectedFrequency"
                             :items="frequencies"
@@ -212,106 +169,152 @@
                             option-key="id"
                             label="Frequency"
                             :use-translations="false"
+                            :button-class="uiLbBtn"
+                            :options-class="uiLbOpts"
                         />
-                        <BaseInput id="seriesEndDate" type="date" v-model="seriesEndDate" :label="$t('End date Repeat event')"  />
+                        <BaseInput id="seriesEndDate" type="date" v-model="seriesEndDate" :label="$t('End date Repeat event')" class="ui-input" />
                     </div>
 
-                    <p v-if="event?.is_series" class="mt-2 hint">
+                    <p v-if="event?.is_series" class="ui-hint mt-2">
                         {{ $t('Event is part of a repeat event') }} —
                         {{ $t('Cycle: {0} to {1}', [selectedFrequency?.name, convertDateFormat(seriesEndDate)]) }}
                     </p>
                 </section>
 
                 <!-- Room -->
-                <section class="card-event-container">
-                    <header class="card-header">
-                        <span class="card-dot bg-rose-400"></span>
-                        <h3 class="card-title">{{ $t('Room') }}</h3>
+                <section class="ui-card">
+                    <header class="ui-card-header">
+                        <span class="ui-dot bg-rose-400"></span>
+                        <h3 class="ui-card-title">{{ $t('Room') }}</h3>
                     </header>
 
                     <div class="mb-1 flex items-center justify-between">
-                        <span class="hint">{{ $t('Pick a room for this event.') }}</span>
+                        <span class="ui-hint">{{ $t('Pick a room for this event.') }}</span>
                         <div v-if="selectedRoom && roomCollisionArray?.[selectedRoom.id] > 0" class="text-[12px] text-amber-600">
                             {{ $t('{0} potential conflicts detected', [roomCollisionArray[selectedRoom.id]]) }}
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto]">
+                    <div class="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto]">
                         <RoomSearch :label="$t('Search for Rooms')" @room-selected="onRoomSelected" />
-                        <div
-                            v-if="selectedRoom"
-                            class="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 text-sm"
+                        <div v-if="selectedRoom"
+                            class="flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-[13px]"
                         >
                             <span class="truncate">{{ selectedRoom.name }}</span>
-                            <button class="ml-1 text-zinc-400 transition hover:text-rose-600" @click="selectedRoom = null">
+                            <button class="ml-0.5 text-zinc-400 transition hover:text-rose-600" @click="selectedRoom = null" type="button">
                                 <IconCircleX class="size-4" />
                             </button>
                         </div>
                     </div>
 
-                    <p class="mt-1 err" v-if="errorMsg('roomId')" v-html="errorMsg('roomId')" />
+                    <p class="ui-error mt-1" v-if="errorMsg('roomId')" v-html="errorMsg('roomId')" />
                 </section>
 
                 <!-- Project -->
-                <section class="card-event-container">
-                    <header class="card-header">
-                        <span class="card-dot bg-emerald-400"></span>
-                        <h3 class="card-title">{{ $t('Project') }}</h3>
+                <!-- Project -->
+                <section class="ui-card">
+                    <header class="ui-card-header">
+                        <span class="ui-dot bg-emerald-400"></span>
+                        <h3 class="ui-card-title">{{ $t('Project') }}</h3>
                     </header>
 
+                    <!-- Aktivierung -->
+                    <label for="showProjectInfo" class="flex items-center gap-2 mt-1 cursor-pointer">
+                        <input id="showProjectInfo" type="checkbox" v-model="showProjectInfo" class="ui-checkbox" />
+                        <span class="text-[13px] text-zinc-700">{{ $t('Enable project assignment') }}</span>
+                    </label>
 
-                    <div class="mt-3 flex items-center gap-2">
-                        <input id="showProjectInfo" type="checkbox" v-model="showProjectInfo" class="size-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500" />
-                        <label for="showProjectInfo" class="text-sm text-zinc-700">{{ $t('Enable project assignment') }}</label>
-                    </div>
+                    <div v-if="showProjectInfo" class="mt-2 space-y-2">
 
-                    <div v-if="showProjectInfo" class="mt-3 space-y-3">
-                        <div class="flex items-center gap-2 text-[13px]">
-                            <span class="text-zinc-500">{{ $t('Currently assigned') }}:</span>
-                            <template v-if="selectedProject?.id">
-                                <a
-                                    v-if="canAccessProject()"
-                                    :href="route('projects.tab', { project: selectedProject.id, projectTab: first_project_calendar_tab_id })"
-                                    class="text-indigo-600 hover:underline"
-                                >
-                                    {{ selectedProject?.name }}
-                                </a>
-                                <span v-else class="text-zinc-800">{{ selectedProject?.name }}</span>
-                                <button class="text-zinc-400 transition hover:text-rose-600" @click="selectedProject = null">
-                                    <IconCircleX class="size-4" />
-                                </button>
-                            </template>
-                            <span v-else class="text-zinc-400">{{ $t('No project selected') }}</span>
+                        <!-- Chip-Ansicht: nur anzeigen, wenn ein bestehendes Projekt ausgewählt ist -->
+                        <template v-if="!creatingProject && selectedProject?.id">
+                            <div class="ui-project-chip">
+                                <div class="min-w-0">
+                                    <a
+                                        v-if="canAccessProject()"
+                                        :href="route('projects.tab', { project: selectedProject.id, projectTab: first_project_calendar_tab_id })"
+                                        class="ui-project-link"
+                                        :title="selectedProject?.name"
+                                    >
+                                        {{ selectedProject?.name }}
+                                    </a>
+                                    <span v-else class="truncate text-zinc-800">{{ selectedProject?.name }}</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button type="button" class="ui-link-btn" @click="editingExisting()">
+                                        {{ $t('Change') }}
+                                    </button>
+                                    <button type="button" class="ui-icon-btn" @click="removeProject" :aria-label="$t('Remove project')">
+                                        <IconCircleX class="size-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Segment: Bestehend / Neu -->
+                        <div class="ui-segment" role="tablist" aria-label="Project source">
+                            <button
+                                type="button"
+                                class="ui-segment-btn"
+                                :class="!creatingProject ? 'is-active' : ''"
+                                role="tab"
+                                :aria-selected="!creatingProject"
+                                @click="switchToExisting()"
+                            >
+                                {{ $t('Existing project') }}
+                            </button>
+                            <button
+                                type="button"
+                                class="ui-segment-btn"
+                                :class="creatingProject ? 'is-active' : ''"
+                                role="tab"
+                                :aria-selected="creatingProject"
+                                @click="switchToNew()"
+                            >
+                                {{ $t('New project') }}
+                            </button>
                         </div>
 
-                        <div class="flex items-center gap-3">
-                            <label class="text-sm" :class="creatingProject ? 'font-semibold text-zinc-900' : 'text-zinc-500'">{{ $t('New project') }}</label>
-                            <input type="checkbox" v-model="creatingProject" class="size-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500" />
-                            <label class="text-sm" :class="!creatingProject ? 'font-semibold text-zinc-900' : 'text-zinc-500'">{{ $t('Existing project') }}</label>
-                        </div>
-
+                        <!-- Inhalt: Bestehend = Suche / Neu = freies Input -->
                         <div>
+                            <!-- Bestehendes Projekt: Suche. Hinweis: Chip oben blendet die Suche aus, bis "Ändern" -->
                             <ProjectSearch
-                                v-if="!creatingProject"
+                                v-if="!creatingProject && !selectedProject?.id"
+                                ref="projectSearchRef"
                                 :label="$t('Search for projects')"
-                                @project-selected="chooseProject"
+                                @project-selected="chooseProjectFromPicker"
                             />
-                            <BaseInput v-else id="projectName" :label="$t('New project name')" v-model="projectName" class="h-11" />
+
+                            <!-- Neues Projekt: freies Feld, keine Bestätigung, NICHT auto-umschalten -->
+                            <BaseInput
+                                v-if="creatingProject"
+                                id="projectName"
+                                ref="projectNameRef"
+                                :label="$t('New project name')"
+                                v-model="projectName"
+                                class="ui-input"
+                                :placeholder="$t('e.g. Kitchen Miller – Renovation')"
+                            />
                         </div>
 
-                        <p class="err" v-if="errorMsg('projectId')" v-html="errorMsg('projectId')" />
-                        <p class="err" v-if="errorMsg('projectName')" v-html="errorMsg('projectName')" />
+                        <!-- Hinweise/Fehler -->
+                        <p class="ui-hint" v-if="creatingProject">
+                            {{ $t('The project will be created when saving the event.') }}
+                        </p>
+                        <p class="ui-error" v-if="errorMsg('projectId')" v-html="errorMsg('projectId')" />
+                        <p class="ui-error" v-if="errorMsg('projectName')" v-html="errorMsg('projectName')" />
                     </div>
                 </section>
 
-                <!-- Notes / Booking messages -->
-                <section class="card-event-container">
-                    <header class="card-header">
-                        <span class="card-dot bg-violet-400"></span>
-                        <h3 class="card-title">{{ $t('Notes & booking') }}</h3>
+
+                <!-- Notes / Booking -->
+                <section class="ui-card">
+                    <header class="ui-card-header">
+                        <span class="ui-dot bg-violet-400"></span>
+                        <h3 class="ui-card-title">{{ $t('Notes & booking') }}</h3>
                     </header>
 
-                    <div class="space-y-4">
+                    <div class="space-y-3">
                         <BaseTextarea
                             :label="$t('What do I need to bear in mind for the event?')"
                             id="description"
@@ -319,7 +322,7 @@
                             rows="4"
                         />
 
-                        <div v-if="event?.occupancy_option" class="space-y-3">
+                        <div v-if="event?.occupancy_option" class="space-y-2">
                             <BaseTextarea
                                 :label="$t('Comment on the booking (inquirer will be notified)')"
                                 id="adminComment"
@@ -327,25 +330,25 @@
                                 rows="3"
                             />
 
-                            <div class="flex flex-wrap items-center gap-x-8 gap-y-2">
+                            <div class="flex flex-wrap items-center gap-x-6 gap-y-1.5">
                                 <label class="inline-flex items-center gap-2">
                                     <input
                                         type="checkbox"
                                         v-model="accept"
-                                        class="size-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+                                        class="ui-checkbox ui-checkbox-emerald"
                                         @change="toggleAccept('accept')"
                                     />
-                                    <span class="text-sm" :class="accept ? 'text-zinc-900' : 'text-zinc-500'">{{ $t('Commitments') }}</span>
+                                    <span class="text-[13px]" :class="accept ? 'text-zinc-900' : 'text-zinc-600'">{{ $t('Commitments') }}</span>
                                 </label>
 
                                 <label class="inline-flex items-center gap-2">
                                     <input
                                         type="checkbox"
                                         v-model="optionAccept"
-                                        class="size-4 rounded border-zinc-300 text-amber-600 focus:ring-amber-500"
+                                        class="ui-checkbox ui-checkbox-amber"
                                         @change="toggleAccept('option')"
                                     />
-                                    <span class="text-sm" :class="optionAccept ? 'text-zinc-900' : 'text-zinc-500'">{{ $t('Optional commitment') }}</span>
+                                    <span class="text-[13px]" :class="optionAccept ? 'text-zinc-900' : 'text-zinc-600'">{{ $t('Optional commitment') }}</span>
                                 </label>
                             </div>
 
@@ -358,8 +361,8 @@
                                     by="name"
                                     label="Option"
                                     :use-translations="false"
-                                    :button-class="lbBtn"
-                                    :options-class="lbOpts"
+                                    :button-class="uiLbBtn"
+                                    :options-class="uiLbOpts"
                                 />
                             </div>
                         </div>
@@ -367,146 +370,127 @@
                 </section>
 
                 <!-- Properties -->
-                <section v-if="(event_properties?.length || 0) > 0" class="card-event-container">
-                    <header class="card-header">
-                        <span class="card-dot bg-cyan-400"></span>
-                        <h3 class="card-title">{{ $t('Properties') }}</h3>
+                <section v-if="(event_properties?.length || 0) > 0" class="ui-card">
+                    <header class="ui-card-header">
+                        <span class="ui-dot bg-cyan-400"></span>
+                        <h3 class="ui-card-title">{{ $t('Properties') }}</h3>
                     </header>
 
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <label
                             v-for="ep in event_properties"
                             :key="ep.id"
-                            class="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 transition hover:bg-white"
+                            class="flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 transition hover:bg-white"
                         >
-                            <input type="checkbox" v-model="ep.checked" class="size-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500" />
-                            <component :is="ep.icon" class="size-4 text-zinc-700" />
-                            <span class="text-sm" :class="ep.checked ? 'font-medium text-zinc-900' : 'text-zinc-700'">{{ ep.name }}</span>
+                            <input type="checkbox" v-model="ep.checked" class="ui-checkbox" />
+                            <PropertyIcon :name="ep.icon" class="size-3.5" />
+                            <span class="text-[13px]" :class="ep.checked ? 'font-medium text-zinc-900' : 'text-zinc-700'">{{ ep.name }}</span>
                         </label>
                     </div>
 
-                    <div v-if="checkedEventProperties.length" class="mt-3 flex flex-wrap items-center gap-2">
-                        <span
-                            v-for="(ep, i) in checkedEventProperties"
-                            :key="ep.id ?? i"
-                            class="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-sm text-zinc-800"
-                        >
-                          <component :is="ep.icon" class="size-4" />
-                          <span>{{ ep.name }}</span>
-                        </span>
+                    <div v-if="checkedEventProperties.length" class="mt-2 flex flex-wrap items-center gap-1.5">
+                    <span
+                        v-for="(ep, i) in checkedEventProperties"
+                        :key="ep.id ?? i"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[12.5px] text-zinc-800"
+                    >
+                       <PropertyIcon :name="ep.icon" class="size-3.5" />
+                      <span>{{ ep.name }}</span>
+                    </span>
                     </div>
                 </section>
 
-                <!-- Actions -->
-                <div class="flex w-full justify-center py-2">
-                    <FormButton
-                        v-if="canCreateDirect"
-                        :disabled="isPrimaryDisabled"
-                        @click="updateOrCreateEvent()"
-                        :text="primaryButtonText"
-                    />
-                    <FormButton
-                        v-else
-                        :disabled="requestDisabled"
-                        @click="updateOrCreateEvent(true)"
-                        :text="$t('Request occupancy')"
-                    />
+                <!-- Sticky Action Bar -->
+                <div class="ui-footer">
+                    <div class="flex items-center justify-end gap-2">
+                        <button type="button" class="ui-btn-secondary" @click="closeModal">
+                            {{ $t('Cancel') }}
+                        </button>
+
+                        <FormButton
+                            v-if="canCreateDirect"
+                            :disabled="isPrimaryDisabled"
+                            @click="updateOrCreateEvent()"
+                            :text="primaryButtonText"
+                        />
+                        <FormButton
+                            v-else
+                            :disabled="requestDisabled"
+                            @click="updateOrCreateEvent(true)"
+                            :text="$t('Request occupancy')"
+                        />
+                    </div>
                 </div>
             </div>
 
             <!-- READONLY MODE -->
-            <div v-else class="card-event-container">
-                <header class="card-header">
-                    <span class="card-dot bg-indigo-400"></span>
-                    <h3 class="card-title">{{ $t('Event overview') }}</h3>
+            <div v-else class="ui-card">
+                <header class="ui-card-header">
+                    <span class="ui-dot bg-indigo-400"></span>
+                    <h3 class="ui-card-title">{{ $t('Event overview') }}</h3>
                 </header>
 
                 <div class="flex items-center gap-3">
-                    <div class="size-10 rounded-full ring-2 ring-zinc-100" :style="{ backgroundColor: selectedEventType?.hex_code }" />
+                    <div class="size-9 rounded-full ring-1 ring-zinc-100" :style="{ backgroundColor: selectedEventType?.hex_code }" />
                     <div class="min-w-0">
-                        <h2 class="truncate text-lg font-semibold text-zinc-900">{{ eventName }}</h2>
-                        <div class="mt-0.5 flex items-center gap-3 text-sm text-zinc-600">
+                        <h2 class="truncate text-[15px] font-semibold text-zinc-900">{{ eventName }}</h2>
+                        <div class="mt-0.5 flex items-center gap-3 text-[12.5px] text-zinc-600">
                             <span>{{ selectedEventType?.name }}</span>
                             <span v-if="selectedEventStatus" class="inline-flex items-center gap-1">
                             <span class="inline-block size-2 rounded-full" :style="{ backgroundColor: selectedEventStatus?.color }"></span>
-                            {{ selectedEventStatus?.name }}
-                          </span>
+                                {{ selectedEventStatus?.name }}
+                            </span>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 form-grid-2">
-                    <div class="space-y-2">
-                        <div>
-                            <div class="hint">{{ $t('Date & Time') }}</div>
-                            <div class="text-sm text-zinc-800">
-                                <span v-if="startDate === endDate">{{ startDate }} • {{ startTime }} – {{ endTime }}</span>
-                                <span v-else>{{ startDate }} {{ startTime }} — {{ endDate }} {{ endTime }}</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="hint">{{ $t('Room') }}</div>
-                            <div class="text-sm text-zinc-800">{{ selectedRoom?.name }}</div>
-                        </div>
-                        <div v-if="selectedProject?.id">
-                            <div class="hint">{{ $t('Project') }}</div>
-                            <div class="text-sm">
-                                <a
-                                    v-if="canAccessProject()"
-                                    :href="route('projects.tab', { project: selectedProject.id, projectTab: first_project_calendar_tab_id })"
-                                    class="text-indigo-600 hover:underline"
-                                >
-                                    {{ selectedProject?.name }}
-                                </a>
-                                <span v-else class="text-zinc-800">{{ selectedProject?.name }}</span>
-                            </div>
+                <div class="mt-3 ui-grid-2">
+                    <div class="space-y-1.5">
+                        <div class="ui-hint">{{ $t('Date & Time') }}</div>
+                        <div class="text-[13px] text-zinc-800">
+                            <span v-if="startDate === endDate">{{ startDate }} • {{ startTime }} – {{ endTime }}</span>
+                            <span v-else>{{ startDate }} {{ startTime }} — {{ endDate }} {{ endTime }}</span>
                         </div>
                     </div>
-                    <div class="space-y-2">
-                        <div class="hint">{{ $t('This event is read-only for you.') }}</div>
-                        <div v-if="event?.is_series" class="text-sm text-zinc-800">
-                            {{ $t('Cycle: {0} to {1}', [selectedFrequency?.name, convertDateFormat(seriesEndDate)]) }}
+                    <div class="space-y-1.5">
+                        <div class="ui-hint">{{ $t('Room') }}</div>
+                        <div class="text-[13px] text-zinc-800">{{ selectedRoom?.name }}</div>
+                    </div>
+                    <div v-if="selectedProject?.id" class="space-y-1.5">
+                        <div class="ui-hint">{{ $t('Project') }}</div>
+                        <div class="text-[13px]">
+                            <a
+                                v-if="canAccessProject()"
+                                :href="route('projects.tab', { project: selectedProject.id, projectTab: first_project_calendar_tab_id })"
+                                class="text-indigo-600 hover:underline"
+                            >
+                                {{ selectedProject?.name }}
+                            </a>
+                            <span v-else class="text-zinc-800">{{ selectedProject?.name }}</span>
                         </div>
                     </div>
                 </div>
 
-                <div v-if="description" class="mt-3 border-t border-zinc-100 pt-3 text-sm text-zinc-800">
+                <div v-if="description" class="mt-3 border-t border-zinc-100 pt-3 text-[13px] text-zinc-800">
                     {{ description }}
                 </div>
 
                 <div v-if="checkedEventProperties.length" class="mt-3 border-t border-zinc-100 pt-3">
-                    <div class="mb-2 hint">{{ $t('Properties') }}</div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="mb-1 ui-hint">{{ $t('Properties') }}</div>
+                    <div class="flex flex-wrap gap-1.5">
             <span
                 v-for="(ep, i) in checkedEventProperties"
                 :key="ep.id ?? i"
-                class="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-sm text-zinc-800"
+                class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[12.5px] text-zinc-800"
             >
-              <component :is="ep.icon" class="size-4" />
+              <component :is="ep.icon" class="size-3.5" />
               <span>{{ ep.name }}</span>
             </span>
                     </div>
                 </div>
 
-                <div v-if="showComments && event?.comments?.length" class="mt-3 border-t border-zinc-100 pt-3">
-                    <div class="mb-2 hint">{{ $t('Comments') }}</div>
-                    <div class="space-y-3">
-                        <div
-                            v-for="c in event?.comments"
-                            :key="c.id"
-                            class="rounded-lg border border-zinc-200 bg-zinc-50/70 p-3"
-                        >
-                            <div class="mb-1 flex items-center gap-2 text-xs text-zinc-500">
-                                <NewUserToolTip :id="c.id" :user="c.user" :height="6" :width="6" />
-                                <span>{{ c.created_at }}</span>
-                            </div>
-                            <div class="text-sm text-zinc-800">{{ c.comment }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-4 flex w-full justify-center">
-                    <FormButton :text="$t('Close')" @click="closeModal" />
+                <div class="mt-3 flex w-full justify-end">
+                    <button type="button" class="ui-btn-secondary" @click="closeModal">{{ $t('Close') }}</button>
                 </div>
             </div>
         </div>
@@ -528,8 +512,9 @@
     </ArtworkBaseModal>
 </template>
 
+
 <script setup>
-import { computed, inject, onMounted, ref, watch } from 'vue'
+import {computed, inject, nextTick, onMounted, ref, watch} from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import dayjs from 'dayjs'
@@ -550,13 +535,14 @@ import { IconChevronUp, IconCircleX } from '@tabler/icons-vue'
 import { useEvent } from '@/Composeables/Event.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useI18n} from "vue-i18n";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const { t } = useI18n(), $t = t;
 const props = defineProps({
     showHints: { type: Boolean, default: false },
     eventTypes: { type: Array, required: true },
     rooms: { type: Array, required: true },
     isAdmin: { type: Boolean, default: false },
-    event: { type: Object, default: null },
+    event: { type: [Object, Boolean], default: null, required: false },
     project: { type: Object, default: null },
     wantedRoomId: { type: [Number, String], default: null },
     roomCollisions: { type: Object, default: () => ({}) },
@@ -645,6 +631,17 @@ const modalTitle = computed(() => {
         return $t('Event')
     }
     return props.isPlanning ? $t('Create planned Event') : $t('New room allocation')
+})
+
+const modalDescription = computed(() => {
+    if (props.event?.id) {
+        if (props.event?.occupancy_option) return $t('Please review the event details and confirm the booking by selecting "Commitments" or "Optional commitment". You can also send a message to the inquirer if needed.')
+        if (props.event?.isPlanning) return $t('This event is marked as planned. You can edit the details, but it will not be visible to regular users until it is confirmed.')
+        return $t('Here you can view and edit the details of the event. Make sure to save any changes you make.')
+    }
+    return props.isPlanning
+        ? $t('You are about to create a planned event. Please fill in the necessary details and save it. The event will not be visible to regular users until it is confirmed.')
+        : $t('Fill in the details for the new room allocation. Once you save, the event will be created and visible to users with access to the selected room.')
 })
 
 const checkedEventProperties = computed(() => (event_properties ?? []).filter(p => p.checked))
@@ -882,10 +879,10 @@ function checkChanges() {
     updateTimes()
 }
 
-const lbBtn =
-    'menu-button bg-white focus:outline-hidden focus:ring-0 w-full text-left rounded-md border border-zinc-200 shadow-sm px-3 py-2 h-11 text-sm text-zinc-900'
-const lbOpts =
-    'absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm'
+const uiLbBtn =
+    'menu-button bg-white focus:outline-none focus:ring-0 w-full text-left rounded-md border border-zinc-200 shadow-sm px-3 py-2 h-10 text-[13px] text-zinc-900';
+const uiLbOpts =
+    'absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-[13px] ring-1 shadow-lg ring-black/5 focus:outline-none';
 
 function toggleAccept(type) {
     if (type === 'option') {
@@ -1018,5 +1015,53 @@ async function afterConfirm(confirmed) {
     }
     await axios.delete(`/events/${props.event.id}`)
     closeModal(true)
+}
+
+// neue lokale UI-States/Methoden
+const showProjectPicker = ref(false)
+
+// beim Öffnen initial steuern (falls Projekt schon gesetzt, Picker ausblenden)
+const _origOpenModal = openModal
+openModal = function () {
+    _origOpenModal()
+    showProjectPicker.value = !selectedProject.value?.id
+}
+
+const projectSearchRef = ref(null)
+const projectNameRef = ref(null)
+
+// Umschalten: Bestehend
+function switchToExisting() {
+    creatingProject.value = false
+    nextTick(() => projectSearchRef.value?.focus?.())
+}
+
+// Umschalten: Neu
+function switchToNew() {
+    // NICHTS automatisch bestätigen – einfach editierbares Feld lassen
+    creatingProject.value = true
+    selectedProject.value = null // wichtig: kein bestehendes Projekt aktiv
+    nextTick(() => projectNameRef.value?.focus?.())
+}
+
+// „Ändern“ aus der Chip-Ansicht → zurück in die Suche
+function editingExisting() {
+    creatingProject.value = false
+    // Chip verstecken -> Suche wieder zeigen (weil selectedProject vorhanden ist, Chip würde sonst bleiben)
+    selectedProject.value = null
+    nextTick(() => projectSearchRef.value?.focus?.())
+}
+
+// Entfernen
+function removeProject() {
+    selectedProject.value = null
+    // bleib in bestehendem Modus? Dann zeig Suche; oder wechsel optional zu "Neu":
+    // creatingProject.value = true
+}
+
+// Auswahl aus Suche
+function chooseProjectFromPicker(project) {
+    chooseProject(project)      // deine vorhandene Methode (setzt selectedProject)
+    // nach Auswahl → Chip anzeigen (Suche verschwindet automatisch)
 }
 </script>

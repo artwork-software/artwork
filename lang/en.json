@@ -3031,5 +3031,15 @@
     "Enable project assignment": "Enable project assignment",
     "Currently assigned": "Currently assigned",
     "No project selected": "No project selected",
-    "Repeat": "Repeat"
+    "Repeat": "Repeat",
+    "Change": "Change",
+    "Please review the event details and confirm the booking by selecting \"Commitments\" or \"Optional commitment\". You can also send a message to the inquirer if needed.": "Please review the event details and confirm the booking by selecting \"Commitments\" or \"Optional commitment\". You can also send a message to the inquirer if needed.",
+    "This event is marked as planned. You can edit the details, but it will not be visible to regular users until it is confirmed.": "This event is marked as planned. You can edit the details, but it will not be visible to regular users until it is confirmed.",
+    "Here you can view and edit the details of the event. Make sure to save any changes you make.": "Here you can view and edit the details of the event. Make sure to save any changes you make.",
+    "You are about to create a planned event. Please fill in the necessary details and save it. The event will not be visible to regular users until it is confirmed.": "You are about to create a planned event. Please fill in the necessary details and save it. The event will not be visible to regular users until it is confirmed.",
+    "Fill in the details for the new room allocation. Once you save, the event will be created and visible to users with access to the selected room.": "Fill in the details for the new room allocation. Once you save, the event will be created and visible to users with access to the selected room.",
+    "{0} potential conflicts detected": "{0} potential conflicts detected",
+    "No rooms found": "No rooms found",
+    "Searching…": "Searching…",
+    "Notes & booking": "Notes & booking"
 }

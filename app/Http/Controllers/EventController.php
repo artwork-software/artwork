@@ -28,6 +28,7 @@ use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\EventDeleted;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
+use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Http\Requests\EventBulkCreateRequest;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
 use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
@@ -320,14 +321,14 @@ class EventController extends Controller
                 $endDate
             )->rooms,*/
 
-            /* 'eventsWithoutRoom' => fn () =>
+            'eventsWithoutRoom' => fn () =>
              Event::query()->hasNoRoom()->get()->map(fn($event) =>
              \Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO::formModel(
                  $event,
                  $userCalendarSettings,
                  EventType::select(['id','name','abbreviation','hex_code'])->get()->keyBy('id')
              )
-             ),*/
+             ),
 
            // 'areas'            => fn () => app('Artwork\\Modules\\Area\\Services\\AreaService')->getAll(),
             'areas'            => fn () => $this->areaService->getAll(),
@@ -351,26 +352,28 @@ class EventController extends Controller
 
     public function allEventsAPI(Request $request): JsonResponse
     {
+        /** @var User $user */
         $user = $this->authManager->user();
 
-        $userCalendarFilter   = $user->userFilters()->calendarFilter()->first();
+
         $userCalendarSettings = $user->getAttribute('calendar_settings');
         $isPlanning           = $request->boolean('isPlanning', false);
 
-        // Abo/Shared Daten (leichtgewichtig lassen)
-        $this->userService->shareCalendarAbo('calendar');
-
-        // Datum bestimmen
-        $dateRangeRequested = $request->filled(['start_date','end_date']);
-        if ($dateRangeRequested) {
-            $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
-            $endDate   = Carbon::parse($request->input('end_date'))->endOfDay();
+        if ($isPlanning) {
+            $userCalendarFilter   = $user->userFilters()->planningCalendarFilter()->first();
         } else {
-            [$startDate, $endDate] = $this->calendarDataService
-                ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, null);
+            $userCalendarFilter   = $user->userFilters()->calendarFilter()->first();
         }
 
-        $rooms = $this->roomService->getFilteredRooms($startDate, $endDate, $userCalendarFilter);
+        $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
+        $endDate   = Carbon::parse($request->input('end_date'))->endOfDay();
+
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+        );
 
         $calendar = ($isPlanning
             ? $this->eventPlanningCalendarService

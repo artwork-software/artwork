@@ -1,5 +1,5 @@
 <template>
-    <div class="h-full">
+    <div :class="isHeightFull ? 'h-full' : ''">
         <component
             :is="event.isMinimal ? MinimalEventInCalendar : FullEventInCalendar"
             :event="event"
@@ -14,12 +14,12 @@
             :verifierForEventTypIds="verifierForEventTypIds"
             :is-planning="isPlanning"
             :is-in-daily-view="isInDailyView"
-            @edit-event="$emit('editEvent', $event)"
-            @edit-sub-event="$emit('editSubEvent', $event)"
-            @open-add-sub-event-modal="$emit('openAddSubEventModal', $event)"
-            @open-confirm-modal="$emit('openConfirmModal', $event)"
-            @show-decline-event-modal="$emit('showDeclineEventModal', $event)"
-            @changed-multi-edit-checkbox="$emit('changedMultiEditCheckbox', $event)"
+            @editEvent="e => emit('editEvent', e)"
+            @editSubEvent="e => openAddSubEventModal"
+            @openAddSubEventModal="openAddSubEventModal"
+            @openConfirmModal="(e, type) => emit('open-confirm-modal', e, type)"
+            @showDeclineEventModal="e => emit('show-decline-event-modal', e)"
+            @changedMultiEditCheckbox="(...args) => emit('changed-multi-edit-checkbox', ...args)"
         />
     </div>
 </template>
@@ -44,14 +44,14 @@ const MinimalEventInCalendar = defineComponent({
     </div>`
 })
 
-defineEmits([
+const emit = defineEmits([
     'editEvent',
     'editSubEvent',
     'openAddSubEventModal',
     'openConfirmModal',
     'showDeclineEventModal',
     'changedMultiEditCheckbox'
-])
+]);
 
 defineProps({
     event: { type: Object, required: true },
@@ -65,6 +65,15 @@ defineProps({
     width: { type: [String, Number], default: '248px' },
     isInDailyView: { type: Boolean, default: false },
     verifierForEventTypIds: { type: Array, default: () => [] },
-    isPlanning: { type: Boolean, default: false }
+    isPlanning: { type: Boolean, default: false },
+    isHeightFull: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
 })
+
+const openAddSubEventModal = (mainEvent, mode, subEvent) => {
+    emit('open-add-sub-event-modal', mainEvent, mode, subEvent);
+}
 </script>

@@ -2,7 +2,7 @@
     <span class="rounded-full items-center font-medium border px-3 mt-2 text-sm mr-1 mb-1 h-8 inline-flex" :style="{backgroundColor: backgroundColorWithOpacity(item.color), color: TextColorWithDarken(item.color), borderColor: TextColorWithDarken(item.color)}">
         <span class="cursor-pointer flex items-center" @click="showEditModal = true">
             {{ item.name }}
-            <component is="IconCalendarCog" v-if="item.is_planning" class="ml-1 h-4 w-4" />
+            <component :is="IconCalendarCog" v-if="item.is_planning" class="ml-1 h-4 w-4" />
         </span>
 
         <button type="button" @click="showConfirmation = true">
@@ -31,6 +31,7 @@ import { XIcon } from "@heroicons/vue/outline";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
 import ProjectStateModal from "@/Layouts/Components/ProjectStateModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import {IconCalendarCog} from "@tabler/icons-vue";
 
 export default {
     name: "ProjectStateTagComponent",
@@ -54,6 +55,7 @@ export default {
         };
     },
     methods: {
+        IconCalendarCog,
         updateState(updatedState) {
             this.$emit('update', updatedState);
             this.showEditModal = false;

@@ -14,7 +14,7 @@
                 <IconLock stroke-width="1.5" class="h-5 w-5 text-white"/>
             </div>
             <button type="button" @click="showRequestWorkTimeChangeModal = true" v-if="userToEditId === usePage().props.auth.user.id && type === 'user'">
-                <Component is="IconClockEdit" class="h-5 w-5 hover:text-blue-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
+                <Component :is="IconClockEdit" class="h-5 w-5 hover:text-blue-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
             </button>
         </div>
         <div class="flex flex-col bg-backgroundGray rounded-b-lg px-1 pt-1">
@@ -83,7 +83,7 @@
     />
 </template>
 <script setup>
-import {IconCalendarMonth, IconLock} from "@tabler/icons-vue";
+import {IconCalendarMonth, IconClockEdit, IconLock} from "@tabler/icons-vue";
 import {router} from "@inertiajs/vue3";
 import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";

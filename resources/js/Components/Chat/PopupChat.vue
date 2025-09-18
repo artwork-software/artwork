@@ -236,7 +236,7 @@
                                 @keyup.enter.exact="scrollToBottom"
                             />
                             <div @click="sendMessage" class="rounded-full p-2 bg-artwork-buttons-create cursor-pointer hover:bg-artwork-buttons-hover duration-200 ease-in-out transition-colors">
-                                <PropertyIcon name="IconBrandTelegram" class="size-4 cursor-pointer text-white" aria-hidden="true" />
+                                <component :is="IconBrandTelegram" class="size-4 cursor-pointer text-white" aria-hidden="true" />
                             </div>
                         </div>
                     </div>
@@ -308,7 +308,7 @@
             />
             <!-- Schließen -->
             <div class="absolute top-2 right-2">
-                <component is="IconSquareRoundedX" class="size-6 text-white cursor-pointer" @click="showPositionPicker = false" />
+                <component :is="IconSquareRoundedX" class="size-6 text-white cursor-pointer" @click="showPositionPicker = false" />
             </div>
         </div>
     </div>
@@ -347,12 +347,13 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import RenameGroupChatModal from "@/Components/Chat/Modals/RenameGroupChatModal.vue";
 import DeleteGroupChatModal from "@/Components/Chat/Modals/DeleteGroupChatModal.vue";
 import {
-    IconArrowsMove, IconBell, IconBellOff,
-    IconBubbleText,
+    IconArrowsMove, IconBrandTelegram, IconBubbleText, IconBell, IconBellOff,
     IconChevronLeft,
-    IconEdit, IconInfoSquareRoundedFilled, IconLoaderQuarter, IconPlus,
-    IconSearch, IconTrash,
-    IconUsersGroup,
+    IconEdit, IconInfoSquareRoundedFilled,
+    IconLoaderQuarter,
+    IconPlus,
+    IconSearch, IconSquareRoundedX,
+    IconTrash, IconUsersGroup,
     IconX
 } from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";

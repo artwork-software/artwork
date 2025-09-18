@@ -1,9 +1,11 @@
 <script>
 import IconLib from "@/Mixins/IconLib.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconCirclePlus} from "@tabler/icons-vue";
 
 export default {
     name: "PlusButton",
+    methods: {IconCirclePlus},
     components: {ToolTipComponent},
     mixins: [IconLib],
     props: {
@@ -20,7 +22,7 @@ export default {
         <ToolTipComponent
             direction="left"
             :tooltip-text="buttonText"
-            icon="IconCirclePlus"
+            :icon="IconCirclePlus"
             icon-size="h-8 w-8 text-white"
             stroke="2.5"
         />

@@ -42,7 +42,7 @@
 
                     <div class="col-span-full">
                         <button @click="$refs.externMaterialIssueFiles.click()" type="button" class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
-                            <component is="IconFile" class="mx-auto size-12 text-gray-400" stroke-width="1" />
+                            <component :is="IconFile" class="mx-auto size-12 text-gray-400" stroke-width="1" />
                             <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t('File storage') }}</span>
                             <input
                                 @change="upload"
@@ -66,7 +66,7 @@
                                             <div>
                                                 <div class="flex items-center justify-end">
                                                     <button type="button" class="text-xs text-red-500" @click="removeFile(file.id)">
-                                                        <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
+                                                        <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
                                                     </button>
                                                 </div>
                                             </div>
@@ -87,7 +87,7 @@
                                             <div>
                                                 <div class="flex items-center justify-end">
                                                     <button type="button" class="text-xs text-red-500" @click="externMaterialIssueForm.files.splice(index, 1)">
-                                                        <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
+                                                        <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
                                                     </button>
                                                 </div>
                                             </div>
@@ -103,10 +103,10 @@
                 <div class="flex items-center w-full gap-x-4">
                     <ArticleSearch @article-selected="addArticleToIssue" class="w-full"/>
                     <button type="button" @click="showArticleFilterModal = true" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                        <ToolTipComponent icon="IconListSearch" :tooltip-text="$t('Search for articles')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
+                        <ToolTipComponent :icon="IconListSearch" :tooltip-text="$t('Search for articles')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                     </button>
                     <button type="button" @click="showSelectMaterialSetModal = true" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ">
-                        <ToolTipComponent icon="IconParentheses" :tooltip-text="$t('Select material sets')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
+                        <ToolTipComponent :icon="IconParentheses" :tooltip-text="$t('Select material sets')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                     </button>
                 </div>
                 <div class="mt-4">
@@ -123,7 +123,7 @@
                                     <p class="text-xs flex items-center gap-x-1">{{ $t('Available stock for issue period') }}:
                                         <span v-if="!article.availableStockRequestIsLoading">{{ article.availableStock?.available }}</span>
                                         <span v-else class="flex items-center gap-x-1">{{ $t('Is queried') }}
-                                            <component is="IconLoader" class="inline-block h-4 w-4 animate-spin text-gray-400" stroke-width="1.5"/>
+                                            <component :is="IconLoader" class="inline-block h-4 w-4 animate-spin text-gray-400" stroke-width="1.5"/>
                                         </span>
                                     </p>
                                     <p v-if="article.quantity > article.availableStock?.available">
@@ -137,7 +137,7 @@
                                 </div>
                                 <div class="flex items-center justify-end w-5">
                                     <button type="button" class="text-xs text-red-500" @click="removeArticle(index)">
-                                        <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
+                                        <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
                                     </button>
                                 </div>
                             </div>
@@ -167,7 +167,7 @@
                                     </div>
                                     <div class="flex items-center justify-end">
                                         <button type="button" class="text-xs text-red-500" @click="removeSpecialArticle(index)">
-                                            <component is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
+                                            <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5"/>
                                         </button>
                                     </div>
                                 </div>
@@ -224,6 +224,7 @@ import debounce from "lodash.debounce";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SelectMaterialSetModal from "@/Pages/IssueOfMaterial/Components/SelectMaterialSetModal.vue";
+import {IconFile, IconListSearch, IconLoader, IconParentheses, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     externMaterialIssue: {

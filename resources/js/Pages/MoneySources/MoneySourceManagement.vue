@@ -203,7 +203,7 @@
                                 </Menu>
                                 <div class="flex ml-3"
                                      v-if="$can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                    <GlassyIconButton text="New" icon="IconPlus" @click="openAddMoneySourceModal" />
+                                    <GlassyIconButton text="New" :icon="IconPlus" @click="openAddMoneySourceModal" />
                                 </div>
                             </div>
                         </div>
@@ -402,7 +402,7 @@ import {Link} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
-import {IconPin} from '@tabler/icons-vue';
+import {IconPin, IconPlus} from '@tabler/icons-vue';
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import Label from "@/Jetstream/Label.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
@@ -522,6 +522,7 @@ export default defineComponent({
         },
     },
     methods: {
+        IconPlus,
         formatDateString(dateString) {
             let date = new Date(dateString),
                 day = date.getDate(),

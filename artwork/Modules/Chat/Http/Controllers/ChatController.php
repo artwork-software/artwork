@@ -352,4 +352,13 @@ class ChatController extends Controller
             return $ciphertext;
         }
     }
+
+    public function disableOrEnableChatNotifications(Request $request): void
+    {
+        /** @var User $user */
+        $user = $this->auth->user();
+
+        $enable = $request->boolean('enabled', true);
+        $user->update(['chat_push_notification' => $enable]);
+    }
 }

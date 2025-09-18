@@ -1,6 +1,6 @@
 <template>
     <!-- Toasts bleiben global -->
-    <div aria-live="assertive" class="pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6 z-50">
+    <div aria-live="assertive" class="pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6 z-50" v-if="usePage().props.auth.user.chat_push_notification">
         <div class="flex w-full flex-col items-center space-y-4 sm:items-end">
             <ChatToastNotification
                 v-for="(toast, index) in toastMessages"
@@ -44,6 +44,17 @@
                                         direction="top"
                                         :icon="IconPlus"
                                         :tooltip-text="$t('Add new Chat')"
+                                        class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200"
+                                        icon-class="size-5"
+                                    />
+                                </div>
+
+                                <!-- Change Chat position Button -->
+                                <div @click="enableOrDisablePushNotification">
+                                    <ToolTipComponent
+                                        direction="top"
+                                        :icon="usePage().props.auth.user.chat_push_notification ? IconBellOff : IconBell"
+                                        :tooltip-text="usePage().props.auth.user.chat_push_notification ? $t('Disable Notifications') : $t('Enable Notifications')"
                                         class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200"
                                         icon-class="size-5"
                                     />
@@ -336,7 +347,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import RenameGroupChatModal from "@/Components/Chat/Modals/RenameGroupChatModal.vue";
 import DeleteGroupChatModal from "@/Components/Chat/Modals/DeleteGroupChatModal.vue";
 import {
-    IconArrowsMove, IconBrandTelegram, IconBubbleText,
+    IconArrowsMove, IconBrandTelegram, IconBubbleText, IconBell, IconBellOff,
     IconChevronLeft,
     IconEdit, IconInfoSquareRoundedFilled,
     IconLoaderQuarter,
@@ -345,6 +356,7 @@ import {
     IconTrash, IconUsersGroup,
     IconX
 } from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const { getUserStatus } = useUserStatus()
 
 const props = defineProps({})
@@ -1031,6 +1043,24 @@ const handleChatDeleted = (chatId) => {
     chatPartner.value = null;
 };
 
+
+const enableOrDisablePushNotification = () => {
+    const payload = {
+
+    }
+
+    router.post(route('chat-system.toggle-push-notifications'),
+        {
+            enabled: !usePage().props.auth.user.chat_push_notification
+        }, {
+        onSuccess: (response) => {
+
+        },
+        onError: (error) => {
+            console.error("Fehler beim Umschalten der Push-Benachrichtigungen:", error);
+        }
+    });
+}
 
 
 

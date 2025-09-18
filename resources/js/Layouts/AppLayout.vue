@@ -43,6 +43,7 @@ import SubMenu from "@/Layouts/SubMenu.vue";
 import {defineAsyncComponent, onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
+import {IconX} from "@tabler/icons-vue";
 const { locale } = useI18n();
 
 const props = defineProps({

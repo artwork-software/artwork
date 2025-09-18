@@ -293,6 +293,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/users/{user}/chat/popup-settings', [UserController::class, 'updateChatPopupSettings'])
         ->name('user.chat.popup-settings');
 
+    // chat-system.toggle-push-notifications
+    Route::post('/users/chat/push-notifications', [ChatController::class, 'disableOrEnableChatNotifications'])
+        ->name('chat-system.toggle-push-notifications');
+
     Route::patch(
         '/users/{user}/permissions',
         [

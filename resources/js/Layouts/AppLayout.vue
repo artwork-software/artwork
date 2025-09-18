@@ -18,7 +18,7 @@
                     <div class="ml-4 xsDark">{{ pushNotification.message }}</div>
                 </div>
                 <button type="button" class="-mt-4 mr-2">
-                    <component is="IconX" class="-mt-4 h-5 w-5 text-secondary hover:text-error relative"
+                    <component :is="IconX" class="-mt-4 h-5 w-5 text-secondary hover:text-error relative"
                            @click="closePushNotification(pushNotification.id)"/>
                 </button>
             </div>
@@ -43,6 +43,7 @@ import SubMenu from "@/Layouts/SubMenu.vue";
 import {defineAsyncComponent, onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
+import {IconX} from "@tabler/icons-vue";
 const { locale } = useI18n();
 
 const props = defineProps({

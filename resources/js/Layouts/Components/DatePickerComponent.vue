@@ -42,7 +42,7 @@
                 </div>
                 <input v-if="is_user_shift_plan === true"
                        v-model="dateValue[0]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="startDate"
                        id="startDate"
                        type="date"
@@ -51,7 +51,7 @@
                        class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[0]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="startDate"
                        id="startDate"
                        type="date"
@@ -68,7 +68,7 @@
                 </div>
                 <input v-if="is_user_shift_plan === true"
                        v-model="dateValue[1]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="endDate"
                        id="endDate"
                        type="date"
@@ -77,7 +77,7 @@
                        class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[1]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="endDate"
                        id="endDate"
                        type="date"
@@ -342,7 +342,7 @@ function updateTimes() {
     }
 
     if (endDateObj < startDateObj) {
-        errorMessage.value = $t('The date only changes when the end date is the same date or later than the start date.');
+        errorMessage.value = $t('Please select a valid date.');
         hasError.value = true;
     } else {
         errorMessage.value = '';

@@ -4,7 +4,7 @@
             <div>
                 <div class="mb-4">
                     <Link :href="route('accommodation.index')" class="inline-flex items-center text-sm font-medium text-artwork-buttons-hover hover:text-artwork-buttons-hover/80">
-                        <component is="IconArrowLeft" class="h-4 w-4 mr-2" />
+                        <component :is="IconArrowLeft" class="h-4 w-4 mr-2" />
                         {{ $t('Back to accommodations overview') }}
                     </Link>
                 </div>
@@ -56,7 +56,7 @@
                                             <div class="flex items-center gap-2">
                                                 {{ $t('Cost per night') }}
                                                 <ToolTipComponent
-                                                    icon="IconInfoCircle"
+                                                    :icon="IconInfoCircle"
                                                     icon-size="h-4 w-4"
                                                     :tooltip-text="$t('Cost per night tooltip')"
                                                     direction="top"
@@ -110,7 +110,7 @@
                                 @click="showAddRoomType = true"
                                 class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-artwork-buttons-create bg-artwork-buttons-create/10 hover:bg-artwork-buttons-create/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create"
                             >
-                                <component is="IconPlus" class="h-4 w-4 mr-2" />
+                                <component :is="IconPlus" class="h-4 w-4 mr-2" />
                                 {{ $t('Add room type') }}
                             </button>
                         </div>
@@ -150,7 +150,7 @@
 
                     <!-- Empty State -->
                     <div v-if="selectedRoomTypes.length === 0" class="mt-4 text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                        <component is="IconHome" class="mx-auto h-12 w-12 text-gray-400" />
+                        <component :is="IconHome" class="mx-auto h-12 w-12 text-gray-400" />
                         <h3 class="mt-2 text-sm font-medium text-gray-900">{{ $t('No room types') }}</h3>
                         <p class="mt-1 text-sm text-gray-500">{{ $t('Get started by adding a room type to this accommodation.') }}</p>
                         <div class="mt-6">
@@ -159,7 +159,7 @@
                                 @click="showAddRoomType = true"
                                 class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create"
                             >
-                                <component is="IconPlus" class="h-4 w-4 mr-2" />
+                                <component :is="IconPlus" class="h-4 w-4 mr-2" />
                                 {{ $t('Add room type') }}
                             </button>
                         </div>
@@ -220,6 +220,7 @@ import ArtworkSingleContact from "@/Artwork/Contact/ArtworkSingleContact.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconArrowLeft, IconHome, IconInfoCircle, IconPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     accommodation: {

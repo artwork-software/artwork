@@ -16,7 +16,7 @@
 
             </div>
             <div class="">
-                <GlassyIconButton text="Save" icon="IconCheck" @click="add" :disabled="!input"/>
+                <GlassyIconButton text="Save" :icon="IconCheck" @click="add" :disabled="!input"/>
             </div>
 
         </div>
@@ -39,6 +39,7 @@ import EditableTagComponent from "@/Components/Tags/EditableTagComponent.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import {IconCheck} from "@tabler/icons-vue";
 
 export default {
     name: "ProjectSettingsItem",
@@ -85,6 +86,7 @@ export default {
         }
     },
     methods: {
+        IconCheck,
         add() {
             this.$emit('add', this.input, this.hex_code)
             this.input = ''

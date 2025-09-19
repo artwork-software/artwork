@@ -5,14 +5,14 @@
     <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0 dark:text-gray-300 flex items-center gap-x-2">
         <button @click="showCreateOrUpdateArtistModal = true">
             <ToolTipComponent
-                icon="IconEdit"
+                :icon="IconEdit"
                 :tooltip-text="$t('Edit artist')"
                 direction="bottom"
             />
         </button>
         <button @click="showConfirmDeleteModal = true">
             <ToolTipComponent
-                icon="IconTrash"
+                :icon="IconTrash"
                 :tooltip-text="$t('Delete artist')"
                 direction="bottom"
             />
@@ -39,6 +39,7 @@ import {router} from "@inertiajs/vue3";
 import {defineAsyncComponent, ref} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import type { Artist } from "@/Pages/Artist/types/Artist";
+import {IconEdit, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps<{
     artist?: Artist;

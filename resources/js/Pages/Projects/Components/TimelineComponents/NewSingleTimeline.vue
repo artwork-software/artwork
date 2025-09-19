@@ -75,8 +75,8 @@
             </div>
             <div class="invisible group-hover:visible" v-if="!time.clicked || editDescription">
                 <BaseMenu v-if="canEditComponent" white-menu-background has-no-offset>
-                    <BaseMenuItem white-menu-background title="Edit" @click="openCloseTimeEditor(true)" />
-                    <BaseMenuItem white-menu-background title="Delete" icon="IconTrash" @click="deleteTime" />
+                    <BaseMenuItem white-menu-background title="Edit" :icon="IconEdit" @click="openCloseTimeEditor(true)" />
+                    <BaseMenuItem white-menu-background title="Delete" :icon="IconTrash" @click="deleteTime" />
                 </BaseMenu>
             </div>
         </div>
@@ -91,7 +91,7 @@ import {usePermission} from "@/Composeables/Permission.js";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 const {hasAdminRole, can} = usePermission(usePage().props)
-import {IconCircleCheck, IconNote, IconTrash} from '@tabler/icons-vue';
+import {IconCircleCheck, IconEdit, IconNote, IconTrash} from '@tabler/icons-vue';
 import timeline from "@/Pages/Projects/Components/Timeline.vue";
 import {nextTick, ref, watch} from "vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";

@@ -14,7 +14,7 @@
                     <div class="col-start-1 row-start-1 truncate pr-6">
                         {{ selectedCategory?.name ?? $t('Please select a Category') }}
                     </div>
-                    <component is="IconChevronUp"
+                    <component :is="IconChevronUp"
                                class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4"
                                aria-hidden="true"/>
                 </ListboxButton>
@@ -33,7 +33,7 @@
 
                                 <span v-if="selected"
                                       :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                <component is="IconCheck" class="size-5" aria-hidden="true"/>
+                                                <component :is="IconCheck" class="size-5" aria-hidden="true"/>
                                             </span>
                             </li>
                         </ListboxOption>
@@ -68,6 +68,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import {onMounted, ref} from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import {IconCheck, IconChevronUp} from "@tabler/icons-vue";
 
 const props = defineProps({})
 

@@ -3059,6 +3059,9 @@
     "Add or edit working hours for the user": "Arbeitszeiten für die Nutzer*in hinzufügen oder bearbeiten",
     "The project will be created when saving the event.": "Das Projekt wird beim Speichern des Termins erstellt.",
     "Previously declined from": "Vorher abgelehnt von",
-    "Add any notes or special requirements for this event...": "Füge Notizen oder besondere Anforderungen für diesen Termin hinzu..."
+    "Add any notes or special requirements for this event...": "Füge Notizen oder besondere Anforderungen für diesen Termin hinzu...",
+    "Please select a valid date.": "Bitte wähle ein gültiges Datum.",
+    "Disable Notifications": "Benachrichtigungen deaktivieren",
+    "Enable Notifications": "Benachrichtigungen aktivieren"
 }
 

@@ -1,8 +1,15 @@
 <script>
 import IconLib from "@/Mixins/IconLib.vue";
+import {
+    IconCornerDownRightDouble,
+    IconDeviceProjector,
+    IconHomeStar,
+    IconLayoutNavbarCollapse, IconLink
+} from "@tabler/icons-vue";
 
 export default {
     name: "ComponentIcons",
+    methods: {IconLink, IconLayoutNavbarCollapse, IconDeviceProjector, IconCornerDownRightDouble, IconHomeStar},
     mixins: [IconLib],
     props: ['type'],
 }
@@ -37,11 +44,11 @@ export default {
     <IconSeparator class="w-6 h-6" v-if="type === 'SeparatorComponent'" />
     <IconCurrencyEuro class="w-6 h-6" v-if="type === 'BudgetInformations'" />
     <IconApps class="w-6 h-6" v-if="type === 'BulkBody'" />
-    <component is="IconHomeStar" class="w-6 h-6" v-if="type === 'ArtistResidenciesComponent'" />
-    <component is="IconCornerDownRightDouble" class="w-6 h-6" v-if="type === 'GroupProjectDisplayComponent'" />
-    <component is="IconDeviceProjector" class="w-6 h-6" v-if="type === 'ProjectGroupDisplayComponent'" />
-    <component is="IconLayoutNavbarCollapse" class="w-6 h-6" v-if="type === 'DisclosureComponent'" />
-    <component is="IconLink" class="w-6 h-6" v-if="type === 'Link'" />
+    <component :is="IconHomeStar" class="w-6 h-6" v-if="type === 'ArtistResidenciesComponent'" />
+    <component :is="IconCornerDownRightDouble" class="w-6 h-6" v-if="type === 'GroupProjectDisplayComponent'" />
+    <component :is="IconDeviceProjector" class="w-6 h-6" v-if="type === 'ProjectGroupDisplayComponent'" />
+    <component :is="IconLayoutNavbarCollapse" class="w-6 h-6" v-if="type === 'DisclosureComponent'" />
+    <component :is="IconLink" class="w-6 h-6" v-if="type === 'Link'" />
 
     <!-- TextField, Checkbox, TextArea, Title, DropDown -->
 </template>

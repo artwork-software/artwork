@@ -29,7 +29,7 @@
                 class="text-gray-500 hover:text-artwork-messages-error transition duration-200 ease-in-out"
                 :aria-label="$t ? $t('Clear input') : 'Clear input'"
             >
-                <component is="IconX" class="size-4" />
+                <component :is="IconX" class="size-4" />
             </button>
         </div>
 
@@ -39,7 +39,7 @@
             class="absolute right-1 top-0 bottom-0 flex items-center pr-2"
         >
             <div class="animate-spin">
-                <component is="IconLoader" class="size-4 text-gray-500" />
+                <component :is="IconLoader" class="size-4 text-gray-500" />
             </div>
         </div>
 
@@ -64,6 +64,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import {IconX} from "@tabler/icons-vue";
 
 // v-model (Composition API)
 const model = defineModel({ default: '' })

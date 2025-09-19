@@ -35,8 +35,8 @@
             {{ $t('Manufacturer website') }}
         </a>
         <BaseMenu has-no-offset>
-            <BaseMenuItem @click="showAddEditManufacturerModal = true" icon="IconEdit" title="Edit Manufacturer" />
-            <BaseMenuItem icon="IconTrash" title="Delete Manufacturer" @click="showDeleteModal = true"/>
+            <BaseMenuItem @click="showAddEditManufacturerModal = true" :icon="IconEdit" title="Edit Manufacturer" />
+            <BaseMenuItem :icon="IconTrash" title="Delete Manufacturer" @click="showDeleteModal = true"/>
         </BaseMenu>
     </div>
 
@@ -64,6 +64,7 @@ import CreateOrUpdateManufacturerModal
 import {ref} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router, Link} from "@inertiajs/vue3";
+import {IconEdit, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     manufacturer: {

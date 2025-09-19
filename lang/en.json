@@ -3053,5 +3053,9 @@
     "Add or edit working hours for the user": "Add or edit working hours for the user",
     "The project will be created when saving the event.": "The project will be created when saving the event.",
     "Previously declined from": "Previously declined from",
-    "Add any notes or special requirements for this event...": "Add any notes or special requirements for this event..."
+    "Add any notes or special requirements for this event...": "Add any notes or special requirements for this event...",
+    "Please select a valid date.": "Please select a valid date.",
+    "Disable Notifications": "Disable Notifications",
+    "Enable Notifications": "Enable Notifications"
+
 }

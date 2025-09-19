@@ -12,11 +12,11 @@
             </div>
         </div>
         <div class="flex items-center cursor-pointer justify-end gap-x-2 font-lexend px-3">
-            <component is="IconEdit"
+            <component :is="IconEdit"
                        class="size-5 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-150 ease-in-out"
                        @click.stop="showEventComponent = true" v-if="can('can plan shifts') || is('artwork admin')" />
             <component
-                is="IconChevronDown"
+                :is="IconChevronDown"
                 class="size-5 text-gray-500 hover:text-gray-700 transition-all duration-150 ease-in-out"
                 :class="{ 'rotate-180': showEventDetails }"
                 @click="showEventDetails = !showEventDetails"
@@ -54,7 +54,7 @@
         <div class="w-full bg-gray-100 rounded-lg py-1.5 px-3 mt-1">
             <div class="text-artwork-buttons-create cursor-pointer flex items-center gap-x-1"
                 @click="showAddTimeLineModal = true">
-                <component is="IconWand" class="size-4"/>
+                <component :is="IconWand" class="size-4"/>
                 {{ event.timelines.length === 0 ? $t('Create new timeline') : $t('Edit timeline') }}
             </div>
         </div>
@@ -94,6 +94,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {usePage} from "@inertiajs/vue3";
 import {can, is} from "laravel-permission-to-vuejs";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
+import {IconChevronDown, IconEdit, IconWand} from "@tabler/icons-vue";
 
 const props = defineProps({
     event: {

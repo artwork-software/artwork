@@ -155,6 +155,7 @@
                                         v-if="is('artwork admin') || headerObject.projectWriteIds.includes(usePage().props.auth.user.id) || headerObject.projectManagerIds.includes(usePage().props.auth.user.id) || can('write projects')"
                                         @click="openEditProjectModal"
                                         title="Edit basic data"
+                                        :icon="IconEdit"
                                     />
                                     <div v-if="project.is_group">
                                         <BaseMenuItem
@@ -172,12 +173,12 @@
                                             title="Create project in this group"
                                         />
                                     </div>
-                                    <BaseMenuItem white-menu-background @click="duplicateProject(this.project)" icon="IconCopy" title="Duplicate" />
+                                    <BaseMenuItem white-menu-background @click="duplicateProject(this.project)" :icon="IconCopy" title="Duplicate" />
                                     <BaseMenuItem
                                         white-menu-background
                                         v-if="headerObject.projectDeleteIds.includes(usePage().props.auth.user.id) || is('artwork admin')"
                                         @click="openDeleteProjectModal(project)"
-                                        icon="IconTrash"
+                                        :icon="IconTrash"
                                         title="Put in the trash"
                                     />
                                 </BaseMenu>
@@ -337,9 +338,9 @@ import {
     IconAlertSquareRounded,
     IconChevronRight,
     IconCirclePlus,
-    IconClipboard,
+    IconClipboard, IconCopy, IconEdit,
     IconLink,
-    IconPrinter,
+    IconPrinter, IconTrash,
     IconX
 } from "@tabler/icons-vue";
 

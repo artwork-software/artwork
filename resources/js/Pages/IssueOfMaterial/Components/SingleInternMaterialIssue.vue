@@ -33,13 +33,13 @@
                 <div class="">
                     <div v-if="!issueOfMaterial?.special_items_done && issueOfMaterial?.special_items?.length > 0">
                         <span class="text-red-500 font-bold">
-                            <component is="IconAlertTriangle" class="size-4 inline-block mr-1" />
+                            <component :is="IconAlertTriangle" class="size-4 inline-block mr-1" />
                             {{ $t('Special items not completed') }}
                         </span>
                     </div>
                     <div v-else>
                         <span class="text-green-500 font-bold">
-                            <component is="IconCheck" class="size-4 inline-block mr-1" />
+                            <component :is="IconCheck" class="size-4 inline-block mr-1" />
                             {{ $t('Completed') }}
                         </span>
                     </div>
@@ -47,9 +47,9 @@
             </div>
             <div class="flex items-center justify-end w-full">
                 <BaseMenu white-menu-background has-no-offset menu-width="w-fit">
-                    <BaseMenuItem white-menu-background title="Edit" @click="showIssueOfMaterialModal = true" />
-                    <BaseMenuItem white-menu-background title="Special items closed" icon="IconCheck" @click="setSpecialItemsDone" v-if="checkIfStatusOrHasAnySpecialItem" />
-                    <BaseMenuItem white-menu-background title="Delete" icon="IconTrash" @click="showIssueOfMaterialConfirmDeleteModal = true" />
+                    <BaseMenuItem white-menu-background title="Edit" :icon="IconEdit" @click="showIssueOfMaterialModal = true" />
+                    <BaseMenuItem white-menu-background title="Special items closed" :icon="IconCheck" @click="setSpecialItemsDone" v-if="checkIfStatusOrHasAnySpecialItem" />
+                    <BaseMenuItem white-menu-background title="Delete" :icon="IconTrash" @click="showIssueOfMaterialConfirmDeleteModal = true" />
                 </BaseMenu>
             </div>
         </div>
@@ -83,6 +83,7 @@ import {computed, ref} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import DetailModalInternMaterialModal from "@/Pages/IssueOfMaterial/Components/DetailModalInternMaterialModal.vue";
+import {IconAlertTriangle, IconCheck, IconEdit, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     issueOfMaterial: {

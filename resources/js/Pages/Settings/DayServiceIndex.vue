@@ -5,11 +5,13 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import AddEditDayServiceModal from "@/Pages/Settings/Components/AddEditDayServiceModal.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import {IconPlus} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "DayServiceIndex",
     mixins: [IconLib],
-    components: {GlassyIconButton, AddEditDayServiceModal, AddButtonSmall, TabComponent, AppLayout},
+    components: {PropertyIcon, GlassyIconButton, AddEditDayServiceModal, AddButtonSmall, TabComponent, AppLayout},
     props: [
         'dayServices'
     ],
@@ -70,6 +72,7 @@ export default {
         }
     },
     methods: {
+        IconPlus,
         closeModal(){
             this.showAddEditDayServiceModal = false;
             this.dayServiceToEdit = null;
@@ -95,7 +98,7 @@ export default {
            <div class="flex items-center justify-between">
                <TabComponent :tabs="tabs" />
 
-               <GlassyIconButton text="New Day Service" icon="IconPlus"@click="showAddEditDayServiceModal = true" />
+               <GlassyIconButton text="New Day Service" :icon="IconPlus"@click="showAddEditDayServiceModal = true" />
            </div>
 
             <div class="my-5 card white p-5" >
@@ -103,7 +106,7 @@ export default {
                     <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-8 mb-3">
                         <div class="col-span-full md:col-span-2 xl:col-span-7">
                             <div class="flex items-center gap-x-1.5">
-                                <Component :is="dayService.icon" stroke-width="1.5" :style="{color: dayService.hex_color}" class="h-8 w-8 cursor-pointer flex items-center text-black" />
+                                <PropertyIcon :name="dayService.icon" stroke-width="1.5" :style="{color: dayService.hex_color}" class="h-8 w-8 cursor-pointer flex items-center text-black" />
                                 <div class="">{{ dayService.name }}</div>
                             </div>
                         </div>

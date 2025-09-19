@@ -89,43 +89,54 @@ readonly class CalendarDataService
      */
     public function getFilteredRooms(UserFilter $filter, $userCalendarSettings, $startDate, $endDate)
     {
-        $rooms = Room::query()
-            ->select(['id','name','temporary','start_date','end_date','position'])
+        $userCalendarFilter = $filter;
+        $rooms = Room::select(['id', 'name', 'temporary', 'start_date', 'end_date'])
             ->where('relevant_for_disposition', true)
-            ->unlessRoomIds($filter?->room_ids)
-            ->unlessRoomAttributeIds($filter?->room_attribute_ids)
-            ->unlessAreaIds($filter?->area_ids)
-            ->unlessRoomCategoryIds($filter?->room_category_ids)
-            ->with([
-                'admins:id', // wir brauchen nur die IDs
-            ])
-            // has_events als EXISTS-Subquery (überlappend im Zeitraum)
-            /*->withExists(['events as has_events' => function (Builder $q) use ($filter, $startDate, $endDate) {
-                $q->when(!empty($filter->event_type_ids), fn($qq) => $qq->whereIn('events.event_type_id', $filter->event_type_ids))
-                    ->where(function ($qq) use ($startDate, $endDate) {
-                        $qq->whereBetween('start_time', [$startDate, $endDate])
-                            ->orWhereBetween('end_time',   [$startDate, $endDate])
-                            ->orWhere(function ($nested) use ($startDate, $endDate) {
-                                $nested->where('start_time', '<=', $startDate)
-                                    ->where('end_time',   '>=', $endDate);
-                            });
-                    });
-            }])
-            // Optional: nur Räume mit Events in Zeitraum
+            ->unlessRoomIds($userCalendarFilter?->room_ids)
+            ->unlessRoomAttributeIds($userCalendarFilter?->room_attribute_ids)
+            ->unlessAreaIds($userCalendarFilter?->area_ids)
+            ->unlessRoomCategoryIds($userCalendarFilter?->room_category_ids)
             ->when(
                 $userCalendarSettings?->hide_unoccupied_rooms,
-                fn($q) => $q->where('has_events', true)
-            )*/
+                function ($query) use ($filter, $startDate, $endDate
+                ): void {
+                    $query->whereExists(function ($eventQuery) use ($filter, $startDate, $endDate): void {
+                        $eventQuery->selectRaw(1)
+                            ->from('events')
+                            ->whereColumn('events.room_id', 'rooms.id')
+                            ->unless(empty($filter->event_type_ids), function ($q) use ($filter): void {
+                                $q->whereIn('events.event_type_id', $filter->event_type_ids);
+                            })
+                            ->where(function ($q) use ($startDate, $endDate): void {
+                                $q->where(function ($q) use ($startDate, $endDate): void {
+                                    $q->whereBetween('start_time', [$startDate, $endDate])
+                                        ->orWhereBetween('end_time', [$startDate, $endDate]);
+                                })->orWhere(function ($q) use ($startDate, $endDate): void {
+                                    $q->where('start_time', '<=', $startDate)
+                                        ->where('end_time', '>=', $endDate);
+                                });
+                            });
+                    });
+                }
+            )
             ->orderBy('position')
-            ->get()
-            // temporäre Räume auf Zeitraum prüfen
-            ->filter(fn($room) => !$room->temporary || $this->datesOverlap($room->start_date, $room->end_date, $startDate, $endDate))
-            ->values();
+            ->get();
 
-        return $rooms->map(fn($room) => new RoomDTO(
+        // Filter out temporary rooms that don't overlap with the displayed time period
+        $filteredRooms = $rooms->filter(function ($room) use ($startDate, $endDate) {
+            // If the room is not temporary, include it
+            if (!$room->temporary) {
+                return true;
+            }
+
+            // If the room is temporary, check if its time period overlaps with the displayed time period
+            return $this->datesOverlap($room->start_date, $room->end_date, $startDate, $endDate);
+        });
+
+        return $filteredRooms->map(fn($room) => new RoomDTO(
             id: $room->id,
             name: $room->name,
-            has_events: (bool)$room->has_events,
+            has_events: $room->events->isNotEmpty(),
             admins: $room->admins->pluck('id')->toArray()
         ));
     }

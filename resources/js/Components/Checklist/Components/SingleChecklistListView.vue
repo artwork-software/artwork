@@ -10,7 +10,7 @@
                         {{ checklist?.name }}
                     </div>
                     <div>
-                        <component is="IconChevronDown" class="h-6 w-6" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
+                        <component :is="IconChevronDown" class="h-6 w-6" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
                     </div>
                 </div>
 

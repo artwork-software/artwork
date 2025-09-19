@@ -12,7 +12,7 @@
                     <ToolTipComponent
                         :tooltip-text="$t('Craft settings')"
                         direction="bottom"
-                        icon="IconLink"
+                        :icon="IconLink"
                         icon-size="h-5 w-5"
                         stroke="1.5"
                         classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
@@ -20,7 +20,7 @@
                     <ToolTipComponent
                         :tooltip-text="$t('Add new category')"
                         direction="bottom"
-                        icon="IconCirclePlus"
+                        :icon="IconCirclePlus"
                         icon-size="h-5 w-5"
                         stroke="1.5"
                         classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"

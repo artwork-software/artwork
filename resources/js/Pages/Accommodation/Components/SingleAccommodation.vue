@@ -20,8 +20,8 @@
     </div>
     <div class="flex items-center">
         <BaseMenu has-no-offset white-menu-background>
-            <BaseMenuItem @click="showCreateOrUpdateModal = true" title="Edit" white-menu-background/>
-            <BaseMenuItem @click="showDeleteModal = true" title="Delete" icon="IconTrash" white-menu-background/>
+            <BaseMenuItem @click="showCreateOrUpdateModal = true" title="Edit" :icon="IconEdit" white-menu-background/>
+            <BaseMenuItem @click="showDeleteModal = true" title="Delete" :icon="IconTrash" white-menu-background/>
         </BaseMenu>
     </div>
 
@@ -49,6 +49,7 @@ import {Link, router} from "@inertiajs/vue3";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {defineAsyncComponent, ref} from "vue";
 import ArtworkBaseDeleteModal from "@/Artwork/Modals/ArtworkBaseDeleteModal.vue";
+import {IconEdit, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     accommodation: {

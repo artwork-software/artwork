@@ -29,7 +29,7 @@
                                 id="start" type="time" class="max-w-28 text-xs"
                                 v-model="person.pivot.end_time"
                             />
-                            <GlassyIconButton text="Save" icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
+                            <GlassyIconButton text="Save" :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
                         </div>
                     </div>
                 </PopoverPanel>
@@ -59,7 +59,7 @@
         </div>
 
         <div class="flex items-center gap-x-1 col-span-1">
-            <component :is="findShiftQualification(person.pivot?.shift_qualification_id)?.icon" class="size-3" />
+            <PropertyIcon :name="findShiftQualification(person.pivot?.shift_qualification_id)?.icon" class="size-3" />
             {{ findShiftQualification(person.pivot?.shift_qualification_id)?.name }}
         </div>
         <div class=" col-span-2">
@@ -125,6 +125,7 @@ import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTim
 import {computed, ref} from "vue";
 import {IconDeviceFloppy, IconNote, IconX} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     person: {

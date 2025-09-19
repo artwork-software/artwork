@@ -7,7 +7,7 @@
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
             <div v-if="event.considerOnMultiEdit" class="flex items-center h-full justify-center align-middle">
                 <div class="bg-white rounded-lg">
-                    <component is="IconSquareCheckFilled" class="size-6 text-green-500" />
+                    <component :is="IconSquareCheckFilled" class="size-6 text-green-500" />
                 </div>
             </div>
             <div class="justify-center items-center h-full gap-2 hidden">
@@ -260,7 +260,7 @@
             <Popover class="relative">
                 <Float auto-placement portal :offset="{  5 : -10}">
                     <PopoverButton class="flex items-center justify-start gap-1 ring-0 focus:ring-0">
-                        <component is="IconInfoCircle" class="size-6 " stroke-width="1.5"/>
+                        <component :is="IconInfoCircle" class="size-6 " stroke-width="1.5"/>
                         <div class="w-16 max-w-16 xsDark text-left" v-if="zoom_factor > 0.4">
                             <div v-if="usePage().props.auth.user.calendar_settings.event_name && event.eventName" class="truncate">
                                 {{ event.eventName }}
@@ -596,10 +596,10 @@ import {Link, router, usePage} from "@inertiajs/vue3";
 import {
     IconChecks,
     IconCirclePlus, IconCircleX, IconClock,
-    IconEdit,
+    IconEdit, IconInfoCircle,
     IconLock,
     IconLockOpen,
-    IconRepeat,
+    IconRepeat, IconSquareCheckFilled,
     IconTrash,
     IconUsersGroup,
     IconX

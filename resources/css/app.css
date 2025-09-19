@@ -748,7 +748,7 @@
     .ui-checkbox-amber { @apply text-amber-600 focus:ring-amber-500; }
 
     /* Project Chip */
-    .ui-project-chip { @apply flex items-center justify-between gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2; }
+    .ui-project-chip { @apply flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2; }
     .ui-project-link { @apply inline-block max-w-[28rem] truncate text-indigo-600 hover:underline; }
 
 

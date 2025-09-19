@@ -45,6 +45,8 @@
                             :use-translations="false"
                             :button-class="uiLbBtn"
                             :options-class="uiLbOpts"
+                            :show-color-indicator="true"
+                            color-property="hex_code"
                         />
                         <ArtworkBaseListbox
                             v-if="statusModule"
@@ -57,25 +59,9 @@
                             :use-translations="false"
                             :button-class="uiLbBtn"
                             :options-class="uiLbOpts"
+                            :show-color-indicator="true"
+                            color-property="color"
                         >
-                            <template #button="{ selected, placeholder }">
-                                <div class="ui-lb-trigger">
-                                    <div class="ui-lb-trigger-text">
-                                        <div class="ui-lb-label">{{ $t('Event Status') }}</div>
-                                        <div class="ui-lb-value">
-                                            <span v-if="selected" class="inline-block size-2.5 rounded-full" :style="{ backgroundColor: selected?.color }" />
-                                            <span class="truncate">{{ selected ? selected?.name : placeholder }}</span>
-                                        </div>
-                                    </div>
-                                    <IconChevronUp class="ui-lb-icon" />
-                                </div>
-                            </template>
-                            <template #option="{ item, selected }">
-                                <div class="flex items-center gap-2">
-                                    <span class="inline-block size-2 rounded-full" :style="{ backgroundColor: item.color }" />
-                                    <span :class="selected ? 'font-medium' : ''" class="truncate">{{ item.name }}</span>
-                                </div>
-                            </template>
                         </ArtworkBaseListbox>
 
                         <BaseInput
@@ -196,9 +182,9 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto]">
-                        <RoomSearch :label="$t('Search for Rooms')" @room-selected="onRoomSelected" />
+                        <RoomSearch v-if="!selectedRoom" :label="$t('Search for Rooms')" @room-selected="onRoomSelected" />
                         <div v-if="selectedRoom"
-                            class="flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-[13px]"
+                             class="flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-4 xsDark"
                         >
                             <span class="truncate">{{ selectedRoom.name }}</span>
                             <button class="ml-0.5 text-zinc-400 transition hover:text-rose-600" @click="selectedRoom = null" type="button">
@@ -238,12 +224,9 @@
                                     >
                                         {{ selectedProject?.name }}
                                     </a>
-                                    <span v-else class="truncate text-zinc-800">{{ selectedProject?.name }}</span>
+                                    <span v-else class="truncate xsDark text-zinc-800">{{ selectedProject?.name }}</span>
                                 </div>
                                 <div class="flex items-center gap-1.5 shrink-0">
-                                    <button type="button" class="ui-link-btn" @click="editingExisting()">
-                                        {{ $t('Change') }}
-                                    </button>
                                     <button type="button" class="ui-icon-btn" @click="removeProject" :aria-label="$t('Remove project')">
                                         <IconCircleX class="size-4" />
                                     </button>
@@ -610,6 +593,7 @@ const roomCollisionArray = ref(props.roomCollisions ?? {})
 const helpTextLengthRoom = ref('')
 const initialRoomId = ref(null)
 const showRejections = ref(false)
+const isLoading = ref(false)
 
 const bookingOptions = [{ name: 'Option 1' }, { name: 'Option 2' }, { name: 'Option 3' }, { name: 'Option 4' }]
 
@@ -651,11 +635,11 @@ const canCreateDirect = computed(
 )
 
 const isPrimaryDisabled = computed(() => {
-    const invalidSeries = series.value && (!seriesEndDate.value || (endDate.value && seriesEndDate.value && endDate.value > seriesEndDate.value))
+    const invalidSeries = series.value && (!seriesEndDate.value || !selectedFrequency.value || (endDate.value && seriesEndDate.value && endDate.value > seriesEndDate.value))
     const missingRoom = !selectedRoom.value
     const missingSubmit = !submit.value
     const needDecision = props.event?.occupancy_option && accept.value === false && optionAccept.value === false && adminComment.value === ''
-    return missingRoom || missingSubmit || invalidSeries || needDecision
+    return missingRoom || missingSubmit || invalidSeries || needDecision || isLoading.value
 })
 const primaryButtonText = computed(() => {
     if (!props.event?.occupancy_option) return $t('Save')
@@ -665,8 +649,8 @@ const primaryButtonText = computed(() => {
     return $t('Save')
 })
 const requestDisabled = computed(() => {
-    const invalidSeries = series.value && (!seriesEndDate.value || (endDate.value && seriesEndDate.value && endDate.value > seriesEndDate.value))
-    if (!selectedRoom.value || !submit.value || invalidSeries) return true
+    const invalidSeries = series.value && (!seriesEndDate.value || !selectedFrequency.value || (endDate.value && seriesEndDate.value && endDate.value > seriesEndDate.value))
+    if (!selectedRoom.value || !submit.value || invalidSeries || isLoading.value) return true
     if (!can('request room occupancy') && !props.isPlanning) return true
     if (!can('can see planning calendar') && props.isPlanning) return true
     return false
@@ -880,9 +864,9 @@ function checkChanges() {
 }
 
 const uiLbBtn =
-    'menu-button bg-white focus:outline-none focus:ring-0 w-full text-left rounded-md border border-zinc-200 shadow-sm px-3 py-2 h-10 text-[13px] text-zinc-900';
+    'menu-button bg-white focus:outline-none focus:ring-0 w-full text-left rounded-md border border-zinc-200 shadow-sm px-3 py-4 h-13 xsDark text-zinc-900';
 const uiLbOpts =
-    'absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-[13px] ring-1 shadow-lg ring-black/5 focus:outline-none';
+    'absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 xsDark ring-1 shadow-lg ring-black/5 focus:outline-none';
 
 function toggleAccept(type) {
     if (type === 'option') {
@@ -944,6 +928,7 @@ function payload() {
     }
 }
 async function updateOrCreateEvent(isOptionParam = false) {
+    isLoading.value = true
     isOption.value = isOptionParam
 
     if (allDayEvent.value) {
@@ -964,15 +949,27 @@ async function updateOrCreateEvent(isOptionParam = false) {
             router.post(route('events.store'), data, {
                 preserveScroll: true,
                 preserveState: (pg) => typeof pg?.component === 'undefined',
-                onSuccess: () => closeModal(true),
-                onError: (resp) => (error.value = resp),
+                onSuccess: () => {
+                    isLoading.value = false
+                    closeModal(true)
+                },
+                onError: (resp) => {
+                    isLoading.value = false
+                    error.value = resp
+                },
             })
         } else {
             router.put(route('events.update', { event: props.event.id }), data, {
                 preserveScroll: true,
                 preserveState: (pg) => typeof pg?.component === 'undefined',
-                onSuccess: () => closeModal(true),
-                onError: (resp) => (error.value = resp),
+                onSuccess: () => {
+                    isLoading.value = false
+                    closeModal(true)
+                },
+                onError: (resp) => {
+                    isLoading.value = false
+                    error.value = resp
+                },
             })
         }
         return
@@ -981,27 +978,35 @@ async function updateOrCreateEvent(isOptionParam = false) {
     try {
         if (!props.event?.id) await axios.post('/events', data)
         else await axios.put(`/events/${props.event.id}`, data)
+        isLoading.value = false
         closeModal(true)
     } catch (e) {
+        isLoading.value = false
         error.value = e?.response?.data?.errors ?? e
     }
 }
 async function singleSaveEvent() {
+    isLoading.value = true
     try {
         await axios.put(`/events/${props.event?.id}`, payload())
+        isLoading.value = false
         closeModal(true)
         closeSeriesEditModal()
     } catch (e) {
+        isLoading.value = false
         error.value = e?.response?.data?.errors ?? e
     }
 }
 async function saveAllSeriesEvents() {
+    isLoading.value = true
     allSeriesEvents.value = true
     try {
         await axios.put(`/events/${props.event?.id}`, payload())
+        isLoading.value = false
         closeModal(true)
         closeSeriesEditModal()
     } catch (e) {
+        isLoading.value = false
         error.value = e?.response?.data?.errors ?? e
     }
 }
@@ -1013,8 +1018,15 @@ async function afterConfirm(confirmed) {
         deleteComponentVisible.value = false
         return
     }
-    await axios.delete(`/events/${props.event.id}`)
-    closeModal(true)
+    isLoading.value = true
+    try {
+        await axios.delete(`/events/${props.event.id}`)
+        isLoading.value = false
+        closeModal(true)
+    } catch (e) {
+        isLoading.value = false
+        error.value = e?.response?.data?.errors ?? e
+    }
 }
 
 // neue lokale UI-States/Methoden
@@ -1042,14 +1054,6 @@ function switchToNew() {
     creatingProject.value = true
     selectedProject.value = null // wichtig: kein bestehendes Projekt aktiv
     nextTick(() => projectNameRef.value?.focus?.())
-}
-
-// „Ändern“ aus der Chip-Ansicht → zurück in die Suche
-function editingExisting() {
-    creatingProject.value = false
-    // Chip verstecken -> Suche wieder zeigen (weil selectedProject vorhanden ist, Chip würde sonst bleiben)
-    selectedProject.value = null
-    nextTick(() => projectSearchRef.value?.focus?.())
 }
 
 // Entfernen

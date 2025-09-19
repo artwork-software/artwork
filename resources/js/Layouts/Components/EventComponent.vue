@@ -23,7 +23,6 @@
                     />
                 </div>
             </div>
-
             <!-- EDIT MODE -->
             <div v-if="canEdit" class="space-y-4">
 
@@ -127,7 +126,6 @@
                         <p class="ui-error" v-if="errorMsg('start')" v-html="errorMsg('start')" />
                         <p class="ui-error" v-if="errorMsg('end')" v-html="errorMsg('end')" />
                     </div>
-
                     <p v-if="helpTextLengthRoom" class="ui-error mt-1">{{ helpTextLengthRoom }}</p>
                 </section>
 

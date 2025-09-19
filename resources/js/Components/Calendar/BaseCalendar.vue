@@ -251,6 +251,7 @@
             </div>
         </div>
 
+
         <!-- Modals -->
         <AsyncEventComponent
             v-if="showEventComponent"

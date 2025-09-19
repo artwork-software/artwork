@@ -3059,6 +3059,8 @@
     "Add or edit working hours for the user": "Arbeitszeiten für die Nutzer*in hinzufügen oder bearbeiten",
     "Please select a valid date.": "Bitte wähle ein gültiges Datum.",
     "Disable Notifications": "Benachrichtigungen deaktivieren",
-    "Enable Notifications": "Benachrichtigungen aktivieren"
+    "Enable Notifications": "Benachrichtigungen aktivieren",
+    "Sort by": "Sortieren nach",
+    "Only mine": "Nur meine"
 }
 

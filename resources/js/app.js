@@ -1,72 +1,63 @@
-import './bootstrap';
-import '../css/app.css';
-import '../css/global.css';
+// resources/js/app.js
+import './bootstrap'
+import '../css/app.css'
+import '../css/global.css'
 
-import {createApp, h} from 'vue';
-import {createInertiaApp} from '@inertiajs/vue3';
+import { createApp, h } from 'vue'
+import { createInertiaApp } from '@inertiajs/vue3'
+import { createI18n } from 'vue-i18n'
 import LaravelPermissionToVueJS from 'laravel-permission-to-vuejs'
-import VueMathjax from 'vue-mathjax-next';
-import * as VueI18n from 'vue-i18n';
+import PrimeVue from 'primevue/config'
+import Aura from '@primeuix/themes/aura'
+import Tooltip from 'primevue/tooltip'
 
-import en from '../../lang/en.json';
-import de from '../../lang/de.json';
-import Icons from "@/icons.js";
-import PrimeVue from 'primevue/config';
-import Aura from '@primeuix/themes/aura';
-import Tooltip from 'primevue/tooltip';
-
-const messages = {
-    en: en,
-    de: de
-};
+import en from '../../lang/en.json'
+import de from '../../lang/de.json'
 
 
-const i18n = VueI18n.createI18n({
-    legacy: false, // Verwende die Composition API
-    locale: document.documentElement.lang || 'de', // Standard-Sprache
-    fallbackLocale: 'en', // Fallback-Sprache
-    messages,
-    missingWarn: false, // Deaktiviert Warnungen für fehlende Schlüssel
-    fallbackWarn: false, // Deaktiviert Warnungen für Fallback-Schlüssel
-    missing: (locale, key) => {
-        // Gibt den Schlüssel zurück, wenn keine Übersetzung gefunden wurde
-        return key;
-    },
-});
-const pages = import.meta.glob('./Pages/**/*.vue');
+const i18n = createI18n({
+    legacy: false,
+    globalInjection: true,
+    locale: localStorage.getItem('locale') || document.documentElement.lang || 'de',
+    fallbackLocale: 'en',
+    messages: { en, de },
+    missingWarn: false,
+    fallbackWarn: false,
+    missing: (_l, key) => key,
+})
+
+const pages = import.meta.glob('./Pages/**/*.vue')
 
 createInertiaApp({
     title: (title) => `${title}`,
     resolve: (name) => {
-        const pages = import.meta.glob('./Pages/**/*.vue')
-        return pages[`./Pages/${name}.vue`]();
+        const page = pages[`./Pages/${name}.vue`]
+        if (!page) throw new Error(`Page not found: ${name}`)
+        return page()
     },
-    setup({ el, App: inertiaApp, props, plugin }) {
-        const app = createApp({ render: () => h(inertiaApp, props) })
-            .use(plugin)
-            .mixin({ methods: { route }});
-        app.use(VueMathjax);
-        app.use(i18n);
-        app.use(Icons);
+    setup({el, App: InertiaRoot, props, plugin}) {
+        const app = createApp({render: () => h(InertiaRoot, props)})
+        app.use(plugin)
+        if (typeof route !== 'undefined') app.mixin({methods: {route}})
+
+        app.use(i18n)
         app.use(PrimeVue, {
-            theme: {
-                preset: Aura,
-                options: {
-                    darkModeSelector: '.fake-dark-selector', // trying to also force a non-usage of the dark mode
-                },
-            },
-        });
-        app.use(LaravelPermissionToVueJS);
-        app.directive('tooltip', Tooltip);
-        app.mount(el);
-        app.config.globalProperties.$updateLocale = function (newLocale) {
-            this.$i18n.locale = newLocale;
-            document.documentElement.lang = newLocale;
-        };
+            theme: {preset: Aura, options: {darkModeSelector: '.fake-dark-selector'}},
+            ripple: true,
+        })
+        app.directive('tooltip', Tooltip)
+        //app.use(VueMathjax)
+        app.use(LaravelPermissionToVueJS)
+
+
+        app.config.globalProperties.$updateLocale = (newLocale) => {
+            i18n.global.locale.value = newLocale
+            document.documentElement.lang = newLocale
+            localStorage.setItem('locale', newLocale)
+        }
+
+        if (import.meta.env.DEV) app.config.performance = true
+        app.mount(el)
     },
-    progress: {
-        color: '#3017AD',
-        showSpinner: true,
-        includeCss: true,
-    },
-});
+    progress: {color: '#3017AD', showSpinner: false, includeCss: true},
+}).then(r => {})

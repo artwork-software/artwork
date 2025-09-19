@@ -224,7 +224,7 @@
                                             role="status"
                                             aria-live="polite"
                                         >
-                                        <component is="IconLayoutGrid" class="h-3.5 w-3.5 opacity-75"
+                                        <component :is="IconLayoutGrid" class="h-3.5 w-3.5 opacity-75"
                                                    stroke-width="1.75" aria-hidden="true"/>
                                         <span class="tabular-nums">
                                           {{ area.rooms?.filter(r => !r.temporary).length || 0 }}
@@ -263,13 +263,13 @@
                                 <!-- Aktionen Bereich -->
                                 <div class="ml-auto">
                                     <BaseMenu white-menu-background has-no-offset>
-                                        <BaseMenuItem icon="IconEdit" title="Edit" white-menu-background
+                                        <BaseMenuItem :icon="IconEdit" title="Edit" white-menu-background
                                                       @click="openEditAreaModal(area)"/>
-                                        <BaseMenuItem icon="IconCopy" title="Duplicate" white-menu-background
+                                        <BaseMenuItem :icon="IconCopy" title="Duplicate" white-menu-background
                                                       @click="duplicateArea(area)"/>
-                                        <BaseMenuItem icon="IconRecycle" title="Remove all rooms" white-menu-background
+                                        <BaseMenuItem :icon="IconRecycle" title="Remove all rooms" white-menu-background
                                                       @click="openDeleteAllRoomsModal(area)"/>
-                                        <BaseMenuItem icon="IconTrash" title="In the recycle bin" white-menu-background
+                                        <BaseMenuItem :icon="IconTrash" title="In the recycle bin" white-menu-background
                                                       @click="openSoftDeleteAreaModal(area)"/>
                                     </BaseMenu>
                                 </div>
@@ -362,13 +362,13 @@
 
                                                                 <!-- Mehr (Kontextmenü) -->
                                                                 <BaseMenu white-menu-background has-no-offset>
-                                                                    <BaseMenuItem icon="IconEdit" title="Edit"
+                                                                    <BaseMenuItem :icon="IconEdit" title="Edit"
                                                                                   white-menu-background
                                                                                   @click="openEditRoomModal(element)"/>
-                                                                    <BaseMenuItem icon="IconCopy" title="Duplicate"
+                                                                    <BaseMenuItem :icon="IconCopy" title="Duplicate"
                                                                                   white-menu-background
                                                                                   @click="duplicateRoom(element)"/>
-                                                                    <BaseMenuItem icon="IconTrash"
+                                                                    <BaseMenuItem :icon="IconTrash"
                                                                                   title="In the recycle bin"
                                                                                   white-menu-background
                                                                                   @click="openSoftDeleteRoomModal(element)"/>
@@ -467,7 +467,7 @@
                                                                         <div
                                                                             class="mt-2 flex flex-wrap items-center gap-2 text-[11px] leading-tight text-amber-800/90">
                                                                           <span class="inline-flex items-center gap-1">
-                                                                            <component is="IconClock"
+                                                                            <component :is="IconClock"
                                                                                        class="h-3.5 w-3.5"
                                                                                        stroke-width="1.5"/>
                                                                             {{
@@ -507,14 +507,14 @@
 
                                                                         <!-- Kontextmenü -->
                                                                         <BaseMenu white-menu-background has-no-offset>
-                                                                            <BaseMenuItem icon="IconEdit" title="Edit"
+                                                                            <BaseMenuItem :icon="IconEdit" title="Edit"
                                                                                           white-menu-background
                                                                                           @click="openEditRoomModal(element)"/>
-                                                                            <BaseMenuItem icon="IconCopy"
+                                                                            <BaseMenuItem :icon="IconCopy"
                                                                                           title="Duplicate"
                                                                                           white-menu-background
                                                                                           @click="duplicateRoom(element)"/>
-                                                                            <BaseMenuItem icon="IconTrash"
+                                                                            <BaseMenuItem :icon="IconTrash"
                                                                                           title="In the recycle bin"
                                                                                           white-menu-background
                                                                                           @click="openSoftDeleteRoomModal(element)"/>
@@ -1156,6 +1156,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import {IconClock, IconCopy, IconEdit, IconLayoutGrid, IconRecycle, IconTrash} from "@tabler/icons-vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
@@ -1301,6 +1302,12 @@ export default defineComponent({
         }
     },
     methods: {
+        IconTrash,
+        IconRecycle,
+        IconCopy,
+        IconEdit,
+        IconClock,
+        IconLayoutGrid,
         afterSoftDeleteAllRoomsConfirm(confirmed) {
             if (confirmed) {
                 this.softDeleteAllRooms()

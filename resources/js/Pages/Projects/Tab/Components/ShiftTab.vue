@@ -91,7 +91,7 @@
                             ref="userWindowButton"
                             @click="openUserWindow"
                         >
-                            <ToolTipComponent icon="IconUsers" :tooltip-text="$t('Users')" direction="left" :stroke="1.5" />
+                            <ToolTipComponent :icon="IconUsers" :tooltip-text="$t('Users')" direction="left" :stroke="1.5" />
                         </div>
                     </div>
                 </div>
@@ -315,7 +315,7 @@ import SingleRelevantEvent from '@/Pages/Projects/Components/SingleRelevantEvent
 import { useSortEnumTranslation } from '@/Composeables/SortEnumTranslation.js'
 
 
-import { IconFilter, IconSearch, IconX, IconCheck, IconChevronDown, IconChevronUp } from '@tabler/icons-vue'
+import {IconFilter, IconSearch, IconX, IconCheck, IconChevronDown, IconChevronUp, IconUsers} from '@tabler/icons-vue'
 
 defineOptions({ name: 'ShiftTab' })
 

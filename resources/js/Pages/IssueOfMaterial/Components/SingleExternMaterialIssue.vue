@@ -28,13 +28,13 @@
                 <div class="">
                     <div v-if="!externMaterialIssue?.special_items_done && externMaterialIssue?.special_items?.length > 0">
                         <span class="text-red-500 font-bold">
-                            <component is="IconAlertTriangle" class="size-4 inline-block mr-1" />
+                            <component :is="IconAlertTriangle" class="size-4 inline-block mr-1" />
                             {{ $t('Special items not completed') }}
                         </span>
                     </div>
                     <div v-else>
                         <span class="text-green-500 font-bold">
-                            <component is="IconCheck" class="size-4 inline-block mr-1" />
+                            <component :is="IconCheck" class="size-4 inline-block mr-1" />
                             {{ $t('Completed') }}
                         </span>
                     </div>
@@ -42,13 +42,13 @@
             </div>
             <div class="flex items-center justify-end w-full gap-x-3">
                 <div class="cursor-pointer">
-                    <component is="IconPrinter" class="size-5 mr-2" stroke-width="1.5" @click="printExternal()" />
+                    <component :is="IconPrinter" class="size-5 mr-2" stroke-width="1.5" @click="printExternal()" />
                 </div>
                 <BaseMenu white-menu-background has-no-offset menu-width="w-fit">
-                    <BaseMenuItem white-menu-background title="Edit" @click="showIssueOfMaterialModal = true" />
-                    <BaseMenuItem white-menu-background title="Enter return" icon="IconReceiptRefund" @click="showEnterExternalIssueReturnModal = true" v-if="!externMaterialIssue.received_by" />
-                    <BaseMenuItem white-menu-background title="Special items closed" icon="IconCheck" @click="setSpecialItemsDone" v-if="checkIfStatusOrHasAnySpecialItem" />
-                    <BaseMenuItem white-menu-background title="Delete" icon="IconTrash" @click="showIssueOfMaterialConfirmDeleteModal = true" />
+                    <BaseMenuItem white-menu-background title="Edit" :icon="IconEdit" @click="showIssueOfMaterialModal = true" />
+                    <BaseMenuItem white-menu-background title="Enter return" :icon="IconReceiptRefund" @click="showEnterExternalIssueReturnModal = true" v-if="!externMaterialIssue.received_by" />
+                    <BaseMenuItem white-menu-background title="Special items closed" :icon="IconCheck" @click="setSpecialItemsDone" v-if="checkIfStatusOrHasAnySpecialItem" />
+                    <BaseMenuItem white-menu-background title="Delete" :icon="IconTrash" @click="showIssueOfMaterialConfirmDeleteModal = true" />
                 </BaseMenu>
             </div>
         </div>
@@ -91,6 +91,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import EnterExternalIssueReturnModal from "@/Pages/IssueOfMaterial/Components/EnterExternalIssueReturnModal.vue";
 import ExternalMaterialIssueDetailModal from "@/Pages/IssueOfMaterial/Components/ExternalMaterialIssueDetailModal.vue";
+import {IconAlertTriangle, IconCheck, IconEdit, IconPrinter, IconReceiptRefund, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     externMaterialIssue: {

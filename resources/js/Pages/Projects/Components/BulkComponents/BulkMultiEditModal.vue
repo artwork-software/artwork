@@ -12,7 +12,7 @@
             <div class="rounded-md bg-red-50 p-4">
                 <div class="flex">
                     <div class="shrink-0">
-                        <component is="IconMoodWrrr" class="size-5 text-red-400" aria-hidden="true"/>
+                        <component :is="IconMoodWrrr" class="size-5 text-red-400" aria-hidden="true"/>
                     </div>
                     <div class="ml-3 flex-1 md:flex md:justify-between">
                         <p class="text-sm text-red-700">
@@ -214,7 +214,7 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {useForm, usePage} from "@inertiajs/vue3";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {IconChevronDown, IconCheck, IconAlertCircle} from "@tabler/icons-vue";
+import {IconChevronDown, IconCheck, IconAlertCircle, IconMoodWrrr} from "@tabler/icons-vue";
 import {onMounted, ref} from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

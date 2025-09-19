@@ -46,7 +46,7 @@
             </div>
             <div class="w-[175px] h-[175px] flex items-center justify-center border-2 border-dashed rounded-lg group hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out cursor-pointer"
                  @click="showAddShiftPresetModal = true">
-                <component is="IconCircleDashedPlus" class="h-6 w-6 rounded-full text-gray-300 group-hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="2"/>
+                <component :is="IconCircleDashedPlus" class="h-6 w-6 rounded-full text-gray-300 group-hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="2"/>
             </div>
         </div>
     </div>
@@ -89,6 +89,7 @@ import AddEditShiftPresetModal from "@/Pages/Shifts/Components/AddEditShiftPrese
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import {IconCircleDashedPlus} from "@tabler/icons-vue";
 
 export default defineComponent({
     name: "SingleShiftPreset",
@@ -129,6 +130,7 @@ export default defineComponent({
         }
     },
     methods: {
+        IconCircleDashedPlus,
         deletePreset(){
             this.$inertia.delete(route('destroy.shift.preset', {shiftPreset: this.preset.id}), {
                 preserveScroll: true,

@@ -73,7 +73,7 @@
                 </div>
 
                 <ToolTipComponent
-                    icon="IconCircuitCapacitorPolarized"
+                    :icon="IconCircuitCapacitorPolarized"
                     icon-size="h-7 w-7"
                     :tooltip-text="$t('Customize column size')"
                     direction="bottom"
@@ -81,14 +81,14 @@
                     :class="!hasCreateEventsPermission ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
                 />
                 <ToolTipComponent
-                    icon="IconFileExport"
+                    :icon="IconFileExport"
                     icon-size="h-7 w-7"
                     :tooltip-text="$t('Export project list')"
                     direction="bottom"
                     @click="showExportModal = true"
                 />
                 <ToolTipComponent
-                    icon="IconCalendarMonth"
+                    :icon="IconCalendarMonth"
                     icon-size="h-7 w-7"
                     :tooltip-text="$t('Show project period in calendar')"
                     direction="bottom"
@@ -308,7 +308,13 @@
 <script setup>
 import BulkSingleEvent from "@/Pages/Projects/Components/BulkComponents/BulkSingleEvent.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import { IconCheck, IconCirclePlus } from "@tabler/icons-vue";
+import {
+    IconCalendarMonth,
+    IconCheck,
+    IconCirclePlus,
+    IconCircuitCapacitorPolarized,
+    IconFileExport
+} from "@tabler/icons-vue";
 import BulkHeader from "@/Pages/Projects/Components/BulkComponents/BulkHeader.vue";
 import {onMounted, ref, watch, provide, computed} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
@@ -667,8 +673,6 @@ const createCopyByEventWithData = (event) => {
             isNew: true,
             is_planning: isPlanningEvent.value,
         };
-
-        events.value.push(clone);
         createdEvents.push(clone);
     }
 
@@ -676,7 +680,8 @@ const createCopyByEventWithData = (event) => {
     event.copyCount = 1;
     event.copyType = copyTypes.value[0];
 
-    if (!props.isInModal) {
+    // Only send request if we have events to create
+    if (createdEvents.length > 0 && !props.isInModal) {
         /*router.post(route('events.bulk.store', {project: props.project}), { events: createdEvents }, {
             preserveState: false,
             preserveScroll: true,

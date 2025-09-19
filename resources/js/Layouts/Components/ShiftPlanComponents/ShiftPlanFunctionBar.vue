@@ -41,11 +41,11 @@
                         <Menu as="div" class="relative inline-block text-left">
                             <div class="flex items-center">
                                 <MenuButton class="">
-                                    <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
+                                    <component :is="IconCalendarMonth" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
                                                        v-if="userGotoMode === 'month'"/>
-                                    <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
+                                    <component :is="IconCalendarWeek" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
                                                       v-if="userGotoMode === 'week'"/>
-                                    <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
+                                    <component :is="IconCalendar" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
                                                   v-if="userGotoMode === 'day'"/>
                                 </MenuButton>
                             </div>
@@ -65,7 +65,7 @@
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Day')"
-                                                    icon="IconCalendar"
+                                                    :icon="IconCalendar"
                                                     icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
@@ -75,7 +75,7 @@
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')"
-                                                    icon="IconCalendarWeek"
+                                                    :icon="IconCalendarWeek"
                                                     icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
@@ -85,7 +85,7 @@
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Month')"
-                                                    icon="IconCalendarMonth"
+                                                    :icon="IconCalendarMonth"
                                                     icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
@@ -155,13 +155,13 @@
                     <span
                         :class="[isCalendarUsingProjectTimePeriod ? 'opacity-0 duration-100 ease-out pointer-events-none' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                         aria-hidden="true">
-                        <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry"
+                        <ToolTipComponent icon-size="w-4 h-4" direction="bottom" :icon="IconGeometry"
                                           :tooltip-text="$t('Project search')" stroke="1.5"/>
                     </span>
                     <span
                         :class="[isCalendarUsingProjectTimePeriod ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out pointer-events-none', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                         aria-hidden="true">
-                        <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry"
+                        <ToolTipComponent icon-size="w-4 h-4" direction="bottom" :icon="IconGeometry"
                                           :tooltip-text="$t('Project search')" stroke="1.5"/>
                     </span>
                 </span>
@@ -194,12 +194,12 @@
                     />
 
                     <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
-                                      :tooltip-text="$t('Lock all shifts')" icon="IconCalendarCheck" icon-size="h-7 w-7"
+                                      :tooltip-text="$t('Lock all shifts')" :icon="IconCalendarCheck" icon-size="h-7 w-7"
                                       @click="commitAllShifts()"/>
 
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory"
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" :icon="IconHistory"
                                       icon-size="h-7 w-7" @click="openHistoryModal()"/>
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal"
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" :icon="IconArrowsDiagonal"
                                       icon-size="h-7 w-7" v-if="!isFullscreen" @click="enterFullscreenMode"/>
                     <!--<ShiftPlanFilter
                         :filter-options="filterOptions"
@@ -258,7 +258,7 @@ import {
     IconCalendarWeek,
     IconCalendar,
     IconChevronRight,
-    IconChevronRightPipe,
+    IconChevronRightPipe, IconGeometry, IconArrowsDiagonal, IconHistory, IconCalendarCheck,
 } from "@tabler/icons-vue";
 
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";

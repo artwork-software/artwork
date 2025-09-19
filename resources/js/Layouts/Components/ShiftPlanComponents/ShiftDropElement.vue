@@ -33,7 +33,7 @@
                     <div v-else-if="room" class="truncate">
                         , {{ room?.name }}
                     </div>
-                    <component is="IconLock" class="text-right h-3 w-3" v-if="shift.isCommitted" />
+                    <component :is="IconLock" class="text-right h-3 w-3" v-if="shift.isCommitted" />
                 </div>
             </div>
         </div>
@@ -80,6 +80,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import axios from "axios";
 import Permissions from "@/Mixins/Permissions.vue";
 import {usePage} from "@inertiajs/vue3";
+import {IconLock} from "@tabler/icons-vue";
 
 
 export default defineComponent({
@@ -219,6 +220,7 @@ export default defineComponent({
         },
     },
     methods: {
+        IconLock,
         handleClickEvent() {
             if (this.multiEditMode) {
                 return;

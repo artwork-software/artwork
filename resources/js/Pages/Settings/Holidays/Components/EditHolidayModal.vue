@@ -21,7 +21,7 @@
                                     {{ $t('Select federal states') }}
                                 </div>
                                 <div>
-                                    <component is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
+                                    <component :is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
                                 </div>
                             </div>
                         </ListboxButton>
@@ -32,7 +32,7 @@
                                         <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ subdivision.name }}</span>
 
                                         <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                            <component is="IconCheck" class="h-5 w-5" aria-hidden="true" />
+                                            <component :is="IconCheck" class="h-5 w-5" aria-hidden="true" />
                                         </span>
                                     </li>
                                 </ListboxOption>
@@ -114,6 +114,7 @@ import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue"
 import {useForm} from "@inertiajs/vue3";
 import {computed, ref} from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 
 const props = defineProps({
     holidayToEdit: {

@@ -14,7 +14,7 @@
         />
         <div v-if="this.modelValue?.length > 0" class="absolute right-1 top-0 bottom-0 flex items-center pr-2">
             <button @click="this.$emit('update:modelValue', '')" class="text-gray-500 hover:text-artwork-buttons-create">
-                <component is="IconX" class="size-4" />
+                <component :is="IconX" class="size-4" />
             </button>
         </div>
         <PlaceholderLabel :for="this.id" :label="this.label" v-if="showLabel" :is-small="isSmall"/>
@@ -25,8 +25,10 @@
 import {defineComponent} from "vue";
 import PlaceholderInputLabelContainer from "@/Components/Inputs/Container/PlaceholderInputLabelContainer.vue";
 import PlaceholderLabel from "@/Components/Inputs/Labels/PlaceholderLabel.vue";
+import {IconX} from "@tabler/icons-vue";
 
 export default defineComponent({
+    methods: {IconX},
     components: {PlaceholderLabel, PlaceholderInputLabelContainer},
     props: {
         id: {

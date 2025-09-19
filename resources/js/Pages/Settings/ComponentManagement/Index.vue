@@ -12,7 +12,7 @@
                 <div class="flex items-center justify-end w-full mb-3">
                     <div class="flex items-center gap-x-5">
                         <div>
-                            <GlassyIconButton icon="IconPlus" @click="showAddNewComponentModal = true" :text="$t('Create a new component')"/>
+                            <GlassyIconButton :icon="IconPlus" @click="showAddNewComponentModal = true" :text="$t('Create a new component')"/>
                         </div>
                         <div class="w-44 md:w-56 lg:w-72">
                             <div>
@@ -66,9 +66,11 @@ import ComponentModal from "@/Pages/Settings/ComponentManagement/Components/Comp
 import DropComponentsToolTip from "@/Components/ToolTips/DropComponentsToolTip.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import {IconPlus} from "@tabler/icons-vue";
 
 export default {
     name: "Index",
+    methods: {IconPlus},
     components: {
         BaseInput,
         GlassyIconButton,

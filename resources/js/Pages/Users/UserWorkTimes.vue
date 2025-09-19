@@ -9,7 +9,7 @@
             </div>
 
             <div>
-                <GlassyIconButton text="Arbeitszeit Buchen" icon="IconAlarmPlus" @click="showWorkingTimePostEntryModal = true" />
+                <GlassyIconButton text="Arbeitszeit Buchen" :icon="IconAlarmPlus" @click="showWorkingTimePostEntryModal = true" />
             </div>
         </div>
         <div class="flex items-center justify-between mb-5">
@@ -164,6 +164,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {router} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import WorkTimeTimerComponent from "@/Pages/Users/Components/WorkTimeTimerComponent.vue";
+import {IconAlarmPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     userToEdit: {

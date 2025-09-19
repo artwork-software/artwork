@@ -6,12 +6,12 @@
                     <h3 class="headline3">{{ layout.name }}</h3>
                     <p class="xsDark mt-1">{{ layout.description }}</p>
                 </div>
-                <component is="IconChevronDown" :class="layoutClosed ? 'rotate-180' : ''" class="transition-all duration-300 ease-in-out h-6 w-6" />
+                <component :is="IconChevronDown" :class="layoutClosed ? 'rotate-180' : ''" class="transition-all duration-300 ease-in-out h-6 w-6" />
             </div>
             <div>
                 <BaseMenu has-no-offset>
                     <BaseMenuItem title="Edit" @click="showCreateOrUpdateModal = true"/>
-                    <BaseMenuItem title="Delete" icon="IconTrash" @click="showDeleteModal = true"/>
+                    <BaseMenuItem title="Delete" :icon="IconTrash" @click="showDeleteModal = true"/>
                 </BaseMenu>
             </div>
         </div>
@@ -20,7 +20,7 @@
                 <div class="flex items-center justify-between mb-2">
                     <h4 class="xsDark mb-2">{{ $t('Header') }}</h4>
                     <div>
-                        <component is="IconNote" class="cursor-pointer size-5 hover:text-artwork-buttons-create ease-in-out duration-200" @click="layout.open_header_notes = !layout.open_header_notes" />
+                        <component :is="IconNote" class="cursor-pointer size-5 hover:text-artwork-buttons-create ease-in-out duration-200" @click="layout.open_header_notes = !layout.open_header_notes" />
                     </div>
                 </div>
                 <div class="grid gap-4" :class="'grid-cols-' + layout['columns_header']">
@@ -86,7 +86,7 @@
                 <div class="flex items-center justify-between mb-2">
                     <h4 class="xsDark mb-2">{{ $t('Footer') }}</h4>
                     <div>
-                        <component is="IconNote" class="cursor-pointer size-5 hover:text-artwork-buttons-create ease-in-out duration-200" @click="layout.open_footer_notes = !layout.open_footer_notes" />
+                        <component :is="IconNote" class="cursor-pointer size-5 hover:text-artwork-buttons-create ease-in-out duration-200" @click="layout.open_footer_notes = !layout.open_footer_notes" />
                     </div>
                 </div>
                 <div class="grid gap-4" :class="'grid-cols-' + layout['columns_footer']">
@@ -150,6 +150,7 @@ import {ref} from "vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {router} from "@inertiajs/vue3";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {IconChevronDown, IconNote, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     layout: {

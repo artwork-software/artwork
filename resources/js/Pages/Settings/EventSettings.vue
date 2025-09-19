@@ -5,7 +5,7 @@
                <div>
                    <div class="flex items-center justify-between mb-5">
                        <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
-                       <GlassyIconButton icon="IconPlus" @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
+                       <GlassyIconButton :icon="IconPlus" @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
                        <div v-if="this.$page.props.show_hints" class="flex mt-1">
                            <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                            <span class="hind ml-1 my-auto">{{$t('Create new Event Types')}}</span>
@@ -53,8 +53,8 @@
                        </div>
                        <div class="flex items-center">
                            <BaseMenu has-no-offset white-menu-background>
-                               <BaseMenuItem title="Edit event type" white-menu-background @click="openEditEventTypeModal(eventType)" />
-                               <BaseMenuItem v-if="index !== 0" title="Delete event type" icon="IconTrash" white-menu-background @click="openDeleteEventTypeModal(eventType)" />
+                               <BaseMenuItem title="Edit event type" :icon="IconEdit" white-menu-background @click="openEditEventTypeModal(eventType)" />
+                               <BaseMenuItem v-if="index !== 0" title="Delete event type" :icon="IconTrash" white-menu-background @click="openDeleteEventTypeModal(eventType)" />
                            </BaseMenu>
                        </div>
                    </li>
@@ -103,6 +103,7 @@ import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import DeleteEventTypeConfirmationModal from "@/Pages/Settings/EventType/Components/Modals/DeleteEventTypeConfirmationModal.vue";
 import DeleteStandardEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/DeleteStandardEventTypeModal.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import {IconEdit, IconPlus, IconTrash} from "@tabler/icons-vue";
 export default {
     mixins: [Permissions],
     computed: {
@@ -204,6 +205,9 @@ export default {
         }
     },
     methods: {
+        IconTrash,
+        IconEdit,
+        IconPlus,
         addColor(color) {
             this.eventTypeForm.hex_code = color;
         },

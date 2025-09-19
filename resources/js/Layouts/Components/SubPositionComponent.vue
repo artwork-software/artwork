@@ -200,7 +200,7 @@
                                     <div v-else class="flex items-center gap-x-1" :class="cell.column.color !== 'whiteColumn' ? cell.column.color : ''">
                                         <component @click="openRelevantBudgetDataSumModalForCell(cell)"
                                                    v-if="calculateRelevantBudgetDataSumFormProjectsInGroup(cell) > 0"
-                                                   is="IconList"
+                                                   :is="IconList"
                                                    class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
                                         {{ toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroup(cell)) }}
                                     </div>
@@ -390,6 +390,7 @@ import SageDragCellElement from "@/Pages/Projects/Components/SageDragCellElement
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import RelevantBudgetDataSumModal from "@/Pages/Projects/Components/Budget/RelevantBudgetDataSumModal.vue";
+import {IconList} from "@tabler/icons-vue";
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
@@ -517,6 +518,7 @@ export default {
         localStorage.removeItem('closedSubPositions')
     },
     methods: {
+        IconList,
         usePage,
         openRelevantBudgetDataSumModalForCell(cell) {
             const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;

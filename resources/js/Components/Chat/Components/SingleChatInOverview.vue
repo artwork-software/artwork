@@ -9,7 +9,7 @@
             >
             <component
                 v-else
-                is="IconUsersGroup"
+                :is="IconUsersGroup"
                 class="size-10 rounded-full object-cover p-3 bg-blue-50 text-blue-900 border border-blue-100"
             />
         </div>
@@ -43,6 +43,7 @@
 import {computed, ref, watchEffect} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import useCrypto from "@/Composeables/useCrypto.js";
+import {IconUsersGroup} from "@tabler/icons-vue";
 
 
 const props = defineProps({

@@ -20,7 +20,7 @@
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedDocuments($event)"
                     class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    <component is="IconFileUpload" class="mx-auto size-12 text-gray-400" />
+                    <component :is="IconFileUpload" class="mx-auto size-12 text-gray-400" />
                     <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t('Drag document here to upload or click in the field') }}</span>
                 </div>
                 <input
@@ -39,7 +39,7 @@
                 <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200" v-if="documents.length > 0">
                     <li class="flex items-center justify-between py-4 pl-4 pr-5 text-sm/6 group" v-for="project_file in documents">
                         <div class="flex w-0 flex-1 items-center">
-                            <component is="IconFileText" class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
+                            <component :is="IconFileText" class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
                             <div class="ml-4 flex min-w-0 flex-1 gap-2">
                                 <span class="truncate font-medium">{{ project_file.name }}</span>
                                 <span class="shrink-0 text-gray-400">{{ project_file.file_size }}</span>
@@ -83,6 +83,7 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {useProjectDocumentListener} from "@/Composeables/Listener/useProjectDocumentListener.js";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import axios from "axios";
+import {IconFileText, IconFileUpload} from "@tabler/icons-vue";
 
 export default defineComponent({
     mixins: [
@@ -119,6 +120,8 @@ export default defineComponent({
         useProjectDocumentListener(this.documents, this.project.id).init();
     },
     methods: {
+        IconFileText,
+        IconFileUpload,
         async uploadChosenDocuments(event) {
             const files = Array.from(event.target.files);
             await this.validateTypeAndUpload(files);

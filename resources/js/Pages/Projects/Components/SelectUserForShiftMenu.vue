@@ -93,7 +93,7 @@
 
                                             <div v-if="user.type === 0 && user.is_freelancer || user.type === 1">
                                                 <ToolTipComponent
-                                                    icon="IconId"
+                                                    :icon="IconId"
                                                     icon-size="w-4 h-4"
                                                     tooltip-text="Freelancer*in"
                                                     direction="left"
@@ -117,7 +117,7 @@
 
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {IconChevronDown, IconChevronUp, IconFilter, IconSearch, IconX} from "@tabler/icons-vue";
+import {IconChevronDown, IconChevronUp, IconFilter, IconId, IconSearch, IconX} from "@tabler/icons-vue";
 import {MenuButton, MenuItems, Menu} from "@headlessui/vue";
 import Input from "@/Jetstream/Input.vue";
 import {computed, nextTick, ref, watch} from "vue"

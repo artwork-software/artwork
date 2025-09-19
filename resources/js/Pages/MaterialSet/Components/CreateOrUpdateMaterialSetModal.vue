@@ -46,7 +46,7 @@
                                 </td>
                                 <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0 flex items-center justify-center">
                                     <button type="button" @click="materialSetForm.items = materialSetForm.items.filter(i => i.id !== item.id)" class="text-red-600 hover:underline text-center">
-                                        <component is="IconTrash" class="size-4" />
+                                        <component :is="IconTrash" class="size-4" />
                                     </button>
                                 </td>
                             </tr>
@@ -72,6 +72,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import {IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     materialSet: {

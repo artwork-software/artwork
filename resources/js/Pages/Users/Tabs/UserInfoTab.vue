@@ -203,8 +203,8 @@
                         <img v-for="( team, index ) in userForm.departments" class="inline-block size-10 min-w-10 min-h-10 rounded-full ring-2 ring-white" :src="'/Svgs/TeamIconSvgs/' + team.svg_name + '.svg'" alt="" />
                     </div>
                     <BaseMenu has-no-offset v-show="this.$can('teammanagement')" class="ml-5 mt-2" :right="true" menu-width="w-88">
-                        <BaseMenuItem icon="IconEdit" @click="openChangeTeamsModal" title="Edit team membership" />
-                        <BaseMenuItem icon="IconTrash" @click="deleteFromAllDepartments" title="Remove user from all teams" />
+                        <BaseMenuItem :icon="IconEdit" @click="openChangeTeamsModal" title="Edit team membership" />
+                        <BaseMenuItem :icon="IconTrash" @click="deleteFromAllDepartments" title="Remove user from all teams" />
                     </BaseMenu>
                 </div>
                 <div class="max-w-xl">
@@ -329,6 +329,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SaveChatKeyButton from "@/Pages/Users/Components/SaveChatKeyButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import {IconEdit, IconTrash} from "@tabler/icons-vue";
 
 export default {
     components: {
@@ -425,6 +426,8 @@ export default {
         this.selectedLanguage = this.languages.find(language => language.id === this.user_to_edit.language);
     },
     methods: {
+        IconTrash,
+        IconEdit,
         isSignedInUser() {
             return this.user_to_edit.id === this.$page.props.auth.user.id;
         },

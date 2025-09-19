@@ -12,6 +12,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
+import {IconPlus} from "@tabler/icons-vue";
 
 // Props
 const props = defineProps({
@@ -99,7 +100,7 @@ function updateComponentOrder(components) {
                 <div class="w-full col-span-1">
                     <div class="flex justify-end mb-5">
                         <GlassyIconButton
-                            icon="IconPlus"
+                            :icon="IconPlus"
                             @click="showAddEditModal = true"
                             :text="t('Create tab')"
                         />

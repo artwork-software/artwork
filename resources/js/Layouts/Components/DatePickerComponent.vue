@@ -19,7 +19,7 @@
                     <ToolTipComponent
                         direction="right"
                         :tooltip-text="$t('Select time')"
-                        icon="IconCalendar"
+                        :icon="IconCalendar"
                         icon-size="h-5 w-5 mr-3"
                         class="cursor-pointer"
                     />
@@ -42,7 +42,7 @@
                 </div>
                 <input v-if="is_user_shift_plan === true"
                        v-model="dateValue[0]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="startDate"
                        id="startDate"
                        type="date"
@@ -51,7 +51,7 @@
                        class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[0]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="startDate"
                        id="startDate"
                        type="date"
@@ -68,7 +68,7 @@
                 </div>
                 <input v-if="is_user_shift_plan === true"
                        v-model="dateValue[1]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="endDate"
                        id="endDate"
                        type="date"
@@ -77,7 +77,7 @@
                        class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[1]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="endDate"
                        id="endDate"
                        type="date"
@@ -100,7 +100,7 @@
                 <p class="text-sm/6 text-white"> {{ errorMessage }} </p>
                 <button type="button" class="-m-1.5 flex-none p-1.5">
                     <span class="sr-only">Dismiss</span>
-                    <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="hasError = false" />
+                    <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="hasError = false" />
                 </button>
             </div>
         </div>
@@ -116,7 +116,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import {useTranslation} from "@/Composeables/Translation.js";
-import {IconAlertSquareRounded, IconCalendar} from '@tabler/icons-vue';
+import {IconAlertSquareRounded, IconCalendar, IconX} from '@tabler/icons-vue';
 const $t = useTranslation()
 // Props
 const props = defineProps({
@@ -342,7 +342,7 @@ function updateTimes() {
     }
 
     if (endDateObj < startDateObj) {
-        errorMessage.value = $t('The date only changes when the end date is the same date or later than the start date.');
+        errorMessage.value = $t('Please select a valid date.');
         hasError.value = true;
     } else {
         errorMessage.value = '';

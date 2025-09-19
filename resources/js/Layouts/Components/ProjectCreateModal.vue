@@ -343,7 +343,7 @@
                                 :text="t('Set up events')"
                                 class="mt-8 inline-flex items-center"
                                 classes="!w-fit gap-x-2 h-12 bg-artwork-buttons-create">
-                                <component is="IconCalendarMonth" class="w-5 h-5" />
+                                <component :is="IconCalendarMonth" class="w-5 h-5" />
                             </BaseButton>
                             <BaseButton
                                 type="submit"
@@ -352,7 +352,7 @@
                                 class="mt-8 inline-flex items-center "
                                 classes="!w-fit gap-x-2 h-12"
                             >
-                                <component is="IconCirclePlus" class="w-5 h-5" />
+                                <component :is="IconCirclePlus" class="w-5 h-5" />
                             </BaseButton>
                         </div>
                     </div>
@@ -550,7 +550,7 @@
                                 :text="t('Set up events')"
                                 class="mt-8 inline-flex items-center"
                                 classes="!w-fit gap-x-2 h-12 bg-artwork-buttons-create">
-                                <component is="IconCalendarMonth" class="w-5 h-5" />
+                                <component :is="IconCalendarMonth" class="w-5 h-5" />
                             </BaseButton>
                             <BaseButton
                                 type="submit"
@@ -559,7 +559,7 @@
                                 class="mt-8 inline-flex items-center "
                                 classes="!w-fit gap-x-2 h-12"
                             >
-                                <component is="IconCirclePlus" class="w-5 h-5" />
+                                <component :is="IconCirclePlus" class="w-5 h-5" />
                             </BaseButton>
                         </div>
 
@@ -617,6 +617,7 @@ import { ref, reactive, computed, defineProps, defineEmits } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { usePermission } from '@/Composeables/Permission.js';
 import { useTranslation } from '@/Composeables/Translation.js';
+import {IconCalendarMonth, IconCirclePlus} from "@tabler/icons-vue";
 
 // Define props
 const props = defineProps({

@@ -11,7 +11,7 @@
                 <div
                     class="name"
                     @click="toggleGroupEdit()">
-                    <component is="IconCornerDownRight" class="icon"/>
+                    <component :is="IconCornerDownRight" class="icon"/>
                     {{ group.name }}
                 </div>
                 <div @click="toggleGroup()">
@@ -22,7 +22,7 @@
                     <ToolTipComponent
                         :tooltip-text="$t('Add new item')"
                         direction="bottom"
-                        icon="IconCirclePlus"
+                        :icon="IconCirclePlus"
                         icon-size="h-5 w-5"
                         stroke="1.5"
                         classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
@@ -32,7 +32,7 @@
                     <ToolTipComponent
                         :tooltip-text="$t('New folder')"
                         direction="bottom"
-                        icon="IconFolderPlus"
+                        :icon="IconFolderPlus"
                         icon-size="h-5 w-5"
                         stroke="1.5"
                         classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
@@ -42,7 +42,7 @@
                     <ToolTipComponent
                         :tooltip-text="$t('Change the order of the folders')"
                         direction="bottom"
-                        icon="IconFolderCog"
+                        :icon="IconFolderCog"
                         icon-size="h-5 w-5"
                         stroke="1.5"
                         classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
@@ -139,7 +139,14 @@
 <script setup>
 import InventoryItem from "@/Pages/Inventory/InventoryManagement/InventoryItem.vue";
 import {computed, ref} from "vue";
-import {IconChevronDown, IconChevronUp, IconTrash} from "@tabler/icons-vue";
+import {
+    IconChevronDown,
+    IconChevronUp, IconCirclePlus,
+    IconCornerDownRight,
+    IconFolderCog,
+    IconFolderPlus,
+    IconTrash
+} from "@tabler/icons-vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import { MenuItem } from "@headlessui/vue";

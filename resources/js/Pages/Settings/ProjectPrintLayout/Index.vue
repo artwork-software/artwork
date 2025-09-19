@@ -16,7 +16,7 @@
                 <!-- Tab components -->
                 <div class="w-full col-span-1">
                     <div class="flex justify-end mb-5">
-                        <GlassyIconButton icon="IconPlus" @click="showCreateOrUpdateModal = true" :text="$t('Create tab')" />
+                        <GlassyIconButton :icon="IconPlus" @click="showCreateOrUpdateModal = true" :text="$t('Create tab')" />
                     </div>
 
 

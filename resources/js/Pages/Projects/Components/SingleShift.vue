@@ -45,9 +45,9 @@
                     v-if="can('can plan shifts') || isAdmin"
                     dots-size="h-5 w-5 text-white"
                 >
-                    <BaseMenuItem white-menu-background title="Edit" icon="IconEdit" @click="editShift" />
-                    <BaseMenuItem white-menu-background title="Clear" icon="IconCircleX" @click="clearShiftUsers(shift)" />
-                    <BaseMenuItem white-menu-background title="Delete" icon="IconTrash" @click="deleteShift(shift.id)" />
+                    <BaseMenuItem white-menu-background title="Edit" :icon="IconEdit" @click="editShift" />
+                    <BaseMenuItem white-menu-background title="Clear" :icon="IconCircleX" @click="clearShiftUsers(shift)" />
+                    <BaseMenuItem white-menu-background title="Delete" :icon="IconTrash" @click="deleteShift(shift.id)" />
                 </BaseMenu>
             </div>
 
@@ -79,7 +79,7 @@
                     @click="resetForm"
                     :aria-label="$t('Cancel')"
                 >
-                    <component is="IconX" class="h-4 w-4" />
+                    <component :is="IconX" class="h-4 w-4" />
                 </button>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2" :id="`container-${shift.id}`">
@@ -149,7 +149,7 @@
                     @click="resetForm"
                     :aria-label="$t('Cancel')"
                 >
-                    <component is="IconX" class="h-4 w-4" />
+                    <component :is="IconX" class="h-4 w-4" />
                 </button>
 
                 <BaseInput
@@ -264,7 +264,7 @@
             <!-- Add Qualification -->
             <div class="my-3 mx-0.5" v-if="canEditComponent">
                 <component
-                    is="IconCirclePlus"
+                    :is="IconCirclePlus"
                     @click="showAddShiftQualificationModal = true"
                     class="h-5 w-5 xsLight cursor-pointer hover:text-artwork-buttons-hover transition-colors"
                     stroke-width="1.5"
@@ -309,6 +309,7 @@ import ShiftsQualificationsDropElement from '@/Pages/Projects/Components/ShiftsQ
 import AddShiftModal from '@/Pages/Projects/Components/AddShiftModal.vue'
 import AddShiftQualificationToShiftModel from '@/Pages/Projects/Components/AddShiftQualificationToShiftModel.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import {IconCirclePlus, IconCircleX, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
 
 defineOptions({ name: 'SingleShift' })
 

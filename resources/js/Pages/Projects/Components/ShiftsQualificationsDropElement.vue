@@ -6,7 +6,7 @@
                     <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
                     <span class="text-xs">{{ $t('Unoccupied') }}</span>
                 </div>
-                <component stroke-width="1.5" class="size-4" :is="this.shiftQualification.icon"/>
+                <PropertyIcon stroke-width="1.5" class="size-4" :name="this.shiftQualification.icon"/>
             </div>
         </SelectUserForShiftMenu>
     </div>
@@ -40,11 +40,13 @@ import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import Input from "@/Jetstream/Input.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     name: 'ShiftsQualificationsDropElement',
     mixins: [ColorHelper],
     components: {
+        PropertyIcon,
         IconFilter, Input, IconSearch, IconChevronUp, CraftFilter, IconX,
         DragElement, IconChevronDown,
         Float,

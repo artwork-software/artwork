@@ -27,7 +27,7 @@
                                     <ToolTipComponent
                                         direction="right"
                                         :tooltip-text="$t('Jump around') + ' ' + $t('Day')"
-                                        icon="IconCalendar"
+                                        :icon="IconCalendar"
                                         icon-size="h-5 w-5 text-white" />
                                 </div>
                             </MenuItem>
@@ -36,7 +36,7 @@
                                     <ToolTipComponent
                                         direction="right"
                                         :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')"
-                                        icon="IconCalendarWeek"
+                                        :icon="IconCalendarWeek"
                                         icon-size="h-5 w-5 text-white" />
                                 </div>
                             </MenuItem>
@@ -45,7 +45,7 @@
                                     <ToolTipComponent
                                         direction="right"
                                         :tooltip-text="$t('Jump around') + ' ' + $t('Month')"
-                                        icon="IconCalendarMonth"
+                                        :icon="IconCalendarMonth"
                                         icon-size="h-5 w-5 text-white" />
                                 </div>
                             </MenuItem>

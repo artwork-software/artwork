@@ -15,8 +15,13 @@
         <div class="relative mt-2">
             <ListboxButton :class="buttonClass">
                 <slot name="button" :selected="internalValue" :placeholder="placeholder">
-                    <div class="col-start-1 row-start-1 truncate pr-6">
-                        {{ displayText }}
+                    <div class="col-start-1 row-start-1 truncate pr-6 flex items-center gap-2">
+                        <span
+                            v-if="showColorIndicator && getColor(internalValue as Option)"
+                            class="inline-block size-3 rounded-full flex-shrink-0"
+                            :style="{ backgroundColor: getColor(internalValue as Option) }"
+                        ></span>
+                        <span class="truncate">{{ displayText }}</span>
                     </div>
                     <IconChevronUp
                         class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4 transition-transform"
@@ -46,9 +51,16 @@
                             >
                                 <li :class="[active ? activeClass : inactiveClass, optionBaseClass]">
                                     <slot name="option" :item="item" :active="active" :selected="selected">
-                                        <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
-                                          {{ useTranslations ? $t(getLabel(item)) : getLabel(item) }}
-                                        </span>
+                                        <div class="flex items-center gap-2">
+                                            <span
+                                                v-if="showColorIndicator && getColor(item)"
+                                                class="inline-block size-3 rounded-full flex-shrink-0"
+                                                :style="{ backgroundColor: getColor(item) }"
+                                            ></span>
+                                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
+                                              {{ useTranslations ? $t(getLabel(item)) : getLabel(item) }}
+                                            </span>
+                                        </div>
 
                                         <span
                                             v-if="selected"
@@ -136,6 +148,10 @@ const props = defineProps({
     disabled: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
 
+    /** Color indicator options */
+    showColorIndicator: { type: Boolean, default: false },
+    colorProperty: { type: String, default: 'color' },
+
     /** Klassen – Standard an dein Design angelehnt, aber überschreibbar */
     labelClass: { type: String, default: 'xsDark' },
     buttonClass: {
@@ -187,6 +203,11 @@ const getKey = (item: Option) => {
     return typeof props.optionKey === 'function'
         ? props.optionKey(item)
         : (item?.[props.optionKey] ?? getLabel(item))
+}
+
+const getColor = (item: Option) => {
+    if (!item || !props.showColorIndicator) return null
+    return item?.[props.colorProperty] ?? null
 }
 
 const i18n = getCurrentInstance()

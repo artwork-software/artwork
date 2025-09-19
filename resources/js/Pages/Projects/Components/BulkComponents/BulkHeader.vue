@@ -80,7 +80,7 @@
                 {{ $t('Period') }}
               </span>
                             <ToolTipComponent
-                                icon="IconExclamationCircle"
+                                :icon="IconExclamationCircle"
                                 icon-size="h-5 w-5"
                                 direction="bottom"
                                 :tooltip-text="$t('If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.')"
@@ -103,6 +103,7 @@ import {ref, watch} from "vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import {usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconExclamationCircle} from "@tabler/icons-vue";
 
 // Emit Event
 const emit = defineEmits(['update:modelValue']);

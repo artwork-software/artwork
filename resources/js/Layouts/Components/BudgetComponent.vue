@@ -91,7 +91,7 @@
                                         </div>
                                         <div class="text-xs text-white text-right flex items-center gap-x-1">
                                             <ToolTipComponent
-                                                icon="IconFlagUp"
+                                                :icon="IconFlagUp"
                                                 :tooltip-text="$t('This Column is relevant for project groups')"
                                                 icon-size="size-4"
                                                 white-icon
@@ -1011,6 +1011,7 @@ export default {
         },
     },
     methods: {
+        IconFlagUp,
         calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented(type) {
             const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
             if (!data || !Array.isArray(data[type])) return 0;

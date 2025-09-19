@@ -20,12 +20,10 @@ use Illuminate\Support\Collection as SupportCollection;
 
 class EventCollectionService
 {
-
     public function __construct(
         private readonly RoomRepository $roomRepository,
         private readonly EventRepository $eventRepository
-    ) {
-    }
+    ) {}
 
     public function collectEventsForRooms(
         array|SupportCollection $roomsWithEvents,
@@ -51,14 +49,6 @@ class EventCollectionService
         return $roomEvents;
     }
 
-    /**
-     * @param Room $room
-     * @param CarbonPeriod $calendarPeriod
-     * @param CalendarFilter|null $calendarFilter
-     * @param Project|null $project
-     * @param bool|null $desiresInventorySchedulingResource
-     * @return array<string, mixed>
-     */
     public function collectEventsForRoom(
         Room $room,
         CarbonPeriod $calendarPeriod,
@@ -67,9 +57,9 @@ class EventCollectionService
         ?bool $desiresInventorySchedulingResource = false
     ): array {
         $eventsForRoom = RoomService::fillPeriodWithEmptyEventData($room, $calendarPeriod);
-        $actualEvents = [];
+        $actualEvents  = [];
 
-        $roomEventsQuery = $this->buildRoomCollectionBaseQuery(
+        $query = $this->buildRoomCollectionBaseQuery(
             $room,
             $calendarFilter,
             $project,
@@ -77,26 +67,24 @@ class EventCollectionService
             null
         );
 
-        foreach ($roomEventsQuery->get()->all() as $event) {
-            $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
-                $calendarPeriod->start :
-                $event->start_time;
-            $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
-            $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
+        foreach ($query->get() as $event) {
+            $eventStart = $event->start_time->isBefore($calendarPeriod->start) ? $calendarPeriod->start : $event->start_time;
+            $eventEnd   = $event->end_time->isAfter($calendarPeriod->end)     ? $calendarPeriod->end   : $event->end_time;
+
+            $eventPeriod = CarbonPeriod::create($eventStart->copy()->startOfDay(), $eventEnd->copy()->endOfDay());
 
             foreach ($eventPeriod as $date) {
-                $dateKey = $date->format('d.m.Y');
-                $actualEvents[$dateKey][] = $event;
+                $key = $date->format('d.m.Y');
+                $actualEvents[$key][] = $event;
             }
         }
 
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [
                 'roomId' => $room->getAttribute('id'),
-                //immediately resolve resource to free used memory
-                'events' => $desiresInventorySchedulingResource ?
-                    MinimalInventorySchedulingEventResource::collection($value)->resolve() :
-                    MinimalCalendarEventResource::collection($value)->resolve()
+                'events' => $desiresInventorySchedulingResource
+                    ? MinimalInventorySchedulingEventResource::collection($value)->resolve()
+                    : MinimalCalendarEventResource::collection($value)->resolve()
             ];
         }
 
@@ -108,13 +96,6 @@ class EventCollectionService
         return $this->eventRepository->getEventsWithoutRoom($project, $with);
     }
 
-    /**
-     * @param array $desiredRooms
-     * @param array $desiredDays
-     * @param CalendarFilter|null $calendarFilter
-     * @param Project|null $project
-     * @return array<string, mixed>
-     */
     public function collectEventsForRoomsOnSpecificDays(
         array $desiredRooms,
         array $desiredDays,
@@ -123,15 +104,11 @@ class EventCollectionService
     ): array {
         $collectedEvents = [];
         foreach ($desiredDays as $desiredDay) {
+            $day = Carbon::parse($desiredDay);
             foreach ($desiredRooms as $roomId) {
+                $room = $this->roomRepository->findOrFail($roomId);
                 $collectedEvents[$desiredDay][$roomId] = MinimalCalendarEventResource::collection(
-                    $this->buildRoomCollectionBaseQuery(
-                        $this->roomRepository->findOrFail($roomId),
-                        $calendarFilter,
-                        $project,
-                        null,
-                        Carbon::parse($desiredDay)
-                    )->get()
+                    $this->buildRoomCollectionBaseQuery($room, $calendarFilter, $project, null, $day)->get()
                 )->resolve();
             }
         }
@@ -140,17 +117,8 @@ class EventCollectionService
     }
 
     /**
-     * @param Room $room
-     * @param CalendarFilter|null $calendarFilter
-     * @param Project|null $project
-     * @param CarbonPeriod|null $calendarPeriod
-     * @param Carbon|null $date
-     * @return HasMany
+     * KORREKT: Relation über $room->events(), nicht getRelation('events')
      */
-    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     private function buildRoomCollectionBaseQuery(
         Room $room,
         ?UserFilter $calendarFilter,
@@ -158,102 +126,63 @@ class EventCollectionService
         ?CarbonPeriod $calendarPeriod,
         ?Carbon $date
     ): HasMany {
-        $eventTypeIds = $calendarFilter?->event_type_ids ?? null;
-        $roomIds = $calendarFilter?->room_ids ?? null;
-        $areaIds = $calendarFilter?->area_ids ?? null;
-        $roomAttributeIds = $calendarFilter?->room_attribute_ids ?? null;
-        $roomCategoryIds = $calendarFilter?->room_category_ids ?? null;
+        $eventTypeIds     = $calendarFilter?->event_type_ids;
+        $roomIds          = $calendarFilter?->room_ids;
+        $areaIds          = $calendarFilter?->area_ids;
+        $roomAttributeIds = $calendarFilter?->room_attribute_ids;
+        $roomCategoryIds  = $calendarFilter?->room_category_ids;
 
-        $roomEventsQuery = Room::query()->getRelation('events')
-            ->with(
-                [
-                    'room',
-                    'creator',
-                    'project',
-                    'project.managerUsers',
-                    'project.status',
-                    'shifts',
-                    'shifts.craft',
-                    'shifts.users',
-                    'shifts.freelancer',
-                    'shifts.serviceProvider',
-                    'shifts.shiftsQualifications',
-                    'subEvents.event',
-                    'subEvents.event.room'
-                ]
-            )
-            ->where(
-                function (Builder $builder) use ($calendarPeriod, $date): void {
-                    $builder->where(function (Builder $builder) use ($calendarPeriod, $date): void {
-                        $builder->when(
-                            $calendarPeriod,
-                            function (Builder $builder) use ($calendarPeriod): void {
-                                //see Event scopeStartAndEndTimeOverlap
-                                $builder->startAndEndTimeOverlap(
-                                    $calendarPeriod->start,
-                                    $calendarPeriod->end
-                                );
-                            }
-                        );
-                        $builder->when(
-                            $date,
-                            function (Builder $builder) use ($date): void {
-                                $builder
-                                    ->whereDate('start_time', '<=', $date)
-                                    ->whereDate('end_time', '>=', $date);
-                            }
-                        );
-                    })->orWhere(function (Builder $builder) use ($calendarPeriod, $date): void {
-                        $builder->when(
-                            $calendarPeriod,
-                            function (Builder $builder) use ($calendarPeriod): void {
-                                //see Event scopeStartAndEndTimeOverlap
-                                $builder->startAndEndTimeOverlap(
-                                    $calendarPeriod->start,
-                                    $calendarPeriod->end
-                                );
-                            }
-                        );
-                        $builder->when(
-                            $date,
-                            function (Builder $builder) use ($date): void {
-                                $builder->whereDate('start_time', '<=', $date)
-                                    ->whereDate('end_time', '>=', $date);
-                            }
-                        );
-                    });
-                }
-            )
-            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
-            ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
-            ->unless(
-                empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
-                fn(Builder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
-                    ->when($roomIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
-                    ->when($areaIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
-                    ->when($roomAttributeIds, fn(Builder $roomBuilder) => $roomBuilder
-                        ->whereHas('attributes', fn(Builder $roomAttributeBuilder) => $roomAttributeBuilder
-                            ->whereIn('room_attributes.id', $roomAttributeIds)))
-                    ->when($roomCategoryIds, fn(Builder $roomBuilder) => $roomBuilder
-                        ->whereHas('categories', fn(Builder $roomCategoryBuilder) => $roomCategoryBuilder
-                            ->whereIn('room_categories.id', $roomCategoryIds)))
-                    ->without(['admins']))
-            )
-            ->unless(empty($eventTypeIds), function ($builder) use ($eventTypeIds) {
-                return $builder->where(function ($builder) use ($eventTypeIds): void {
-                    $builder->whereIn('event_type_id', $eventTypeIds)
-                        ->orWhereHas('subEvents', function ($builder) use ($eventTypeIds): void {
-                            $builder->whereIn('event_type_id', $eventTypeIds);
+        $q = $room->events()
+            ->with([
+                'room',
+                'creator',
+                'project',
+                'project.managerUsers',
+                'project.status',
+                'shifts',
+                'shifts.craft',
+                'shifts.users',
+                'shifts.freelancer',
+                'shifts.serviceProvider',
+                'shifts.shiftsQualifications',
+                'subEvents.event',
+                'subEvents.event.room'
+            ])
+            ->when($calendarPeriod, function ($builder) use ($calendarPeriod) {
+                // Overlap innerhalb Period
+                $builder->where(function ($w) use ($calendarPeriod) {
+                    $w->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
+                        ->orWhereBetween('end_time',   [$calendarPeriod->start, $calendarPeriod->end])
+                        ->orWhere(function ($nested) use ($calendarPeriod) {
+                            $nested->where('start_time', '<=', $calendarPeriod->start)
+                                ->where('end_time',   '>=', $calendarPeriod->end);
                         });
                 });
-            });
+            })
+            ->when($date, function ($builder) use ($date) {
+                $builder->whereDate('start_time', '<=', $date)->whereDate('end_time', '>=', $date);
+            })
+            ->when($project, fn($builder) => $builder->where('project_id', $project->id))
+            ->unless(
+                empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
+                fn($builder) => $builder->whereHas('room', fn($rb) => $rb
+                    ->when($roomIds, fn($rb2) => $rb2->whereIn('rooms.id', $roomIds))
+                    ->when($areaIds, fn($rb2) => $rb2->whereIn('area_id', $areaIds))
+                    ->when($roomAttributeIds, fn($rb2) => $rb2
+                        ->whereHas('attributes', fn($ab) => $ab->whereIn('room_attributes.id', $roomAttributeIds)))
+                    ->when($roomCategoryIds, fn($rb2) => $rb2
+                        ->whereHas('categories', fn($cb) => $cb->whereIn('room_categories.id', $roomCategoryIds)))
+                    ->without('admins'))
+            )
+            ->when($eventTypeIds, function ($builder) use ($eventTypeIds) {
+                $builder->where(function ($b) use ($eventTypeIds) {
+                    $b->whereIn('event_type_id', $eventTypeIds)
+                        ->orWhereHas('subEvents', fn($sb) => $sb->whereIn('event_type_id', $eventTypeIds));
+                });
+            })
+            ->whereNull('deleted_at')
+            ->orderBy('start_time');
 
-
-        $roomEventsQuery->where('deleted_at', null);
-
-        // order $roomEventsQuery by start_time
-        $roomEventsQuery->orderBy('start_time');
-
-        return $roomEventsQuery;
+        return $q;
     }
 }

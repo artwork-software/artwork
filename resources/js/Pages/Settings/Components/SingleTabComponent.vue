@@ -129,8 +129,8 @@ function updateDefaultTab() {
 
                     <!-- Menü -->
                     <BaseMenu has-no-offset white-menu-background>
-                        <BaseMenuItem icon="IconEdit" title="Edit" @click="editTab" white-menu-background />
-                        <BaseMenuItem icon="IconTrash" title="Delete" @click="removeTab" white-menu-background />
+                        <BaseMenuItem :icon="IconEdit" title="Edit" @click="editTab" white-menu-background />
+                        <BaseMenuItem :icon="IconTrash" title="Delete" @click="removeTab" white-menu-background />
                     </BaseMenu>
                 </div>
             </div>

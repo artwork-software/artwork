@@ -8,7 +8,7 @@
                 <div
                     class="name flex items-center gap-x-1"
                     @click="toggleFolderEdit()">
-                    <component is="IconFolderSymlink" class="icon"/>
+                    <component :is="IconFolderSymlink" class="icon"/>
                     {{ folder.name }}
                 </div>
                 <div @click="toggleGroup()">
@@ -18,7 +18,7 @@
                 <ToolTipComponent
                     :tooltip-text="$t('Add new item')"
                     direction="bottom"
-                    icon="IconCirclePlus"
+                    :icon="IconCirclePlus"
                     icon-size="h-5 w-5"
                     stroke="1.5"
                     classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
@@ -83,7 +83,7 @@
 
 import InventoryItem from "@/Pages/Inventory/InventoryManagement/InventoryItem.vue";
 import {computed, ref} from "vue";
-import {IconChevronDown, IconChevronUp, IconTrash} from "@tabler/icons-vue";
+import {IconChevronDown, IconChevronUp, IconCirclePlus, IconFolderSymlink, IconTrash} from "@tabler/icons-vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import { MenuItem } from "@headlessui/vue";

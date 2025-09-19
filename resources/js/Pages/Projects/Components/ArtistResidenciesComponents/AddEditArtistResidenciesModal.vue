@@ -96,7 +96,7 @@
 
                                                 <!-- Check -->
                                                 <div v-if="selectedArtist?.id === artist.id" class="absolute right-3 top-3 text-artwork-buttons-hover">
-                                                    <component is="IconCheck" class="h-5 w-5" />
+                                                    <component :is="IconCheck" class="h-5 w-5" />
                                                 </div>
                                             </div>
                                         </div>
@@ -204,7 +204,7 @@
                                         <div class="flex items-center">
                                             <h4 class="xsLight">{{ $t('No. of overnight stays') }}</h4>
                                             <ToolTipComponent
-                                                icon="IconInfoCircle"
+                                                :icon="IconInfoCircle"
                                                 icon-size="h-4 w-4 ml-2"
                                                 :tooltip-text="$t('The number of nights is calculated from the arrival and departure dates.')"
                                                 direction="bottom"
@@ -224,7 +224,7 @@
                                         <div class="flex items-center">
                                             <h4 class="xsLight">{{ $t('Daily allowance entitlement') }}</h4>
                                             <ToolTipComponent
-                                                icon="IconInfoCircle"
+                                                :icon="IconInfoCircle"
                                                 icon-size="h-4 w-4 ml-2"
                                                 :tooltip-text="$t('Daily allowance entitlement is calculated from the number of overnight stays and the daily allowance.')"
                                                 direction="bottom"
@@ -356,6 +356,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import CountUp from "@/Artwork/Visual/CountUp.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import {IconCheck, IconInfoCircle} from "@tabler/icons-vue";
 
 
 const props = defineProps({

@@ -59,9 +59,9 @@
                             </div>
                         </div>
                         <div class="flex gap-x-2 px-2">
-                            <component is="IconEdit" class="w-5 h-5 rounded-full cursor-pointer hover:text-artwork-buttons-create duration-200 ease-in-out"
+                            <component :is="IconEdit" class="w-5 h-5 rounded-full cursor-pointer hover:text-artwork-buttons-create duration-200 ease-in-out"
                                       @click="openArticleEditModal" v-if="can('inventory.create_edit') || is('artwork admin')" />
-                            <component is="IconTrash" class="w-5 h-5 rounded-full cursor-pointer hover:text-red-500 duration-200 ease-in-out"
+                            <component :is="IconTrash" class="w-5 h-5 rounded-full cursor-pointer hover:text-red-500 duration-200 ease-in-out"
                                       @click="showConfirmDelete = true" v-if="can('inventory.delete') || is('artwork admin')" />
                         </div>
                     </div>
@@ -89,7 +89,7 @@
                                     <div class="pr-2 py-4 flex items-center justify-between">
                                         <dt class="text-sm font-bold text-primary font-lexend flex items-center gap-x-2">
                                             {{ $t('Total quantity') }}
-                                            <component is="IconChevronDown" :class="[open ? 'rotate-180' : '']"
+                                            <component :is="IconChevronDown" :class="[open ? 'rotate-180' : '']"
                                                        class="size-5 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
                                         </dt>
                                         <p class="font-lexend text-sm pl-2"
@@ -151,7 +151,7 @@
                                     <div class="flex">
                                         <div class="shrink-0">
                                             <component
-                                                is="IconAlertSquareRoundedFilled"
+                                                :is="IconAlertSquareRoundedFilled"
                                                 class="size-5 text-red-400"
                                                 aria-hidden="true"
                                             />
@@ -197,8 +197,8 @@
                                         <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-lexend font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset">
                                             {{ detailedArticle.status?.name }} - {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
                                         </span>
-                                        <component is="IconPlus" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
-                                        <component is="IconMinus" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>
+                                        <component :is="IconPlus" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
+                                        <component :is="IconMinus" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>
                                     </span>
                                 </DisclosureButton>
                             </h3>
@@ -229,7 +229,7 @@
                                     <div class="rounded-md bg-red-50 p-4">
                                         <div class="flex">
                                             <div class="shrink-0">
-                                                <component is="IconAlertSquareRoundedFilled" class="size-5 text-red-400"
+                                                <component :is="IconAlertSquareRoundedFilled" class="size-5 text-red-400"
                                                            aria-hidden="true"/>
                                             </div>
                                             <div class="ml-3">
@@ -274,7 +274,14 @@ import {router, usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
 import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
 import {nextTick, ref, computed} from "vue";
-import {IconEdit, IconPhoto} from "@tabler/icons-vue";
+import {
+    IconAlertSquareRoundedFilled,
+    IconChevronDown,
+    IconEdit, IconMinus,
+    IconPhoto,
+    IconPlus,
+    IconTrash
+} from "@tabler/icons-vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {can, is} from "laravel-permission-to-vuejs";
 

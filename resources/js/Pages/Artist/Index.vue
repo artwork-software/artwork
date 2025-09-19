@@ -17,7 +17,7 @@
                     </div>
                     <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none flex items-center gap-x-4">
                         <ToolTipComponent
-                            icon="IconFileExport"
+                            :icon="IconFileExport"
                             :tooltip-text="$t('Export artists')"
                             direction="bottom"
                             @click="exportArtist"
@@ -66,6 +66,7 @@ import UserHeader from "@/Pages/Users/UserHeader.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {defineAsyncComponent, ref} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconFileExport} from "@tabler/icons-vue";
 
 const props = defineProps({
     artists: {

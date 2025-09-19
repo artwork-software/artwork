@@ -23,10 +23,10 @@
         <td class="py-5 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0 actions-column">
             <div class="flex items-center gap-x-4">
                 <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover">
-                    <component is="IconEdit" class="h-5 w-5" aria-hidden="true" @click="showAddEditPropertyModal = true" />
+                    <component :is="IconEdit" class="h-5 w-5" aria-hidden="true" @click="showAddEditPropertyModal = true" />
                 </button>
                 <button type="button" class="text-red-600 hover:text-red-900" v-if="property.is_deletable">
-                    <component is="IconTrash" class="h-5 w-5" aria-hidden="true" @click="showDeleteConfirmation = true" />
+                    <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" @click="showDeleteConfirmation = true" />
                 </button>
             </div>
         </td>
@@ -53,6 +53,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {ref} from "vue";
 import {router} from "@inertiajs/vue3";
 import AddEditArticlePropertyModal from "@/Pages/InventorySetting/Components/AddEditArticlePropertyModal.vue";
+import {IconEdit, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     property: {

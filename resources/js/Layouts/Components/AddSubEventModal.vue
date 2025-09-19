@@ -4,8 +4,9 @@
             <ModalHeader
                 :title="subEventToEdit ? $t('Edit sub-event') : $t('New sub-event')"
                 :description="$t('Please note that the appointment must take place within the appointment group period.')"
-                :sub-title="$t('Belongs to Blocker in {0}', [event.roomName])"
+                :sub-title="$t('Belongs to Blocker in {0}', [event?.roomName ?? event?.room?.name])"
             />
+
             <div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 mb-4">
                     <div>
@@ -296,11 +297,11 @@ export default {
     data() {
         return {
             subEvent: useForm({
-                event_id: this.event.id,
+                event_id: this.event?.id,
                 eventName: this.subEventToEdit?.eventName ? this.subEventToEdit?.eventName : '',
                 selectedEventType: this.subEventToEdit?.type ? this.subEventToEdit?.type : this.eventTypes[1],
-                start_time: this.subEventToEdit?.start ? this.subEventToEdit?.start : dayjs(this.event.start).format('YYYY-MM-DD HH:mm'),
-                end_time: this.subEventToEdit?.end ? this.subEventToEdit?.end : dayjs(this.event.end).format('YYYY-MM-DD HH:mm'),
+                start_time: this.subEventToEdit?.start ? this.subEventToEdit?.start : dayjs(this.event?.start).format('YYYY-MM-DD HH:mm'),
+                end_time: this.subEventToEdit?.end ? this.subEventToEdit?.end : dayjs(this.event?.end).format('YYYY-MM-DD HH:mm'),
                 description: this.subEventToEdit?.description ? this.subEventToEdit?.description : '',
                 user_id: this.$page.props.auth.user.id,
                 event_type_id: this.subEventToEdit?.eventTypeId ? this.subEventToEdit?.eventTypeId : '',
@@ -313,10 +314,10 @@ export default {
             helpTextEnd: '',
             helpTextLength: '',
             allDayEvent: this.subEventToEdit?.allDay ? this.subEventToEdit.allDay : false,
-            startTime: this.subEventToEdit?.start ? dayjs(this.subEventToEdit?.start).format('HH:mm') : dayjs(this.event.start).format('HH:mm'),
-            endTime: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('HH:mm') : dayjs(this.event.end).format('HH:mm'),
-            startDate: this.subEventToEdit?.start ? dayjs(this.subEventToEdit?.start).format('YYYY-MM-DD') : dayjs(this.event.start).format('YYYY-MM-DD'),
-            endDate: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('YYYY-MM-DD') : dayjs(this.event.end).format('YYYY-MM-DD'),
+            startTime: this.subEventToEdit?.start ? dayjs(this.subEventToEdit?.start).format('HH:mm') : dayjs(this.event?.start).format('HH:mm'),
+            endTime: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('HH:mm') : dayjs(this.event?.end).format('HH:mm'),
+            startDate: this.subEventToEdit?.start ? dayjs(this.subEventToEdit?.start).format('YYYY-MM-DD') : dayjs(this.event?.start).format('YYYY-MM-DD'),
+            endDate: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('YYYY-MM-DD') : dayjs(this.event?.end).format('YYYY-MM-DD'),
             show: true,
             submit: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType.individual_name ? this.subEventToEdit?.title?.length > 0 : true : true,
             //event_properties: event_properties

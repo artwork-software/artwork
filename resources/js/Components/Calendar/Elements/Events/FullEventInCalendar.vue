@@ -7,7 +7,7 @@
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
             <div v-if="event.considerOnMultiEdit" class="flex items-center h-full justify-center align-middle">
                 <div class="bg-white rounded-lg">
-                    <component is="IconSquareCheckFilled" class="size-6 text-green-500" />
+                    <component :is="IconSquareCheckFilled" class="size-6 text-green-500" />
                 </div>
             </div>
             <div class="justify-center items-center h-full gap-2 hidden">
@@ -84,7 +84,7 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-x-1 mt-1 w-28">
-                            <component is="IconClock" class="size-3.5" stroke-width="2" v-if="!event.allDay && new Date(event.start).toDateString() === new Date(event.end).toDateString()"/>
+                            <component :is="IconClock" class="size-3.5" stroke-width="2" v-if="!event.allDay && new Date(event.start).toDateString() === new Date(event.end).toDateString()"/>
                             <!-- Time -->
                             <div class="flex"
                                  :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}"
@@ -113,11 +113,11 @@
                                     </div>
                                     <div v-else class="items-center">
                                         <div v-if="new Date(event.start).toDateString() !== new Date(event.end).toDateString()">
-                                <span class="text-error">
-                                    {{
-                                        new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : ''
-                                    }}
-                                </span>
+                                            <span class="text-error">
+                                                {{
+                                                    new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : ''
+                                                }}
+                                            </span>
                                             {{
                                                 event.formattedDates.startDateTime_without_year  + ' - ' +  event.formattedDates.endDateTime_without_year
                                             }}
@@ -156,7 +156,7 @@
                              :class="[zoom_factor === 1 ? 'eventText' : '', 'font-semibold']"
                              v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
                              class="uppercase flex items-center">
-                            <component is="IconRepeat" class="mr-1 min-h-3 min-w-3" stroke-width="2"/>
+                            <component :is="IconRepeat" class="mr-1 min-h-3 min-w-3" stroke-width="2"/>
                             {{ $t('Repeat event') }}
                         </div>
                         <!-- User-Icons -->
@@ -225,9 +225,10 @@
                 </div>
             </div>
             <div class="flex gap-x-1 mt-5">
-                <div class="grid gird-cols-1 md:grid-cols-2 gap-1">
+                <div class="grid gird-cols-1 md:grid-cols-2 gap-3">
                     <div v-for="property in event.eventProperties" class="col-span-1">
-                        <ToolTipComponent
+                        <PropertyIcon :name="property.icon" class="size-3.5" />
+                        <!--<ToolTipComponent
                             :icon="property.icon"
                             icon-size="size-4"
                             :tooltip-text="property.name"
@@ -235,21 +236,21 @@
                             stroke="1.5"
                             direction="left"
                             no-relative
-                        />
+                        />-->
                     </div>
                 </div>
 
                 <div class="invisible group-hover/singleEvent:visible flex items-start justify-end w-full" :class="event.isPlanning ? 'pt-2' : ''">
                     <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background>
-                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" icon="IconLock" title="Request verification" />
-                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" icon="IconLockOpen" title="Withdraw verification request" />
-                        <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" icon="IconChecks" title="Approve verification" />
-                        <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" icon="IconCircleX" title="Reject verification" />
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" title="Request verification" />
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
+                        <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
+                        <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
 
-                        <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" icon="IconEdit" title="edit" />
-                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" @click="$emit('openAddSubEventModal', event, 'create', null)" icon="IconCirclePlus" title="Add Sub-Event" />
-                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" icon="IconX" title="Decline event" />
-                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" icon="IconTrash" title="Delete" />
+                        <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" :icon="IconEdit" title="edit" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" @click="$emit('openAddSubEventModal', event, 'create', null)" :icon="IconCirclePlus" title="Add Sub-Event" />
+                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" :icon="IconX" title="Decline event" @click="$emit('showDeclineEventModal', event)" />
+                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
                     </BaseMenu>
                 </div>
             </div>
@@ -259,7 +260,7 @@
             <Popover class="relative">
                 <Float auto-placement portal :offset="{  5 : -10}">
                     <PopoverButton class="flex items-center justify-start gap-1 ring-0 focus:ring-0">
-                        <component is="IconInfoCircle" class="size-6 " stroke-width="1.5"/>
+                        <component :is="IconInfoCircle" class="size-6 " stroke-width="1.5"/>
                         <div class="w-16 max-w-16 xsDark text-left" v-if="zoom_factor > 0.4">
                             <div v-if="usePage().props.auth.user.calendar_settings.event_name && event.eventName" class="truncate">
                                 {{ event.eventName }}
@@ -459,15 +460,15 @@
                             </div>
                             <div class="invisible group-hover/singleEvent:visible">
                                 <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background>
-                                    <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" icon="IconLock" title="Request verification" />
-                                    <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" icon="IconLockOpen" title="Withdraw verification request" />
-                                    <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" icon="IconChecks" title="Approve verification" />
-                                    <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" icon="IconCircleX" title="Reject verification" />
+                                    <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" title="Request verification" />
+                                    <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
+                                    <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
+                                    <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
 
-                                    <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" icon="IconEdit" title="edit" />
-                                    <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" @click="$emit('openAddSubEventModal', event, 'create', null)" icon="IconCirclePlus" title="Add Sub-Event" />
-                                    <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" icon="IconX" title="Decline event" />
-                                    <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" icon="IconTrash" title="Delete" />
+                                    <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" :icon="IconEdit" title="edit" />
+                                    <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" @click="$emit('openAddSubEventModal', event, 'create', null)" :icon="IconCirclePlus" title="Add Sub-Event" />
+                                    <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" :icon="IconX" title="Decline event" />
+                                    <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
                                 </BaseMenu>
                             </div>
                         </div>
@@ -592,7 +593,17 @@
 <script setup>
 import {computed, defineAsyncComponent, inject, onMounted, ref} from "vue";
 import {Link, router, usePage} from "@inertiajs/vue3";
-import {IconCirclePlus, IconEdit, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
+import {
+    IconChecks,
+    IconCirclePlus, IconCircleX, IconClock,
+    IconEdit, IconInfoCircle,
+    IconLock,
+    IconLockOpen,
+    IconRepeat, IconSquareCheckFilled,
+    IconTrash,
+    IconUsersGroup,
+    IconX
+} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import {Menu, MenuButton, MenuItem, MenuItems, Popover, PopoverButton, PopoverPanel} from "@headlessui/vue";
 import VueMathjax from "vue-mathjax-next";
@@ -604,6 +615,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {Float} from "@headlessui-float/vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const {t} = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);

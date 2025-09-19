@@ -32,7 +32,7 @@
                             <div class="relative mt-2">
                                 <ListboxButton class="menu-button">
                                     <div class="col-start-1 row-start-1 xsDark truncate pr-6">{{ selectedType?.name ? $t(selectedType?.name) : '' }}</div>
-                                    <component is="IconChevronDown" class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4" :class="open ? 'rotate-180' : '' " aria-hidden="true" />
+                                    <component :is="IconChevronDown" class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4" :class="open ? 'rotate-180' : '' " aria-hidden="true" />
                                 </ListboxButton>
 
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -42,7 +42,7 @@
                                                 <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ $t(type.name) }}</span>
 
                                                 <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                    <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                                    <component :is="IconCheck" class="size-5" aria-hidden="true" />
                                                 </span>
                                             </li>
                                         </ListboxOption>
@@ -60,14 +60,14 @@
                                 :label="$t('Selection value {index}', {index: index + 1})"
                             />
                             <button type="button" @click="propertyForm.select_values.splice(index, 1)" class="text-red-500 hover:text-red-700">
-                                <component is="IconX" class="size-5" aria-hidden="true" />
+                                <component :is="IconX" class="size-5" aria-hidden="true" />
                             </button>
 
                         </div>
 
                         <div class="flex items-center justify-end">
                             <button type="button" @click="propertyForm.select_values.push('')" class="text-gray-500 text-xs hover:text-gray-700 flex items-center font-lexend">
-                                <component is="IconPlus" class="size-4" aria-hidden="true" />
+                                <component :is="IconPlus" class="size-4" aria-hidden="true" />
                                 {{ $t('Selection Add value') }}
                             </button>
                         </div>
@@ -138,6 +138,7 @@ import {computed, ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import {IconCheck, IconChevronDown, IconPlus, IconX} from "@tabler/icons-vue";
 
 const props = defineProps({
     property: {

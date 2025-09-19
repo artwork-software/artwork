@@ -18,7 +18,7 @@
                     <div class="ml-4 xsDark">{{ pushNotification.message }}</div>
                 </div>
                 <button type="button" class="-mt-4 mr-2">
-                    <component is="IconX" class="-mt-4 h-5 w-5 text-secondary hover:text-error relative"
+                    <component :is="IconX" class="-mt-4 h-5 w-5 text-secondary hover:text-error relative"
                            @click="closePushNotification(pushNotification.id)"/>
                 </button>
             </div>
@@ -40,10 +40,10 @@
 <script setup>
 import {Head, router, usePage} from "@inertiajs/vue3"
 import SubMenu from "@/Layouts/SubMenu.vue";
-import {onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
+import {defineAsyncComponent, onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
-import PopupChat from "@/Components/Chat/PopupChat.vue";
+import {IconX} from "@tabler/icons-vue";
 const { locale } = useI18n();
 
 const props = defineProps({
@@ -97,6 +97,12 @@ onMounted(() => {
         });
 
 
+})
+
+const PopupChat = defineAsyncComponent({
+    loader: () => import('@/Components/Chat/PopupChat.vue'),
+    delay: 0,
+    timeout: 3000,
 })
 
 </script>

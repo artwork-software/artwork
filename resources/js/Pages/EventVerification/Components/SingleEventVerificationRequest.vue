@@ -19,17 +19,17 @@
                 <div class="flex items-center justify-between mt-3">
                     <div>
                         <BaseCardButton text="Open in Calendar" @click="openPlanningCalendarWithEventId">
-                            <component is="IconCalendar" class="size-4" aria-hidden="true" />
+                            <component :is="IconCalendar" class="size-4" aria-hidden="true" />
                         </BaseCardButton>
                     </div>
                     <div>
                         <BaseCardButton text="Approve" @click="approveRequest" v-if="eventVerification.status === 'pending'" class="!bg-green-600 hover:!bg-green-800 capitalize text-xs font-lexend">
-                            <component is="IconCheckbox" class="size-4" aria-hidden="true" />
+                            <component :is="IconCheckbox" class="size-4" aria-hidden="true" />
                         </BaseCardButton>
                     </div>
                     <div>
                         <BaseCardButton text="Reject" @click="showRejectEventVerificationRequestModal = true" v-if="eventVerification.status === 'pending'" class="!bg-red-500 hover:!bg-red-800 capitalize text-xs font-lexend">
-                            <component is="IconBan" class="size-4" aria-hidden="true" />
+                            <component :is="IconBan" class="size-4" aria-hidden="true" />
                         </BaseCardButton>
                     </div>
                 </div>
@@ -94,6 +94,7 @@ import {defineAsyncComponent, ref} from "vue";
 import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
 import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
 import dayjs from "dayjs";
+import {IconBan, IconCalendar, IconCheckbox} from "@tabler/icons-vue";
 
 const props = defineProps({
     eventVerification: {

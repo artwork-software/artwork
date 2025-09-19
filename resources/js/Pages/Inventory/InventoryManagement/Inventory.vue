@@ -17,7 +17,7 @@
                             <span v-else>
                                 absteigend
                             </span>
-                            <component is="IconX" class="h-4 w-4 cursor-pointer hover:text-red-600 transition-colors duration-300 ease-in-out" @click="updateSort({ id: null })"/>
+                            <component :is="IconX" class="h-4 w-4 cursor-pointer hover:text-red-600 transition-colors duration-300 ease-in-out" @click="updateSort({ id: null })"/>
                         </span>
 
                     </div>
@@ -51,9 +51,9 @@
                             </div>
                             <div class="flex items-center space-x-1">
                                 <div @click="updateSort(column)" class="w-fit">
-                                    <component is="IconSortDescending" class="h-4 w-4 cursor-pointer" v-if="usePage().props.auth.user.inventory_sort_column_id === column.id && usePage().props.auth.user.inventory_sort_direction === 'desc'"/>
-                                    <component is="IconSortAscending" class="h-4 w-4 cursor-pointer" v-if="usePage().props.auth.user.inventory_sort_column_id === column.id && usePage().props.auth.user.inventory_sort_direction === 'asc'"/>
-                                    <component is="IconArrowsSort" class="h-4 w-4 invisible group-hover:visible cursor-pointer" v-if="usePage().props.auth.user.inventory_sort_column_id !== column.id"/>
+                                    <component :is="IconSortDescending" class="h-4 w-4 cursor-pointer" v-if="usePage().props.auth.user.inventory_sort_column_id === column.id && usePage().props.auth.user.inventory_sort_direction === 'desc'"/>
+                                    <component :is="IconSortAscending" class="h-4 w-4 cursor-pointer" v-if="usePage().props.auth.user.inventory_sort_column_id === column.id && usePage().props.auth.user.inventory_sort_direction === 'asc'"/>
+                                    <component :is="IconArrowsSort" class="h-4 w-4 invisible group-hover:visible cursor-pointer" v-if="usePage().props.auth.user.inventory_sort_column_id !== column.id"/>
                                 </div>
                                 <div class="inventory-th-menu-container invisible group-hover:visible">
                                     <BaseMenu white-icon v-if="can('can manage inventory stock') || hasAdminRole()">
@@ -170,7 +170,15 @@
 
 <script setup>
 import InventoryHeader from "@/Pages/Inventory/InventoryHeader.vue";
-import {IconCopy, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
+import {
+    IconArrowsSort,
+    IconCopy,
+    IconEdit,
+    IconSortAscending,
+    IconSortDescending,
+    IconTrash,
+    IconX
+} from "@tabler/icons-vue";
 import {Listbox, ListboxOption, ListboxOptions, MenuItem} from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {CheckIcon} from "@heroicons/vue/solid";

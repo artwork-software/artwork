@@ -12,7 +12,7 @@
 
             <div class="flex items-center justify-between">
                 <TabComponent :tabs="tabs" use-translation/>
-                <GlassyIconButton text="Add User Contracts" icon="IconPlus" @click="showCreateOrUpdateUserContractModal  = true" />
+                <GlassyIconButton text="Add User Contracts" :icon="IconPlus" @click="showCreateOrUpdateUserContractModal  = true" />
             </div>
 
 
@@ -53,6 +53,7 @@ import CreateOrUpdateUserContractModal
     from "@/Pages/Settings/UserContractSettings/Components/CreateOrUpdateUserContractModal.vue";
 import SingleUserContractTemplate
     from "@/Pages/Settings/UserContractSettings/Components/SingleUserContractTemplate.vue";
+import {IconPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     contracts: {

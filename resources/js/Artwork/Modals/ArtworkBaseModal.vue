@@ -18,27 +18,27 @@
 
                                 <div class="p-5">
                                     <div class="card white p-5 relative">
-                                        <div class="flex items-start justify-between mb-4">
+                                        <div class="flex items-start gap-x-8 justify-between mb-8 bg-zinc-50 p-6 -mx-5 -mt-5 rounded-t-lg">
                                             <div class="text-left">
-                                                <h3 class="font-lexend font-bold">{{ $t(props.title) }}</h3>
-                                                <p class="text-sm xsDark mt-0.5">
+                                                <h3 class="font-medium text-lg subpixel-antialiased">{{ $t(props.title) }}</h3>
+                                                <p class="text-xs text-zinc-500 subpixel-antialiased mt-0.5">
                                                     {{ $t(props.description) }}
                                                 </p>
                                             </div>
                                             <div class="flex items-center gap-x-3">
-                                                <div class="text-gray-800 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
-                                                    <div @click="showBackdrop = !showBackdrop">
-                                                        <ToolTipDefault top show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
-                                                    </div>
-                                                </div>
-                                                <div ref="dragHandleRef" class="text-gray-800 hover:text-yellow-400 transition-all duration-150 ease-in-out cursor-grab dragHandle">
+                                                <div class="ui-button" @click="showBackdrop = !showBackdrop">
                                                     <div>
-                                                        <ToolTipDefault top show-draggable :tooltip-text="$t('Hold here to move')"/>
+                                                        <ToolTipComponent :icon="IconTexture" :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
                                                     </div>
                                                 </div>
-                                                <div class="text-gray-800 hover:text-artwork-error transition-all duration-150 ease-in-out cursor-pointer">
-                                                    <div @click="$emit('close')">
-                                                        <ToolTipDefault top show-x-icon :tooltip-text="$t('Close Window')"/>
+                                                <div ref="dragHandleRef" class="ui-button hover:!bg-yellow-50">
+                                                    <div>
+                                                        <ToolTipComponent :icon="IconDragDrop" :tooltip-text="$t('Hold here to move')"/>
+                                                    </div>
+                                                </div>
+                                                <div class="ui-button hover:!bg-red-50 !text-red-500" @click="$emit('close')">
+                                                    <div>
+                                                        <ToolTipComponent :icon="IconX" :tooltip-text="$t('Close Window')" classes="!text-red-500"/>
                                                     </div>
                                                 </div>
                                             </div>
@@ -62,6 +62,8 @@ import {nextTick, onMounted, ref} from "vue";
 import {Dialog, DialogPanel, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import { createDraggable } from 'animejs';
 import CardHeadline from "@/Artwork/Cards/CardHeadline.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconDragDrop, IconTexture, IconX} from "@tabler/icons-vue";
 
 const props = defineProps({
     modalSize: {

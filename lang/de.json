@@ -3061,6 +3061,13 @@
     "Disable Notifications": "Benachrichtigungen deaktivieren",
     "Enable Notifications": "Benachrichtigungen aktivieren",
     "Sort by": "Sortieren nach",
-    "Only mine": "Nur meine"
+    "Only mine": "Nur meine",
+    "Basic information": "Basisinformationen",
+    "Reset your password or send a reset email.": "Setze dein Passwort zurück oder sende eine E-Mail zum Zurücksetzen.",
+    "Security": "Sicherheit",
+    "Preferences": "Einstellungen",
+    "Account & Contact": "Konto & Kontakt",
+    "User Profile": "Nutzerprofil",
+    "Manage global roles and granular permissions for this user.": "Verwalte globale Rollen und granulare Berechtigungen für diesen Nutzer*in."
 }
 

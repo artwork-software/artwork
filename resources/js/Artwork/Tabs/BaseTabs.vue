@@ -1,32 +1,44 @@
 <template>
     <div class="w-full">
-        <div class="block font-lexend overflow-x-auto overflow-y-hidden w-full">
-            <div class=" border-gray-200">
-                <nav class="-mb-px flex space-x-5 " aria-label="Tabs">
-                    <div v-for="tab in tabs">
-                        <Link v-if="tab.permission" :key="tab.name" :href="tab.href" :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-gray-500 hover:border-gray-200 hover:text-gray-700', 'flex border-b-2 px-1 py-4 items-center gap-x-2 text-sm font-medium whitespace-nowrap font-lexend']" :aria-current="tab.current ? 'page' : undefined">
-                            <component :is="tab.icon" v-if="tab.icon" class="inline-block size-4" aria-hidden="true"/>
-                            {{ $t(tab.name) }}
-                            <span v-if="tab.count" :class="[tab.current ? 'bg-artwork-buttons-create/10 text-artwork-buttons-create' : 'bg-gray-100 text-gray-900', 'ml-3 hidden rounded-full px-2.5 py-0.5 text-xs font-medium md:inline-block']">{{ tab.count }}</span>
-                        </Link>
-                    </div>
-                </nav>
-            </div>
+        <div class="overflow-x-auto">
+            <nav class="flex gap-2">
+                <template v-for="tab in tabs" :key="tab.name">
+                    <Link
+                        v-if="tab.permission"
+                        :href="tab.href"
+                        :aria-current="tab.current ? 'page' : undefined"
+                        :class="[
+              tab.current
+                ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'
+                : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
+              'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium'
+            ]"
+                    >
+                        <PropertyIcon v-if="tab.icon" :name="tab.icon" class="size-4" />
+                        {{ $t(tab.name) }}
+                        <span
+                            v-if="tab.count"
+                            :class="[
+                            tab.current ? 'bg-blue-100 text-blue-700' : 'bg-zinc-100 text-zinc-700',
+                            'ml-2 hidden rounded-full px-2.5 py-0.5 text-xs font-medium md:inline-block'
+                          ]"
+                        >{{ tab.count }}</span
+                        >
+                    </Link>
+                </template>
+            </nav>
         </div>
     </div>
 </template>
 
 <script setup>
-import {usePage, Link, router} from "@inertiajs/vue3";
-const props = defineProps({
+import { Link } from '@inertiajs/vue3'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+
+defineProps({
     tabs: {
         type: Array,
-        required: true
-    }
+        required: true,
+    },
 })
-
 </script>
-
-<style scoped>
-
-</style>

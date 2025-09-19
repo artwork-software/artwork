@@ -1,231 +1,282 @@
 <template>
-    <div>
-        <div>
-            <h2 class="mb-8 headline2">{{ $t('User rights')}}</h2>
+    <div class="">
+        <!-- Header -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">
+                {{ $t('User rights') }}
+            </h2>
+            <p class="mt-1 text-sm text-zinc-600">
+                {{ $t('Manage global roles and granular permissions for this user.') }}
+            </p>
         </div>
 
-        <div class="bg-lightBackgroundGray py-10 px-10 -mx-5">
-            <div>
-                <div class="uppercase mb-3 text-xs columnSubName flex items-center cursor-pointer" @click="showGlobalRoles = !showGlobalRoles">
-                    {{ $t('Global roles')}}
-                    <div class="flex items-center ml-2">
-                        <SvgCollection svg-name="arrowUp" v-if="showGlobalRoles"></SvgCollection>
-                        <SvgCollection svg-name="arrowDown" v-if="!showGlobalRoles"></SvgCollection>
-                    </div>
+        <!-- Global roles -->
+        <section class="rounded-3xl border border-zinc-200 bg-white shadow-sm">
+            <button
+                type="button"
+                class="flex w-full items-center justify-between px-6 py-4 sm:px-8"
+                @click="showGlobalRoles = !showGlobalRoles"
+            >
+                <div class="flex items-center gap-2">
+          <span class="text-xs font-medium uppercase tracking-wide text-zinc-700">
+            {{ $t('Global roles') }}
+          </span>
+                    <span
+                        class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-medium text-blue-700 ring-1 ring-blue-200"
+                    >
+            {{ available_roles?.length || 0 }}
+          </span>
                 </div>
-                <div class="relative justify-between flex items-center" v-if="showGlobalRoles" v-for="(role, index) in available_roles" :key=index>
-                    <div class="flex items-center h-7">
-                        <div class="flex gap-3">
-                            <div class="flex h-6 shrink-0 items-center">
-                                <div class="group grid size-4 grid-cols-1">
-                                    <input v-model="userForm.roles" @change="this.editUser()" :value="role.name" id="comments" aria-describedby="comments-description" name="comments" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
-                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
-                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="text-sm/6">
-                                <label for="comments" class="font-medium text-gray-900 capitalize font-lexend">{{$t(role.translation_key)}}</label>
-                                <p id="comments-description" class="text-gray-500 font-lexend text-xs">{{ $t(role.tooltipKey) }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="justify-end">
-                        <ToolTipDefault :left="true" :tooltip-text="$t(role.tooltipKey)" />
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="mt-4">
-            <div v-if="showUserPermissions" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="w-full mb-3" v-for="(group, groupName) in this.computedGroupedPermissions" v-show="group.shown">
-                    <div class="flex items-center justify-between select-none mb-4 mt-3">
-                        <div class="flex items-center gap-x-2 xxsLight !font-bold uppercase" @click="group.show = typeof group.show === 'undefined' ? false : !group.show">
-                            {{ $t(groupName) }}
-                            <div class="flex items-center ml-2">
-                                <SvgCollection svg-name="arrowUp" v-if="typeof group.show === 'undefined' ? true : group.show"/>
-                                <SvgCollection svg-name="arrowDown" v-else/>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="text-xs underline text-artwork-buttons-create cursor-pointer" @click="checkOrUncheckAllPermissionsOfGroup(group)">
-                                {{ group.permissions.some(permission => this.userForm.permissions.includes(permission.name)) ? $t('Deselect all') : $t('Select all') }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="space-y-3 divide-y divide-gray-200 divide-dashed">
-                        <div v-if="typeof group.show === 'undefined' || group.show" class="flex items-start justify-between pb-3" v-for="(permission, index) in group.permissions" :key=index>
-                            <div class="flex gap-3">
-                                <div class="flex h-6 shrink-0 items-center">
-                                    <div class="group grid size-4 grid-cols-1">
-                                        <input v-model="userForm.permissions" @change="this.editUser()" :value="permission.name" id="comments" aria-describedby="comments-description" name="comments" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
-                                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
-                                            <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                            <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="text-sm/6">
-                                    <label for="comments" class="font-medium capitalize font-lexend" :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'text-gray-900' : 'text-gray-500']">{{ $t(permission.translation_key) }}</label>
-                                    <p id="comments-description" class="text-gray-400 font-lexend text-xs">{{ $t(permission.tooltipKey) }}</p>
-                                </div>
-                            </div>
-                            <div>
-                                <ToolTipDefault :left="true" :tooltip-text="$t(permission.tooltipKey)"/>
-                            </div>
+                <SvgCollection :svg-name="showGlobalRoles ? 'arrowUp' : 'arrowDown'" />
+            </button>
+
+            <div v-if="showGlobalRoles" class="border-t border-zinc-100 px-6 py-6 sm:px-8 sm:py-8">
+                <div class="space-y-4">
+                    <div
+                        v-for="(role, index) in available_roles"
+                        :key="index"
+                        class="flex items-start justify-between rounded-2xl border border-zinc-200 bg-zinc-50/50 px-4 py-3"
+                    >
+                        <label class="flex cursor-pointer items-start gap-3">
+                            <input
+                                v-model="userForm.roles"
+                                @change="editUser"
+                                :value="role.name"
+                                type="checkbox"
+                                class="mt-1 h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                            />
+                            <span>
+                <span class="block font-medium capitalize text-zinc-900">{{ $t(role.translation_key) }}</span>
+                <span class="block text-xs text-zinc-500">
+                  {{ $t(role.tooltipKey) }}
+                </span>
+              </span>
+                        </label>
+                        <div class="pl-2">
+                            <ToolTipDefault :left="true" :tooltip-text="$t(role.tooltipKey)" />
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="flex mt-12">
-                <span @click="openDeleteUserModal()" class="font-lexend text-sm cursor-pointer text-red-500">{{ $t('Permanently delete user')}}</span>
+        </section>
+
+        <!-- Permissions -->
+        <section class="mt-6">
+            <div v-if="showUserPermissions" class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div
+                    v-for="(group, groupName) in groupedPermissions"
+                    :key="groupName"
+                    v-show="group.shown"
+                    class="rounded-3xl border border-zinc-200 bg-white shadow-sm"
+                >
+                    <!-- Group Header -->
+                    <div class="flex items-center justify-between px-6 py-4 sm:px-7">
+                        <button
+                            type="button"
+                            class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-800"
+                            @click="toggleGroup(groupName)"
+                        >
+                            <span>{{ $t(groupName) }}</span>
+                            <SvgCollection :svg-name="isGroupOpen(groupName) ? 'arrowUp' : 'arrowDown'" />
+                        </button>
+
+                        <button
+                            type="button"
+                            class="text-xs font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800"
+                            @click="checkOrUncheckAllPermissionsOfGroup(group)"
+                        >
+                            {{
+                                hasAnyOfGroupChecked(group)
+                                    ? $t('Deselect all')
+                                    : $t('Select all')
+                            }}
+                        </button>
+                    </div>
+
+                    <!-- Permissions list -->
+                    <div
+                        v-if="isGroupOpen(groupName)"
+                        class="space-y-0.5 border-t border-zinc-100 px-6 py-4 sm:px-7 sm:py-6"
+                    >
+                        <div
+                            v-for="(permission, i) in group.permissions"
+                            :key="i"
+                            class="flex items-start justify-between rounded-2xl px-3 py-2 hover:bg-zinc-50"
+                        >
+                            <label class="flex cursor-pointer items-start gap-3">
+                                <input
+                                    v-model="userForm.permissions"
+                                    @change="editUser"
+                                    :value="permission.name"
+                                    type="checkbox"
+                                    class="mt-1 h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                />
+                                <span>
+                  <span
+                      class="block font-medium capitalize"
+                      :class="userForm.permissions.includes(permission.name) ? 'text-zinc-900' : 'text-zinc-600'"
+                  >
+                    {{ $t(permission.translation_key) }}
+                  </span>
+                  <span class="block text-xs text-zinc-500">
+                    {{ $t(permission.tooltipKey) }}
+                  </span>
+                </span>
+                            </label>
+                            <ToolTipDefault :left="true" :tooltip-text="$t(permission.tooltipKey)" />
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <!-- Danger zone -->
+            <div class="mt-10 rounded-3xl border border-red-200 bg-red-50 p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-sm font-semibold text-red-800">
+                            {{ $t('Permanently delete user') }}
+                        </h4>
+                        <p class="mt-0.5 text-xs text-red-700">
+                            {{ $t('This action cannot be undone.') }}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        @click="openDeleteUserModal"
+                        class="rounded-full border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100"
+                    >
+                        {{ $t('Delete user') }}
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Delete user modal -->
+        <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
+            <div class="mx-4">
+                <div class="text-2xl font-bold text-zinc-900 my-2">
+                    {{ $t('Delete user') }}
+                </div>
+                <div class="text-sm text-red-700">
+                    {{
+                        $t('re you sure you want to delete {last_name}, {first_name} from the system?', {
+                            last_name: user_to_edit.last_name,
+                            first_name: user_to_edit.first_name
+                        })
+                    }}
+                </div>
+                <div class="mt-6 flex items-center justify-between">
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-full bg-red-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2"
+                        @click="deleteUser"
+                    >
+                        {{ $t('Delete') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="text-sm font-medium text-zinc-700 underline underline-offset-2 hover:text-zinc-900"
+                        @click="closeDeleteUserModal"
+                    >
+                        {{ $t('No, not really') }}
+                    </button>
+                </div>
+            </div>
+        </BaseModal>
     </div>
-
-    <!-- Nutzer*in löschen Modal -->
-    <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
-        <div class="mx-4">
-            <div class="headline1 my-2">
-                {{ $t('Delete user')}}
-            </div>
-            <div class="errorText">
-                {{ $t('re you sure you want to delete {last_name}, {first_name} from the system?', {last_name: user_to_edit.last_name, first_name: user_to_edit.first_name})}}
-            </div>
-            <div class="flex justify-between mt-6">
-                <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-secondaryHover" @click="deleteUser">
-                    {{ $t('Delete') }}
-                </button>
-                <div class="flex my-auto">
-                    <span @click="closeDeleteUserModal()" class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
-                </div>
-            </div>
-        </div>
-    </BaseModal>
 </template>
 
-<script>
-import {
-    CheckIcon,
-    DotsVerticalIcon,
-    InformationCircleIcon,
-    PencilAltIcon,
-    TrashIcon,
-    XIcon
-} from "@heroicons/vue/outline";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import JetInputError from "@/Jetstream/InputError.vue";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {useForm} from "@inertiajs/vue3";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {router} from "@inertiajs/vue3";
-import {reactive} from "vue";
-import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+<script setup>
+import { ref, computed } from 'vue'
+import { useForm, usePage, router } from '@inertiajs/vue3'
+import SvgCollection from '@/Layouts/Components/SvgCollection.vue'
+import ToolTipDefault from '@/Components/ToolTips/ToolTipDefault.vue'
+import BaseModal from '@/Components/Modals/BaseModal.vue'
 
-export default {
-    components: {
-        BaseModal,
-        ToolTipDefault,
-        JetDialogModal,
-        CheckIcon,
-        XIcon,
-        PencilAltIcon,
-        JetInputError,
-        DotsVerticalIcon,
-        TeamIconCollection,
-        TrashIcon,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
-        InformationCircleIcon,
-        SvgCollection
-    },
-    props: [
-        'user_to_edit',
-        'permissions',
-        'all_permissions',
-        'available_roles',
-    ],
-    data() {
-        return {
-            showGlobalRoles: true,
-            showUserPermissions: true,
-            deletingUser: false,
-            userForm: useForm({
-                permissions: this.user_to_edit.permissions,
-                roles: this.user_to_edit.roles,
-            }),
-        }
-    },
-    computed: {
-        computedGroupedPermissions() {
-            let groupedPermissions = {};
+const props = defineProps({
+    user_to_edit: { type: Object, required: true },
+    permissions: { type: Array, default: () => [] },      // not directly used but kept for API parity
+    all_permissions: { type: Object, required: true },
+    available_roles: { type: Array, required: true },
+})
 
-            for (const [group, permissions] of Object.entries(this.all_permissions)) {
-                groupedPermissions[group] = {
-                    shown: true,
-                    permissions: []
-                };
+/* UI state */
+const showGlobalRoles = ref(true)
+const showUserPermissions = ref(true)
+const deletingUser = ref(false)
 
-                permissions.forEach((permission) => {
-                    if (permission.name === 'can view and delete sage100-api-data') {
-                        if (this.$page.props.sageApiEnabled) {
-                            groupedPermissions[group].permissions.push(permission);
-                        }
-                        return;
-                    }
+/* Form */
+const userForm = useForm({
+    permissions: props.user_to_edit.permissions || [],
+    roles: props.user_to_edit.roles || [],
+})
 
-                    groupedPermissions[group].permissions.push(permission);
-                });
+/* Page props (for sage toggle) */
+const page = usePage()
 
-                groupedPermissions[group].shown = groupedPermissions[group].permissions.length > 0;
+/* Group open/close state map */
+const groupOpen = ref({}) // { [groupName]: boolean }
+
+/* Build grouped permissions (filtered & sorted) */
+const groupedPermissions = computed(() => {
+    // Build raw groups
+    const grouped = {}
+    for (const [groupName, perms] of Object.entries(props.all_permissions)) {
+        const filtered = (perms || []).filter((p) => {
+            if (p.name === 'can view and delete sage100-api-data') {
+                return !!page.props?.sageApiEnabled
             }
-
-            // Sortiere Gruppen nach Anzahl der Permissions
-            const sortedGroupedPermissions = Object.fromEntries(
-                Object.entries(groupedPermissions)
-                    .sort(([, a], [, b]) => b.permissions.length - a.permissions.length)
-            );
-
-            return reactive(sortedGroupedPermissions);
+            return true
+        })
+        grouped[groupName] = {
+            shown: filtered.length > 0,
+            permissions: filtered,
         }
-    },
-    methods: {
-        checkOrUncheckAllPermissionsOfGroup(group) {
-            if (group.permissions.some(permission => this.userForm.permissions.includes(permission.name))) {
-                // Entferne alle Berechtigungen der Gruppe
-                this.userForm.permissions = this.userForm.permissions.filter(permission =>
-                    !group.permissions.some(p => p.name === permission)
-                );
-            } else {
-                // Füge alle Berechtigungen der Gruppe hinzu
-                this.userForm.permissions = [...new Set([...this.userForm.permissions, ...group.permissions.map(p => p.name)])];
-            }
-
-            this.editUser();
-        },
-        editUser() {
-            this.userForm.patch(
-                route('user.update.permissions-and-roles', {user: this.user_to_edit.id}),
-                {
-                    preserveScroll: true
-                }
-            );
-        },
-        openDeleteUserModal() {
-            this.deletingUser = true;
-        },
-        closeDeleteUserModal() {
-            this.deletingUser = false;
-        },
-        deleteUser() {
-            router.delete(`/users/${this.user_to_edit.id}`);
-            this.closeDeleteUserModal()
-        },
+        // initialize open state first time
+        if (!(groupName in groupOpen.value)) {
+            groupOpen.value[groupName] = true
+        }
     }
+
+    // Sort groups by permission count (desc)
+    return Object.fromEntries(
+        Object.entries(grouped).sort(([, a], [, b]) => (b.permissions?.length || 0) - (a.permissions?.length || 0))
+    )
+})
+
+/* Helpers */
+const isGroupOpen = (name) => !!groupOpen.value[name]
+const toggleGroup = (name) => (groupOpen.value[name] = !groupOpen.value[name])
+
+const hasAnyOfGroupChecked = (group) =>
+    group.permissions.some((p) => userForm.permissions.includes(p.name))
+
+/* Actions */
+const checkOrUncheckAllPermissionsOfGroup = (group) => {
+    if (hasAnyOfGroupChecked(group)) {
+        // remove all
+        userForm.permissions = userForm.permissions.filter(
+            (permName) => !group.permissions.some((p) => p.name === permName)
+        )
+    } else {
+        // add all (unique)
+        const toAdd = group.permissions.map((p) => p.name)
+        userForm.permissions = Array.from(new Set([...userForm.permissions, ...toAdd]))
+    }
+    editUser()
+}
+
+const editUser = () => {
+    userForm.patch(route('user.update.permissions-and-roles', { user: props.user_to_edit.id }), {
+        preserveScroll: true,
+    })
+}
+
+const openDeleteUserModal = () => (deletingUser.value = true)
+const closeDeleteUserModal = () => (deletingUser.value = false)
+
+const deleteUser = () => {
+    router.delete(`/users/${props.user_to_edit.id}`)
+    closeDeleteUserModal()
 }
 </script>

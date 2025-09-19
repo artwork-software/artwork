@@ -49,7 +49,7 @@
             <MenuItems
                 v-else
                 :class="whiteBackground ? 'bg-white ring-1 ring-zinc-200' : 'bg-zinc-900/95 ring-1 ring-black/80'"
-                class="w-96 absolute right-0 top-12 z-50 origin-top-right rounded-lg shadow-lg  p-2 text-white max-h-[calc(100vh-10rem)] overflow-auto"
+                class="w-96  absolute right-0 top-12 z-50 origin-top-right rounded-lg shadow-lg  p-2 text-white max-h-[calc(100vh-10rem)] overflow-auto"
             >
                 <slot />
             </MenuItems>

@@ -3055,5 +3055,12 @@
     "Disable Notifications": "Disable Notifications",
     "Enable Notifications": "Enable Notifications",
     "Sort by": "Sort by",
-    "Only mine": "Only mine"
+    "Only mine": "Only mine",
+    "Basic information": "Basic information",
+    "Reset your password or send a reset email.": "Reset your password or send a reset email.",
+    "Security": "Security",
+    "Preferences": "Preferences",
+    "Account & Contact": "Account & Contact",
+    "User Profile": "User Profile",
+    "Manage global roles and granular permissions for this user.": "Manage global roles and granular permissions for this user."
 }

@@ -3149,19 +3149,14 @@ class EventController extends Controller
         ));
     }
 
-    public function updateDescription(Request $request, Event $event): RedirectResponse
+    public function updateDescription(Request $request, Event $event): void
     {
         $event->update($request->only(['description']));
 
-        broadcast(new EventUpdated(
-            $event->room_id,
-            $event->start_time,
-            $event->is_series ?
-                $event->series->end_date :
-                $event->end_time
-        ))->toOthers();
-
-        return $this->redirector->back();
+        broadcast(new EventCreated(
+            $event->fresh(),
+            $event->fresh()->room_id
+        ));
     }
 
 

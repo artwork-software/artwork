@@ -17,6 +17,8 @@ class InventoryArticleDTO
     public array $images = [];
     public array $room = [];
     public array $manufacturer = [];
+    public string $created_at;
+    public string $updated_at;
 
     /**
      * Create a DTO from an InventoryArticle model.
@@ -38,6 +40,8 @@ class InventoryArticleDTO
         $dto->images = InventoryArticleImageDTO::fromCollection($article->images);
         $dto->room = $article->room;
         $dto->manufacturer = $article->manufacturer;
+        $dto->created_at = $article->created_at;
+        $dto->updated_at = $article->updated_at;
 
         return $dto;
     }

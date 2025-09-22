@@ -286,7 +286,7 @@
 
                                                 <div class="flex items-center gap-4 md:gap-6">
                                                     <div class="w-28">
-                                                        <BaseInput :id="'article-quantity-' + article.originalIndex" type="number" v-model="article.quantity" :label="$t('Menge')" />
+                                                        <BaseInput :id="'article-quantity-' + article.originalIndex" type="number" v-model="internMaterialIssue.articles[article.originalIndex].quantity" :label="$t('Menge')" />
                                                     </div>
                                                     <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeArticle(article.originalIndex)">
                                                         <component :is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
@@ -977,7 +977,7 @@ const submit = () => {
             (file) => file.id
         );
     }
-
+console.log(internMaterialIssue.articles)
     if (props.issueOfMaterial?.id) {
         // Use post instead of patch for better file upload handling
         internMaterialIssue._method = "PATCH";

@@ -2,6 +2,11 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from "@tailwindcss/vite";
+import viteCompression from 'vite-plugin-compression'
+import Components from 'unplugin-vue-components/vite'
+import Icons from 'unplugin-icons/vite'
+import IconsResolver from 'unplugin-icons/resolver'
+
 const port = 5173;
 const origin = `${process.env.DDEV_PRIMARY_URL}:${port}`;
 
@@ -41,6 +46,13 @@ export default defineConfig({
                 },
             },
         }),
+        Components({
+            dts: 'resources/types/components.d.ts',
+            resolvers: [IconsResolver({ prefix: 'i', enabledCollections: ['tabler'] })],
+        }),
+        Icons({ compiler: 'vue3', autoInstall: true }),
         tailwindcss(),
+        viteCompression({ algorithm: 'brotliCompress', ext: '.br', deleteOriginFile: false }),
+        viteCompression({ algorithm: 'gzip', ext: '.gz', deleteOriginFile: false })
     ],
 });

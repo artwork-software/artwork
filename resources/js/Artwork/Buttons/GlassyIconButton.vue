@@ -14,12 +14,15 @@
 
 </template>
 
-<script setup>
+<script setup lang="ts">
+
+import {IconPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     icon: {
-        type: String,
-        required: true
+        // erlaubt String oder echte Komponente (Function/Object)
+        type: [String, Function, Object] as PropType<string | Component>,
+        default: IconPlus,
     },
     iconSize: {
         type: String,

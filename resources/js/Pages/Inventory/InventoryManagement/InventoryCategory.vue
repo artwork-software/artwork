@@ -11,7 +11,7 @@
             <div class="category-td-container">
                 <div class="name flex items-center gap-x-1"
                     @click="toggleCategoryEdit()">
-                    <component is="IconCategory" class="icon" />
+                    <component :is="IconCategory" class="icon" />
                     {{ category.name }}
                 </div>
                 <div @click="toggleCategory()"
@@ -22,7 +22,7 @@
                 <ToolTipComponent
                     :tooltip-text="$t('Add new group')"
                     direction="bottom"
-                    icon="IconCirclePlus"
+                    :icon="IconCirclePlus"
                     icon-size="h-5 w-5"
                     stroke="1.5"
                     white-icon
@@ -89,8 +89,9 @@
 <script setup>
 import InventoryGroup from "@/Pages/Inventory/InventoryManagement/InventoryGroup.vue";
 import {
+    IconCategory,
     IconChevronDown,
-    IconChevronUp,
+    IconChevronUp, IconCirclePlus,
     IconCopy,
     IconDotsVertical, IconEdit,
     IconTrash,

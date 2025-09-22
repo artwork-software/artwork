@@ -27,7 +27,7 @@
 
             </slot>
             <div class="flex items-center w-max" v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id)) || can('can use checklists') && isInOwnTaskManagement">
-                <GlassyIconButton text="New checklist" icon="IconPlus" @click="openAddChecklistModal = true" />
+                <GlassyIconButton text="New checklist" :icon="IconPlus" @click="openAddChecklistModal = true" />
             </div>
         </div>
     </div>
@@ -47,7 +47,7 @@
 <script setup>
 
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import {IconLayoutKanban, IconLayoutList} from "@tabler/icons-vue";
+import {IconLayoutKanban, IconLayoutList, IconPlus} from "@tabler/icons-vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";

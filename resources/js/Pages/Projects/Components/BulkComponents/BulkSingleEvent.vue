@@ -189,7 +189,7 @@
             >
                 <div class="flex items-center gap-x-3">
                     <ToolTipComponent
-                        icon="IconNote"
+                        :icon="IconNote"
                         v-if="!isInModal"
                         :tooltip-text="$t('Edit the description')"
                         stroke="1.5"
@@ -206,7 +206,7 @@
 
                     <!-- Copy Menu -->
                     <BaseMenu show-custom-icon dots-color="!text-artwork-buttons-context" stroke-width="2"
-                              icon="IconCopy" translation-key="Copy" menu-width="w-fit" white-menu-background>
+                              :icon="IconCopy" translation-key="Copy" menu-width="w-fit" white-menu-background>
                         <div class="flex items-center gap-x-2 p-3">
                             <IconPlus class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context" stroke-width="2" />
                             <BaseInput
@@ -250,11 +250,11 @@
 
                     <!-- Edit/Delete Menu -->
                     <BaseMenu has-no-offset white-menu-background menu-width="!w-fit" v-if="!isInModal">
-                        <BaseMenuItem white-menu-background icon="IconEdit" title="Edit" @click="openEventComponent(event.id)" />
+                        <BaseMenuItem white-menu-background :icon="IconEdit" title="Edit" @click="openEventComponent(event.id)" />
                         <BaseMenuItem
                             v-if="(index > 0 && !event.copy) || !isInModal"
                             white-menu-background
-                            icon="IconTrash"
+                            :icon="IconTrash"
                             title="Put in the trash"
                             @click="openDeleteEventConfirmModal"
                         />
@@ -282,8 +282,8 @@
 import {
     IconCheck,
     IconChevronDown,
-    IconCircleCheckFilled,
-    IconPlus,
+    IconCircleCheckFilled, IconCopy, IconEdit, IconNote,
+    IconPlus, IconTrash,
 } from "@tabler/icons-vue";
 import {
     Listbox,

@@ -294,6 +294,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/users/{user}/chat/popup-settings', [UserController::class, 'updateChatPopupSettings'])
         ->name('user.chat.popup-settings');
 
+    // chat-system.toggle-push-notifications
+    Route::post('/users/chat/push-notifications', [ChatController::class, 'disableOrEnableChatNotifications'])
+        ->name('chat-system.toggle-push-notifications');
+
     Route::patch(
         '/users/{user}/permissions',
         [
@@ -569,6 +573,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Event Views
     Route::get('/calendar/view', [EventController::class, 'viewEventIndex'])->name('events');
+    Route::get('/response/all/events', [EventController::class, 'allEventsAPI'])->name('events.all');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
         ->name('events.for-rooms-by-days-and-project');
     Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');

@@ -57,7 +57,10 @@ class InventoryArticleService
         $filters = json_decode(Request::get('filters', '[]'), true, 512, JSON_THROW_ON_ERROR);
         $query = $this->articleRepository->applyFilters($query, $filters);
 
-        return $query->paginate(Request::integer('entitiesPerPage', 50));
+        //per_page = api, entitiesPerPage = frontend
+        $perPage = Request::get('per_page', Request::integer('entitiesPerPage', 50));
+
+        return $query->paginate($perPage);
     }
 
     /**

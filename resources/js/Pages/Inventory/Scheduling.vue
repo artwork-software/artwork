@@ -104,7 +104,7 @@
                             <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                 <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                     <ToolTipComponent
-                                        icon="IconPencil"
+                                        :icon="IconPencil"
                                         icon-size="h-4 w-4"
                                         :tooltip-text="$t('Edit')"
                                         direction="right"
@@ -112,7 +112,7 @@
                                 </span>
                                 <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                     <ToolTipComponent
-                                        icon="IconPencil"
+                                        :icon="IconPencil"
                                         icon-size="h-4 w-4"
                                         :tooltip-text="$t('Edit')"
                                         direction="right"
@@ -181,7 +181,7 @@
                             />
                             <ToolTipComponent
                                 v-if="!searchOpened"
-                                icon="IconSearch"
+                                :icon="IconSearch"
                                 icon-size="h-5 w-5"
                                 classes="text-white"
                                 :tooltip-text="$t('Search')"
@@ -218,7 +218,7 @@ import {Link, router} from "@inertiajs/vue3";
 import {
     IconChevronDown,
     IconChevronsDown,
-    IconChevronUp,
+    IconChevronUp, IconPencil, IconSearch,
     IconX
 } from "@tabler/icons-vue";
 import {Switch} from "@headlessui/vue";

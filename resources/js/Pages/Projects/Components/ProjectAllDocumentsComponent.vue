@@ -320,7 +320,6 @@ function closePreview() {
                             class="size-5 shrink-0 text-zinc-400"
                             aria-hidden="true"
                         />
-
                         <!-- Titel & Meta -->
                         <div class="min-w-0 flex-1">
                             <div class="truncate text-sm font-medium text-zinc-900">
@@ -329,9 +328,9 @@ function closePreview() {
                             <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
                                 <span>{{ file.file_size }}</span>
                                 <span v-if="file.created_at" class="inline-flex items-center gap-1">
-                  • <span>{{ $t('Uploaded') }}:</span>
-                  <time :datetime="file.created_at">{{ formatDate(file.created_at) }}</time>
-                </span>
+                                  • <span>{{ $t('Uploaded') }}:</span>
+                                  <time :datetime="file.created_at">{{ formatDate(file.created_at) }}</time>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -413,8 +412,8 @@ function closePreview() {
                             </button>
 
                             <span class="text-sm text-zinc-600">
-                {{ currentPage }} / {{ totalPages }}
-              </span>
+                                {{ currentPage }} / {{ totalPages }}
+                            </span>
 
                             <button
                                 type="button"
@@ -433,3 +432,4 @@ function closePreview() {
         </teleport>
     </div>
 </template>
+

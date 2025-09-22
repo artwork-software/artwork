@@ -13,13 +13,13 @@
                         {{ $t('The working time pattern “{0}” is currently selected. This means that working times cannot be edited. Remove the working time pattern to enter your own times.', [selectedWorkTimePattern.name]) }}
                     </p>
                     <div class="mt-2 cursor-pointer text-artwork-buttons-create hover:text-artwork-buttons-default flex items-center gap-x-1 text-sm font-lexend" @click="showConfirmRemovePatternModal = true">
-                        <component is="IconRepeat" class="size-5 text-gray-500"/>
+                        <component :is="IconRepeat" class="size-5 text-gray-500"/>
                         {{ $t('Click here to remove the current work time pattern.') }}
                     </div>
                 </div>
             </div>
             <div class="flex items-center justify-end gap-2">
-                <GlassyIconButton text="Select Work Time Pattern" icon="IconClockSearch" @click.stop="showSelectWorkTimePatternModal = true"/>
+                <GlassyIconButton text="Select Work Time Pattern" :icon="IconClockSearch" @click.stop="showSelectWorkTimePatternModal = true"/>
             </div>
         </div>
 
@@ -224,6 +224,7 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import NextWorkTimeCountdown from "@/Pages/Users/Components/NextWorkTimeCountdown.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
+import {IconClockSearch, IconRepeat} from "@tabler/icons-vue";
 
 const props = defineProps({
     userToEdit: {

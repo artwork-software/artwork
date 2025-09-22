@@ -38,7 +38,6 @@ class InventoryArticle extends Model
     use Searchable;
     use SoftDeletes;
 
-
     protected $fillable = [
         'name',
         'description',

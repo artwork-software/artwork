@@ -12,7 +12,7 @@
 
             <div class="flex items-center justify-between">
                 <TabComponent :tabs="tabs" use-translation/>
-                <GlassyIconButton text="Add Work Time Pattern" icon="IconPlus" @click="showCreateOrUpdateWorkTimePatternModal  = true" />
+                <GlassyIconButton text="Add Work Time Pattern" :icon="IconPlus" @click="showCreateOrUpdateWorkTimePatternModal  = true" />
             </div>
 
 
@@ -50,6 +50,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SingleWorkTimePattern from "@/Pages/Settings/WorkTimePattern/Components/SingleWorkTimePattern.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import {IconPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     workTimePatterns: {

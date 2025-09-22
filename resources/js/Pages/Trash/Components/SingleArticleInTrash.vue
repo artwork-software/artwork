@@ -26,8 +26,8 @@
     </div>
     <div class="flex flex-none items-center gap-x-4">
         <BaseMenu has-no-offset>
-            <BaseMenuItem @click="restoreArticle" icon="IconRefresh" title="Restore" />
-            <BaseMenuItem @click="showConfirmDeleteModal = true" icon="IconTrash" title="Delete permanently"/>
+            <BaseMenuItem @click="restoreArticle" :icon="IconRefresh" title="Restore" />
+            <BaseMenuItem @click="showConfirmDeleteModal = true" :icon="IconTrash" title="Delete permanently"/>
         </BaseMenu>
     </div>
 
@@ -47,6 +47,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {router} from "@inertiajs/vue3";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {ref} from "vue";
+import {IconRefresh, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     article: {

@@ -20,6 +20,8 @@ RUN apt-get update -y && \
       nginx \
       openssl \
       unzip \
+      mariadb-server \
+      mariadb-client \
       netcat \
       supervisor \
       libcap2-bin \
@@ -60,9 +62,8 @@ RUN mkdir -p /var/www/html && \
     mkdir -p /var/log/supervisor
 
 WORKDIR /var/www/html
-COPY . /var/www/html
 
-RUN cp .env.standalone.example .env || true
+COPY . /var/www/html
 
 RUN cp -rf .install/artwork.vhost.conf /etc/nginx/sites-available/default && \
     echo "\n    add_header X-Frame-Options \"SAMEORIGIN\" always;" \
@@ -72,13 +73,6 @@ RUN cp -rf .install/artwork.vhost.conf /etc/nginx/sites-available/default && \
     "\n    add_header Content-Security-Policy \"default-src 'self';\" always;" \
     "\n    # add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains; preload\" always;\n" \
     >> /etc/nginx/sites-available/default
-
-RUN wget -O composer.phar https://getcomposer.org/download/2.6.5/composer.phar && \
-    php composer.phar --no-interaction install
-
-RUN php artisan key:generate && php artisan storage:link
-
-RUN npm install && npm run build
 
 RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 750 /var/www/html && \

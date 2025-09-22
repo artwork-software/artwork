@@ -23,7 +23,7 @@
 
                 <div class="mt-5">
                     <SmallFormButton v-if="can('inventory.create_edit') || is('artwork admin')" class="flex items-center gap-x-2 font-lexend" @click="showAddEditArticleModal = true">
-                        <component is="IconBarcode" class="size-5" aria-hidden="true" />
+                        <component :is="IconBarcode" class="size-5" aria-hidden="true" />
                         <span>
                             {{ $t('Add Article') }}
                         </span>
@@ -134,7 +134,7 @@ import InventoryLayoutSwitchComponent from "@/Pages/Inventory/LayoutComponents/I
 import InventorySingleArticleInTable from "@/Pages/Inventory/TableComponents/InventorySingleArticleInTable.vue";
 import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import {IconIdBadge} from "@tabler/icons-vue";
+import {IconBarcode, IconIdBadge} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {can, is} from "laravel-permission-to-vuejs";

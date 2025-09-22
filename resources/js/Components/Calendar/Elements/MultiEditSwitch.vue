@@ -5,7 +5,7 @@
                 <ToolTipComponent
                     direction="bottom"
                     :tooltip-text="$t('Edit')"
-                    icon="IconPencil"
+                    :icon="IconPencil"
                     icon-size="h-4 w-4"
                 />
             </span>
@@ -13,7 +13,7 @@
                 <ToolTipComponent
                     direction="bottom"
                     :tooltip-text="$t('Edit')"
-                    icon="IconPencil"
+                    :icon="IconPencil"
                     icon-size="h-4 w-4"
                 />
             </span>

@@ -11,7 +11,7 @@
                         </p>
                         <button type="button" class="-m-1.5 flex-none p-1.5">
                             <span class="sr-only">Dismiss</span>
-                            <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
+                            <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
                         </button>
                     </div>
                 </div>
@@ -68,7 +68,7 @@
                             <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                 <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                     <ToolTipComponent
-                                        icon="IconCalendarWeek"
+                                        :icon="IconCalendarWeek"
                                         icon-size="h-4 w-4"
                                         :tooltip-text="$t('Daily view')"
                                         direction="left"
@@ -76,7 +76,7 @@
                                 </span>
                                 <span :class="[dailyViewMode ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                     <ToolTipComponent
-                                        icon="IconCalendarWeek"
+                                        :icon="IconCalendarWeek"
                                         icon-size="h-4 w-4"
                                         :tooltip-text="$t('Daily view')"
                                         direction="left"
@@ -88,7 +88,7 @@
                             <span :class="[multiEditModeCalendar ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                 <span :class="[multiEditModeCalendar ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                     <ToolTipComponent
-                                        icon="IconPencil"
+                                        :icon="IconPencil"
                                         icon-size="h-4 w-4"
                                         :tooltip-text="$t('Edit')"
                                         direction="left"
@@ -96,7 +96,7 @@
                                 </span>
                                 <span :class="[multiEditModeCalendar ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                     <ToolTipComponent
-                                        icon="IconPencil"
+                                        :icon="IconPencil"
                                         icon-size="h-4 w-4"
                                         :tooltip-text="$t('Edit')"
                                         direction="left"
@@ -230,7 +230,7 @@
                                                 <ToolTipComponent
                                                     :tooltip-text="$t('Add shift')"
                                                     direction="bottom"
-                                                    icon="IconPlus"
+                                                    :icon="IconPlus"
                                                     icon-size="h-4 w-4"
                                                     classes="text-artwork-buttons-create"
                                                 />
@@ -250,7 +250,7 @@
                          :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
                          class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background pointer-events-auto">
                         <div :class="showUserOverview ? '' : ' rotate-180 fixed bottom-0 mb-0.5'">
-                            <component is="IconChevronsDown" class="h-4 w-4 text-gray-300"/>
+                            <component :is="IconChevronsDown" class="h-4 w-4 text-gray-300"/>
                         </div>
                     </div>
                     <div v-if="showUserOverview" @mousedown="startResize"
@@ -272,7 +272,7 @@
                                     <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                         <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                             <ToolTipComponent
-                                                icon="IconPencil"
+                                                :icon="IconPencil"
                                                 icon-size="h-4 w-4"
                                                 :tooltip-text="$t('Edit')"
                                                 direction="top"
@@ -280,7 +280,7 @@
                                         </span>
                                         <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                                             <ToolTipComponent
-                                                icon="IconPencil"
+                                                :icon="IconPencil"
                                                 icon-size="h-4 w-4"
                                                 :tooltip-text="$t('Edit')"
                                                 direction="top"
@@ -374,7 +374,7 @@
                                           :class="[highlightMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
-                                              icon="IconBulb"
+                                              :icon="IconBulb"
                                               icon-size="h-4 w-4"
                                               :tooltip-text="$t('Highlight')"
                                               direction="bottom"
@@ -384,7 +384,7 @@
                                           :class="[highlightMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
-                                              icon="IconBulb"
+                                              :icon="IconBulb"
                                               icon-size="h-4 w-4"
                                               :tooltip-text="$t('Highlight')"
                                               direction="bottom"
@@ -401,7 +401,7 @@
                                           :class="[$page.props.auth.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
-                                              icon="IconList"
+                                              :icon="IconList"
                                               icon-size="h-4 w-4"
                                               :tooltip-text="$t('Compact view')"
                                               direction="bottom"
@@ -411,7 +411,7 @@
                                           :class="[$page.props.auth.user.compact_mode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
-                                              icon="IconList"
+                                              :icon="IconList"
                                               icon-size="h-4 w-4"
                                               :tooltip-text="$t('Compact view')"
                                               direction="bottom"
@@ -764,10 +764,10 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {
     IconAlertSquareRounded,
     IconArrowDown,
-    IconArrowUp,
-    IconChevronDown,
-    IconFileText,
-    IconPencil,
+    IconArrowUp, IconBulb, IconCalendarWeek,
+    IconChevronDown, IconChevronsDown,
+    IconFileText, IconList,
+    IconPencil, IconPlus,
     IconX
 } from "@tabler/icons-vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
@@ -1096,6 +1096,13 @@ export default {
         },
     },
     methods: {
+        IconList,
+        IconBulb,
+        IconChevronsDown,
+        IconPlus,
+        IconPencil,
+        IconCalendarWeek,
+        IconX,
         IconAlertSquareRounded,
         usePage,
         changeDailyViewMode(){

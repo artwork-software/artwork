@@ -7,13 +7,13 @@
                     <ArticleSearch @article-selected="addArticleNameToFilter" class="w-72"
                         id="article-search" />
                     <button type="button" @click="filterIssueByArticleIds" class="p-4 flex items-center justify-center bg-gray-100 shadow-sm border border-gray-200 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                        <component is="IconSearch" class="size-5" stroke-width="1.5"/>
+                        <component :is="IconSearch" class="size-5" stroke-width="1.5"/>
                     </button>
                 </div>
 
                 <div>
                     <BaseButton v-if="can('inventory.disposition') || is('artwork admin')" :text="$t('New issue of material')" @click="openIssueOfMaterialModal">
-                        <component is="IconCopyPlus" class="size-5 mr-2" />
+                        <component :is="IconCopyPlus" class="size-5 mr-2" />
                     </BaseButton>
                 </div>
             </div>
@@ -27,7 +27,7 @@
                     <div v-for="(articleName, index) in articleNamesForFilter" :key="index" class="bg-blue-50 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded-full flex items-center border border-blue-200 font-lexend">
                         {{ articleName.name }}
                         <button type="button" @click="articleNamesForFilter.splice(index, 1)" class="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none">
-                            <component is="IconX" class="size-4" />
+                            <component :is="IconX" class="size-4" />
                         </button>
                     </div>
                 </div>
@@ -104,6 +104,7 @@ import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import {watch} from "vue";
 import {router} from "@inertiajs/vue3";
 import {can, is} from "laravel-permission-to-vuejs";
+import {IconCopyPlus, IconSearch, IconX} from "@tabler/icons-vue";
 
 const props = defineProps({
     issues: {

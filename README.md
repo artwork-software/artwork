@@ -113,17 +113,19 @@ Everytime the container is built it will perform an auto update on database and 
 
 ### Installation
 
+*Please note that the docker setup is currently not ready for production usage*
+
 To boot the container you can simply run the following command:
 
-`docker compose -f docker-compose-production.yml up -d`
+`docker compose up -d`
 
-The application needs an app key variable set. For this please run the command ``docker compose -f docker-compose-production.yml exec artwork php artisan key:generate --show``
+The application needs an app key variable set. For this please run the command ``docker compose  exec artwork php artisan key:generate --show``
 
 This will output a key. Copy this key and paste it into the .env file under the APP_KEY variable.
 
-Afterwards reload the container to load the new ``.env`` by running `docker compose -f docker-compose-production.yml up -d` again.
+Afterwards reload the container to load the new ``.env`` by running `docker compose up -d` again.
 
-Feel free to modify the .env file to your needs, e.g. with E-Mail credentials.
+Make sure you adjust the values in your .env file.
 
 ### Updates
 

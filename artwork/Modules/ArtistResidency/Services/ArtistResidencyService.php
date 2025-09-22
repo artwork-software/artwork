@@ -198,10 +198,16 @@ readonly class ArtistResidencyService
                 'defaultFont' => 'sans-serif',
             ]);
 
-        $this->ensureDirectoryExists('pdf');
-
         $filename = $this->createFilename(now(), $project->name, '72');
-        $pdfContent->save($this->createStoragePath($filename));
+        $filePath = $this->createStoragePath($filename);
+
+        // Ensure the full directory path exists, including any subdirectories from the filename
+        $directory = dirname($filePath);
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        $pdfContent->save($filePath);
 
         return $this->inertiaResponseFactory->location(
             route('artist-residency.export.pdf.download', ['filename' => $filename])

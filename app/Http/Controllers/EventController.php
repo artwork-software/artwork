@@ -28,6 +28,7 @@ use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\EventDeleted;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
+use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Http\Requests\EventBulkCreateRequest;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
 use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
@@ -81,6 +82,7 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
@@ -94,6 +96,7 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
@@ -188,70 +191,182 @@ class EventController extends Controller
      */
     public function viewEventIndex(Request $request, ?Project $project = null): Response|JsonResponse
     {
+
         /** @var User $user */
         $user = $this->authManager->user();
-        $userCalendarFilter = $user->userFilters()->calendarFilter()->first(); //$user->getAttribute('calendar_filter');
 
-        //dd($userCalendarFilter);
-
-
+        $userCalendarFilter   = $user->userFilters()->calendarFilter()->first();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
-        $isPlanning = $request->boolean('isPlanning', false);
+        $isPlanning           = $request->boolean('isPlanning', false);
 
-
+        // Abo/Shared Daten (leichtgewichtig lassen)
         $this->userService->shareCalendarAbo('calendar');
-        $dateRangeRequested = false;
 
-        if ($request->input('start_date') && $request->input('end_date')) {
+        // Datum bestimmen
+        $dateRangeRequested = $request->filled(['start_date','end_date']);
+        if ($dateRangeRequested) {
             $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
-            $endDate = Carbon::parse($request->input('end_date'))->endOfDay();
-            $dateRangeRequested = true;
+            $endDate   = Carbon::parse($request->input('end_date'))->endOfDay();
         } else {
             [$startDate, $endDate] = $this->calendarDataService
                 ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
         }
 
+        // Sicherheitskappen für View-Spannen
         $calendarWarningText = '';
-
         if ($user->daily_view && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
-            $user->userFilters()->updateOrCreate([
-                'filter_type' => UserFilterTypes::CALENDAR_FILTER->value
-            ], [
-                'end_date' => $endDate->format('Y-m-d')
-            ]);
+
+            $user->userFilters()->updateOrCreate(
+                ['filter_type' => UserFilterTypes::CALENDAR_FILTER->value],
+                ['end_date' => $endDate->format('Y-m-d')]
+            );
         }
 
         if ($startDate->diffInDays($endDate) > (365 * 2)) {
             $endDate = $startDate->copy()->addYears(2);
             $calendarWarningText = __('calendar.calendar_limit_two_years');
-            $user->userFilters()->updateOrCreate([
-                'filter_type' => UserFilterTypes::CALENDAR_FILTER->value
-            ], [
-                'end_date' => $endDate->format('Y-m-d')
-            ]);
+
+            $user->userFilters()->updateOrCreate(
+                ['filter_type' => UserFilterTypes::CALENDAR_FILTER->value],
+                ['end_date' => $endDate->format('Y-m-d')]
+            );
         }
 
-        $period = $this->calendarDataService->createCalendarPeriodDto(
-            $startDate,
-            $endDate,
-            $user,
-            false
-        );
+        // Perioden/Monate (leichtgewichtig)
+        $period = $this->calendarDataService->createCalendarPeriodDto($startDate, $endDate, $user, false);
 
         $months = [];
-        foreach ($period as $periodObject) {
-            $date = Carbon::parse($periodObject->withoutFormat);
-            $month = $date->format('m.Y');
-            if (!array_key_exists($month, $months)) {
-                $months[$month] = [
-                    'first_day_in_period' => $date->format('Y-m-d'),
-                    'month' => $date->monthName,
-                    'year' => $date->format('y'),
-                ];
-            }
+        foreach ($period as $p) {
+            $date  = Carbon::parse($p->withoutFormat);
+            $key   = $date->format('m.Y');
+            $months[$key] ??= [
+                'first_day_in_period' => $date->format('Y-m-d'),
+                'month' => $date->monthName,
+                'year'  => $date->format('y'),
+            ];
         }
+
+        // **Rooms selbst sind leichtgewichtig** (id/name/admins/has_events Flag),
+        // Events werden **lazy** geliefert (siehe 'calendar' Prop unten).
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+        );
+
+        $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
+
+        // Sofortige JSON-Antwort nur, wenn explizit ein Datumsbereich abgefragt wird (z.B. Planner)
+        /*if ($dateRangeRequested) {
+            $calendar = ($isPlanning
+                ? $this->eventPlanningCalendarService
+                : $this->eventCalendarService
+            )->mapRoomsToContentForCalendar(
+                ($isPlanning
+                    ? $this->eventPlanningCalendarService
+                    : $this->eventCalendarService
+                )->filterRoomsEvents(
+                    $rooms,
+                    $userCalendarFilter,
+                    $startDate,
+                    $endDate,
+                    $userCalendarSettings
+                ),
+                $startDate,
+                $endDate
+            );
+
+            return response()->json(['calendar' => $calendar->rooms]);
+        }*/
+
+        // Inertia v2 Best Practice: Schwere Props **lazy/deferred** als Closures.
+        // Client lädt diese gezielt via Partial Reload / <WhenVisible />. :contentReference[oaicite:1]{index=1}
+        return Inertia::render('Calendar/Index', [
+            'period'                 => $period,
+            'months'                 => $months,
+            'rooms'                  => $rooms,
+            'dateValue'              => $dateValue,
+            'user_filters'           => $userCalendarFilter,
+            'calendarWarningText'    => $calendarWarningText,
+
+            // Filter/Optionen (meist klein, aber ggf. trotzdem lazy)
+            'personalFilters' => fn () =>
+            $this->filterService->getPersonalFilter($user, UserFilterTypes::CALENDAR_FILTER->value),
+            'filterOptions'   => fn () => $this->filterService->getCalendarFilterDefinitions(),
+
+            // **L A Z Y**: teure Event-Mappings und große Listen:
+            /*'calendar' => fn () => ($isPlanning
+                ? $this->eventPlanningCalendarService
+                : $this->eventCalendarService
+            )->mapRoomsToContentForCalendar(
+                ($isPlanning
+                    ? $this->eventPlanningCalendarService
+                    : $this->eventCalendarService
+                )->filterRoomsEvents(
+                    $this->calendarDataService->getFilteredRooms(
+                        $userCalendarFilter,
+                        $userCalendarSettings,
+                        $startDate,
+                        $endDate
+                    ),
+                    $userCalendarFilter,
+                    $startDate,
+                    $endDate,
+                    $userCalendarSettings
+                ),
+                $startDate,
+                $endDate
+            )->rooms,*/
+
+            'eventsWithoutRoom' => fn () =>
+             Event::query()->hasNoRoom()->get()->map(fn($event) =>
+             \Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO::formModel(
+                 $event,
+                 $userCalendarSettings,
+                 EventType::select(['id','name','abbreviation','hex_code'])->get()->keyBy('id')
+             )
+             ),
+
+           // 'areas'            => fn () => app('Artwork\\Modules\\Area\\Services\\AreaService')->getAll(),
+            'areas'            => fn () => $this->areaService->getAll(),
+            'eventTypes'       => fn () => EventType::select(['id','name','abbreviation','hex_code'])->orderBy('name')->get(),
+            'eventStatuses'    => fn () => EventStatus::orderBy('order')->get(),
+            'event_properties' => fn () => EventProperty::all(),
+
+            // Projekt-Tabs (klein, aber konsistent)
+            'first_project_tab_id' => fn () => $this->projectTabService->getDefaultOrFirstProjectTabId(),
+            'first_project_calendar_tab_id' => fn () => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
+            'first_project_shift_tab_id' => fn () => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+
+            'projectNameUsedForProjectTimePeriod' => fn () =>
+            $userCalendarSettings->getAttribute('time_period_project_id')
+                ? $this->projectService->findById(
+                $userCalendarSettings->getAttribute('time_period_project_id')
+            )->name
+                : null,
+        ]);
+    }
+
+    public function allEventsAPI(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        $isPlanning           = $request->boolean('isPlanning', false);
+
+        if ($isPlanning) {
+            $userCalendarFilter   = $user->userFilters()->planningCalendarFilter()->first();
+        } else {
+            $userCalendarFilter   = $user->userFilters()->calendarFilter()->first();
+        }
+
+        $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
+        $endDate   = Carbon::parse($request->input('end_date'))->endOfDay();
 
         $rooms = $this->calendarDataService->getFilteredRooms(
             $userCalendarFilter,
@@ -260,98 +375,25 @@ class EventController extends Controller
             $endDate,
         );
 
-        if ($dateRangeRequested) {
-            if ($isPlanning) {
-                $this->eventPlanningCalendarService->filterRoomsEvents(
-                    $rooms,
-                    $userCalendarFilter,
-                    $startDate,
-                    $endDate,
-                    $userCalendarSettings
-                );
-            } else {
-                $this->eventCalendarService->filterRoomsEvents(
-                    $rooms,
-                    $userCalendarFilter,
-                    $startDate,
-                    $endDate,
-                    $userCalendarSettings
-                );
-            }
-        } else {
-            if ($isPlanning) {
-                $this->eventPlanningCalendarService->filterRoomsEvents(
-                    $rooms,
-                    $userCalendarFilter,
-                    $startDate,
-                    $endDate,
-                    $userCalendarSettings
-                );
-            } else {
-                $this->eventCalendarService->filterRoomsEventsWithMinimalData(
-                    $rooms,
-                    $userCalendarFilter,
-                    $startDate,
-                    $endDate,
-                    $userCalendarSettings
-                );
-            }
-        }
-
-        if ($isPlanning) {
-            $calendarData = $this->eventPlanningCalendarService->mapRoomsToContentForCalendar(
+        $calendar = ($isPlanning
+            ? $this->eventPlanningCalendarService
+            : $this->eventCalendarService
+        )->mapRoomsToContentForCalendar(
+            ($isPlanning
+                ? $this->eventPlanningCalendarService
+                : $this->eventCalendarService
+            )->filterRoomsEvents(
                 $rooms,
+                $userCalendarFilter,
                 $startDate,
                 $endDate,
-            );
-        } else {
-            $calendarData = $this->eventCalendarService->mapRoomsToContentForCalendar(
-                $rooms,
-                $startDate,
-                $endDate,
-            );
-        }
+                $userCalendarSettings
+            ),
+            $startDate,
+            $endDate
+        );
 
-        $dateValue = [
-            $startDate ? $startDate->format('Y-m-d') : null,
-            $endDate ? $endDate->format('Y-m-d') : null
-        ];
-
-        $eventTypes = EventType::select(['id', 'name', 'abbreviation', 'hex_code'])
-            ->get()
-            ->keyBy('id');
-
-        if ($dateRangeRequested) {
-            return response()->json(['calendar' => $calendarData->rooms]);
-        }
-
-        return Inertia::render('Calendar/Index', [
-            'period' => $period,
-            'rooms' => $rooms,
-            'calendar' => Inertia::always(fn() => $calendarData->rooms),
-            'personalFilters' => Inertia::always(fn() =>
-                $this->filterService->getPersonalFilter($user, UserFilterTypes::CALENDAR_FILTER->value)),
-            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
-            'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
-                EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)),
-            'areas' => $this->areaService->getAll(),
-            'dateValue' => $dateValue,
-            'user_filters' => $userCalendarFilter,
-            'eventTypes' => EventType::all(),
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
-            'event_properties' => EventProperty::all(),
-            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTabId(),
-            'first_project_calendar_tab_id' => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
-            'first_project_shift_tab_id' => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'projectNameUsedForProjectTimePeriod' => $userCalendarSettings->getAttribute('time_period_project_id') ?
-                $this->projectService->findById(
-                    $userCalendarSettings->getAttribute('time_period_project_id')
-                )->name : null,
-            'calendarWarningText' => $calendarWarningText,
-            'months' => $months,
-        ]);
+        return response()->json(['calendar' => $calendar->rooms]);
     }
 
     public function viewPlanningCalendar(Request $request, ?Project $project = null): Response
@@ -3063,14 +3105,13 @@ class EventController extends Controller
                 $project,
                 $this->authManager->id()
             );
-
             broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
                 $storedEvent->fresh(),
                 'created'
             ));
         }
 
-        //return Redirect::back();
+        return Redirect::back();
     }
 
     public function updateSingleBulkEvent(
@@ -3102,26 +3143,20 @@ class EventController extends Controller
             $project,
             $this->authManager->id()
         );
-
         broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
             $event->fresh(),
             'created'
         ));
     }
 
-    public function updateDescription(Request $request, Event $event): RedirectResponse
+    public function updateDescription(Request $request, Event $event): void
     {
         $event->update($request->only(['description']));
 
-        broadcast(new EventUpdated(
-            $event->room_id,
-            $event->start_time,
-            $event->is_series ?
-                $event->series->end_date :
-                $event->end_time
-        ))->toOthers();
-
-        return $this->redirector->back();
+        broadcast(new EventCreated(
+            $event->fresh(),
+            $event->fresh()->room_id
+        ));
     }
 
 

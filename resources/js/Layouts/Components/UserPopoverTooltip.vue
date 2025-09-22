@@ -24,15 +24,15 @@
                                 </div>
 
                                 <div class="text-sm font-bold flex items-center gap-x-2" v-if="user.position" :class="isWhite ? 'text-gray-500' : 'text-gray-300'">
-                                    <component is="IconMapPin" class="h-4 w-4" v-if="user.position"/>
+                                    <component :is="IconMapPin" class="h-4 w-4" v-if="user.position"/>
                                     {{ user.position }}
                                 </div>
                                 <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.email && !user.email_private || $can('can view private user info') || hasAdminRole()">
-                                    <component is="IconMail" class="h-4 w-4" v-if="user.email"/>
+                                    <component :is="IconMail" class="h-4 w-4" v-if="user.email"/>
                                     {{ user.email }}
                                 </div>
                                 <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.phone_number && !user.phone_private || $can('can view private user info') || hasAdminRole()">
-                                    <component is="IconDeviceMobile" class="h-4 w-4" v-if="user.phone_number"/>
+                                    <component :is="IconDeviceMobile" class="h-4 w-4" v-if="user.phone_number"/>
                                     {{ user.phone_number }}
                                 </div>
                                 <div class="col-span-4 mt-2 break-all text-xs italic" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.description">
@@ -61,6 +61,7 @@
 import {Popover, PopoverButton, PopoverPanel} from '@headlessui/vue'
 import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
+import {IconDeviceMobile, IconMail, IconMapPin} from "@tabler/icons-vue";
 
 export default {
     name: "UserPopoverTooltip",
@@ -110,6 +111,9 @@ export default {
         }
     },
     methods: {
+        IconDeviceMobile,
+        IconMail,
+        IconMapPin,
         calculatePopoverPosition(event) {
             const {top, left, height, width} = event.target.getBoundingClientRect();
 

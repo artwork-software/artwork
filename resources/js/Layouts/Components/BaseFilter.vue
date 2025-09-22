@@ -11,7 +11,7 @@
                 <ToolTipComponent
                     direction="bottom"
                     :tooltip-text="$t('Filter')"
-                    icon="IconFilter"
+                    :icon="IconFilter"
                     :whiteIcon="whiteIcon"
                     :grayIcon="grayIcon"
                     icon-size="h-7 w-7"/>
@@ -47,9 +47,11 @@ import {
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconFilter} from "@tabler/icons-vue";
 
 export default {
     name: "BaseFilter",
+    methods: {IconFilter},
     mixins: [Permissions, IconLib],
     components: {
         ToolTipComponent,

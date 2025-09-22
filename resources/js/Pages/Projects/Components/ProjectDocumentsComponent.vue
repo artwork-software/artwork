@@ -10,6 +10,7 @@ import JetInputError from '@/Jetstream/InputError.vue'
 import { useProjectDocumentListener } from '@/Composeables/Listener/useProjectDocumentListener.js'
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
 import FilePreview from "@/Artwork/Files/FilePreview.vue";
+import { IconFileUpload, IconFileText } from '@tabler/icons-vue'
 
 interface ProjectFile {
     id?: number | string
@@ -224,7 +225,7 @@ function closePreview() {
                       isDragging ? 'border-indigo-400 bg-indigo-50/60' : 'border-zinc-300 hover:border-zinc-400',
                       isUploading ? 'opacity-60 cursor-progress' : 'cursor-pointer'
                     ]">
-                <component is="IconFileUpload" class="mx-auto size-12 text-zinc-400" aria-hidden="true" />
+                <component :is="IconFileUpload" class="mx-auto size-12 text-zinc-400" aria-hidden="true" />
                 <div class="mt-2 text-sm font-medium text-zinc-900">
                     {{ $t('Drag document here to upload or click in the field') }}
                 </div>
@@ -253,8 +254,7 @@ function closePreview() {
                             size="sm"
                             @open="openPreview(file)"
                         />
-                        <component v-else is="IconFileText" class="size-5 shrink-0 text-zinc-400" aria-hidden="true" />
-
+                        <component v-else :is="IconFileText" class="size-5 shrink-0 text-zinc-400" aria-hidden="true" />
                         <!-- Name + Meta -->
                         <div class="min-w-0 flex-1">
                             <div class="truncate text-sm font-medium text-zinc-900">{{ file.name }}</div>

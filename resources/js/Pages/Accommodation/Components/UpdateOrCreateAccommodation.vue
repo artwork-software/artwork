@@ -28,46 +28,160 @@
             <div>
                 <div class="my-4">
                     <h2 class="text-md font-semibold mb-2">{{ $t('Room types')}} <span class="text-red-500">*</span></h2>
-                    <p class="text-sm text-zinc-600 mb-3">{{ $t('Select the room types that are available at this accommodation.') }} {{ $t('At least one room type must be selected.') }}</p>
+                    <p class="text-sm text-zinc-600 mb-3">{{ $t('Manage room types and their costs for this accommodation.') }}</p>
                 </div>
-                <ArtworkBaseListbox
-                    v-model="selectedRoomTypes"
-                    :items="roomTypes"
-                    multiple
-                    use-translations
-                    placeholder=""
-                    :selectedFormatter="(items) => `${items.length} ausgewählt`"
-                    :error="showRoomTypeError"
-                />
-                <div v-if="showRoomTypeError" class="mt-1 text-sm text-red-600">
+
+                <div v-if="showRoomTypeError" class="mb-4 text-sm text-red-600">
                     {{ $t('At least one room type must be selected.') }}
                 </div>
 
-                <!-- Custom Room Type Creation -->
-                <div class="mt-4 p-4 bg-gray-50 rounded-lg border">
-                    <h3 class="text-sm font-medium text-gray-700 mb-2">{{ $t('Create an individual room type') }}</h3>
-                    <div class="flex gap-2">
-                        <BaseInput
-                            id="new_room_type"
-                            v-model="newRoomTypeName"
-                            :placeholder="$t('Enter room type name')"
-                            class="flex-1"
-                        />
-                        <ArtworkBaseModalButton
-                            size="sm"
-                            variant="secondary"
+                <!-- Room Types Table -->
+                <div v-if="selectedRoomTypes.length > 0" class="mt-4">
+                    <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-300">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        {{ $t('Room type') }}
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <div class="flex items-center gap-2">
+                                            {{ $t('Cost per night') }}
+                                            <ToolTipComponent
+                                                :icon="IconInfoCircle"
+                                                icon-size="h-4 w-4"
+                                                :tooltip-text="$t('Cost per night tooltip')"
+                                                direction="top"
+                                            />
+                                        </div>
+                                    </th>
+                                    <th scope="col" class="relative px-6 py-3">
+                                        <span class="sr-only">{{ $t('Actions') }}</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="roomType in selectedRoomTypes" :key="roomType.id" class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-sm font-medium text-gray-900">{{ $t(roomType.name) }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="w-32">
+                                            <BaseInput
+                                                :id="`cost_${roomType.id}`"
+                                                type="number"
+                                                :step="0.01"
+                                                :max="50000"
+                                                v-model="roomTypeCosts[roomType.id]"
+                                                placeholder="0.00"
+                                                no-margin-top
+                                                @focusout="updateAccommodationOnFocusout"
+                                            />
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button
+                                            type="button"
+                                            @click="removeRoomType(roomType.id)"
+                                            class="text-red-600 hover:text-red-900"
+                                        >
+                                            {{ $t('Remove') }}
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Add Room Type Section -->
+                <div class="mt-4">
+                    <div v-if="!showAddRoomType" class="flex justify-start">
+                        <button
                             type="button"
-                            @click="createNewRoomType"
-                            :disabled="!newRoomTypeName.trim() || creatingRoomType"
+                            @click="showAddRoomType = true"
+                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-artwork-buttons-create bg-artwork-buttons-create/10 hover:bg-artwork-buttons-create/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create"
                         >
-                            {{ creatingRoomType ? $t('Creating...') : $t('Add') }}
-                        </ArtworkBaseModalButton>
+                            <component :is="IconPlus" class="h-4 w-4 mr-2" />
+                            {{ $t('Add room type') }}
+                        </button>
                     </div>
-                    <div v-if="showNewRoomTypeNameRequiredError" class="mt-1 text-sm text-red-600">
-                        {{ $t('Room type name is required.') }}
+
+                    <!-- Add Room Type Dropdown -->
+                    <div v-if="showAddRoomType" class="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="flex-1">
+                                <ArtworkBaseListbox
+                                    v-model="selectedNewRoomType"
+                                    :items="availableRoomTypes"
+                                    use-translations
+                                    placeholder="Select a room type"
+                                    label="Room type"
+                                />
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <button
+                                    type="button"
+                                    @click="addRoomType"
+                                    :disabled="!selectedNewRoomType"
+                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create disabled:bg-gray-400"
+                                >
+                                    {{ $t('Add') }}
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="showAddRoomType = false; selectedNewRoomType = null"
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create"
+                                >
+                                    {{ $t('Cancel') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Create New Room Type Section -->
+                        <div class="border-t pt-4">
+                            <h3 class="text-sm font-medium text-gray-700 mb-2">{{ $t('Create an individual room type') }}</h3>
+                            <div class="flex gap-2">
+                                <BaseInput
+                                    id="new_room_type"
+                                    v-model="newRoomTypeName"
+                                    :placeholder="$t('Enter room type name')"
+                                    class="flex-1"
+                                />
+                                <ArtworkBaseModalButton
+                                    size="sm"
+                                    variant="secondary"
+                                    type="button"
+                                    @click="createNewRoomType"
+                                    :disabled="!newRoomTypeName.trim() || creatingRoomType"
+                                >
+                                    {{ creatingRoomType ? $t('Creating...') : $t('Add') }}
+                                </ArtworkBaseModalButton>
+                            </div>
+                            <div v-if="showNewRoomTypeNameRequiredError" class="mt-1 text-sm text-red-600">
+                                {{ $t('Room type name is required.') }}
+                            </div>
+                            <div v-if="showNewRoomTypeError" class="mt-1 text-sm text-red-600">
+                                {{ $t('An error occurred while creating the room type.') }}
+                            </div>
+                        </div>
                     </div>
-                    <div v-if="showNewRoomTypeError" class="mt-1 text-sm text-red-600">
-                        {{ $t('An error occurred while creating the room type.') }}
+                </div>
+
+                <!-- Empty State -->
+                <div v-if="selectedRoomTypes.length === 0" class="mt-4 text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                    <component :is="IconHome" class="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">{{ $t('No room types') }}</h3>
+                    <p class="mt-1 text-sm text-gray-500">{{ $t('Get started by adding a room type to this accommodation.') }}</p>
+                    <div class="mt-6">
+                        <button
+                            type="button"
+                            @click="showAddRoomType = true"
+                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create"
+                        >
+                            <component :is="IconPlus" class="h-4 w-4 mr-2" />
+                            {{ $t('Add room type') }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -100,6 +214,8 @@ import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {ListboxButton, ListboxOption, ListboxOptions, Listbox} from "@headlessui/vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconHome, IconInfoCircle, IconPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     accommodation: {
@@ -135,16 +251,26 @@ const accommodationForm = useForm({
     zip_code: props.accommodation.zip_code,
     location: props.accommodation.location,
     note: props.accommodation.note,
-    room_types: props.accommodation.room_types ?? []
+    room_types: props.accommodation.room_types ?? [],
+    room_type_costs: {}
 })
 
 const selectedRoomTypes = ref([])
 const selectedRoomTypeIds = computed(() => selectedRoomTypes.value.map(rt => rt.id))
+const roomTypeCosts = ref({})
 const showRoomTypeError = ref(false)
+const showAddRoomType = ref(false)
+const selectedNewRoomType = ref(null)
 const newRoomTypeName = ref('')
 const showNewRoomTypeError = ref(false)
 const showNewRoomTypeNameRequiredError = ref(false)
 const creatingRoomType = ref(false)
+
+// Available room types that are not yet selected
+const availableRoomTypes = computed(() => {
+    const selectedIds = new Set(selectedRoomTypeIds.value)
+    return props.roomTypes.filter(rt => !selectedIds.has(rt.id))
+})
 watch(
     () => [props.accommodation?.id, props.roomTypes], // neu laden, wenn Unterkunft oder die Liste wechselt
     () => {
@@ -154,6 +280,13 @@ watch(
         selectedRoomTypes.value = (props.roomTypes ?? []).filter((rt) =>
             accTypeIds.has(rt.id)
         )
+
+        // Initialize costs from existing pivot data
+        const newCosts = {}
+        props.accommodation?.room_types?.forEach((rt) => {
+            newCosts[rt.id] = rt.pivot?.cost_per_night || 0.00
+        })
+        roomTypeCosts.value = newCosts
     },
     { immediate: true }
 )
@@ -168,6 +301,39 @@ watch(
     }
 )
 
+const addRoomType = () => {
+    if (selectedNewRoomType.value) {
+        selectedRoomTypes.value.push(selectedNewRoomType.value)
+        roomTypeCosts.value[selectedNewRoomType.value.id] = 0.00
+        selectedNewRoomType.value = null
+        showAddRoomType.value = false
+    }
+}
+
+const removeRoomType = (roomTypeId) => {
+    selectedRoomTypes.value = selectedRoomTypes.value.filter(rt => rt.id !== roomTypeId)
+    delete roomTypeCosts.value[roomTypeId]
+}
+
+const updateAccommodationOnFocusout = () => {
+    // Only auto-save when editing an existing accommodation, not when creating
+    if (accommodationForm.id) {
+        accommodationForm.room_types = selectedRoomTypeIds.value;
+        accommodationForm.room_type_costs = roomTypeCosts.value;
+
+        accommodationForm.patch(route('accommodation.update', accommodationForm.id), {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                // Silent success - no notification needed for auto-save
+            },
+            onError: () => {
+                console.log('Error auto-saving accommodation');
+            }
+        });
+    }
+}
+
 const updateOrCreateAccommodation = () => {
     // Clear previous error
     showRoomTypeError.value = false;
@@ -179,6 +345,7 @@ const updateOrCreateAccommodation = () => {
     }
 
     accommodationForm.room_types = selectedRoomTypeIds.value;
+    accommodationForm.room_type_costs = roomTypeCosts.value;
 
     if (accommodationForm.id) {
         accommodationForm.patch(route('accommodation.update', accommodationForm.id), {

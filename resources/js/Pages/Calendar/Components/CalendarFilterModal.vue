@@ -100,7 +100,7 @@
                                             <!-- count of checked filters in subcategory -->
                                             {{ filterSubCategory.filter(filter => filter.checked).length }} {{ $t('selected') }}
                                         </span>
-                                        <component is="IconChevronDown" class="w-4 h-4 text-gray-400" :class="filterSubCategory.open ? 'rotate-180' : ''" />
+                                        <component :is="IconChevronDown" class="w-4 h-4 text-gray-400" :class="filterSubCategory.open ? 'rotate-180' : ''" />
                                     </div>
                                 </div>
 
@@ -162,6 +162,7 @@ import {router, useForm, usePage} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import {IconChevronDown} from "@tabler/icons-vue";
 
 const props = defineProps({
     filterOptions: {

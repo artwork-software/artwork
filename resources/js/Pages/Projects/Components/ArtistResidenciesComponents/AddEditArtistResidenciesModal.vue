@@ -96,7 +96,7 @@
 
                                                 <!-- Check -->
                                                 <div v-if="selectedArtist?.id === artist.id" class="absolute right-3 top-3 text-artwork-buttons-hover">
-                                                    <component is="IconCheck" class="h-5 w-5" />
+                                                    <component :is="IconCheck" class="h-5 w-5" />
                                                 </div>
                                             </div>
                                         </div>
@@ -204,7 +204,7 @@
                                         <div class="flex items-center">
                                             <h4 class="xsLight">{{ $t('No. of overnight stays') }}</h4>
                                             <ToolTipComponent
-                                                icon="IconInfoCircle"
+                                                :icon="IconInfoCircle"
                                                 icon-size="h-4 w-4 ml-2"
                                                 :tooltip-text="$t('The number of nights is calculated from the arrival and departure dates.')"
                                                 direction="bottom"
@@ -224,7 +224,7 @@
                                         <div class="flex items-center">
                                             <h4 class="xsLight">{{ $t('Daily allowance entitlement') }}</h4>
                                             <ToolTipComponent
-                                                icon="IconInfoCircle"
+                                                :icon="IconInfoCircle"
                                                 icon-size="h-4 w-4 ml-2"
                                                 :tooltip-text="$t('Daily allowance entitlement is calculated from the number of overnight stays and the daily allowance.')"
                                                 direction="bottom"
@@ -346,7 +346,7 @@
 
 import {useForm, usePage} from "@inertiajs/vue3";
 import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
@@ -356,6 +356,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import CountUp from "@/Artwork/Visual/CountUp.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import {IconCheck, IconInfoCircle} from "@tabler/icons-vue";
 
 
 const props = defineProps({
@@ -497,6 +498,21 @@ const filteredArtists = computed(() => {
         (a.civil_name && a.civil_name.toLowerCase().includes(artistSearch.value.toLowerCase()))
     )
 })
+
+// Auto-fill cost_per_night when accommodation and room type are selected
+watch(
+    [selectedAccommodation, selectedRoomType],
+    ([newAccommodation, newRoomType]) => {
+        if (newAccommodation && newRoomType) {
+            // Find the room type in the accommodation's room_types with pivot data
+            const roomTypeWithCost = newAccommodation.room_types?.find(rt => rt.id === newRoomType.id)
+            if (roomTypeWithCost && roomTypeWithCost.pivot && roomTypeWithCost.pivot.cost_per_night) {
+                artistResidency.cost_per_night = roomTypeWithCost.pivot.cost_per_night
+            }
+        }
+    },
+    { deep: true }
+)
 
 
 </script>

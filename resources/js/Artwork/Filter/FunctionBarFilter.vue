@@ -3,7 +3,7 @@
         <ToolTipComponent
             direction="bottom"
             :tooltip-text="$t('Filter')"
-            icon="IconFilter"
+            :icon="IconFilter"
             icon-size="h-7 w-7"
             @click="showCalendarFilterModal = true"/>
 
@@ -30,6 +30,7 @@
 
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {computed, defineAsyncComponent, ref} from "vue";
+import {IconFilter} from "@tabler/icons-vue";
 
 const props = defineProps({
     filterOptions: {

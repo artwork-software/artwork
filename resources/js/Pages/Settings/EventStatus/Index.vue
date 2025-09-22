@@ -52,7 +52,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-4">
-                                    <component is="IconGripVertical" class="h-5 w-5" />
+                                    <component :is="IconGripVertical" class="h-5 w-5" />
                                     <BaseMenu has-no-offset>
                                         <MenuItem @click="updateEventStatus(element)"
                                                   v-slot="{ active }">
@@ -108,7 +108,7 @@ import {MenuItem, Switch} from "@headlessui/vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {ref, watch} from "vue";
-import {IconEdit, IconTrash} from "@tabler/icons-vue";
+import {IconEdit, IconGripVertical, IconTrash} from "@tabler/icons-vue";
 import draggable from "vuedraggable";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";

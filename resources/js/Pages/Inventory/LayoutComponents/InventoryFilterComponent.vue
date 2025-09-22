@@ -5,7 +5,7 @@
                 title="Filter"
                 description=""
             />
-            <component is="IconChevronDown" class="size-5 mt-0.5" :class="showFilter ? 'rotate-180 transform' : ''" />
+            <component :is="IconChevronDown" class="size-5 mt-0.5" :class="showFilter ? 'rotate-180 transform' : ''" />
         </div>
         <div v-if="showFilter">
             <div class="grid gap-4" style="grid-template-columns: repeat(auto-fit, minmax(200px, max-content));">
@@ -63,7 +63,7 @@
                 <div v-if="filter.value" class="flex items-center bg-blue-50 rounded-full px-3 py-1 text-sm font-medium text-blue-700 border border-blue-100">
                     <span>{{ filter.name }}{{ isBool(filter.value) ? '' : ': ' + filter.value }}</span>
                     <button type="button" @click="removeFilter(filter)" class="ml-2 text-blue-500 hover:text-blue-700">
-                        <component is="IconX" class="size-4" />
+                        <component :is="IconX" class="size-4" />
                     </button>
                 </div>
             </div>
@@ -78,6 +78,7 @@ import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {isBool} from "@aesoper/normal-utils";
+import {IconChevronDown, IconX} from "@tabler/icons-vue";
 
 const props = defineProps({
     filterableProperties: {

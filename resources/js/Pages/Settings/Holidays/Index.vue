@@ -33,7 +33,7 @@
                                     <span class="flex items-center justify-between w-full">
                                        {{ $t('Select federal states') }}
                                     </span>
-                                    <component is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
+                                    <component :is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-gray-300 ring-opacity-5 focus:outline-none sm:text-sm">
@@ -138,7 +138,7 @@
                                     <span>
                                         {{ $t('Select federal states') }}
                                     </span>
-                                    <component is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
+                                    <component :is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-gray-300 ring-opacity-5 focus:outline-none sm:text-sm">
@@ -147,7 +147,7 @@
                                                 <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ subdivision.name }}</span>
 
                                                 <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                    <component is="IconCheck" class="h-5 w-5" aria-hidden="true" />
+                                                    <component :is="IconCheck" class="h-5 w-5" aria-hidden="true" />
                                                 </span>
                                             </li>
                                         </ListboxOption>
@@ -210,7 +210,7 @@
                                 <div class="ml-3 text-sm/6 flex">
                                     <label for="treatAsSpecialDay" class="text-sm font-medium">{{ $t('Treat as special day') }}</label>
                                     <ToolTipComponent
-                                        icon="IconInfoCircle"
+                                        :icon="IconInfoCircle"
                                         icon-size="h-4 w-4 ml-2"
                                         :tooltip-text="$t('A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.')"
                                         direction="bottom"
@@ -260,7 +260,7 @@
                                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Repeat annually')}}</th>
                                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 flex">{{ $t('Special Day')}}
                                             <ToolTipComponent
-                                            icon="IconInfoCircle"
+                                            :icon="IconInfoCircle"
                                             icon-size="h-4 w-4 ml-2"
                                             :tooltip-text="$t('A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.')"
                                             direction="bottom"
@@ -296,7 +296,7 @@
                                             <ToolTipComponent
                                                 v-if="!holiday.from_api"
                                                 @click="editHoliday(holiday)"
-                                                icon="IconEdit"
+                                                :icon="IconEdit"
                                                 :tooltip-text="$t('Edit')"
                                                 icon-size="h-5 w-5"
                                                 class="cursor-pointer text-gray-500 hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out"
@@ -305,7 +305,7 @@
                                             <ToolTipComponent
                                                 v-if="!holiday.from_api"
                                                 @click="deleteHolidayModal(holiday.id)"
-                                                icon="IconTrash"
+                                                :icon="IconTrash"
                                                 :tooltip-text="$t('Delete')"
                                                 icon-size="h-5 w-5"
                                                 class="cursor-pointer text-gray-500 hover:text-red-600 transition-colors duration-300 ease-in-out"
@@ -383,6 +383,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EditHolidayModal from "@/Pages/Settings/Holidays/Components/EditHolidayModal.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import {IconCheck, IconChevronDown, IconEdit, IconInfoCircle, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     holidays: {

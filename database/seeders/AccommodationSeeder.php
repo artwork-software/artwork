@@ -12,6 +12,13 @@ class AccommodationSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        // Create basic room types - only Einzelzimmer and Doppelzimmer
+        \Artwork\Modules\Accommodation\Models\AccommodationRoomType::firstOrCreate([
+            'name' => 'Einzelzimmer'
+        ]);
+
+        \Artwork\Modules\Accommodation\Models\AccommodationRoomType::firstOrCreate([
+            'name' => 'Doppelzimmer'
+        ]);
     }
 }

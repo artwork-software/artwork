@@ -1,7 +1,7 @@
 <template>
 
     <div class="w-full hidden group-hover:flex border-2 border-dashed rounded-lg items-center justify-center btn-group-border-hover cursor-pointer" :class="eventsLength > 0 ? 'h-8' : 'h-full'" @click="showAddShiftModal = true">
-        <component is="IconCircleDashedPlus" class="h-6 w-6 text-gray-300 btn-group-hover" stroke-width="2"/>
+        <component :is="IconCircleDashedPlus" class="h-6 w-6 text-gray-300 btn-group-hover" stroke-width="2"/>
     </div>
 
     <AddShiftModal v-if="showAddShiftModal"
@@ -21,6 +21,7 @@
 
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import {ref} from "vue";
+import {IconCircleDashedPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     eventsLength: {

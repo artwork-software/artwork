@@ -113,7 +113,7 @@
                                 />
                                 <span>
                   <span
-                      class="block font-medium capitalize"
+                      class="block font-medium "
                       :class="userForm.permissions.includes(permission.name) ? 'text-zinc-900' : 'text-zinc-600'"
                   >
                     {{ $t(permission.translation_key) }}

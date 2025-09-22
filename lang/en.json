@@ -3062,5 +3062,7 @@
     "Preferences": "Preferences",
     "Account & Contact": "Account & Contact",
     "User Profile": "User Profile",
-    "Manage global roles and granular permissions for this user.": "Manage global roles and granular permissions for this user."
+    "Manage global roles and granular permissions for this user.": "Manage global roles and granular permissions for this user.",
+    "View and edit shift settings": "View and edit shift settings",
+    "Allows viewing and editing shift settings": "Allows viewing and editing shift settings"
 }

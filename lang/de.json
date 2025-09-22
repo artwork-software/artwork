@@ -3068,6 +3068,8 @@
     "Preferences": "Einstellungen",
     "Account & Contact": "Konto & Kontakt",
     "User Profile": "Nutzerprofil",
-    "Manage global roles and granular permissions for this user.": "Verwalte globale Rollen und granulare Berechtigungen für diesen Nutzer*in."
+    "Manage global roles and granular permissions for this user.": "Verwalte globale Rollen und granulare Berechtigungen für diesen Nutzer*in.",
+    "View and edit shift settings": "Schichteinstellungen anzeigen und bearbeiten",
+    "Allows viewing and editing shift settings": "Erlaubt das Anzeigen und Bearbeiten von Schichteinstellungen"
 }
 

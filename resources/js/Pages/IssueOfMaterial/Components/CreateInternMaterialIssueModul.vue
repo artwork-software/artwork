@@ -232,7 +232,7 @@
                                         <div class="min-w-0">
                                             <h4 class="text-sm font-semibold text-zinc-900 flex items-center gap-1">
                                                 {{ article.name }}
-                                                <component :is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="articleForDetailModal = article" />
+                                                <component :is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="openArticleDetailModal(article)" />
                                             </h4>
                                             <div class="mt-0.5 text-xs text-zinc-600 flex items-center gap-1">
                                                 {{ $t('Available stock in period') }}:
@@ -490,10 +490,19 @@ const internMaterialIssue = useForm({
         id: article.id,
         name: article.name,
         description: article.description,
-        quantity: article.pivot?.quantity || article.quantity || 1,
+        quantity: article.pivot?.quantity || article.quantity || 1, // Usage quantity for material issue
+        total_quantity: article.quantity, // Original total stock quantity for detail modal
+        is_detailed_quantity: article.is_detailed_quantity,
         availableStock: 0,
         availableStockRequestIsLoading: true,
+        detailed_article_quantities: article.detailed_article_quantities || [],
+        category: article.category || null,
+        subCategory: article.sub_category || null,
         images: article.images || [],
+        properties: article.properties || [],
+        room: article.room || null,
+        manufacturer: article.manufacturer || null,
+        status_values: article.status_values || [],
     })), // [{ id, quantity }]
     special_items: props.issueOfMaterial?.special_items || [], // [{...}]
     isInProjectComponent: props.isInProjectComponent || false
@@ -600,6 +609,8 @@ type ProjectLike = {
     is_group?: boolean
     first_event?: { formatted_dates?: { start_without_time?: string; startTime?: string } };
     last_event?: { formatted_dates?: { end_without_time?: string; endTime?: string } };
+    firstEventInProject?: { start_time?: string; [key: string]: any };
+    lastEventInProject?: { end_time?: string; [key: string]: any };
 };
 
 const DEFAULT_START = '00:00';
@@ -617,18 +628,58 @@ const addProject = (project?: ProjectLike) => {
         internMaterialIssue.name = project.name;
     }
 
-    // Start: nur wenn Datum leer
+    // Extract start date/time from either format
+    let startDate: string | null = null;
+    let startTime: string | null = null;
+
+    // Try first_event format (from project search)
     const fdStart = project.first_event?.formatted_dates;
-    if (isEmpty(internMaterialIssue.start_date) && fdStart?.start_without_time) {
-        internMaterialIssue.start_date = fdStart.start_without_time;
-        internMaterialIssue.start_time = fdStart.startTime ?? DEFAULT_START;
+    if (fdStart?.start_without_time) {
+        startDate = fdStart.start_without_time;
+        startTime = fdStart.startTime ?? DEFAULT_START;
+    }
+    // Try firstEventInProject format (from project context)
+    else if (project.firstEventInProject?.start_time) {
+        const eventStartTime = project.firstEventInProject.start_time;
+        // Extract date and time from datetime string (e.g., "2024-01-15 09:00:00")
+        if (typeof eventStartTime === 'string' && eventStartTime.includes(' ')) {
+            const [date, time] = eventStartTime.split(' ');
+            startDate = date;
+            startTime = time.substring(0, 5); // Extract HH:mm from HH:mm:ss
+        }
     }
 
-    // Ende: nur wenn Datum leer
+    // Set start date/time only if empty
+    if (isEmpty(internMaterialIssue.start_date) && startDate) {
+        internMaterialIssue.start_date = startDate;
+        internMaterialIssue.start_time = startTime ?? DEFAULT_START;
+    }
+
+    // Extract end date/time from either format
+    let endDate: string | null = null;
+    let endTime: string | null = null;
+
+    // Try last_event format (from project search)
     const fdEnd = project.last_event?.formatted_dates;
-    if (isEmpty(internMaterialIssue.end_date) && fdEnd?.end_without_time) {
-        internMaterialIssue.end_date = fdEnd.end_without_time;
-        internMaterialIssue.end_time = fdEnd.endTime ?? DEFAULT_END;
+    if (fdEnd?.end_without_time) {
+        endDate = fdEnd.end_without_time;
+        endTime = fdEnd.endTime ?? DEFAULT_END;
+    }
+    // Try lastEventInProject format (from project context)
+    else if (project.lastEventInProject?.end_time) {
+        const eventEndTime = project.lastEventInProject.end_time;
+        // Extract date and time from datetime string (e.g., "2024-01-15 18:00:00")
+        if (typeof eventEndTime === 'string' && eventEndTime.includes(' ')) {
+            const [date, time] = eventEndTime.split(' ');
+            endDate = date;
+            endTime = time.substring(0, 5); // Extract HH:mm from HH:mm:ss
+        }
+    }
+
+    // Set end date/time only if empty
+    if (isEmpty(internMaterialIssue.end_date) && endDate) {
+        internMaterialIssue.end_date = endDate;
+        internMaterialIssue.end_time = endTime ?? DEFAULT_END;
     }
 };
 
@@ -730,10 +781,12 @@ const addArticleToIssue = (article) => {
             id: article.id,
             name: article.name,
             description: article.description,
-            quantity: 1,
+            quantity: 1, // Usage quantity for material issue
+            total_quantity: article.quantity, // Original total stock quantity for detail modal
+            is_detailed_quantity: article.is_detailed_quantity,
             availableStock: 0,
             availableStockRequestIsLoading: true,
-            detailedArticleQuantities:
+            detailed_article_quantities:
                 article.detailed_article_quantities || [],
             category: article.category || null,
             subCategory: article.sub_category || null,
@@ -1002,10 +1055,13 @@ onMounted(() => {
         checkAvailableStock();
     }
 
-
-
+    // Pre-select project and auto-populate dates when editing existing issue
     if(props.issueOfMaterial?.project) {
         addProject(props.issueOfMaterial?.project);
+    }
+    // Pre-select project and auto-populate dates when creating from project context
+    else if (props.isInProjectComponent && props.project) {
+        addProject(props.project);
     }
 
     loadMoreArticles();
@@ -1024,6 +1080,43 @@ const searchArticles = async (searchTerm) => {
         articles.value = response.data.articles.data || [];
     } catch (e) {
         console.error('Fehler bei der Artikelsuche:', e);
+    }
+};
+
+const openArticleDetailModal = async (article) => {
+    try {
+        // If the article already has detailed_article_quantities, use it directly
+        if (article.detailed_article_quantities && article.detailed_article_quantities.length > 0) {
+            articleForDetailModal.value = article;
+            return;
+        }
+
+        // Otherwise, fetch complete article data from the API
+        const response = await axios.get(route('inventory.articles.api'), {
+            params: {
+                article_id: article.id,
+                include_detailed_quantities: true
+            }
+        });
+
+        // Find the article in the response
+        const completeArticle = response.data.articles.data?.find(a => a.id === article.id);
+        if (completeArticle) {
+            // Use the complete article data directly to ensure all nested properties (like status) are preserved
+            articleForDetailModal.value = {
+                ...completeArticle,
+                // Preserve any material issue specific properties from the original article
+                quantity: article.quantity, // Usage quantity for material issue
+                total_quantity: completeArticle.quantity, // Original total stock quantity
+            };
+        } else {
+            // Fallback: use the article as-is if we can't fetch complete data
+            articleForDetailModal.value = article;
+        }
+    } catch (error) {
+        console.error('Error fetching complete article data:', error);
+        // Fallback: use the article as-is if there's an error
+        articleForDetailModal.value = article;
     }
 };
 </script>

@@ -2271,7 +2271,7 @@ class ProjectController extends Controller
                     $headerObject->project->first_event = $firstEvent;
                     $headerObject->project->last_event  = $lastEvent;
                     $headerObject->materials = InternalIssue::where('project_id', $project->id)
-                        ->with(['articles', 'specialItems', 'files', 'responsibleUsers'])
+                        ->with(['articles.images', 'specialItems', 'files', 'responsibleUsers'])
                         ->get();
                     break;
             }

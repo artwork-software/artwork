@@ -9,7 +9,7 @@
                         <span class="text-[11px] font-semibold text-sky-800 tracking-wide">{{ $t('External Material Issue') }}</span>
                     </div>
                     <h1 class="mt-2 text-xl md:text-2xl font-bold tracking-tight text-zinc-900">
-                        {{ $t('Create external material issue') }}
+                        {{ externMaterialIssue?.id ? $t('Edit external material issue') : $t('Create external material issue') }}
                     </h1>
                     <p class="text-sm text-zinc-500">
                         {{ $t('Here you can capture the basic information for the external material issue. Fields marked with * are required.') }}
@@ -463,6 +463,19 @@ const props = defineProps({
 })
 
 
+// Map articles and ensure pivot quantities are correctly assigned
+const mapArticlesWithQuantity = (articles) => {
+    if (!articles || !Array.isArray(articles)) return [];
+
+    return articles.map(article => ({
+        ...article,
+        // Map pivot.quantity to quantity for form binding
+        quantity: article.pivot?.quantity || article.quantity || 1,
+        // Preserve pivot data for reference
+        pivot: article.pivot
+    }));
+};
+
 const externMaterialIssueForm = useForm({
     id: props.externMaterialIssue.id ?? null,
     name: props.externMaterialIssue.name,
@@ -476,7 +489,7 @@ const externMaterialIssueForm = useForm({
     external_phone: props.externMaterialIssue.external_phone,
     files: [], // New files to upload
     existing_files: props.externMaterialIssue?.files || [], // Keep track of existing files
-    articles: props.externMaterialIssue?.articles || [],
+    articles: mapArticlesWithQuantity(props.externMaterialIssue?.articles || []),
     special_items: props.externMaterialIssue?.special_items || [],
     special_items_done: props.externMaterialIssue?.special_items_done || false,
     issued_by_id: props.externMaterialIssue?.issued_by_id || null

@@ -14,44 +14,50 @@
                         {{ props.detailsForModal.article.name }}
                     </h3>
                 </div>
-                <!-- Enhanced Stock Information Pyramid -->
+                <!-- Enhanced Stock Information -->
                 <div class="flex flex-wrap items-start w-full">
-                    <!-- Pyramid-style stock display -->
-                    <div class="flex flex-col items-center space-y-1">
-                        <!-- Total quantity (widest) -->
+                    <div class="flex flex-col items-center">
                         <button
                             @click="toggleStatusDetails"
-                            class="inline-flex items-center rounded-r-full bg-blue-50 pr-6 py-2.5 w-56 text-md font-medium text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100 hover:ring-blue-300 transition-all duration-200 cursor-pointer group">
-                            <div class="pl-2">
-                                {{ $t('Total quantity') }}:
+                            class="inline-flex items-center flex flex-wrap text-lg bg-blue-50 py-2.5 w-64 text-md font-medium text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100 hover:ring-blue-300 transition-all duration-200 cursor-pointer group">
+                            <div class="flex w-full items-center justify-between">
+                                <div class="pl-2">
+                                    {{ $t('Total quantity') }}:
+                                </div>
+                                <div class="flex flex-wrap">
+                                    <div class="ml-1 tabular-nums text-2xl w-16">
+                                        {{ props.detailsForModal?.article?.quantity ?? 0 }}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="ml-1 tabular-nums">{{ props.detailsForModal?.article?.quantity ?? 0 }}</div>
-                            <svg
-                                class="ml-2 w-3 h-3 transition-transform duration-200"
-                                :class="{ 'rotate-90': isStatusDetailsExpanded }"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
+                            <div class="flex items-center justify-center w-full">
+                                <div class="ml-2 text-secondary text-sm">{{ $t('Details on Click') }}</div>
+                                <svg
+                                    class=" w-3 h-3 transition-transform duration-200"
+                                    :class="{ 'rotate-90': isStatusDetailsExpanded }"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
                         </button>
-                        <!-- Einsatzbereit quantity (medium width) -->
                         <div
-                            class="inline-flex items-center rounded-r-full bg-green-50 pr-6 py-2.5 text-md w-56 font-medium text-green-700 ring-1 ring-inset ring-green-200">
+                            class="inline-flex items-center justify-between flex text-lg bg-green-50 pr-6 py-2.5 text-md w-64 font-medium text-green-700 ring-1 ring-inset ring-green-200">
                             <div class="ml-2">
                                 {{ $t('of which available') }}:
                             </div>
-                            <div class="ml-1 tabular-nums">{{ getEinsatzbereitQuantity() }}</div>
+                            <div class="ml-1 tabular-nums text-2xl">{{ getEinsatzbereitQuantity() }}</div>
                         </div>
-
-                        <!-- Available after usage (narrowest) -->
                         <div
-                            class="inline-flex mb-4 items-center rounded-r-full bg-emerald-50 pr-6 py-2.5 text-md w-56 font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                            class="inline-flex justify-between flex rounded-bl-lg items-center text-lg bg-emerald-50 pr-2 py-2.5 text-md w-64 font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
                             <div class="ml-2">
                                 {{ $t('available after usage') }}:
                             </div>
-                            <div class="ml-1 tabular-nums" :class="{ 'text-red-700': getAvailableQuantity() < 0 }">
+                            <div class="ml-1 tabular-nums text-2xl"
+                                 :class="{ 'text-red-700': getAvailableQuantity() < 0 }">
                                 {{ getAvailableQuantity() }}
                             </div>
                         </div>
@@ -112,7 +118,12 @@
                     class="border-b border-zinc-100 bg-gradient-to-r from-indigo-50 via-indigo-50/60 to-transparent px-5 py-3 rounded-t-2xl">
                     <h3 class="text-sm font-semibold text-zinc-900 flex items-center gap-2">
                         <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
-                        {{ $t('usage_on_by') }} {{ formatDate(props.detailsForModal.date) }}
+                        <template v-if="props.detailsForModal.date">
+                            {{ $t('usage_on_by') }} {{ formatDate(props.detailsForModal.date) }}
+                        </template>
+                        <template v-else>
+                            {{ $t('usage_in_period') }} {{ formatDate(props.detailsForModal.start_date) }} - {{ formatDate(props.detailsForModal.end_date) }}
+                        </template>
                     </h3>
                 </div>
                 <div class="p-5">

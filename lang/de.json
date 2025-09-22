@@ -2779,6 +2779,7 @@
     "available": "Verfügbar",
     "total_quantity_by_status": "Gesamtmenge nach Status",
     "usage_on_by": "Verwendung am",
+    "usage_in_period": "Verwendung im Zeitraum",
     "Create & edit sets": "Sets anlegen & bearbeiten",
     "Allows creating and editing sets": "Erlaubt das Erstellen und Bearbeiten von Sets",
     "Delete sets": "Sets löschen",
@@ -3036,6 +3037,7 @@
     "Value, period and persons involved.": "Wert, Zeitraum und beteiligte Personen.",
     "Loaned inventory and quantities.": "Verliehenes Inventar und Mengen.",
     "Create external material issue": "Externe Materialausgabe erstellen",
+    "Edit external material issue": "Externe Materialausgabe bearbeiten",
     "Here you can capture the basic information for the external material issue. Fields marked with * are required.": "Hier kannst du die Basisinformationen für die externe Materialausgabe erfassen. Felder, die mit * markiert sind, sind Pflichtfelder.",
     "Conflicts regarding availability": "Konflikte bezüglich der Verfügbarkeit",
     "There are": "Es gibt",
@@ -3154,5 +3156,6 @@
     "Add any notes or special requirements for this event...": "Füge Notizen oder besondere Anforderungen für diesen Termin hinzu...",
     "Please select a valid date.": "Bitte wähle ein gültiges Datum.",
     "Disable Notifications": "Benachrichtigungen deaktivieren",
-    "Enable Notifications": "Benachrichtigungen aktivieren"
+    "Enable Notifications": "Benachrichtigungen aktivieren",
+    "Details on Click": "Klick für Details"
 }

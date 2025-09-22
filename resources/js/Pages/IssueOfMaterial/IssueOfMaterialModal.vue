@@ -33,7 +33,7 @@
 
         <div class="px-5 pb-5 pt-2">
             <div v-if="internOrExternal" class="flex flex-col gap-y-4">
-                <ExternMaterialIssueModul :extern-material-issue="externMaterialIssue" @close="$emit('close')" />
+                <ExternMaterialIssueModal :extern-material-issue="externMaterialIssue" @close="$emit('close')" />
             </div>
             <div v-else>
                 <CreateInternMaterialIssueModul :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" @close="$emit('close')" @saved="handleSaved" />
@@ -112,8 +112,8 @@ const CreateInternMaterialIssueModul = defineAsyncComponent({
     timeout: 3000,
 })
 
-const ExternMaterialIssueModul = defineAsyncComponent({
-    loader: () => import('@/Pages/IssueOfMaterial/Components/ExternMaterialIssueModul.vue'),
+const ExternMaterialIssueModal = defineAsyncComponent({
+    loader: () => import('@/Pages/IssueOfMaterial/Components/ExternMaterialIssueModal.vue'),
     delay: 0,
     timeout: 3000,
 })

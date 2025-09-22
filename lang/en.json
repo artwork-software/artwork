@@ -2778,6 +2778,7 @@
     "available": "Available",
     "total_quantity_by_status": "Total quantity by status",
     "usage_on_by": "Usage on",
+    "usage_in_period": "Usage in period",
     "Create & edit sets": "Create & edit sets",
     "Allows creating and editing sets": "Allows creating and editing sets",
     "Delete sets": "Delete sets",
@@ -3033,6 +3034,7 @@
     "Value, period and persons involved.": "Value, period and persons involved.",
     "Loaned inventory and quantities.": "Loaned inventory and quantities.",
     "Create external material issue": "Create external material issue",
+    "Edit external material issue": "Edit external material issue",
     "Here you can capture the basic information for the external material issue. Fields marked with * are required.": "Here you can capture the basic information for the external material issue. Fields marked with * are required.",
     "Conflicts regarding availability": "Conflicts regarding availability",
     "There are": "There are",
@@ -3146,5 +3148,6 @@
     "Add any notes or special requirements for this event...": "Add any notes or special requirements for this event...",
     "Please select a valid date.": "Please select a valid date.",
     "Disable Notifications": "Disable Notifications",
-    "Enable Notifications": "Enable Notifications"
+    "Enable Notifications": "Enable Notifications",
+    "Details on Click": "Details on Click"
 }

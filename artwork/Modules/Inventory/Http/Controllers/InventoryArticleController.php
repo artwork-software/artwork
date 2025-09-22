@@ -151,6 +151,7 @@ class InventoryArticleController extends Controller
         $articles = InventoryArticle::whereIn('id', $articleIds)
             ->with([
                 'statusValues',
+                'detailedArticleQuantities.status',
                 'internalIssues' => function ($q) use ($startDate, $endDate) {
                     $q->whereDate('start_date', '<=', $endDate)
                         ->where(function ($qq) use ($startDate) {
@@ -196,7 +197,7 @@ class InventoryArticleController extends Controller
         $articles = InventoryArticle::search($search)
             ->take(50)
             ->get()
-            ->load(['category', 'subCategory', 'detailedArticleQuantities', 'images']);
+            ->load(['category', 'subCategory', 'detailedArticleQuantities.status', 'images']);
 
         return response()->json($articles);
     }
@@ -213,7 +214,7 @@ class InventoryArticleController extends Controller
         );
 
         return response()->json([
-            'articles' => $articlesByFilter->with(['category', 'subCategory', 'detailedArticleQuantities', 'images', 'statusValues', 'properties'])
+            'articles' => $articlesByFilter->with(['category', 'subCategory', 'detailedArticleQuantities.status', 'images', 'statusValues', 'properties'])
                 ->paginate(15)
         ]);
     }

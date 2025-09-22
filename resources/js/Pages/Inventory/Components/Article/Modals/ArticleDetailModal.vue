@@ -118,8 +118,8 @@
                                                        class="size-5 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
                                         </dt>
                                         <p class="font-lexend text-sm pl-2"
-                                           :class="article.quantity === 0 ? 'text-error' : 'text-artwork-buttons-create'">
-                                            {{ formatQuantity(article.quantity) }}</p>
+                                           :class="(article.total_quantity || article.quantity) === 0 ? 'text-error' : 'text-artwork-buttons-create'">
+                                            {{ formatQuantity(article.total_quantity || article.quantity) }}</p>
                                     </div>
                                 </div>
                             </DisclosureButton>
@@ -158,7 +158,7 @@
                             </div>
                         </div>-->
                         <div>
-                            <dl class="divide-y divide-gray-100" v-if="article.properties.length > 0">
+                            <dl class="divide-y divide-gray-100" v-if="article.properties?.length > 0">
                                 <div
                                     class="pr-2 py-4 flex items-center justify-between"
                                     v-for="property in article.properties"
@@ -205,8 +205,8 @@
                                 </h3>
                             </div>
                             <p class="font-lexend text-sm pl-2"
-                               :class="article.quantity === 0 ? 'text-error' : 'text-artwork-buttons-create'">
-                                {{ formatQuantity(article.quantity) }}
+                               :class="(article.total_quantity || article.quantity) === 0 ? 'text-error' : 'text-artwork-buttons-create'">
+                                {{ formatQuantity(article.total_quantity || article.quantity) }}
                             </p>
                         </div>
                     </div>
@@ -219,8 +219,8 @@
                                         {{ detailedArticle.name }}
                                     </span>
                                     <span class="ml-6 flex items-center gap-x-3">
-                                        <span class="inline-flex items-center rounded-md  px-2 py-1 text-xs font-lexend font-medium border" :style="{backgroundColor: detailedArticle.status.color + '33', borderColor: detailedArticle.status.color + '66', color: detailedArticle.status.color}">
-                                            {{ detailedArticle.status?.name }} - {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
+                                        <span class="inline-flex items-center rounded-md  px-2 py-1 text-xs font-lexend font-medium border" :style="{backgroundColor: (detailedArticle.status?.color || '#6b7280') + '33', borderColor: (detailedArticle.status?.color || '#6b7280') + '66', color: detailedArticle.status?.color || '#6b7280'}">
+                                            {{ detailedArticle.status?.name || $t('Unknown Status') }} - {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
                                         </span>
                                         <component :is="IconChevronDown" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
                                         <component :is="IconChevronUp" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>

@@ -259,17 +259,37 @@ class InventoryArticle extends Model
 
         $usedQuantity = $sumQuantity($internalIssues) + $sumQuantity($externalIssues);
 
-        // Get the quantity of items with "Einsatzbereit" status instead of total quantity
-        $readyStatus = null;
-        if ($this->relationLoaded('statusValues')) {
-            $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
-        } else {
-            // Load the statusValues relation if not already loaded
-            $this->load('statusValues');
-            $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
-        }
+        // Get the quantity of items with "Einsatzbereit" status
+        $total = 0;
 
-        $total = $readyStatus ? (int) $readyStatus->pivot->value : 0;
+        if ($this->is_detailed_quantity) {
+            // For detailed quantity articles, sum up the quantities of all detailed articles with "Einsatzbereit" status
+            if ($this->relationLoaded('detailedArticleQuantities')) {
+                $detailedQuantities = $this->detailedArticleQuantities;
+            } else {
+                // Load the detailedArticleQuantities relation if not already loaded
+                $this->load('detailedArticleQuantities.status');
+                $detailedQuantities = $this->detailedArticleQuantities;
+            }
+
+            foreach ($detailedQuantities as $detailedQuantity) {
+                if ($detailedQuantity->status && $detailedQuantity->status->name === 'Einsatzbereit') {
+                    $total += (int) $detailedQuantity->quantity;
+                }
+            }
+        } else {
+            // For regular articles, use the main article's status
+            $readyStatus = null;
+            if ($this->relationLoaded('statusValues')) {
+                $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
+            } else {
+                // Load the statusValues relation if not already loaded
+                $this->load('statusValues');
+                $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
+            }
+
+            $total = $readyStatus ? (int) $readyStatus->pivot->value : 0;
+        }
         $available = max($total - $usedQuantity, 0);
 
         return [

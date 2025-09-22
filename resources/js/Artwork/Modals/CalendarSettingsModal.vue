@@ -151,7 +151,7 @@
                     <p id="use_event_status_color-description" class="text-gray-500 text-xs">{{ $t('Colors calendar entries according to their status, making it easier to quickly identify scheduled, confirmed or completed events, for example.') }}</p>
                 </div>
             </div>
-            <div class="flex gap-3" v-if="!inShiftPlan">
+            <div class="flex gap-3">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
                         <input v-model="userCalendarSettings.hide_unoccupied_rooms" id="hide_unoccupied_rooms" aria-describedby="hide_unoccupied_rooms-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />

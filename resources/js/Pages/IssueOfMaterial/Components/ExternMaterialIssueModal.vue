@@ -124,7 +124,7 @@
                             <div class="mt-1 flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/60 px-3 py-2">
                                 <div class="flex items-center gap-2">
                                     <img class="size-8 rounded-full object-cover" :src="issueBy.profile_photo_url" alt="" />
-                                    <span class="text-sm font-semibold text-indigo-800">{{ issueBy.name }}</span>
+                                    <span class="text-sm font-semibold text-indigo-800">{{ issueBy.first_name }} {{ issueBy.last_name }}</span>
                                 </div>
                                 <button type="button" class="text-xs font-medium text-indigo-700 underline" @click="issueBy = null">
                                     {{ $t('Remove assignment') }}
@@ -147,7 +147,13 @@
                 <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1">
                     <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl">
                         <div class="flex items-center w-full gap-x-3">
-                            <ArticleSearch @article-selected="addArticleToIssue" id="articleSearchInModal" class="w-full" :label="$t('Search items')" />
+                            <BaseInput
+                                id="articleSearchFilter"
+                                v-model="articleSearchFilter"
+                                class="w-full"
+                                :label="$t('Search Articles')"
+                                :placeholder="$t('Filter articles by name...')"
+                            />
                             <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
                         </div>
@@ -158,13 +164,13 @@
                             <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
                             {{ $t('Found Articles') }}
                         </h3>
-                        <div v-if="articles && articles.length > 0" class="text-sm text-zinc-500">
-                            {{ articles.length }} {{ articles.length === 1 ? $t('article found') : $t('articles found') }}
+                        <div v-if="filteredArticles && filteredArticles.length > 0" class="text-sm text-zinc-500">
+                            {{ filteredArticles.length }} {{ filteredArticles.length === 1 ? $t('article found') : $t('articles found') }}
                         </div>
                     </div>
 
                     <div ref="scrollContainer" class="max-h-[28rem] overflow-y-auto px-5 pb-5">
-                        <div v-for="article in articles" :key="article.id" class="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 shadow-sm hover:bg-zinc-50 transition">
+                        <div v-for="article in filteredArticles" :key="article.id" class="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 shadow-sm hover:bg-zinc-50 transition">
                             <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
                                 <div class="flex items-start gap-3">
                                     <img v-if="article?.images?.[0]?.image" :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="h-12 w-12 rounded-lg border border-zinc-200 object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
@@ -326,10 +332,18 @@
 
                     <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 max-h-56 min-h-56 overflow-y-auto">
                         <div v-if="props.externMaterialIssue?.files?.length" class="space-y-2">
-                            <div v-for="(file, index) in props.externMaterialIssue.files" :key="'existing-' + index" class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
-                                <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-blue-700 hover:underline">
-                                    {{ file.original_name }}
-                                </a>
+                            <div v-for="(file, index) in props.externMaterialIssue.files" :key="'existing-' + index" class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+                                <!-- Thumbnail für Bilddateien -->
+                                <div v-if="isImageFile(file.original_name)" class="shrink-0">
+                                    <div class="overflow-hidden rounded border border-zinc-200 shadow-sm" style="width: 40px; height: 40px;">
+                                        <img :src="'/storage/' + file.file_path" :alt="file.original_name" class="block h-full w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                    </div>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-blue-700 hover:underline">
+                                        {{ file.original_name }}
+                                    </a>
+                                </div>
                                 <button type="button" class="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeFile(file.id)">
                                     <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
                                 </button>
@@ -337,8 +351,14 @@
                         </div>
 
                         <div v-if="externMaterialIssueForm.files?.length" class="mt-3 space-y-2">
-                            <div v-for="(file, index) in externMaterialIssueForm.files" :key="'new-' + index" class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
-                                <div class="min-w-0">
+                            <div v-for="(file, index) in externMaterialIssueForm.files" :key="'new-' + index" class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+                                <!-- Thumbnail für neue Bilddateien -->
+                                <div v-if="isImageFile(file.name || file.original_name) && filePreviewUrl(file)" class="shrink-0">
+                                    <div class="overflow-hidden rounded border border-zinc-200 shadow-sm" style="width: 40px; height: 40px;">
+                                        <img :src="filePreviewUrl(file)" :alt="file.name || file.original_name" class="block h-full w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                    </div>
+                                </div>
+                                <div class="min-w-0 flex-1">
                                     <h4 class="truncate text-sm font-medium">{{ file.name ?? file.original_name }}</h4>
                                     <p v-if="file.size" class="text-[11px] text-zinc-500">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</p>
                                 </div>
@@ -421,7 +441,6 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import {computed, nextTick, onMounted, ref, watch} from "vue";
 import debounce from "lodash.debounce";
-import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SelectMaterialSetModal from "@/Pages/IssueOfMaterial/Components/SelectMaterialSetModal.vue";
 import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFilter.vue";
@@ -497,7 +516,7 @@ const externMaterialIssueForm = useForm({
 
 const showArticleFilterModal = ref(false)
 const showSelectMaterialSetModal = ref(false)
-const issueBy = ref(null)
+const issueBy = ref(props.externMaterialIssue?.issued_by || null)
 
 // Artikel Pagination State (aligned with internal)
 const articles = ref([])
@@ -507,6 +526,7 @@ const hasMoreArticles = ref(true)
 const paginationPage = ref(1)
 const articleForDetailModal = ref(null);
 const articleForUsageModal = ref(null);
+const articleSearchFilter = ref("");
 
 const isReturnDateBeforeIssueDate = computed(() => {
     if (!externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date) {
@@ -535,6 +555,18 @@ const conflicts = computed(() => {
 })
 
 const hasConflicts = computed(() => conflicts.value.length > 0)
+
+// Filtered articles based on search input
+const filteredArticles = computed(() => {
+    if (!articleSearchFilter.value) {
+        return articles.value;
+    }
+
+    const searchTerm = articleSearchFilter.value.toLowerCase();
+    return articles.value.filter(article =>
+        article.name?.toLowerCase().includes(searchTerm)
+    );
+})
 
 // Scrollt zur ersten konfliktbehafteten Zeile und hebt sie kurz hervor
 function scrollToFirstConflict () {
@@ -740,6 +772,8 @@ const submit = () => {
 
     if (issueBy.value) {
         externMaterialIssueForm.issued_by_id = issueBy.value.id
+    } else {
+        externMaterialIssueForm.issued_by_id = null
     }
 
     if(props.externMaterialIssue?.id){
@@ -830,6 +864,26 @@ const removeFile = (id) => {
 const selectIssueBy = (user) => {
     issueBy.value = user
 }
+
+// Helper function to check if file is an image based on extension
+const isImageFile = (filename) => {
+    if (!filename) return false;
+    const extension = filename.split('.').pop()?.toLowerCase();
+    const imageExtensions = ['png', 'jpe', 'jpeg', 'jpg', 'gif', 'bmp', 'ico', 'tiff', 'tif', 'svg', 'svgz'];
+    return imageExtensions.includes(extension);
+};
+
+// Helper function to create preview URL for file objects
+const filePreviewUrl = (file) => {
+    if (!file) return null;
+    try {
+        return URL.createObjectURL(file);
+    } catch (error) {
+        console.error('Error creating file preview URL:', error);
+        return null;
+    }
+};
+
 
 watch(
     () => [externMaterialIssueForm.issue_date, externMaterialIssueForm.return_date],

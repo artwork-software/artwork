@@ -212,9 +212,9 @@
                     </div>
 
                     <div class="pb-10">
-                        <Disclosure as="div" class="mb-2" v-slot="{ open }" v-for="detailedArticle in article.detailed_article_quantities" :class="[open ? 'shadow-sm rounded-lg' : 'rounded-xl shadow-lg ', '']">
+                        <Disclosure as="div" class="mb-2" v-slot="{ open }" v-for="detailedArticle in article.detailed_article_quantities" :class="[open ? 'shadow-sm rounded-lg' : 'rounded-xl shadow-lg ', '']" :style="{backgroundColor: (detailedArticle.status?.color || '#6b7280') + '15'}">
                             <h3>
-                                <DisclosureButton class="flex items-center group justify-between w-full px-4 py-3 bg-white hover:bg-artwork-buttons-create/10" :class="open ? 'rounded-t-lg' : 'rounded-lg'">
+                                <DisclosureButton class="flex items-center group justify-between w-full px-4 py-3 hover:bg-artwork-buttons-create/10" :class="open ? 'rounded-t-lg' : 'rounded-lg'">
                                     <span :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-primary']">
                                         {{ detailedArticle.name }}
                                     </span>

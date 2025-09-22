@@ -57,7 +57,7 @@ class InventoryArticle extends Model
         'deleted_at' => TranslatedDateTimeCast::class,
     ];
 
-    protected $appends = ['room', 'manufacturer'];
+    protected $appends = ['room', 'manufacturer', 'category', 'subCategory'];
 
     public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -127,6 +127,16 @@ class InventoryArticle extends Model
                 ];
             })->toArray() ?? [],
         ];
+    }
+
+    public function getCategoryAttribute()
+    {
+        return $this->getRelationValue('category');
+    }
+
+    public function getSubCategoryAttribute()
+    {
+        return $this->getRelationValue('subCategory');
     }
 
     public function getRoomAttribute(): array

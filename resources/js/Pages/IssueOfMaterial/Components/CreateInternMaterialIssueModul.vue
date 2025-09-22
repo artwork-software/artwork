@@ -143,7 +143,13 @@
                 <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1">
                     <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl">
                         <div class="flex items-center w-full gap-x-3">
-                            <ArticleSearch id="articleSearchInModal" class="w-full" :label="$t('Search Articles')" @article-selected="addArticleToIssue" />
+                            <BaseInput
+                                id="articleSearchFilter"
+                                v-model="articleSearchFilter"
+                                class="w-full"
+                                :label="$t('Search Articles')"
+                                :placeholder="$t('Filter articles by name...')"
+                            />
                             <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
                         </div>
@@ -154,13 +160,13 @@
                             <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
                             {{ $t('Found Articles') }}
                         </h3>
-                        <div v-if="articles && articles.length" class="text-sm text-zinc-500">
-                            {{ articles.length }} {{ articles.length === 1 ? $t('article found') : $t('articles found') }}
+                        <div v-if="filteredArticles && filteredArticles.length" class="text-sm text-zinc-500">
+                            {{ filteredArticles.length }} {{ filteredArticles.length === 1 ? $t('article found') : $t('articles found') }}
                         </div>
                     </div>
 
-                    <div ref="scrollContainer" class="max-h-[28rem] overflow-y-auto px-5 pb-5">
-                        <div v-for="article in articles" :key="article.id" class="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 shadow-sm hover:bg-zinc-50 transition">
+                    <div ref="scrollContainer" class="h-full overflow-y-auto px-5 pb-5">
+                        <div v-for="article in filteredArticles" :key="article.id" class="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 shadow-sm hover:bg-zinc-50 transition">
                             <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
                                 <div class="flex items-start gap-3">
                                     <img v-if="article?.images?.[0]?.image" :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="h-12 w-12 rounded-lg border border-zinc-200 object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
@@ -216,53 +222,78 @@
                         </div>
 
                         <div class="p-5">
-                            <div v-if="internMaterialIssue.articles.length" class="divide-y divide-zinc-200/80">
-                                <div v-for="(article, index) in internMaterialIssue.articles" :key="index" :data-article-row="index" class="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
-                                    <div class="flex w-full items-start gap-4">
-                                        <!-- Single preview with zoom overlay -->
-                                        <div v-if="article?.images?.length" class="shrink-0" style="max-width: 120px">
-                                            <div class="group relative cursor-zoom-in overflow-hidden rounded-lg border border-zinc-200 shadow-sm" @click="openLightbox(0, article.images)">
-                                                <img :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="block h-auto w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
-                                                <div class="pointer-events-none absolute inset-0 grid place-items-center bg-black/0 transition group-hover:bg-black/30">
-                                                    <component :is="IconWindowMaximize" class="h-4 w-4 text-white opacity-0 transition group-hover:opacity-100" />
+                            <div v-if="internMaterialIssue.articles.length" class="space-y-6">
+                                <!-- Loop through categories -->
+                                <div v-for="(subcategories, categoryName) in groupedSelectedArticles" :key="categoryName" class="space-y-4">
+                                    <!-- Category heading -->
+                                    <div class="border-b border-zinc-200/60 pb-2">
+                                        <h4 class="text-sm font-semibold text-zinc-800 flex items-center gap-2">
+                                            <span class="inline-block size-2 rounded-full bg-blue-500"></span>
+                                            {{ categoryName }}
+                                        </h4>
+                                    </div>
+
+                                    <!-- Loop through subcategories within this category -->
+                                    <div v-for="(articles, subcategoryName) in subcategories" :key="`${categoryName}-${subcategoryName}`" class="space-y-3">
+                                        <!-- Subcategory heading -->
+                                        <div class="ml-4">
+                                            <h5 class="text-xs font-medium text-zinc-600 flex items-center gap-1.5">
+                                                <span class="inline-block size-1.5 rounded-full bg-zinc-400"></span>
+                                                {{ subcategoryName }}
+                                            </h5>
+                                        </div>
+
+                                        <!-- Articles in this subcategory -->
+                                        <div class="ml-8 divide-y divide-zinc-200/80">
+                                            <div v-for="article in articles" :key="article.originalIndex" :data-article-row="article.originalIndex" class="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
+                                                <div class="flex w-full items-start gap-4">
+                                                    <!-- Single preview with zoom overlay -->
+                                                    <div v-if="article?.images?.length" class="shrink-0" style="max-width: 120px">
+                                                        <div class="group relative cursor-zoom-in overflow-hidden rounded-lg border border-zinc-200 shadow-sm" @click="openLightbox(0, article.images)">
+                                                            <img :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="block h-auto w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                                            <div class="pointer-events-none absolute inset-0 grid place-items-center bg-black/0 transition group-hover:bg-black/30">
+                                                                <component :is="IconWindowMaximize" class="h-4 w-4 text-white opacity-0 transition group-hover:opacity-100" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="min-w-0">
+                                                        <h4 class="text-sm font-semibold text-zinc-900 flex items-center gap-1">
+                                                            {{ article.name }}
+                                                            <component :is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="openArticleDetailModal(article)" />
+                                                        </h4>
+                                                        <div class="mt-0.5 text-xs text-zinc-600 flex items-center gap-1">
+                                                            {{ $t('Available stock in period') }}:
+                                                            <span v-if="!article.availableStockRequestIsLoading" class="tabular-nums inline-flex items-center gap-1" :class="{
+                              'text-emerald-600': (article.availableStock?.available ?? 0) > 0,
+                              'text-red-600': (article.availableStock?.available ?? 0) === 0
+                            }">{{ article.availableStock?.available ?? 0 }}
+                              <button type="button" class="underline" @click="getArticleDataForUsage(article)">
+                                <component :is="IconInfoCircle" class="h-3.5 w-3.5" stroke-width="1.5" />
+                              </button>
+                            </span>
+                                                            <span v-else class="inline-flex items-center gap-1 text-zinc-500">
+                              {{ $t('Fetching') }}
+                              <component :is="IconLoader" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
+                            </span>
+                                                        </div>
+                                                        <div v-if="article.quantity > (article.availableStock?.available ?? 0) && internMaterialIssue.start_date && internMaterialIssue.end_date" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
+                                                            <span>{{ $t('You have selected more items than are available.') }}</span>
+                                                            <button type="button" class="underline" @click="getArticleDataForUsage(article)">{{ $t('Show usage') }}</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex items-center gap-4 md:gap-6">
+                                                    <div class="w-28">
+                                                        <BaseInput :id="'article-quantity-' + article.originalIndex" type="number" v-model="article.quantity" :label="$t('Menge')" />
+                                                    </div>
+                                                    <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeArticle(article.originalIndex)">
+                                                        <component :is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div class="min-w-0">
-                                            <h4 class="text-sm font-semibold text-zinc-900 flex items-center gap-1">
-                                                {{ article.name }}
-                                                <component :is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="openArticleDetailModal(article)" />
-                                            </h4>
-                                            <div class="mt-0.5 text-xs text-zinc-600 flex items-center gap-1">
-                                                {{ $t('Available stock in period') }}:
-                                                <span v-if="!article.availableStockRequestIsLoading" class="tabular-nums inline-flex items-center gap-1" :class="{
-                          'text-emerald-600': (article.availableStock?.available ?? 0) > 0,
-                          'text-red-600': (article.availableStock?.available ?? 0) === 0
-                        }">{{ article.availableStock?.available ?? 0 }}
-                          <button type="button" class="underline" @click="getArticleDataForUsage(article)">
-                            <component :is="IconInfoCircle" class="h-3.5 w-3.5" stroke-width="1.5" />
-                          </button>
-                        </span>
-                                                <span v-else class="inline-flex items-center gap-1 text-zinc-500">
-                          {{ $t('Fetching') }}
-                          <component :is="IconLoader" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
-                        </span>
-                                            </div>
-                                            <div v-if="article.quantity > (article.availableStock?.available ?? 0) && internMaterialIssue.start_date && internMaterialIssue.end_date" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
-                                                <span>{{ $t('You have selected more items than are available.') }}</span>
-                                                <button type="button" class="underline" @click="getArticleDataForUsage(article)">{{ $t('Show usage') }}</button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-center gap-4 md:gap-6">
-                                        <div class="w-28">
-                                            <BaseInput :id="'article-quantity-' + index" type="number" v-model="article.quantity" :label="$t('Menge')" />
-                                        </div>
-                                        <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeArticle(index)">
-                                            <component :is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
-                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -336,10 +367,18 @@
                             <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 max-h-56 min-h-56 overflow-y-auto">
                                 <!-- Bestehende Dateien -->
                                 <div v-if="props.issueOfMaterial?.files?.length" class="space-y-2">
-                                    <div v-for="(file, index) in props.issueOfMaterial.files" :key="'existing-' + index" class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
-                                        <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-blue-700 hover:underline">
-                                            {{ file.original_name }}
-                                        </a>
+                                    <div v-for="(file, index) in props.issueOfMaterial.files" :key="'existing-' + index" class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+                                        <!-- Thumbnail für Bilddateien -->
+                                        <div v-if="isImageFile(file.original_name)" class="shrink-0">
+                                            <div class="overflow-hidden rounded border border-zinc-200 shadow-sm" style="width: 40px; height: 40px;">
+                                                <img :src="'/storage/' + file.file_path" :alt="file.original_name" class="block h-full w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                            </div>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-blue-700 hover:underline">
+                                                {{ file.original_name }}
+                                            </a>
+                                        </div>
                                         <button type="button" class="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeFile(file.id)">
                                             <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
                                         </button>
@@ -348,8 +387,14 @@
 
                                 <!-- Neu ausgewählte Dateien -->
                                 <div v-if="internMaterialIssue.files?.length" class="mt-3 space-y-2">
-                                    <div v-for="(file, index) in internMaterialIssue.files" :key="'new-' + index" class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
-                                        <div class="min-w-0">
+                                    <div v-for="(file, index) in internMaterialIssue.files" :key="'new-' + index" class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+                                        <!-- Thumbnail für neue Bilddateien -->
+                                        <div v-if="isImageFile(file.name || file.original_name) && filePreviewUrl(file)" class="shrink-0">
+                                            <div class="overflow-hidden rounded border border-zinc-200 shadow-sm" style="width: 40px; height: 40px;">
+                                                <img :src="filePreviewUrl(file)" :alt="file.name || file.original_name" class="block h-full w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                            </div>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
                                             <h4 class="truncate text-sm font-medium">{{ file.name ?? file.original_name }}</h4>
                                             <p v-if="file.size" class="text-[11px] text-zinc-500">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</p>
                                         </div>
@@ -428,7 +473,6 @@ import {router, useForm, usePage} from "@inertiajs/vue3";
 import {computed, nextTick, onMounted, ref, watch} from "vue";
 import debounce from "lodash.debounce";
 import axios from "axios";
-import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SelectMaterialSetModal from "@/Pages/IssueOfMaterial/Components/SelectMaterialSetModal.vue";
 import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFilter.vue";
@@ -498,6 +542,8 @@ const internMaterialIssue = useForm({
         detailed_article_quantities: article.detailed_article_quantities || [],
         category: article.category || null,
         subCategory: article.sub_category || null,
+        // Ensure consistent property naming - map sub_category to subCategory for consistency
+        sub_category: article.sub_category || null,
         images: article.images || [],
         properties: article.properties || [],
         room: article.room || null,
@@ -519,6 +565,7 @@ const showSelectMaterialSetModal = ref(false);
 const articles = ref([]);
 const loadingMore = ref(false);
 const scrollContainer = ref(null);
+const articleSearchFilter = ref("");
 const articleForDetailModal = ref(null);
 const articleForUsageModal = ref(null);
 const hasMoreArticles = ref(true);
@@ -550,6 +597,51 @@ const conflicts = computed(() => {
 })
 
 const hasConflicts = computed(() => conflicts.value.length > 0)
+
+// Filtered articles based on search input
+const filteredArticles = computed(() => {
+    if (!articleSearchFilter.value) {
+        return articles.value;
+    }
+
+    const searchTerm = articleSearchFilter.value.toLowerCase();
+    return articles.value.filter(article =>
+        article.name?.toLowerCase().includes(searchTerm)
+    );
+})
+
+// Group selected articles by category and subcategory
+const groupedSelectedArticles = computed(() => {
+    if (!internMaterialIssue.articles?.length) {
+        return {};
+    }
+
+    const grouped = {};
+
+    internMaterialIssue.articles.forEach((article, index) => {
+        // Handle both camelCase (subCategory) and snake_case (sub_category) property names
+        const categoryName = article.category?.name || 'Ohne Kategorie';
+        const subcategoryName = (article.subCategory?.name || article.sub_category?.name) || 'Ohne Unterkategorie';
+
+        // Initialize category if it doesn't exist
+        if (!grouped[categoryName]) {
+            grouped[categoryName] = {};
+        }
+
+        // Initialize subcategory if it doesn't exist
+        if (!grouped[categoryName][subcategoryName]) {
+            grouped[categoryName][subcategoryName] = [];
+        }
+
+        // Add article with its original index for operations like remove
+        grouped[categoryName][subcategoryName].push({
+            ...article,
+            originalIndex: index
+        });
+    });
+
+    return grouped;
+})
 
 // Setzt alle Konflikt-Mengen auf „max. verfügbar“
 function fixAllConflicts () {
@@ -790,6 +882,8 @@ const addArticleToIssue = (article) => {
                 article.detailed_article_quantities || [],
             category: article.category || null,
             subCategory: article.sub_category || null,
+            // Ensure consistent property naming - maintain both for compatibility
+            sub_category: article.sub_category || null,
             images: article.images || [],
             properties: article.properties || [],
             room: article.room || null,
@@ -1082,6 +1176,26 @@ const searchArticles = async (searchTerm) => {
         console.error('Fehler bei der Artikelsuche:', e);
     }
 };
+
+// Helper function to check if file is an image based on extension
+const isImageFile = (filename) => {
+    if (!filename) return false;
+    const extension = filename.split('.').pop()?.toLowerCase();
+    const imageExtensions = ['png', 'jpe', 'jpeg', 'jpg', 'gif', 'bmp', 'ico', 'tiff', 'tif', 'svg', 'svgz'];
+    return imageExtensions.includes(extension);
+};
+
+// Helper function to create preview URL for file objects
+const filePreviewUrl = (file) => {
+    if (!file) return null;
+    try {
+        return URL.createObjectURL(file);
+    } catch (error) {
+        console.error('Error creating file preview URL:', error);
+        return null;
+    }
+};
+
 
 const openArticleDetailModal = async (article) => {
     try {

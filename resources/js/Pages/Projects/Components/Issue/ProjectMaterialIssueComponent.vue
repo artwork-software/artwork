@@ -153,8 +153,22 @@
                                 class="rounded-xl border border-white/40 bg-white/60 backdrop-blur p-4 ring-1 transition hover:shadow-sm"
                                 :class="cardClass(a)"
                             >
-                                <!-- Header -->
-                                <div class="flex items-start justify-between gap-3">
+                                <!-- Article Layout with Image -->
+                                <div class="flex items-start gap-4">
+                                    <!-- Article Image -->
+                                    <div v-if="a?.images?.length" class="shrink-0" style="max-width: 80px">
+                                        <div class="group relative cursor-zoom-in overflow-hidden rounded-lg border border-zinc-200 shadow-sm" @click="openArticleLightbox(0, a.images)">
+                                            <img :src="'/storage/' + a.images[0].image" :alt="a.images[0].alt || ''" class="block h-auto w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                            <div class="pointer-events-none absolute inset-0 grid place-items-center bg-black/0 transition group-hover:bg-black/30">
+                                                <component :is="IconWindowMaximize" class="h-3 w-3 text-white opacity-0 transition group-hover:opacity-100" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Article Content -->
+                                    <div class="min-w-0 flex-1">
+                                        <!-- Header -->
+                                        <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <div class="truncate text-sm font-medium text-zinc-900" :title="a.name">
                                             {{ a.name }}
@@ -206,9 +220,11 @@
                                         :style="{ width: (needProgress(a) || 0) + '%' }"
                                     />
                                 </div>
-                                <div class="mt-1 flex items-center justify-between text-[11px] text-zinc-500">
-                                    <span>{{ $t('Planned')}}</span>
-                                    <span>{{ a.pivot?.quantity || 0 }} / {{ a.quantity }}</span>
+                                        <div class="mt-1 flex items-center justify-between text-[11px] text-zinc-500">
+                                            <span>{{ $t('Planned')}}</span>
+                                            <span>{{ a.pivot?.quantity || 0 }} / {{ a.quantity }}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -344,6 +360,27 @@
         </div>
     </teleport>
 
+    <!-- Article Images Galleria -->
+    <Galleria
+        v-model:activeIndex="articleActiveIndex"
+        v-model:visible="articleDisplayCustom"
+        :value="articleLightboxImages"
+        :responsiveOptions="responsiveOptions"
+        :numVisible="7"
+        :pt="{ mask: { onClick: onArticleMaskClick } }"
+        :circular="true"
+        :fullScreen="true"
+        :showItemNavigators="true"
+        :showThumbnails="true"
+    >
+        <template #item="slotProps">
+            <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" style="width: 60%; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
+        </template>
+        <template #thumbnail="slotProps">
+            <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" class="w-20 max-w-20" style="display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
+        </template>
+    </Galleria>
+
     <IssueOfMaterialModal
         v-if="showIssueOfMaterialModal"
         @close="showIssueOfMaterialModal = false"
@@ -358,19 +395,21 @@ import { ref, computed, onBeforeUnmount, watch } from 'vue'
 import {
     IconPlus, IconEdit, IconPackage, IconCalendar, IconClock, IconChevronDown, IconChevronUp,
     IconChevronRight, IconAlertTriangle, IconFileText, IconDownload, IconHome, IconBuildingFactory,
-    IconSticker2, IconCircleCheck,
+    IconSticker2, IconCircleCheck, IconWindowMaximize,
 } from '@tabler/icons-vue'
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import FilePreview from "@/Artwork/Files/FilePreview.vue";
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
+import Galleria from "primevue/galleria";
 
 type Manufacturer = { id:number; name:string }
 type Room = { id:number; name:string }
 type ArticlePivot = { quantity:number } & Record<string, unknown>
 type Article = {
     id:number; name:string; description?:string|null; quantity:number;
-    room?:Room|null; manufacturer?:Manufacturer|null; pivot?:ArticlePivot|null
+    room?:Room|null; manufacturer?:Manufacturer|null; pivot?:ArticlePivot|null;
+    images?: { image: string; alt?: string }[] | null;
 }
 type SpecialItem = { id:number; name:string; quantity:number; description?:string|null }
 type InternalIssue = {
@@ -398,6 +437,25 @@ const emit = defineEmits<{
 
 const showIssueOfMaterialModal = ref(false)
 const materialIssueToEdit = ref(null)
+
+/** Article Lightbox State */
+const articleLightboxImages = ref([])
+const articleActiveIndex = ref(0)
+const articleDisplayCustom = ref(false)
+const responsiveOptions = ref([
+    {
+        breakpoint: '1024px',
+        numVisible: 5
+    },
+    {
+        breakpoint: '768px',
+        numVisible: 3
+    },
+    {
+        breakpoint: '560px',
+        numVisible: 1
+    }
+])
 
 /** Nur Issues, die zu diesem Projekt gehören */
 const projectIssues = computed(() => props.materials.filter(m => String(m.project_id ?? '') === String(props.project.id)))
@@ -493,6 +551,19 @@ const openEditIssue = (issue:InternalIssue) => {
 const openCreateMaterialIssue = () => {
     materialIssueToEdit.value = null
     showIssueOfMaterialModal.value = true
+}
+
+/** Article Lightbox Functions */
+function openArticleLightbox(startIndex, images) {
+    articleLightboxImages.value = images || []
+    articleActiveIndex.value = startIndex || 0
+    articleDisplayCustom.value = true
+}
+
+const onArticleMaskClick = (e) => {
+    if (e.target === e.currentTarget) {
+        articleDisplayCustom.value = false
+    }
 }
 
 function totalNeed(issue: { articles?: { pivot?: { quantity?: number|null } | null }[] | null }) {

@@ -21,7 +21,7 @@
                             <!-- lupe icon -->
                             <div class="absolute inset-0 bg-black/50 z-10 rounded-lg group-hover:opacity-100 opacity-0 cursor-pointer transition duration-200 ease-in-out" @click="imageClick(index)">
                                 <div class="flex items-center justify-center w-full h-full">
-                                    <component is="IconWindowMaximize" class="w-5 h-5 text-white" />
+                                    <component :is="IconWindowMaximize" class="w-5 h-5 text-white" />
                                 </div>
                             </div>
                             <img :src="'/storage/' + image.image" alt="" style="cursor: pointer" class="cursor-pointer rounded-lg" @click="imageClick(index)" />
@@ -84,9 +84,9 @@
                             </div>
                         </div>
                         <div class="flex gap-x-2 px-2" v-if="showButtonForEditAndDelete">
-                            <component is="IconEdit" class="w-5 h-5 rounded-full cursor-pointer hover:text-artwork-buttons-create duration-200 ease-in-out"
+                            <component :is="IconEdit" class="w-5 h-5 rounded-full cursor-pointer hover:text-artwork-buttons-create duration-200 ease-in-out"
                                       @click="openArticleEditModal" v-if="can('inventory.create_edit') || is('artwork admin')" />
-                            <component is="IconTrash" class="w-5 h-5 rounded-full cursor-pointer hover:text-red-500 duration-200 ease-in-out"
+                            <component :is="IconTrash" class="w-5 h-5 rounded-full cursor-pointer hover:text-red-500 duration-200 ease-in-out"
                                       @click="showConfirmDelete = true" v-if="can('inventory.delete') || is('artwork admin')" />
                         </div>
                     </div>
@@ -114,7 +114,7 @@
                                     <div class="pr-2 py-4 flex items-center justify-between">
                                         <dt class="text-sm font-bold text-primary font-lexend flex items-center gap-x-2">
                                             {{ $t('Total quantity') }}
-                                            <component is="IconChevronDown" :class="[open ? 'rotate-180' : '']"
+                                            <component :is="IconChevronDown" :class="[open ? 'rotate-180' : '']"
                                                        class="size-5 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
                                         </dt>
                                         <p class="font-lexend text-sm pl-2"
@@ -176,7 +176,7 @@
                                     <div class="flex">
                                         <div class="shrink-0">
                                             <component
-                                                is="IconAlertSquareRoundedFilled"
+                                                :is="IconAlertSquareRoundedFilled"
                                                 class="size-5 text-blue-400"
                                                 aria-hidden="true"
                                             />
@@ -222,8 +222,8 @@
                                         <span class="inline-flex items-center rounded-md  px-2 py-1 text-xs font-lexend font-medium border" :style="{backgroundColor: detailedArticle.status.color + '33', borderColor: detailedArticle.status.color + '66', color: detailedArticle.status.color}">
                                             {{ detailedArticle.status?.name }} - {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
                                         </span>
-                                        <component is="IconChevronDown" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
-                                        <component is="IconChevronUp" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>
+                                        <component :is="IconChevronDown" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
+                                        <component :is="IconChevronUp" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>
                                     </span>
                                 </DisclosureButton>
                             </h3>
@@ -254,7 +254,7 @@
                                     <div class="rounded-md bg-red-50 p-4">
                                         <div class="flex">
                                             <div class="shrink-0">
-                                                <component is="IconAlertSquareRoundedFilled" class="size-5 text-red-400"
+                                                <component :is="IconAlertSquareRoundedFilled" class="size-5 text-red-400"
                                                            aria-hidden="true"/>
                                             </div>
                                             <div class="ml-3">
@@ -296,6 +296,13 @@ import {ref} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import Galleria from 'primevue/galleria';
+import {
+    IconAlertSquareRoundedFilled,
+    IconChevronDown, IconChevronUp,
+    IconEdit,
+    IconTrash,
+    IconWindowMaximize
+} from "@tabler/icons-vue";
 
 const $t = useTranslation()
 

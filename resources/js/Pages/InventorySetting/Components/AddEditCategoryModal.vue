@@ -51,12 +51,12 @@
                                                     <div class="flex items-center justify-between">
                                                         <div class="flex items-center gap-2">
                                                             <span class="drag-handle inline-flex p-1 rounded hover:bg-gray-100 cursor-grab">
-                                                                <component is="IconGripVertical" class="size-4" aria-hidden="true" />
+                                                                <component :is="IconGripVertical" class="size-4" aria-hidden="true" />
                                                             </span>
                                                             {{ property?.name }}
                                                         </div>
                                                         <button type="button" @click="removePropertyFromCategory(property)" class="text-red-600 hover:text-red-900">
-                                                            <component is="IconTrash" class="h-5 w-5" aria-hidden="true" />
+                                                            <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" />
                                                         </button>
                                                     </div>
                                                 </td>
@@ -84,7 +84,7 @@
                                                                 :display-value="(person) => property.defaultValue ? props.rooms?.find((room) => room.id === parseInt(property.defaultValue) )?.name : ''"/>
                                                             <ComboboxButton
                                                                 class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                                <component is="IconSelector" class="size-5 text-gray-400"
+                                                                <component :is="IconSelector" class="size-5 text-gray-400"
                                                                            aria-hidden="true"/>
                                                             </ComboboxButton>
 
@@ -100,7 +100,7 @@
                                                                             </span>
                                                                         <span v-if="selected"
                                                                               :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                              <component is="IconCheck" class="size-5"
+                                                                              <component :is="IconCheck" class="size-5"
                                                                                          aria-hidden="true"/>
                                                                             </span>
                                                                     </li>
@@ -119,7 +119,7 @@
                                                                 :display-value="(person) => property.defaultValue ? props.manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.defaultValue) )?.name : ''"/>
                                                             <ComboboxButton
                                                                 class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                                <component is="IconSelector" class="size-5 text-gray-400"
+                                                                <component :is="IconSelector" class="size-5 text-gray-400"
                                                                            aria-hidden="true"/>
                                                             </ComboboxButton>
 
@@ -135,7 +135,7 @@
                                                                             </span>
                                                                         <span v-if="selected"
                                                                               :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                              <component is="IconCheck" class="size-5"
+                                                                              <component :is="IconCheck" class="size-5"
                                                                                          aria-hidden="true"/>
                                                                             </span>
                                                                     </li>
@@ -161,7 +161,7 @@
                                                 <PropertiesMenu white-menu-background has-no-offset>
                                                     <template v-slot:button>
                                                         <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
-                                                            <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
+                                                            <component :is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
                                                             <span>
                                                                 {{ $t('Add property') }}
                                                             </span>
@@ -201,7 +201,7 @@
                             :description="$t('Add sub-categories to the category.')"
                         />
                         <div class="flex items-center gap-x-2 text-gray-400 text-sm font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out" @click="addEmptySubCategory">
-                            <component is="IconCategoryPlus" class="size-4" aria-hidden="true" />
+                            <component :is="IconCategoryPlus" class="size-4" aria-hidden="true" />
                             <span>
                                 {{ $t('Add sub-category') }}
                             </span>
@@ -217,10 +217,10 @@
                                         <span v-else>{{ $t('Sub-Category without name. Please add a name')}}</span>
 
                                         <div>
-                                            <component is="IconTrash" class="h-5 w-5 text-red-600 hover:text-red-900 cursor-pointer" @click="removeSubCategoryFromCategory(subCategory)" />
+                                            <component :is="IconTrash" class="h-5 w-5 text-red-600 hover:text-red-900 cursor-pointer" @click="removeSubCategoryFromCategory(subCategory)" />
                                         </div>
                                     </div>
-                                    <component is="IconChevronUp"
+                                    <component :is="IconChevronUp"
                                         :class="open ? 'rotate-180 transform' : ''"
                                         class="h-5 w-5 text-artwork-buttons-context"
                                     />
@@ -268,12 +268,12 @@
                                                                         <div class="flex items-center justify-between">
                                                                             <div class="flex items-center gap-2">
                                                                                 <span class="drag-handle inline-flex p-1 rounded hover:bg-gray-100 cursor-grab">
-                                                                                    <component is="IconGripVertical" class="size-4" aria-hidden="true" />
+                                                                                    <component :is="IconGripVertical" class="size-4" aria-hidden="true" />
                                                                                 </span>
                                                                                 {{ property?.name }}
                                                                             </div>
                                                                             <button type="button" @click="removePropertyFromSubCategory(property, subCategory)" class="text-red-600 hover:text-red-900">
-                                                                                <component is="IconTrash" class="h-5 w-5" aria-hidden="true" />
+                                                                                <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" />
                                                                             </button>
                                                                         </div>
                                                                     </td>
@@ -301,7 +301,7 @@
                                                                                     :display-value="(person) => property.defaultValue ? props.rooms?.find((room) => room.id === parseInt(property.defaultValue) )?.name : ''"/>
                                                                                 <ComboboxButton
                                                                                     class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                                                    <component is="IconSelector" class="size-5 text-gray-400"
+                                                                                    <component :is="IconSelector" class="size-5 text-gray-400"
                                                                                                aria-hidden="true"/>
                                                                                 </ComboboxButton>
 
@@ -317,7 +317,7 @@
                                                                                                 </span>
                                                                                             <span v-if="selected"
                                                                                                   :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                                                  <component is="IconCheck" class="size-5"
+                                                                                                  <component :is="IconCheck" class="size-5"
                                                                                                              aria-hidden="true"/>
                                                                                                 </span>
                                                                                         </li>
@@ -336,7 +336,7 @@
                                                                                     :display-value="(person) => property.defaultValue ? props.manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.defaultValue) )?.name : ''"/>
                                                                                 <ComboboxButton
                                                                                     class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                                                    <component is="IconSelector" class="size-5 text-gray-400"
+                                                                                    <component :is="IconSelector" class="size-5 text-gray-400"
                                                                                                aria-hidden="true"/>
                                                                                 </ComboboxButton>
 
@@ -352,7 +352,7 @@
                                                                                                 </span>
                                                                                             <span v-if="selected"
                                                                                                   :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                                                  <component is="IconCheck" class="size-5"
+                                                                                                  <component :is="IconCheck" class="size-5"
                                                                                                              aria-hidden="true"/>
                                                                                                 </span>
                                                                                         </li>
@@ -378,7 +378,7 @@
                                                                 <PropertiesMenu white-menu-background has-no-offset>
                                                                     <template v-slot:button>
                                                                         <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
-                                                                            <component is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
+                                                                            <component :is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
                                                                             <span>
                                                                                         {{ $t('Add property') }}
                                                                                     </span>
@@ -437,7 +437,14 @@ import {computed, onMounted, ref} from "vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions} from "@headlessui/vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import {IconCheck, IconSelector} from "@tabler/icons-vue";
+import {
+    IconCategoryPlus,
+    IconCheck, IconChevronUp,
+    IconGripVertical,
+    IconLibraryPlus,
+    IconSelector,
+    IconTrash
+} from "@tabler/icons-vue";
 
 import draggable from "vuedraggable";
 

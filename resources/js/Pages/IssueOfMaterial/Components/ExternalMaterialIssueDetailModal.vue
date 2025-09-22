@@ -84,7 +84,7 @@
                         <div v-for="a in issue.articles" :key="a.id" class="flex items-center justify-between gap-3 p-3">
                             <div class="min-w-0 flex items-center gap-2">
                                 <span class="font-medium text-zinc-900 truncate">{{ a.name }}</span>
-                                <component is="IconSearch" @click="openArticleDetailModal(a.id)" class="size-4 cursor-pointer text-zinc-400 hover:text-indigo-600 duration-200" />
+                                <component :is="IconSearch" @click="openArticleDetailModal(a.id)" class="size-4 cursor-pointer text-zinc-400 hover:text-indigo-600 duration-200" />
                             </div>
                             <div class="shrink-0 inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-800">
                                 <span>{{ $t('Quantity') }}:</span>
@@ -172,6 +172,7 @@ import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import { defineAsyncComponent, ref } from "vue";
 import { router } from '@inertiajs/vue3';
+import {IconSearch} from "@tabler/icons-vue";
 
 const props = defineProps({
     issue: { type: Object, required: true },

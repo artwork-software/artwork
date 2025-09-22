@@ -65,7 +65,7 @@
 
                         <!-- Gelbes Warn-Icon bei abweichendem Zeitraum -->
                         <ToolTipComponent
-                            icon="IconAlertTriangle"
+                            :icon="IconAlertTriangle"
                             v-if="isPeriodDeviating(issue)"
                             classes="!text-red-500"
                             icon-size="!size-4"
@@ -263,7 +263,7 @@
                                         size="sm"
                                         @open="openPreview(f)"
                                     />
-                                    <component v-else is="IconFileText" class="size-5 shrink-0 text-zinc-400" aria-hidden="true" />
+                                    <component v-else :is="IconFileText" class="size-5 shrink-0 text-zinc-400" aria-hidden="true" />
 
                                     <!-- Name + Meta -->
                                     <div class="min-w-0 flex-1">

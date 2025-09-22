@@ -148,7 +148,7 @@
                     <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl">
                         <div class="flex items-center w-full gap-x-3">
                             <ArticleSearch @article-selected="addArticleToIssue" id="articleSearchInModal" class="w-full" :label="$t('Search items')" />
-                            <ToolTipComponent @click="showSelectMaterialSetModal = true" icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
+                            <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
                         </div>
                     </div>
@@ -215,7 +215,7 @@
                                             <div class="group relative cursor-zoom-in overflow-hidden rounded-lg border border-zinc-200 shadow-sm" @click="openLightbox(0, article.images)">
                                                 <img :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="block h-auto w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
                                                 <div class="pointer-events-none absolute inset-0 grid place-items-center bg-black/0 transition group-hover:bg-black/30">
-                                                    <component is="IconWindowMaximize" class="h-4 w-4 text-white opacity-0 transition group-hover:opacity-100" />
+                                                    <component :is="IconWindowMaximize" class="h-4 w-4 text-white opacity-0 transition group-hover:opacity-100" />
                                                 </div>
                                             </div>
                                         </div>
@@ -223,7 +223,7 @@
                                         <div class="min-w-0">
                                             <h4 class="text-sm font-semibold text-zinc-900 flex items-center gap-1">
                                                 {{ article.name }}
-                                                <component is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="articleForDetailModal = article" />
+                                                <component :is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="articleForDetailModal = article" />
                                             </h4>
                                             <div class="mt-0.5 text-xs text-zinc-600 flex items-center gap-1">
                                                 {{ $t('Available stock in period') }}:
@@ -232,12 +232,12 @@
                                                   'text-red-600': (article.availableStock?.available ?? 0) === 0
                                                 }">{{ article.availableStock?.available ?? 0 }}
                                                   <button type="button" class="underline" @click="getArticleDataForUsage(article)">
-                                                    <component is="IconInfoCircle" class="h-3.5 w-3.5" stroke-width="1.5" />
+                                                    <component :is="IconInfoCircle" class="h-3.5 w-3.5" stroke-width="1.5" />
                                                   </button>
                                                 </span>
                                                 <span v-else class="inline-flex items-center gap-1 text-zinc-500">
                                                     {{ $t('Fetching') }}
-                                                    <component is="IconLoader" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
+                                                    <component :is="IconLoader" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
                                                 </span>
                                             </div>
                                             <div v-if="article.quantity > (article.availableStock?.available ?? 0) && externMaterialIssueForm.issue_date && externMaterialIssueForm.return_date" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
@@ -254,7 +254,7 @@
                                             <BaseInput :id="'article-quantity-' + index" type="number" v-model="article.quantity" :label="$t('Menge')" />
                                         </div>
                                         <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeArticle(index)">
-                                            <component is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
+                                            <component :is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
                                         </button>
                                     </div>
                                 </div>
@@ -281,7 +281,7 @@
                                     <span>{{ $t('Special items done') }}</span>
                                 </label>
                                 <button type="button" class="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700" @click="addSpecialItem">
-                                    <component is="IconPlus" class="h-3.5 w-3.5" />
+                                    <component :is="IconPlus" class="h-3.5 w-3.5" />
                                     {{ $t('Add special article') }}
                                 </button>
                             </div>
@@ -295,7 +295,7 @@
                                         <BaseInput :id="'special-article-quantity' + index" type="number" v-model="article.quantity" :label="$t('Quantity')" class="md:col-span-2" />
                                         <div class="flex items-center justify-center">
                                             <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeSpecialArticle(index)">
-                                                <component is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
+                                                <component :is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
                                             </button>
                                         </div>
                                         <BaseTextarea :id="'special-article-description-' + index" v-model="article.description" rows="1" :label="$t('Description')" class="md:col-span-9" />
@@ -318,7 +318,7 @@
                 <div class="p-6 grid grid-cols-1 gap-6 md:grid-cols-2 items-stretch">
                     <div>
                         <button @click="$refs.externMaterialIssueFiles.click()" type="button" class="relative block w-full max-h-56 min-h-56 rounded-2xl border-2 border-dashed border-emerald-300/70 p-10 text-center hover:border-emerald-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
-                            <component is="IconFile" class="mx-auto size-12 text-emerald-600" stroke-width="1" />
+                            <component :is="IconFile" class="mx-auto size-12 text-emerald-600" stroke-width="1" />
                             <span class="mt-2 block text-sm font-semibold text-emerald-800">{{ $t('Select file') }}</span>
                             <input @change="upload" class="hidden" ref="externMaterialIssueFiles" id="file" type="file" multiple />
                         </button>
@@ -331,7 +331,7 @@
                                     {{ file.original_name }}
                                 </a>
                                 <button type="button" class="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeFile(file.id)">
-                                    <component is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
+                                    <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
                                 </button>
                             </div>
                         </div>
@@ -343,7 +343,7 @@
                                     <p v-if="file.size" class="text-[11px] text-zinc-500">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</p>
                                 </div>
                                 <button type="button" class="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="externMaterialIssueForm.files.splice(index, 1)">
-                                    <component is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
+                                    <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
                                 </button>
                             </div>
                         </div>
@@ -429,6 +429,15 @@ import axios from "axios";
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
 import Galleria from "primevue/galleria";
+import {
+    IconFile,
+    IconInfoCircle,
+    IconListDetails,
+    IconLoader, IconParentheses,
+    IconPlus,
+    IconTrash,
+    IconWindowMaximize
+} from "@tabler/icons-vue";
 
 const props = defineProps({
     externMaterialIssue: {

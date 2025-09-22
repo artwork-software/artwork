@@ -32,7 +32,7 @@
                             <div class="relative mt-2">
                                 <ListboxButton class="menu-button">
                                     <div class="col-start-1 row-start-1 xsDark truncate pr-6">{{ selectedType?.name ? $t(selectedType?.name) : '' }}</div>
-                                    <component is="IconChevronDown" class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4" :class="open ? 'rotate-180' : '' " aria-hidden="true" />
+                                    <component :is="IconChevronDown" class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4" :class="open ? 'rotate-180' : '' " aria-hidden="true" />
                                 </ListboxButton>
 
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -42,7 +42,7 @@
                                                 <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ $t(type.name) }}</span>
 
                                                 <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                    <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                                    <component :is="IconCheck" class="size-5" aria-hidden="true" />
                                                 </span>
                                             </li>
                                         </ListboxOption>
@@ -60,14 +60,14 @@
                                 :label="$t('Selection value {index}', {index: index + 1})"
                             />
                             <button type="button" @click="propertyForm.select_values.splice(index, 1)" class="text-red-500 hover:text-red-700">
-                                <component is="IconX" class="size-5" aria-hidden="true" />
+                                <component :is="IconX" class="size-5" aria-hidden="true" />
                             </button>
 
                         </div>
 
                         <div class="flex items-center justify-end">
                             <button type="button" @click="propertyForm.select_values.push('')" class="text-gray-500 text-xs hover:text-gray-700 flex items-center font-lexend">
-                                <component is="IconPlus" class="size-4" aria-hidden="true" />
+                                <component :is="IconPlus" class="size-4" aria-hidden="true" />
                                 {{ $t('Selection Add value') }}
                             </button>
                         </div>
@@ -89,7 +89,7 @@
                                     <label for="is_filterable" class="font-medium text-gray-900">Filterbar</label>
                                     <ToolTipComponent
                                         class="ml-2"
-                                        icon="IconInfoCircle"
+                                        :icon="IconInfoCircle"
                                         icon-size="size-4"
                                         tooltip-text="Soll nach dieser Eigenschaft gefiltert werden können?"
                                         direction="right"
@@ -114,7 +114,7 @@
                                     <label for="show_in_list" class="font-medium text-gray-900">In Artikelübersicht</label>
                                     <ToolTipComponent
                                         class="ml-2"
-                                        icon="IconInfoCircle"
+                                        :icon="IconInfoCircle"
                                         icon-size="size-4"
                                         tooltip-text="Soll diese Eigenschaft in der Artikelübersicht angezeigt werden?"
                                         direction="right"
@@ -139,7 +139,7 @@
                                     <label for="is_required" class="font-medium text-gray-900">Wert verpflichtend</label>
                                     <ToolTipComponent
                                         class="ml-2"
-                                        icon="IconInfoCircle"
+                                        :icon="IconInfoCircle"
                                         icon-size="size-4"
                                         tooltip-text="Muss dieser Wert bei der Artikelanlage angegeben werden?"
                                         direction="right"
@@ -166,7 +166,7 @@
                                     </label>
                                     <ToolTipComponent
                                         class="ml-2"
-                                        icon="IconInfoCircle"
+                                        :icon="IconInfoCircle"
                                         icon-size="size-4"
                                         :tooltip-text="$t('Only relevant for single inventory capable articles. A property with this active will always be set for all articles and is made for properties that are the same for all articles.')"
                                         direction="right"
@@ -191,7 +191,7 @@
                                     <label for="individual_value" class="font-medium text-gray-900">{{$t('individual value')}}</label>
                                     <ToolTipComponent
                                         class="ml-2"
-                                        icon="IconInfoCircle"
+                                        :icon="IconInfoCircle"
                                         icon-size="size-4"
                                         :tooltip-text="$t('If active, this property will not be duplicated when duplicating an article and individual values can not be edited with multiedit-functions. This is useful for properties like serial numbers that should be unique for each article.')"
                                         direction="right"
@@ -221,6 +221,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconCheck, IconChevronDown, IconInfoCircle, IconPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     property: {

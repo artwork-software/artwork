@@ -107,7 +107,7 @@
                     {{ selectedCategoryIds.length }} {{ $t('selected') }}
                   </span>
                   <component
-                    is="IconChevronDown"
+                    :is="IconChevronDown"
                     class="w-4 h-4 text-gray-400"
                     :class="sections.categories.open ? 'rotate-180' : ''"
                   />
@@ -167,7 +167,7 @@
                     {{ selectedSubCategoryIds.length }} {{ $t('selected') }}
                   </span>
                   <component
-                    is="IconChevronDown"
+                    :is="IconChevronDown"
                     class="w-4 h-4 text-gray-400"
                     :class="sections.subCategories.open ? 'rotate-180' : ''"
                   />
@@ -193,7 +193,7 @@
                         {{ subs.items.filter(s => s.checked).length }} {{ $t('selected') }}
                       </span>
                       <component
-                        is="IconChevronDown"
+                        :is="IconChevronDown"
                         class="w-4 h-4 text-gray-400"
                         :class="subs.open ? 'rotate-180' : ''"
                       />
@@ -263,7 +263,7 @@
               {{ filledPropertyCount }} {{ $t('selected') }}
             </span>
                               <component
-                                  is="IconChevronDown"
+                                  :is="IconChevronDown"
                                   class="w-4 h-4 text-gray-400"
                                   :class="sections.properties.open ? 'rotate-180' : ''"
                               />
@@ -370,6 +370,7 @@ import TinyPageHeadline from '@/Components/Headlines/TinyPageHeadline.vue'
 import { XIcon } from '@heroicons/vue/outline'
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
+import {IconChevronDown} from "@tabler/icons-vue";
 
 const emits = defineEmits(['close'])
 const page = usePage()

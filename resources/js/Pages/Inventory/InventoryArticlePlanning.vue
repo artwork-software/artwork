@@ -17,7 +17,7 @@
               <span class="inline-block size-2 rounded-full bg-indigo-600"></span>{{ $t('Today') }}
             </span>
                         <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
-              <component is="IconRouteSquare" class="size-3" />{{ $t('Used in period') }}
+              <component :is="IconRouteSquare" class="size-3" />{{ $t('Used in period') }}
             </span>
                         <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
               <span class="inline-block size-2 rounded bg-zinc-300"></span>{{ $t('Weekend') }}
@@ -69,11 +69,11 @@
                                         @click="toggleCategory(group.category)"
                                     >
                                         <component
-                                            is="IconChevronRight"
+                                            :is="IconChevronRight"
                                             class="size-4 transition-transform"
                                             :class="isCatOpen(group.category) ? 'rotate-90' : ''"
                                         />
-                                        <component is="IconCategoryFilled" class="size-4 text-zinc-500" />
+                                        <component :is="IconCategoryFilled" class="size-4 text-zinc-500" />
                                         <span class="truncate">{{ group.category }}</span>
                                         <span class="ml-auto text-[10px] text-zinc-500">
                       {{ countGroup(group) }}
@@ -112,7 +112,7 @@
                           {{ availability.availability?.[date.date]?.[article.id] ?? 0 }}
                         </span>
                                                 <component
-                                                    is="IconRouteSquare"
+                                                    :is="IconRouteSquare"
                                                     v-if="availability.usedFlag?.[date.date]?.[article.id]"
                                                     class="size-3 text-zinc-500"
                                                 />
@@ -131,11 +131,11 @@
                                                 @click="toggleSub(group.category, sub.name)"
                                             >
                                                 <component
-                                                    is="IconChevronRight"
+                                                    :is="IconChevronRight"
                                                     class="size-4 transition-transform"
                                                     :class="isSubOpen(group.category, sub.name) ? 'rotate-90' : ''"
                                                 />
-                                                <component is="IconCategory2" class="size-4 text-zinc-500" />
+                                                <component :is="IconCategory2" class="size-4 text-zinc-500" />
                                                 <span class="truncate">{{ sub.name }}</span>
                                                 <span class="ml-auto text-[10px] text-zinc-500">{{ sub.articles?.length ?? 0 }}</span>
                                             </button>
@@ -172,7 +172,7 @@
                               {{ availability.availability?.[date.date]?.[article.id] ?? 0 }}
                             </span>
                                                         <component
-                                                            is="IconRouteSquare"
+                                                            :is="IconRouteSquare"
                                                             v-if="availability.usedFlag?.[date.date]?.[article.id]"
                                                             class="size-3 text-zinc-500"
                                                         />
@@ -203,6 +203,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router } from "@inertiajs/vue3";
 import {ref, reactive, onMounted, watch, defineAsyncComponent} from "vue";
+import {IconCategory2, IconCategoryFilled, IconChevronRight, IconRouteSquare} from "@tabler/icons-vue";
 
 const props = defineProps({
     groupedArticles: { type: Array, required: true, default: () => [] },

@@ -10,7 +10,7 @@
                 <div class="flex items-center gap-2">
                     <div class="hidden sm:block">
                         <GlassyIconButton
-                            icon="IconCopyPlus"
+                            :icon="IconCopyPlus"
                             v-if="can('set.create_edit') || is('artwork admin')"
                             :text="$t('New Material Set')"
                             @click="openCreate()"

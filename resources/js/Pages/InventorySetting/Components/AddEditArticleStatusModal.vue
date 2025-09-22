@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal @close="('close')"
+    <ArtworkBaseModal @close="$emit('close')"
         title="Edit Article Status"
         description="Edit the details of the article status."
     >

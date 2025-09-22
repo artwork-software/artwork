@@ -7,7 +7,7 @@
                 <div class="col-span-1">
                     <div @click="addImage"
                          class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
-                        <component is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true"/>
+                        <component :is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true"/>
                         <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t('Upload Images') }}</span>
                         <input type="file" accept="image/*" class="sr-only" ref="articleImageInput" multiple
                                @input="handleImageInput"/>
@@ -187,7 +187,7 @@
                                        classes="text-artwork-buttons-create"
                                        icon-right
                                        stroke="2"
-                                       icon="IconClick"
+                                       :icon="IconClick"
                                        icon-size="size-4"
                                        :tooltip-text="$t('Click to set the article quantity to the detailed article quantity')"/>
                             </span>
@@ -236,7 +236,7 @@
                                                 <ToolTipComponent
                                                     v-if="property?.tooltip_text"
                                                     :tooltip-text="property?.tooltip_text"
-                                                    icon="IconInfoCircle"
+                                                    :icon="IconInfoCircle"
                                                     icon-size="size-4"
                                                     direction="top"
                                                     tooltipCssClass="break-all !text-xs"
@@ -293,7 +293,7 @@
                                                    class="sr-only"/>
                                             <div class="flex items-center gap-x-2">
                                                 <div class="flex items-center gap-x-2">
-                                                    <component is="IconPhoto" class="size-5 shrink-0 text-gray-400"
+                                                    <component :is="IconPhoto" class="size-5 shrink-0 text-gray-400"
                                                                aria-hidden="true"/>
                                                     <div class="flex">
                                                         <div class="truncate font-medium">{{
@@ -305,7 +305,7 @@
                                                 <button type="button"
                                                         class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
                                                         @click="property.value = null">
-                                                    <component is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
+                                                    <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
                                                 </button>
                                             </div>
                                         </div>
@@ -383,7 +383,7 @@
                                         <ToolTipComponent
                                             v-if="prop.tooltip_text"
                                             :tooltip-text="prop.tooltip_text"
-                                            icon="IconInfoCircle" icon-size="size-4"
+                                            :icon="IconInfoCircle" icon-size="size-4"
                                             direction="left"
                                         />
                                     </div>
@@ -439,7 +439,7 @@
                                     <input type="file" class="sr-only" @input="setAcrossValue(prop.id, $event.target.files)" />
                                     <div class="flex items-center gap-x-2">
                                         <div class="flex items-center gap-x-2">
-                                            <component is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true"/>
+                                            <component :is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true"/>
                                             <div class="flex">
                                                 <div class="truncate font-medium">
                                                     {{ acrossValues[prop.id]?.[0]?.name ?? $t('Select a file') }}
@@ -449,7 +449,7 @@
                                         <button type="button"
                                                 class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
                                                 @click="setAcrossValue(prop.id, null)">
-                                            <component is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
+                                            <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
                                         </button>
                                     </div>
                                 </div>
@@ -721,7 +721,7 @@
                                                       aria-label="Kopieren"
                                                       @click.stop="copyDetailedArticle(item)"
                                                   >
-                                                    <component is="IconCopy" class="h-4 w-4" aria-hidden="true"/>
+                                                    <component :is="IconCopy" class="h-4 w-4" aria-hidden="true"/>
                                                   </button>
 
                                                     <!-- Löschen -->
@@ -731,7 +731,7 @@
                                                       aria-label="Löschen"
                                                       @click.stop="removeOpenDetailedArticle(idx)"
                                                   >
-                                                    <component is="IconTrash" class="h-4 w-4" aria-hidden="true"/>
+                                                    <component :is="IconTrash" class="h-4 w-4" aria-hidden="true"/>
                                                   </button>
                                                 </span>
 
@@ -757,7 +757,7 @@
                                     type="button"
                                     class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
                                     @click="addNewDetailedArticle">
-                                    <component is="IconPlus" class="h-5 w-5" aria-hidden="true"/>
+                                    <component :is="IconPlus" class="h-5 w-5" aria-hidden="true"/>
                                     <span>{{ $t('Add Detailed Article') }}</span>
                                 </button>
                             </div>
@@ -825,7 +825,7 @@
                                             <ToolTipComponent
                                                 v-if="property.tooltip_text"
                                                 :tooltip-text="property.tooltip_text"
-                                                icon="IconInfoCircle" icon-size="size-4"
+                                                :icon="IconInfoCircle" icon-size="size-4"
                                                 direction="left"
                                             />
                                         </div>
@@ -869,7 +869,7 @@
                                         <input type="file" @input="property.value = $event.target.files" class="sr-only"/>
                                         <div class="flex items-center gap-x-2">
                                             <div class="flex items-center gap-x-2">
-                                                <component is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true"/>
+                                                <component :is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true"/>
                                                 <div class="flex">
                                                     <div class="truncate font-medium">
                                                         {{ property.value ? property.value[0].name : $t('Select a file') }}
@@ -879,7 +879,7 @@
                                             <button type="button"
                                                     class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
                                                     @click="property.value = null">
-                                                <component is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
+                                                <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
                                             </button>
                                         </div>
                                     </div>
@@ -959,6 +959,7 @@ import InventoryStylelessCombobox
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
+import {IconClick, IconCopy, IconInfoCircle, IconPhoto, IconPhotoPlus, IconPlus, IconTrash} from "@tabler/icons-vue";
 
 const acrossValues = ref({})
 const props = defineProps({article: {type: Object, required: false, default: null}})

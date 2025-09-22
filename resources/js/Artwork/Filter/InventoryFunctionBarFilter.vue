@@ -3,7 +3,7 @@
         <ToolTipComponent
             direction="bottom"
             :tooltip-text="$t('Inventory Filter')"
-            icon="IconFilter"
+            :icon="IconFilter"
             icon-size="h-7 w-7"
             @click="showInventoryFilterModal = true"/>
 
@@ -26,6 +26,7 @@
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import { usePage } from '@inertiajs/vue3';
 import { computed, defineAsyncComponent, ref } from 'vue';
+import {IconFilter} from "@tabler/icons-vue";
 
 const props = defineProps({
 

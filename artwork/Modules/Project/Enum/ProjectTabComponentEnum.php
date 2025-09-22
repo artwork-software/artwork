@@ -45,6 +45,7 @@ enum ProjectTabComponentEnum: string
 
     case ARTIST_RESIDENCIES = 'ArtistResidenciesComponent';
     case ARTIST_NAME_DISPLAY = 'ArtistNameDisplayComponent';
+    case PROJECT_MATERIAL_ISSUE_COMPONENT = 'ProjectMaterialIssueComponent';
 
     /**
      * Get all available values

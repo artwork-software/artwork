@@ -10,6 +10,8 @@ use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Inventory\Services\InventoryPlanningService;
+use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
+use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\AuthManager;
@@ -24,6 +26,8 @@ class InventoryArticleController extends Controller
         private readonly InventoryArticleService $inventoryArticleService,
         private readonly AuthManager $authManager,
         protected InventoryPlanningService $inventoryPlanningService,
+        private readonly InventoryUserFilterService $inventoryUserFilterService,
+        private readonly InventoryUserFilterShareService $inventoryUserFilterShareService,
     ){
     }
 
@@ -32,9 +36,12 @@ class InventoryArticleController extends Controller
      */
     public function index()
     {
+
         /** @var User $user */
         $user = $this->authManager->user();
+        $this->inventoryUserFilterShareService->getFilterDataForUser($user);
         $data = $this->inventoryPlanningService->getAvailabilityData($user);
+
         if (request()?->has(['article_id', 'date'])) {
             $data['detailsForModal'] = $this->inventoryPlanningService->getDetailsForModal(
                 request('article_id'),
@@ -124,38 +131,59 @@ class InventoryArticleController extends Controller
 
     public function availableStockBatch(Request $request)
     {
-        $articleIds = $request->get('article_ids', []);
-        $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date');
 
-        // Optimiere durch Eager Loading aller benötigten Daten
+        $validated = $request->validate([
+            'article_ids'   => ['required', 'array', 'min:1'],
+            'article_ids.*' => ['integer', 'distinct', 'exists:inventory_articles,id'],
+            'start_date'    => ['required', 'date'],
+            'end_date'      => ['required', 'date', 'after_or_equal:start_date'],
+            'type'          => ['nullable', 'in:intern,extern'],
+            'issue_id'      => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $articleIds = array_map('intval', $validated['article_ids']);
+        $startDate  = $validated['start_date'];
+        $endDate    = $validated['end_date'];
+        $type       = $validated['type'] ?? null;
+        $issueId    = $validated['issue_id'] ?? null;
+
+
         $articles = InventoryArticle::whereIn('id', $articleIds)
             ->with([
-                'internalIssues' => function ($query) use ($startDate, $endDate) {
-                    $query->where(function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('start_date', [$startDate, $endDate])
-                          ->orWhereBetween('end_date', [$startDate, $endDate]);
-                    });
+                'statusValues',
+                'internalIssues' => function ($q) use ($startDate, $endDate) {
+                    $q->whereDate('start_date', '<=', $endDate)
+                        ->where(function ($qq) use ($startDate) {
+                            $qq->whereDate('end_date', '>=', $startDate)
+                                ->orWhereNull('end_date');
+                        });
                 },
-                'externalIssues' => function ($query) use ($startDate, $endDate) {
-                    $query->where(function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('issue_date', [$startDate, $endDate])
-                          ->orWhereBetween('return_date', [$startDate, $endDate]);
-                    });
-                }
+                'externalIssues' => function ($q) use ($startDate, $endDate) {
+                    $q->whereDate('issue_date', '<=', $endDate)
+                        ->where(function ($qq) use ($startDate) {
+                            $qq->whereDate('return_date', '>=', $startDate)
+                                ->orWhereNull('return_date');
+                        });
+                },
             ])
             ->get()
             ->keyBy('id');
 
         $results = [];
         foreach ($articleIds as $id) {
-            if ($articles->has($id)) {
-                $results[$id] = $articles[$id]->getAvailableStock($startDate, $endDate);
+            if (isset($articles[$id])) {
+                $results[$id] = $articles[$id]->getAvailableStock(
+                    $startDate,
+                    $endDate,
+                    $issueId,
+                    $type
+                );
             }
         }
 
         return response()->json(['data' => $results]);
     }
+
 
     public function search(Request $request): \Illuminate\Http\JsonResponse
     {
@@ -168,8 +196,40 @@ class InventoryArticleController extends Controller
         $articles = InventoryArticle::search($search)
             ->take(50)
             ->get()
-            ->load(['category', 'subCategory']);
+            ->load(['category', 'subCategory', 'detailedArticleQuantities', 'images']);
 
         return response()->json($articles);
+    }
+
+    public function loadArticlesByFilter(Request $request) {
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $articlesByFilter = $this->inventoryUserFilterService->getFilteredArticles(
+            $user,
+            $startDate,
+            $endDate
+        );
+
+        return response()->json([
+            'articles' => $articlesByFilter->with(['category', 'subCategory', 'detailedArticleQuantities', 'images', 'statusValues', 'properties'])
+                ->paginate(15)
+        ]);
+    }
+
+    /**
+     * Liefert alle Nutzungsdaten für das UsageModal eines Artikels zeitraum
+     */
+    public function usageData(Request $request)
+    {
+        $articleId = $request->get('article_id');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date', $startDate);
+        if (!$articleId || !$startDate || !$endDate) {
+            return response()->json(['error' => 'article_id und date erforderlich'], 400);
+        }
+        $details = $this->inventoryPlanningService->getDetailsForModalRange($articleId, $startDate, $endDate);
+        return response()->json(['data' => $details]);
     }
 }

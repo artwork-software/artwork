@@ -10,6 +10,7 @@ use Artwork\Modules\ExternalIssue\Models\ExternalIssueFile;
 use Artwork\Modules\ExternalIssue\Services\ExternalIssueService;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Artwork\Modules\User\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -21,7 +22,8 @@ class ExternalIssueController extends Controller
 {
     public function __construct(
         protected ExternalIssueService $externalIssueService,
-        protected AuthManager $auth
+        protected AuthManager $auth,
+        protected InventoryUserFilterShareService $inventoryUserFilterShareService,
     ) {}
 
     public function index()
@@ -31,7 +33,7 @@ class ExternalIssueController extends Controller
 
         // if articleIds is provided, filter issues by articles
         if (!empty($articleIds)) {
-            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy'])
+            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy', 'articles.images'])
                 ->whereHas('articles', function ($query) use ($articleIds) {
                     $query->whereIn('inventory_articles.id', [$articleIds]);
                 })
@@ -39,26 +41,37 @@ class ExternalIssueController extends Controller
                 ->orderBy('return_date')
                 ->paginate($entitiesPerPage);
         } else {
-            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy'])
+            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy', 'articles.images'])
                 ->orderBy('issue_date')
                 ->orderBy('return_date')
                 ->paginate($entitiesPerPage);
         }
+
+        $this->inventoryUserFilterShareService->getFilterDataForUser($this->auth->user());
 
         return Inertia::render('IssueOfMaterial/ExternIssueOfMaterialManagement', [
             'issues' => $issues,
             'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
                 ->get() : [],
             'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
+            'detailedArticle' => Inertia::optional(fn () =>
+                InventoryArticle::with([
+                    'category',
+                    'subCategory',
+                    'properties',
+                    'images' => function ($query) {
+                        $query->orderBy('is_main_image', 'desc')->orderBy('id');
+                    },
+                    'statusValues',
+                    'detailedArticleQuantities.status',
+                ])->find(request()?->get('articleId'))
+            )
         ]);
     }
 
     public function store(StoreExternalIssueRequest $request): \Illuminate\Http\RedirectResponse
     {
-        /** @var User $user */
-        $user = $this->auth->user();
-        $issue = $this->externalIssueService->store($request->validated(), $user, $request->file('files', []));
-
+        $issue = $this->externalIssueService->store($request->validated(), $request->file('files', []));
         return redirect()->route('extern-issue-of-material.index');
     }
 

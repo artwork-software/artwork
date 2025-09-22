@@ -39,6 +39,7 @@ const props = defineProps({})
 const tabs = [
     { name: 'Categories & Sub-Categories', href: route('inventory-management.settings.category'), current: route().current('inventory-management.settings.category') },
     { name: 'Properties', href: route('inventory-management.settings.properties'), current: route().current('inventory-management.settings.properties') },
+    { name: 'Status Settings', href: route('inventory-management.settings.status'), current: route().current('inventory-management.settings.status') },
 ]
 </script>
 

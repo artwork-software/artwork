@@ -86,7 +86,7 @@ class InventoryArticle extends Model
             'inventory_article_status_values',
             'inventory_article_id',
             'inventory_article_status_id'
-        )->withPivot('value');
+        )->withPivot('value')->orderBy('order');
     }
 
     public function internalIssues(): \Illuminate\Database\Eloquent\Relations\MorphToMany
@@ -201,38 +201,84 @@ class InventoryArticle extends Model
         ];
     }
 
-    public function getAvailableStock(string $startDate, string $endDate): array
-    {
-        $usedQuantity = 0;
-        $internalIssues = $this->internalIssues()
-            ->where(function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('start_date', [$startDate, $endDate])
-                    ->orWhereBetween('end_date', [$startDate, $endDate]);
-            })->get();
+    public function getAvailableStock(
+        string $startDate,
+        string $endDate,
+        ?int $excludeIssueId = null,
+        ?string $excludeType = null
+    ): array {
+        $sumQuantity = function ($issues): int {
+            $used = 0;
+            foreach ($issues as $issue) {
+                $used += (int) ($issue->pivot->quantity ?? 0);
+            }
+            return $used;
+        };
 
-        foreach ($internalIssues as $issue) {
-            $usedQuantity += $issue->pivot->quantity ?? 0;
+        if ($this->relationLoaded('internalIssues')) {
+            $internalIssues = $this->internalIssues;
+            // Apply exclusion filter to pre-loaded relations if needed
+            if ($excludeType === 'intern' && $excludeIssueId) {
+                $internalIssues = $internalIssues->filter(function ($issue) use ($excludeIssueId) {
+                    return $issue->id !== $excludeIssueId;
+                });
+            }
+        } else {
+            $internalIssues = $this->internalIssues()
+                ->where('start_date', '<=', $endDate)
+                ->where(function ($q) use ($startDate) {
+                    $q->where('end_date', '>=', $startDate)
+                        ->orWhereNull('end_date');
+                })
+                ->when($excludeType === 'intern' && $excludeIssueId, function ($q) use ($excludeIssueId) {
+                    $q->where('internal_issues.id', '!=', $excludeIssueId);
+                })
+                ->get();
         }
 
-        $externalIssues = $this->externalIssues()
-            ->where(function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('issue_date', [$startDate, $endDate])
-                    ->orWhereBetween('return_date', [$startDate, $endDate]);
-            })->get();
-
-        foreach ($externalIssues as $issue) {
-            $usedQuantity += $issue->pivot->quantity ?? 0;
+        if ($this->relationLoaded('externalIssues')) {
+            $externalIssues = $this->externalIssues;
+            // Apply exclusion filter to pre-loaded relations if needed
+            if ($excludeType === 'extern' && $excludeIssueId) {
+                $externalIssues = $externalIssues->filter(function ($issue) use ($excludeIssueId) {
+                    return $issue->id !== $excludeIssueId;
+                });
+            }
+        } else {
+            $externalIssues = $this->externalIssues()
+                ->where('issue_date', '<=', $endDate)
+                ->where(function ($q) use ($startDate) {
+                    $q->where('return_date', '>=', $startDate)
+                        ->orWhereNull('return_date');
+                })
+                ->when($excludeType === 'extern' && $excludeIssueId, function ($q) use ($excludeIssueId) {
+                    $q->where('external_issues.id', '!=', $excludeIssueId);
+                })
+                ->get();
         }
 
-        $total = $this->quantity;
+        $usedQuantity = $sumQuantity($internalIssues) + $sumQuantity($externalIssues);
+
+        // Get the quantity of items with "Einsatzbereit" status instead of total quantity
+        $readyStatus = null;
+        if ($this->relationLoaded('statusValues')) {
+            $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
+        } else {
+            // Load the statusValues relation if not already loaded
+            $this->load('statusValues');
+            $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
+        }
+
+        $total = $readyStatus ? (int) $readyStatus->pivot->value : 0;
         $available = max($total - $usedQuantity, 0);
 
         return [
             'available' => $available,
-            'total' => $total,
-            'reserved' => $usedQuantity,
-            'quantity' => $this->quantity,
+            'total'     => $total,
+            'reserved'  => $usedQuantity,
+            'quantity'  => $total,
         ];
     }
+
 
 }

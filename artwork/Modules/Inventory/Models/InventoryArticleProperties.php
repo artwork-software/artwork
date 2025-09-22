@@ -18,10 +18,12 @@ class InventoryArticleProperties extends Model
         'tooltip_text',
         'is_required',
         'is_deletable',
+        'across_articles',
+        'individual_value',
     ];
 
     /**
-     * @var string[] $casts
+     * @var string<> The table associated with the model.
      */
     protected $casts = [
         'is_filterable' => 'boolean',
@@ -29,10 +31,13 @@ class InventoryArticleProperties extends Model
         'is_required' => 'boolean',
         'is_deletable' => 'boolean',
         'select_values' => 'array',
+        'across_articles' => 'boolean',
+        'individual_value' => 'boolean',
     ];
 
 
-    public function scopeFilterable($query) {
+    public function scopeFilterable($query)
+    {
         return $query->where('is_filterable', true);
     }
 }

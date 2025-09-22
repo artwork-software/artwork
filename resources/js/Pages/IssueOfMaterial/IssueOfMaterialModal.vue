@@ -4,10 +4,12 @@
         modal-size="max-w-7xl"
         :title="issueOfMaterial?.id ?  $t('Edit issue of material') : $t('New issue of material')"
         :description="issueOfMaterial?.id ? $t('Edit the details of the issue of material') : $t('Create a new issue of material')"
+        classes-in-white-background="!p-0"
     >
 
-        <div class="w-fit mb-5">
-            <SwitchGroup as="div" class="flex items-center justify-between gap-x-4">
+        <div class="w-full mb-5 bg-zinc-100 rounded-t-lg p-5" v-if="!checkIfEditMode">
+            <div class="w-fit px-5">
+                <SwitchGroup as="div" class="flex items-center justify-between gap-x-8" >
                     <span class="flex grow flex-col">
                       <SwitchLabel as="span" class="text-sm/6 font-medium text-gray-900" passive>
                           {{ $t('Internal material issue') }}
@@ -16,8 +18,8 @@
                           {{ $t('Create an internal material issue for employees') }}
                       </SwitchDescription>
                     </span>
-                <Switch v-model="internOrExternal" :class="[internOrExternal ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-hidden']">
-                    <span aria-hidden="true" :class="[internOrExternal ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out']" />
+                <Switch v-model="internOrExternal" :disabled="checkIfEditMode" :class="[internOrExternal ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex h-6 w-16 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors disabled:bg-gray-500 duration-200 ease-in-out focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-hidden']">
+                    <span aria-hidden="true" :class="[internOrExternal ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-8 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out']" />
                 </Switch>
                 <span class="flex grow flex-col">
                       <SwitchLabel as="span" class="text-sm/6 font-medium text-gray-900" passive>{{ $t('Borrowing slip') }}</SwitchLabel>
@@ -25,21 +27,24 @@
                           {{ $t('Create a borrowing slip for external material issues') }}
                       </SwitchDescription>
                     </span>
-            </SwitchGroup>
+                </SwitchGroup>
+            </div>
         </div>
 
+        <div class="px-5 pb-5 pt-2">
+            <div v-if="internOrExternal" class="flex flex-col gap-y-4">
+                <ExternMaterialIssueModul :extern-material-issue="externMaterialIssue" @close="$emit('close')" />
+            </div>
+            <div v-else>
+                <CreateInternMaterialIssueModul :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" @close="$emit('close')" @saved="handleSaved" />
+            </div>
+        </div>
 
-        <div v-if="internOrExternal" class="flex flex-col gap-y-4">
-            <ExternMaterialIssueModul :extern-material-issue="externMaterialIssue" @close="$emit('close')" />
-        </div>
-        <div v-else>
-            <CreateInternMaterialIssueModul :issue-of-material="issueOfMaterial" @close="$emit('close')" />
-        </div>
     </ArtworkBaseModal>
 </template>
 <script setup>
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
-import {defineAsyncComponent, ref} from "vue";
+import {computed, defineAsyncComponent, ref} from "vue";
 import {Switch, SwitchDescription, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 
 
@@ -51,6 +56,7 @@ const props = defineProps({
             id: null,
             name: '',
             project_id: null,
+            project: null,
             start_date: '',
             start_time: '00:00',
             end_date: '',
@@ -84,6 +90,16 @@ const props = defineProps({
     isExternOrIntern: {
         type: Boolean,
         required: false,
+    },
+    project: {
+        type: Object,
+        required: false,
+        default: () => ({}),
+    },
+    isInProjectComponent: {
+        type: Boolean,
+        required: false,
+        default: false,
     }
 })
 
@@ -101,4 +117,16 @@ const ExternMaterialIssueModul = defineAsyncComponent({
     delay: 0,
     timeout: 3000,
 })
+
+const emit = defineEmits(['close', 'saved']);
+
+const handleSaved = (quantityData) => {
+    emit('saved', quantityData);
+};
+
+const checkIfEditMode = computed(() => {
+    return !!(props.issueOfMaterial?.id || props.externMaterialIssue?.id);
+
+
+});
 </script>

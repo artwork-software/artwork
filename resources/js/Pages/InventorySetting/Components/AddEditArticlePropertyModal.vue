@@ -6,7 +6,7 @@
             />
         </div>
 
-        <div>
+        <div class="artwork">
             <form @submit.prevent="addEditProperty">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="col-span-full">
@@ -77,14 +77,24 @@
                         <div class="flex gap-3">
                             <div class="flex h-6 shrink-0 items-center">
                                 <div class="group grid size-4 grid-cols-1">
-                                    <input id="is_filterable" aria-describedby="is_filterable-description" v-model="propertyForm.is_filterable" name="is_filterable" type="checkbox" class="input-checklist" />
+                                    <input id="is_filterable" aria-describedby="is_filterable-description" v-model="propertyForm.is_filterable" name="is_filterable" type="checkbox" class="aw-checklist-input" />
+                                    <svg class="aw-input-svg" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
                                 </div>
                             </div>
                             <div class="text-sm/6">
-                                <label for="is_filterable" class="font-medium text-gray-900">Filterbar</label>
-                                <p id="is_filterable-description" class="text-gray-500">
-                                    Soll nach dieser Eigenschaft gefiltert werden können?
-                                </p>
+                                <div class="flex items-center">
+                                    <label for="is_filterable" class="font-medium text-gray-900">Filterbar</label>
+                                    <ToolTipComponent
+                                        class="ml-2"
+                                        :icon="IconInfoCircle"
+                                        icon-size="size-4"
+                                        tooltip-text="Soll nach dieser Eigenschaft gefiltert werden können?"
+                                        direction="right"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -92,14 +102,24 @@
                         <div class="flex gap-3">
                             <div class="flex h-6 shrink-0 items-center">
                                 <div class="group grid size-4 grid-cols-1">
-                                    <input id="show_in_list" aria-describedby="show_in_list-description" v-model="propertyForm.show_in_list" name="show_in_list" type="checkbox" class="input-checklist" />
+                                    <input id="show_in_list" aria-describedby="show_in_list-description" v-model="propertyForm.show_in_list" name="show_in_list" type="checkbox" class="aw-checklist-input" />
+                                    <svg class="aw-input-svg" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
                                 </div>
                             </div>
                             <div class="text-sm/6">
-                                <label for="show_in_list" class="font-medium text-gray-900">In Artikelübersicht</label>
-                                <p id="show_in_list-description" class="text-gray-500">
-                                    Soll diese Eigenschaft in der Artikelübersicht angezeigt werden?
-                                </p>
+                                <div class="flex items-center">
+                                    <label for="show_in_list" class="font-medium text-gray-900">In Artikelübersicht</label>
+                                    <ToolTipComponent
+                                        class="ml-2"
+                                        :icon="IconInfoCircle"
+                                        icon-size="size-4"
+                                        tooltip-text="Soll diese Eigenschaft in der Artikelübersicht angezeigt werden?"
+                                        direction="right"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -107,14 +127,76 @@
                         <div class="flex gap-3">
                             <div class="flex h-6 shrink-0 items-center">
                                 <div class="group grid size-4 grid-cols-1">
-                                    <input id="is_required" aria-describedby="is_required-description" v-model="propertyForm.is_required" name="is_required" type="checkbox" class="input-checklist" />
+                                    <input id="is_required" aria-describedby="is_required-description" v-model="propertyForm.is_required" name="is_required" type="checkbox" class="aw-checklist-input" />
+                                    <svg class="aw-input-svg" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
                                 </div>
                             </div>
                             <div class="text-sm/6">
-                                <label for="is_required" class="font-medium text-gray-900">Wert verpflichtend</label>
-                                <p id="is_required-description" class="text-gray-500">
-                                    Muss dieser Wert bei der Artikelanlage angegeben werden?
-                                </p>
+                                <div class="flex items-center">
+                                    <label for="is_required" class="font-medium text-gray-900">Wert verpflichtend</label>
+                                    <ToolTipComponent
+                                        class="ml-2"
+                                        :icon="IconInfoCircle"
+                                        icon-size="size-4"
+                                        tooltip-text="Muss dieser Wert bei der Artikelanlage angegeben werden?"
+                                        direction="right"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-2">
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input id="across_articles" aria-describedby="across_articles-description" v-model="propertyForm.across_articles" name="across_articles" type="checkbox" class="aw-checklist-input" />
+                                    <svg class="aw-input-svg" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <div class="flex items-center">
+                                    <label for="across_articles" class="font-medium text-gray-900">
+                                        {{$t('across all articles')}}
+                                    </label>
+                                    <ToolTipComponent
+                                        class="ml-2"
+                                        :icon="IconInfoCircle"
+                                        icon-size="size-4"
+                                        :tooltip-text="$t('Only relevant for single inventory capable articles. A property with this active will always be set for all articles and is made for properties that are the same for all articles.')"
+                                        direction="right"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-2">
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input id="individual_value" aria-describedby="individual_value-description" v-model="propertyForm.individual_value" name="individual_value" type="checkbox" class="aw-checklist-input" />
+                                    <svg class="aw-input-svg" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <div class="flex items-center">
+                                    <label for="individual_value" class="font-medium text-gray-900">{{$t('individual value')}}</label>
+                                    <ToolTipComponent
+                                        class="ml-2"
+                                        :icon="IconInfoCircle"
+                                        icon-size="size-4"
+                                        :tooltip-text="$t('If active, this property will not be duplicated when duplicating an article and individual values can not be edited with multiedit-functions. This is useful for properties like serial numbers that should be unique for each article.')"
+                                        direction="right"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -138,7 +220,8 @@ import {computed, ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
-import {IconCheck, IconChevronDown, IconPlus, IconX} from "@tabler/icons-vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconCheck, IconChevronDown, IconInfoCircle, IconPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     property: {
@@ -154,10 +237,10 @@ const types = [
     { name: 'Number', type: 'number' },
     { name: 'Date', type: 'date' },
     { name: 'Time', type: 'time' },
-    { name: 'Datetime', type: 'datetime' },
+    { name: 'Datetime', type: 'datetime-local' },
     { name: 'Checkbox', type: 'checkbox' },
     { name: 'Selection', type: 'selection' },
-    //{ name: 'Upload', type: 'file' },
+
 ]
 
 const selectedType = ref(props.property ? (types.find(type => type.type === props.property.type) || { type: props.property.type, name: props.property.type }) : types[0])
@@ -170,6 +253,8 @@ const propertyForm = useForm({
     is_filterable: props.property ? props.property.is_filterable : false,
     show_in_list: props.property ? props.property.show_in_list : false,
     is_required: props.property ? props.property.is_required : false,
+    across_articles: props.property ? props.property.across_articles : false,
+    individual_value: props.property ? props.property.individual_value : false,
     select_values: props.property ? props.property.select_values : [],
 })
 

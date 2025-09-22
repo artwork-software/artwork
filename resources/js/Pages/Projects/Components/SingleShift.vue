@@ -132,7 +132,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Pause -->
             <div
                 v-if="!editBreakTime && shift.break_minutes"
@@ -141,6 +140,7 @@
                 :title="$t('Edit break')"
             >
                 <span>{{ shift.break_formatted }}</span>
+
             </div>
 
             <div v-else-if="editBreakTime" class="relative pt-1">
@@ -156,7 +156,7 @@
                     type="number"
                     v-model="updateTimeForm.break_minutes"
                     :label="$t('Length of break in minutes*')"
-                    id="break"
+                    :id="'break-time-' + this.shift.id"
                     required
                     is-small
                     @focusout="saveTimeChanges"

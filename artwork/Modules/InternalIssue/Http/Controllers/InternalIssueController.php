@@ -9,13 +9,21 @@ use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\InternalIssue\Services\InternalIssueService;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
+use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
+use Illuminate\Auth\AuthManager;
 
 class InternalIssueController extends Controller
 {
-    public function __construct(protected InternalIssueService $internalIssueService) {}
+    public function __construct(
+        protected InternalIssueService $internalIssueService,
+        protected InventoryUserFilterShareService $inventoryUserFilterShareService,
+        protected AuthManager $authManger,
+        protected InventoryUserFilterService $inventoryUserFilterService
+    ) {}
 
     public function index(): \Inertia\Response
     {
@@ -24,7 +32,7 @@ class InternalIssueController extends Controller
 
         // if articleIds is provided, filter issues by articles
         if (!empty($articleIds)) {
-            $issues = InternalIssue::with(['files', 'articles', 'specialItems', 'room', 'project', 'responsibleUsers'])
+            $issues = InternalIssue::with(['files', 'articles.images', 'articles.category', 'articles.subCategory', 'specialItems', 'room', 'project', 'responsibleUsers'])
                 ->whereHas('articles', function ($query) use ($articleIds) {
                     $query->whereIn('inventory_articles.id', [$articleIds]);
                 })
@@ -32,17 +40,30 @@ class InternalIssueController extends Controller
                 ->orderBy('start_time')
                 ->paginate($entitiesPerPage);
         } else {
-            $issues = InternalIssue::with(['files', 'articles', 'specialItems', 'room', 'project', 'responsibleUsers'])
+            $issues = InternalIssue::with(['files', 'articles.images', 'articles.category', 'articles.subCategory', 'specialItems', 'room', 'project', 'responsibleUsers'])
                 ->orderBy('start_date')
                 ->orderBy('start_time')
                 ->paginate($entitiesPerPage);
         }
+        $this->inventoryUserFilterShareService->getFilterDataForUser($this->authManger->user());
 
         return Inertia::render('IssueOfMaterial/IssueOfMaterialManagement', [
             'issues' => $issues,
             'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
                 ->get() : [],
             'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
+            'detailedArticle' => Inertia::optional(fn () =>
+                InventoryArticle::with([
+                    'category',
+                    'subCategory',
+                    'properties',
+                    'images' => function ($query) {
+                        $query->orderBy('is_main_image', 'desc')->orderBy('id');
+                    },
+                    'statusValues',
+                    'detailedArticleQuantities.status',
+                ])->find(request()?->get('articleId'))
+            ),
         ]);
     }
 
@@ -51,7 +72,7 @@ class InternalIssueController extends Controller
         $issue = $this->internalIssueService
             ->store($request->validated(), $request->file('files', []));
 
-        return redirect()->route('issue-of-material.index');
+        return redirect()->back();
     }
 
     public function update(UpdateInternalIssueRequest $request, InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
@@ -60,7 +81,7 @@ class InternalIssueController extends Controller
         $issue = $this->internalIssueService
             ->update($internalIssue, $request->validated(), $request->file('files', []));
 
-        return redirect()->route('issue-of-material.index');
+        return redirect()->back();
     }
 
     public function destroy(InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
@@ -68,22 +89,22 @@ class InternalIssueController extends Controller
         $this->internalIssueService
             ->delete($internalIssue);
 
-        return redirect()->route('issue-of-material.index');
+        return redirect()->back();
     }
 
-    public function fileDelete(InternalIssueFile $internalIssueFile): \Illuminate\Http\JsonResponse
+    public function fileDelete(InternalIssueFile $internalIssueFile): \Illuminate\Http\RedirectResponse
     {
         $this->internalIssueService
             ->deleteFile($internalIssueFile);
 
-        return response()->json(['message' => 'File deleted successfully'], 200);
+        return redirect()->back();
     }
 
     public function setSpecialItemsDone(InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
     {
         $internalIssue->update(['special_items_done' => true]);
 
-        return redirect()->route('issue-of-material.index');
+        return redirect()->back();
     }
 }
 

@@ -1,5 +1,5 @@
 <template>
-    <div class="select-none border-b" :class="showFilter ? 'pb-4' : ''">
+    <div class="select-none border-b border-gray-300" :class="showFilter ? 'pb-4' : ''">
         <div class="flex items-start gap-x-4 cursor-pointer hover:text-artwork-buttons-hover" @click="showFilter = !showFilter">
             <TinyPageHeadline
                 title="Filter"
@@ -8,10 +8,10 @@
             <component :is="IconChevronDown" class="size-5 mt-0.5" :class="showFilter ? 'rotate-180 transform' : ''" />
         </div>
         <div v-if="showFilter">
-            <div class="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-6 gap-4">
+            <div class="grid gap-4" style="grid-template-columns: repeat(auto-fit, minmax(200px, max-content));">
                 <div v-for="filterProperty in newFilterObject" :key="filterProperty.id">
                     <div>
-                        <label class="font-lexend text-xs mb-1">{{ filterProperty.name }}</label>
+                        <label class="font-lexend text-xs mb-1 whitespace-nowrap">{{ filterProperty.name }}</label>
                     </div>
                     <div class="flex items-center border border-gray-200 rounded-lg focus-within:ring-2 focus-within:ring-blue-500" v-if="filterProperty.type !== 'selection' && filterProperty.type !== 'checkbox'">
                         <select v-model="filterProperty.operator" v-if="getAllowedFilters(filterProperty.type).length > 0" class="text-gray-700 min-w-28 text-sm px-2 py-2 border-none rounded-l-lg focus:outline-none focus:ring-0">

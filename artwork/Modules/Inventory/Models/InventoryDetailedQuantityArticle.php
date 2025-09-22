@@ -99,7 +99,8 @@ class InventoryDetailedQuantityArticle extends Model
 
     public function status()
     {
-        return $this->belongsTo(InventoryArticleStatus::class, 'inventory_article_status_id');
+        return $this->belongsTo(InventoryArticleStatus::class, 'inventory_article_status_id')
+            ->orderBy('order');
     }
 
 }

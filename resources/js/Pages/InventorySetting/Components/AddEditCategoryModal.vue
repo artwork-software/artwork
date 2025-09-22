@@ -37,132 +37,156 @@
                                         <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Default Value') }}</th>
                                     </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-200 bg-white">
-                                    <tr v-for="property in categoryForm.properties" :key="category?.id" class="divide-x divide-gray-200">
-                                        <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-                                            <div class="flex items-center justify-between">
-                                                {{ property?.name }}
-                                                <button type="button" @click="removePropertyFromCategory(property)" class="text-red-600 hover:text-red-900">
-                                                    <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                        <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
-                                            {{ $t(capitalizeFirstLetter(property?.type)) }}
-                                        </td>
-                                        <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
-                                            <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
-                                                   :type="property.type" v-model="property.defaultValue"
-                                                   class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                                                   :placeholder="$t('Default Value')"
-                                            />
-
-                                            <div v-if="property.type === 'checkbox'" class="px-3">
-                                                <input type="checkbox" v-model="property.defaultValue"
-                                                       class="input-checklist"/>
-                                            </div>
-
-                                            <Combobox v-if="property.type === 'room'" as="div" v-model="property.defaultValue"
-                                                  @update:modelValue="roomQuery = ''">
-                                                <div class="relative">
-                                                    <ComboboxInput
-                                                        class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
-                                                        @change="roomQuery = $event.target.value" @blur="roomQuery = ''"
-                                                        :display-value="(person) => property.defaultValue ? props.rooms?.find((room) => room.id === parseInt(property.defaultValue) )?.name : ''"/>
-                                                    <ComboboxButton
-                                                        class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                        <component :is="IconSelector" class="size-5 text-gray-400"
-                                                                   aria-hidden="true"/>
-                                                    </ComboboxButton>
-
-                                                    <ComboboxOptions v-if="filteredRooms?.length > 0"
-                                                                     class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
-                                                        <ComboboxOption v-for="room in filteredRooms" :key="room.id"
-                                                                        :value="room.id" as="template"
-                                                                        v-slot="{ active, selected }">
-                                                            <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
-                                                                    <span
-                                                                        :class="['block truncate', selected && 'font-semibold']">
-                                                                      {{ room.name }}
-                                                                    </span>
-                                                                <span v-if="selected"
-                                                                      :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                      <component :is="IconCheck" class="size-5"
-                                                                                 aria-hidden="true"/>
-                                                                    </span>
-                                                            </li>
-                                                        </ComboboxOption>
-                                                    </ComboboxOptions>
-                                                </div>
-                                            </Combobox>
-
-                                            <Combobox v-if="property.type === 'manufacturer'" as="div"
-                                                  v-model="property.defaultValue" @update:modelValue="manufacturerQuery = ''">
-                                                <div class="relative">
-                                                    <ComboboxInput
-                                                        class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
-                                                        @change="manufacturerQuery = $event.target.value"
-                                                        @blur="manufacturerQuery = ''"
-                                                        :display-value="(person) => property.defaultValue ? props.manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.defaultValue) )?.name : ''"/>
-                                                    <ComboboxButton
-                                                        class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                        <component :is="IconSelector" class="size-5 text-gray-400"
-                                                                   aria-hidden="true"/>
-                                                    </ComboboxButton>
-
-                                                    <ComboboxOptions v-if="filteredManufacturers?.length > 0"
-                                                                     class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
-                                                        <ComboboxOption v-for="manufacturer in filteredManufacturers"
-                                                                        :key="manufacturer.id" :value="manufacturer.id" as="template"
-                                                                        v-slot="{ active, selected }">
-                                                            <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
-                                                                    <span
-                                                                        :class="['block truncate', selected && 'font-semibold']">
-                                                                      {{ manufacturer.name }}
-                                                                    </span>
-                                                                <span v-if="selected"
-                                                                      :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                      <component :is="IconCheck" class="size-5"
-                                                                                 aria-hidden="true"/>
-                                                                    </span>
-                                                            </li>
-                                                        </ComboboxOption>
-                                                    </ComboboxOptions>
-                                                </div>
-                                            </Combobox>
-
-                                            <div v-if="property.type === 'selection'" class="">
-                                                <div class="mt-2 grid grid-cols-1">
-                                                    <select id="location" name="location" v-model="property.defaultValue" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
-                                                        <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr class="divide-x divide-gray-200">
-                                        <td colspan="3" class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-                                            <PropertiesMenu white-menu-background has-no-offset>
-                                                <template v-slot:button>
-                                                    <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
-                                                        <component :is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
-                                                        <span>
-                                                            {{ $t('Add property') }}
-                                                        </span>
+                                    <draggable
+                                        tag="tbody"
+                                        :list="categoryForm.properties"
+                                        item-key="id"
+                                        handle=".drag-handle"
+                                        ghost-class="opacity-50"
+                                        class="divide-y divide-gray-200 bg-white"
+                                    >
+                                        <template #item="{ element: property, index }">
+                                            <tr :key="property.id" class="divide-x divide-gray-200">
+                                                <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="drag-handle inline-flex p-1 rounded hover:bg-gray-100 cursor-grab">
+                                                                <component :is="IconGripVertical" class="size-4" aria-hidden="true" />
+                                                            </span>
+                                                            {{ property?.name }}
+                                                        </div>
+                                                        <button type="button" @click="removePropertyFromCategory(property)" class="text-red-600 hover:text-red-900">
+                                                            <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" />
+                                                        </button>
                                                     </div>
-                                                </template>
-                                                <template v-slot:menu>
-                                                    <div v-for="property in properties">
-                                                        <div @click="addPropertyToCategory(property)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
-                                                            <div class="xsDark">
-                                                                {{ property.name }}
-                                                            </div>
+                                                </td>
+                                                <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
+                                                    {{ $t(capitalizeFirstLetter(property?.type)) }}
+                                                </td>
+                                                <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                                    <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
+                                                           :type="property.type" v-model="property.defaultValue"
+                                                           class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                                           :placeholder="$t('Default Value')"
+                                                    />
+
+                                                    <div v-if="property.type === 'checkbox'" class="px-3">
+                                                        <input type="checkbox" v-model="property.defaultValue"
+                                                               class="input-checklist"/>
+                                                    </div>
+
+                                                    <Combobox v-if="property.type === 'room'" as="div" v-model="property.defaultValue"
+                                                          @update:modelValue="roomQuery = ''">
+                                                        <div class="relative">
+                                                            <ComboboxInput
+                                                                class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                                @change="roomQuery = $event.target.value" @blur="roomQuery = ''"
+                                                                :display-value="(person) => property.defaultValue ? props.rooms?.find((room) => room.id === parseInt(property.defaultValue) )?.name : ''"/>
+                                                            <ComboboxButton
+                                                                class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                                <component :is="IconSelector" class="size-5 text-gray-400"
+                                                                           aria-hidden="true"/>
+                                                            </ComboboxButton>
+
+                                                            <ComboboxOptions v-if="filteredRooms?.length > 0"
+                                                                             class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                                <ComboboxOption v-for="room in filteredRooms" :key="room.id"
+                                                                                :value="room.id" as="template"
+                                                                                v-slot="{ active, selected }">
+                                                                    <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                            <span
+                                                                                :class="['block truncate', selected && 'font-semibold']">
+                                                                              {{ room.name }}
+                                                                            </span>
+                                                                        <span v-if="selected"
+                                                                              :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                              <component :is="IconCheck" class="size-5"
+                                                                                         aria-hidden="true"/>
+                                                                            </span>
+                                                                    </li>
+                                                                </ComboboxOption>
+                                                            </ComboboxOptions>
+                                                        </div>
+                                                    </Combobox>
+
+                                                    <Combobox v-if="property.type === 'manufacturer'" as="div"
+                                                          v-model="property.defaultValue" @update:modelValue="manufacturerQuery = ''">
+                                                        <div class="relative">
+                                                            <ComboboxInput
+                                                                class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                                @change="manufacturerQuery = $event.target.value"
+                                                                @blur="manufacturerQuery = ''"
+                                                                :display-value="(person) => property.defaultValue ? props.manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.defaultValue) )?.name : ''"/>
+                                                            <ComboboxButton
+                                                                class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                                <component :is="IconSelector" class="size-5 text-gray-400"
+                                                                           aria-hidden="true"/>
+                                                            </ComboboxButton>
+
+                                                            <ComboboxOptions v-if="filteredManufacturers?.length > 0"
+                                                                             class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                                <ComboboxOption v-for="manufacturer in filteredManufacturers"
+                                                                                :key="manufacturer.id" :value="manufacturer.id" as="template"
+                                                                                v-slot="{ active, selected }">
+                                                                    <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                            <span
+                                                                                :class="['block truncate', selected && 'font-semibold']">
+                                                                              {{ manufacturer.name }}
+                                                                            </span>
+                                                                        <span v-if="selected"
+                                                                              :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                              <component :is="IconCheck" class="size-5"
+                                                                                         aria-hidden="true"/>
+                                                                            </span>
+                                                                    </li>
+                                                                </ComboboxOption>
+                                                            </ComboboxOptions>
+                                                        </div>
+                                                    </Combobox>
+
+                                                    <div v-if="property.type === 'selection'" class="">
+                                                        <div class="mt-2 grid grid-cols-1">
+                                                            <select id="location" name="location" v-model="property.defaultValue" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                                <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
+                                                            </select>
                                                         </div>
                                                     </div>
-                                                </template>
-                                            </PropertiesMenu>
-                                        </td>
-                                    </tr>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </draggable>
+                                    <tbody>
+                                        <tr class="divide-x divide-gray-200">
+                                            <td colspan="3" class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                                <PropertiesMenu white-menu-background has-no-offset>
+                                                    <template v-slot:button>
+                                                        <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
+                                                            <component :is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
+                                                            <span>
+                                                                {{ $t('Add property') }}
+                                                            </span>
+                                                        </div>
+                                                    </template>
+                                                    <template v-slot:menu>
+                                                        <div v-if="filteredPropertiesByCategory.length > 0">
+                                                            <div v-for="property in filteredPropertiesByCategory">
+                                                                <div @click="addPropertyToCategory(property)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
+                                                                    <div class="xsDark">
+                                                                        {{ property.name }}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div v-else class="p-4">
+                                                            <div class="bg-red-50 text-red-500 border border-red-100 p-4 text-xs rounded-lg">
+                                                                <!-- all properties are already added -->
+                                                                {{ $t('All properties are already added to the category.') }}
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </PropertiesMenu>
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -230,109 +254,125 @@
                                                             <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Default Value') }}</th>
                                                         </tr>
                                                         </thead>
-                                                        <tbody class="divide-y divide-gray-200 bg-white">
-                                                        <tr v-for="property in subCategory.properties" :key="property?.id" class="divide-x divide-gray-200">
-                                                            <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-                                                                <div class="flex items-center justify-between">
-                                                                    {{ property?.name }}
-                                                                    <button type="button" @click="removePropertyFromSubCategory(property, subCategory)" class="text-red-600 hover:text-red-900">
-                                                                        <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" />
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                            <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
-                                                                {{ $t(capitalizeFirstLetter(property?.type)) }}
-                                                            </td>
-                                                            <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
-                                                                <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
-                                                                       :type="property.type" v-model="property.defaultValue"
-                                                                       class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                                                                       :placeholder="$t('Default Value')"
-                                                                />
+                                                        <draggable
+                                                            tag="tbody"
+                                                            :list="subCategory.properties"
+                                                            item-key="id"
+                                                            handle=".drag-handle"
+                                                            ghost-class="opacity-50"
+                                                            class="divide-y divide-gray-200 bg-white"
+                                                        >
+                                                            <template #item="{ element: property, index }">
+                                                                <tr :key="property.id" class="divide-x divide-gray-200">
+                                                                    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                                                        <div class="flex items-center justify-between">
+                                                                            <div class="flex items-center gap-2">
+                                                                                <span class="drag-handle inline-flex p-1 rounded hover:bg-gray-100 cursor-grab">
+                                                                                    <component :is="IconGripVertical" class="size-4" aria-hidden="true" />
+                                                                                </span>
+                                                                                {{ property?.name }}
+                                                                            </div>
+                                                                            <button type="button" @click="removePropertyFromSubCategory(property, subCategory)" class="text-red-600 hover:text-red-900">
+                                                                                <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" />
+                                                                            </button>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
+                                                                        {{ $t(capitalizeFirstLetter(property?.type)) }}
+                                                                    </td>
+                                                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                                                        <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
+                                                                               :type="property.type" v-model="property.defaultValue"
+                                                                               class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                                                               :placeholder="$t('Default Value')"
+                                                                        />
 
-                                                                <div v-if="property.type === 'checkbox'" class="px-3">
-                                                                    <input type="checkbox" v-model="property.defaultValue"
-                                                                           class="input-checklist"/>
-                                                                </div>
+                                                                        <div v-if="property.type === 'checkbox'" class="px-3">
+                                                                            <input type="checkbox" v-model="property.defaultValue"
+                                                                                   class="input-checklist"/>
+                                                                        </div>
 
-                                                                <Combobox v-if="property.type === 'room'" as="div" v-model="property.defaultValue"
-                                                                      @update:modelValue="roomQuery = ''">
-                                                                    <div class="relative">
-                                                                        <ComboboxInput
-                                                                            class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
-                                                                            @change="roomQuery = $event.target.value" @blur="roomQuery = ''"
-                                                                            :display-value="(person) => property.defaultValue ? props.rooms?.find((room) => room.id === parseInt(property.defaultValue) )?.name : ''"/>
-                                                                        <ComboboxButton
-                                                                            class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                                            <component :is="IconSelector" class="size-5 text-gray-400"
-                                                                                       aria-hidden="true"/>
-                                                                        </ComboboxButton>
+                                                                        <Combobox v-if="property.type === 'room'" as="div" v-model="property.defaultValue"
+                                                                              @update:modelValue="roomQuery = ''">
+                                                                            <div class="relative">
+                                                                                <ComboboxInput
+                                                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                                                    @change="roomQuery = $event.target.value" @blur="roomQuery = ''"
+                                                                                    :display-value="(person) => property.defaultValue ? props.rooms?.find((room) => room.id === parseInt(property.defaultValue) )?.name : ''"/>
+                                                                                <ComboboxButton
+                                                                                    class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                                                    <component :is="IconSelector" class="size-5 text-gray-400"
+                                                                                               aria-hidden="true"/>
+                                                                                </ComboboxButton>
 
-                                                                        <ComboboxOptions v-if="filteredRooms?.length > 0"
-                                                                                         class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
-                                                                            <ComboboxOption v-for="room in filteredRooms" :key="room.id"
-                                                                                            :value="room.id" as="template"
-                                                                                            v-slot="{ active, selected }">
-                                                                                <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
-                                                                                        <span
-                                                                                            :class="['block truncate', selected && 'font-semibold']">
-                                                                                          {{ room.name }}
-                                                                                        </span>
-                                                                                    <span v-if="selected"
-                                                                                          :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                                          <component :is="IconCheck" class="size-5"
-                                                                                                     aria-hidden="true"/>
-                                                                                        </span>
-                                                                                </li>
-                                                                            </ComboboxOption>
-                                                                        </ComboboxOptions>
-                                                                    </div>
-                                                                </Combobox>
+                                                                                <ComboboxOptions v-if="filteredRooms?.length > 0"
+                                                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                                                    <ComboboxOption v-for="room in filteredRooms" :key="room.id"
+                                                                                                    :value="room.id" as="template"
+                                                                                                    v-slot="{ active, selected }">
+                                                                                        <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                                                <span
+                                                                                                    :class="['block truncate', selected && 'font-semibold']">
+                                                                                                  {{ room.name }}
+                                                                                                </span>
+                                                                                            <span v-if="selected"
+                                                                                                  :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                                                  <component :is="IconCheck" class="size-5"
+                                                                                                             aria-hidden="true"/>
+                                                                                                </span>
+                                                                                        </li>
+                                                                                    </ComboboxOption>
+                                                                                </ComboboxOptions>
+                                                                            </div>
+                                                                        </Combobox>
 
-                                                                <Combobox v-if="property.type === 'manufacturer'" as="div"
-                                                                      v-model="property.defaultValue" @update:modelValue="manufacturerQuery = ''">
-                                                                    <div class="relative">
-                                                                        <ComboboxInput
-                                                                            class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
-                                                                            @change="manufacturerQuery = $event.target.value"
-                                                                            @blur="manufacturerQuery = ''"
-                                                                            :display-value="(person) => property.defaultValue ? props.manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.defaultValue) )?.name : ''"/>
-                                                                        <ComboboxButton
-                                                                            class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                                            <component :is="IconSelector" class="size-5 text-gray-400"
-                                                                                       aria-hidden="true"/>
-                                                                        </ComboboxButton>
+                                                                        <Combobox v-if="property.type === 'manufacturer'" as="div"
+                                                                              v-model="property.defaultValue" @update:modelValue="manufacturerQuery = ''">
+                                                                            <div class="relative">
+                                                                                <ComboboxInput
+                                                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                                                    @change="manufacturerQuery = $event.target.value"
+                                                                                    @blur="manufacturerQuery = ''"
+                                                                                    :display-value="(person) => property.defaultValue ? props.manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.defaultValue) )?.name : ''"/>
+                                                                                <ComboboxButton
+                                                                                    class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                                                                                    <component :is="IconSelector" class="size-5 text-gray-400"
+                                                                                               aria-hidden="true"/>
+                                                                                </ComboboxButton>
 
-                                                                        <ComboboxOptions v-if="filteredManufacturers?.length > 0"
-                                                                                         class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
-                                                                            <ComboboxOption v-for="manufacturer in filteredManufacturers"
-                                                                                            :key="manufacturer.id" :value="manufacturer.id" as="template"
-                                                                                            v-slot="{ active, selected }">
-                                                                                <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
-                                                                                        <span
-                                                                                            :class="['block truncate', selected && 'font-semibold']">
-                                                                                          {{ manufacturer.name }}
-                                                                                        </span>
-                                                                                    <span v-if="selected"
-                                                                                          :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
-                                                                                          <component :is="IconCheck" class="size-5"
-                                                                                                     aria-hidden="true"/>
-                                                                                        </span>
-                                                                                </li>
-                                                                            </ComboboxOption>
-                                                                        </ComboboxOptions>
-                                                                    </div>
-                                                                </Combobox>
+                                                                                <ComboboxOptions v-if="filteredManufacturers?.length > 0"
+                                                                                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
+                                                                                    <ComboboxOption v-for="manufacturer in filteredManufacturers"
+                                                                                                    :key="manufacturer.id" :value="manufacturer.id" as="template"
+                                                                                                    v-slot="{ active, selected }">
+                                                                                        <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                                                <span
+                                                                                                    :class="['block truncate', selected && 'font-semibold']">
+                                                                                                  {{ manufacturer.name }}
+                                                                                                </span>
+                                                                                            <span v-if="selected"
+                                                                                                  :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                                                  <component :is="IconCheck" class="size-5"
+                                                                                                             aria-hidden="true"/>
+                                                                                                </span>
+                                                                                        </li>
+                                                                                    </ComboboxOption>
+                                                                                </ComboboxOptions>
+                                                                            </div>
+                                                                        </Combobox>
 
-                                                                <div v-if="property.type === 'selection'" class="">
-                                                                    <div class="mt-2 grid grid-cols-1">
-                                                                        <select id="location" name="location" v-model="property.defaultValue" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
-                                                                            <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
+                                                                        <div v-if="property.type === 'selection'" class="">
+                                                                            <div class="mt-2 grid grid-cols-1">
+                                                                                <select id="location" name="location" v-model="property.defaultValue" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
+                                                                                    <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            </template>
+                                                        </draggable>
+                                                        <tbody>
                                                         <tr class="divide-x divide-gray-200">
                                                             <td colspan="3" class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
                                                                 <PropertiesMenu white-menu-background has-no-offset>
@@ -340,18 +380,27 @@
                                                                         <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
                                                                             <component :is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
                                                                             <span>
-                                                                                {{ $t('Add property') }}
-                                                                            </span>
+                                                                                        {{ $t('Add property') }}
+                                                                                    </span>
                                                                         </div>
                                                                     </template>
                                                                     <template v-slot:menu>
-                                                                        <div v-for="property in properties">
-                                                                            <div @click="addPropertyToSubCategory(property, subCategory)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
-                                                                                <div class="xsDark">
-                                                                                    {{ property.name }}
+                                                                        <div v-if="filteredPropertiesByCategoryAndSubCategory.length > 0">
+                                                                            <div v-for="property in filteredPropertiesByCategoryAndSubCategory">
+                                                                                <div @click="addPropertyToSubCategory(property, subCategory)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
+                                                                                    <div class="xsDark">
+                                                                                        {{ property.name }}
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
+                                                                        <div v-else class="p-4">
+                                                                            <div class="bg-red-50 text-red-500 border border-red-100 p-4 text-xs rounded-lg">
+                                                                                <!-- all properties are already added -->
+                                                                                {{ $t('All properties are already added to the sub-category.') }}
+                                                                            </div>
+                                                                        </div>
+
                                                                     </template>
                                                                 </PropertiesMenu>
                                                             </td>
@@ -388,7 +437,16 @@ import {computed, onMounted, ref} from "vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions} from "@headlessui/vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import {IconCategoryPlus, IconCheck, IconChevronUp, IconLibraryPlus, IconSelector, IconTrash} from "@tabler/icons-vue";
+import {
+    IconCategoryPlus,
+    IconCheck, IconChevronUp,
+    IconGripVertical,
+    IconLibraryPlus,
+    IconSelector,
+    IconTrash
+} from "@tabler/icons-vue";
+
+import draggable from "vuedraggable";
 
 const props = defineProps({
     category: {
@@ -438,6 +496,21 @@ const filteredManufacturers = computed(() =>
         }),
 );
 
+const filteredPropertiesByCategory = computed(() => {
+    // if property is already in categoryForm.properties, do not show it
+    return props.properties.filter(property => {
+        return !categoryForm.properties.some(p => p.id === property.id);
+    });
+});
+
+const filteredPropertiesByCategoryAndSubCategory = computed(() => {
+    // if property is already in category and subCategory.properties, do not show it
+    return props.properties.filter(property => {
+        return !categoryForm.properties.some(p => p.id === property.id) &&
+            !subCategories.value.some(subCategory => subCategory.properties.some(p => p.id === property.id));
+    });
+})
+
 const addEmptySubCategory = () => {
     subCategories.value.push({
         id: null,
@@ -480,50 +553,39 @@ const addPropertyToSubCategory = (property, subCategory) => {
 
 onMounted(() => {
     if (props.category) {
-        categoryForm.properties = props.category.properties.map(property => {
+        categoryForm.properties = props.category.properties.map((property, idx) => {
             let defaultValue = property.pivot.value ?? '';
-
-            // Convert string checkbox values to booleans
             if (property.type === 'checkbox') {
-                defaultValue = defaultValue === 'true' ? true :
-                              defaultValue === 'false' ? false :
-                              defaultValue === '' ? false : defaultValue;
+                defaultValue = defaultValue === 'true';
             }
-
             return {
                 id: property.id,
                 name: property.name,
                 type: property.type,
                 select_values: property.select_values,
-                defaultValue: defaultValue
+                defaultValue,
+                position: property.pivot?.position ?? idx,
             }
-        });
+        }).sort((a,b) => (a.position ?? 0) - (b.position ?? 0));
 
-        // add sub categories to subCategories from props.category if they exist with property values and default values
-        subCategories.value = props.category.subcategories.map(subCategory => {
-            return {
-                id: subCategory.id,
-                name: subCategory.name,
-                properties: subCategory.properties ? subCategory.properties.map(property => {
-                    let defaultValue = property.pivot.value ?? '';
-
-                    // Convert string checkbox values to booleans
-                    if (property.type === 'checkbox') {
-                        defaultValue = defaultValue === 'true' ? true :
-                                      defaultValue === 'false' ? false :
-                                      defaultValue === '' ? false : defaultValue;
-                    }
-
-                    return {
-                        id: property.id,
-                        name: property.name,
-                        type: property.type,
-                        select_values: property.select_values,
-                        defaultValue: defaultValue
-                    }
-                }) : []
-            }
-        });
+        subCategories.value = props.category.subcategories.map((sub) => ({
+            id: sub.id,
+            name: sub.name,
+            properties: (sub.properties ?? []).map((property, idx) => {
+                let defaultValue = property.pivot.value ?? '';
+                if (property.type === 'checkbox') {
+                    defaultValue = defaultValue === 'true';
+                }
+                return {
+                    id: property.id,
+                    name: property.name,
+                    type: property.type,
+                    select_values: property.select_values,
+                    defaultValue,
+                    position: property.pivot?.position ?? idx,
+                }
+            }).sort((a,b) => (a.position ?? 0) - (b.position ?? 0))
+        }));
     }
 })
 
@@ -544,48 +606,47 @@ const capitalizeFirstLetter = (val) => {
 }
 
 const createOrUpdateCategory = () => {
-    // Convert boolean checkbox values to strings for category properties
-    if (categoryForm.properties && categoryForm.properties.length > 0) {
-        categoryForm.properties.forEach(property => {
-            if (property.type === 'checkbox' && typeof property.defaultValue === 'boolean') {
-                property.defaultValue = property.defaultValue ? 'true' : 'false';
-            }
-        });
-    }
-
-    // Convert boolean checkbox values to strings for subcategory properties
-    const processedSubCategories = subCategories.value.map(subCategory => {
-        const processedSubCategory = {...subCategory};
-        if (processedSubCategory.properties && processedSubCategory.properties.length > 0) {
-            processedSubCategory.properties = processedSubCategory.properties.map(property => {
-                const processedProperty = {...property};
-                if (processedProperty.type === 'checkbox' && typeof processedProperty.defaultValue === 'boolean') {
-                    processedProperty.defaultValue = processedProperty.defaultValue ? 'true' : 'false';
-                }
-                return processedProperty;
-            });
+    const normalizeProp = (p, idx) => {
+        let val = p?.defaultValue;
+        if (p?.type === 'checkbox') {
+            const boolVal = val === true || val === 'true';
+            val = boolVal ? 'true' : 'false';
+        } else {
+            val = (val ?? '') + '';
         }
-        return processedSubCategory;
-    });
+        return { id: p.id, defaultValue: val, position: idx };
+    };
 
-    categoryForm.subcategories = processedSubCategories;
+    // Kategorie-Properties normalisieren
+    categoryForm.properties = (categoryForm.properties ?? []).map((p, i) => normalizeProp(p, i));
 
-    if (categoryForm.id) {
-        categoryForm.patch(route('inventory-management.settings.categories.update', {inventoryCategory: categoryForm.id}), {
+    // Subkategorien normalisieren
+    categoryForm.subcategories = (subCategories.value ?? []).map(sc => ({
+        id: sc.id ?? null,
+        name: sc.name ?? '',
+        properties: (sc.properties ?? []).map((p, i) => normalizeProp(p, i)),
+    }));
+
+    const isUpdate = !!categoryForm.id;
+    const url = isUpdate
+        ? route('inventory-management.settings.categories.update', { inventoryCategory: categoryForm.id })
+        : route('inventory-management.settings.categories.create');
+
+    // WICHTIG: Methoden direkt auf categoryForm aufrufen (Kontext!)
+    if (isUpdate) {
+        categoryForm.patch(url, {
             preserveScroll: true,
-            onSuccess: () => {
-                emit('close');
-            }
+            onSuccess: () => emit('close'),
         });
     } else {
-        categoryForm.post(route('inventory-management.settings.categories.create'), {
+        categoryForm.post(url, {
             preserveScroll: true,
-            onSuccess: () => {
-                emit('close');
-            }
+            onSuccess: () => emit('close'),
         });
     }
-}
+};
+
+
 
 const removeSubCategoryFromCategory = (subCategory) => {
     if ( subCategory.id) {
@@ -602,5 +663,6 @@ const removeSubCategoryFromCategory = (subCategory) => {
 </script>
 
 <style scoped>
-
+.drag-handle { cursor: grab; }
+.drag-handle:active { cursor: grabbing; }
 </style>

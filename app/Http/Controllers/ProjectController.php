@@ -2161,7 +2161,8 @@ class ProjectController extends Controller
                 case ProjectTabComponentEnum::BULK_EDIT->value:
                     // Events (ohne „schwere“ Relationen) laden und mit Minimal-Resource anreichern
                     $eventsUnsorted = $project->events()
-                        ->without(['series', 'event_type', 'subEvents', 'creator'])
+                        ->with(['event_type', 'room', 'eventStatus'])
+                        ->without(['series', 'subEvents', 'creator'])
                         ->get()
                         ->map(
                         /** @return array<string,mixed> */
@@ -2174,9 +2175,9 @@ class ProjectController extends Controller
                     $userBulkSortId = (int) ($authUser?->getAttribute('bulk_sort_id') ?? 0);
 
                     $eventsSorted = match ($userBulkSortId) {
-                        1       => $eventsUnsorted->sortBy('roomName'),
-                        2       => $eventsUnsorted->sortBy('eventTypeName'),
-                        3       => $eventsUnsorted->sortBy('startTime'),
+                        1       => $eventsUnsorted->sortBy('roomName')->values(),
+                        2       => $eventsUnsorted->sortBy('eventTypeName')->values(),
+                        3       => $eventsUnsorted->sortBy('startTime')->values(),
                         default => $eventsUnsorted,
                     };
 

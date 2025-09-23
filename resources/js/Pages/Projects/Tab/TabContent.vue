@@ -35,6 +35,7 @@
                     :eventStatuses="headerObject.eventStatuses"
                     :event_properties="headerObject.event_properties"
                     :component="component"
+                    :materials="headerObject.materials"
                 />
             </div>
         </div>
@@ -126,6 +127,7 @@ import ProjectGroupDisplayComponent from "@/Pages/Projects/Components/ProjectGro
 import DisclosureComponent from "@/Pages/Projects/Tab/Components/DisclosureComponent.vue";
 import ArtistNameDisplayComponent from "@/Pages/Projects/Components/ArtistNameDisplayComponent.vue";
 import LinkComponent from "@/Pages/Projects/Tab/Components/LinkComponent.vue";
+import ProjectMaterialIssueComponent from "@/Pages/Projects/Components/Issue/ProjectMaterialIssueComponent.vue";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
@@ -164,7 +166,8 @@ const componentMapping = {
     GroupProjectDisplayComponent,
     ProjectGroupDisplayComponent,
     DisclosureComponent,
-    ArtistNameDisplayComponent
+    ArtistNameDisplayComponent,
+    ProjectMaterialIssueComponent
 };
 
 const props = defineProps({

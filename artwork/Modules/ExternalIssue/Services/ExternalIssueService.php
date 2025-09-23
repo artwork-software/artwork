@@ -16,9 +16,8 @@ class ExternalIssueService
     ) {
     }
 
-    public function store(array $data, User $user, array $files = []): ExternalIssue
+    public function store(array $data, array $files = []): ExternalIssue
     {
-        $data['issued_by_id'] = $user->id;
         $issue = ExternalIssue::create($data);
 
         if (!empty($files)) {

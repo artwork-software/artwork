@@ -7,6 +7,7 @@
                     <ArticleSearch
                         @article-selected="addArticleNameToFilter"
                         class="w-72"
+                        id="article-search"
                     />
                     <button type="button" @click="filterIssueByArticleIds" class="p-4 flex items-center justify-center bg-gray-100 shadow-sm border border-gray-200 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer">
                         <component :is="IconSearch" class="size-5" stroke-width="1.5"/>
@@ -68,7 +69,7 @@
                     <div class="">
                         <div v-if="issues.data.length > 0">
                             <WhiteInnerCard class="my-3 group/issueOfMaterial" :key="issueOfMaterial.id" v-for="issueOfMaterial in issues.data">
-                                <SingleInternMaterialIssue :issue-of-material="issueOfMaterial" />
+                                <SingleInternMaterialIssue :issue-of-material="issueOfMaterial" :detailed-article="detailedArticle" />
                             </WhiteInnerCard>
                         </div>
                         <div v-else>
@@ -121,6 +122,24 @@ const props = defineProps({
     materialSets: {
         type: Object,
         required: false,
+    },
+    detailedArticle: {
+        type: Object,
+        required: false
+    },
+    categories: {
+        type: Object,
+        required: false
+    },
+    filterable_properties: {
+        type: Array,
+        required: false,
+        default: () => []
+    },
+    articles: {
+        type: Object,
+        required: false,
+        default: () => []
     }
 })
 const showIssueOfMaterialModal = ref(false);

@@ -214,6 +214,7 @@ const props = defineProps({
         end_time: 'End time',
         event_type: 'Event type',
         event_name: 'Event name',
+        event_description: 'Event description',
         event_status: 'Event Status',
         room: 'Room',
         project_team: 'Project team',

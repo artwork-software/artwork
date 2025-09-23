@@ -48,6 +48,7 @@ return [
             'end_time' => 'Uhrzeit bis',
             'event_type' => 'Termintyp',
             'event_name' => 'Terminname',
+            'event_description' => 'Terminbeschreibung',
             'event_status' => 'Terminstatus',
             'room' => 'Raum',
             'project_team' => 'Projekttean',

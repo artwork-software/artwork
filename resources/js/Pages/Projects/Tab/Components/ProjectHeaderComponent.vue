@@ -49,6 +49,7 @@
                                         v-if="project?.key_visual_path !== null"
                                         :src="'/storage/keyVisual/' + project?.key_visual_path"
                                         :alt="$t('Current key visual')"
+                                        @error="(e) => e.target.src = usePage().props.big_logo"
                                         class="size-24 rounded-full object-cover ring-2 ring-white transition-transform duration-300 hover:scale-110"
                                     />
                                     <div v-else class="size-12 rounded-full bg-gradient-to-br from-zinc-200 to-zinc-100 ring-2 ring-white shadow-inner"></div>

@@ -6,6 +6,7 @@
         <span v-if="project?.key_visual_path !== null" class="print:hidden">
             <img :src="'/storage/keyVisual/' + project?.key_visual_path"
                  :alt="$t('Current key visual')"
+                 @error="(e) => e.target.src = usePage().props.big_logo"
                  class="mx-auto size-8 rounded-full object-cover mr-2">
         </span>
         <div class=" group-hover/project:text-artwork-buttons-create duration-300 ease-in-out text-dark flex items-center gap-x-1">
@@ -16,6 +17,8 @@
 </template>
 
 <script setup>
+
+import {usePage} from "@inertiajs/vue3";
 
 const props = defineProps({
     project: {

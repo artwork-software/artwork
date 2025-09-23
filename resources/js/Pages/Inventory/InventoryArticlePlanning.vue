@@ -26,6 +26,16 @@
 
                     <div class="flex-1"></div>
 
+                    <!-- Search Input Field -->
+                    <div class="shrink-0 mr-3">
+                        <input
+                            type="text"
+                            v-model="searchFilter"
+                            :placeholder="$t('Search articles, categories...')"
+                            class="px-3 py-1.5 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-w-[200px]"
+                        />
+                    </div>
+
                     <div class="shrink-0">
                         <DatePickerComponent
                             v-if="dataArray"
@@ -39,9 +49,9 @@
             </div>
 
             <!-- Grid wrapper -->
-            <div class="flex flex-col w-full h-full overflow-hidden relative">
-                <div class="flex-1 overflow-auto text-sm relative">
-                    <div class="min-w-max">
+            <div class="flex flex-col w-full overflow-hidden relative" style="height: calc(100vh - 100px);">
+                <div class="flex-1 overflow-x-auto overflow-y-hidden text-sm relative">
+                    <div class="min-w-max h-full overflow-y-auto">
                         <!-- Timeline header row -->
                         <div class="flex sticky top-0 z-30 bg-white/90 backdrop-blur shadow-sm text-sm font-medium text-zinc-700">
                             <div class="sticky left-0 z-20 bg-white/90 px-4 py-2 font-medium w-[220px] min-w-[220px] flex items-center border-r border-zinc-200">
@@ -59,7 +69,7 @@
 
                         <!-- Body -->
                         <div>
-                            <template v-for="group in groupedArticles" :key="group.category">
+                            <template v-for="group in filteredGroupedArticles" :key="group.category">
                                 <!-- Category row (toggle) -->
                                 <div class="flex bg-zinc-100/80">
                                     <button
@@ -202,7 +212,7 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router } from "@inertiajs/vue3";
-import {ref, reactive, onMounted, watch, defineAsyncComponent} from "vue";
+import {ref, reactive, onMounted, watch, computed, defineAsyncComponent} from "vue";
 import {IconCategory2, IconCategoryFilled, IconChevronRight, IconRouteSquare} from "@tabler/icons-vue";
 
 const props = defineProps({
@@ -217,13 +227,70 @@ const showArticleUsageModal = ref(false);
 const currentModalArticleId = ref(null);
 const currentModalDate = ref(null);
 
+// Search filter
+const searchFilter = ref('');
+
+// Filtered grouped articles based on search input
+const filteredGroupedArticles = computed(() => {
+    if (!searchFilter.value.trim()) {
+        return props.groupedArticles;
+    }
+
+    const searchTerm = searchFilter.value.trim().toLowerCase();
+    const filtered = [];
+
+    for (const group of props.groupedArticles) {
+        const categoryName = group.category.toLowerCase();
+
+        // If search matches category name, include entire category
+        if (categoryName.includes(searchTerm)) {
+            filtered.push(group);
+            continue;
+        }
+
+        // Check if search matches any subcategory name
+        const matchingSubcategories = (group.subcategories || []).filter(sub =>
+            sub.name.toLowerCase().includes(searchTerm)
+        );
+
+        if (matchingSubcategories.length > 0) {
+            // Include entire category if any subcategory matches
+            filtered.push(group);
+            continue;
+        }
+
+        // Otherwise, filter articles by name
+        const filteredArticles = (group.articles || []).filter(article =>
+            article.name.toLowerCase().includes(searchTerm)
+        );
+
+        const filteredSubcategories = (group.subcategories || []).map(sub => ({
+            ...sub,
+            articles: (sub.articles || []).filter(article =>
+                article.name.toLowerCase().includes(searchTerm)
+            )
+        })).filter(sub => sub.articles.length > 0);
+
+        // Include category if it has matching articles or subcategories with matching articles
+        if (filteredArticles.length > 0 || filteredSubcategories.length > 0) {
+            filtered.push({
+                ...group,
+                articles: filteredArticles,
+                subcategories: filteredSubcategories
+            });
+        }
+    }
+
+    return filtered;
+});
+
 /** --- Collapsible state --- */
 const catOpen = reactive({}); // key: category -> boolean
 const subOpen = reactive({}); // key: `${category}:::${sub}` -> boolean
 const keyFor = (cat, sub) => `${cat}:::${sub}`;
 
 const ensureInitialState = () => {
-    for (const g of props.groupedArticles ?? []) {
+    for (const g of filteredGroupedArticles.value ?? []) {
         if (catOpen[g.category] === undefined) catOpen[g.category] = true;
         for (const s of g.subcategories ?? []) {
             const k = keyFor(g.category, s.name);
@@ -232,7 +299,7 @@ const ensureInitialState = () => {
     }
 };
 onMounted(ensureInitialState);
-watch(() => props.groupedArticles, ensureInitialState, { deep: true });
+watch(() => filteredGroupedArticles.value, ensureInitialState, { deep: true });
 
 const isCatOpen = (cat) => catOpen[cat] ?? true;
 const toggleCategory = (cat) => (catOpen[cat] = !isCatOpen(cat));

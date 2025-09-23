@@ -1684,7 +1684,9 @@ class ProjectController extends Controller
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
                     ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
                     ->first();
-                $sum = (float)$firstColumn->value + (float)$secondColumn->value;
+                $firstDecimal = str_replace(',', '.', $firstColumn->value ?: '0');
+                $secondDecimal = str_replace(',', '.', $secondColumn->value ?: '0');
+                $sum = bcadd($firstDecimal, $secondDecimal, 2);
                 ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
@@ -1711,7 +1713,9 @@ class ProjectController extends Controller
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
                     ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
                     ->first();
-                $sum = (float)$firstColumn->value - (float)$secondColumn->value;
+                $firstDecimal = str_replace(',', '.', $firstColumn->value ?: '0');
+                $secondDecimal = str_replace(',', '.', $secondColumn->value ?: '0');
+                $sum = bcsub($firstDecimal, $secondDecimal, 2);
                 ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
@@ -1969,12 +1973,16 @@ class ProjectController extends Controller
                 ->first();
 
             if ($column->type === 'sum') {
-                $sum = (float)$firstRowValue + (float)$secondRowValue;
+                $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
+                $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
+                $sum = bcadd($firstDecimal, $secondDecimal, 2);
                 $updateColumn->update([
                     'value' => $sum
                 ]);
             } else {
-                $sum = (float)$firstRowValue - (float)$secondRowValue;
+                $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
+                $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
+                $sum = bcsub($firstDecimal, $secondDecimal, 2);
                 $updateColumn->update([
                     'value' => $sum
                 ]);

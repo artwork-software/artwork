@@ -166,6 +166,21 @@
                     <p id="hide_unoccupied_rooms-description" class="text-gray-500 text-xs">{{ $t('Hides rooms in the calendar in which no events are entered, for a clearer display of active areas.') }}</p>
                 </div>
             </div>
+            <div class="flex gap-3" v-if="inShiftPlan">
+                <div class="flex h-6 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                        <input v-model="userCalendarSettings.hide_unoccupied_days" id="hide_unoccupied_days" aria-describedby="hide_unoccupied_days-description" name="options" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                            <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="text-sm/6">
+                    <label for="hide_unoccupied_days" class="font-medium text-gray-900">{{ $t('Hide unoccupied days') }}</label>
+                    <p id="hide_unoccupied_days-description" class="text-gray-500 text-xs">{{ $t('Hides days in the calendar on which no events are scheduled, for a more focused view of active days.') }}</p>
+                </div>
+            </div>
             <div class="flex gap-3">
                 <div class="flex h-6 shrink-0 items-center">
                     <div class="group grid size-4 grid-cols-1">
@@ -301,6 +316,7 @@ const userCalendarSettings = useForm({
     expand_days: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.expand_days : false,
     use_event_status_color: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.use_event_status_color : false,
     hide_unoccupied_rooms: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.hide_unoccupied_rooms : false,
+    hide_unoccupied_days: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.hide_unoccupied_days : false,
     display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
     show_unplanned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_unplanned_events : false,
     show_planned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_planned_events : false,

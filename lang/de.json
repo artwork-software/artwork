@@ -3070,6 +3070,8 @@
     "User Profile": "Nutzerprofil",
     "Manage global roles and granular permissions for this user.": "Verwalte globale Rollen und granulare Berechtigungen für diesen Nutzer*in.",
     "View and edit shift settings": "Schichteinstellungen anzeigen und bearbeiten",
-    "Allows viewing and editing shift settings": "Erlaubt das Anzeigen und Bearbeiten von Schichteinstellungen"
+    "Allows viewing and editing shift settings": "Erlaubt das Anzeigen und Bearbeiten von Schichteinstellungen",
+    "Hide unoccupied days": "Unbesetzte Tage ausblenden",
+    "Hides days in the calendar on which no events are scheduled, for a more focused view of active days.": "Blendet Tage im Kalender aus, an denen keine Termine geplant sind, für eine fokussiertere Ansicht aktiver Tage."
 }
 

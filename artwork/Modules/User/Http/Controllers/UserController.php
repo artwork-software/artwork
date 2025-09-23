@@ -1096,7 +1096,8 @@ class UserController extends Controller
             'hide_unoccupied_rooms',
             'display_project_groups',
             'show_unplanned_events',
-            'show_planned_events'
+            'show_planned_events',
+            'hide_unoccupied_days'
         ]));
     }
 

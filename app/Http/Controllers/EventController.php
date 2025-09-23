@@ -12,6 +12,7 @@ use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
+use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO;
 use Artwork\Modules\Calendar\DTO\ProjectDTO;
@@ -259,31 +260,6 @@ class EventController extends Controller
 
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
 
-        // Sofortige JSON-Antwort nur, wenn explizit ein Datumsbereich abgefragt wird (z.B. Planner)
-        /*if ($dateRangeRequested) {
-            $calendar = ($isPlanning
-                ? $this->eventPlanningCalendarService
-                : $this->eventCalendarService
-            )->mapRoomsToContentForCalendar(
-                ($isPlanning
-                    ? $this->eventPlanningCalendarService
-                    : $this->eventCalendarService
-                )->filterRoomsEvents(
-                    $rooms,
-                    $userCalendarFilter,
-                    $startDate,
-                    $endDate,
-                    $userCalendarSettings
-                ),
-                $startDate,
-                $endDate
-            );
-
-            return response()->json(['calendar' => $calendar->rooms]);
-        }*/
-
-        // Inertia v2 Best Practice: Schwere Props **lazy/deferred** als Closures.
-        // Client lädt diese gezielt via Partial Reload / <WhenVisible />. :contentReference[oaicite:1]{index=1}
         return Inertia::render('Calendar/Index', [
             'period'                 => $period,
             'months'                 => $months,
@@ -291,55 +267,26 @@ class EventController extends Controller
             'dateValue'              => $dateValue,
             'user_filters'           => $userCalendarFilter,
             'calendarWarningText'    => $calendarWarningText,
-
-            // Filter/Optionen (meist klein, aber ggf. trotzdem lazy)
             'personalFilters' => fn () =>
             $this->filterService->getPersonalFilter($user, UserFilterTypes::CALENDAR_FILTER->value),
             'filterOptions'   => fn () => $this->filterService->getCalendarFilterDefinitions(),
-
-            // **L A Z Y**: teure Event-Mappings und große Listen:
-            /*'calendar' => fn () => ($isPlanning
-                ? $this->eventPlanningCalendarService
-                : $this->eventCalendarService
-            )->mapRoomsToContentForCalendar(
-                ($isPlanning
-                    ? $this->eventPlanningCalendarService
-                    : $this->eventCalendarService
-                )->filterRoomsEvents(
-                    $this->calendarDataService->getFilteredRooms(
-                        $userCalendarFilter,
-                        $userCalendarSettings,
-                        $startDate,
-                        $endDate
-                    ),
-                    $userCalendarFilter,
-                    $startDate,
-                    $endDate,
-                    $userCalendarSettings
-                ),
-                $startDate,
-                $endDate
-            )->rooms,*/
-
             'eventsWithoutRoom' => fn () =>
              Event::query()->hasNoRoom()->get()->map(fn($event) =>
-             \Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO::formModel(
-                 $event,
-                 $userCalendarSettings,
-                 EventType::select(['id','name','abbreviation','hex_code'])->get()->keyBy('id')
-             )
+                 \Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO::formModel(
+                     $event,
+                     $userCalendarSettings,
+                     EventType::select(['id','name','abbreviation','hex_code'])->get()->keyBy('id')
+                 )
              ),
-
-           // 'areas'            => fn () => app('Artwork\\Modules\\Area\\Services\\AreaService')->getAll(),
             'areas'            => fn () => $this->areaService->getAll(),
             'eventTypes'       => fn () => EventType::select(['id','name','abbreviation','hex_code'])->orderBy('name')->get(),
             'eventStatuses'    => fn () => EventStatus::orderBy('order')->get(),
             'event_properties' => fn () => EventProperty::all(),
-
-            // Projekt-Tabs (klein, aber konsistent)
             'first_project_tab_id' => fn () => $this->projectTabService->getDefaultOrFirstProjectTabId(),
-            'first_project_calendar_tab_id' => fn () => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
-            'first_project_shift_tab_id' => fn () => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'first_project_calendar_tab_id' => fn () => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
+            'first_project_shift_tab_id' => fn () => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
 
             'projectNameUsedForProjectTimePeriod' => fn () =>
             $userCalendarSettings->getAttribute('time_period_project_id')
@@ -551,9 +498,7 @@ class EventController extends Controller
             ]);
         }
 
-        if ($user->getAttribute('daily_view')) {
-            $renderViewName = 'Shifts/ShiftPlanDailyView';
-        }
+
 
         $period = $this->calendarDataService->createCalendarPeriodDto(
             $startDate,
@@ -590,6 +535,16 @@ class EventController extends Controller
             $endDate ? $endDate->format('Y-m-d') : null
         ];
 
+
+        if ($user->getAttribute('daily_view')) {
+            $renderViewName = 'Shifts/ShiftPlanDailyView';
+        }
+
+        if ($userCalendarSettings->hide_unoccupied_days) {
+            $result = $this->calendarDataService->hideUnoccupiedDays($calendarData, $period);
+            $calendarData = $result['calendarData'];
+            $period       = $result['period'];
+        }
 
 
         return Inertia::render($renderViewName, [
@@ -654,6 +609,7 @@ class EventController extends Controller
             'calendarWarningText' => $calendarWarningText,
         ]);
     }
+
 
     /**
      * @return array<string, array<int, mixed>>

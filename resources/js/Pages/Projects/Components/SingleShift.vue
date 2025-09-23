@@ -309,7 +309,7 @@ import ShiftsQualificationsDropElement from '@/Pages/Projects/Components/ShiftsQ
 import AddShiftModal from '@/Pages/Projects/Components/AddShiftModal.vue'
 import AddShiftQualificationToShiftModel from '@/Pages/Projects/Components/AddShiftQualificationToShiftModel.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
-import {IconCirclePlus, IconCircleX, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
+import {IconCirclePlus, IconCircleX, IconEdit, IconTrash, IconX, IconExclamationCircle} from "@tabler/icons-vue";
 
 defineOptions({ name: 'SingleShift' })
 

@@ -3064,5 +3064,7 @@
     "User Profile": "User Profile",
     "Manage global roles and granular permissions for this user.": "Manage global roles and granular permissions for this user.",
     "View and edit shift settings": "View and edit shift settings",
-    "Allows viewing and editing shift settings": "Allows viewing and editing shift settings"
+    "Allows viewing and editing shift settings": "Allows viewing and editing shift settings",
+    "Hide unoccupied days": "Hide unoccupied days",
+    "Hides days in the calendar on which no events are scheduled, for a more focused view of active days.": "Hides days in the calendar on which no events are scheduled, for a more focused view of active days."
 }

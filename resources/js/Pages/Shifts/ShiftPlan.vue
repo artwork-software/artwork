@@ -32,6 +32,7 @@
                                       :firstProjectShiftTabId="firstProjectShiftTabId"
                                       @select-go-to-next-mode="selectGoToNextMode"
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
+                                      :event-types="eventTypes"
                 >
                     <template #multiEditCalendar>
                         <div v-if="multiEditModeCalendar">
@@ -875,7 +876,8 @@ export default {
         'useFirstNameForSort',
         'userShiftPlanShiftQualificationFilters',
         'projectNameUsedForProjectTimePeriod',
-        'calendarWarningText'
+        'calendarWarningText',
+        'eventTypes'
     ],
     data() {
         return {

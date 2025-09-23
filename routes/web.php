@@ -265,6 +265,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/users/{user}/calendar-settings', [UserController::class, 'updateCalendarSettings'])
         ->name('user.calendar_settings.update');
 
+    Route::patch('/users/shift-preset-toggle', [UserController::class, 'toggleUserShiftTimePreset'])
+        ->name('user.shift-time-preset.toggle');
+
     //Users
     Route::get('/users', [UserController::class, 'index'])->name('users');
     Route::get('/users/addresses', [UserController::class, 'getAddresses'])->name('users.addresses');

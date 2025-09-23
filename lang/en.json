@@ -3066,5 +3066,9 @@
     "View and edit shift settings": "View and edit shift settings",
     "Allows viewing and editing shift settings": "Allows viewing and editing shift settings",
     "Hide unoccupied days": "Hide unoccupied days",
-    "Hides days in the calendar on which no events are scheduled, for a more focused view of active days.": "Hides days in the calendar on which no events are scheduled, for a more focused view of active days."
+    "Hides days in the calendar on which no events are scheduled, for a more focused view of active days.": "Hides days in the calendar on which no events are scheduled, for a more focused view of active days.",
+    "Planning Mode": "Planning Mode",
+    "Event Content": "Event Content",
+    "Visibility & Filters": "Visibility & Filters",
+    "Appearance & Accessibility": "Appearance & Accessibility"
 }

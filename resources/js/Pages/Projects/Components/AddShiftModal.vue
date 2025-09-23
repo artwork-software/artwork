@@ -5,7 +5,7 @@
                 <div class="px-5 py-3 mb-5">
                     <div class="flex items-center justify-end my-2">
                         <div class="flex items-center justify-end">
-                            <button type="button" class="text-xs text-artwork-buttons-create underline cursor-pointer" @click="showPresetBox = !showPresetBox">
+                            <button type="button" class="text-xs text-artwork-buttons-create underline cursor-pointer" @click="openOrClosePresetBox()">
                                 {{ showPresetBox ? $t('Hide time presets') : $t('Show time presets') }}
                             </button>
                         </div>
@@ -275,7 +275,7 @@ import {
     ChevronDownIcon,
     PlusCircleIcon
 } from "@heroicons/vue/outline";
-import {router, useForm} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -354,7 +354,7 @@ export default defineComponent({
     ],
     data(){
         return {
-            showPresetBox: false,
+            showPresetBox: usePage().props.auth.user?.is_time_preset_open ?? false,
             searchPreset: '',
             showSearchbar: false,
             showComfirmDeleteModal: false,
@@ -740,6 +740,22 @@ export default defineComponent({
             //console.log(computedShiftQualifications)
 
             return reactive(computedShiftQualifications);
+        },
+        openOrClosePresetBox() {
+            router.patch(route('user.shift-time-preset.toggle'), {
+                is_time_preset_open: !this.showPresetBox
+            }, {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    this.showPresetBox = !this.showPresetBox;
+                },
+                onError: (error) => {
+                    console.log(error);
+                },
+                onFinish: () => {
+                }
+            });
         },
         selectableCrafts() {
             let crafts = [];

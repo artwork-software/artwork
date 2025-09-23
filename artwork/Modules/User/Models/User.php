@@ -237,7 +237,8 @@ class User extends Model implements
         'use_chat',
         'work_time_balance',
         'chat_popup_position',
-        'chat_push_notification'
+        'chat_push_notification',
+        'is_time_preset_open'
     ];
 
     protected $casts = [
@@ -269,6 +270,7 @@ class User extends Model implements
         'bulk_column_size' => 'array',
         'use_chat' => 'boolean',
         'chat_push_notification' => 'boolean',
+        'is_time_preset_open' => 'boolean',
     ];
 
     protected $hidden = [

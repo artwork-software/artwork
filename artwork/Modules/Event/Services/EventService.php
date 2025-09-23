@@ -1696,6 +1696,7 @@ readonly class EventService
         /** @var Event $createdEvent */
         $createdEvent  = $project->events()->create([
             'eventName' => $event['name'] ?? '',
+            'name' => $event['name'] ?? '',
             'user_id' => $userId,
             'start_time' => $startTime,
             'end_time' => $endTime,

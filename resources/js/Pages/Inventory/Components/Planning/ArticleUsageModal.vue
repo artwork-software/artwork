@@ -19,7 +19,7 @@
                     <div class="flex flex-col items-center">
                         <button
                             @click="toggleStatusDetails"
-                            class="inline-flex items-center flex flex-wrap text-lg bg-blue-50 py-2.5 w-64 text-md font-medium text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100 hover:ring-blue-300 transition-all duration-200 cursor-pointer group">
+                            class="inline-flex items-center flex flex-wrap text-lg bg-blue-50 py-2.5 w-72 text-md font-medium text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100 hover:ring-blue-300 transition-all duration-200 cursor-pointer group">
                             <div class="flex w-full items-center justify-between">
                                 <div class="pl-2">
                                     {{ $t('Total quantity') }}:
@@ -45,14 +45,14 @@
                             </div>
                         </button>
                         <div
-                            class="inline-flex items-center justify-between flex text-lg bg-green-50 pr-6 py-2.5 text-md w-64 font-medium text-green-700 ring-1 ring-inset ring-green-200">
+                            class="inline-flex items-center justify-between flex text-lg bg-green-50 pr-6 py-2.5 text-md w-72 font-medium text-green-700 ring-1 ring-inset ring-green-200">
                             <div class="ml-2">
                                 {{ $t('of which available') }}:
                             </div>
                             <div class="ml-1 tabular-nums text-2xl">{{ getEinsatzbereitQuantity() }}</div>
                         </div>
                         <div
-                            class="inline-flex justify-between flex rounded-bl-lg items-center text-lg bg-emerald-50 pr-2 py-2.5 text-md w-64 font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                            class="inline-flex justify-between flex rounded-bl-lg items-center text-lg bg-emerald-50 pr-2 py-2.5 text-md w-72 font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
                             <div class="ml-2">
                                 {{ $t('available after usage') }}:
                             </div>
@@ -64,7 +64,7 @@
                     </div>
 
                     <!-- Expandable Status Details -->
-                    <div class="w-2/3">
+                    <div class="w-1/2">
                         <Transition
                             enter-active-class="transition-all duration-300 ease-out"
                             enter-from-class="opacity-0 max-h-0"

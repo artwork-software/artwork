@@ -10,6 +10,7 @@
                 :eventTypes="eventTypes"
                 @previousTimeRange="goToPrevAssignedDay"
                 @next-time-range="goToNextAssignedDay"
+                :user_to_edit_id="userToEditId"
             />
         </div>
 

@@ -608,6 +608,8 @@ class UserController extends Controller
             Carbon::parse($vacationMonth) :
             Carbon::today();
 
+        $userService->shareCalendarAbo('shiftCalendar');
+
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
 
         return Inertia::render(
@@ -1177,7 +1179,7 @@ class UserController extends Controller
         $selectedPeriodDate = $vacationMonth ?
             Carbon::parse($vacationMonth) :
             Carbon::today();
-        $user->load(['shiftCalendarAbo']);
+        $userService->shareCalendarAbo('shiftCalendar');
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
 
         return Inertia::render(

@@ -18,6 +18,6 @@ trait HasCategoryProperties
             'inventory_category_property_values', // Eigene Pivot-Tabelle für Kategorien/Subkategorien
             'inventory_category_propertyable_id', // Das Fremdschlüsselfeld für die Kategorie oder SubKategorie
             'inventory_article_property_id' // Das Fremdschlüsselfeld für die Property
-        )->withPivot('value'); // Das "value"-Feld wird als zusätzliches Pivot-Attribut geladen
+        )->withPivot(['value', 'position'])->orderBy('inventory_category_property_values.position');
     }
 }

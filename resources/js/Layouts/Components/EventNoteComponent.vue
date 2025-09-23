@@ -50,7 +50,7 @@ export default {
         updateDescription() {
             if (this.eventDescription.isDirty) {
                 this.eventDescription.patch(route('event.update.description', this.event.id), {
-                    preserveState: false,
+                    preserveState: true,
                     preserveScroll: true,
                     onSuccess: () => {
                         this.showTextField = false

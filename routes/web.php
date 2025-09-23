@@ -1,87 +1,85 @@
 <?php
 
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AreaController;
-use App\Http\Controllers\ArtistResidencyController;
-use App\Http\Controllers\AvailabilityController;
-use App\Http\Controllers\BudgetAccountManagementController;
-use App\Http\Controllers\BudgetGeneralController;
-use App\Http\Controllers\BudgetManagementAccountController;
-use App\Http\Controllers\BudgetManagementCostUnitController;
-use App\Http\Controllers\BudgetTemplateController;
+use App\Http\Controllers\RoomController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\CraftController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\GenreController;
+use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\FilterController;
+use App\Http\Controllers\SectorController;
+use App\Http\Controllers\WorkerController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\CellCalculationsController;
-use App\Http\Controllers\CellCommentsController;
-use App\Http\Controllers\ChecklistController;
-use App\Http\Controllers\ChecklistTemplateController;
-use App\Http\Controllers\CollectingSocietyController;
-use App\Http\Controllers\CommentController;
-use App\Http\Controllers\CompanyTypeController;
-use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\ContractController;
-use App\Http\Controllers\ContractModuleController;
-use App\Http\Controllers\ContractTypeController;
-use App\Http\Controllers\CraftController;
-use App\Http\Controllers\CraftInventoryItemEventController;
 use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\RoomFileController;
+use App\Http\Controllers\VacationController;
+use App\Http\Controllers\ChecklistController;
+use App\Http\Controllers\ComponentController;
+use App\Http\Controllers\EventTypeController;
+use App\Http\Controllers\ExportPDFController;
+use App\Http\Controllers\SubEventsController;
 use App\Http\Controllers\DayServiceController;
 use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\EventController;
-use App\Http\Controllers\EventStatusController;
-use App\Http\Controllers\EventTypeController;
-use App\Http\Controllers\EventVerificationController;
-use App\Http\Controllers\ExportPDFController;
-use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
-use App\Http\Controllers\GeneralSettingsController;
-use App\Http\Controllers\GenreController;
-use App\Http\Controllers\HolidayController;
-use App\Http\Controllers\IndividualTimeController;
-use App\Http\Controllers\MoneySourceCategoryController;
-use App\Http\Controllers\MoneySourceController;
-use App\Http\Controllers\MoneySourceFileController;
-use App\Http\Controllers\MoneySourceReminderController;
-use App\Http\Controllers\MoneySourceTaskController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PermissionPresetController;
-use App\Http\Controllers\PresetShiftController;
-use App\Http\Controllers\PresetTimeLineController;
-use App\Http\Controllers\PresetTimelineTimeController;
-use App\Http\Controllers\ProjectComponentValueController;
-use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\ProjectFileController;
-use App\Http\Controllers\ProjectManagementBuilderController;
-use App\Http\Controllers\ProjectPrintLayoutController;
-use App\Http\Controllers\ProjectRoleController;
-use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\ProjectTabController;
-use App\Http\Controllers\ProjectTabSidebarTabController;
-use App\Http\Controllers\RoomAttributeController;
-use App\Http\Controllers\RoomCategoryController;
-use App\Http\Controllers\RoomController;
-use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\RowCommentController;
-use App\Http\Controllers\SageAssignedDataCommentController;
-use App\Http\Controllers\SageNotAssignedDataController;
-use App\Http\Controllers\SectorController;
-use App\Http\Controllers\ServiceProviderContactsController;
-use App\Http\Controllers\ServiceProviderController;
-use App\Http\Controllers\ShiftController;
-use App\Http\Controllers\ShiftFilterController;
-use App\Http\Controllers\ShiftPresetController;
-use App\Http\Controllers\ShiftQualificationController;
-use App\Http\Controllers\ShiftSettingsController;
-use App\Http\Controllers\ShiftTimePresetController;
-use App\Http\Controllers\SidebarTabComponentController;
-use App\Http\Controllers\SubEventsController;
 use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
-use App\Http\Controllers\System\FileSettingsController;
-use App\Http\Controllers\TaskController;
+use App\Http\Controllers\CompanyTypeController;
+use App\Http\Controllers\EventStatusController;
+use App\Http\Controllers\MoneySourceController;
+use App\Http\Controllers\PresetShiftController;
+use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\ProjectRoleController;
+use App\Http\Controllers\ShiftFilterController;
+use App\Http\Controllers\ShiftPresetController;
+use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\CellCommentsController;
+use App\Http\Controllers\ContractTypeController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\TaskTemplateController;
+use App\Http\Controllers\BudgetGeneralController;
+use App\Http\Controllers\ProjectStatesController;
+use App\Http\Controllers\RoomAttributeController;
+use App\Http\Controllers\ShiftSettingsController;
+use App\Http\Controllers\BudgetTemplateController;
+use App\Http\Controllers\ContractModuleController;
+use App\Http\Controllers\IndividualTimeController;
+use App\Http\Controllers\PresetTimeLineController;
 use App\Http\Controllers\TimelinePresetController;
+use App\Http\Controllers\ArtistResidencyController;
+use App\Http\Controllers\GeneralSettingsController;
+use App\Http\Controllers\MoneySourceFileController;
+use App\Http\Controllers\MoneySourceTaskController;
+use App\Http\Controllers\ServiceProviderController;
+use App\Http\Controllers\ShiftTimePresetController;
+use App\Http\Controllers\CellCalculationsController;
+use App\Http\Controllers\PermissionPresetController;
+use App\Http\Controllers\ChecklistTemplateController;
+use App\Http\Controllers\CollectingSocietyController;
+use App\Http\Controllers\EventVerificationController;
+use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
+use App\Http\Controllers\PresetTimelineTimeController;
+use App\Http\Controllers\ProjectPrintLayoutController;
+use App\Http\Controllers\ShiftQualificationController;
+use App\Http\Controllers\MoneySourceCategoryController;
+use App\Http\Controllers\MoneySourceReminderController;
+use App\Http\Controllers\SageNotAssignedDataController;
+use App\Http\Controllers\SidebarTabComponentController;
+use App\Http\Controllers\System\FileSettingsController;
+use App\Http\Controllers\ProjectTabSidebarTabController;
 use App\Http\Controllers\ToolSettingsBrandingController;
+use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
 use Artwork\Modules\ArtistResidency\Http\Controllers\ArtistController;
@@ -96,43 +94,46 @@ use Artwork\Modules\User\Http\Controllers\UserFilterController;
 use Artwork\Modules\User\Http\Controllers\UserFilterTemplateController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarAboController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarFilterController;
-use App\Http\Controllers\VacationController;
-use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
 use Artwork\Modules\Accommodation\Http\Controllers\AccommodationRoomTypeController;
 use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
-use Artwork\Modules\Contacts\Http\Controllers\ContactController;
-use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
-use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
-use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
-use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
-use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
-use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
-use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
-use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
-use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
-use Artwork\Modules\Inventory\Http\Controllers\InventorySubCategoryController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupFolderController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
-use Artwork\Modules\Invitation\Http\Controller\InvitationController;
-use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
-use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
-use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
-use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
+use App\Http\Controllers\BudgetAccountManagementController;
+use App\Http\Controllers\BudgetManagementAccountController;
+use App\Http\Controllers\CraftInventoryItemEventController;
+use App\Http\Controllers\SageAssignedDataCommentController;
+use App\Http\Controllers\ServiceProviderContactsController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
-use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
+use App\Http\Controllers\BudgetManagementCostUnitController;
+use App\Http\Controllers\ProjectManagementBuilderController;
+use Artwork\Modules\Contacts\Http\Controllers\ContactController;
+use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
+use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
+use Artwork\Modules\Invitation\Http\Controller\InvitationController;
+use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
+use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
+use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
+use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
+use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryUserFilterController;
+use Artwork\Modules\Inventory\Http\Controllers\InventorySubCategoryController;
+use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleStatusController;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
-use Artwork\Modules\User\Http\Controllers\UserWorkTimeController;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupFolderController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -1802,6 +1803,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // patch articles.restore
         Route::patch('/articles/{inventoryArticle}/restore', [InventoryArticleController::class, 'restore'])
             ->name('articles.restore');
+
+        //inventory.filter.store
+        Route::post('/filter/store', [InventoryUserFilterController::class, 'store'])
+                ->name('inventory.filter.store');
+
+        // get articles form api
+        Route::get('/articles/', [InventoryArticleController::class, 'loadArticlesByFilter'])
+            ->name('inventory.articles.api');
+
+        // Nutzungsdaten für UsageModal eines Artikels an einem Tag
+        Route::get('/articles/usage', [InventoryArticleController::class, 'usageData'])
+            ->name('inventory.articles.usage');
     });
 
 
@@ -1840,6 +1853,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');
+
+            Route::get('/status', [InventoryArticleStatusController::class, 'index'])
+                ->name('inventory-management.settings.status');
+
+            Route::put('/status/{inventoryArticleStatus}', [InventoryArticleStatusController::class, 'update'])
+                ->name('inventory.article-status.update');
 
             Route::get('/properties', [InventoryArticlePropertiesController::class, 'index'])
                 ->name('inventory-management.settings.properties');

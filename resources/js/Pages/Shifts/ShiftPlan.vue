@@ -276,7 +276,7 @@
                                                 :icon="IconPencil"
                                                 icon-size="h-4 w-4"
                                                 :tooltip-text="$t('Edit')"
-                                                direction="right"
+                                                direction="top"
                                             />
                                         </span>
                                         <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
@@ -284,7 +284,7 @@
                                                 :icon="IconPencil"
                                                 icon-size="h-4 w-4"
                                                 :tooltip-text="$t('Edit')"
-                                                direction="right"
+                                                direction="top"
                                             />
                                         </span>
                                     </span>

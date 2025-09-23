@@ -10,9 +10,9 @@
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ calculateTotalCost(artist_residency) }} €</td>
         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
             <BaseMenu dots-size="h-5 w-5" has-no-offset white-menu-background>
-                <BaseMenuItem white-menu-background icon="IconEdit" title="Edit" @click="$emit('editResidency', artist_residency)"/>
-                <BaseMenuItem white-menu-background icon="IconCopy" title="Duplicate" @click="duplicate"/>
-                <BaseMenuItem white-menu-background icon="IconTrash" title="Delete" @click="deleteArtistResidency"/>
+                <BaseMenuItem white-menu-background :icon="IconEdit" title="Edit" @click="$emit('editResidency', artist_residency)"/>
+                <BaseMenuItem white-menu-background :icon="IconCopy" title="Duplicate" @click="duplicate"/>
+                <BaseMenuItem white-menu-background :icon="IconTrash" title="Delete" @click="deleteArtistResidency"/>
             </BaseMenu>
         </td>
     </tr>
@@ -37,6 +37,7 @@ import AddEditArtistResidenciesModal
 import {ref} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import {IconCopy, IconEdit, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     artist_residency: {

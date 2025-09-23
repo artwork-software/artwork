@@ -16,7 +16,7 @@
             />
             <div
                 v-if="eventsWithoutRoomLen > 0"
-                class="w-full h-8 px-4 py-2 bg-red-500 cursor-pointer"
+                class="w-full h-8 px-4 py-2 bg-error cursor-pointer rounded-lg ml-4 -mt-1"
                 @click="showEventsWithoutRoomComponent = true"
             >
                 <div class="flex items-center justify-center w-full h-full gap-x-1">
@@ -93,18 +93,14 @@
                                                 />
                                             </template>
 
-                                            <div  class="sticky bottom-0 left-0 w-full z-20 pointer-events-none ">
-                                                <div class="relative h-10">
-                                                    <button
-                                                        type="button"
-                                                        class="pointer-events-auto group-hover/container:inline-flex hidden absolute left-1 bottom-2 items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium shadow ring-0 backdrop-blur-sm bg-white/90 hover:bg-gray-50/90 focus:outline-none focus:ring-0 transition duration-300 ease-in-out"
-                                                        :aria-label="$t('Add event')"
-                                                        @click="openNewEventModalWithBaseData(day.withoutFormat, (room.roomId ?? room.id))"
-                                                    >
-                                                        <component :is="IconPlus" class="size-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
+                                            <button
+                                                type="button"
+                                                class="pointer-events-auto group-hover/container:inline-flex hidden absolute left-1 bottom-1 z-20 items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium shadow ring-0 backdrop-blur-sm bg-white/90 hover:bg-gray-50/90 focus:outline-none focus:ring-0 transition duration-300 ease-in-out"
+                                                :aria-label="$t('Add event')"
+                                                @click="openNewEventModalWithBaseData(day.withoutFormat, (room.roomId ?? room.id))"
+                                            >
+                                                <component :is="IconPlus" class="size-4" />
+                                            </button>
                                             <!-- Scroll to next Event if more than 3 Events -->
                                             <div v-if="(room.content?.[dayKey(day)]?.events ?? []).length > 1 && !settings.expand_days" class="sticky bottom-0 left-0 w-full z-20 pointer-events-none">
                                                 <!-- dezenter Verlauf + Button rechts -->
@@ -255,6 +251,7 @@
             </div>
         </div>
 
+
         <!-- Modals -->
         <AsyncEventComponent
             v-if="showEventComponent"
@@ -402,7 +399,7 @@ const cellStyle = computed(() => ({
     height: settings.value.expand_days ? "" : rowHeightPx.value,
     minHeight: settings.value.expand_days ? rowHeightPx.value : ""
 }));
-const containerClass = computed(() => ['group/container border-t border-gray-300 border-dashed relative overflow-scroll h-full', (zoom_factor.value > 0.4 ? "cell" : "overflow-hidden")]);
+const containerClass = computed(() => ['group/container border-t border-gray-300 border-dashed relative overflow-scroll', (zoom_factor.value > 0.4 ? "cell" : "overflow-hidden")]);
 
 // Topbar count
 const eventsWithoutRoomLen = computed(() =>

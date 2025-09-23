@@ -24,7 +24,8 @@ class InventoryCategoryController extends Controller
         protected InventoryArticleService $articleService,
         protected InventoryPropertyRepository $propertyRepository,
         protected InventoryArticleService $inventoryArticleService
-    ) {}
+    ) {
+    }
 
     /**
      * @throws \JsonException
@@ -35,23 +36,23 @@ class InventoryCategoryController extends Controller
     ): \Inertia\Response {
         // Optimiere durch gezieltes Eager Loading
         $inventoryCategory?->load([
-            'subcategories' => function ($query) {
+            'subcategories' => function ($query): void {
                 $query->orderBy('name');
             },
-            'subcategories.articles' => function ($query) {
+            'subcategories.articles' => function ($query): void {
                 $query->orderBy('name');
             },
-            'subcategories.properties' => function ($query) {
+            'subcategories.properties' => function ($query): void {
                 $query->orderBy('name');
             },
-            'properties' => function ($query) {
+            'properties' => function ($query): void {
                 $query->orderBy('name');
             }
         ]);
 
-        $inventorySubCategory?->load(['properties' => function ($query) {
+        $inventorySubCategory?->load(['properties' => function ($query): void {
             $query->orderBy('name');
-        }, 'articles' => function ($query) {
+        }, 'articles' => function ($query): void {
             $query->orderBy('name');
         }]);
 
@@ -79,17 +80,24 @@ class InventoryCategoryController extends Controller
             $filterableProperties = $this->propertyRepository->filterable();
         }
 
+        $articles = $this->articleService->getArticleList(
+            $inventoryCategory,
+            $inventorySubCategory,
+            request('search')
+        );
+
         return Inertia::render('Inventory/Index', [
             'categories' => $this->categoryService->getAllWithRelations(),
             'currentCategory' => $inventoryCategory,
             'currentSubCategory' => $inventorySubCategory,
-            'articles' => $this->articleService->getArticleList($inventoryCategory, $inventorySubCategory, request('search')),
+            'articles' => $articles,
             'articlesCount' => $this->articleService->count(),
             'filterableProperties' => $filterableProperties->values(), // Reset keys
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::select('id', 'name')->orderBy('name')->get(),
             'manufacturers' => Manufacturer::select('id', 'name')->orderBy('name')->get(),
-            'statuses' => InventoryArticleStatus::select('id', 'name')->orderBy('name')->get(),
+            'statuses' => InventoryArticleStatus::select('id', 'name', 'color')->orderBy('order')->get(),
+            'countsByStatus' => $this->articleService->getCountsByStatus($articles),
         ]);
     }
 
@@ -124,14 +132,14 @@ class InventoryCategoryController extends Controller
 
     public function destroy(InventoryCategory $inventoryCategory): void
     {
-        $inventoryCategory->articles()->each(function (InventoryArticle $article) {
+        $inventoryCategory->articles()->each(function (InventoryArticle $article): void {
             $this->inventoryArticleService->delete($article);
             $this->inventoryArticleService->forceDelete($article);
         });
 
         $inventoryCategory->properties()->detach();
-        $inventoryCategory->subcategories()->each(function (InventorySubCategory $subcategory) {
-            $subcategory->articles()->each(function (InventoryArticle $article) {
+        $inventoryCategory->subcategories()->each(function (InventorySubCategory $subcategory): void {
+            $subcategory->articles()->each(function (InventoryArticle $article): void {
                 $this->inventoryArticleService->delete($article);
                 $this->inventoryArticleService->forceDelete($article);
             });

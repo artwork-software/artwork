@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Inventory\Services;
 
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
+use Artwork\Modules\ExternalIssue\Repositories\ExternalIssueRepository;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Repositories\InventoryArticleRepository;
@@ -18,42 +19,37 @@ class InventoryPlanningService
      * @param InventoryArticleRepository $articleRepo
      */
     public function __construct(
-        protected readonly InventoryArticleRepository $articleRepo
+        protected readonly InventoryArticleRepository $articleRepo,
+        protected readonly InventoryUserFilterService $filterService,
     ) {}
 
-    /**
-     * Get availability data for planning
-     *
-     * @param User $user
-     * @return array<string, mixed>
-     */
+
     public function getAvailabilityData(User $user): array
     {
-        $filter = $user->inventoryArticlePlanFilter;
+        $filter = $user->inventoryArticlePlanFilter ?? (object)['start_date' => null, 'end_date' => null];
 
-        if (!$filter) {
-            $filter = (object)[
-                'start_date' => null,
-                'end_date' => null,
-            ];
-        }
         $start = $filter->start_date ? Carbon::parse($filter->start_date) : Carbon::now()->startOfMonth();
-        $end = $filter->end_date ? Carbon::parse($filter->end_date) : Carbon::now()->endOfMonth();
-
+        $end   = $filter->end_date   ? Carbon::parse($filter->end_date)   : Carbon::now()->endOfMonth();
 
         $dates = $this->generateDateRange($start, $end);
 
-        /** @var Collection<int, InventoryArticle> $articles */
-        $articles = $this->articleRepo->getAllWithCategories();
-        $grouped = $this->groupArticles($articles);
+        // 1x laden: alles was Availability braucht
+        $articles = $this->filterService->getFilteredArticlesNew($user)
+            ->with([
+                'detailedArticleQuantities',            // für is_detailed_quantity
+                'detailedArticleQuantities.status',     // Status der Detail-Batches
+                'statusValues'                          // Fallback/klassische Statuswerte
+            ])
+            ->get();
 
-        $availability = $this->calculateAvailability($articles, $dates);
+        $grouped = $this->groupArticles($articles);
+        $availability = $this->calculateAvailabilityWithFlag($articles, $dates);
 
         return [
             'groupedArticles' => array_values($grouped),
-            'availability' => $availability,
-            'dates' => $dates,
-            'dataArray' => [$start->format('Y-m-d'), $end->format('Y-m-d')],
+            'availability'    => $availability,
+            'dates'           => $dates,
+            'dataArray'       => [$start->format('Y-m-d'), $end->format('Y-m-d')],
         ];
     }
 
@@ -105,44 +101,42 @@ class InventoryPlanningService
     }
 
     /**
-     * Calculate article availability for each date
+     * Calculate article availability and usage flag for each date
      *
      * @param Collection<int, InventoryArticle> $articles
      * @param SupportCollection $dates
-     * @return array<string, array<int, int>>
+     * @return array{0: array<string, array<int, int>>, 1: array<string, array<int, bool>>}
      */
-    protected function calculateAvailability(Collection $articles, SupportCollection $dates): array
+    protected function calculateAvailabilityWithFlag(Collection $articles, SupportCollection $dates): array
     {
         $availability = [];
+        $usedFlag = [];
 
         // Eager load detailed article quantities with their statuses
         $articlesWithDetails = InventoryArticle::with(['detailedArticleQuantities', 'detailedArticleQuantities.status', 'statusValues'])
             ->whereIn('id', $articles->pluck('id'))
             ->get();
 
-        // Initialize availability with quantities that have status "Einsatzbereit" (available)
+        // Initialize availability and usedFlag
         foreach ($dates as $dateInfo) {
             $date = $dateInfo['date'];
             foreach ($articlesWithDetails as $article) {
                 if ($article->is_detailed_quantity) {
-                    // For articles with detailed quantities, find quantities with status "Einsatzbereit"
                     $availableQuantity = $article->detailedArticleQuantities
                         ->filter(function ($detailedArticle) {
-                            return $detailedArticle->status && $detailedArticle->status->name === 'Einsatzbereit';
+                            return $detailedArticle->status && $detailedArticle->status->id === 1;
                         })
                         ->sum('quantity');
                 } else {
-                    // For articles without detailed quantities, use the total quantity
-                    // Find the "Einsatzbereit" status value if it exists
-                    $availableStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit');
+                    $availableStatus = $article->statusValues->firstWhere('inventory_article_status_id', 1);
                     $availableQuantity = $availableStatus ? $availableStatus->pivot->value : $article->quantity;
                 }
-
                 $availability[$date][$article->id] = $availableQuantity ?? 0;
+                $usedFlag[$date][$article->id] = false;
             }
         }
 
-        // Process internal issues with eager loading to reduce queries
+        // Process internal issues
         InternalIssue::with(['articles' => function($query) use ($articles) {
             $query->whereIn('inventory_articles.id', $articles->pluck('id'));
         }])
@@ -151,7 +145,7 @@ class InventoryPlanningService
                       ->whereDate('end_date', '>=', $dates->first()['date']);
             })
             ->get()
-            ->each(function ($issue) use (&$availability, $dates) {
+            ->each(function ($issue) use (&$availability, &$usedFlag, $dates) {
                 foreach ($dates as $dateInfo) {
                     $date = $dateInfo['date'];
                     $dateCarbon = Carbon::parse($date);
@@ -161,12 +155,13 @@ class InventoryPlanningService
                     if ($dateCarbon->between($startDate, $endDate)) {
                         foreach ($issue->articles as $article) {
                             $availability[$date][$article->id] -= $article->pivot->quantity;
+                            $usedFlag[$date][$article->id] = true;
                         }
                     }
                 }
             });
 
-        // Process external issues with eager loading to reduce queries
+        // Process external issues
         ExternalIssue::with(['articles' => function($query) use ($articles) {
             $query->whereIn('inventory_articles.id', $articles->pluck('id'));
         }])
@@ -175,7 +170,7 @@ class InventoryPlanningService
                       ->whereDate('return_date', '>=', $dates->first()['date']);
             })
             ->get()
-            ->each(function ($issue) use (&$availability, $dates) {
+            ->each(function ($issue) use (&$availability, &$usedFlag, $dates) {
                 foreach ($dates as $dateInfo) {
                     $date = $dateInfo['date'];
                     $dateCarbon = Carbon::parse($date);
@@ -185,12 +180,16 @@ class InventoryPlanningService
                     if ($dateCarbon->between($issueDate, $returnDate)) {
                         foreach ($issue->articles as $article) {
                             $availability[$date][$article->id] -= $article->pivot->quantity;
+                            $usedFlag[$date][$article->id] = true;
                         }
                     }
                 }
             });
 
-        return $availability;
+        return [
+            'availability' => $availability,
+            'usedFlag' => $usedFlag
+        ];
     }
 
     /**
@@ -207,14 +206,14 @@ class InventoryPlanningService
 
         $internal = InternalIssue::with(['articles' => function ($query) use ($articleId) {
             $query->where('inventory_article_id', $articleId);
-        }])
+        }, 'specialItems', 'files', 'responsibleUsers'])
             ->whereDate('start_date', '<=', $date)
             ->whereDate('end_date', '>=', $date)
             ->get();
 
         $external = ExternalIssue::with(['articles' => function ($query) use ($articleId) {
             $query->where('inventory_article_id', $articleId);
-        }])
+        }, 'issuedBy', 'receivedBy', 'files', 'specialItems'])
             ->whereDate('issue_date', '<=', $date)
             ->whereDate('return_date', '>=', $date)
             ->get();
@@ -252,12 +251,98 @@ class InventoryPlanningService
                 'status' => $article->statusValues->map(fn ($statusValue) => [
                     'id' => $statusValue->id,
                     'name' => $statusValue->name,
+                    'color' => $statusValue->color,
                     'value' => $statusCounts[$statusValue->id] ?? 0,
                 ])->toArray(),
             ],
             'date' => $date,
             'internal' => $internal->filter(fn($i) => $i->articles->isNotEmpty())->values(),
             'external' => $external->filter(fn($e) => $e->articles->isNotEmpty())->values(),
+        ];
+    }
+
+    /**
+     * Get detailed information for the modal view for a date range
+     *
+     * @param int $articleId
+     * @param string $startDate
+     * @param string $endDate
+     * @return array<string, mixed>
+     */
+    public function getDetailsForModalRange(int $articleId, string $startDate, string $endDate): array
+    {
+        $article = InventoryArticle::with(['category', 'subCategory', 'statusValues', 'detailedArticleQuantities'])
+            ->findOrFail($articleId);
+
+        $internal = InternalIssue::with(['articles' => function ($query) use ($articleId) {
+            $query->where('inventory_article_id', $articleId);
+        }])
+            ->whereDate('start_date', '<=', $endDate)
+            ->whereDate('end_date', '>=', $startDate)
+            ->get();
+
+        $external = ExternalIssue::with(['articles' => function ($query) use ($articleId) {
+            $query->where('inventory_article_id', $articleId);
+        }])
+            ->whereDate('issue_date', '<=', $endDate)
+            ->whereDate('return_date', '>=', $startDate)
+            ->get();
+
+        // Statuszählungen für den Zeitraum
+        $statusCounts = [];
+        foreach ($article->statusValues as $statusValue) {
+            $statusCounts[$statusValue->id] = 0;
+        }
+
+        if ($article->is_detailed_quantity) {
+            foreach ($article->detailedArticleQuantities as $detailedArticle) {
+                if ($detailedArticle->inventory_article_status_id) {
+                    $statusId = $detailedArticle->inventory_article_status_id;
+                    $statusCounts[$statusId] = ($statusCounts[$statusId] ?? 0) + $detailedArticle->quantity;
+                }
+            }
+        } else {
+            foreach ($article->statusValues as $statusValue) {
+                $statusCounts[$statusValue->id] = $statusValue->pivot->value ?? 0;
+            }
+        }
+
+        // Summiere die ausgegebenen Mengen im Zeitraum
+        $issuedQuantity = 0;
+        foreach ($internal as $issue) {
+            foreach ($issue->articles as $a) {
+                if ($a->pivot->quantity) {
+                    $issuedQuantity += $a->pivot->quantity;
+                }
+            }
+        }
+        foreach ($external as $issue) {
+            foreach ($issue->articles as $a) {
+                if ($a->pivot->quantity) {
+                    $issuedQuantity += $a->pivot->quantity;
+                }
+            }
+        }
+
+        return [
+            'article' => [
+                'id' => $article->id,
+                'name' => $article->name,
+                'category' => $article->category->name ?? null,
+                'sub_category' => $article->subCategory->name ?? null,
+                'quantity' => $article->quantity,
+                'status' => $article->statusValues->map(fn ($statusValue) => [
+                    'id' => $statusValue->id,
+                    'name' => $statusValue->name,
+                    'color' => $statusValue->color,
+                    'value' => $statusCounts[$statusValue->id] ?? 0,
+                ])->toArray(),
+            ],
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'internal' => $internal->filter(fn($i) => $i->articles->isNotEmpty())->values(),
+            'external' => $external->filter(fn($e) => $e->articles->isNotEmpty())->values(),
+            'issued_quantity' => $issuedQuantity,
         ];
     }
 }

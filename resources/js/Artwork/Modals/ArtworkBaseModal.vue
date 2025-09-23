@@ -15,7 +15,6 @@
                                          @after-enter="initDraggable"
                                          leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
                             <DialogPanel class="card glassy draggableModal w-full" :class="[modalSize, showBackdrop ? '' : '!border-gray-200 shadow-glass']"  ref="containerRef">
-
                                 <div class="p-5">
                                     <div class="card white p-5 relative">
                                         <div class="flex items-start gap-x-8 justify-between mb-8 bg-zinc-50 p-6 -mx-5 -mt-5 rounded-t-lg">
@@ -57,13 +56,11 @@
 
 <script setup>
 
-import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
-import {nextTick, onMounted, ref} from "vue";
+import {nextTick, ref} from "vue";
 import {Dialog, DialogPanel, TransitionChild, TransitionRoot} from "@headlessui/vue";
-import { createDraggable } from 'animejs';
-import CardHeadline from "@/Artwork/Cards/CardHeadline.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {IconDragDrop, IconTexture, IconX} from "@tabler/icons-vue";
+
 
 const props = defineProps({
     modalSize: {
@@ -93,6 +90,10 @@ const props = defineProps({
     showBackdrop: {
         type: Boolean,
         default: true
+    },
+    classesInWhiteBackground: {
+        type: String,
+        default: ''
     }
 })
 const open = ref(true)

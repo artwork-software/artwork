@@ -4,7 +4,8 @@
             <div class="flex justify-between items-center pt-5">
                 <h2 class="text-2xl font-semibold">{{ $t('Material issue book')}}</h2>
                 <div class="flex items-center gap-x-1 w-96">
-                    <ArticleSearch @article-selected="addArticleNameToFilter" class="w-72" />
+                    <ArticleSearch @article-selected="addArticleNameToFilter" class="w-72"
+                        id="article-search" />
                     <button type="button" @click="filterIssueByArticleIds" class="p-4 flex items-center justify-center bg-gray-100 shadow-sm border border-gray-200 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <component :is="IconSearch" class="size-5" stroke-width="1.5"/>
                     </button>
@@ -34,7 +35,10 @@
             <div class="relative">
                 <BaseCard class="p-4">
                     <div class="sticky top-0 z-10 mb-4 rounded-lg bg-white w-full">
-                        <div class="grid px-3 py-3 grid-cols-9 gap-4 w-full">
+                        <div class="grid px-3 py-3 grid-cols-10 gap-4 w-full">
+                            <div class="flex items-center">
+                                <h3 class="xsDark">{{ $t('Name') }}</h3>
+                            </div>
                             <div class="flex items-center">
                                 <h3 class="xsDark">{{ $t('Material value') }}</h3>
                             </div>
@@ -65,7 +69,7 @@
 
                     <div class="">
                         <WhiteInnerCard class="my-3 group/issueOfMaterial" :key="issueOfMaterial.id" v-for="issueOfMaterial in issues.data">
-                            <SingleExternMaterialIssue :extern-material-issue="issueOfMaterial" />
+                            <SingleExternMaterialIssue :extern-material-issue="issueOfMaterial" :detailed-article="detailedArticle" />
                         </WhiteInnerCard>
                     </div>
 
@@ -115,6 +119,10 @@ const props = defineProps({
     materialSets: {
         type: Object,
         required: true
+    },
+    detailedArticle: {
+        type: Object,
+        required: false
     }
 })
 

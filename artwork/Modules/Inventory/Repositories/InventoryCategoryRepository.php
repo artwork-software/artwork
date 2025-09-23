@@ -8,12 +8,14 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\DB;
 
 readonly class InventoryCategoryRepository
 {
     public function __construct(
         private InventoryCategory $inventoryCategory
-    ) {}
+    ) {
+    }
 
     public function getNewModelInstance(array $attributes = []): InventoryCategory
     {
@@ -32,28 +34,27 @@ readonly class InventoryCategoryRepository
     {
         return $this->getNewModelQuery()
             ->with([
-                'subcategories' => function ($query) {
-                    $query->select('id', 'inventory_category_id', 'name')
+                'subcategories' => function ($query): void {
+                    $query
                         ->orderBy('name');
                 },
                 'subcategories.articles',
                 'subcategories.properties:id,name,type,select_values',
-                'properties' => function ($query) {
-                    $query->select('inventory_article_properties.id', 'name', 'type', 'select_values')
+                'properties' => function ($query): void {
+                    $query
                         ->orderBy('name');
                 },
-                'articles' => function ($query) {
-                    $query->select('id', 'inventory_category_id', 'inventory_sub_category_id', 'name')
+                'articles' => function ($query): void {
+                    $query
                         ->with([
                             'subCategory:id,name',
-                            'images' => function ($q) {
+                            'images' => function ($q): void {
                                 $q->where('is_main_image', true)->select('id', 'inventory_article_id', 'image');
                             }
                         ])
                         ->withCount('detailedArticleQuantities');
                 }
             ])
-            ->select('id', 'name')
             ->orderBy('name')
             ->get();
     }
@@ -92,27 +93,70 @@ readonly class InventoryCategoryRepository
         return $category->update($data);
     }
 
-    /**
-     * Attach properties to category
-     */
-    public function attachProperties(InventoryCategory $category, SupportCollection $properties): void
+    private function normalizeValue(mixed $v): string
     {
-        $propertyData = $properties->mapWithKeys(function ($property) {
-            return [$property['id'] => ['value' => $property['defaultValue'] ?? '']];
-        });
-
-        $category->properties()->syncWithoutDetaching($propertyData);
+        if (is_bool($v)) {
+            return $v ? 'true' : 'false';
+        }
+        return (string) ($v ?? '');
     }
 
     /**
-     * Sync properties with category
+     * Attach properties to category (anhängen = ans Ende einsortieren)
+     */
+    public function attachProperties(InventoryCategory $category, SupportCollection $properties): void
+    {
+        // existierende IDs ermitteln, damit wir nur NEUE anhängen
+        $existingIds = DB::table('inventory_category_property_values')
+            ->where('inventory_category_propertyable_type', $category->getMorphClass())
+            ->where('inventory_category_propertyable_id', $category->getKey())
+            ->pluck('inventory_article_property_id')
+            ->all();
+
+        // aktuelle Max-Position bestimmen
+        $start = (int) DB::table('inventory_category_property_values')
+            ->where('inventory_category_propertyable_type', $category->getMorphClass())
+            ->where('inventory_category_propertyable_id', $category->getKey())
+            ->max('position');
+        if ($start < 0) {
+            $start = -1;
+        }
+
+        $propertyData = $properties
+            ->reject(fn ($p) => in_array($p['id'], $existingIds, true))
+            ->values()
+            ->mapWithKeys(function ($p, $i) use ($start) {
+                $pos = array_key_exists('position', $p) ? (int) $p['position'] : ($start + 1 + $i);
+                return [
+                    $p['id'] => [
+                        'value'    => $this->normalizeValue($p['defaultValue'] ?? null),
+                        'position' => $pos,
+                    ],
+                ];
+            });
+
+        if ($propertyData->isNotEmpty()) {
+            $category->properties()->syncWithoutDetaching($propertyData->all());
+        }
+    }
+
+    /**
+     * Sync properties with category (vollständige Liste = Reihenfolge nach Index)
      */
     public function syncProperties(InventoryCategory $category, SupportCollection $properties): void
     {
-        $propertyData = $properties->mapWithKeys(function ($property) {
-            return [$property['id'] => ['value' => $property['defaultValue'] ?? '']];
-        });
+        $propertyData = $properties
+            ->values()
+            ->mapWithKeys(function ($p, $i) {
+                $pos = array_key_exists('position', $p) ? (int) $p['position'] : $i;
+                return [
+                    $p['id'] => [
+                        'value'    => $this->normalizeValue($p['defaultValue'] ?? null),
+                        'position' => $pos,
+                    ],
+                ];
+            });
 
-        $category->properties()->sync($propertyData);
+        $category->properties()->sync($propertyData->all());
     }
 }

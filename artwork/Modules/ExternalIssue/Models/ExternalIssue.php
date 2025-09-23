@@ -30,7 +30,8 @@ class ExternalIssue extends Model
     protected $fillable = [
         'material_value', 'issued_by_id', 'received_by_id',
         'issue_date', 'return_date', 'return_remarks',
-        'external_name', 'external_address', 'external_email', 'external_phone', 'special_items_done'
+        'external_name', 'external_address', 'external_email', 'external_phone', 'special_items_done',
+        'name'
     ];
 
     protected $casts = [

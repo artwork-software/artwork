@@ -71,5 +71,19 @@ class AddNewComponents extends Command
         } else {
             $this->info('Component Artist Name Display Component already exists');
         }
+
+        if (!Component::query()->where('type', ProjectTabComponentEnum::PROJECT_MATERIAL_ISSUE_COMPONENT)->first()) {
+            Component::create([
+                'name' => 'Project Material Issue Component',
+                'type' => ProjectTabComponentEnum::PROJECT_MATERIAL_ISSUE_COMPONENT,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => false,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ]);
+            $this->info('Component Project Material Issue Component added');
+        } else {
+            $this->info('Component Project Material Issue Component already exists');
+        }
     }
 }

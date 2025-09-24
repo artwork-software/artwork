@@ -48,7 +48,7 @@ use App\Http\Controllers\ContractTypeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\TaskTemplateController;
-use App\Http\Controllers\BudgetGeneralController;
+use AppHttp\Controllers\BudgetGeneralController;
 use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\RoomAttributeController;
 use App\Http\Controllers\ShiftSettingsController;
@@ -1762,6 +1762,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->only(['store', 'update', 'destroy']);
     });
 
+    // SingleShiftPreset Routes
+    Route::get('/single-shift-presets', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'index'])
+        ->name('single-shift-presets.index');
+    Route::post('/single-shift-presets', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'store'])
+        ->name('single-shift-presets.store');
+    Route::put('/single-shift-presets/{singleShiftPreset}', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'update'])
+        ->name('single-shift-presets.update');
+    Route::delete('/single-shift-presets/{singleShiftPreset}', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'destroy'])
+        ->name('single-shift-presets.destroy');
+
     // attach DayService to entity
     Route::post(
         '/day-service/{dayService}/attach/{dayServiceable}',
@@ -2298,7 +2308,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // user.work-time-pattern.update
         Route::patch(
             '/work-time-pattern/{user}/update-user',
-            [\Artwork\Modules\User\Http\Controllers\UserWorkTimeController::class, 'store']
+            [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
         )->name('shift.work-time-pattern.update-user');
     });
 

@@ -76,6 +76,7 @@ use Artwork\Modules\Shift\Services\ShiftPresetService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\Event\Services\SubEventService;
+use Artwork\Modules\Shift\Services\SingleShiftPresetService;
 use Artwork\Modules\Task\Http\Resources\TaskDashboardResource;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
@@ -138,6 +139,7 @@ class EventController extends Controller
         private readonly ShiftTimePresetService $shiftTimePresetService,
         private readonly ProjectService $projectService,
         private readonly EventPlanningCalendarService $eventPlanningCalendarService,
+        protected readonly SingleShiftPresetService $singleShiftPresetService,
     ) {
     }
 
@@ -472,6 +474,7 @@ class EventController extends Controller
         $userCalendarSettings = $user->getAttribute('calendar_settings');
         $renderViewName = 'Shifts/ShiftPlan';
         $this->userService->shareCalendarAbo('shiftCalendar');
+        $this->singleShiftPresetService->shareSingleShiftPresets();
 
 
         [$startDate, $endDate] = $this->calendarDataService

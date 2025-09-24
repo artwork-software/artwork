@@ -124,6 +124,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Event\Services\SubEventService;
+use Artwork\Modules\Shift\Services\SingleShiftPresetService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelineRequest;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelinesRequest;
@@ -186,6 +187,7 @@ class ProjectController extends Controller
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
         private readonly UserProjectManagementSettingService $userFilterAndSortSettingService,
         private readonly ProjectPrintLayoutService $projectPrintLayoutService,
+        protected readonly SingleShiftPresetService $singleShiftPresetService,
     ) {
     }
 
@@ -2237,6 +2239,7 @@ class ProjectController extends Controller
 
                 case ProjectTabComponentEnum::SHIFT_TAB->value:
                     $this->loadShiftTabData($headerObject, $project);
+                    $this->singleShiftPresetService->shareSingleShiftPresets();
                     $loadedProjectInformation['ShiftTab'] = $this->projectTabService->getShiftTab(
                         $project,
                         $shiftQualificationService,

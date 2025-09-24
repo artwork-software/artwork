@@ -420,7 +420,7 @@
                                       </span>
                                 </span>
                                 </Switch>
-                                <BaseFilter :whiteIcon="true" onlyIcon="true">
+                                <BaseFilter :whiteIcon="true" :onlyIcon="true">
                                     <div class="mx-auto w-full max-w-md max-h-44 rounded-2xl border-none mt-2 pb-3">
                                         <div class="relative flex items-start mb-2">
                                             <div class="flex h-6 items-center">

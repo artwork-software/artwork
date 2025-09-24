@@ -14,6 +14,7 @@ import {
     IconArrowsSort,
     IconChevronDown
 } from '@tabler/icons-vue'
+import ShiftSettingTabs from "@/Pages/Settings/Components/ShiftSettingTabs.vue";
 
 const { t: $t } = useI18n()
 
@@ -134,6 +135,8 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
                     </button>
                 </div>
             </div>
+
+            <ShiftSettingTabs />
 
             <!-- Toolbar -->
             <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">

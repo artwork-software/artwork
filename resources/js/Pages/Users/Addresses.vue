@@ -404,7 +404,7 @@
 
     <!-- Invite users -->
     <invite-users-modal
-        :show="addingUser"
+        v-if="addingUser"
         :closeModal="closeAddUserModal"
         :all_permissions="all_permissions"
         :departments="departments"

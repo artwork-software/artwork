@@ -28,46 +28,84 @@ class ExternalIssueController extends Controller
 
     public function index()
     {
-        $entitiesPerPage = request()?->input('entitiesPerPage', 10);
-        $articleIds = request()?->input('article_ids', []);
+        $entitiesPerPage = request()?->integer('entitiesPerPage', 10);
 
-        // if articleIds is provided, filter issues by articles
+        // IDs aus CSV/Array robust einlesen
+        $articleIdsParam = request()?->input('article_ids', []);
+        $articleIds = is_string($articleIdsParam)
+            ? array_filter(array_map('intval', explode(',', $articleIdsParam)))
+            : (is_array($articleIdsParam) ? array_map('intval', $articleIdsParam) : []);
+
+        // neue Filter
+        $dateFrom = request()?->input('date_from');
+        $dateTo   = request()?->input('date_to');
+        $issuedBy = request()?->input('issued_by_id');
+        $receivedBy = request()?->input('received_by_id');
+        $q        = trim((string) request()?->input('q', ''));
+
+        $issuesQuery = ExternalIssue::with([
+            'files',
+            'articles', 'articles.images',
+            'specialItems',
+            'issuedBy',
+            'receivedBy',
+        ]);
+
         if (!empty($articleIds)) {
-            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy', 'articles.images'])
-                ->whereHas('articles', function ($query) use ($articleIds) {
-                    $query->whereIn('inventory_articles.id', [$articleIds]);
-                })
-                ->orderBy('issue_date')
-                ->orderBy('return_date')
-                ->paginate($entitiesPerPage);
-        } else {
-            $issues = ExternalIssue::with(['files', 'articles', 'specialItems', 'issuedBy', 'receivedBy', 'articles.images'])
-                ->orderBy('issue_date')
-                ->orderBy('return_date')
-                ->paginate($entitiesPerPage);
+            $issuesQuery->whereHas('articles', function ($query) use ($articleIds) {
+                $query->whereIn('inventory_articles.id', $articleIds);
+            });
         }
+
+        // Zeitfilter: entweder im Ausgabedatum ODER im Rückgabedatum innerhalb Range
+        $issuesQuery
+            ->when($dateFrom, fn($q) => $q->whereDate('issue_date', '>=', $dateFrom))
+            ->when($dateTo,   fn($q) => $q->whereDate('return_date', '<=', $dateTo));
+
+        // User-Filter
+        $issuesQuery
+            ->when($issuedBy,   fn($q) => $q->where('issued_by_id', $issuedBy))
+            ->when($receivedBy, fn($q) => $q->where('received_by_id', $receivedBy));
+
+        // Name/Extern/Remarks Suche
+        if ($q !== '') {
+            $issuesQuery->where(function ($sub) use ($q) {
+                $sub->where('name', 'like', "%{$q}%")
+                    ->orWhere('external_name', 'like', "%{$q}%")
+                    ->orWhere('return_remarks', 'like', "%{$q}%");
+            });
+        }
+
+        $issues = $issuesQuery
+            ->orderBy('issue_date')
+            ->orderBy('return_date')
+            ->paginate($entitiesPerPage);
 
         $this->inventoryUserFilterShareService->getFilterDataForUser($this->auth->user());
 
         return Inertia::render('IssueOfMaterial/ExternIssueOfMaterialManagement', [
             'issues' => $issues,
-            'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
-                ->get() : [],
+            'articlesInFilter' => !empty($articleIds)
+                ? InventoryArticle::whereIn('id', $articleIds)->get()
+                : [],
             'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
             'detailedArticle' => Inertia::optional(fn () =>
-                InventoryArticle::with([
-                    'category',
-                    'subCategory',
-                    'properties',
-                    'images' => function ($query) {
-                        $query->orderBy('is_main_image', 'desc')->orderBy('id');
-                    },
-                    'statusValues',
-                    'detailedArticleQuantities.status',
-                ])->find(request()?->get('articleId'))
-            )
+            InventoryArticle::with([
+                'category',
+                'subCategory',
+                'properties',
+                'images' => fn ($q) => $q->orderBy('is_main_image', 'desc')->orderBy('id'),
+                'statusValues',
+                'detailedArticleQuantities.status',
+            ])->find(request()?->get('articleId'))
+            ),
+            // optional, falls du urlParameters nutzt:
+            'urlParameters' => request()->only([
+                'article_ids','date_from','date_to','issued_by_id','received_by_id','q'
+            ]),
         ]);
     }
+
 
     public function store(StoreExternalIssueRequest $request): \Illuminate\Http\RedirectResponse
     {

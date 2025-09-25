@@ -7,6 +7,7 @@ use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Repositories\InventoryUserFilterRepository;
 use Artwork\Modules\Manufacturer\Models\Manufacturer;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Inertia\Inertia;
@@ -41,14 +42,15 @@ class InventoryUserFilterShareService
             ];
         })->toArray();
 
-        $filterableProperties = InventoryArticleProperties::filterable()->select('id', 'name', 'type', 'select_values')->get()->map(function ($prop) {
-            return [
+        $filterableProperties = InventoryArticleProperties::filterable()
+            ->select('id', 'name', 'type', 'select_values')
+            ->get()
+            ->map(fn ($prop) => [
                 'id' => $prop->id,
                 'name' => $prop->name,
                 'type' => $prop->type,
                 'select_values' => $prop->select_values ?? [],
-            ];
-        })->toArray();
+            ])->toArray();
 
         $userFilter = $this->filterRepo->getByUser($user);
         $userFilterArr = [
@@ -61,8 +63,15 @@ class InventoryUserFilterShareService
             'categories' => $categories,
             'filterable_properties' => $filterableProperties,
             'user_filter' => $userFilterArr,
-            'rooms' => Room::all(),
-            'manufacturers' => Manufacturer::all(),
+
+            // bereits vorhanden:
+            'rooms' => Room::select('id','name')->orderBy('name')->get(),
+
+            // NEU:
+            'projects' => Project::select('id','name')->orderBy('name')->get(),
+            'users' => User::select('id','first_name', 'last_name')->orderBy('first_name')->get(),
+            // optional: 'manufacturers' => Manufacturer::all(),
         ]);
     }
+
 }

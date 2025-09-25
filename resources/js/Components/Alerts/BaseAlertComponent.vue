@@ -21,6 +21,12 @@
 <script setup>
 
 import {computed} from "vue";
+import {
+    IconAlertSquareFilled,
+    IconCircleCheckFilled,
+    IconExclamationCircleFilled,
+    IconInfoSquareRoundedFilled, IconMoodSadFilled
+} from "@tabler/icons-vue";
 
 const props = defineProps({
     type: {
@@ -67,15 +73,15 @@ const bgClass = computed(() => {
 const iconClass = computed(() => {
     switch (props.type) {
         case types.success:
-            return 'IconCircleCheckFilled'
+            return IconCircleCheckFilled
         case types.error:
-            return 'IconExclamationCircleFilled'
+            return IconExclamationCircleFilled
         case types.warning:
-            return 'IconAlertSquareFilled'
+            return IconAlertSquareFilled
         case types.info:
-            return 'IconInfoSquareRoundedFilled'
+            return IconInfoSquareRoundedFilled
         default:
-            return 'IconMoodSadFilled'
+            return IconMoodSadFilled
     }
 })
 

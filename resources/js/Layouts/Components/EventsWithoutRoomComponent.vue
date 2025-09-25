@@ -1,10 +1,11 @@
 <template>
-    <BaseModal @closed="closeModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_appointment_warning.svg">
-        <div class="mx-4">
-            <ModalHeader
-                :title="$t('Events without room')"
-                :description="$t('These room booking requests have been rejected by the room admin. Cancel the appointments or move them to another room.')"
-            />
+    <ArtworkBaseModal
+        @close="closeModal(false)"
+        v-if="true"
+        :title="'Events without room'"
+        :description="'These room booking requests have been rejected by the room admin. Cancel the appointments or move them to another room.'"
+    >
+        <div class="">
             <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
                 <SingleEventInEventsWithoutRoom
                     :computed-events-without-room="computedEventsWithoutRoom"
@@ -20,7 +21,7 @@
                 />
             </div>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -48,17 +49,15 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {router} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import SingleEventInEventsWithoutRoom from "@/Layouts/Components/SingleEventInEventsWithoutRoom.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {provide, inject} from "vue";
 export default {
     name: 'EventsWithoutRoomComponent',
     mixins: [Permissions, IconLib],
     components: {
-        ModalHeader,
         SingleEventInEventsWithoutRoom,
-        BaseModal,
+        ArtworkBaseModal,
         Switch,
         SwitchGroup,
         SwitchLabel,

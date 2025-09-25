@@ -46,6 +46,8 @@
                     dots-size="h-5 w-5 text-white"
                 >
                     <BaseMenuItem white-menu-background title="Edit" :icon="IconEdit" @click="editShift" />
+                    <BaseMenuItem white-menu-background title="Canceling a fixed term" v-if="shift.is_committed" :icon="IconLockOpen2" @click="lockOrUnlockShift(false)" />
+                    <BaseMenuItem white-menu-background title="Commitment" v-if="!shift.is_committed" :icon="IconLock" @click="lockOrUnlockShift(true)" />
                     <BaseMenuItem white-menu-background title="Clear" :icon="IconCircleX" @click="clearShiftUsers(shift)" />
                     <BaseMenuItem white-menu-background title="Delete" :icon="IconTrash" @click="deleteShift(shift.id)" />
                 </BaseMenu>
@@ -309,7 +311,15 @@ import ShiftsQualificationsDropElement from '@/Pages/Projects/Components/ShiftsQ
 import AddShiftModal from '@/Pages/Projects/Components/AddShiftModal.vue'
 import AddShiftQualificationToShiftModel from '@/Pages/Projects/Components/AddShiftQualificationToShiftModel.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
-import {IconCirclePlus, IconCircleX, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
+import {
+    IconCirclePlus,
+    IconCircleX,
+    IconEdit,
+    IconTrash,
+    IconX,
+    IconExclamationCircle,
+    IconLock, IconLockOpen2
+} from "@tabler/icons-vue";
 
 defineOptions({ name: 'SingleShift' })
 
@@ -574,6 +584,16 @@ function deleteShift(shift_id) {
 
 function editShift() {
     openEditShiftModal.value = true
+}
+
+const lockOrUnlockShift = (commit = false) => {
+    router.post(route('shift.change.commit.status', props.shift.id), {
+        commit: commit
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => wantsFreshPlacements()
+    })
 }
 </script>
 

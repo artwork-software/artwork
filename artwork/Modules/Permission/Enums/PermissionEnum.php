@@ -58,5 +58,6 @@ enum PermissionEnum : string
     case INVENTORY_CREATE_EDIT = 'inventory.create_edit';
     case INVENTORY_DELETE = 'inventory.delete';
     case INVENTORY_DISPOSITION = 'inventory.disposition';
+    case SHIFT_SETTINGS_VIEW_EDIT = 'shift.settings_view_edit';
 
 }

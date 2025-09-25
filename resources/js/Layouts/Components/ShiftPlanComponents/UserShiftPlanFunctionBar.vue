@@ -71,6 +71,7 @@ export default {
         'type',
         'totalPlannedWorkingHours',
         'eventTypes',
+        'user_to_edit_id'
     ],
     emits: ['previousTimeRange', 'nextTimeRange'],
     data() {
@@ -98,8 +99,8 @@ export default {
             return (totalDays * hoursPerDay).toFixed(1);
         },
         checkIfThisIsMe(){
-            if(this.$page.props.auth.user_to_edit){
-                return this.$page.props.auth.user_to_edit.id === this.$page.props.auth.user.id;
+            if(this.$page.props.auth.user.id){
+                return this.user_to_edit_id === this.$page.props.auth.user.id;
             }
         },
     },

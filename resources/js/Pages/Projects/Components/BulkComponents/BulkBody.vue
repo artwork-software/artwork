@@ -131,7 +131,7 @@
         <div class="overflow-x-scroll relative w-max">
             <BulkHeader v-model="timeArray" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
             <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
-                <div v-if="sortedEvents.length > 0">
+                <div v-if="sortedEvents.length > 0 && showEvents">
                     <!-- Render events by groups -->
                     <div v-for="(group, groupIndex) in getEventGroups()" :key="group.key" class="mb-6">
                         <!-- Group Divider -->
@@ -354,6 +354,7 @@ const props = defineProps({
 
 const emits = defineEmits(['closed']);
 
+let showEvents = ref(true);
 const hasCreateEventsPermission = ref(can('create events without request'));
 const roomCollisions = ref([]);
 const timeArray = ref(!props.isInModal);
@@ -701,7 +702,7 @@ const submit = () => {
     events.value.forEach(e => {
         e.nameError = false;
         if (!e.id && e.is_planning === undefined) {
-            e.is_planning = isPlanningEvent.value; // FIX: .value
+            e.is_planning = isPlanningEvent.value;
         }
     });
 
@@ -711,12 +712,7 @@ const submit = () => {
         invalidEvents.value.forEach(e => e.nameError = true);
         return;
     }
-
-    /*router.post(route('events.bulk.store', {project: props.project}), { events: events.value }, {
-        preserveScroll: true,
-        onSuccess: () => { emits('closed'); }
-    });*/
-
+    showEvents = false;
     axios.post(route('events.bulk.store', {project: props.project}), { events: events.value })
         .then(() => { emits('closed'); });
 };

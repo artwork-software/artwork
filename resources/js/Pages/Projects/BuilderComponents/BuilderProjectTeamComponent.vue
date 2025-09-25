@@ -14,7 +14,7 @@
 
     <div class="hidden print:block ">
         <h3 class="headline3 hidden print:block print:mb-2">{{ $t('Project team') }}</h3>
-        <div v-if="project.team?.length > 0" class="space-y-1 mt-3">
+        <div v-if="project.team?.length > 0" class="space-y-1">
             <div v-for="(user, index) in project.team" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">
                 <div class="flex items-center">
                     <div>

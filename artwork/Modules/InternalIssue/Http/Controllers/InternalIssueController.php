@@ -27,43 +27,98 @@ class InternalIssueController extends Controller
 
     public function index(): \Inertia\Response
     {
-        $entitiesPerPage = request()?->input('entitiesPerPage', 10);
-        $articleIds = request()?->input('article_ids', []);
-
-        // if articleIds is provided, filter issues by articles
-        if (!empty($articleIds)) {
-            $issues = InternalIssue::with(['files', 'articles.images', 'articles.category', 'articles.subCategory', 'specialItems', 'room', 'project', 'responsibleUsers'])
-                ->whereHas('articles', function ($query) use ($articleIds) {
-                    $query->whereIn('inventory_articles.id', [$articleIds]);
-                })
-                ->orderBy('start_date')
-                ->orderBy('start_time')
-                ->paginate($entitiesPerPage);
-        } else {
-            $issues = InternalIssue::with(['files', 'articles.images', 'articles.category', 'articles.subCategory', 'specialItems', 'room', 'project', 'responsibleUsers'])
-                ->orderBy('start_date')
-                ->orderBy('start_time')
-                ->paginate($entitiesPerPage);
+        $entitiesPerPage = (int) request()->input('entitiesPerPage', 10);
+        $q = trim((string) request()->input('q', ''));
+        // ---- Artikel-IDs (CSV oder Array) sicher parsen
+        $articleIdsInput = request()->input('article_ids', '');
+        $articleIds = [];
+        if (is_array($articleIdsInput)) {
+            $articleIds = array_filter(array_map('intval', $articleIdsInput));
+        } elseif (is_string($articleIdsInput) && strlen($articleIdsInput)) {
+            $articleIds = array_filter(array_map('intval', explode(',', $articleIdsInput)));
         }
+
+        // ---- Neue Filter
+        $dateFrom = request()->input('date_from'); // Y-m-d
+        $dateTo   = request()->input('date_to');   // Y-m-d
+        $projectId = (int) request()->input('project_id', 0);
+        $roomId    = (int) request()->input('room_id', 0);
+
+        // Mehrfach: responsible_user_ids als CSV/Array -> int[]
+        $respInput = request()->input('responsible_user_ids', '');
+        $responsibleUserIds = [];
+        if (is_array($respInput)) {
+            $responsibleUserIds = array_filter(array_map('intval', $respInput));
+        } elseif (is_string($respInput) && strlen($respInput)) {
+            $responsibleUserIds = array_filter(array_map('intval', explode(',', $respInput)));
+        }
+
+        $issuesQuery = InternalIssue::query()
+            ->with([
+                'files',
+                'articles.images',
+                'articles.category',
+                'articles.subCategory',
+                'specialItems',
+                'room',
+                'project',
+                'responsibleUsers',
+            ])
+            ->when(!empty($articleIds), function ($q) use ($articleIds) {
+                $q->whereHas('articles', function ($sub) use ($articleIds) {
+                    $sub->whereIn('inventory_articles.id', $articleIds);
+                });
+            })
+            ->when($projectId > 0, fn ($q) => $q->where('project_id', $projectId))
+            ->when($roomId > 0, fn ($q) => $q->where('room_id', $roomId))
+            ->when(!empty($responsibleUserIds), function ($q) use ($responsibleUserIds) {
+                $q->whereHas('responsibleUsers', function ($sub) use ($responsibleUserIds) {
+                    $sub->whereIn('users.id', $responsibleUserIds);
+                });
+            })
+            // Zeitraumfilter: es gibt start_date (und end_date). Typisch filtern wir auf start_date im Intervall.
+            ->when($dateFrom, fn ($q) => $q->whereDate('start_date', '>=', $dateFrom))
+            ->when($dateTo,   fn ($q) => $q->whereDate('start_date', '<=', $dateTo))
+            ->when($q !== '', function ($qbuilder) use ($q) {
+                $qbuilder->where(function ($sub) use ($q) {
+                    $sub->where('name', 'like', "%{$q}%")
+                        // optional auch Notizen mit durchsuchen:
+                        ->orWhere('notes', 'like', "%{$q}%");
+                });
+            })
+            ->orderBy('start_date')
+            ->orderBy('start_time');
+
+        $issues = $issuesQuery->paginate($entitiesPerPage)->withQueryString();
+
+        // Für die Chips in der UI die tatsächlich geladenen Artikel zurückgeben
+        $articlesInFilter = !empty($articleIds)
+            ? InventoryArticle::whereIn('id', $articleIds)->get()
+            : collect([]);
+
+        // Gemeinsame Filterdaten (siehe unten getFilterDataForUser) schon geladen:
         $this->inventoryUserFilterShareService->getFilterDataForUser($this->authManger->user());
 
         return Inertia::render('IssueOfMaterial/IssueOfMaterialManagement', [
             'issues' => $issues,
-            'articlesInFilter' => $articleIds ? InventoryArticle::whereIn('id', [$articleIds])
-                ->get() : [],
+            'articlesInFilter' => $articlesInFilter,
             'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
             'detailedArticle' => Inertia::optional(fn () =>
-                InventoryArticle::with([
-                    'category',
-                    'subCategory',
-                    'properties',
-                    'images' => function ($query) {
-                        $query->orderBy('is_main_image', 'desc')->orderBy('id');
-                    },
-                    'statusValues',
-                    'detailedArticleQuantities.status',
-                ])->find(request()?->get('articleId'))
+            InventoryArticle::with([
+                'category',
+                'subCategory',
+                'properties',
+                'images' => function ($query) {
+                    $query->orderBy('is_main_image', 'desc')->orderBy('id');
+                },
+                'statusValues',
+                'detailedArticleQuantities.status',
+            ])->find(request()->get('articleId'))
             ),
+            // Praktisch: URL-Parameter wieder an die Page zurückgeben (für Initialisierung)
+            'urlParameters' => request()->only([
+                'article_ids','date_from','date_to','project_id','room_id','responsible_user_ids','q' // <- q ergänzen
+            ]),
         ]);
     }
 

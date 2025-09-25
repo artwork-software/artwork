@@ -49,7 +49,9 @@ readonly class UserShiftCalendarAboService
     {
         if ($calendarAbo->date_range) {
             $shifts = $shifts->whereBetween('shifts.start_date', [$calendarAbo->start_date, $calendarAbo->end_date])
-                ->whereBetween('shifts.end_date', [$calendarAbo->start_date, $calendarAbo->end_date]);
+                ->whereBetween('shifts.end_date', [$calendarAbo->start_date, $calendarAbo->end_date])
+                ->where('is_committed', true)
+            ;
         }
         return $shifts->sortBy('start_date');
     }

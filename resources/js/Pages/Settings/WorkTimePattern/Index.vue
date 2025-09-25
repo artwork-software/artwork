@@ -8,10 +8,9 @@
                 </div>
             </div>
 
-
+            <ShiftSettingTabs />
 
             <div class="flex items-center justify-between">
-                <TabComponent :tabs="tabs" use-translation/>
                 <GlassyIconButton text="Add Work Time Pattern" :icon="IconPlus" @click="showCreateOrUpdateWorkTimePatternModal  = true" />
             </div>
 
@@ -51,6 +50,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SingleWorkTimePattern from "@/Pages/Settings/WorkTimePattern/Components/SingleWorkTimePattern.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import {IconPlus} from "@tabler/icons-vue";
+import ShiftSettingTabs from "@/Pages/Settings/Components/ShiftSettingTabs.vue";
 
 const props = defineProps({
     workTimePatterns: {

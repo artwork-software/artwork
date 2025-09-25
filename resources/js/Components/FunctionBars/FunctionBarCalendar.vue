@@ -50,7 +50,6 @@
                         <BaseMenuItem :icon="IconCalendarRepeat" white-menu-background without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>
-
                 <div v-else-if="!project" class="relative">
                     <BaseInput
                         id="calendarProjectSearch"
@@ -539,8 +538,6 @@ const jumpToDayOfMonth = (day) => {
 // Shortcut functions for the three icons
 const jumpToToday = () => {
     const today = new Date().toISOString().slice(0, 10);
-    dateValueCopy.value[0] = today;
-    dateValueCopy.value[1] = today;
 
     // Switch to daily mode if not already in daily mode
     if (!dailyViewMode.value) {
@@ -549,10 +546,18 @@ const jumpToToday = () => {
             daily_view: true
         }, {
             preserveScroll: false,
-            preserveState: false
+            preserveState: false,
+            onSuccess: () => {
+                // Set dates and update only after the mode change is completed
+                dateValueCopy.value[0] = today;
+                dateValueCopy.value[1] = today;
+                updateTimes();
+            }
         });
     } else {
-        // If already in daily mode, just update the dates
+        // If already in daily mode, set dates and update
+        dateValueCopy.value[0] = today;
+        dateValueCopy.value[1] = today;
         updateTimes();
     }
 }
@@ -578,11 +583,13 @@ const jumpToCurrentWeek = () => {
 
 const jumpToCurrentMonth = () => {
     const today = new Date();
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    dateValueCopy.value[0] = monthStart.toISOString().slice(0, 10);
-    dateValueCopy.value[1] = monthEnd.toISOString().slice(0, 10);
+    // Use UTC methods to avoid timezone conversion issues
+    const monthStart = new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1));
+    const monthEnd = new Date(Date.UTC(today.getFullYear(), today.getMonth() + 1, 0));
+
+    const startDateString = monthStart.toISOString().slice(0, 10);
+    const endDateString = monthEnd.toISOString().slice(0, 10);
 
     // Switch to normal mode (not daily mode) if in daily mode
     if (dailyViewMode.value) {
@@ -593,12 +600,16 @@ const jumpToCurrentMonth = () => {
             preserveScroll: false,
             preserveState: false,
             onSuccess: () => {
-                // Update dates only after the mode change is completed
+                // Set dates and update only after the mode change is completed
+                dateValueCopy.value[0] = startDateString;
+                dateValueCopy.value[1] = endDateString;
                 updateTimes();
             }
         });
     } else {
-        // If already in normal mode, just update the dates
+        // If already in normal mode, set dates and update
+        dateValueCopy.value[0] = startDateString;
+        dateValueCopy.value[1] = endDateString;
         updateTimes();
     }
 }

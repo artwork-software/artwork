@@ -19,17 +19,33 @@
                         <!-- Sidebar component, swap this element with another sidebar if you like -->
                         <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-2">
                             <div class="flex h-16 shrink-0 items-center">
-                                <img class="h-8 w-auto" src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company" />
+                                <img class="h-8 w-auto" :src="usePage().props.big_logo" alt="artwork-logo" />
                             </div>
                             <nav class="flex flex-1 flex-col">
                                 <ul role="list" class="flex flex-1 flex-col gap-y-7">
                                     <li>
                                         <ul role="list" class="-mx-2 space-y-1">
                                             <li v-for="item in navigation" :key="item.name">
-                                                <a :href="item.href" :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
-                                                    <component :is="item.icon" :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-6 shrink-0']" aria-hidden="true" />
-                                                    {{ $t(item.name) }}
-                                                </a>
+                                                <div v-if="item.has_permission">
+                                                    <a v-if="!item.isMenu" :href="item.href" :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
+                                                        <component :is="item.icon" :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-6 shrink-0']" aria-hidden="true" />
+                                                        {{ $t(item.name) }}
+                                                    </a>
+                                                    <div v-else>
+                                                        <div class="text-gray-700 group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold">
+                                                            <component :is="item.icon" class="text-gray-400 size-6 shrink-0" aria-hidden="true" />
+                                                            {{ $t(item.name) }}
+                                                        </div>
+                                                        <ul class="ml-8 space-y-1">
+                                                            <li v-for="subMenu in item.subMenus" :key="subMenu.name">
+                                                                <a v-if="subMenu.has_permission" :href="subMenu.href" :class="[subMenu.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6']">
+                                                                    <component :is="subMenu.icon" :class="[subMenu.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-5 shrink-0']" aria-hidden="true" />
+                                                                    {{ $t(subMenu.name) }}
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
                                             </li>
                                         </ul>
                                     </li>
@@ -266,7 +282,7 @@ const navigation = ref([
         current: true,
         isMenu: true,
         showToolTipForItem: false,
-        has_permission: moduleIsVisible('inventory'),
+        has_permission: moduleIsVisible('room_assignment'),
         subMenus: [
             {
                 name: 'Calendar',

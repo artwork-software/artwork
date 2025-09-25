@@ -1,5 +1,5 @@
 <template>
-    <BaseFilter onlyIcon="true">
+    <BaseFilter :onlyIcon="true">
         <div class="inline-flex border-none justify-end w-full">
             <button class="flex items-center" @click="resetCalendarFilter">
                 <IconX stroke-width="1.5" class="w-3 mr-1"/>

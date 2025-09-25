@@ -48,6 +48,7 @@ use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Builder;
@@ -74,7 +75,9 @@ use App\Models\User as LaravelUser;
 
 class UserController extends Controller
 {
-    public function __construct()
+    public function __construct(
+        protected AuthManager $auth,
+    )
     {
         $this->authorizeResource(User::class, 'user');
     }
@@ -605,6 +608,8 @@ class UserController extends Controller
             Carbon::parse($vacationMonth) :
             Carbon::today();
 
+        $userService->shareCalendarAbo('shiftCalendar');
+
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
 
         return Inertia::render(
@@ -1096,8 +1101,18 @@ class UserController extends Controller
             'hide_unoccupied_rooms',
             'display_project_groups',
             'show_unplanned_events',
-            'show_planned_events'
+            'show_planned_events',
+            'hide_unoccupied_days'
         ]));
+    }
+
+    public function toggleUserShiftTimePreset(Request $request): void
+    {
+        /** @var User $user */
+        $user = $this->auth->user();
+        $user->update([
+            'is_time_preset_open' => $request->boolean('is_time_preset_open')
+        ]);
     }
 
     public function updateSidebar(User $user, Request $request): void
@@ -1164,7 +1179,7 @@ class UserController extends Controller
         $selectedPeriodDate = $vacationMonth ?
             Carbon::parse($vacationMonth) :
             Carbon::today();
-        $user->load(['shiftCalendarAbo']);
+        $userService->shareCalendarAbo('shiftCalendar');
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
 
         return Inertia::render(

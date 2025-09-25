@@ -7,11 +7,14 @@ import IconLib from "@/Mixins/IconLib.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import {IconPlus} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ShiftSettingTabs from "@/Pages/Settings/Components/ShiftSettingTabs.vue";
 
 export default {
     name: "DayServiceIndex",
     mixins: [IconLib],
-    components: {PropertyIcon, GlassyIconButton, AddEditDayServiceModal, AddButtonSmall, TabComponent, AppLayout},
+    components: {
+        ShiftSettingTabs,
+        PropertyIcon, GlassyIconButton, AddEditDayServiceModal, AddButtonSmall, TabComponent, AppLayout},
     props: [
         'dayServices'
     ],
@@ -95,8 +98,9 @@ export default {
                 </div>
             </div>
 
+            <ShiftSettingTabs />
+
            <div class="flex items-center justify-between">
-               <TabComponent :tabs="tabs" />
 
                <GlassyIconButton text="New Day Service" :icon="IconPlus"@click="showAddEditDayServiceModal = true" />
            </div>

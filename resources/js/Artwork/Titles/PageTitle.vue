@@ -1,26 +1,17 @@
 <template>
-    <div class="py-4">
-        <h3 class="headline h2 text-color ">{{ title }}</h3>
-        <p class="text-color light sub-line light">
+    <div class="py-2">
+        <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">
+            {{ title }}
+        </h1>
+        <p class="mt-1 text-sm text-zinc-600">
             {{ description }}
         </p>
     </div>
 </template>
 
 <script setup>
-
-const props = defineProps({
-    title: {
-        type: String,
-        required: true
-    },
-    description: {
-        type: String,
-        required: true
-    },
+defineProps({
+    title: { type: String, required: true },
+    description: { type: String, required: true },
 })
 </script>
-
-<style scoped>
-
-</style>

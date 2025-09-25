@@ -8,10 +8,9 @@
                 </div>
             </div>
 
-
+            <ShiftSettingTabs />
 
             <div class="flex items-center justify-between">
-                <TabComponent :tabs="tabs" use-translation/>
                 <GlassyIconButton text="Add User Contracts" :icon="IconPlus" @click="showCreateOrUpdateUserContractModal  = true" />
             </div>
 
@@ -54,6 +53,7 @@ import CreateOrUpdateUserContractModal
 import SingleUserContractTemplate
     from "@/Pages/Settings/UserContractSettings/Components/SingleUserContractTemplate.vue";
 import {IconPlus} from "@tabler/icons-vue";
+import ShiftSettingTabs from "@/Pages/Settings/Components/ShiftSettingTabs.vue";
 
 const props = defineProps({
     contracts: {

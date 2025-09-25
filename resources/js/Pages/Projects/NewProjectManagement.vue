@@ -1,219 +1,282 @@
 <template>
     <AppLayout title="Projektübersicht">
-        <div class="mx-auto container pt-10">
-            <div class="">
-                <div class="">
-                    <div class="w-full flex items-center justify-end">
-                        <div class="w-full flex items-center">
-                            <div class="w-full flex items-center">
-                                <h1 class="items-center flex mr-2 headline1">
+        <div class="container mx-auto pt-6 relative">
+            <!-- Headbar (neu) -->
+            <div class="-mx-2 sm:mx-0">
+                <div
+                    class="rounded-2xl border border-zinc-200/70 bg-white/85 backdrop-blur px-3 py-3 sm:px-5 sm:py-4 shadow-sm"
+                >
+                    <div class="flex flex-wrap items-center gap-3 sm:gap-4">
+                        <!-- Brand + Titel -->
+                        <div class="flex items-center gap-3 mr-auto">
+                            <div class="size-9 rounded-xl bg-blue-600/10 text-blue-700 flex items-center justify-center">
+                                <!-- kleiner geometrischer Akzent -->
+                                <component :is="IconGeometry" class="size-6" />
+                            </div>
+                            <div>
+                                <div class="text-zinc-900  text-xl sm:text-2xl font-semibold tracking-tight">
                                     {{ $t('Projects') }}
-                                </h1>
-                            </div>
-                            <div class="flex relative items-center gap-x-3.5">
-                                <div class="flex items-center">
-                                    <div v-if="!showSearchbar" @click="openSearchbar"
-                                         class="cursor-pointer inset-y-0">
-                                        <ToolTipComponent :icon="IconSearch" icon-size="h-7 w-7" :tooltip-text="$t('Search')"
-                                                          direction="bottom"/>
-                                    </div>
-                                    <div v-else class="w-96">
-                                        <BaseInput type="text" is-small ref="searchBarInput" id="searchBarInput" label="Search for projects" v-model="project_search"/>
-                                    </div>
-                                    <IconX v-if="showSearchbar" class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
                                 </div>
-                                <BaseFilter only-icon="true" :left="false">
-                                    <div class="w-full">
-                                        <div class="flex justify-end mb-3">
-                                        <span class="xxsLight cursor-pointer text-right w-full" @click="resetFilter">
-                                            {{ $t('Deselect all') }}
-                                        </span>
-                                        </div>
-                                        <SwitchGroup as="div" class="flex items-center">
-                                            <Switch v-model="showOnlyMyProjects"
-                                                    :class="[showOnlyMyProjects ? 'bg-green-400' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
-                                                <span class="sr-only">Use setting</span>
-                                                <span aria-hidden="true"
-                                                      :class="[showOnlyMyProjects ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
-                                            </Switch>
-                                            <SwitchLabel as="span" class="ml-3 xxsLight">
-                                                {{ $t('Show only my projects') }}
-                                            </SwitchLabel>
-                                        </SwitchGroup>
-                                        <div class="flex max-h-8 mb-3 mt-3">
-                                            <input v-model="showProjectGroups"
-                                                   type="checkbox"
-                                                   class="input-checklist-dark"/>
-                                            <p class=" ml-4 my-auto text-sm text-secondary">
-                                                {{ $t('Project groups') }}
-                                            </p>
-                                        </div>
-                                        <div class="flex max-h-8 mb-3 mt-3">
-                                            <input v-model="showProjects"
-                                                   type="checkbox"
-                                                   class="input-checklist-dark"/>
-                                            <p class=" ml-4 my-auto text-sm text-secondary">
-                                                {{ $t('Projects') }}
-                                            </p>
-                                        </div>
-                                        <div class="flex max-h-8 mb-3 mt-3">
-                                            <input v-model="showExpiredProjects"
-                                                   type="checkbox"
-                                                   class="input-checklist-dark"/>
-                                            <p class=" ml-4 my-auto text-sm text-secondary">
-                                                {{ $t('Show expired projects') }}
-                                            </p>
-                                        </div>
-                                        <div class="flex max-h-8 mb-3 mt-3">
-                                            <input v-model="showFutureProjects"
-                                                   type="checkbox"
-                                                   class="input-checklist-dark"/>
-                                            <p class=" ml-4 my-auto text-sm text-secondary">
-                                                {{ $t('Show future projects') }}
-                                            </p>
-                                        </div>
-                                        <div class="flex max-h-8 mb-3 mt-3">
-                                            <input v-model="showProjectsWithoutEvents"
-                                                   type="checkbox"
-                                                   class="input-checklist-dark"/>
-                                            <p class=" ml-4 my-auto text-sm text-secondary">
-                                                {{ $t('Show projects without events') }}
-                                            </p>
-                                        </div>
-                                        <div class="flex max-h-8 mb-3 mt-3">
-                                            <input v-model="showOnlyProjectsWithoutGroup"
-                                                   type="checkbox"
-                                                   class="input-checklist-dark"/>
-                                            <p class=" ml-4 my-auto text-sm text-secondary">
-                                                {{ $t('Show only projects without group') }}
-                                            </p>
-                                        </div>
-                                        <div class="flex justify-between xsLight mb-3"
-                                             @click="showProjectStateFilter = !showProjectStateFilter">
-                                            {{ $t('Project status') }}
-                                            <IconChevronDown stroke-width="1.5" class="h-5 w-5"
-                                                             v-if="!showProjectStateFilter"
-                                                             aria-hidden="true"/>
-                                            <IconChevronUp stroke-width="1.5" class="h-5 w-5"
-                                                           v-if="showProjectStateFilter"
-                                                           aria-hidden="true"/>
-                                        </div>
-                                        <div v-if="showProjectStateFilter">
-                                            <div class="flex mb-3" v-for="state in computedStates">
-                                                <input v-model="state.clicked"
-                                                       type="checkbox"
-                                                       class="input-checklist-dark"/>
-                                                <p class=" ml-4 my-auto text-sm text-secondary">{{state.name }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center justify-end py-1">
-                                            <div class="text-xs cursor-pointer hover:text-gray-200 transition-all duration-150 ease-in-out" @click="applyFiltersAndSort()">
-                                                {{ $t('Apply') }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </BaseFilter>
-                                <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72" >
-                                    <div class="flex items-center justify-end py-1">
-                                    <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="resetSort()">
-                                        {{ $t('Reset') }}
-                                    </span>
-                                    </div>
-                                    <MenuItem v-for="projectSortEnumName in projectSortEnumNames" v-slot="{ active }">
-                                        <div @click="sortBy = projectSortEnumName; applyFiltersAndSort()"
-                                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                            {{ getSortEnumTranslation(projectSortEnumName) }}
-                                            <IconCheck v-if="userProjectManagementSetting.sort_by === projectSortEnumName" class="w-5 h-5"/>
-                                        </div>
-                                    </MenuItem>
-                                </BaseMenu>
-                                <ToolTipComponent :icon="IconFileExport"
-                                                  icon-size="h-7 w-7"
-                                                  :tooltip-text="$t('Export project list')"
-                                                  direction="bottom"
-                                                  @click="openExportModal"/>
-
+                                <div v-if="projects?.data?.length" class="text-xs text-zinc-500">
+                                    {{ projects.data.length }} {{ $t('Projects') }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="flex items-center justify-between my-4">
-                        <div class="mt-4 gap-x-1 flex items-center pb-4" v-if="lastProject?.id">
-                            <div class="xsLight">
-                                {{ $t('Last visited project') }}:
-                            </div>
-                            <a class="text-artwork-buttons-create text-sm font-bold flex items-center gap-x-1" :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })">
-                                <component :is="IconGeometry" class="size-4 text-artwork-buttons-create" />
-                                <span>{{ lastProject.name }}</span>
-                            </a>
-                        </div>
-                        <GlassyIconButton text="New project" :icon="IconPlus" v-if="can('create and edit own project') || role('artwork admin')" @click="openCreateProjectModal" />
-                    </div>
 
+                        <!-- Quick-Search (Icon -> Input) -->
+                        <div class="relative flex items-center gap-2">
+                            <button
+                                v-if="!showSearchbar"
+                                @click="openSearchbar"
+                                type="button"
+                                class="inline-flex items-center justify-center rounded-xl border border-zinc-200/80 px-2.5 py-2 hover:bg-zinc-50 transition"
+                                aria-label="Search"
+                            >
+                                <ToolTipComponent :icon="IconSearch" icon-size="h-6 w-6" :tooltip-text="$t('Search')" direction="bottom" />
+                            </button>
+
+                            <div v-else class="w-72 sm:w-96 flex items-center gap-2">
+                                <BaseInput
+                                    type="text"
+                                    is-small
+                                    ref="searchBarInput"
+                                    id="searchBarInput"
+                                    :label="$t('Search for projects')"
+                                    v-model="project_search"
+                                    class="w-full"
+                                />
+                                <button
+                                    type="button"
+                                    class="shrink-0 rounded-xl border border-transparent px-1.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+                                    @click="closeSearchbar()"
+                                    aria-label="Close search"
+                                >
+                                    <IconX class="h-6 w-6 text-zinc-500" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Quick-Pill: nur meine -->
+                        <button
+                            type="button"
+                            @click="toggleMyProjects()"
+                            :aria-pressed="!!showOnlyMyProjects"
+                            class="ui-button flex items-center gap-2"
+                            :class="showOnlyMyProjects ? 'bg-blue-600/10 text-blue-700 border-blue-200/60': 'text-zinc-700 dark:text-zinc-200'">
+                            <span class="size-2 rounded-full" :class="showOnlyMyProjects ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-700'"></span>
+                            {{ $t('Only mine') }}
+                        </button>
+
+                        <!-- Filter -->
+                        <BaseFilter :only-icon="true" :left="false" white-background classes="ui-button">
+                            <div class="w-full px-2 py-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Filters') }}</div>
+                                    <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetFilter">
+                                        {{ $t('Deselect all') }}
+                                    </button>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <!-- Toggles -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                            <input v-model="showProjectGroups" type="checkbox" class="size-4 accent-emerald-600" />
+                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Project groups') }}</span>
+                                        </label>
+                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                            <input v-model="showProjects" type="checkbox" class="size-4 accent-emerald-600" />
+                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Projects') }}</span>
+                                        </label>
+                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                            <input v-model="showExpiredProjects" type="checkbox" class="size-4 accent-emerald-600" />
+                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show expired projects') }}</span>
+                                        </label>
+                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                            <input v-model="showFutureProjects" type="checkbox" class="size-4 accent-emerald-600" />
+                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show future projects') }}</span>
+                                        </label>
+                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                            <input v-model="showProjectsWithoutEvents" type="checkbox" class="size-4 accent-emerald-600" />
+                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show projects without events') }}</span>
+                                        </label>
+                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                            <input v-model="showOnlyProjectsWithoutGroup" type="checkbox" class="size-4 accent-emerald-600" />
+                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show only projects without group') }}</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- States -->
+                                    <div class="border-t border-zinc-200 dark:border-zinc-800 pt-2">
+                                        <button
+                                            type="button"
+                                            class="w-full flex items-center justify-between text-sm text-zinc-700 dark:text-zinc-200"
+                                            @click="showProjectStateFilter = !showProjectStateFilter"
+                                        >
+                                            <span>{{ $t('Project status') }}</span>
+                                            <IconChevronDown v-if="!showProjectStateFilter" class="h-5 w-5 text-zinc-500" />
+                                            <IconChevronUp v-else class="h-5 w-5 text-zinc-500" />
+                                        </button>
+                                        <div v-if="showProjectStateFilter" class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <label v-for="state in computedStates" :key="state.id" class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                                <input v-model="state.clicked" type="checkbox" class="size-4 accent-emerald-600" />
+                                                <span class="text-sm text-zinc-700 dark:text-zinc-200 truncate">{{ state.name }}</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-end">
+                                        <button
+                                            class="text-xs font-semibold text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer transition"
+                                            @click="applyFiltersAndSort()"
+                                            type="button"
+                                        >
+                                            {{ $t('Apply') }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </BaseFilter>
+
+                        <!-- Sort -->
+                        <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-72" classes="ui-button">
+                            <div class="flex items-center justify-between py-1 px-1">
+                                <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Sort by') }}</div>
+                                <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetSort()">
+                                    {{ $t('Reset') }}
+                                </button>
+                            </div>
+                            <MenuItem v-for="projectSortEnumName in projectSortEnumNames" :key="projectSortEnumName" v-slot="{ active }">
+                                <div
+                                    @click="sortBy = projectSortEnumName; applyFiltersAndSort()"
+                                    :class="[
+                                        active ? 'bg-blue-50 text-artwork-buttons-create ' : 'text-zinc-600 ',
+                                        'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm rounded-md'
+                                      ]"
+                                >
+                                    {{ getSortEnumTranslation(projectSortEnumName) }}
+                                    <IconCheck v-if="userProjectManagementSetting.sort_by === projectSortEnumName" class="w-5 h-5" />
+                                </div>
+                            </MenuItem>
+                        </BaseMenu>
+
+                        <!-- Export -->
+                        <button type="button" @click="openExportModal" class="ui-button">
+                            <ToolTipComponent :icon="IconFileExport" icon-size="h-6 w-6" :tooltip-text="$t('Export project list')" direction="bottom" />
+                        </button>
+
+                        <button class="ui-button" @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')">
+                            <component :is="IconPlus" class="size-6" stroke-width="1"/>
+                            {{ $t('New project') }}
+                        </button>
+                    </div>
                 </div>
             </div>
 
-                <div class="relative">
-                    <BaseCard>
-                        <div class="p-5">
-                            <div class="overflow-x-auto px-2 w-full pb-5">
-                                <div class="sticky top-0 z-10 w-fit mb-4 rounded-lg">
-                                    <div class="grid px-3 py-3 " :style="`grid-template-columns: ${gridTemplateColumns}`">
-                                        <div v-for="component in components" :key="component.name"  :class="component.type === 'ActionsComponent' ? 'flex justify-end' : ''" class="px-3 text-left flex items-center" >
-                                            <h3 v-if="checkIfComponentIsVisible(component)" class="xsDark">{{ $t(component.name) }}</h3>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="space-y-3 mb-3 w-fit">
-                                    <SingleProjectInManagement
-                                        v-for="project in pinnedProjects"
-                                        :key="project.id"
-                                        :project="project"
-                                        :components="components"
-                                        :categories="categories"
-                                        :genres="genres"
-                                        :sectors="sectors"
-                                        :states="states"
-                                        :projectGroups="projectGroups"
-                                        :createSettings="createSettings"
-                                        :fullProject="pinnedProjectsAll.find((p) => p.id === project.id)"
-                                    />
+            <!-- Last visited -->
+            <div class="my-5 flex items-center justify-between">
+                <div class="flex items-center gap-2 pb-2" v-if="lastProject?.id">
+                    <div class="text-sm text-zinc-600 dark:text-zinc-300">{{ $t('Last visited project') }}:</div>
+                    <a
+                        class="text-artwork-buttons-create text-sm font-semibold inline-flex items-center gap-1"
+                        :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })"
+                    >
+                        <component :is="IconGeometry" class="size-4" />
+                        <span class="truncate max-w-56">{{ lastProject.name }}</span>
+                    </a>
+                </div>
+            </div>
 
-
-                                </div>
-                                <!-- Tabelle -->
-                                <div class="space-y-3 w-fit">
-                                    <SingleProjectInManagement
-                                        v-for="project in projectComponents"
-                                        :key="project.id"
-                                        :project="project"
-                                        :components="components"
-                                        :categories="categories"
-                                        :genres="genres"
-                                        :sectors="sectors"
-                                        :states="states"
-                                        :projectGroups="projectGroups"
-                                        :createSettings="createSettings"
-                                        :fullProject="projects.data.find((p) => p.id === project.id)"
-                                    />
-
+            <!-- Header row -->
+            <div class="overflow-x-auto">
+                <div class="min-w-fit">
+                    <div class="mb-4">
+                        <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/50 backdrop-blur px-3 py-2">
+                            <div
+                                class="grid items-center text-zinc-600 dark:text-zinc-300 text-xs font-semibold tracking-wide"
+                                :style="`grid-template-columns: ${gridTemplateColumns}`"
+                            >
+                                <div
+                                    v-for="component in components"
+                                    :key="component.name"
+                                    :class="['px-3 py-2', component.type === 'ActionsComponent' ? 'text-right' : 'text-left']"
+                                >
+                                    <span v-if="checkIfComponentIsVisible(component)" class="truncate block">{{ $t(component.name) }}</span>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="px-5 pb-5">
-                            <BasePaginator
-                                :entities="projects"
-                                property-name="projects"
-                                :emit-update-entities-per-page="true"
-                                @update-page="updatePage"
-                                @update-entities-per-page="changeEntitiesPerPage"/>
+                    <!-- SKELETONS -->
+                    <div v-if="isLoading" class="mt-3 space-y-2">
+                        <div
+                            v-for="n in skeletonCount"
+                            :key="'sk-'+n"
+                            class="rounded-xl border border-zinc-200 bg-white/70 backdrop-blur overflow-hidden"
+                        >
+                            <div class="grid items-center" :style="`grid-template-columns: ${gridTemplateColumns}`">
+                                <div v-for="i in skeletonCols" :key="i" class="px-3 py-3">
+                                    <div class="h-4 w-[70%] rounded bg-zinc-200/70 animate-pulse"></div>
+                                </div>
+                            </div>
                         </div>
-                    </BaseCard>
+                    </div>
 
+                    <!-- Pinned -->
+                    <div v-else-if="pinnedProjects?.length" class="mt-3 space-y-4">
+                        <SingleProjectInManagement
+                            v-for="project in pinnedProjects"
+                            :key="project.id"
+                            :project="project"
+                            :components="components"
+                            :categories="categories"
+                            :genres="genres"
+                            :sectors="sectors"
+                            :states="states"
+                            :project-groups="projectGroups"
+                            :create-settings="createSettings"
+                            :full-project="pinnedProjectsAll.find((p) => p.id === project.id)"
+                            :grid-template-columns="gridTemplateColumns"
+                            v-memo="[project.id, project.updated_at]"
+                        />
+                    </div>
+
+                    <!-- List -->
+                    <div v-if="!isLoading" class="mt-2 space-y-2">
+                        <SingleProjectInManagement
+                            v-for="project in projectComponents"
+                            :key="project.id"
+                            :project="project"
+                            :components="components"
+                            :categories="categories"
+                            :genres="genres"
+                            :sectors="sectors"
+                            :states="states"
+                            :project-groups="projectGroups"
+                            :create-settings="createSettings"
+                            :full-project="projects.data.find((p) => p.id === project.id)"
+                            :grid-template-columns="gridTemplateColumns"
+                            v-memo="[project.id, project.updated_at]"
+                        />
+                    </div>
                 </div>
+            </div>
+
+            <!-- Paginator -->
+            <div class="px-1 sm:px-0 pb-8 pt-6">
+                <BasePaginator
+                    :entities="projects"
+                    property-name="projects"
+                    :emit-update-entities-per-page="true"
+                    @update-page="updatePage"
+                    @update-entities-per-page="changeEntitiesPerPage"
+                />
+            </div>
         </div>
 
-        <SideNotification v-if="dropFeedbackShown" type="project_create_success"/>
+        <!-- Notifications & Modals -->
+        <SideNotification v-if="dropFeedbackShown" type="project_create_success" />
+
         <project-create-modal
             v-if="createProject"
             :show="createProject"
@@ -244,6 +307,7 @@
             :description="$t('The project was successfully created.')"
             :button="$t('Close')"
         />
+
         <project-data-edit-modal
             v-if="editingProject"
             :show="editingProject"
@@ -253,29 +317,30 @@
             :states="states"
             @closed="closeEditProjectModal"
         />
+
         <project-history-component
             v-if="showProjectHistory"
             :project_history="projectHistoryToDisplay"
             :access_budget="projectBudgetAccess"
             @closed="closeProjectHistoryModal"
         />
-        <export-modal v-if="showExportModal"
-                      @close="showExportModal = false"
-                      :enums="[
-                          exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
-                          exportTabEnums.EXCEL_CALENDAR_EXPORT,
-                          exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
-                      ]"
-                      :configuration="getExportModalConfiguration()"/>
 
+        <export-modal
+            v-if="showExportModal"
+            @close="showExportModal = false"
+            :enums="[
+        exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+        exportTabEnums.EXCEL_CALENDAR_EXPORT,
+        exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
+      ]"
+            :configuration="getExportModalConfiguration()"
+        />
     </AppLayout>
 </template>
 
 <script setup>
-
 import AppLayout from "@/Layouts/AppLayout.vue";
-import {Link, router, usePage} from "@inertiajs/vue3";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import { router, usePage } from "@inertiajs/vue3";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {
     IconCheck,
@@ -287,14 +352,11 @@ import {
     IconSearch,
     IconX
 } from "@tabler/icons-vue";
-import Input from "@/Jetstream/Input.vue";
-import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import { usePermission } from "@/Composeables/Permission.js";
-import {MenuItem, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
-import {computed, nextTick, ref, watch} from "vue";
-import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
+import { MenuItem, Switch, SwitchGroup } from "@headlessui/vue";
+import { computed, nextTick, ref, watch } from "vue";
+import { useSortEnumTranslation } from "@/Composeables/SortEnumTranslation.js";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
@@ -305,241 +367,150 @@ import SideNotification from "@/Layouts/Components/General/SideNotification.vue"
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import debounce from "lodash.debounce";
 import SingleProjectInManagement from "@/Pages/Projects/ProjectManagmentComponents/SingleProjectInManagement.vue";
-import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
-import BaseCard from "@/Artwork/Cards/BaseCard.vue";
-import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
-import CardHeadline from "@/Artwork/Cards/CardHeadline.vue";
+import { useExportTabEnums } from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
-
-const {can, hasAdminRole, role, canSeeComponent, canEditComponent} = usePermission(usePage().props);
-const {getSortEnumTranslation} = useSortEnumTranslation();
+const { can, role, canSeeComponent } = usePermission(usePage().props);
+const { getSortEnumTranslation } = useSortEnumTranslation();
 const exportTabEnums = useExportTabEnums();
+
 const props = defineProps({
-    components: {
-        type: Object,
-        required: true,
-    },
-    projectComponents: {
-        type: Object,
-        required: true,
-    },
-    projects: {
-        type: Object,
-        required: true,
-    },
-    projectSortEnumNames: {
-        type: Object,
-        required: true,
-    },
-    eventTypes: {
-        type: Object,
-        required: true,
-    },
-    rooms: {
-        type: Object,
-        required: true,
-    },
-    userProjectManagementSetting: {
-        type: Object,
-        required: true,
-    },
-    eventStatuses: {
-        type: Object,
-        required: true,
-    },
-    sectors: {
-        type: Object,
-        required: true,
-    },
-    genres: {
-        type: Object,
-        required: true,
-    },
-    categories: {
-        type: Object,
-        required: true,
-    },
-    states: {
-        type: Object,
-        required: true,
-    },
-    projectGroups: {
-        type: Object,
-        required: true,
-    },
-    createSettings: {
-        type: Object,
-        required: true,
-    },
-    first_project_tab_id: {
-        type: Number,
-        required: true,
-    },
-    pinnedProjects: {
-        type: Object,
-        required: true,
-    },
-    myLastProject: {
-        type: Object,
-        required: false,
-    },
-    pinnedProjectsAll: {
-        type: Object,
-        required: true,
-    },
-    lastProject: {
-        type: Object,
-        required: true,
-    },
-    entitiesPerPage: {
-        type: Number,
-        required: true,
-    },
-})
-
-
+    components: { type: Object, required: true },
+    projectComponents: { type: Object, required: true },
+    projects: { type: Object, required: true },
+    projectSortEnumNames: { type: Object, required: true },
+    eventTypes: { type: Object, required: true },
+    rooms: { type: Object, required: true },
+    userProjectManagementSetting: { type: Object, required: true },
+    eventStatuses: { type: Object, required: true },
+    sectors: { type: Object, required: true },
+    genres: { type: Object, required: true },
+    categories: { type: Object, required: true },
+    states: { type: Object, required: true },
+    projectGroups: { type: Object, required: true },
+    createSettings: { type: Object, required: true },
+    first_project_tab_id: { type: Number, required: true },
+    pinnedProjects: { type: Object, required: true },
+    myLastProject: { type: Object, required: false },
+    pinnedProjectsAll: { type: Object, required: true },
+    lastProject: { type: Object, required: true },
+    entitiesPerPage: { type: Number, required: true },
+});
 
 const project_search = ref(route().params.query);
 const showProjectHistoryTab = ref(true);
-const showBudgetHistoryTab = ref(false);
 const projectBudgetAccess = ref({});
 const showSearchbar = ref(route().params.query?.length > 0);
-const showSuccessModal = ref(false);
 const showSuccessModal2 = ref(false);
-const nameOfDeletedProject = ref('');
 const showProjectHistory = ref(false);
 const projectHistoryToDisplay = ref([]);
-
-// Project management settings
-const userProjectManagementSetting = props.userProjectManagementSetting; // Assuming it's passed or available in the context
-const showOnlyMyProjects = ref(props.userProjectManagementSetting?.project_filters.showOnlyMyProjects);
-const showProjectGroups = ref(props.userProjectManagementSetting?.project_filters.showProjectGroups);
-const showProjects = ref(props.userProjectManagementSetting?.project_filters.showProjects);
-const showExpiredProjects = ref(props.userProjectManagementSetting?.project_filters.showExpiredProjects);
-const showFutureProjects = ref(props.userProjectManagementSetting?.project_filters.showFutureProjects ?? false);
-const showProjectsWithoutEvents = ref(props.userProjectManagementSetting?.project_filters.showProjectsWithoutEvents);
-const showOnlyProjectsWithoutGroup = ref(props.userProjectManagementSetting?.project_filters.showOnlyProjectsWithoutGroup);
-const sortBy = ref(props.userProjectManagementSetting?.sort_by === null ? undefined : props.userProjectManagementSetting?.sort_by);
-
-const showProjectStateFilter = ref(true);
 const editingProject = ref(false);
 const projectToEdit = ref(null);
 const createProject = ref(false);
 const showExportModal = ref(false);
-const entitiesPerPage = ref([10, 15, 20, 30, 50, 75, 100]);
 const page = ref(route().params.page ?? 1);
 const perPage = ref(props.entitiesPerPage ?? 10);
 const showAddBulkEventModal = ref(false);
 const dropFeedbackShown = ref(null);
 
+// Loading-State für Skeletons
+const isLoading = ref(false);
+const skeletonCols = computed(() => props.components?.length ?? 6);
+const skeletonCount = computed(() => Math.min(perPage.value || 10, 10)); // max. 10 Skeletons
 
+// Settings
+const userProjectManagementSetting = props.userProjectManagementSetting;
+const showOnlyMyProjects = ref(userProjectManagementSetting?.project_filters.showOnlyMyProjects);
+const showProjectGroups = ref(userProjectManagementSetting?.project_filters.showProjectGroups);
+const showProjects = ref(userProjectManagementSetting?.project_filters.showProjects);
+const showExpiredProjects = ref(userProjectManagementSetting?.project_filters.showExpiredProjects);
+const showFutureProjects = ref(userProjectManagementSetting?.project_filters.showFutureProjects ?? false);
+const showProjectsWithoutEvents = ref(userProjectManagementSetting?.project_filters.showProjectsWithoutEvents);
+const showOnlyProjectsWithoutGroup = ref(userProjectManagementSetting?.project_filters.showOnlyProjectsWithoutGroup);
+const sortBy = ref(userProjectManagementSetting?.sort_by === null ? undefined : userProjectManagementSetting?.sort_by);
 
+const showProjectStateFilter = ref(true);
+
+// Grid wird 1x berechnet und an Zeilen weitergegeben → weniger Recalcs
 const gridTemplateColumns = computed(() =>
     props.components
         .map((component) => {
-            if (component.type === 'ProjectTitleComponent') {
-                return '20rem'; // w-80
-            } else if (component.type === 'ActionsComponent') {
-                return '5rem'; // Automatisch anpassen
-            } else {
-                return '14rem'; // w-56
-            }
+            if (component.type === "ProjectTitleComponent") return "20rem";
+            if (component.type === "ActionsComponent") return "5rem";
+            return "14rem";
         })
-        .join(' ')
+        .join(" ")
 );
 
-
-
 const checkIfComponentIsVisible = (component) => {
-    if (
-        component?.type === 'ProjectTitleComponent' ||
-        component?.type === 'ActionsComponent' ||
-        component?.type === null
-    ) {
-        return true;
-    } else {
-        return canSeeComponent(component.component);
-    }
-}
-
-const openCreateProjectModal = () => {
-    createProject.value = true;
+    if (component?.type === "ProjectTitleComponent" || component?.type === "ActionsComponent" || component?.type === null) return true;
+    return canSeeComponent(component.component);
 };
 
+// Headbar Aktionen
+const openCreateProjectModal = () => (createProject.value = true);
 const closeCreateProjectModal = (showSuccessModalFlag) => {
     createProject.value = false;
-    if (showSuccessModalFlag) {
-        showAddBulkEventModal.value = true;
-    }
+    if (showSuccessModalFlag) showAddBulkEventModal.value = true;
 };
-
+const toggleMyProjects = () => {
+    showOnlyMyProjects.value = !showOnlyMyProjects.value;
+    applyFiltersAndSort();
+};
 const closeEditProjectModal = () => {
     editingProject.value = false;
     projectToEdit.value = null;
 };
-
-
 const closeSearchbar = () => {
     showSearchbar.value = !showSearchbar.value;
-    project_search.value = '';
+    project_search.value = "";
 };
-
 const openSearchbar = () => {
     showSearchbar.value = !showSearchbar.value;
     nextTick(() => {
-        if (showSearchbar.value) {
-            document.querySelector('#searchBarInput')?.focus();
-        }
+        if (showSearchbar.value) document.querySelector("#searchBarInput")?.focus();
     });
 };
-
-const closeSuccessModal = () => {
-    showSuccessModal.value = false;
-    nameOfDeletedProject.value = "";
-    closeSearchbar();
-};
-
-
 const closeSuccessModal2 = () => {
     showSuccessModal2.value = false;
-    closeSearchbar();
+    if (showSearchbar.value) closeSearchbar();
 };
-
-
 const closeProjectHistoryModal = () => {
     showProjectHistory.value = false;
     projectHistoryToDisplay.value = [];
 };
+const openExportModal = () => (showExportModal.value = true);
 
-const openExportModal = () => {
-    showExportModal.value = true;
-};
-
+// Filter/Sort -> laden mit Skeleton
 const applyFiltersAndSort = (resetPage = true) => {
-    router.post(route('projects.filter'), {
-        project_state_ids: props.states.filter((state) => state.clicked).map((state) => state.id),
-        project_filters: {
-            showOnlyMyProjects: getTruthyOrUndefined(showOnlyMyProjects.value),
-            showProjectGroups: getTruthyOrUndefined(showProjectGroups.value),
-            showProjects: getTruthyOrUndefined(showProjects.value),
-            showExpiredProjects: getTruthyOrUndefined(showExpiredProjects.value),
-            showFutureProjects: getTruthyOrUndefined(showFutureProjects.value),
-            showProjectsWithoutEvents: getTruthyOrUndefined(showProjectsWithoutEvents.value),
-            showOnlyProjectsWithoutGroup: getTruthyOrUndefined(showOnlyProjectsWithoutGroup.value),
+    isLoading.value = true;
+    router.post(
+        route("projects.filter"),
+        {
+            project_state_ids: props.states.filter((s) => s.clicked).map((s) => s.id),
+            project_filters: {
+                showOnlyMyProjects: getTruthyOrUndefined(showOnlyMyProjects.value),
+                showProjectGroups: getTruthyOrUndefined(showProjectGroups.value),
+                showProjects: getTruthyOrUndefined(showProjects.value),
+                showExpiredProjects: getTruthyOrUndefined(showExpiredProjects.value),
+                showFutureProjects: getTruthyOrUndefined(showFutureProjects.value),
+                showProjectsWithoutEvents: getTruthyOrUndefined(showProjectsWithoutEvents.value),
+                showOnlyProjectsWithoutGroup: getTruthyOrUndefined(showOnlyProjectsWithoutGroup.value),
+            },
+            sort: sortBy.value,
         },
-        sort: sortBy.value,
-    }, {
-        preserveState: false,
-        onSuccess: () => {
-            reloadProjects(resetPage);
-        },
-    });
+        {
+            preserveState: false,
+            onStart: () => (isLoading.value = true),
+            onFinish: () => (isLoading.value = false),
+            onSuccess: () => reloadProjects(resetPage),
+        }
+    );
 };
 
 const resetFilter = () => {
-    // Reset all local reactive filter variables
     showOnlyMyProjects.value = false;
     showProjectGroups.value = false;
     showProjects.value = false;
@@ -548,18 +519,19 @@ const resetFilter = () => {
     showProjectsWithoutEvents.value = false;
     showOnlyProjectsWithoutGroup.value = false;
 
-    // Reset project state checkboxes
-    props.states.forEach((state) => {
-        state.clicked = false;
-    });
+    props.states.forEach((s) => (s.clicked = false));
 
-    router.post(route('projects.filter'), {
+    isLoading.value = true;
+    router.post(route("projects.filter"), {
         page: 1,
         entitiesPerPage: perPage.value,
         query: route().params.query,
         project_states: undefined,
         project_filters: undefined,
         sort: sortBy.value,
+    }, {
+        onStart: () => (isLoading.value = true),
+        onFinish: () => (isLoading.value = false),
     });
 };
 
@@ -581,32 +553,30 @@ const changeEntitiesPerPage = (entitiesPerPage) => {
 
 const getTruthyOrUndefined = (value) => (value ? 1 : undefined);
 
+// Reload (wird von applyFiltersAndSort etc. getriggert)
 const reloadProjects = (resetPage = true) => {
     router.reload({
-        only: ['projects', 'pinnedProjects', 'projectComponents', 'components', 'pinnedProjectsAll'],
+        only: ["projects", "pinnedProjects", "projectComponents", "components", "pinnedProjectsAll"],
         data: {
             page: resetPage ? 1 : page.value,
             entitiesPerPage: perPage.value,
             query: project_search.value,
         },
+        onStart: () => (isLoading.value = true),
+        onFinish: () => (isLoading.value = false),
     });
 };
 
-const reloadProjectsDebounced = debounce(reloadProjects, 1000);
+// Debounced search
+const reloadProjectsDebounced = debounce(reloadProjects, 800);
+watch(project_search, () => reloadProjectsDebounced());
 
-const showDropFeedback = () => {
-    dropFeedbackShown.value = true;
-    setTimeout(() => {
-        dropFeedbackShown.value = false;
-    }, 3000);
-};
-
+// Export-Konfig
 const getExportModalConfiguration = () => ({
-    [exportTabEnums.EXCEL_EVENT_LIST_EXPORT]: {
-        show_artists: props.createSettings.show_artists,
-    },
+    [exportTabEnums.EXCEL_EVENT_LIST_EXPORT]: { show_artists: props.createSettings.show_artists },
 });
 
+// States (unverändert)
 const computedStates = computed(() => {
     if (props.userProjectManagementSetting) {
         props.states.forEach((state) => {
@@ -615,32 +585,4 @@ const computedStates = computed(() => {
     }
     return props.states;
 });
-
-const computedStateTags = computed(() => {
-    return computedStates.value.filter((state) =>
-        props.userProjectManagementSetting.project_state_ids.includes(state.id)
-    );
-});
-
-const historyTabs = computed(() => [
-    {
-        name: 'Project',
-        href: '#',
-        current: showProjectHistoryTab.value,
-    },
-    {
-        name: 'Budget',
-        href: '#',
-        current: showBudgetHistoryTab.value,
-    },
-]);
-
-// watch on project_search
-watch(project_search, (value) => {
-    reloadProjectsDebounced();
-});
 </script>
-
-<style scoped>
-
-</style>

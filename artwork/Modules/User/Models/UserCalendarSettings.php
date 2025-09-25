@@ -62,7 +62,8 @@ class UserCalendarSettings extends Model
         'hide_unoccupied_rooms',
         'display_project_groups',
         'show_unplanned_events',
-        'show_planned_events'
+        'show_planned_events',
+        'hide_unoccupied_days'
     ];
 
     protected $casts = [
@@ -84,6 +85,7 @@ class UserCalendarSettings extends Model
         'display_project_groups' => 'boolean',
         'show_unplanned_events' => 'boolean',
         'show_planned_events' => 'boolean',
+        'hide_unoccupied_days' => 'boolean',
     ];
 
     public function user(): BelongsTo

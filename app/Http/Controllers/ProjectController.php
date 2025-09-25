@@ -124,6 +124,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Event\Services\SubEventService;
+use Artwork\Modules\Shift\Services\SingleShiftPresetService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelineRequest;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelinesRequest;
@@ -186,6 +187,7 @@ class ProjectController extends Controller
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
         private readonly UserProjectManagementSettingService $userFilterAndSortSettingService,
         private readonly ProjectPrintLayoutService $projectPrintLayoutService,
+        protected readonly SingleShiftPresetService $singleShiftPresetService,
     ) {
     }
 
@@ -1684,7 +1686,9 @@ class ProjectController extends Controller
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
                     ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
                     ->first();
-                $sum = (float)$firstColumn->value + (float)$secondColumn->value;
+                $firstDecimal = str_replace(',', '.', $firstColumn->value ?: '0');
+                $secondDecimal = str_replace(',', '.', $secondColumn->value ?: '0');
+                $sum = bcadd($firstDecimal, $secondDecimal, 2);
                 ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
@@ -1711,7 +1715,9 @@ class ProjectController extends Controller
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
                     ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
                     ->first();
-                $sum = (float)$firstColumn->value - (float)$secondColumn->value;
+                $firstDecimal = str_replace(',', '.', $firstColumn->value ?: '0');
+                $secondDecimal = str_replace(',', '.', $secondColumn->value ?: '0');
+                $sum = bcsub($firstDecimal, $secondDecimal, 2);
                 ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
@@ -1969,12 +1975,16 @@ class ProjectController extends Controller
                 ->first();
 
             if ($column->type === 'sum') {
-                $sum = (float)$firstRowValue + (float)$secondRowValue;
+                $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
+                $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
+                $sum = bcadd($firstDecimal, $secondDecimal, 2);
                 $updateColumn->update([
                     'value' => $sum
                 ]);
             } else {
-                $sum = (float)$firstRowValue - (float)$secondRowValue;
+                $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
+                $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
+                $sum = bcsub($firstDecimal, $secondDecimal, 2);
                 $updateColumn->update([
                     'value' => $sum
                 ]);
@@ -2237,6 +2247,7 @@ class ProjectController extends Controller
 
                 case ProjectTabComponentEnum::SHIFT_TAB->value:
                     $this->loadShiftTabData($headerObject, $project);
+                    $this->singleShiftPresetService->shareSingleShiftPresets();
                     $loadedProjectInformation['ShiftTab'] = $this->projectTabService->getShiftTab(
                         $project,
                         $shiftQualificationService,

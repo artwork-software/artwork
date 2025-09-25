@@ -1,6 +1,6 @@
 <template>
     <div v-if="project.state">
-        <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-xs ml-2 mb-1 inline-flex border"
+        <span class="rounded-full items-center font-medium px-3 py-1 text-xs inline-flex border"
             :class="isColorCloseToWhite(project.state.color) ? 'text-black' : 'text-white'"
               :style="{backgroundColor: backgroundColorWithOpacity(project.state.color), color: TextColorWithDarken(project.state.color), borderColor: TextColorWithDarken(project.state.color)}">
             {{ project?.state?.name }}

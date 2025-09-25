@@ -1,5 +1,5 @@
 <template>
-    <div class="border-gray-200 mb-5">
+    <div class="border-gray-200">
         <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
             <Link v-for="tab in tabs" :key="tab?.name"
                   :href="tab.href"

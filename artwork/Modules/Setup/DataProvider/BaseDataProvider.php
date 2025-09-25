@@ -445,6 +445,15 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipKey' => "Allows disposition and management of inventory",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::SHIFT_SETTINGS_VIEW_EDIT->value,
+                'name_de' => "Schichteinstellungen einsehen und bearbeiten",
+                'translation_key' => "View and edit shift settings",
+                'group' => 'Shifts',
+                'tooltipText' => "Erlaubt das Einsehen und Bearbeiten der Schichteinstellungen",
+                'tooltipKey' => "Allows viewing and editing shift settings",
+                'checked' => false
+            ],
         ];
     }
 

@@ -7,8 +7,7 @@
                     {{$t('Define global settings for shift scheduling.')}}
                 </div>
             </div>
-            <TabComponent :tabs="tabs" />
-
+            <ShiftSettingTabs />
             <div class="card glassy p-5 my-10">
                 <div class="card white p-5">
 
@@ -346,11 +345,17 @@ import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import Button from "@/Jetstream/Button.vue";
 import {IconGripVertical, IconPlus} from "@tabler/icons-vue";
+import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
+import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
+import ShiftSettingTabs from "@/Pages/Settings/Components/ShiftSettingTabs.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
+        ShiftSettingTabs,
+        ShiftTabs,
+        BaseTabs,
         Button, XIcon,
         UserSearch,
         GlassyIconButton,
@@ -421,36 +426,7 @@ export default defineComponent({
                 users: this.shiftCommitWorkflowUsers.map(user => user.id) || []
             }),
             deleteType: '',
-            tabs: [
-                {
-                    name: this.$t('Shift Settings'),
-                    href: route('shift.settings'),
-                    current: route().current('shift.settings'),
-                    show: true,
-                    icon: 'IconCalendarUser'
-                },
-                {
-                    name: this.$t('Day Services'),
-                    href: route('day-service.index'),
-                    current: route().current('day-service.index'),
-                    show: true,
-                    icon: 'IconHours24'
-                },
-                {
-                    name: this.$t('Work Time Pattern'),
-                    href: route('shift.work-time-pattern'),
-                    current: route().current('shift.work-time-pattern'),
-                    show: true,
-                    icon: 'IconClockCog'
-                },
-                {
-                    name: this.$t('User Contracts'),
-                    href: route('user-contract-settings.index'),
-                    current: route().current('user-contract-settings.index'),
-                    show: true,
-                    icon: 'IconContract'
-                }
-            ]
+
         }
     },
     computed: {

@@ -201,13 +201,15 @@
                                       icon-size="h-7 w-7" @click="openHistoryModal()"/>
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" :icon="IconArrowsDiagonal"
                                       icon-size="h-7 w-7" v-if="!isFullscreen" @click="enterFullscreenMode"/>
+
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" :icon="IconCalendarStar"
+                                      icon-size="h-7 w-7" @click="showCalendarAboSettingModal = true"/>
                     <!--<ShiftPlanFilter
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
                         :user_filters="user_filters"
                         :crafts="crafts"
                     />-->
-
                 </div>
             </div>
         </div>
@@ -238,6 +240,8 @@
         in-shift-plan
     />
 
+    <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal" :eventTypes="eventTypes"/>
+    <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" is_shift_calendar_abo />
 
 </template>
 
@@ -258,7 +262,7 @@ import {
     IconCalendarWeek,
     IconCalendar,
     IconChevronRight,
-    IconChevronRightPipe, IconGeometry, IconArrowsDiagonal, IconHistory, IconCalendarCheck,
+    IconChevronRightPipe, IconGeometry, IconArrowsDiagonal, IconHistory, IconCalendarCheck, IconCalendarStar,
 } from "@tabler/icons-vue";
 
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
@@ -273,6 +277,8 @@ import {usePermission} from "@/Composeables/Permission.js";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
+import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
+import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 const {hasAdminRole, can} = usePermission(usePage().props);
 
 const props = defineProps({
@@ -285,7 +291,8 @@ const props = defineProps({
     user_filters: Object,
     crafts: Array,
     projectNameUsedForProjectTimePeriod: String,
-    firstProjectShiftTabId: [Number, String]
+    firstProjectShiftTabId: [Number, String],
+    eventTypes: Array
 });
 
 const emit = defineEmits(['enterFullscreenMode', 'previousTimeRange', 'nextTimeRange', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode']);
@@ -294,6 +301,8 @@ const emit = defineEmits(['enterFullscreenMode', 'previousTimeRange', 'nextTimeR
 const showConfirmCommitModal = ref(false);
 const showShiftCommitDateSelectModal = ref(false);
 const showCalendarSettingsModal = ref(false);
+const showCalendarAboInfoModal = ref(false);
+const showCalendarAboSettingModal = ref(false);
 const showCalendarFilterModal = ref(false);
 const scrollDays = ref(1);
 const projectSearch = ref('');
@@ -578,6 +587,13 @@ watch(() => usePage().props.auth.user.calendar_settings.use_project_time_period,
         });
     }
 });
+
+const closeCalendarAboSettingModal = (bool) => {
+    showCalendarAboSettingModal.value = false;
+    if(bool){
+        showCalendarAboInfoModal.value = true;
+    }
+}
 </script>
 
 <style scoped>

@@ -9,7 +9,7 @@
 
             <div class="flex items-center" v-if="element.deletable">
                 <BaseMenu has-no-offset>
-                    <BaseMenuItem title="Delete" :icon="IconTrash" @click="showDeleteConfirmationModal = true" />
+                    <BaseMenuItem whiteMenuBackground title="Delete" :icon="IconTrash" @click="showDeleteConfirmationModal = true" />
                 </BaseMenu>
             </div>
         </div>

@@ -1,473 +1,565 @@
 <template>
-    <BaseModal @closed="closeUserModal" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
-            <div class="mx-4">
-                <div class="mt-8 headline1">
-                    {{ $t('Invite users') }}
+    <ArtworkBaseModal
+        @close="handleClose(false)"
+        :title="$t('Invite users')"
+        :description="$t('You can invite several users with the same user permissions and team memberships at once.')"
+    >
+        <div class="mx-4">
+            <!-- Emails -->
+            <div class="mt-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <div class="col-span-4">
+                        <TextInputComponent
+                            id="email"
+                            v-model="emailInput"
+                            :label="$t('E-Mail*')"
+                            required
+                            @keyup.enter.prevent="addEmailsFromInput"
+                            @keydown.prevent="onEmailDel"
+                            @blur="addEmailsFromInput"
+                            autocomplete="off"
+                            placeholder="max@example.com, anna@firma.de …"
+                        />
+                    </div>
+                    <div class="col-span-1 flex items-center justify-center">
+                        <button
+                            :disabled="!emailInput"
+                            @click="addEmailsFromInput"
+                            class="rounded-full mt-1 inline-flex items-center p-2 text-white transition
+                     disabled:opacity-50 disabled:cursor-not-allowed
+                     bg-blue-600 hover:bg-blue-700 focus-visible:outline focus-visible:outline-2
+                     focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                            aria-label="Add email"
+                        >
+                            <CheckIcon class="h-5 w-5" />
+                        </button>
+                    </div>
                 </div>
-                <div class="xsLight my-3">
-                    {{ $t('You can invite several users with the same user permissions and team memberships at once.') }}
+
+                <JetInputError :message="form.error" class="mt-2" />
+
+                <ul v-if="showInvalidEmailErrorText" class="mt-2">
+                    <li class="text-red-600 text-xs">
+                        {{ $t('This is not a valid e-mail address.') }}
+                    </li>
+                </ul>
+
+                <p v-if="helpText" class="text-red-600 text-xs mt-2">{{ helpText }}</p>
+
+                <!-- Chips -->
+                <div class="mt-3 flex flex-wrap gap-2">
+          <span
+              v-for="(email, i) in form.user_emails"
+              :key="email + i"
+              class="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-sm text-zinc-800"
+          >
+            {{ email }}
+            <button
+                type="button"
+                @click="removeEmail(i)"
+                class="rounded p-0.5 text-zinc-500 hover:text-red-600 hover:bg-red-50 transition"
+                :aria-label="$t('Remove email from invitation')"
+            >
+              <XCircleIcon class="h-4 w-4" />
+            </button>
+          </span>
                 </div>
-                <div class="mt-6">
-                    <div class="grid grid-cols-1 md:grid-cols-5">
-                        <div class="col-span-4">
-                            <TextInputComponent id="email" v-model="emailInput" label="E-Mail*"
-                                                @keyup.enter="addEmailToInvitationArray" required/>
-                        </div>
-                        <div class="col-span-1">
-                            <div class="flex items-center h-full justify-center">
-                                <button
-                                    :class="[emailInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
-                                    @click="addEmailToInvitationArray" :disabled="!emailInput">
-                                    <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
-                                </button>
-                            </div>
-                        </div>
-                        <jet-input-error :message="form.error" class="mt-2"/>
 
-                    </div>
-                    <ul v-if="showInvalidEmailErrorText">
-                        <li class="errorText">{{ $t('This is not a valid e-mail address.')}}</li>
-                    </ul>
-                    <span v-if="helpText.length > 0" class="text-red-500 text-xs mt-1">
-                        {{ helpText }}
-                    </span>
-                    <span v-for="(email,index) in form.user_emails"
-                          class="flex mr-1 rounded-full items-center sDark">
-                            {{ email }}
-                    <button type="button" @click="deleteEmailFromInvitationArray(index)">
-                    <span class="sr-only">{{ $t('Remove email from invitation')}}</span>
-                        <IconCircleX stroke-width="1.5"
-                            class="ml-1 mt-1 h-5 w-5 hover:text-error "/>
-                    </button>
-                    </span>
-                    <ul class="mt-4">
-                        <li class="errorText" v-for="(error,key) in errors" :key="key">
-                            {{ error }}
-                        </li>
-                    </ul>
-                    <div class="flex my-3" v-if="form.departments.length > 0">
-                        <TeamIconCollection v-for="(team, index) in form.departments" class="h-14 w-14 rounded-full ring-2 ring-white object-cover" :class="index !== 0 ? '-ml-5' : ''" :iconName="team.svg_name"/>
-                    </div>
-                    <Disclosure as="div">
-                        <div class="flex mb-4">
-                            <DisclosureButton>
-                                <AddButtonSmall :text="$t('Assign to teams')"/>
-                            </DisclosureButton>
-                            <div v-if="this.$page.props.show_hints && form.departments.length === 0" class="flex mt-2">
-                                <SvgCollection svgName="arrowLeft" class="mt-2 ml-2"/>
-                                <span class="hind ml-1 my-auto">{{ $t('Assign users directly to your teams')}}</span>
-                            </div>
-                        </div>
-                        <transition enter-active-class="transition-enter-active"
-                                    enter-from-class="transition-enter-from"
-                                    enter-to-class="transition-enter-to"
-                                    leave-active-class="transition-leave-active"
-                                    leave-from-class="transition-leave-from"
-                                    leave-to-class="transition-leave-to">
-                            <DisclosurePanel
-                                class="origin-top-right absolute z-30 overflow-y-auto max-h-48 w-72 rounded-lg shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                <div v-if="departments.length === 0">
-                                    <span class="text-secondary p-1 ml-4 flex flex-nowrap">{{$t('No teams available for assignment')}}</span>
-                                </div>
-                                <div v-for="team in departments">
-                                        <span class="flex "
-                                              :class="[team.checked ? 'text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-md subpixel-antialiased']">
-                                            <input :key="team.name" v-model="team.checked" type="checkbox"
-                                                   @change="teamChecked(team)"
-                                                   class="input-checklist-dark mr-3"/>
-                                            <TeamIconCollection class="h-9 w-9 rounded-full" :iconName="team.svg_name"/>
-                                            <span class="ml-2">
-                                            {{ team.name }}
-                                            </span>
-                                        </span>
-                                </div>
-                            </DisclosurePanel>
-                        </transition>
-                    </Disclosure>
-                    <div class="pb-5 my-2 border-gray-200 sm:pb-0">
-                        <h3 class="mt-6 mb-8 headline2">{{ $t('Define user permissions')}}</h3>
-                        <div class="mb-8">
-                            <div v-for="role in roles">
-                                <div class="relative flex w-full">
-                                    <div class="flex h-6 items-center">
-                                        <input v-model="role.checked"
-                                               @change="changeRole(role)"
-                                               :name="role.translation_key"
-                                               :id="role.translation_key"
-                                               type="checkbox"
-                                               class="input-checklist"
-                                        />
-                                    </div>
-                                    <div class="ml-3 w-full text-sm flex items-center justify-between">
-                                        <label :for="role.translation_key" class="font-medium text-gray-900 w-5/6">
-                                            {{ $t(role.translation_key)}}
-                                        </label>
+                <!-- Server errors -->
+                <ul class="mt-4">
+                    <li class="text-red-600 text-xs" v-for="(error, key) in errors" :key="key">{{ error }}</li>
+                </ul>
+            </div>
 
-                                        <ToolTipDefault :top="true" :tooltip-text="$t(role.tooltipKey)" />
-                                    </div>
-                                </div>
-                            </div>
+            <!-- Teams -->
+            <div class="mt-6">
+                <Disclosure as="div">
+                    <div class="mb-3 flex items-center gap-3">
+                        <DisclosureButton>
+                            <AddButtonSmall :text="$t('Assign to teams')" />
+                        </DisclosureButton>
+
+                        <div v-if="page.props.show_hints && selectedDepartments.length === 0" class="flex items-center gap-1 text-zinc-500">
+                            <SvgCollection svgName="arrowLeft" class="h-4 w-4" />
+                            <span class="text-xs">{{ $t('Assign users directly to your teams') }}</span>
                         </div>
-                    </div>
-                    <div v-if="!this.form.roles.includes('artwork admin')" class="pb-5 my-2 border-gray-200 sm:pb-0">
-                        <div v-on:click="showPresets = !showPresets">
-                            <h2 class="flex headline6Light cursor-pointer mb-2">
-                                {{$t('Permission presets')}}
-                                <IconChevronUp stroke-width="1.5" v-if="showPresets"
-                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronUp>
-                                <IconChevronDown stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronDown>
-                            </h2>
-                        </div>
-                        <div class="mb-8 flex flex-col" v-if="showPresets">
-                            <div v-if="permission_presets.length > 0"
-                                 v-for="preset in permission_presets">
-                                <div class="relative flex w-full mb-2">
-                                    <div class="flex h-6 items-center">
-                                        <input v-model="preset.checked"
-                                               @change="usePreset(preset)"
-                                               :id="preset.name"
-                                               :name="preset.name"
-                                               type="checkbox"
-                                               class="input-checklist"
-                                        />
-                                    </div>
-                                    <div class="ml-3 w-full text-sm flex items-center justify-between">
-                                        <label :for="preset.name" class="font-medium text-gray-900 w-5/6">
-                                            {{ preset.name }}
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div v-else
-                                 class="xsLight">
-                                {{ $t('No permission presets have been created yet.')}}
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="!this.form.roles.includes('artwork admin')">
-                        <div v-on:click="showUserPermissions = !showUserPermissions">
-                            <h2 class="flex headline6Light cursor-pointer mb-2">
-                                {{$t('User permissions')}}
-                                <IconChevronUp stroke-width="1.5" v-if="showUserPermissions"
-                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronUp>
-                                <IconChevronDown stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronDown>
-                            </h2>
-                        </div>
-                        <div v-if="showUserPermissions && this.form.role !== 'admin'"
-                             class="flex flex-col">
-                            <div v-for="(group, groupName) in this.computedGroupedPermissions"
-                                 v-show="group.shown"
+
+                        <div class="ml-auto flex -space-x-3" v-if="selectedDepartments.length">
+                            <TeamIconCollection
+                                v-for="(t, idx) in selectedDepartments.slice(0, 4)"
+                                :key="t.id + '-' + idx"
+                                class="h-9 w-9 rounded-full ring-2 ring-white"
+                                :iconName="t.svg_name"
+                            />
+                            <div
+                                v-if="selectedDepartments.length > 4"
+                                class="h-9 w-9 rounded-full ring-2 ring-white bg-zinc-800 text-white text-xs flex items-center justify-center"
                             >
-                                <div class="flex items-center justify-between">
-                                    <h3 class="headline6Light mb-2 mt-3">{{ groupName }}</h3>
-                                    <div class="text-xs underline text-artwork-buttons-create cursor-pointer" @click="checkOrUncheckAllPermissionsOfGroup(group)">
-                                        {{ group.permissions.some(permission => permission.checked) ? $t('Deselect all') : $t('Select all') }}
-                                    </div>
-                                </div>
-                                <div class="relative w-full flex items-center mb-2" v-for="(permission, index) in group.permissions" :key=index>
-                                    <div class="relative flex w-full">
-                                        <div class="flex h-6 items-center">
-                                            <input v-model="permission.checked"
-                                                   @change="changePermission(permission)"
-                                                   :id="permission.translation_key"
-                                                   :name="permission.translation_key"
-                                                   type="checkbox"
-                                                   class="input-checklist"
-                                            />
-                                        </div>
-                                        <div class="ml-3 w-full text-sm flex items-center justify-between">
-                                            <label :for="permission.translation_key" class="font-medium text-gray-900 w-5/6">
-                                                {{ $t(permission.translation_key)}}
-                                            </label>
-
-                                            <ToolTipDefault :top="true" :tooltip-text="$t(permission.tooltipKey)" />
-                                        </div>
-                                    </div>
-                                </div>
+                                +{{ selectedDepartments.length - 4 }}
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="w-full items-center text-center">
-                    <FormButton
-                        class="mt-5"
-                        @click="addUser"
-                        :disabled="form.processing || (form.user_emails.length === 0)"
-                        :text="$t('Invite')"
-                    />
+
+                    <transition
+                        enter-active-class="transition ease-out duration-150"
+                        enter-from-class="opacity-0 -translate-y-1"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition ease-in duration-100"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-1"
+                    >
+                        <DisclosurePanel
+                            class="relative z-30 max-h-56 w-80 overflow-y-auto rounded-xl bg-white p-2 ring-1 ring-zinc-200 shadow-lg"
+                        >
+                            <div v-if="deptLocal.length === 0" class="px-3 py-2 text-sm text-zinc-500">
+                                {{ $t('No teams available for assignment') }}
+                            </div>
+
+                            <label
+                                v-for="team in deptLocal"
+                                :key="team.id"
+                                class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-zinc-50"
+                            >
+                                <input
+                                    type="checkbox"
+                                    class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                    v-model="team.checked"
+                                    @change="onTeamToggle(team)"
+                                />
+                                <TeamIconCollection class="h-7 w-7 rounded-full ring-2 ring-white" :iconName="team.svg_name" />
+                                <span :class="team.checked ? 'text-zinc-900 font-medium' : 'text-zinc-600'">{{ team.name }}</span>
+                            </label>
+                        </DisclosurePanel>
+                    </transition>
+                </Disclosure>
+            </div>
+
+            <!-- Roles -->
+            <div class="mt-8">
+                <h3 class="mb-4 text-base font-semibold text-zinc-900">{{ $t('Define user permissions') }}</h3>
+
+                <div class="space-y-2">
+                    <div
+                        v-for="role in rolesLocal"
+                        :key="role.name"
+                        class="flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2"
+                    >
+                        <label class="flex items-center gap-3 text-sm">
+                            <input
+                                type="checkbox"
+                                class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                v-model="role.checked"
+                                @change="onRoleToggle(role)"
+                                :name="role.translation_key"
+                                :id="role.translation_key"
+                            />
+                            <span class="text-zinc-900">{{ $t(role.translation_key) }}</span>
+                        </label>
+                        <ToolTipDefault top :tooltip-text="$t(role.tooltipKey)" />
+                    </div>
                 </div>
             </div>
 
-        </BaseModal>
+            <!-- Presets -->
+            <div v-if="!form.roles.includes('artwork admin')" class="mt-8">
+                <button
+                    class="mb-2 flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-left text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+                    @click="showPresets = !showPresets"
+                    type="button"
+                >
+                    <span>{{ $t('Permission presets') }}</span>
+                    <component :is="showPresets ? ChevronUpIcon : ChevronDownIcon" class="h-4 w-4" />
+                </button>
+
+                <div v-if="showPresets" class="space-y-2">
+                    <div
+                        v-if="presetsLocal.length > 0"
+                        v-for="preset in presetsLocal"
+                        :key="preset.id"
+                        class="flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2"
+                    >
+                        <label class="flex items-center gap-3 text-sm">
+                            <input
+                                type="checkbox"
+                                class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                v-model="preset.checked"
+                                @change="applyPreset(preset)"
+                                :id="`preset-${preset.id}`"
+                                :name="preset.name"
+                            />
+                            <span class="text-zinc-900">{{ preset.name }}</span>
+                        </label>
+                    </div>
+                    <div v-else class="text-sm text-zinc-500">
+                        {{ $t('No permission presets have been created yet.') }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permissions -->
+            <div v-if="!form.roles.includes('artwork admin')" class="mt-8">
+                <button
+                    class="mb-2 flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-left text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+                    @click="showUserPermissions = !showUserPermissions"
+                    type="button"
+                >
+                    <span>{{ $t('User permissions') }}</span>
+                    <component :is="showUserPermissions ? ChevronUpIcon : ChevronDownIcon" class="h-4 w-4" />
+                </button>
+
+                <div v-if="showUserPermissions" class="space-y-6">
+                    <!-- Search within permissions -->
+                    <div class="relative">
+                        <input
+                            v-model="permQuery"
+                            type="text"
+                            :placeholder="$t('Search permissions…')"
+                            class="h-9 w-full rounded-lg border border-zinc-300 bg-white px-9 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none ring-0 transition focus:border-zinc-400 focus:bg-zinc-50"
+                        />
+                        <SearchIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                        <button
+                            v-if="permQuery"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700"
+                            @click="permQuery = ''"
+                            aria-label="Clear permission search"
+                        >
+                            <XIcon class="h-4 w-4" />
+                        </button>
+                    </div>
+
+                    <div
+                        v-for="(group, groupName) in filteredGroupedPermissions"
+                        :key="groupName"
+                        v-show="group.shown && group.permissions.length"
+                        class="rounded-xl border border-zinc-200 bg-white p-3"
+                    >
+                        <div class="mb-2 flex items-center justify-between">
+                            <h4 class="text-xs font-semibold uppercase tracking-wide text-zinc-600">{{ $t(groupName) }}</h4>
+                            <button
+                                class="text-xs underline text-blue-600 hover:text-blue-700"
+                                @click="toggleWholeGroup(group)"
+                            >
+                                {{
+                                    group.permissions.some(p => p.checked)
+                                        ? $t('Deselect all')
+                                        : $t('Select all')
+                                }}
+                            </button>
+                        </div>
+
+                        <div class="divide-y divide-dashed divide-zinc-200">
+                            <div
+                                v-for="perm in group.permissions"
+                                :key="perm.name"
+                                class="flex items-center justify-between py-2"
+                            >
+                                <label class="flex items-center gap-3 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                        v-model="perm.checked"
+                                        @change="onPermissionToggle(perm)"
+                                        :id="perm.translation_key"
+                                        :name="perm.translation_key"
+                                    />
+                                    <span :class="perm.checked ? 'text-zinc-900' : 'text-zinc-600'">
+                    {{ $t(perm.translation_key) }}
+                  </span>
+                                </label>
+                                <ToolTipDefault top :tooltip-text="$t(perm.tooltipKey)" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="w-full text-center">
+                <FormButton
+                    class="mt-6"
+                    :text="$t('Invite')"
+                    :disabled="form.processing || form.user_emails.length === 0"
+                    @click="submit"
+                />
+            </div>
+        </div>
+    </ArtworkBaseModal>
 </template>
-<script>
 
-import Permissions from "@/Mixins/Permissions.vue";
-import JetDialogModal from '@/Jetstream/DialogModal.vue'
+<script setup>
+import { ref, computed, reactive, getCurrentInstance } from 'vue'
+import { useForm, usePage } from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import TextInputComponent from '@/Components/Inputs/TextInputComponent.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import {XIcon} from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from '@heroicons/vue/solid'
-import Checkbox from "@/Layouts/Components/Checkbox.vue";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {useForm} from "@inertiajs/vue3";
-import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import AddButtonSmall from '@/Layouts/Components/General/Buttons/AddButtonSmall.vue'
+import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
+import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
+import ToolTipDefault from '@/Components/ToolTips/ToolTipDefault.vue'
+import SvgCollection from '@/Layouts/Components/SvgCollection.vue'
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon } from '@heroicons/vue/solid'
+import { XIcon, SearchIcon } from '@heroicons/vue/outline'
 
-export default {
-    name: "InviteUsersModal",
-    mixins: [Permissions, IconLib],
-    components: {
-        TextInputComponent,
-        BaseModal,
-        ToolTipDefault,
-        FormButton,
-        AddButtonSmall,
-        JetDialogModal,
-        JetInputError,
-        XIcon,
-        ChevronDownIcon,
-        ChevronUpIcon,
-        Checkbox,
-        CheckIcon,
-        XCircleIcon,
-        TeamIconCollection,
-        Disclosure,
-        DisclosureButton,
-        DisclosurePanel,
-        SvgCollection
-    },
-    props: {
-        show: Boolean,
-        closeModal: Function,
-        all_permissions: Object,
-        departments: Array,
-        roles: Array,
-        permission_presets: Array,
-        users: Array,
-        invitedUsers: Array,
-    },
-    data() {
-        return {
-            showUserPermissions: true,
-            addingUser: false,
-            deletingUser: false,
-            showSuccessModal: false,
-            userToDelete: {},
-            emailInput: "",
-            showSearchbar: false,
-            user_query: "",
-            user_search_results: [],
-            showPresets: true,
-            form: useForm({
-                user_emails: [],
-                permissions: [],
-                departments: [],
-                roles: [],
-            }),
-            showGlobalRoles: true,
-            showInvalidEmailErrorText: false,
-            usedPermissionPresets: [],
-            helpText: "",
+/* Props */
+const props = defineProps({
+    show: Boolean,
+    closeModal: Function,
+    all_permissions: { type: Object, required: true }, // { groupName: [ {id, name, translation_key, tooltipKey}, ... ] }
+    departments: { type: Array, default: () => [] },   // [{id, name, svg_name}]
+    roles: { type: Array, default: () => [] },         // [{name, translation_key, tooltipKey}]
+    permission_presets: { type: Array, default: () => [] }, // [{id, name, permissions:[ids]}]
+    users: { type: Array, default: () => [] },         // for dedupe email check
+    invitedUsers: { type: Array, default: () => [] }
+})
+
+/* i18n helper */
+const { proxy } = getCurrentInstance()
+const $t = (k, v) => proxy.$t(k, v)
+
+/* Page */
+const page = usePage()
+
+/* UI state */
+const emailInput = ref('')
+const helpText = ref('')
+const showInvalidEmailErrorText = ref(false)
+
+const showPresets = ref(true)
+const showUserPermissions = ref(true)
+const permQuery = ref('')
+
+/* Form */
+const form = useForm({
+    user_emails: [],
+    permissions: [],
+    departments: [],
+    roles: []
+})
+
+/* Errors */
+const errors = computed(() => page.props?.errors || {})
+
+/* Local copies to avoid mutating props */
+const deptLocal = reactive((props.departments || []).map(d => ({ ...d, checked: false })))
+const rolesLocal = reactive((props.roles || []).map(r => ({ ...r, checked: false })))
+const presetsLocal = reactive((props.permission_presets || []).map(p => ({ ...p, checked: false })))
+
+/* Selected departments (derived) */
+const selectedDepartments = computed(() => deptLocal.filter(d => d.checked))
+
+/* Build permission map and grouped list with checked flags */
+const sageEnabled = computed(() => !!page.props?.sageApiEnabled)
+
+/* Flatten permissions into a map for lookups (id -> name) */
+const permissionIdToName = computed(() => {
+    const map = new Map()
+    Object.values(props.all_permissions || {}).forEach(list => {
+        list.forEach(p => map.set(p.id, p.name))
+    })
+    return map
+})
+
+/* Core grouped permissions with 'checked' bound to form.permissions */
+const groupedPermissions = computed(() => {
+    const groups = {}
+    for (const [groupName, list] of Object.entries(props.all_permissions || {})) {
+        const perms = []
+        list.forEach(p => {
+            if (
+                p.name === 'can view and delete sage100-api-data' &&
+                !sageEnabled.value
+            ) {
+                return
+            }
+            perms.push({
+                ...p,
+                checked: form.permissions.includes(p.name)
+            })
+        })
+        groups[groupName] = {
+            shown: perms.length > 0,
+            permissions: perms
         }
-    },
-    computed: {
-        errors() {
-            return this.$page.props.errors;
-        },
-        computedGroupedPermissions() {
-            let groupedPermissions = {};
+    }
+    return groups
+})
 
-            for (const [group, permissions] of Object.entries(this.all_permissions)) {
-                groupedPermissions[group] = {
-                    shown: true,
-                    permissions: []
-                };
+/* Filter by query inside permissions */
+const filteredGroupedPermissions = computed(() => {
+    const q = permQuery.value.trim().toLowerCase()
+    if (!q) return groupedPermissions.value
+    const out = {}
+    for (const [g, obj] of Object.entries(groupedPermissions.value)) {
+        const filtered = obj.permissions.filter(p =>
+            (p.translation_key || p.name || '').toLowerCase().includes(q)
+        )
+        out[g] = { shown: filtered.length > 0, permissions: filtered }
+    }
+    return out
+})
 
-                permissions.forEach((permission) => {
-                    //permissions depending on specific logic to be displayed
-                    if (permission.name === 'can view and delete sage100-api-data') {
-                        //this permission is only added when sage api is enabled
-                        if (this.$page.props.sageApiEnabled) {
-                            groupedPermissions[group].permissions.push(permission);
-                        }
-                        return;
-                    }
+/* Methods */
+// Add emails (supports comma/space separation)
+function addEmailsFromInput () {
+    if (!emailInput.value) return
+    const raw = emailInput.value
+    const parsed = splitEmails(raw)
+    const { valid, invalid, duplicates, existing } = validateEmails(parsed)
 
-                    permission.checked = false;
-                    //other permissions are pushed anytime
-                    groupedPermissions[group].permissions.push(permission);
-                });
+    // merge valid
+    valid.forEach(e => {
+        if (!form.user_emails.includes(e)) form.user_emails.push(e)
+    })
 
-                //groups are only shown when there are permissions to display
-                groupedPermissions[group].shown = groupedPermissions[group].permissions.length > 0;
-            }
+    // build help messages
+    if (invalid.length) {
+        showInvalidEmailErrorText.value = true
+    } else {
+        showInvalidEmailErrorText.value = false
+    }
 
-            return groupedPermissions;
+    const hints = []
+    if (invalid.length) hints.push($t('This is not a valid e-mail address.'))
+    if (duplicates.length) hints.push($t('Duplicate address skipped: {0}', [duplicates.join(', ')]))
+    if (existing.length) hints.push($t('This e-mail address already exists in the system. {0}', [existing.join(', ')]))
+    helpText.value = hints.join(' ')
+
+    emailInput.value = ''
+}
+
+function onEmailDel (e) {
+    // Remove last chip on Backspace when input empty
+    if (e.key === 'Backspace' && emailInput.value === '' && form.user_emails.length) {
+        form.user_emails.pop()
+    }
+}
+
+function removeEmail (i) {
+    form.user_emails.splice(i, 1)
+}
+
+function splitEmails (str) {
+    return str
+        .split(/[\s,;]+/)
+        .map(s => s.trim())
+        .filter(Boolean)
+}
+
+function validateEmails (list) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const valid = []
+    const invalid = []
+    const duplicates = []
+    const existing = []
+
+    const known = new Set(form.user_emails)
+    const systemEmails = new Set((props.users || []).map(u => u.email))
+
+    list.forEach(e => {
+        if (!re.test(e)) {
+            invalid.push(e)
+            return
         }
-    },
-    updated() {
-        //if component is updated set permissions to checked if they are contained in form
-        Object.values(this.all_permissions).forEach((permissions) => {
-            permissions.forEach((permission) => {
-                permission.checked = this.form.permissions.includes(permission.name);
-            });
-        });
+        if (known.has(e) || valid.includes(e)) {
+            duplicates.push(e)
+            return
+        }
+        if (systemEmails.has(e)) {
+            existing.push(e)
+            return
+        }
+        valid.push(e)
+    })
+    return { valid, invalid, duplicates, existing }
+}
 
-        //if there was a permission_preset used set it to checked
-        this.usedPermissionPresets.forEach((usedPreset) => {
-            this.permission_presets.forEach((permissionPreset) => {
-                if (usedPreset.id === permissionPreset.id) {
-                    permissionPreset.checked = true;
-                }
-            });
-        });
-    },
-    methods: {
-        checkOrUncheckAllPermissionsOfGroup(group) {
-            // check if some permissions are already selected in the group and if so deselect them
-            if (group.permissions.some(permission => this.form.permissions.includes(permission.name))) {
-                group.permissions.forEach(permission => {
-                    this.form.permissions = this.form.permissions.filter(permissionName => permissionName !== permission.name);
-                    permission.checked = false;
-                });
-            } else {
-                // select all permissions
-                group.permissions.forEach(permission => {
-                    this.form.permissions.push(permission.name);
-                    permission.checked = true;
-                });
-            }
-        },
-        closeUserModal(bool){
-            this.uncheckRolesAndPermissions();
-            this.addingUser = false;
-            this.emailInput = "";
-            this.form.user_emails = [];
-            this.form.permissions = [];
-            this.form.departments = [];
-            this.form.roles = [];
-            this.departments.forEach((team) => {
-                team.checked = false;
-            })
-            this.closeModal(bool);
-        },
-        addEmailToInvitationArray() {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(this.emailInput)) {
-                this.showInvalidEmailErrorText = true;
-                return;
-            }
+/* Teams */
+function onTeamToggle (team) {
+    if (team.checked) {
+        if (!form.departments.find(t => t.id === team.id)) {
+            form.departments.push({ id: team.id, name: team.name, svg_name: team.svg_name })
+        }
+    } else {
+        form.departments = form.departments.filter(t => t.id !== team.id)
+    }
+}
 
-            if (this.form.user_emails?.includes(this.emailInput)) {
-                this.helpText = this.$t('This e-mail address already exists in the system. {0}', [this.emailInput]);
-                return;
-            }
+/* Roles */
+function onRoleToggle (role) {
+    if (role.checked) {
+        if (!form.roles.includes(role.name)) form.roles.push(role.name)
+    } else {
+        form.roles = form.roles.filter(r => r !== role.name)
+    }
+}
 
-            // check if email is already in users
-            if (this.users) {
-                const user = this.users.find(user => user.email === this.emailInput);
+/* Presets */
+function applyPreset (preset) {
+    const namesFromIds = preset.permissions
+        .map(id => permissionIdToName.value.get(id))
+        .filter(Boolean)
 
-                if (user) {
-                    this.helpText = this.$t('This e-mail address already exists in the system. {0}', [this.emailInput]);
-                    return;
-                }
-            }
+    if (preset.checked) {
+        // add all preset permissions
+        form.permissions = Array.from(new Set([...form.permissions, ...namesFromIds]))
+    } else {
+        // remove all preset permissions
+        form.permissions = form.permissions.filter(n => !namesFromIds.includes(n))
+    }
+}
 
-            this.showInvalidEmailErrorText = false;
-            this.form.user_emails.push(this.emailInput);
-            this.emailInput = "";
-        },
-        deleteEmailFromInvitationArray(index) {
-            this.form.user_emails.splice(index, 1);
-        },
-        teamChecked(team) {
-            if (team.checked) {
-                this.form.departments.push(team);
-            } else {
-                const spliceIndex = this.form.departments.findIndex(teamToSplice => {
-                    return team.id === teamToSplice.id
-                })
-                this.form.departments.splice(spliceIndex, 1);
-            }
-        },
-        changeRole(role) {
-            if (role.checked) {
-                this.form.roles.push(role.name);
-                return;
-            }
+/* Permissions */
+function onPermissionToggle (perm) {
+    if (perm.checked) {
+        if (!form.permissions.includes(perm.name)) form.permissions.push(perm.name)
+    } else {
+        form.permissions = form.permissions.filter(n => n !== perm.name)
+    }
+}
 
-            this.form.roles = this.form.roles.filter(permissionName => permissionName !== role.name);
-        },
-        changePermission(permission) {
-            if (permission.checked) {
-                this.form.permissions.push(permission.name);
-            } else {
-                this.form.permissions = this.form.permissions.filter(
-                    (permissionName) => permissionName !== permission.name
-                );
-            }
-        },
-        usePreset(permissionPreset) {
-            //Check/Uncheck the permissions based on the given permissionPreset
-            Object.values(this.all_permissions).forEach((permissions) => {
-                permissions.forEach((permission) => {
-                    if (permissionPreset.permissions.includes(permission.id)) {
-                        permission.checked = permissionPreset.checked;
-                        if (permission.checked){
-                            this.form.permissions.push(permission.name);
-                        } else {
-                            this.form.permissions = this.form.permissions.filter(
-                                (permissionName) => permissionName !== permission.name
-                            );
-                        }
-                    }
-                });
-            });
+function toggleWholeGroup (group) {
+    const someChecked = group.permissions.some(p => p.checked)
+    if (someChecked) {
+        // uncheck all
+        const names = group.permissions.map(p => p.name)
+        form.permissions = form.permissions.filter(n => !names.includes(n))
+    } else {
+        // check all
+        const toAdd = group.permissions.map(p => p.name)
+        form.permissions = Array.from(new Set([...form.permissions, ...toAdd]))
+    }
+}
 
-            //append used preset to array, if there is an backend error it will get checked again
-            //see update lifecycle-hook
-            if (permissionPreset.checked) {
-                this.usedPermissionPresets.push(permissionPreset);
-            } else {
-                this.usedPermissionPresets = this.usedPermissionPresets.filter(
-                    (usedPermissionPreset) => usedPermissionPreset.id !== permissionPreset.id
-                );
-            }
-        },
-        addUser() {
-            this.form.post(
-                route('invitations.store'),
-                {
-                    onSuccess: () => {
-                        this.closeUserModal(true);
-                        this.emailInput = "";
-                        this.form.user_emails = [];
-                        this.form.permissions = [];
-                        this.form.departments = [];
-                        this.form.role = '';
-                        this.departments.forEach((team) => {
-                            team.checked = false;
-                        })
-                    }
-                }
-            );
-        },
-        uncheckRolesAndPermissions() {
-            this.roles.forEach((role) => {
-                role.checked = false;
-            })
+/* Submit */
+function submit () {
+    form.post(route('invitations.store'), {
+        onSuccess: () => {
+            resetAll()
+            handleClose(true)
+        }
+    })
+}
 
-            this.usedPermissionPresets = [];
-            this.permission_presets.forEach((permission) => {
-                permission.checked = false;
-            })
-        },
-    },
+/* Reset & close */
+function resetAll () {
+    emailInput.value = ''
+    helpText.value = ''
+    showInvalidEmailErrorText.value = false
+    permQuery.value = ''
+
+    form.user_emails = []
+    form.permissions = []
+    form.departments = []
+    form.roles = []
+
+    deptLocal.forEach(d => (d.checked = false))
+    rolesLocal.forEach(r => (r.checked = false))
+    presetsLocal.forEach(p => (p.checked = false))
+}
+
+function handleClose (bool) {
+    resetAll()
+    props.closeModal?.(bool)
 }
 </script>

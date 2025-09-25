@@ -81,10 +81,14 @@ import axios from "axios";
 import Permissions from "@/Mixins/Permissions.vue";
 import {usePage} from "@inertiajs/vue3";
 import {IconLock} from "@tabler/icons-vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 
 export default defineComponent({
     components: {
+        BaseMenuItem,
+        BaseMenu,
         MultipleShiftQualificationSlotsAvailable,
         ShiftQualificationIconCollection,
         ChooseUserSeriesShift,

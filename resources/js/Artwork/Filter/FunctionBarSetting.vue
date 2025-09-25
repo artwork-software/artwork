@@ -11,7 +11,6 @@
         />
 
         <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="checkIfAnySettingIsActive">
-              <span class="absolute inline-flex h-full w-full motion-safe:animate-ping rounded-full bg-blue-400 opacity-75"></span>
               <span class="relative inline-flex size-2.5 rounded-full bg-blue-500"></span>
         </span>
     </div>
@@ -55,9 +54,9 @@ const CalendarSettingsModal = defineAsyncComponent({
 })
 
 const checkIfAnySettingIsActive = computed(() => {
-
     const settingsInShiftPlan = [
-        'high_contrast', 'work_shifts', 'expand_days', 'display_project_groups', 'show_qualifications', 'shift_notes'
+        'high_contrast', 'work_shifts', 'expand_days', 'display_project_groups', 'show_qualifications', 'shift_notes',
+        'hide_unoccupied_days', 'hide_unoccupied_rooms'
     ]
 
     if (props.isInShiftPlan) {

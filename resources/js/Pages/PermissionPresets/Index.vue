@@ -1,115 +1,112 @@
 <template>
-    <UserHeader title="All permission presets" description="Edit and create permission presets">
+    <UserHeader
+        title="All permission presets"
+        description="Edit and create permission presets"
+    >
+        <!-- Header Actions -->
         <template #tabBar>
-            <div class="flex items-center justify-end">
+            <div class="flex items-center justify-end gap-3">
+                <!-- Search -->
+                <div class="relative">
+                    <input
+                        v-model="query"
+                        :placeholder="$t('Search presets')"
+                        type="text"
+                        class="h-10 w-64 rounded-xl border border-zinc-300 bg-white px-10 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none ring-0 transition focus:border-zinc-400 focus:bg-zinc-50"
+                    />
+                    <SearchIcon class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
+                    <button
+                        v-if="query"
+                        @click="query = ''"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700"
+                        aria-label="Clear"
+                    >
+                        <XIcon class="h-4 w-4" />
+                    </button>
+                </div>
+
+                <!-- Create -->
                 <BaseCardButton
                     text="Create new permission presets"
                     @click="openPermissionPresetModal('create')"
-                />
+                >
+                    <component :is="IconPlus" class="size-6" />
+                </BaseCardButton>
             </div>
         </template>
+
+        <!-- List / Empty State -->
         <template #default>
-            <ul role="list" class="mt-6 w-full">
-                <li v-for="(permissionPreset, index) in permission_presets"
-                    :key="permissionPreset.id"
-                    class="py-2 flex justify-between items-center border-b-2"
+            <div v-if="filteredPresets.length === 0" class="rounded-2xl border border-zinc-200 bg-white p-10 text-center">
+                <div class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full ring-1 ring-inset ring-zinc-200">
+                    <DotsVerticalIcon class="h-6 w-6 text-zinc-400" />
+                </div>
+                <h3 class="text-base font-semibold text-zinc-900">
+                    {{ $t('No permission presets found') }}
+                </h3>
+                <p class="mt-1 text-sm text-zinc-600">
+                    {{ $t('Create your first preset to reuse permission sets quickly.') }}
+                </p>
+                <div class="mt-6">
+                    <BaseCardButton
+                        text="Create preset"
+                        @click="openPermissionPresetModal('create')"
+                    />
+                </div>
+            </div>
+
+            <ul v-else role="list" class="grid gap-3 lg:gap-4">
+                <li
+                    v-for="(preset, idx) in filteredPresets"
+                    :key="preset.id"
+                    class="group flex items-center justify-between rounded-2xl bg-white p-4 ring-1 ring-zinc-200 transition hover:bg-zinc-50 hover:shadow-sm"
                 >
-                    <span @click="openPermissionPresetModal('edit', permissionPreset)"
-                          class="mr-3 sDark cursor-pointer">
-                        {{ permissionPreset.name }}
-                    </span>
-                    <Menu as="div" class="relative z-10">
-                        <div>
-                            <div class="flex">
-                                <MenuButton
-                                    class="flex bg-tagBg p-0.5 rounded-full">
-                                    <DotsVerticalIcon
-                                        class="flex-shrink-0 h-6 w-6 text-menuartwork-buttons-create"
-                                        aria-hidden="true"/>
-                                </MenuButton>
-                                <div v-if="this.$page.props.show_hints && index === 0"
-                                     class="absolute flex w-48 ml-9">
-                                    <div>
-                                        <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
-                                    </div>
-                                    <div class="flex">
-                                        <span class="hind ml-1">{{  $t('Edit a permission preset') }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <transition enter-active-class="transition-enter-active"
-                                    enter-from-class="transition-enter-from"
-                                    enter-to-class="transition-enter-to"
-                                    leave-active-class="transition-leave-active"
-                                    leave-from-class="transition-leave-from"
-                                    leave-to-class="transition-leave-to">
-                            <MenuItems
-                                class="w-64 origin-top-right absolute right-0 mr-4 mt-2 shadow-lg bg-primary focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem v-slot="{ active }">
-                                        <a @click="openPermissionPresetModal('edit', permissionPreset)"
-                                           :class="[
-                                               active ?
-                                               'bg-primaryHover text-white' :
-                                               'text-secondary',
-                                               'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased'
-                                           ]"
-                                        >
-                                            <PencilAltIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                aria-hidden="true"/>
-                                            {{ $t('Edit permission preset')}}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a @click="openConfirmPermissionPresetDeleteModal(permissionPreset)"
-                                           :class="[
-                                               active ?
-                                               'bg-primaryHover text-white' :
-                                               'text-secondary',
-                                               'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased'
-                                           ]"
-                                        >
-                                            <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                aria-hidden="true"/>
-                                            <span>
-                                                {{$t('Delete permission preset')}}
-                                            </span>
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                    <!-- Clickable name -->
+                    <button
+                        type="button"
+                        @click="openPermissionPresetModal('edit', preset)"
+                        class="text-left text-zinc-900 transition hover:text-zinc-950"
+                    >
+                        <span class="block text-sm font-medium leading-6">{{ preset.name }}</span>
+                    </button>
+
+                    <!-- Row actions -->
+                    <BaseMenu white-menu-background has-no-offset>
+                        <BaseMenuItem white-menu-background :icon="IconEdit" @click="openPermissionPresetModal('edit', preset)" title="Edit permission preset"/>
+                        <BaseMenuItem white-menu-background :icon="IconTrash" @click="openConfirmPermissionPresetDeleteModal(preset)" title="Delete permission preset"/>
+                    </BaseMenu>
                 </li>
             </ul>
         </template>
     </UserHeader>
-    <permission-preset-modal
+
+    <!-- Modals -->
+    <PermissionPresetModal
         v-if="showPermissionPresetModal"
         :show="showPermissionPresetModal"
         :available_permissions="available_permissions"
-        :mode="this.permissionPresetModalMode"
-        :permission_preset="this.permissionPresetModalResource"
+        :mode="permissionPresetModalMode"
+        :permission_preset="permissionPresetModalResource"
         @close="closePermissionPresetModal"
     />
-    <confirmation-component
+
+    <ConfirmationComponent
         v-if="showConfirmDeletePermissionPresetModal"
         confirm="Löschen"
         titel="Rechte-Preset löschen?"
-        :description="this.confirmDeletePermissionPresetModalDescription"
+        :description="confirmDeletePermissionPresetModalDescription"
         @closed="closeConfirmPermissionPresetDeleteModal"
     />
-    <success-modal
+
+    <SuccessModal
         v-if="showPermissionPresetSuccessModal"
         title="Erfolg"
         :description="showPermissionPresetSuccessModal"
         button="Schließen"
         @closed="closePermissionPresetSuccessModal"
     />
-    <error-component
+
+    <ErrorComponent
         v-if="showPermissionPresetErrorModal"
         :titel="$t('Unfortunately an error has occurred')"
         :description="showPermissionPresetErrorModal"
@@ -117,101 +114,100 @@
     />
 </template>
 
-<script>
-import {defineComponent} from "vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
-import UserTabs from "@/Pages/Users/Components/UserTabs.vue";
-import UserHeader from "@/Pages/Users/UserHeader.vue";
-import {PlusIcon} from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import PermissionPresetModal from "@/Pages/PermissionPresets/Components/PermissionPresetModal.vue";
-import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {router} from "@inertiajs/vue3";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
-import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
+<script setup>
+import { ref, computed, getCurrentInstance } from 'vue'
+import { usePage, router } from '@inertiajs/vue3'
+import UserHeader from '@/Pages/Users/UserHeader.vue'
+import PermissionPresetModal from '@/Pages/PermissionPresets/Components/PermissionPresetModal.vue'
+import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue'
+import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
+import ErrorComponent from '@/Layouts/Components/ErrorComponent.vue'
+import BaseCardButton from '@/Artwork/Buttons/BaseCardButton.vue'
+import SvgCollection from '@/Layouts/Components/SvgCollection.vue'
+import {
+    Menu, MenuButton, MenuItem, MenuItems
+} from '@headlessui/vue'
+import {
+    DotsVerticalIcon, PencilAltIcon, TrashIcon, SearchIcon, XIcon
+} from '@heroicons/vue/outline'
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import {IconEdit, IconPlus, IconTrash} from "@tabler/icons-vue";
 
-export default defineComponent({
-    components: {
-        BaseCardButton,
-        ErrorComponent,
-        SuccessModal,
-        ConfirmationComponent,
-        Menu,
-        MenuButton,
-        MenuItems,
-        MenuItem,
-        PencilAltIcon,
-        TrashIcon,
-        DotsVerticalIcon,
-        PermissionPresetModal,
-        PlusIcon,
-        SvgCollection,
-        UserHeader,
-        UserTabs,
-        AppLayout
-    },
-    props: [
-        'permission_presets',
-        'available_permissions'
-    ],
-    data() {
-        return {
-            showPermissionPresetModal: false,
-            permissionPresetModalMode: null,
-            permissionPresetModalResource: null,
-            showConfirmDeletePermissionPresetModal: false,
-            confirmDeletePermissionPresetIdToDelete: null,
-            confirmDeletePermissionPresetModalDescription: null
-        }
-    },
-    computed: {
-        showPermissionPresetSuccessModal() {
-            return this.$page.props.flash.success;
-        },
-        showPermissionPresetErrorModal() {
-            return this.$page.props.flash.error;
-        }
-    },
-    methods: {
-        openPermissionPresetModal(modalMode, permissionPreset = null) {
-            this.permissionPresetModalMode = modalMode;
-            this.permissionPresetModalResource = permissionPreset;
-            this.showPermissionPresetModal = true;
-        },
-        closePermissionPresetModal() {
-            this.permissionPresetModalMode = null;
-            this.permissionPresetModalResource = null;
-            this.showPermissionPresetModal = false;
-        },
-        openConfirmPermissionPresetDeleteModal(permissionPreset) {
-            this.confirmDeletePermissionPresetIdToDelete = permissionPreset.id;
-            this.confirmDeletePermissionPresetModalDescription = this.$t('Do you really want to delete the {presetName} rights preset? This cannot be undone.', {presetName: permissionPreset.name})
-            this.showConfirmDeletePermissionPresetModal = true;
-        },
-        closeConfirmPermissionPresetDeleteModal(bool) {
-            if (bool) {
-                router.delete(
-                    route(
-                        'permission-presets.destroy',
-                        {
-                            permission_preset: this.confirmDeletePermissionPresetIdToDelete
-                        }
-                    )
-                );
-            }
-            this.showConfirmDeletePermissionPresetModal = false;
-            this.confirmDeletePermissionPresetIdToDelete = null;
-            this.confirmDeletePermissionPresetModalDescription = null;
-        },
-        closePermissionPresetSuccessModal() {
-            this.$page.props.flash.success = null;
-        },
-        closePermissionPresetErrorModal() {
-            this.$page.props.flash.error = null;
-        }
-    }
+/* Props */
+const props = defineProps({
+    permission_presets: { type: Array, required: true },
+    available_permissions: { type: Array, required: true }
 })
+
+/* i18n helper */
+const { proxy } = getCurrentInstance()
+const $t = (k, v) => proxy.$t(k, v)
+
+/* Inertia page (for hints / flash) */
+const page = usePage()
+
+/* UI State */
+const showPermissionPresetModal = ref(false)
+const permissionPresetModalMode = ref(null) // 'create' | 'edit'
+const permissionPresetModalResource = ref(null)
+
+const showConfirmDeletePermissionPresetModal = ref(false)
+const confirmDeletePermissionPresetIdToDelete = ref(null)
+const confirmDeletePermissionPresetModalDescription = ref(null)
+
+/* Search */
+const query = ref('')
+
+/* Derived */
+const filteredPresets = computed(() => {
+    if (!query.value) return props.permission_presets
+    const q = query.value.toLowerCase().trim()
+    return props.permission_presets.filter(p => (p.name || '').toLowerCase().includes(q))
+})
+
+/* Flash modals */
+const showPermissionPresetSuccessModal = computed(() => page.props?.flash?.success)
+const showPermissionPresetErrorModal = computed(() => page.props?.flash?.error)
+
+/* Actions */
+function openPermissionPresetModal(mode, preset = null) {
+    permissionPresetModalMode.value = mode
+    permissionPresetModalResource.value = preset
+    showPermissionPresetModal.value = true
+}
+function closePermissionPresetModal() {
+    permissionPresetModalMode.value = null
+    permissionPresetModalResource.value = null
+    showPermissionPresetModal.value = false
+}
+
+function openConfirmPermissionPresetDeleteModal(preset) {
+    confirmDeletePermissionPresetIdToDelete.value = preset.id
+    confirmDeletePermissionPresetModalDescription.value = $t(
+        'Do you really want to delete the {presetName} rights preset? This cannot be undone.',
+        { presetName: preset.name }
+    )
+    showConfirmDeletePermissionPresetModal.value = true
+}
+function closeConfirmPermissionPresetDeleteModal(confirmed) {
+    if (confirmed) {
+        router.delete(
+            route('permission-presets.destroy', {
+                permission_preset: confirmDeletePermissionPresetIdToDelete.value
+            })
+        )
+    }
+    showConfirmDeletePermissionPresetModal.value = false
+    confirmDeletePermissionPresetIdToDelete.value = null
+    confirmDeletePermissionPresetModalDescription.value = null
+}
+
+/* Close flash modals */
+function closePermissionPresetSuccessModal() {
+    page.props.flash.success = null
+}
+function closePermissionPresetErrorModal() {
+    page.props.flash.error = null
+}
 </script>

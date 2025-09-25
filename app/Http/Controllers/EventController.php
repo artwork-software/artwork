@@ -92,6 +92,7 @@ use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -946,7 +947,7 @@ class EventController extends Controller
             ->sync($request->get('event_properties', []));
 
         broadcast(new EventCreated(
-            $event->load(['event_type', 'project']),
+            $event->fresh(),
             $event->room_id
         ));
     }
@@ -1408,7 +1409,7 @@ class EventController extends Controller
                     'message' => $notificationTitle
                 ];
 
-                $this->eventService->save($event);
+                //$this->eventService->save($event);
                 $notificationDescription = [
                     1 => [
                         'type' => 'link',
@@ -1457,7 +1458,6 @@ class EventController extends Controller
         if ($request->roomChange) {
             $room = Room::find($event->room_id);
             $project = Project::find($event->project_id);
-
 
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
@@ -1518,11 +1518,7 @@ class EventController extends Controller
                 $this->notificationService->setNotificationTo($projectManager);
                 $this->notificationService->createNotification();
             }
-            $notificationTitle = __(
-                'notification.event.room_change_confirmed',
-                [],
-                $event->creator->language
-            );
+            $notificationTitle = __('notification.event.room_change_confirmed', [], $event->creator->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -1572,22 +1568,26 @@ class EventController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $oldEventDescription = $event->description;
-        $oldEventRoom = $event->room_id;
-        $oldEventProject = $event->project_id;
-        $oldEventName = $event->eventName;
-        $oldEventType = $event->event_type_id;
-        $oldEventStartDate = $event->start_time;
-        $oldEventEndDate = $event->end_time;
-        $oldEventPropertyIds = $event->getAttribute('eventProperties')->map(
+        $oldEventDescription   = $event->description;
+        $oldEventRoom          = $event->room_id;
+        $oldEventProject       = $event->project_id;
+        $oldEventName          = $event->eventName;
+        $oldEventType          = $event->event_type_id;
+        $oldEventStartDate     = $event->start_time;
+        $oldEventEndDate       = $event->end_time;
+        $oldEventPropertyIds   = $event->getAttribute('eventProperties')->map(
             fn (EventProperty $eventProperty) => $eventProperty->getAttribute('id')
         )->all();
 
-        $event->fill($request->data());
-        $event->eventProperties()->sync(($newEventPropertyIds = $request->get('event_properties', [])));
+        $data = $request->data();
 
+        // remove is_series and series_id from data to prevent overwriting
+        unset($data['is_series'], $data['series_id']);
+        $event->fill($data);
+        $event->eventProperties()->sync(($newEventPropertyIds = $request->get('event_properties', [])));
         $this->eventService->save($event);
 
+        // Projekt ggf. anlegen & zuordnen (dein Original)
         if ($request->get('projectName')) {
             $project = Project::create(['name' => $request->get('projectName')]);
             $project->users()->save(Auth::user(), ['access_budget' => true]);
@@ -1607,12 +1607,12 @@ class EventController extends Controller
         }
 
         $newEventDescription = $event->description;
-        $newEventRoom = $event->room_id;
-        $newEventProject = $event->project_id;
-        $newEventName = $event->eventName;
-        $newEventType = $event->event_type_id;
-        $newEventStartDate = $event->start_time;
-        $newEventEndDate = $event->end_time;
+        $newEventRoom        = $event->room_id;
+        $newEventProject     = $event->project_id;
+        $newEventName        = $event->eventName;
+        $newEventType        = $event->event_type_id;
+        $newEventStartDate   = $event->start_time;
+        $newEventEndDate     = $event->end_time;
 
         $this->checkShortDescriptionChanges($event->id, $oldEventDescription, $newEventDescription);
         $this->checkRoomChanges($event->id, $oldEventRoom, $newEventRoom);
@@ -1624,90 +1624,65 @@ class EventController extends Controller
 
         $this->createEventScheduleNotification($event);
 
-        // get time diff
         $oldEventStartDateDays = Carbon::create($oldEventStartDate);
-        $oldEventEndDateDays = Carbon::create($oldEventEndDate);
-
+        $oldEventEndDateDays   = Carbon::create($oldEventEndDate);
         $newEventStartDateDays = Carbon::parse($newEventStartDate);
-        $newEventEndDateDays = Carbon::parse($newEventEndDate);
+        $newEventEndDateDays   = Carbon::parse($newEventEndDate);
 
-        $diffStartDays = $oldEventStartDateDays->diffInDays($newEventStartDateDays, false);
-        $diffEndDays = $oldEventEndDateDays->diffInDays($newEventEndDateDays, false);
-
+        $diffStartDays    = $oldEventStartDateDays->diffInDays($newEventStartDateDays, false);
+        $diffEndDays      = $oldEventEndDateDays->diffInDays($newEventEndDateDays, false);
         $diffStartMinutes = $oldEventStartDateDays->diffInRealMinutes($newEventStartDateDays, false);
-        $diffEndMinutes = $oldEventEndDateDays->diffInRealMinutes($newEventEndDateDays, false);
+        $diffEndMinutes   = $oldEventEndDateDays->diffInRealMinutes($newEventEndDateDays, false);
 
-        if ($request->allSeriesEvents) {
-            if ($event->is_series) {
-                $seriesEvents = Event::where('series_id', $event->series_id)->get();
-                foreach ($seriesEvents as $seriesEvent) {
-                    // Guard
-                    if ($seriesEvent->id === $event->id) {
-                        continue;
-                    }
-
-                    $startDay = Carbon::create($seriesEvent->start_time)
-                        ->addDays($diffStartDays)
-                        ->format('Y-m-d');
-                    $endDay = Carbon::create($seriesEvent->end_time)
-                        ->addDays($diffEndDays)
-                        ->format('Y-m-d');
-
-                    $startTime = Carbon::create($seriesEvent->start_time)
-                        ->addMinutes($diffStartMinutes)
-                        ->format('H:i:s');
-                    $endTime = Carbon::create($seriesEvent->end_time)
-                        ->addMinutes($diffEndMinutes)
-                        ->format('H:i:s');
-
-                    $seriesEvent->update([
-                        'name' => $event->name,
-                        'eventName' => $event->eventName,
-                        'description' => $event->description,
-                        'occupancy_option' => $event->occupancy_option,
-                        'audience' => $event->audience,
-                        'is_loud' => $event->is_loud,
-                        'event_type_id' => $event->event_type_id,
-                        'room_id' => $event->room_id,
-                        'project_id' => $event->project_id,
-                        'start_time' => $startDay . ' ' . $startTime,
-                        'end_time' => $endDay . ' ' . $endTime,
-                    ]);
+        if ($request->allSeriesEvents && $event->is_series) {
+            $seriesEvents = Event::where('series_id', $event->series_id)->get();
+            foreach ($seriesEvents as $seriesEvent) {
+                if ($seriesEvent->id === $event->id) {
+                    continue;
                 }
-                // date shifts with date
+
+                $startDay = Carbon::create($seriesEvent->start_time)->addDays($diffStartDays)->format('Y-m-d');
+                $endDay   = Carbon::create($seriesEvent->end_time)->addDays($diffEndDays)->format('Y-m-d');
+
+                $startTime = Carbon::create($seriesEvent->start_time)->addMinutes($diffStartMinutes)->format('H:i:s');
+                $endTime   = Carbon::create($seriesEvent->end_time)->addMinutes($diffEndMinutes)->format('H:i:s');
+
+                $seriesEvent->update([
+                    'name'         => $event->name,
+                    'eventName'    => $event->eventName,
+                    'description'  => $event->description,
+                    'occupancy_option' => $event->occupancy_option,
+                    'audience'     => $event->audience,
+                    'is_loud'      => $event->is_loud,
+                    'event_type_id'=> $event->event_type_id,
+                    'room_id'      => $event->room_id,
+                    'project_id'   => $event->project_id,
+                    'start_time'   => $startDay.' '.$startTime,
+                    'end_time'     => $endDay.' '.$endTime,
+                ]);
             }
         }
 
+        DB::transaction(function () use ($request, $event) {
+            $this->handleSeriesOnUpdate($request, $event);
+        });
+
         $shifts = Shift::where('event_id', $event->id)->get();
         foreach ($shifts as $shift) {
-            $startDay = Carbon::create($shift->start_date)
-                ->addDays($diffStartDays)
-                ->format('Y-m-d');
-            $endDay = Carbon::create($shift->end_date)
-                ->addDays($diffEndDays)
-                ->format('Y-m-d');
+            $startDay = Carbon::create($shift->start_date)->addDays($diffStartDays)->format('Y-m-d');
+            $endDay   = Carbon::create($shift->end_date)->addDays($diffEndDays)->format('Y-m-d');
 
             $shift->update([
                 'start_date' => $startDay,
-                'end_date' => $endDay,
+                'end_date'   => $endDay,
             ]);
         }
 
-        // update event time in inventory
         if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
             $this->craftInventoryItemEventService->updateEventTimeInInventory($isInInventoryEvent, $event);
         }
 
-        broadcast(new EventCreated(
-            $event->fresh(),
-            $event->fresh()->room_id
-        ));
-
-        //redirect is required for bulk component event component
-        /*if ($request->boolean('usedInBulkComponent')) {
-            return $this->redirector->back();
-        }*/
-        //return new CalendarEventResource($event);
+        broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
     }
 
     private function createEventScheduleNotification(Event $event): void
@@ -2269,6 +2244,210 @@ class EventController extends Controller
             $roomId
         ));
     }
+
+    /**
+     * Serie beim Bearbeiten setzen/aktualisieren:
+     * - Serie neu anlegen, wenn vorher keine war und is_series=true.
+     * - Bei bestehender Serie: bei Turnus-/Ende-Änderung alle zukünftigen Instanzen
+     *   (ab dem bearbeiteten Event) löschen und gemäß neuem Plan neu erzeugen.
+     * - Am Bearbeitungstag wird KEIN zusätzlicher Termin erzeugt.
+     */
+    protected function handleSeriesOnUpdate(Request $request, Event $event): void
+    {
+        $wantsSeries   = (bool) $request->boolean('is_series') ?? false;
+        $newFrequency  = $request->input('seriesFrequency');   // 1,2,3,4 (daily/weekly/biweekly/monthly)
+        $newSeriesEnd  = $request->input('seriesEndDate');     // z.B. '2025-12-31'
+
+        // Wenn der Nutzer nichts zu Serie/Ende/Frequenz übermittelt, nichts tun.
+        if ($wantsSeries === false && !$event->is_series) {
+            return;
+        }
+
+        //dd($request->all(), $wantsSeries, $event->is_series, $newFrequency, $newSeriesEnd);
+
+        $eventStart = Carbon::parse($event->start_time)->setTimezone(config('app.timezone'));
+        $eventEnd   = Carbon::parse($event->end_time)->setTimezone(config('app.timezone'));
+
+        // FALL A: vorher KEINE Serie -> jetzt Serie aktivieren
+        if (!$event->is_series && $wantsSeries) {
+            if (empty($newFrequency) || empty($newSeriesEnd)) {
+                // Ohne Frequency/Ende können wir keine Serie sinnvoll erzeugen.
+                return;
+            }
+
+            /** @var SeriesEvents $series */
+            $series = SeriesEvents::create([
+                'frequency_id' => (int) $newFrequency,
+                'end_date'     => $newSeriesEnd,
+            ]);
+
+            $event->update([
+                'is_series' => true,
+                'series_id' => $series->id,
+            ]);
+
+            $endSeriesDateExclusive = Carbon::parse($newSeriesEnd)->addDay()->startOfDay();
+
+            // Fortlaufende Erzeugung ab NÄCHSTER Instanz; am Bearbeitungstag nichts erzeugen.
+            $cursorStart = $eventStart->copy();
+            $cursorEnd   = $eventEnd->copy();
+            [$nextStart, $nextEnd] = $this->generateNextOccurrence($cursorStart, $cursorEnd, (int) $newFrequency);
+
+            while ($nextEnd < $endSeriesDateExclusive) {
+                $this->createSeriesEvent($nextStart->copy(), $nextEnd->copy(), $request, $series, $event->project_id);
+                [$nextStart, $nextEnd] = $this->generateNextOccurrence($nextStart, $nextEnd, (int) $newFrequency);
+            }
+
+            return;
+        }
+
+        // FALL B: Serie existiert bereits – prüfen, ob Turnus oder Enddatum geändert wurde
+        if ($event->is_series && $wantsSeries) {
+            /** @var SeriesEvents|null $series */
+            $series = SeriesEvents::find($event->series_id);
+            if (!$series) {
+                return;
+            }
+
+            $oldFrequency = (int) $series->frequency_id;
+            $oldEnd       = Carbon::parse($series->end_date)->startOfDay();
+            $freq         = (int) ($newFrequency ?: $oldFrequency);
+            $seriesEndStr = $newSeriesEnd ?: $oldEnd->toDateString();
+
+            $series->update([
+                'frequency_id' => $freq,
+                'end_date'     => $seriesEndStr,
+            ]);
+
+            $newEndExclusive = Carbon::parse($seriesEndStr)->addDay()->startOfDay();
+
+            // --- Robuster Lösch-Block (ersetzen) ---
+            $cutoff = $event->getRawOriginal('start_time') ?: (string) $event->start_time; // roher DB-Wert bevorzugt
+
+            $query = Event::query()
+                ->where('series_id', $series->id)
+                ->where('id', '!=', $event->id)
+                ->where('start_time', '>', $cutoff);
+
+            $ids = $query->pluck('id');
+
+            if ($ids->isNotEmpty()) {
+
+                foreach ($query->get() as $eventToDelete) {
+                    broadcast(new RemoveEvent($eventToDelete, $eventToDelete->room_id));
+                }
+
+                $usesSoftDeletes = in_array(
+                    SoftDeletes::class,
+                    class_uses_recursive(Event::class),
+                    true
+                );
+
+                if ($usesSoftDeletes) {
+                    // wirklich weg damit (nicht nur "trashed")
+                    Event::whereIn('id', $ids)->forceDelete();
+                } else {
+                    Event::whereIn('id', $ids)->delete();
+                }
+            }
+
+            [$nextStart, $nextEnd] = $this->generateNextOccurrence($eventStart->copy(), $eventEnd->copy(), $freq);
+
+            while ($nextEnd < $newEndExclusive) {
+                $this->createSeriesEvent($nextStart->copy(), $nextEnd->copy(), $request, $series, $event->project_id);
+                [$nextStart, $nextEnd] = $this->generateNextOccurrence($nextStart, $nextEnd, $freq);
+            }
+
+            return;
+        }
+
+        // FALL C (NEU): Serie existiert, Nutzer deaktiviert is_series => Zukunft löschen & Event entkoppeln
+        if ($event->is_series && !$wantsSeries) {
+            /** @var SeriesEvents|null $series */
+            $series = SeriesEvents::find($event->series_id);
+            if (!$series) {
+                // Falls das Serienobjekt fehlt, einfach am Event deaktivieren
+                $event->update(['is_series' => false, 'series_id' => null]);
+                return;
+            }
+
+            $query = Event::query()
+                ->where('series_id', $series->id)
+                ->where('id', '!=', $event->id);
+
+
+            $ids = $query->pluck('id');
+
+            if ($ids->isNotEmpty()) {
+                foreach ($query->get() as $eventToDelete) {
+                    broadcast(new RemoveEvent($eventToDelete, $eventToDelete->room_id));
+                }
+
+                $usesSoftDeletes = in_array(
+                    SoftDeletes::class,
+                    class_uses_recursive(Event::class),
+                    true
+                );
+
+                if ($usesSoftDeletes) {
+                    // wirklich weg damit (nicht nur "trashed")
+                    Event::whereIn('id', $ids)->forceDelete();
+                } else {
+                    Event::whereIn('id', $ids)->delete();
+                }
+            }
+
+
+
+            // Aktuelles Event aus der Serie lösen
+            $event->update(['is_series' => false, 'series_id' => null]);
+
+            // Optionales Aufräumen: Wenn KEIN Event mehr auf diese Serie verweist, Serie-Datensatz löschen
+            $stillReferenced = Event::where('series_id', $series->id)->exists();
+            if (!$stillReferenced) {
+                $series->delete();
+            }
+
+            return;
+        }
+    }
+
+
+    /**
+     * Liefert nächste Instanz (Start/Ende) basierend auf Frequency-ID.
+     * 1=daily(+1 Tag), 2=weekly(+1 Woche), 3=biweekly(+2 Wochen), 4=monthly(+1 Monat)
+     */
+    protected function generateNextOccurrence(Carbon $start, Carbon $end, int $frequency): array
+    {
+        $nextStart = $start->copy();
+        $nextEnd   = $end->copy();
+
+        switch ($frequency) {
+            case 1:
+                $nextStart->addDay();
+                $nextEnd->addDay();
+                break;
+            case 2:
+                $nextStart->addWeek();
+                $nextEnd->addWeek();
+                break;
+            case 3:
+                $nextStart->addWeeks(2);
+                $nextEnd->addWeeks(2);
+                break;
+            case 4:
+                $nextStart->addMonthNoOverflow();
+                $nextEnd->addMonthNoOverflow();
+                break;
+            default:
+                $nextStart->addWeek();
+                $nextEnd->addWeek();
+                break;
+        }
+
+        return [$nextStart, $nextEnd];
+    }
+
 
     public function getCollisionCount(Request $request): int
     {

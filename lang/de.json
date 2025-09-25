@@ -3199,5 +3199,6 @@
     "Create shift preset": "Schichtvorlage erstellen",
     "Define names, times, trades, and required qualifications.": "Definiere Namen, Zeiten, Tätigkeiten und erforderliche Qualifikationen.",
     "Break duration (minutes)": "Pausendauer (Minuten)",
-    "Click to select, adjust quantity on the right": "Klicken zum Auswählen, Menge rechts anpassen"
+    "Click to select, adjust quantity on the right": "Klicken zum Auswählen, Menge rechts anpassen",
+    "This shift is already committed.": "Diese Schicht ist bereits festgeschrieben."
 }

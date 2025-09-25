@@ -647,6 +647,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/shift/{shiftPreset}/preset/store', [PresetShiftController::class, 'store'])
         ->name('shift.preset.store');
     Route::post('/shifts/commit', [EventController::class, 'commitShifts'])->name('shifts.commit');
+    Route::post('/shifts/{shift}/commit/change', [EventController::class, 'changeCommitShifts'])->name('shift.change.commit.status');
     Route::post('/shifts/commit/request', [ShiftCommitWorkflowRequestsController::class, 'store'])
         ->name('shifts.requestCommit');
 

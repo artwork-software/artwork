@@ -965,6 +965,10 @@ class EventController extends Controller
         $this->shiftService->commitShiftsByDate($startDate, $endDate);
     }
 
+    public function changeCommitShifts(Request $request, Shift $shift){
+        $shift->update(['is_committed' => $request->boolean('commit')]);
+    }
+
 
     private function adjoiningRoomsCheck(EventStoreRequest $request, $event): void
     {

@@ -502,6 +502,16 @@ function toggleTimePresetBox() {
         }
     )
 }
+
+const lockOrUnlockShift = (commit = false) => {
+    router.post(route('shift.change.commit.status', props.shift.id), {
+        commit: commit
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => wantsFreshPlacements()
+    })
+}
 </script>
 
 <template>
@@ -513,6 +523,9 @@ function toggleTimePresetBox() {
         @close="closeModal"
     >
         <form @submit.prevent="saveShift" class="relative z-40 artwork">
+
+
+
             <div class="space-y-6">
                 <!-- REPLACE: Sektion Schichtvorlagen -->
                 <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
@@ -649,9 +662,9 @@ function toggleTimePresetBox() {
                             </p>
                         </div>
                         <div class="flex items-center gap-2">
-              <span class="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700">
-                {{ filteredShiftTimePresets.length }}
-              </span>
+                              <span class="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700">
+                                {{ filteredShiftTimePresets.length }}
+                              </span>
                             <button type="button" class="ui-button !text-xs" @click="toggleTimePresetBox()">
                                 {{ showTimePresetBox ? $t('Hide') : $t('Show') }}
                             </button>
@@ -948,11 +961,29 @@ function toggleTimePresetBox() {
                         </div>
                     </div>
                 </section>
+
+                <div v-if="shift.is_committed" class="flex items-start justify-between gap-3 rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-4 sm:p-5 shadow-sm">
+                    <AlertComponent
+                        type="error"
+                        show-icon
+                        icon-size="w-4 h-4"
+                        :text="$t('This shift is already committed.')"
+                        class="mb-6"
+                    />
+
+                    <div class="">
+                        <button class="ui-button !w-fit" @click="lockOrUnlockShift(false)" type="button">
+                            {{ $t('Canceling a fixed term') }}
+                        </button>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Sticky Footer -->
             <div class="sticky bottom-0 left-0 right-0 z-50 mt-5">
                 <div class="px-4 sm:px-6 py-3 bg-white/90 backdrop-blur flex items-center" :class="!props.shift?.roomId ? 'justify-center' : 'justify-between'">
+
                     <ArtworkBaseModalButton
                         variant="primary"
                         type="submit"

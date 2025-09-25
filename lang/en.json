@@ -3191,5 +3191,6 @@
     "Create shift preset": "Create shift preset",
     "Define names, times, trades, and required qualifications.": "Define names, times, trades, and required qualifications.",
     "Break duration (minutes)": "Break duration (minutes)",
-    "Click to select, adjust quantity on the right": "Click to select, adjust quantity on the right"
+    "Click to select, adjust quantity on the right": "Click to select, adjust quantity on the right",
+    "This shift is already committed.": "This shift is already committed."
 }

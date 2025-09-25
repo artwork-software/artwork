@@ -953,7 +953,7 @@ import {XCircleIcon} from '@heroicons/vue/solid'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
-import ArtworkBaseListbox from "@/Artwork/ArtworkBaseListbox.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import InventoryStylelessCombobox
     from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryStylelessCombobox.vue";
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
+use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
@@ -213,5 +214,93 @@ readonly class CalendarDataService
                 color: $holiday->color,
                 subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
             ));
+    }
+
+    /**
+     * Blendet unbelegte Tage aus dem Kalender aus.
+     *
+     * - Ermittelt belegte Tage aus allen Räumen (mind. ein Event oder eine Schicht).
+     * - Filtert $period auf echte CalendarPeriodDTOs, deren ->fullDay belegt ist.
+     * - Reduziert und sortiert pro Raum die content-Keys in der Reihenfolge der gefilterten Perioden.
+     * - Entfernt Week-Separators/ExtraRows (die im $period als Arrays vorliegen).
+     *
+     * @param  CalendarFrontendDataDTO                 $calendarData
+     * @param  array<int, CalendarPeriodDTO|array>     $period
+     * @return array{
+     *     calendarData: CalendarFrontendDataDTO,
+     *     period: array<int, CalendarPeriodDTO>
+     * }
+     */
+    public function hideUnoccupiedDays(CalendarFrontendDataDTO $calendarData, array $period): array
+    {
+        // 1) Belegte Tage sammeln (Set aus "dd.mm.YYYY")
+        $occupiedDays = [];
+
+        foreach ($calendarData->rooms as $room) {
+            if (!isset($room['content']) || !is_array($room['content'])) {
+                continue;
+            }
+
+            foreach ($room['content'] as $dateKey => $bucket) {
+                $hasEvents = isset($bucket['events']) && !empty($bucket['events']);
+                $hasShifts = isset($bucket['shifts']) && !empty($bucket['shifts']);
+
+                if ($hasEvents || $hasShifts) {
+                    $occupiedDays[$dateKey] = true;
+                }
+            }
+        }
+
+        // Wenn nichts belegt ist: original zurückgeben (keine Reduktion)
+        if (empty($occupiedDays)) {
+            // zudem sicherstellen, dass period nur DTOs enthält (optional):
+            $periodDTOs = array_values(array_filter(
+                $period,
+                fn ($d) => $d instanceof CalendarPeriodDTO
+            ));
+
+            return [
+                'calendarData' => $calendarData,
+                'period'       => $periodDTOs,
+            ];
+        }
+
+        // 2) Perioden filtern: nur echte DTOs, deren ->fullDay im belegten Set liegt
+        $filteredPeriod = array_values(array_filter(
+            $period,
+            static function ($d) use ($occupiedDays) {
+                if (!($d instanceof CalendarPeriodDTO)) {
+                    return false; // Arrays (Week-Separators/ExtraRows) raus
+                }
+                return isset($occupiedDays[$d->fullDay]);
+            }
+        ));
+
+        // 3) Räume-Content auf belegte Tage reduzieren & in Perioden-Reihenfolge sortieren
+        $orderedKeys = array_map(static fn (CalendarPeriodDTO $p) => $p->fullDay, $filteredPeriod);
+
+        foreach ($calendarData->rooms as &$room) {
+            if (!isset($room['content']) || !is_array($room['content'])) {
+                continue;
+            }
+
+            // a) nur belegte Keys behalten
+            $room['content'] = array_intersect_key($room['content'], $occupiedDays);
+
+            // b) auf Reihenfolge der gefilterten Perioden bringen
+            $ordered = [];
+            foreach ($orderedKeys as $key) {
+                if (isset($room['content'][$key])) {
+                    $ordered[$key] = $room['content'][$key];
+                }
+            }
+            $room['content'] = $ordered;
+        }
+        unset($room);
+
+        return [
+            'calendarData' => $calendarData,
+            'period'       => $filteredPeriod,
+        ];
     }
 }

@@ -1,8 +1,8 @@
 <template>
     <Menu
         as="div"
-        class="inline-block print:hidden w-full float-left"
-        :class="!noRelative ? 'relative' : ''"
+        class="inline-block print:hidden float-left"
+        :class="[!noRelative ? 'relative' : '', classes]"
     >
         <Float
             auto-placement
@@ -115,6 +115,7 @@ const props = withDefaults(defineProps<{
     noTooltip?: boolean
     needsMaxHeight?: boolean
     textWithMarginLeft?: boolean
+    classes?: string | string[]
 }>(), {
     dotsColor: 'text-artwork-navigation-text',
     dotsSize: 'h-6 w-6',
@@ -136,6 +137,7 @@ const props = withDefaults(defineProps<{
     noTooltip: false,
     needsMaxHeight: false,
     textWithMarginLeft: false,
+    classes: '',
 })
 
 const menuButtonRef = ref<HTMLDivElement | null>(null)

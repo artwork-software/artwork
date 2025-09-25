@@ -84,6 +84,8 @@
                             :crafts="crafts"
                             filter-type="shift_filter"
                         />
+
+                        <FunctionBarSetting :is-planning="false" is-in-shift-plan />
                     </div>
                 </div>
             </div>
@@ -213,6 +215,7 @@ import {
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
+import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 
 const props = defineProps({
     days: {

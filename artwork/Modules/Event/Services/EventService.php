@@ -1785,6 +1785,8 @@ readonly class EventService
         return $event;
     }
 
+
+
     public function attachEventProperty(Event $event, EventProperty $eventProperty): Event
     {
         return $this->eventRepository->attachEventProperty($event, $eventProperty);

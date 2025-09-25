@@ -91,7 +91,7 @@ const props = defineProps({
 
 // --- Klassen sauber getrennt
 const inputBaseClass = [
-    'peer block w-full font-lexend shadow-sm',
+    'peer block w-full shadow-sm',
     'border border-gray-200 rounded-md',
     'focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create',
     // nicer transitions
@@ -107,7 +107,7 @@ const inputPaddingClass = computed(() => {
 // Label-Basis: default ist FLOATED (klein/oben).
 // Wenn das input LEER ist (placeholder-shown), fährt es runter und wird größer.
 const labelBaseClass = [
-    'absolute font-lexend pointer-events-none',
+    'absolute pointer-events-none',
     'text-gray-500 transition-all duration-200',
     // floated (default)
     'text-[10px] peer-focus:text-artwork-buttons-create',

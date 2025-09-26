@@ -3220,5 +3220,9 @@
     "This shift is already committed.": "This shift is already committed.",
     "Search…": "Search…",
     "Ascending": "Ascending",
-    "Descending": "Descending"
+    "Descending": "Descending",
+    "Service Provider": "Service Provider",
+    "Add new Address": "Add new Address",
+    "Department": "Department",
+    "Members": "Members"
 }

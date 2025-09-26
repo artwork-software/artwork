@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full">
+    <div class="w-full my-4">
         <div class="overflow-x-auto">
             <nav class="flex gap-2">
                 <template v-for="tab in tabs" :key="tab.name">

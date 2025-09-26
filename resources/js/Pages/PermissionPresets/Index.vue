@@ -5,34 +5,24 @@
     >
         <!-- Header Actions -->
         <template #tabBar>
-            <div class="flex items-center justify-end gap-3">
-                <!-- Search -->
-                <div class="relative">
-                    <input
-                        v-model="query"
-                        :placeholder="$t('Search presets')"
-                        type="text"
-                        class="h-10 w-64 rounded-xl border border-zinc-300 bg-white px-10 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none ring-0 transition focus:border-zinc-400 focus:bg-zinc-50"
-                    />
-                    <SearchIcon class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
-                    <button
-                        v-if="query"
-                        @click="query = ''"
-                        class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700"
-                        aria-label="Clear"
-                    >
-                        <XIcon class="h-4 w-4" />
+            <ToolbarHeader
+                :icon="IconUsersGroup"
+                :title="$t('Permission presets')"
+                :description="`${filteredPresets.length} ${$t('Permission presets')}`"
+                icon-bg-class="bg-indigo-600/10 text-indigo-700"
+                v-model="query"
+                :search-enabled="true"
+                :search-label="$t('Search presets')"
+                :search-tooltip="$t('Search')"
+            >
+                <template #actions>
+                    <button class="ui-button-add" @click="openPermissionPresetModal('create')">
+                        <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
+                        {{ $t('Create new permission presets') }}
                     </button>
-                </div>
-
-                <!-- Create -->
-                <BaseCardButton
-                    text="Create new permission presets"
-                    @click="openPermissionPresetModal('create')"
-                >
-                    <component :is="IconPlus" class="size-6" />
-                </BaseCardButton>
-            </div>
+                </template>
+            </ToolbarHeader>
+            
         </template>
 
         <!-- List / Empty State -->
@@ -132,12 +122,13 @@ import {
 } from '@heroicons/vue/outline'
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import {IconEdit, IconPlus, IconTrash} from "@tabler/icons-vue";
+import {IconCirclePlus, IconEdit, IconPlus, IconTrash, IconUsersGroup} from "@tabler/icons-vue";
+import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 
 /* Props */
 const props = defineProps({
-    permission_presets: { type: Array, required: true },
-    available_permissions: { type: Array, required: true }
+    permission_presets: { type: Object, required: true },
+    available_permissions: { type: Object, required: true }
 })
 
 /* i18n helper */

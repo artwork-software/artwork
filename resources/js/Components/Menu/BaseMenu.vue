@@ -32,7 +32,7 @@
                                 direction="bottom"
                                 :tooltip-text="$t('Sorting')"
                                 :icon="IconSortDescending"
-                                icon-size="h-8 w-8"
+                                :icon-size="dotsSize"
                                 :white-icon="whiteIcon"
                                 :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
                                 :no-tooltip="!noTooltip"

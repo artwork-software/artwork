@@ -145,8 +145,13 @@ class ServiceProvider extends Model implements DayServiceable
 
     public function getProfilePhotoUrlAttribute(): string
     {
+        $isUrl = filter_var($this->profile_image, FILTER_VALIDATE_URL);
+        if ($isUrl) {
+            return $this->profile_image;
+        }
         return $this->profile_image
-            ?: route('generate-avatar-image', ['letters' => $this->provider_name[0] . $this->provider_name[1]]);
+            ? asset('storage/' . $this->profile_image)
+            : route('generate-avatar-image', ['letters' => $this->provider_name[0] ?? 'S']);
     }
 
     public function plannedWorkingHours($startDate, $endDate): float|int

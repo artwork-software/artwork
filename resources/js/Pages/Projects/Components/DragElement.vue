@@ -1,11 +1,10 @@
 <template>
     <div class="card glassy-shiftplan !rounded-lg">
         <div
-            class="drag-item w-full p-2 text-white text-xs flex items-center gap-2 relative !rounded-lg"
             :class="page.props.auth.user.compact_mode ? 'h-8 flex items-center justify-between' : 'h-12'"
             draggable="true"
             @dragstart="onDragStart"
-            :style="{ backgroundColor: backgroundColorWithOpacity(color, 25) + '!important' }"
+            class="drag-item w-full p-2 text-white text-xs flex items-center gap-2 relative !rounded-lg" :style="{backgroundColor: backgroundColorWithOpacityOld(color) + '!important'}"
         >
             <div class="text-white" v-if="!page.props.auth.user.compact_mode">
                 <img
@@ -81,7 +80,7 @@ import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import { IconId, IconCalendarShare } from '@tabler/icons-vue';
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 const {
-    backgroundColorWithOpacity
+    backgroundColorWithOpacityOld
 } = useColorHelper();
 /**
  * Types (locker, aber hilfreich). Passe bei Bedarf an deine echten DTOs an.

@@ -2497,7 +2497,7 @@
     "Create a new manufacturer": "Erstelle einen neuen Hersteller",
     "Please enter the address of the manufacturer, e.g: Maxmustermann Str. 1234, 12345 Musterdorf": "Bitte gib die Adresse des Herstellers ein, z.B.: Maxmustermann Str. 1234, 12345 Musterdorf",
     "Address": "Adresse",
-    "Contact Person": "Ansprechpartner",
+    "Contact Person": "Ansprechpartner*in",
     "Phone": "Telefon",
     "Update Manufacturer": "Hersteller aktualisieren",
     "Delete Manufacturer": "Hersteller löschen",
@@ -3228,5 +3228,9 @@
     "This shift is already committed.": "Diese Schicht ist bereits festgeschrieben.",
     "Search…": "Suche…",
     "Ascending": "Aufsteigend",
-    "Descending": "Absteigend"
+    "Descending": "Absteigend",
+    "Service Provider": "Dienstleister",
+    "Add new Address": "Neue Adresse hinzufügen",
+    "Department": "Abteilung",
+    "Members": "Mitglieder*innen"
 }

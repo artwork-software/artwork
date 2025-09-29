@@ -1,71 +1,74 @@
 <template>
-    <div class="artwork-container">
-        <div class="">
-            <h2 class="headline1">{{$t('Event Settings')}}</h2>
-            <div class="xsLight mt-2">
-                {{ $t('Set global event settings.')}}
+        <div class="artwork-container">
+            <ToolbarHeader
+                :icon="IconCalendarEvent"
+                :title="title || $t('Event Settings')"
+                icon-bg-class="bg-orange-600/10 text-orange-700"
+                :description="description || $t('Set global event settings.')"
+                :search-enabled="false"
+            >
+                <template #actions>
+                    <slot name="actions"></slot>
+                </template>
+            </ToolbarHeader>
+
+            <!-- Tabs outside the header card -->
+            <BaseTabs :tabs="tabs" navigation-mode="links" />
+
+            <div class="mt-6">
+                <slot></slot>
             </div>
         </div>
-
-        <div class="w-full">
-            <div class="mb-8">
-                <div class="hidden sm:block">
-                    <div class="border-gray-200">
-                        <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
-                            <Link v-for="tab in tabs" :key="tab?.name"
-                                  :href="tab.href"
-                                  :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold font-lexend']"
-                                  :aria-current="tab.current ? 'page' : undefined" v-show="tab.show">
-                                {{ $t(tab.name) }}
-                            </Link>
-                        </nav>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card white p-5">
-            <slot>
-
-            </slot>
-        </div>
-
-    </div>
 </template>
 
-<script setup>
+<script>
+import {defineComponent} from 'vue';
+import AppLayout from "@/Layouts/AppLayout.vue";
+import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
+import {IconCalendarEvent, IconPlus} from '@tabler/icons-vue';
 
-import {Link} from "@inertiajs/vue3";
-
-const props = defineProps({})
-
-
-const tabs = [
-    {
-        name: 'Event Types',
-        href: route('event_types.management'),
-        current: route().current('event_types.management'),
-        show: true
+export default defineComponent({
+    props: ['title', 'description'],
+    emits: ['add-event-type', 'add-event-status', 'add-event-property'],
+    components: {
+        AppLayout,
+        ToolbarHeader,
+        BaseTabs
     },
-    {
-        name: 'Public holidays & school holidays',
-        href: route('holiday.management'),
-        current: route().current('holiday.management'),
-        show: true
-    },
-    {
-        name: 'Event Status',
-        href: route('event_status.management'),
-        current: route().current('event_status.management'),
-        show: true
-    },
-    {
-        name: 'Event Eigenschaften',
-        href: route('event_settings.event_properties.index'),
-        current: route().current('event_settings.event_properties.index'),
-        show: true
+    data() {
+        return {
+            IconCalendarEvent,
+            IconPlus,
+            tabs: [
+                {
+                    name: this.$t('Event Types'),
+                    href: route('event_types.management'),
+                    current: route().current('event_types.management'),
+                    permission: true
+                },
+                {
+                    name: this.$t('Public holidays & school holidays'),
+                    href: route('holiday.management'),
+                    current: route().current('holiday.management'),
+                    permission: true
+                },
+                {
+                    name: this.$t('Event Status'),
+                    href: route('event_status.management'),
+                    current: route().current('event_status.management'),
+                    permission: true
+                },
+                {
+                    name: this.$t('Event Eigenschaften'),
+                    href: route('event_settings.event_properties.index'),
+                    current: route().current('event_settings.event_properties.index'),
+                    permission: true
+                }
+            ]
+        }
     }
-];
+});
 </script>
 
 <style scoped>

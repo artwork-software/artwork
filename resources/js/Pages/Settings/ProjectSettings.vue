@@ -1,11 +1,5 @@
 <template>
     <ProjectSettingsHeader :title="$t('Project Settings')">
-        <template #actions>
-            <button class="ui-button-add" @click="openAddStateModal">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
-                {{ $t('Add Status') }}
-            </button>
-        </template>
 
         <div class="space-y-10 pb-8">
                 <ProjectSettingsItem
@@ -57,7 +51,10 @@
                         </div>
                     </div>
                 </div>
-
+            <button class="ui-button-add" @click="openAddStateModal">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ $t('Add Status') }}
+            </button>
                 <ProjectSettingsItem
                     :title="$t('Contract Types')"
                     :description="$t('Define contract types that can be assigned to contracts later.')"
@@ -357,6 +354,7 @@ export default {
         }
     },
     methods: {
+        IconPlus,
         openEditGenreModal(genre) {
             this.$inertia.patch(route('genres.update', genre.id), {name: genre.name, color: genre.color}, { preserveScroll: true});
         },

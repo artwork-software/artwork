@@ -1,13 +1,5 @@
 <template>
-    <AppLayout :title="$t('Project overview builder')">
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1 my-6">{{$t('Project overview builder')}}</h2>
-                <div class="xsLight">
-                    {{$t('Define global settings for projects.')}}
-                </div>
-            </div>
-            <ProjectTabs />
+    <ProjectSettingsHeader :title="$t('Project overview builder')" :description="$t('Define global settings for projects.')">
 
             <div>
                 <TinyPageHeadline
@@ -63,16 +55,12 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-
-    </AppLayout>
+    </ProjectSettingsHeader>
 </template>
 
 <script setup>
 
-import AppLayout from "@/Layouts/AppLayout.vue";
-import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
+import ProjectSettingsHeader from "@/Pages/Settings/Components/ProjectSettingsHeader.vue";
 import SearchInput from "@/Components/Form/SearchInput.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {computed, ref} from "vue";

@@ -2,10 +2,15 @@
     <app-layout :title="$t('Event Settings')">
 
            <EventSettingHeader>
+               <template #actions>
+                   <button class="ui-button-add" @click="openAddEventTypeModal">
+                       <component :is="IconPlus" stroke-width="1" class="size-5" />
+                       {{ $t('New Event Type') }}
+                   </button>
+               </template>
                <div>
                    <div class="flex items-center justify-between mb-5">
                        <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
-                       <GlassyIconButton :icon="IconPlus" @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
                        <div v-if="this.$page.props.show_hints" class="flex mt-1">
                            <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                            <span class="hind ml-1 my-auto">{{$t('Create new Event Types')}}</span>

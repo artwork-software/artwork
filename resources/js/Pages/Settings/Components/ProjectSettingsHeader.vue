@@ -27,7 +27,7 @@
 import {defineComponent} from 'vue';
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
-import BaseTabs from "@/Components/Tabs/BaseTabs.vue";
+import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import {IconSettings} from '@tabler/icons-vue';
 
 export default defineComponent({
@@ -45,37 +45,37 @@ export default defineComponent({
                     name: this.$t('Project Settings'),
                     href: route('project.settings'),
                     current: route().current('project.settings'),
-                    hasPermission: true
+                    permission: true
                 },
                 {
                     name: this.$t('Project Role Settings'),
                     href: route('project-roles.index'),
                     current: route().current('project-roles.index'),
-                    hasPermission: true
+                    permission: true
                 },
                 {
                     name: this.$t('Tab Settings'),
                     href: route('tab.index'),
                     current: route().current('tab.index'),
-                    hasPermission: true
+                    permission: true
                 },
                 {
                     name: this.$t('Component Settings'),
                     href: route('component.index'),
                     current: route().current('component.index'),
-                    hasPermission: true
+                    permission: true
                 },
                 {
                     name: this.$t('Print Layout Settings'),
                     href: route('project-print-layout.index'),
                     current: route().current('project-print-layout.index'),
-                    hasPermission: true
+                    permission: true
                 },
                 {
                     name: this.$t('Project overview builder'),
                     href: route('project-management-builder.index'),
                     current: route().current('project-management-builder.index'),
-                    hasPermission: true
+                    permission: true
                 },
             ]
         }

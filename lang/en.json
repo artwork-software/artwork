@@ -3227,5 +3227,9 @@
     "Members": "Members",
     "No user contracts found. Please create a new one.": "No user contracts found. Please create a new one.",
     "Shift Templates": "Shift Templates",
-    "Manage material sets for inventory planning.": "Manage material sets for inventory planning."
+    "Manage material sets for inventory planning.": "Manage material sets for inventory planning.",
+    "Drag and drop rooms to change their order in the system.": "Drag and drop rooms to change their order in the system.",
+    "Create print layout": "Create print layout",
+    "Add Event Status":"Add Event Status",
+    "New Event Property": "New Event Property"
 }

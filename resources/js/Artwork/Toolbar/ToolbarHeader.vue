@@ -14,7 +14,7 @@
                         <div class="text-zinc-900 text-xl sm:text-2xl font-semibold tracking-tight truncate">
                             {{ $t(title) }}
                         </div>
-                        <div v-if="$slots.subtitle || description" class="text-xs text-zinc-500 truncate">
+                        <div v-if="$slots.subtitle || description" class="text-xs text-zinc-500">
                             <slot name="subtitle">
                                 {{ $t(description) }}
                             </slot>

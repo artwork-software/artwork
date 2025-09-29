@@ -27,7 +27,7 @@
 import {defineComponent} from 'vue';
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
-import BaseTabs from "@/Components/Tabs/BaseTabs.vue";
+import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import {IconPackage} from '@tabler/icons-vue';
 
 export default defineComponent({
@@ -45,19 +45,19 @@ export default defineComponent({
                     name: this.$t('Categories & Sub-Categories'),
                     href: route('inventory-management.settings.category'),
                     current: route().current('inventory-management.settings.category'),
-                    hasPermission: true
+                    permission: true
                 },
                 {
                     name: this.$t('Properties'),
                     href: route('inventory-management.settings.properties'),
                     current: route().current('inventory-management.settings.properties'),
-                    hasPermission: true
+                    permission: true
                 },
                 {
                     name: this.$t('Status Settings'),
                     href: route('inventory-management.settings.status'),
                     current: route().current('inventory-management.settings.status'),
-                    hasPermission: true
+                    permission: true
                 },
             ]
         }

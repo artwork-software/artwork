@@ -86,28 +86,10 @@
 
                       <!-- Aktionen -->
                       <template #row-actions="{ row }">
-                          <BaseMenu>
-                              <MenuItem v-slot="{ active }">
-                                  <Link :href="getEditHref(row)"
-                                        :class="[active ? 'bg-gray-50 text-indigo-700' : 'text-gray-700','group flex items-center px-4 py-2 text-sm']">
-                                      <PencilAltIcon class="mr-3 h-5 w-5 text-gray-500 group-hover:text-indigo-700" />
-                                      {{ $t('Edit team') }}
-                                  </Link>
-                              </MenuItem>
-                              <MenuItem v-slot="{ active }">
-                                  <button type="button" @click="openDeleteAllTeamMembersModal(row)"
-                                          :class="[active ? 'bg-gray-50 text-indigo-700' : 'text-gray-700','group flex items-center w-full px-4 py-2 text-sm']">
-                                      <TrashIcon class="mr-3 h-5 w-5 text-gray-500 group-hover:text-indigo-700" />
-                                      {{ $t('Remove all team members') }}
-                                  </button>
-                              </MenuItem>
-                              <MenuItem v-slot="{ active }">
-                                  <button type="button" @click="openDeleteTeamModal(row)"
-                                          :class="[active ? 'bg-gray-50 text-indigo-700' : 'text-gray-700','group flex items-center w-full px-4 py-2 text-sm']">
-                                      <TrashIcon class="mr-3 h-5 w-5 text-gray-500 group-hover:text-indigo-700" />
-                                      {{ $t('Delete Team') }}
-                                  </button>
-                              </MenuItem>
+                          <BaseMenu classes="!w-fit" has-no-offset white-menu-background>
+                              <BaseMenuItem :title="$t('Edit team')" :icon="IconEdit" as-link :link="getEditHref(row)" white-menu-background />
+                              <BaseMenuItem :title="$t('Remove all team members')" :icon="IconTrash" @click="openDeleteAllTeamMembersModal(row)" white-menu-background />
+                              <BaseMenuItem :title="$t('Delete Team')" :icon="IconTrash" @click="openDeleteTeamModal(row)" white-menu-background />
                           </BaseMenu>
                       </template>
                   </BaseTable>
@@ -126,7 +108,7 @@
                                       <MenuButton :class="[form.svg_name === '' ? 'border border-gray-400' : '']"
                                                   class="items-center rounded-full focus:outline-none h-12 w-12">
                                           <label v-if="form.svg_name === ''" class="text-gray-400 text-xs">Icon*</label>
-                                          <ChevronDownIcon v-if="form.svg_name === ''" class="h-4 w-4 mx-auto text-black" />
+                                          <IconChevronDown v-if="form.svg_name === ''" class="h-4 w-4 mx-auto text-black" />
                                           <TeamIconCollection v-else class="h-12 w-12" :iconName="form.svg_name" alt="TeamIcon" />
                                       </MenuButton>
                                   </div>
@@ -198,7 +180,7 @@
                                   <span class="ml-4">{{ user.first_name }} {{ user.last_name }}</span>
                                   <button type="button" class="ml-2" @click="deleteUserFromTeam(index)">
                                       <span class="sr-only">User aus Team entfernen</span>
-                                      <XCircleIcon class="h-5 w-5 hover:text-red-600"/>
+                                      <IconX class="h-5 w-5 hover:text-red-600"/>
                                   </button>
                               </div>
                           </div>
@@ -279,9 +261,9 @@ import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 
 // Icons
-import { PencilAltIcon, TrashIcon, XCircleIcon, ChevronDownIcon } from '@heroicons/vue/outline'
-import {IconUsersGroup, IconCirclePlus} from '@tabler/icons-vue'
+import {IconUsersGroup, IconCirclePlus, IconTrash, IconEdit, IconChevronDown, IconX} from '@tabler/icons-vue'
 import UserHeader from "@/Pages/Users/UserHeader.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 // Props
 const props = defineProps<{ departments: any; users: any }>()

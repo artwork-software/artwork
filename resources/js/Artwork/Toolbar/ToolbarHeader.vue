@@ -57,6 +57,8 @@
                 <!-- Actions Slot (Filter, Sort, Buttons, …) -->
                 <slot name="actions" />
             </div>
+
+            <slot name="extra" />
         </div>
     </div>
 </template>

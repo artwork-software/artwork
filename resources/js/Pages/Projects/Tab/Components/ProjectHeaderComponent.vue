@@ -21,6 +21,8 @@
             <div class="mt-10 artwork-container !pb-0">
                 <div class="relative">
 
+                    <div class="absolute inset-0 -top-6 bg-gradient-to-b from-artwork-navigation-color/10 to-white/0 pointer-events-none"></div>
+
                     <div class="p-5 sm:p-6">
                         <!-- Zugehörigkeit zu Gruppen -->
                         <div v-if="project?.groups?.length > 0" class="mb-3">
@@ -220,9 +222,15 @@
 
             </div>
 
+
+
+
             <!-- STICKY TABS -->
             <div class="artwork-container !pb-0 sticky top-0 z-40 mt-3 bg-white/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur w-full mx-auto scroll-shadow-sm">
-                <nav class="relative flex gap-6 px-1 pt-3 pb-2 text-sm tracking-wide" aria-label="Tabs">
+
+                <BaseTabs :tabs="tabsForBaseTabComponent" />
+
+                <nav class="relative flex gap-6 px-1 pt-3 pb-2 text-sm tracking-wide hidden" aria-label="Tabs">
 
                     <Link
                         v-for="tab in headerObject.tabs"
@@ -339,11 +347,13 @@ import {
     IconAlertSquareRounded,
     IconChevronRight,
     IconCirclePlus,
-    IconClipboard, IconCopy, IconEdit,
+    IconClipboard, IconCopy, IconEdit, IconFolder, IconFolderOpen,
     IconLink,
     IconPrinter, IconTrash,
     IconX
 } from "@tabler/icons-vue";
+import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
+import tabs from "@/Pages/Areas/Components/Tabs.vue";
 
 const props = defineProps({
     headerObject: {
@@ -495,6 +505,17 @@ const closeProjectStateChangeModal = () => {
         router.reload()
     });
 }
+
+const tabsForBaseTabComponent = computed(() => {
+    return props.headerObject.tabs.map(tab => ({
+        id: tab.id,
+        name: tab.name,
+        href: route('projects.tab', { project: props.project.id, projectTab: tab.id }),
+        current: tab.id === props.headerObject.currentTabId,
+        //icon: tab.id === props.headerObject.currentTabId ? 'IconFolderOpen' : 'IconFolder',
+        permission: true
+    }));
+});
 </script>
 
 <style scoped>

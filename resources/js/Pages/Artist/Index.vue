@@ -40,7 +40,7 @@
 
                 <!-- Name (Avatar + Name + Email) -->
                 <template #cell-name="{ row }">
-                    <Link class="flex items-center" :href="route('accommodation.show', row.id)">
+                    <div class="flex items-center">
                         <div class="size-11 shrink-0">
                             <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
                         </div>
@@ -48,7 +48,7 @@
                             <div class="font-medium text-gray-900">{{ row.name }}</div>
                             <div class="mt-1 text-gray-500">{{ row.email }}</div>
                         </div>
-                    </Link>
+                    </div>
                 </template>
 
                 <!-- Actions -->

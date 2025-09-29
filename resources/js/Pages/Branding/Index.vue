@@ -5,12 +5,6 @@
                  class="w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
                 {{ this.$page.props.flash.success }}
             </div>
-            <div class="max-w-2xl">
-                <h2 class="headline2 my-2">{{ $t('Branding') }}</h2>
-                <div class="xsLight">
-                    {{ $t('To ensure your artwork is clearly associated with your company, please upload your custom artwork logos and login illustration here.') }}
-                </div>
-            </div>
             <jet-input-error :message="uploadDocumentFeedback"/>
             <label class="block mt-6 mb-4 xsDark">
                 {{ $t('Big Logo (Upload by click or drag & drop)') }}

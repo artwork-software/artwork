@@ -1,16 +1,13 @@
 <template>
-    <app-layout :title="$t('Project Settings')">
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1 my-6">{{$t('Project Settings')}}</h2>
-                <div class="xsLight">
-                    {{$t('Define global settings for projects.')}}
-                </div>
-            </div>
+    <ProjectSettingsHeader :title="$t('Project Settings')">
+        <template #actions>
+            <button class="ui-button-add" @click="openAddStateModal">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ $t('Add Status') }}
+            </button>
+        </template>
 
-            <ProjectTabs />
-
-            <div class="space-y-10 pb-8 ">
+        <div class="space-y-10 pb-8">
                 <ProjectSettingsItem
                     :title="$t('Genres')"
                     :description="$t('Define genres that projects can be assigned to later.')"
@@ -47,11 +44,6 @@
                         <div class="xsLight">
                             {{ $t('Define project statuses to indicate the progress of a project. Users can then adjust their notifications based on these statuses.') }}
                         </div>
-                    </div>
-                    <div class="mt-8 flex">
-                        <BaseCardButton text="Add Status" @click="openAddStateModal">
-                        </BaseCardButton>
-
                     </div>
                     <div class="flex flex-wrap w-full max-w-xl mt-2">
                         <div class="flex flex-wrap w-full">
@@ -205,7 +197,6 @@
                     </div>
                 </div>
             </div>
-        </div>
 
         <ProjectSettingsDeleteModal
             :show="deletingGenre"
@@ -278,13 +269,14 @@
             @close="closeStateModal"
             @submit="submitState"
         />
-    </app-layout>
+    </ProjectSettingsHeader>
 </template>
 
 <script>
-import AppLayout from '@/Layouts/AppLayout.vue';
+import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline"
-import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
+import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid"
+import {IconPlus} from '@tabler/icons-vue';
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
@@ -293,7 +285,6 @@ import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDele
 import ProjectStateModal from "@/Layouts/Components/ProjectStateModal.vue";
 import ProjectStateTagComponent from "@/Layouts/Components/ProjectStateTagComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
@@ -301,14 +292,13 @@ import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
 export default {
     mixins: [Permissions],
     components: {
+        ProjectSettingsHeader,
         BaseCardButton,
         TinyPageHeadline,
-        ProjectTabs,
         ProjectStateModal,
         ProjectStateTagComponent,
         ProjectSettingsDeleteModal,
         ProjectSettingsItem,
-        AppLayout,
         XCircleIcon,
         PlusSmIcon,
         SvgCollection,

@@ -1,46 +1,68 @@
 <template>
-    <AppLayout :title="$t('Inventory')">
+    <app-layout :title="$t('Inventory Settings') + ' - ' + title">
         <div class="artwork-container">
-            <div class="container">
-                <div class="">
-                    <h2 class="headline1">{{$t('Inventory')}}</h2>
-                    <div class="xsLight mt-2">
-                        {{$t('Define global settings for inventory planning.')}}
-                    </div>
-                </div>
+            <ToolbarHeader
+                :icon="IconPackage"
+                :title="title || $t('Inventory Settings')"
+                icon-bg-class="bg-purple-600/10 text-purple-700"
+                :description="description || $t('Define global settings for inventory planning.')"
+                :search-enabled="false"
+            >
+                <template #actions>
+                    <slot name="actions"></slot>
+                </template>
+            </ToolbarHeader>
 
-                <div class="border-gray-200 mb-5">
-                    <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
-                        <Link v-for="tab in tabs" :key="tab?.name"
-                              :href="tab.href"
-                              :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
-                              :aria-current="tab.current ? 'page' : undefined">
-                            {{ $t(tab.name) }}
-                        </Link>
-                    </nav>
-                </div>
+            <!-- Tabs outside the header card -->
+            <BaseTabs :tabs="tabs" navigation-mode="links" />
 
-                <slot>
-
-                </slot>
+            <div class="mt-6">
+                <slot></slot>
             </div>
         </div>
-    </AppLayout>
+    </app-layout>
 </template>
 
-<script setup>
-
+<script>
+import {defineComponent} from 'vue';
 import AppLayout from "@/Layouts/AppLayout.vue";
-import {Link} from "@inertiajs/vue3";
+import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import BaseTabs from "@/Components/Tabs/BaseTabs.vue";
+import {IconPackage} from '@tabler/icons-vue';
 
-const props = defineProps({})
-
-
-const tabs = [
-    { name: 'Categories & Sub-Categories', href: route('inventory-management.settings.category'), current: route().current('inventory-management.settings.category') },
-    { name: 'Properties', href: route('inventory-management.settings.properties'), current: route().current('inventory-management.settings.properties') },
-    { name: 'Status Settings', href: route('inventory-management.settings.status'), current: route().current('inventory-management.settings.status') },
-]
+export default defineComponent({
+    props: ['title', 'description'],
+    components: {
+        AppLayout,
+        ToolbarHeader,
+        BaseTabs
+    },
+    data() {
+        return {
+            IconPackage,
+            tabs: [
+                {
+                    name: this.$t('Categories & Sub-Categories'),
+                    href: route('inventory-management.settings.category'),
+                    current: route().current('inventory-management.settings.category'),
+                    hasPermission: true
+                },
+                {
+                    name: this.$t('Properties'),
+                    href: route('inventory-management.settings.properties'),
+                    current: route().current('inventory-management.settings.properties'),
+                    hasPermission: true
+                },
+                {
+                    name: this.$t('Status Settings'),
+                    href: route('inventory-management.settings.status'),
+                    current: route().current('inventory-management.settings.status'),
+                    hasPermission: true
+                },
+            ]
+        }
+    }
+});
 </script>
 
 <style scoped>

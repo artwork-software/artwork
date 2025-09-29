@@ -3232,5 +3232,8 @@
     "Service Provider": "Dienstleister",
     "Add new Address": "Neue Adresse hinzufügen",
     "Department": "Abteilung",
-    "Members": "Mitglieder*innen"
+    "Members": "Mitglieder*innen",
+    "No user contracts found. Please create a new one.": "Keine Nutzerverträge gefunden. Bitte erstelle einen neuen.",
+    "Shift Templates": "Schichtvorlagen",
+    "Manage material sets for inventory planning.": "Verwalte Material-Sets für die Inventarplanung."
 }

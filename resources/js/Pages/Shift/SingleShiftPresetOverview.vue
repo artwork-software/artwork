@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AddSingleShiftPresetModal from './Components/AddSingleShiftPresetModal.vue'
 import { useI18n } from 'vue-i18n'
-import AppLayout from "@/Layouts/AppLayout.vue"
+import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue"
 
 // Tabler Icons
 import {
@@ -14,7 +14,6 @@ import {
     IconArrowsSort,
     IconChevronDown
 } from '@tabler/icons-vue'
-import ShiftSettingTabs from "@/Pages/Settings/Components/ShiftSettingTabs.vue";
 
 const { t: $t } = useI18n()
 
@@ -115,29 +114,18 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
 </script>
 
 <template>
-    <AppLayout :title="$t('Shift Settings')">
-        <div class="artwork-container space-y-6">
-            <!-- Header -->
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">{{ $t('Single Shift Presets') }}</h1>
-                    <p class="text-sm text-gray-500">
-                        {{ $t('Templates with times, trades, and qualifications — quick to plan and reusable.') }}
-                    </p>
-                </div>
-                <div class="flex items-center gap-2">
-          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-            {{ $t('Count') }}: {{ shownCount }} / {{ totalCount }}
-          </span>
-                    <button class="ui-button" type="button" @click="openAddModal">
-                        <IconPlus class="size-4" />
-                        <span>{{ $t('Create Preset') }}</span>
-                    </button>
-                </div>
-            </div>
+    <ShiftSettingsHeader
+        :title="$t('Shift Templates')"
+        :description="$t('Templates with times, trades, and qualifications — quick to plan and reusable.')"
+    >
+        <template #actions>
+            <button class="ui-button-add" type="button" @click="openAddModal">
+                <IconPlus class="size-4" />
+                <span>{{ $t('Create Preset') }}</span>
+            </button>
+        </template>
 
-            <ShiftSettingTabs />
-
+        <div class="space-y-6">
             <!-- Toolbar -->
             <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -385,7 +373,7 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
                 @closed="handleClosed"
             />
         </div>
-    </AppLayout>
+    </ShiftSettingsHeader>
 </template>
 
 <style scoped>

@@ -48,7 +48,7 @@ use App\Http\Controllers\ContractTypeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\TaskTemplateController;
-use AppHttp\Controllers\BudgetGeneralController;
+use App\Http\Controllers\BudgetGeneralController;
 use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\RoomAttributeController;
 use App\Http\Controllers\ShiftSettingsController;

@@ -5,7 +5,7 @@
                 :key="project.id"
                 @mousedown.middle="openProjectInNewTab(project)"
                 @mousedown="openProjectInNewTabWithCmdOrSTRG($event, project)"
-                class="group relative rounded-xl border border-zinc-200 bg-white/80 backdrop-blur hover:shadow-md transition-shadow cursor-pointer"
+                class="group relative cursor-pointer"
                 @contextmenu.prevent="openMenu(project.id, $event)"
             >
                 <!-- Pinned -->

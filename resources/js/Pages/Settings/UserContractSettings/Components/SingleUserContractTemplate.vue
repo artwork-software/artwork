@@ -78,13 +78,13 @@ const ConfirmDeleteModal = defineAsyncComponent({
 })
 
 const deleteUserContract = () => {
-    router.delete(route('user-contract-settings.destroy', {userContract: props.userContract.id}), {
+    router.delete(route('user-contract-settings.destroy', {userContract: props.contract.id}), {
         preserveScroll: true,
         onSuccess: () => {
             showDeleteModal.value = false;
         },
         onError: (error) => {
-            console.error('Error deleting work time pattern:', error);
+            console.error('Error deleting user contract:', error);
         }
     });
 }

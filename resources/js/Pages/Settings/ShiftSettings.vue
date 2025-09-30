@@ -1,14 +1,6 @@
 <template>
-    <AppLayout :title="$t('Shift Settings')">
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1">{{$t('Shift Settings')}}</h2>
-                <div class="xsLight mt-2">
-                    {{$t('Define global settings for shift scheduling.')}}
-                </div>
-            </div>
-            <ShiftSettingTabs />
-            <div class="card glassy p-5 my-10">
+    <ShiftSettingsHeader :title="$t('Shift Settings')">
+        <div class="card glassy p-5 my-10">
                 <div class="card white p-5">
 
                     <div class="flex items-center justify-between">
@@ -278,7 +270,6 @@
                     </SwitchLabel>
                 </SwitchGroup>
             </div>
-        </div>
         <ShiftQualificationModal
             v-if="this.showShiftQualificationModal"
             :show="this.showShiftQualificationModal"
@@ -303,11 +294,11 @@
         <AddEditShiftTimePreset :time-preset="presetToEdit" @closed="closeShiftPresetModal" v-if="showAddShiftPresetModal" />
         <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" :users-with-inventory-permission="usersWithInventoryPermission" />
         <ConfirmDeleteModal :title="confirmDeleteTitle" :description="confirmDeleteDescription" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
-    </AppLayout>
+    </ShiftSettingsHeader>
 </template>
 <script>
 import {defineComponent} from 'vue'
-import AppLayout from "@/Layouts/AppLayout.vue";
+import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import {CheckIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon, DuplicateIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {
@@ -347,13 +338,12 @@ import Button from "@/Jetstream/Button.vue";
 import {IconGripVertical, IconPlus} from "@tabler/icons-vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
-import ShiftSettingTabs from "@/Pages/Settings/Components/ShiftSettingTabs.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
-        ShiftSettingTabs,
+        ShiftSettingsHeader,
         ShiftTabs,
         BaseTabs,
         Button, XIcon,
@@ -390,8 +380,7 @@ export default defineComponent({
         MenuItems,
         DuplicateIcon,
         TrashIcon,
-        DotsVerticalIcon,
-        AppLayout
+        DotsVerticalIcon
     },
     props: [
         'crafts',

@@ -1,14 +1,22 @@
 <template>
-    <app-layout :title="$t('Budget settings')">
+    <app-layout :title="$t('Budget Settings') + ' - ' + title">
         <div class="artwork-container">
-            <div class="mb-5">
-                <h2 class="headline1 mb-2">{{ $t('Budget settings') }}</h2>
-                <div class="headline3Light">
-                    {{ $t('Define settings for your budget.') }}
-                </div>
-            </div>
-            <BudgetSettingsTabs class="mb-5"/>
-            <div>
+            <ToolbarHeader
+                :icon="IconCurrencyDollar"
+                :title="title || $t('Budget Settings')"
+                icon-bg-class="bg-green-600/10 text-green-700"
+                :description="description || $t('Define settings for your budget.')"
+                :search-enabled="false"
+            >
+                <template #actions>
+                    <slot name="actions"></slot>
+                </template>
+            </ToolbarHeader>
+
+            <!-- Tabs outside the header card -->
+            <BaseTabs :tabs="tabs" navigation-mode="links" />
+
+            <div class="mt-6">
                 <slot></slot>
             </div>
         </div>
@@ -17,13 +25,54 @@
 
 <script>
 import {defineComponent} from 'vue';
-import BudgetSettingsTabs from "@/Pages/BudgetSettings/BudgetSettingsTabs.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
+import {IconCurrencyDollar} from '@tabler/icons-vue';
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default defineComponent({
+    props: ['title', 'description'],
+    mixins: [Permissions],
     components: {
         AppLayout,
-        BudgetSettingsTabs
+        ToolbarHeader,
+        BaseTabs
+    },
+    data() {
+        return {
+            IconCurrencyDollar,
+            tabs: [
+                {
+                    name: this.$t('General'),
+                    href: route('budget-settings.general'),
+                    current: route().current('budget-settings.general'),
+                    permission: this.$canAny([
+                        'can manage global project budgets',
+                        'can manage all project budgets without docs'
+                    ])
+                },
+                {
+                    name: this.$t('Account management'),
+                    href: route('budget-settings.account-management'),
+                    current: route().current('budget-settings.account-management'),
+                    permission: this.$canAny([
+                        'can manage global project budgets',
+                        'can manage all project budgets without docs'
+                    ])
+                },
+                {
+                    name: this.$t('Budget templates'),
+                    href: route('budget-settings.templates'),
+                    current: route().current('budget-settings.templates'),
+                    permission: this.$can('view budget templates')
+                }
+            ]
+        }
     }
 });
 </script>
+
+<style scoped>
+
+</style>

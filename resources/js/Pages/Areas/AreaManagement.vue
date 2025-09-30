@@ -1,16 +1,8 @@
 <template>
-    <app-layout :title="$t('Rooms & areas')">
-        <div class="artwork-container">
-            <div class="w-full flex my-auto justify-between">
-                <div class="flex flex-wrap w-full">
-                    <div class="flex flex-wrap w-full">
-                        <h2 class="headline1 flex w-full">{{ $t('Rooms & areas') }}</h2>
-                        <div class="xsLight flex mt-4 w-full">
-                            {{
-                                $t('Create areas and rooms and assign side rooms to individual rooms. Also define global properties for rooms.')
-                            }}
-                        </div>
-                        <Tabs/>
+    <RoomSettingsHeader
+        :title="$t('Rooms & areas')"
+        :description="$t('Create areas and rooms and assign side rooms to individual rooms. Also define global properties for rooms.')"
+    >
                         <h2 class="headline2 w-full">{{ $t('Room properties') }}</h2>
                         <div class="xsLight flex mt-4 w-full">
                             {{
@@ -176,7 +168,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
                     <div class="flex w-full flex-wrap mt-8">
                         <!-- Modernisierte Liste: Bereiche & Räume -->
                         <div
@@ -533,10 +524,7 @@
                         </div>
 
                     </div>
-                </div>
-            </div>
-        </div>
-    </app-layout>
+    </RoomSettingsHeader>
     <!-- Areal Hinzufügen-->
 
     <BaseModal @closed="closeAddAreaModal" v-if="showAddAreaModal">
@@ -1115,7 +1103,7 @@
 
 <script>
 
-import AppLayout from '@/Layouts/AppLayout.vue'
+import RoomSettingsHeader from '@/Pages/Areas/Components/RoomSettingsHeader.vue'
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Button from "@/Jetstream/Button.vue";
 import JetButton from "@/Jetstream/Button.vue";
@@ -1145,7 +1133,6 @@ import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
-import Tabs from "@/Pages/Areas/Components/Tabs.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -1171,7 +1158,6 @@ export default defineComponent({
         TextInputComponent,
         BaseModal,
         BaseMenu,
-        Tabs,
         FormButton,
         AddButtonBig,
         SuccessModal,
@@ -1180,7 +1166,7 @@ export default defineComponent({
         UserTooltip,
         SvgCollection,
         Button,
-        AppLayout,
+        RoomSettingsHeader,
         DotsVerticalIcon,
         PlusSmIcon,
         SearchIcon,

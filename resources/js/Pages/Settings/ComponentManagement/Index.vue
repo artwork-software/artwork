@@ -1,19 +1,14 @@
 <template>
-    <AppLayout>
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1 my-6">{{$t('Tab Settings')}}</h2>
-                <div class="xsLight">
-                    {{$t('Define global settings for projects.')}}
-                </div>
-            </div>
-            <ProjectTabs />
-            <div>
+    <ProjectSettingsHeader :title="$t('Component Settings')" :description="$t('Define global settings for projects.')">
+        <template #actions>
+            <button class="ui-button-add" @click="showAddNewComponentModal = true">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ $t('Create a new component') }}
+            </button>
+        </template>
+        <div>
                 <div class="flex items-center justify-end w-full mb-3">
                     <div class="flex items-center gap-x-5">
-                        <div>
-                            <GlassyIconButton :icon="IconPlus" @click="showAddNewComponentModal = true" :text="$t('Create a new component')"/>
-                        </div>
                         <div class="w-44 md:w-56 lg:w-72">
                             <div>
                                 <BaseInput id="search" type="text" name="search" v-model="searchComponent" label="Search" />
@@ -44,19 +39,18 @@
                     </div>
                 </div>
             </div>
-        </div>
         <ComponentModal v-if="showAddNewComponentModal"
                         :show="showAddNewComponentModal"
                         mode="create"
                         :tab-component-types="tabComponentTypes"
                         @close="showAddNewComponentModal = false"
         />
-    </AppLayout>
+    </ProjectSettingsHeader>
 </template>
 
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
+import ProjectSettingsHeader from "@/Pages/Settings/Components/ProjectSettingsHeader.vue";
 import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -79,7 +73,7 @@ export default {
         PlusButton,
         ComponentIcons,
         DragComponentElement,
-        ProjectTabs,
+        ProjectSettingsHeader,
         AppLayout,
         ComponentModal
     },

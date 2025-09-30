@@ -1,5 +1,5 @@
 <script>
-import AppLayout from "@/Layouts/AppLayout.vue";
+import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import AddEditDayServiceModal from "@/Pages/Settings/Components/AddEditDayServiceModal.vue";
@@ -7,49 +7,18 @@ import IconLib from "@/Mixins/IconLib.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import {IconPlus} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-import ShiftSettingTabs from "@/Pages/Settings/Components/ShiftSettingTabs.vue";
 
 export default {
     name: "DayServiceIndex",
     mixins: [IconLib],
     components: {
-        ShiftSettingTabs,
-        PropertyIcon, GlassyIconButton, AddEditDayServiceModal, AddButtonSmall, TabComponent, AppLayout},
+        ShiftSettingsHeader,
+        PropertyIcon, GlassyIconButton, AddEditDayServiceModal, AddButtonSmall, TabComponent},
     props: [
         'dayServices'
     ],
     data() {
         return {
-            tabs: [
-                {
-                    name: this.$t('Shift Settings'),
-                    href: route('shift.settings'),
-                    current: route().current('shift.settings'),
-                    show: true,
-                    icon: 'IconCalendarUser'
-                },
-                {
-                    name: this.$t('Day Services'),
-                    href: route('day-service.index'),
-                    current: route().current('day-service.index'),
-                    show: true,
-                    icon: 'IconHours24'
-                },
-                {
-                    name: this.$t('Work Time Pattern'),
-                    href: route('shift.work-time-pattern'),
-                    current: route().current('shift.work-time-pattern'),
-                    show: true,
-                    icon: 'IconClockCog'
-                },
-                {
-                    name: this.$t('User Contracts'),
-                    href: route('user-contract-settings.index'),
-                    current: route().current('user-contract-settings.index'),
-                    show: true,
-                    icon: 'IconContract'
-                }
-            ],
             iconList: [
                 {iconName: 'IconAbacus'},
                 {iconName: 'IconKey'},
@@ -89,21 +58,13 @@ export default {
 </script>
 
 <template>
-    <AppLayout :title="$t('Day Services')">
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1">{{$t('Day Services')}}</h2>
-                <div class="xsLight mt-2">
-                    {{$t('Define global settings for shift scheduling.')}}
-                </div>
-            </div>
-
-            <ShiftSettingTabs />
-
-           <div class="flex items-center justify-between">
-
-               <GlassyIconButton text="New Day Service" :icon="IconPlus"@click="showAddEditDayServiceModal = true" />
-           </div>
+    <ShiftSettingsHeader :title="$t('Day Services')">
+        <template #actions>
+            <button class="ui-button-add" @click="showAddEditDayServiceModal = true">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ $t('New Day Service') }}
+            </button>
+        </template>
 
             <div class="my-5 card white p-5" >
                 <div v-for="dayService in dayServices">
@@ -120,10 +81,9 @@ export default {
                     </div>
                 </div>
             </div>
-        </div>
 
         <AddEditDayServiceModal :icon-list="iconList" v-if="showAddEditDayServiceModal" :day-service-to-edit="dayServiceToEdit" @closed="closeModal" />
-    </AppLayout>
+    </ShiftSettingsHeader>
 </template>
 
 <style scoped>

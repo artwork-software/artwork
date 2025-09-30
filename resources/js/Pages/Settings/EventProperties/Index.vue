@@ -1,13 +1,16 @@
 <template>
     <app-layout :title="$t('Event Properties')">
         <EventSettingHeader>
+            <template #actions>
+                <button class="ui-button-add" @click="showEventPropertyModal = true">
+                    <component :is="IconPlus" stroke-width="1" class="size-5" />
+                    {{ $t('New Event Property') }}
+                </button>
+            </template>
             <div class="my-10">
-                <div class="mb-4 flex items-center justify-between gap-x-10">
+                <div class="mb-4">
                     <TinyPageHeadline title="Event Eigenschaften"
                                       description="Hier kannst du die Event Eigenschaften verwalten."/>
-                    <div>
-                        <GlassyIconButton :icon="IconPlus" @click="showEventPropertyModal = true;" text="Event Eigenschaft hinzufügen"/>
-                    </div>
                 </div>
                 <ul role="list" class="flex flex-col gap-y-3">
                     <li v-for="(eventProperty) in event_properties"

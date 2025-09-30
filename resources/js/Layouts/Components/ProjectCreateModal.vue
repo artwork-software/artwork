@@ -603,7 +603,6 @@ import ProjectGroupListbox from "@/Components/Listboxes/ProjectGroupListbox.vue"
 import KeyVisual from "@/Components/Uploads/KeyVisual.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import BaseTabs from "@/Components/Tabs/BaseTabs.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import Permissions from "@/Mixins/Permissions.vue";

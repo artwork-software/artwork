@@ -3232,5 +3232,12 @@
     "Service Provider": "Dienstleister",
     "Add new Address": "Neue Adresse hinzufügen",
     "Department": "Abteilung",
-    "Members": "Mitglieder*innen"
+    "Members": "Mitglieder*innen",
+    "No user contracts found. Please create a new one.": "Keine Nutzerverträge gefunden. Bitte erstelle einen neuen.",
+    "Shift Templates": "Schichtvorlagen",
+    "Manage material sets for inventory planning.": "Verwalte Material-Sets für die Inventarplanung.",
+    "Drag and drop rooms to change their order in the system.": "Ziehe Räume per Drag & Drop, um ihre Reihenfolge im System zu ändern.",
+    "Create print layout": "Drucklayout erstellen",
+    "Add Event Status": "Terminstatus hinzufügen",
+    "New Event Property": "Termin-Eigenschaft erstellen"
 }

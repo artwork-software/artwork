@@ -3193,7 +3193,7 @@
     "This month": "Dieser Monat",
     "All time": "Jede Zeit",
     "Name search": "Namenssuche",
-    "Search by issue name …": "Suche nach Ausgabenname …",
+    "Search by issue name": "Suche nach Ausgabenname",
     "Quick range": "Schnellbereich",
     "Range": "Bereich",
     "Track and filter external issues, returns and recipients.": "Verfolge und filtere externe Ausgaben, Rückgaben und Empfänger.",
@@ -3240,5 +3240,7 @@
     "Create print layout": "Drucklayout erstellen",
     "Add Event Status": "Terminstatus hinzufügen",
     "New Event Property": "Termin-Eigenschaft erstellen",
-    "Create and manage templates for checklists that can be reused across projects.": "Erstelle und verwalte Vorlagen für Checklisten, die projektübergreifend wiederverwendet werden können."
+    "Create and manage templates for checklists that can be reused across projects.": "Erstelle und verwalte Vorlagen für Checklisten, die projektübergreifend wiederverwendet werden können.",
+    "Filters": "Filter",
+    "External material issues": "Externe Materialausgaben"
 }

@@ -3185,7 +3185,7 @@
     "This month": "This month",
     "All time": "All time",
     "Name search": "Name search",
-    "Search by issue name …": "Search by issue name …",
+    "Search by issue name": "Search by issue name",
     "Quick range": "Quick range",
     "Range": "Range",
     "Track and filter external issues, returns and recipients.": "Track and filter external issues, returns and recipients.",
@@ -3232,5 +3232,7 @@
     "Create print layout": "Create print layout",
     "Add Event Status":"Add Event Status",
     "New Event Property": "New Event Property",
-    "Create and manage templates for checklists that can be reused across projects.": "Create and manage templates for checklists that can be reused across projects."
+    "Create and manage templates for checklists that can be reused across projects.": "Create and manage templates for checklists that can be reused across projects.",
+    "Filters": "Filters",
+    "External material issues": "External material issues"
 }

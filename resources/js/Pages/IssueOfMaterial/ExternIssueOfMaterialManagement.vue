@@ -1,8 +1,24 @@
 <template>
     <AppLayout :title="$t('Inventory')">
-        <div class="px-10 w-full mx-auto font-lexend">
+        <div class="artwork-container">
+
+
+            <ToolbarHeader title="External material issues"
+                           description="Track and filter external issues, returns and recipients."
+                           :icon="IconMenu4"
+                           icon-bg-class="bg-blue-600/10 text-blue-700"
+            >
+                <template #actions>
+                    <button class="ui-button-add"  @click="openIssueOfMaterialModal">
+                        <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
+                        {{ $t('New issue of material') }}
+                    </button>
+                </template>
+
+            </ToolbarHeader>
+
             <!-- Header -->
-            <div class="flex flex-wrap items-center justify-between gap-4 pt-6 pb-2">
+            <!--<div class="flex flex-wrap items-center justify-between gap-4 pt-6 pb-2 hidden">
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
             <span class="inline-flex size-6 items-center justify-center rounded-md bg-indigo-600/10 text-indigo-700">
@@ -37,7 +53,7 @@
                         <component :is="IconCopyPlus" class="size-5 mr-2" />
                     </BaseButton>
                 </div>
-            </div>
+            </div>-->
 
             <div class="mt-2">
                 <IssueTabs />
@@ -113,11 +129,11 @@
                                 class="w-full rounded-md border border-gray-300 pl-8 pr-8 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             />
                             <span class="pointer-events-none absolute left-2 top-1.5 text-gray-400">
-                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <circle cx="11" cy="11" r="7" stroke-width="1.5"></circle>
-                  <path d="M20 20l-3.5-3.5" stroke-width="1.5"></path>
-                </svg>
-              </span>
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                  <circle cx="11" cy="11" r="7" stroke-width="1.5"></circle>
+                                  <path d="M20 20l-3.5-3.5" stroke-width="1.5"></path>
+                                </svg>
+                            </span>
                             <button v-if="filters.q" type="button" class="absolute right-1.5 top-1.5 rounded p-1 text-gray-400 hover:text-gray-600" @click="filters.q = ''">&times;</button>
                         </div>
                     </div>
@@ -144,23 +160,23 @@
                 <!-- Filter-Summary -->
                 <div class="pb-3">
                     <div class="mt-1 flex flex-wrap items-center gap-2">
-            <span v-if="filters.date_from || filters.date_to" class="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50/70 px-2.5 py-0.5 text-xs text-indigo-700">
-              {{ $t('Range') }}:
-              <span class="mx-1 font-medium">{{ formatDate(filters.date_from) || '…' }} – {{ formatDate(filters.date_to) || '…' }}</span>
-              <button class="ml-1 text-indigo-500 hover:text-indigo-700" @click="clearRange">&times;</button>
-            </span>
-                        <span v-if="filters.issued_by_id" class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50/70 px-2.5 py-0.5 text-xs text-sky-700">
-              {{ $t('Issued by') }}: <span class="mx-1 font-medium">{{ userNameById(filters.issued_by_id) }}</span>
-              <button class="ml-1 text-sky-500 hover:text-sky-700" @click="filters.issued_by_id = ''">&times;</button>
-            </span>
-                        <span v-if="filters.received_by_id" class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50/70 px-2.5 py-0.5 text-xs text-emerald-700">
-              {{ $t('Received by') }}: <span class="mx-1 font-medium">{{ userNameById(filters.received_by_id) }}</span>
-              <button class="ml-1 text-emerald-500 hover:text-emerald-700" @click="filters.received_by_id = ''">&times;</button>
-            </span>
-                        <span v-if="filters.q" class="inline-flex items-center rounded-full border border-violet-200 bg-violet-50/70 px-2.5 py-0.5 text-xs text-violet-700">
-              {{ $t('Search') }}: <span class="mx-1 font-medium">“{{ filters.q }}”</span>
-              <button class="ml-1 text-violet-500 hover:text-violet-700" @click="filters.q = ''">&times;</button>
-            </span>
+                        <span v-if="filters.date_from || filters.date_to" class="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50/70 px-2.5 py-0.5 text-xs text-indigo-700">
+                          {{ $t('Range') }}:
+                          <span class="mx-1 font-medium">{{ formatDate(filters.date_from) || '…' }} – {{ formatDate(filters.date_to) || '…' }}</span>
+                          <button class="ml-1 text-indigo-500 hover:text-indigo-700" @click="clearRange">&times;</button>
+                        </span>
+                                    <span v-if="filters.issued_by_id" class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50/70 px-2.5 py-0.5 text-xs text-sky-700">
+                          {{ $t('Issued by') }}: <span class="mx-1 font-medium">{{ userNameById(filters.issued_by_id) }}</span>
+                          <button class="ml-1 text-sky-500 hover:text-sky-700" @click="filters.issued_by_id = ''">&times;</button>
+                        </span>
+                                    <span v-if="filters.received_by_id" class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50/70 px-2.5 py-0.5 text-xs text-emerald-700">
+                          {{ $t('Received by') }}: <span class="mx-1 font-medium">{{ userNameById(filters.received_by_id) }}</span>
+                          <button class="ml-1 text-emerald-500 hover:text-emerald-700" @click="filters.received_by_id = ''">&times;</button>
+                        </span>
+                                    <span v-if="filters.q" class="inline-flex items-center rounded-full border border-violet-200 bg-violet-50/70 px-2.5 py-0.5 text-xs text-violet-700">
+                          {{ $t('Search') }}: <span class="mx-1 font-medium">“{{ filters.q }}”</span>
+                          <button class="ml-1 text-violet-500 hover:text-violet-700" @click="filters.q = ''">&times;</button>
+                        </span>
                         <button
                             v-if="hasAnyFilter"
                             type="button"
@@ -229,7 +245,8 @@ import SingleExternMaterialIssue from "@/Pages/IssueOfMaterial/Components/Single
 import { router, usePage } from "@inertiajs/vue3";
 import { computed, provide, ref, watch } from "vue";
 import { can, is } from "laravel-permission-to-vuejs";
-import { IconCopyPlus, IconSearch, IconX } from "@tabler/icons-vue";
+import {IconCirclePlus, IconCopyPlus, IconMenu4, IconSearch, IconX} from "@tabler/icons-vue";
+import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 
 const props = defineProps({
     issues: Object,

@@ -3239,5 +3239,6 @@
     "Drag and drop rooms to change their order in the system.": "Ziehe Räume per Drag & Drop, um ihre Reihenfolge im System zu ändern.",
     "Create print layout": "Drucklayout erstellen",
     "Add Event Status": "Terminstatus hinzufügen",
-    "New Event Property": "Termin-Eigenschaft erstellen"
+    "New Event Property": "Termin-Eigenschaft erstellen",
+    "Create and manage templates for checklists that can be reused across projects.": "Erstelle und verwalte Vorlagen für Checklisten, die projektübergreifend wiederverwendet werden können."
 }

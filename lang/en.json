@@ -3231,5 +3231,6 @@
     "Drag and drop rooms to change their order in the system.": "Drag and drop rooms to change their order in the system.",
     "Create print layout": "Create print layout",
     "Add Event Status":"Add Event Status",
-    "New Event Property": "New Event Property"
+    "New Event Property": "New Event Property",
+    "Create and manage templates for checklists that can be reused across projects.": "Create and manage templates for checklists that can be reused across projects."
 }

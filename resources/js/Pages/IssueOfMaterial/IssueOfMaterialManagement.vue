@@ -1,8 +1,24 @@
 <template>
     <AppLayout :title="$t('Inventory')">
-        <div class="px-10 w-full mx-auto">
+        <div class="artwork-container">
             <!-- Header -->
-            <div class="flex flex-wrap items-center justify-between gap-4 pt-6 pb-2">
+
+            <ToolbarHeader title="Material issue book"
+                           description="Track and filter all internal material issues across projects and rooms."
+                           :icon="IconMenu4"
+                           icon-bg-class="bg-amber-600/10 text-amber-700"
+            >
+                <template #actions>
+                    <button class="ui-button-add"  @click="openIssueOfMaterialModal">
+                        <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
+                        {{ $t('New issue of material') }}
+                    </button>
+                </template>
+
+            </ToolbarHeader>
+
+
+            <!--<div class="flex flex-wrap items-center justify-between gap-4 pt-6 pb-2 hidden">
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
                     <span class="inline-flex size-6 items-center justify-center rounded-md bg-indigo-600/10 text-indigo-700">
@@ -41,7 +57,7 @@
                         <component :is="IconCopyPlus" class="size-5 mr-2" />
                     </BaseButton>
                 </div>
-            </div>
+            </div>-->
 
             <div>
                 <IssueTabs />
@@ -249,7 +265,7 @@
                         </div>
 
                         <!-- Projekt -->
-                        <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                        <div class="col-span-12 sm:col-span-6 lg:col-span-2">
                             <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('Project') }}</label>
                             <select
                                 v-model="filters.project_id"
@@ -261,7 +277,7 @@
                         </div>
 
                         <!-- Name-Suche -->
-                        <div class="col-span-12 sm:col-span-6 lg:col-span-2">
+                        <div class="col-span-12 sm:col-span-4 lg:col-span-2">
                             <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('Name search') }}</label>
                             <div class="relative">
                                 <input
@@ -289,11 +305,11 @@
                         </div>
 
                         <!-- Aktionen -->
-                        <div class="col-span-12 sm:col-span-6 lg:col-span-1 flex items-center justify-end gap-2">
+                        <div class="col-span-12 sm:col-span-4 lg:col-span-2 flex items-center justify-end gap-2">
                             <button
                                 type="button"
                                 @click="applyFilters"
-                                class="inline-flex items-center justify-center rounded-md border border-indigo-200 bg-indigo-50/70 px-3 py-2 text-sm text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                class="ui-button-add"
                                 :title="$t('Apply filters')"
                             >
                                 <component :is="IconSearch" class="size-4 mr-1" stroke-width="1.5" />
@@ -302,7 +318,7 @@
                             <button
                                 type="button"
                                 @click="resetFilters"
-                                class="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                class="ui-button"
                             >
                                 {{ $t('Reset') }}
                             </button>
@@ -475,7 +491,8 @@ import SingleInternMaterialIssue from "@/Pages/IssueOfMaterial/Components/Single
 import { router, usePage } from "@inertiajs/vue3";
 import { computed, provide, ref, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { can, is } from "laravel-permission-to-vuejs";
-import { IconCopyPlus, IconSearch, IconX } from "@tabler/icons-vue";
+import {IconCirclePlus, IconCopyPlus, IconMenu, IconMenu4, IconSearch, IconX} from "@tabler/icons-vue";
+import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 
 const props = defineProps({
     issues: Object,

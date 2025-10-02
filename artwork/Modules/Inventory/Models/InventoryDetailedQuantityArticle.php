@@ -20,8 +20,11 @@ class InventoryDetailedQuantityArticle extends Model
         'name',
         'description',
         'quantity',
-        'inventory_article_status_id'
+        'inventory_article_status_id',
+        'type_number'
     ];
+
+
 
     protected $appends = ['room', 'manufacturer'];
 

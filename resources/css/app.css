@@ -742,6 +742,7 @@
     .ui-card-title { @apply text-[13.5px] font-semibold text-zinc-900; }
     .ui-dot { @apply inline-block size-2.5 rounded-full; }
     .ui-button { @apply inline-flex items-center gap-x-2 justify-center rounded-xl border border-zinc-200/80 px-2.5 py-2.5 cursor-pointer hover:bg-zinc-50 transition text-sm;}
+    .ui-button-small { @apply inline-flex items-center gap-x-2 justify-center rounded-md border border-zinc-200/80 px-2.5 bg-white py-0.5 cursor-pointer hover:bg-zinc-50 transition text-xs;}
     .ui-button-add { @apply inline-flex items-center gap-x-2 justify-center rounded-xl bg-blue-50 text-blue-500 border border-blue-200/80 px-4 py-2.5 cursor-pointer hover:bg-blue-100 transition text-sm;}
     /* Listbox Trigger (kompakt) */
     .ui-lb-trigger { @apply flex w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 h-10 shadow-sm; }

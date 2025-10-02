@@ -4,7 +4,7 @@ import JetInputError from "@/Jetstream/InputError.vue";
 import Button from "@/Jetstream/Button.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import {IconDownload, IconEdit, IconX} from "@tabler/icons-vue";
-import {router, useForm} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 
 const props = defineProps({
@@ -83,29 +83,28 @@ const deleteKeyVisual = () => {
             </div>
         </div>
         <div v-else class="flex items-center justify-center relative w-full">
-            <div
-                class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
-                <button @click="downloadKeyVisual" type="button"
-                        class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            <div class="absolute w-full text-center flex items-center justify-center hidden group-hover:block space-x-4">
+                <button @click="downloadKeyVisual" type="button" v-if="project.key_visual_path !== 'default_keyVisual.png'"
+                        class="ui-button bg-white hover:text-orange-500">
                     <IconDownload class="h-5 w-5" aria-hidden="true"/>
                 </button>
                 <button @click="selectNewKeyVisual" type="button"
-                        class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        class="ui-button bg-white hover:text-blue-500">
                     <IconEdit
-                        class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                        class="h-5 w-5"
                         aria-hidden="true"/>
                 </button>
                 <button @click="deleteKeyVisual" type="button"
-                        class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                    <IconX class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                        class="ui-button bg-white hover:text-red-500">
+                    <IconX class="h-5 w-5"
                            aria-hidden="true"/>
                 </button>
             </div>
             <div class="text-center">
                 <div class="cursor-pointer">
-                    <img src="">
                     <img :src="'/storage/keyVisual/' + project.key_visual_path"
                          alt="Aktuelles Key-Visual"
+                         @error="(e) => e.target.src = usePage().props.big_logo"
                          class="rounded-md w-full h-48">
                     <input id="keyVisual-upload" ref="keyVisual"
                            name="file-upload" type="file" class="sr-only"
@@ -113,6 +112,7 @@ const deleteKeyVisual = () => {
                 </div>
             </div>
         </div>
+
         <jet-input-error :message="uploadKeyVisualFeedback"/>
     </div>
 </template>

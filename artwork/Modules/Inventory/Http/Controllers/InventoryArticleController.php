@@ -16,6 +16,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
@@ -131,12 +132,14 @@ class InventoryArticleController extends Controller
 
     public function availableStockBatch(Request $request)
     {
-
         $validated = $request->validate([
             'article_ids'   => ['required', 'array', 'min:1'],
             'article_ids.*' => ['integer', 'distinct', 'exists:inventory_articles,id'],
             'start_date'    => ['required', 'date'],
             'end_date'      => ['required', 'date', 'after_or_equal:start_date'],
+            // Uhrzeiten sind optional – nur wenn mitgegeben, wird stundengenau gerechnet
+            'start_time'    => ['nullable', 'date_format:H:i'],
+            'end_time'      => ['nullable', 'date_format:H:i'],
             'type'          => ['nullable', 'in:intern,extern'],
             'issue_id'      => ['nullable', 'integer', 'min:1'],
         ]);
@@ -144,25 +147,46 @@ class InventoryArticleController extends Controller
         $articleIds = array_map('intval', $validated['article_ids']);
         $startDate  = $validated['start_date'];
         $endDate    = $validated['end_date'];
+        $startTime  = $validated['start_time'] ?? null;
+        $endTime    = $validated['end_time'] ?? null;
         $type       = $validated['type'] ?? null;
         $issueId    = $validated['issue_id'] ?? null;
 
+        // Wenn Zeiten mitgeliefert → stundengenau, sonst ganztägig
+        $hasTime = filled($startTime) && filled($endTime);
+
+        $startAt = $hasTime
+            ? \Carbon\Carbon::parse("{$startDate} {$startTime}:00")
+            : \Carbon\Carbon::parse($startDate)->startOfDay();
+
+        $endAt = $hasTime
+            ? \Carbon\Carbon::parse("{$endDate} {$endTime}:59") // inkl. :59, um "bis 10:00" als einschließend zu behandeln
+            : \Carbon\Carbon::parse($endDate)->endOfDay();
+
+        // Hilfs-Raws: TIMESTAMP(date, time) – fällt auf 00:00:00 bzw. 23:59:59 zurück, wenn time NULL ist
+        $tsInternalStart = DB::raw("TIMESTAMP(start_date, COALESCE(start_time,'00:00:00'))");
+        $tsInternalEnd   = DB::raw("TIMESTAMP(COALESCE(end_date,start_date), COALESCE(end_time,'23:59:59'))");
+
+        $tsExternalStart = DB::raw("TIMESTAMP(issue_date, COALESCE(issue_time,'00:00:00'))");
+        $tsExternalEnd   = DB::raw("TIMESTAMP(COALESCE(return_date, issue_date), COALESCE(return_time,'23:59:59'))");
 
         $articles = InventoryArticle::whereIn('id', $articleIds)
             ->with([
                 'statusValues',
                 'detailedArticleQuantities.status',
-                'internalIssues' => function ($q) use ($startDate, $endDate) {
-                    $q->whereDate('start_date', '<=', $endDate)
-                        ->where(function ($qq) use ($startDate) {
-                            $qq->whereDate('end_date', '>=', $startDate)
-                                ->orWhereNull('end_date');
+                // Interne Verplanungen: Zeitüberlappung (start <= endAt) && (end >= startAt)
+                'internalIssues' => function ($q) use ($tsInternalStart, $tsInternalEnd, $startAt, $endAt) {
+                    $q->where($tsInternalStart, '<=', $endAt)
+                        ->where(function ($qq) use ($tsInternalEnd, $startAt) {
+                            $qq->where($tsInternalEnd, '>=', $startAt)
+                                ->orWhereNull('end_date'); // Sicherheit wie bisher, falls offene Enden genutzt werden
                         });
                 },
-                'externalIssues' => function ($q) use ($startDate, $endDate) {
-                    $q->whereDate('issue_date', '<=', $endDate)
-                        ->where(function ($qq) use ($startDate) {
-                            $qq->whereDate('return_date', '>=', $startDate)
+                // Externe Ausgaben (Verleih): gleiche Logik
+                'externalIssues' => function ($q) use ($tsExternalStart, $tsExternalEnd, $startAt, $endAt) {
+                    $q->where($tsExternalStart, '<=', $endAt)
+                        ->where(function ($qq) use ($tsExternalEnd, $startAt) {
+                            $qq->where($tsExternalEnd, '>=', $startAt)
                                 ->orWhereNull('return_date');
                         });
                 },
@@ -173,9 +197,10 @@ class InventoryArticleController extends Controller
         $results = [];
         foreach ($articleIds as $id) {
             if (isset($articles[$id])) {
+                // Passe ggf. die Signatur deiner Model-Methode an (siehe Kommentar unten)
                 $results[$id] = $articles[$id]->getAvailableStock(
-                    $startDate,
-                    $endDate,
+                    $startAt,   // exakter Startzeitpunkt (Carbon)
+                    $endAt,     // exakter Endzeitpunkt (Carbon)
                     $issueId,
                     $type
                 );
@@ -184,7 +209,6 @@ class InventoryArticleController extends Controller
 
         return response()->json(['data' => $results]);
     }
-
 
     public function search(Request $request): \Illuminate\Http\JsonResponse
     {

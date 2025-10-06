@@ -530,13 +530,8 @@ const lockOrUnlockShift = (commit = false) => {
                 <!-- REPLACE: Sektion Schichtvorlagen -->
                 <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->
-                    <div class="flex items-start justify-between gap-3 p-4 sm:p-5">
-                        <div>
-                            <h3 class="text-sm font-semibold text-gray-900">{{ $t('shift templates') }}</h3>
-                            <p class="text-xs text-gray-500">
-                                {{ $t('Complete templates with times, trade, description, and qualifications.') }}
-                            </p>
-                        </div>
+                    <div class="flex items-center justify-between gap-3 p-4">
+                        <h3 class="text-sm font-semibold text-gray-900">{{ $t('shift templates') }}</h3>
                         <div class="flex items-center gap-2">
                           <span class="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700">
                             {{ filteredSingleShiftPresets.length }}
@@ -654,13 +649,8 @@ const lockOrUnlockShift = (commit = false) => {
                 <!-- Sektion: Zeitvorgaben -->
                 <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->
-                    <div class="flex items-start justify-between gap-3 p-4 sm:p-5">
-                        <div>
-                            <h3 class="text-sm font-semibold text-gray-900">{{ $t('Time presets') }}</h3>
-                            <p class="text-xs text-gray-500">
-                                {{ $t('Speed up with saved start/end/break templates.') }}
-                            </p>
-                        </div>
+                    <div class="flex items-center justify-between gap-3 p-4">
+                        <h3 class="text-sm font-semibold text-gray-900">{{ $t('Time presets') }}</h3>
                         <div class="flex items-center gap-2">
                               <span class="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700">
                                 {{ filteredShiftTimePresets.length }}

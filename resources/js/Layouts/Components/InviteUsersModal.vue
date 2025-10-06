@@ -9,13 +9,12 @@
             <div class="mt-6">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
                     <div class="col-span-4">
-                        <TextInputComponent
+                        <BaseInput
                             id="email"
                             v-model="emailInput"
                             :label="$t('E-Mail*')"
                             required
                             @keyup.enter.prevent="addEmailsFromInput"
-                            @keydown.prevent="onEmailDel"
                             @blur="addEmailsFromInput"
                             autocomplete="off"
                             placeholder="max@example.com, anna@firma.de …"
@@ -290,7 +289,7 @@
 import { ref, computed, reactive, getCurrentInstance } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
-import TextInputComponent from '@/Components/Inputs/TextInputComponent.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import AddButtonSmall from '@/Layouts/Components/General/Buttons/AddButtonSmall.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
@@ -426,13 +425,6 @@ function addEmailsFromInput () {
     helpText.value = hints.join(' ')
 
     emailInput.value = ''
-}
-
-function onEmailDel (e) {
-    // Remove last chip on Backspace when input empty
-    if (e.key === 'Backspace' && emailInput.value === '' && form.user_emails.length) {
-        form.user_emails.pop()
-    }
 }
 
 function removeEmail (i) {

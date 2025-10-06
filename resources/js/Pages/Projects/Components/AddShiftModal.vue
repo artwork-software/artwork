@@ -962,7 +962,7 @@ const lockOrUnlockShift = (commit = false) => {
                     </div>
                 </section>
 
-                <div v-if="shift.is_committed" class="flex items-start justify-between gap-3 rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-4 sm:p-5 shadow-sm">
+                <div v-if="shift?.is_committed" class="flex items-start justify-between gap-3 rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-4 sm:p-5 shadow-sm">
                     <AlertComponent
                         type="error"
                         show-icon

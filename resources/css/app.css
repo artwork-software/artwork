@@ -751,6 +751,10 @@
     .ui-lb-value { @apply flex items-center gap-2 text-[13px] text-zinc-900 min-w-0; }
     .ui-lb-icon { @apply size-4 text-zinc-400; }
 
+    .dashboard-chip {
+        @apply flex items-center justify-center gap-2 rounded-xl border px-2.5 py-2 text-xs hover:bg-gray-50;
+    }
+
     /* Inputs kompakt */
     .ui-input :deep(input),
     .ui-input { @apply h-10; }

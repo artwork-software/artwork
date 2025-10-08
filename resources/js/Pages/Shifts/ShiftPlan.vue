@@ -357,7 +357,7 @@
                                         </div>
                                     </div>
                                 </BaseFilter>
-                                <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-fit" right white-icon>
+                                <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-fit" right white-icon classesButton="ui-button hover:!bg-artwork-navigation-color/10 text-artwork-buttons-context">
                                     <div class="flex items-center justify-end py-1">
                                     <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="this.resetSort()">
                                         {{ $t('Reset') }}
@@ -394,7 +394,7 @@
                                 </BaseMenu>
                             </div>
                         </div>
-                        <div class="pt-14 z-10">
+                        <div class="pt-20 z-10">
                             <table class="w-full text-white overflow-y-scroll z-10">
                                 <div class="z-10">
                                     <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">

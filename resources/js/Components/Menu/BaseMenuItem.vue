@@ -2,12 +2,12 @@
     <MenuItem v-slot="{ active }">
         <Link :href="link" v-if="asLink"
            :class="[whiteMenuBackground ? 'hover:text-artwork-buttons-create' : 'hover:text-white text-white', icon === IconTrash ? 'text-red-400' : ' text-gray-500', 'group flex items-center text-xs px-3 py-2 text-sm subpixel-antialiased cursor-pointer rounded-lg hover:bg-gray-100']">
-            <component :is="resolvedIcon" class="mr-2 h-4 w-4" :class="whiteMenuBackground ? 'group-hover:text-artwork-buttons-create' : ' group-hover:text-artwork-buttons-hover'" aria-hidden="true"/>
+            <PropertyIcon :name="icon" class="mr-2 h-4 w-4" :class="whiteMenuBackground ? 'group-hover:text-artwork-buttons-create' : ' group-hover:text-artwork-buttons-hover'" aria-hidden="true"/>
             {{ withoutTranslation ? title : $t(title) }}
         </Link>
         <div v-else
            :class="[whiteMenuBackground ? 'hover:text-artwork-buttons-create' : 'hover:text-white text-white', icon === IconTrash ? 'text-red-400' : ' text-gray-500' , 'group flex items-center text-xs px-3 py-2 text-sm subpixel-antialiased cursor-pointer rounded-lg hover:bg-gray-100']">
-            <component :is="resolvedIcon" class="mr-2 h-4 w-4" :class="whiteMenuBackground ? 'group-hover:text-artwork-buttons-create' : 'group-hover:text-artwork-buttons-hover'" aria-hidden="true"/>
+            <PropertyIcon :name="icon" class="mr-2 h-4 w-4" :class="whiteMenuBackground ? 'group-hover:text-artwork-buttons-create' : 'group-hover:text-artwork-buttons-hover'" aria-hidden="true"/>
             {{ withoutTranslation ? title : $t(title) }}
         </div>
     </MenuItem>
@@ -19,6 +19,7 @@ import {MenuItem} from "@headlessui/vue";
 import {Link} from "@inertiajs/vue3";
 import {computed} from "vue";
 import {IconEdit, IconTrash} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const props = defineProps({
     asLink: {
         type: Boolean,

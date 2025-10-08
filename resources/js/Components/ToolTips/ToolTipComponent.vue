@@ -70,7 +70,7 @@
             v-else
             class="focus:outline-none"
             type="button"
-            :class="classes"
+            :class="[classes, classesButton]"
             :disabled="disabled"
         >
             <PropertyIcon

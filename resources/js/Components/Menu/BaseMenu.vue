@@ -23,7 +23,7 @@
                                 stroke-width="1.5"
                                 class="flex-shrink-0"
                                 aria-hidden="true"
-                                :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
+                                :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '', classesButton]"
                             />
 
                             <!-- Sort Icon mit Tooltip -->
@@ -36,6 +36,7 @@
                                 :white-icon="whiteIcon"
                                 :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
                                 :no-tooltip="!noTooltip"
+                                :classes-button="classesButton"
                             />
 
                             <!-- Benutzerdefiniertes Icon mit Tooltip -->
@@ -50,6 +51,7 @@
                                 :white-icon="whiteIcon"
                                 :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
                                 :no-tooltip="!noTooltip"
+                                :classes-button="classesButton"
                             />
                         </div>
 
@@ -116,6 +118,7 @@ const props = withDefaults(defineProps<{
     needsMaxHeight?: boolean
     textWithMarginLeft?: boolean
     classes?: string | string[]
+    classesButton?: string | string[]
 }>(), {
     dotsColor: 'text-artwork-navigation-text',
     dotsSize: 'h-6 w-6',
@@ -138,6 +141,7 @@ const props = withDefaults(defineProps<{
     needsMaxHeight: false,
     textWithMarginLeft: false,
     classes: '',
+    classesButton: '',
 })
 
 const menuButtonRef = ref<HTMLDivElement | null>(null)

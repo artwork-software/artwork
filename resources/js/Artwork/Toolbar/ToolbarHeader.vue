@@ -28,10 +28,9 @@
                         v-if="!showSearchbar"
                         @click="openSearchbar"
                         type="button"
-                        class="inline-flex items-center justify-center rounded-xl border border-zinc-200/80 px-2.5 py-2 hover:bg-zinc-50 transition"
                         aria-label="Search"
                     >
-                        <ToolTipComponent :icon="IconSearch" icon-size="h-6 w-6" :tooltip-text="searchTooltip" direction="bottom" />
+                        <ToolTipComponent :icon="IconSearch" icon-size="h-6 w-6" :tooltip-text="searchTooltip" direction="bottom" classes-button="ui-button"/>
                     </button>
 
                     <div v-else class="w-72 sm:w-96 flex items-center justify-end gap-2">

@@ -8,7 +8,7 @@
     >
         <div
             v-if="data.data.showLine"
-            class="w-full flex items-center justify-center h-0.5 bg-gray-300"
+            class="w-full flex items-center justify-center h-0.5 bg-zinc-300"
         ></div>
     </div>
 </template>

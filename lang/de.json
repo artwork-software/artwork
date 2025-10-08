@@ -3249,5 +3249,7 @@
     "Share context, decisions, and notes with your team.": "Teile Kontext, Entscheidungen und Notizen mit deinem Team.",
     "comments": "Kommentare",
     "All Project updates & comments": "Alle Projekt-Updates & Kommentare",
-    "projects in total": "Projekte insgesamt"
+    "projects in total": "Projekte insgesamt",
+    "Here you can edit the component {0}.": "Hier kannst du die Komponente {0} bearbeiten.",
+    "Here you can create a new component.": "Hier kannst du eine neue Komponente erstellen."
 }

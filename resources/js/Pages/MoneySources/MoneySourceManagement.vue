@@ -1,718 +1,767 @@
 <template>
     <app-layout :title="$t('Sources of funding')">
-        <div class="">
-            <div class="artwork-container">
-                <div class="flex flex-1 flex-wrap">
-                    <div>
-                        <p class="items-center flex mr-2 headline1 mb-11">{{ $t('Sources of funding')}}</p>
+        <div class="artwork-container">
+            <!-- Page header -->
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <h1 class="headline1">{{ $t('Sources of funding') }}</h1>
+
+                <div class="flex items-center gap-2">
+                    <button class="ui-button-add inline-flex items-center gap-2" @click="showMoneySourceModal = true">
+                        <IconPlus class="size-5" stroke-width="1" />
+                        {{ $t('New') }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div
+                class="mb-4 flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-xs md:flex-row md:items-center md:justify-between"
+            >
+                <!-- Filter: Typ -->
+                <div class="flex items-center gap-3">
+                    <Listbox as="div" v-model="moneySourceFilter">
+                        <div class="relative">
+                            <ListboxButton
+                                class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                                <span class="text-gray-800">{{ moneySourceFilter.name }}</span>
+                                <IconChevronDown class="h-4 w-4 text-gray-400" />
+                            </ListboxButton>
+
+                            <transition
+                                enter-active-class="transition duration-100 ease-out"
+                                enter-from-class="opacity-0 translate-y-1"
+                                enter-to-class="opacity-100 translate-y-0"
+                                leave-active-class="transition duration-75 ease-in"
+                                leave-from-class="opacity-100 translate-y-0"
+                                leave-to-class="opacity-0 translate-y-1"
+                            >
+                                <ListboxOptions
+                                    class="absolute z-20 mt-2 w-64 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
+                                >
+                                    <ListboxOption
+                                        v-for="filter in moneySourceFilters"
+                                        :key="filter.type"
+                                        :value="filter"
+                                        as="template"
+                                        v-slot="{ active, selected }"
+                                    >
+                                        <li
+                                            :class="[
+                        active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800',
+                        'flex cursor-pointer items-center justify-between rounded-md px-3 py-2'
+                      ]"
+                                        >
+                                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'truncate']">{{ filter.name }}</span>
+                                            <IconCircleCheck v-if="selected" class="h-4 w-4 text-indigo-600" />
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
+                        </div>
+                    </Listbox>
+
+                    <!-- Toggle: erweiterte Filter -->
+                    <button
+                        type="button"
+                        class="inline-flex size-10 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        @click="showMoneySourceFilters = !showMoneySourceFilters"
+                        :aria-expanded="showMoneySourceFilters"
+                        :aria-controls="'filters-popover'"
+                    >
+                        <IconFilter class="h-5 w-5 text-gray-700" stroke-width="1.5" />
+                    </button>
+                </div>
+
+                <!-- Suche -->
+                <div class="relative w-full max-w-md md:ml-auto">
+                    <div v-if="!showSearchbar" class="flex justify-end">
+                        <button
+                            type="button"
+                            class="inline-flex size-10 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            @click="openSearchbar"
+                        >
+                            <IconSearch class="h-5 w-5 text-gray-700" stroke-width="1.5" />
+                        </button>
                     </div>
-                    <div class="w-full flex my-auto">
-                        <div class="flex justify-between w-full">
-                            <div class="flex">
-                                <Listbox as="div" class="flex" v-model="moneySourceFilter">
-                                    <ListboxButton
-                                        class="bg-white w-full relative py-2 cursor-pointer focus:outline-none">
-                                        <div class="flex items-center my-auto">
-                                            <p class="items-center flex mr-2 xsDark">
-                                                {{ moneySourceFilter.name }}</p>
-                                            <span
-                                                class="inset-y-0 flex items-center pr-2 pointer-events-none">
-                                                <IconChevronDown stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
-                                             </span>
-                                        </div>
-                                    </ListboxButton>
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions
-                                            class="absolute w-80 z-10 mt-12 bg-artwork-navigation-background rounded-lg shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
-                                            <ListboxOption as="template" class="max-h-8"
-                                                           v-for="filter in moneySourceFilters"
-                                                           :key="filter.name"
-                                                           :value="filter"
-                                                           v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
-                                                        <span
-                                                            :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
-                                                            {{ filter.name }}
-                                                        </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </Listbox>
+
+                    <div v-else class="relative">
+                        <input
+                            ref="searchBarInput"
+                            v-model="moneySource_query"
+                            type="text"
+                            :placeholder="$t('Search for sources')"
+                            class="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-8 text-sm text-gray-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                        />
+                        <IconSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <button
+                            type="button"
+                            class="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded hover:bg-gray-100"
+                            @click="closeSearchbar"
+                        >
+                            <IconX class="h-4 w-4 text-gray-500" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Erweiterte Filter Popover -->
+            <div
+                v-if="showMoneySourceFilters"
+                id="filters-popover"
+                class="relative mb-4"
+            >
+                <div
+                    class="z-10 w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-lg"
+                >
+                    <!-- Kategorien -->
+                    <Disclosure as="div" class="mb-3">
+                        <DisclosureButton
+                            class="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 focus:outline-none"
+                        >
+                            <span>{{ $t('All categories') }}</span>
+                            <ChevronDownIcon class="h-4 w-4 text-gray-500 ui-open:rotate-180 ui-open:transform" />
+                        </DisclosureButton>
+                        <DisclosurePanel class="mt-2 px-2">
+                            <div v-if="moneySourceCategories?.length" class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+                                <label
+                                    v-for="cat in moneySourceCategories"
+                                    :key="cat.id"
+                                    class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-gray-50"
+                                >
+                                    <input
+                                        v-model="categoryFilters"
+                                        class="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        type="checkbox"
+                                        :value="cat.id"
+                                    />
+                                    <span
+                                        class="text-xs"
+                                        :class="categoryFilters.includes(cat.id) ? 'text-gray-900' : 'text-gray-500'"
+                                    >{{ cat.name }}</span>
+                                </label>
                             </div>
-                            <div class="flex items-center">
-                                <div v-if="!showSearchbar" @click="openSearchbar"
-                                     class="cursor-pointer inset-y-0 mr-3">
-                                    <IconSearch stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
-                                </div>
-                                <div v-else class="flex items-center w-full mr-2">
-                                    <input type="text"
-                                           ref="searchBarInput"
-                                           :placeholder="$t('Search for sources')"
-                                           v-model="moneySource_query"
-                                           class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                    <IconX class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
-                                </div>
+                            <div v-else class="px-1 text-xs text-gray-500">
+                                {{ $t('No categories for funding sources have been created yet.') }}
                             </div>
-                            <div class="flex items-center">
-                                <div class="flex items-center relative h-10 w-10">
-                                    <IconFilter stroke-width="1.5" @click="showMoneySourceFilters = !showMoneySourceFilters"
-                                          class="h-6 w-6 mx-2 cursor-pointer"/>
-                                    <div v-if="showMoneySourceFilters"
-                                         class="w-72 absolute top-10 h-auto rounded-lg shadow-lg bg-artwork-navigation-background p-4 flex flex-col z-50">
-                                        <Disclosure v-slot="{ open }">
-                                            <DisclosureButton
-                                                class="flex w-full py-2 px-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                                                <span
-                                                    :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('All categories')}}</span>
-                                                <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''"
-                                                                 class="h-4 w-4 mt-0.5 text-white"/>
-                                            </DisclosureButton>
-                                            <DisclosurePanel>
-                                                <div class="flex flex-col gap-1 px-2"
-                                                     v-if="moneySourceCategories.length > 0">
-                                                    <div v-for="moneySourceCategory in moneySourceCategories"
-                                                         class="flex flex-row items-center">
-                                                        <input
-                                                            class="text-success h-4 w-4 border-1 border-darkGray bg-darkGrayBg focus:border-none"
-                                                            v-model="categoryFilters"
-                                                            :id="'moneySourceCategoryFilterId-' + moneySourceCategory.id"
-                                                            type="checkbox"
-                                                            :value="moneySourceCategory.id"
-                                                        />
-                                                        <label :class="[
-                                                                  categoryFilters.includes(moneySourceCategory.id) ?
-                                                                      'text-white' :
-                                                                      'text-secondary',
-                                                                  'cursor-pointer text-xs text-secondary subpixel-antialiased ml-1.5'
-                                                               ]"
-                                                               :for="'moneySourceId-' + moneySourceCategory.id">
-                                                            {{ moneySourceCategory.name }}
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                <div v-else class="xxsLight px-2">
-                                                    {{ $t('No categories for funding sources have been created yet.')}}
-                                                </div>
-                                            </DisclosurePanel>
-                                        </Disclosure>
-                                        <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
-                                        <div class="flex flex-row px-2">
-                                            <input
-                                                class="text-success h-4 w-4 border-1 border-darkGray bg-darkGrayBg focus:border-none cursor-pointer"
-                                                v-model="openTasksFilter"
-                                                id="openTasksFilter"
-                                                type="checkbox"
-                                            />
-                                            <label :class="[
-                                                        openTasksFilter ?
-                                                            'text-white' :
-                                                            'text-secondary',
-                                                        'cursor-pointer text-xs subpixel-antialiased ml-1.5'
-                                                   ]"
-                                                   for="openTasksFilter">
-                                                {{$t('Sources with open tasks')}}
-                                            </label>
-                                        </div>
-                                        <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
-                                        <div @click="openTimeSpanFilterModal"
-                                             :class="[
-                                                        timeSpanFilterActive ?
-                                                            'text-white' :
-                                                            'text-secondary',
-                                                        'cursor-pointer text-xs subpixel-antialiased ml-1.5'
-                                                   ]">
-                                            {{ $t('Period')}}
-                                        </div>
-                                    </div>
-                                </div>
-                                <Menu as="div" class="my-auto relative ml-2">
-                                    <div class="flex">
-                                        <MenuButton
-                                            class="flex">
-                                            <IconArrowsSort stroke-width="1.5"
-                                                 class=" flex-shrink-0 h-6 w-6 my-auto"
-                                                 aria-hidden="true" :alt="$t('Sort')"/>
-                                        </MenuButton>
-                                    </div>
-                                    <transition enter-active-class="transition-enter-active"
-                                                enter-from-class="transition-enter-from"
-                                                enter-to-class="transition-enter-to"
-                                                leave-active-class="transition-leave-active"
-                                                leave-from-class="transition-leave-from"
-                                                leave-to-class="transition-leave-to">
-                                        <MenuItems
-                                            class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 rounded-lg shadow-lg bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                            <div class="py-1">
-                                                <MenuItem class="cursor-pointer" v-slot="{ active }">
-                                                    <div @click="changeSortAlgorithm('name')"
-                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        {{$t('Alphabetical')}}
-                                                        <IconSortDescending
-                                                            v-if="sortType === 'name' && sortOrder === 'descending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                            aria-hidden="true"/>
-                                                        <IconSortAscending
-                                                            v-if="sortType === 'name' && sortOrder === 'ascending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"/>
-                                                    </div>
-                                                </MenuItem>
-                                                <MenuItem class="cursor-pointer" v-slot="{ active }">
-                                                    <div @click="changeSortAlgorithm('funding_start_date')"
-                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        {{$t('Start date')}}
-                                                        <IconSortDescending
-                                                            v-if="sortType === 'funding_start_date' && sortOrder === 'descending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                            aria-hidden="true"/>
-                                                        <IconSortAscending
-                                                            v-if="sortType === 'funding_start_date' && sortOrder === 'ascending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"/>
-                                                    </div>
-                                                </MenuItem>
-                                                <MenuItem class="cursor-pointer" v-slot="{ active }">
-                                                    <div @click="changeSortAlgorithm('funding_end_date')"
-                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        {{$t('End date')}}
-                                                        <IconSortDescending
-                                                            v-if="sortType === 'funding_end_date' && sortOrder === 'descending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                            aria-hidden="true"/>
-                                                        <IconSortAscending
-                                                            v-if="sortType === 'funding_end_date' && sortOrder === 'ascending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"/>
-                                                    </div>
-                                                </MenuItem>
-                                                <MenuItem class="cursor-pointer" v-slot="{ active }">
-                                                    <div @click="changeSortAlgorithm('created_at')"
-                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        {{ $t('Created on')}}
-                                                        <IconSortDescending
-                                                            v-if="sortType === 'created_at' && sortOrder === 'descending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                            aria-hidden="true"/>
-                                                        <IconSortAscending
-                                                            v-if="sortType === 'created_at' && sortOrder === 'ascending'"
-                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"/>
-                                                    </div>
-                                                </MenuItem>
-                                            </div>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
-                                <div class="flex ml-3"
-                                     v-if="$can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                    <GlassyIconButton text="New" :icon="IconPlus" @click="openAddMoneySourceModal" />
-                                </div>
+                        </DisclosurePanel>
+                    </Disclosure>
+
+                    <hr class="my-3 border-gray-200" />
+
+                    <!-- Offene Aufgaben -->
+                    <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded-md">
+                        <input
+                            v-model="openTasksFilter"
+                            class="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            type="checkbox"
+                        />
+                        <span :class="openTasksFilter ? 'text-gray-900' : 'text-gray-500'" class="text-xs">
+              {{ $t('Sources with open tasks') }}
+            </span>
+                    </label>
+
+                    <hr class="my-3 border-gray-200" />
+
+                    <!-- Zeitraum -->
+                    <button
+                        type="button"
+                        class="rounded-md px-2 py-1.5 text-left text-xs"
+                        :class="timeSpanFilterActive ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-700'"
+                        @click="openTimeSpanFilterModal"
+                    >
+                        {{ $t('Period') }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Aktive Filter als Tags -->
+            <div class="mb-4 flex flex-wrap gap-2">
+                <TagComponent
+                    v-if="timeSpanFilterActive"
+                    :displayed-text="formatDateString(timeSpanFilterStart) + ' - ' + formatDateString(timeSpanFilterEnd)"
+                    :method="deactivateTimeSpanFilter"
+                    property=""
+                />
+                <TagComponent
+                    v-for="catId in categoryFilters"
+                    :key="'cat_'+catId"
+                    :displayed-text="findCategoryName(catId)"
+                    :method="() => removeCategoryFilter(catId)"
+                    property=""
+                />
+                <TagComponent
+                    v-if="openTasksFilter"
+                    :displayed-text="$t('Sources with open tasks')"
+                    :method="() => (openTasksFilter = false)"
+                    property=""
+                />
+            </div>
+
+            <!-- Sort & Create on the right -->
+            <div class="mb-3 flex items-center justify-end gap-2">
+                <Menu as="div" class="relative">
+                    <MenuButton
+                        class="inline-flex size-10 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        :aria-label="$t('Sort')"
+                    >
+                        <IconArrowsSort class="h-5 w-5 text-gray-700" stroke-width="1.5" />
+                    </MenuButton>
+                    <transition
+                        enter-active-class="transition duration-100 ease-out"
+                        enter-from-class="opacity-0 -translate-y-1"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition duration-75 ease-in"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-1"
+                    >
+                        <MenuItems
+                            class="absolute right-0 z-20 mt-2 w-60 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
+                        >
+                            <div class="py-1">
+                                <MenuItem v-slot="{ active }">
+                                    <button
+                                        type="button"
+                                        @click="changeSortAlgorithm('name')"
+                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                    >
+                                        <span>{{ $t('Alphabetical') }}</span>
+                                        <span v-if="sortType === 'name'">
+                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
+                      <IconSortAscending v-else class="h-4 w-4" />
+                    </span>
+                                    </button>
+                                </MenuItem>
+
+                                <MenuItem v-slot="{ active }">
+                                    <button
+                                        type="button"
+                                        @click="changeSortAlgorithm('funding_start_date')"
+                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                    >
+                                        <span>{{ $t('Start date') }}</span>
+                                        <span v-if="sortType === 'funding_start_date'">
+                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
+                      <IconSortAscending v-else class="h-4 w-4" />
+                    </span>
+                                    </button>
+                                </MenuItem>
+
+                                <MenuItem v-slot="{ active }">
+                                    <button
+                                        type="button"
+                                        @click="changeSortAlgorithm('funding_end_date')"
+                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                    >
+                                        <span>{{ $t('End date') }}</span>
+                                        <span v-if="sortType === 'funding_end_date'">
+                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
+                      <IconSortAscending v-else class="h-4 w-4" />
+                    </span>
+                                    </button>
+                                </MenuItem>
+
+                                <MenuItem v-slot="{ active }">
+                                    <button
+                                        type="button"
+                                        @click="changeSortAlgorithm('created_at')"
+                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                    >
+                                        <span>{{ $t('Created on') }}</span>
+                                        <span v-if="sortType === 'created_at'">
+                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
+                      <IconSortAscending v-else class="h-4 w-4" />
+                    </span>
+                                    </button>
+                                </MenuItem>
+                            </div>
+                        </MenuItems>
+                    </transition>
+                </Menu>
+
+                <!-- Optional zweite "Neu"-Schaltfläche (oben schon vorhanden) -->
+                <GlassyIconButton v-if="is('view edit add money_sources') || is('can edit and delete money sources') || is('artwork admin')"
+                                  text="New" :icon="IconPlus" @click="showMoneySourceModal = true"/>
+            </div>
+
+            <!-- Liste -->
+            <ul role="list" class="w-full">
+                <li
+                    v-for="moneySource in filteredMoneySources"
+                    :key="moneySource.id"
+                    v-show="(moneySources.some(s => s.money_source_id === moneySource.id) || can('view edit add money_sources | can edit and delete money sources')) || is('artwork admin')"
+                    class="mb-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-xs"
+                >
+                    <!-- Kopfzeile -->
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2">
+                                <img
+                                    v-if="moneySource.is_group"
+                                    src="/Svgs/IconSvgs/icon_group_red.svg"
+                                    class="h-5 w-5"
+                                    alt="groupIcon"
+                                />
+                                <Link :href="getEditHref(moneySource)" class="sDark truncate font-medium">
+                                    {{ moneySource.name }}
+                                </Link>
+                                <IconPinned
+                                    v-if="isPinned(moneySource)"
+                                    class="h-4 w-4 text-indigo-600"
+                                    stroke-width="1.5"
+                                />
+                            </div>
+
+                            <div v-if="moneySource.group_id !== null" class="mt-1 text-xs text-gray-500">
+                                {{ $t('Belongs to') }}:
+                                {{ findGroupName(moneySource.group_id) }}
                             </div>
                         </div>
+
+                        <!-- Aktionen -->
+                        <div class="flex items-center gap-1">
+                            <BaseMenu>
+                                <MenuItem v-slot="{ active }">
+                                    <a
+                                        :href="getEditHref(moneySource)"
+                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700', 'flex items-center rounded-md px-3 py-2 text-sm']"
+                                    >
+                                        <IconEdit class="mr-2 h-4 w-4" stroke-width="1.5" />
+                                        {{ $t('edit') }}
+                                    </a>
+                                </MenuItem>
+
+                                <MenuItem
+                                    v-if="canWriteOrCompetent(moneySource) || $can('view edit add money_sources') || can('can edit and delete money sources') || is('artwork admin')"
+                                    v-slot="{ active }"
+                                >
+                                    <button
+                                        type="button"
+                                        @click="duplicateMoneySource(moneySource)"
+                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700', 'flex w-full items-center rounded-md px-3 py-2 text-sm']"
+                                    >
+                                        <IconCopy class="mr-2 h-4 w-4" stroke-width="1.5" />
+                                        {{ $t('Duplicate') }}
+                                    </button>
+                                </MenuItem>
+
+                                <MenuItem
+                                    v-if="canWriteOrCompetent(moneySource) || can('view edit add money_sources') || can('can edit and delete money sources') || is('artwork admin')"
+                                    v-slot="{ active }"
+                                >
+                                    <button
+                                        type="button"
+                                        @click="pinMoneySource(moneySource)"
+                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700', 'flex w-full items-center rounded-md px-3 py-2 text-sm']"
+                                    >
+                                        <IconPin class="mr-2 h-4 w-4" />
+                                        {{ isPinned(moneySource) ? $t('Undo pinning') : $t('Pin') }}
+                                    </button>
+                                </MenuItem>
+
+                                <MenuItem
+                                    v-if="canWriteOrCompetent(moneySource) || can('can edit and delete money sources') || is('artwork admin')"
+                                    v-slot="{ active }"
+                                >
+                                    <button
+                                        type="button"
+                                        @click="openDeleteSourceModal(moneySource)"
+                                        :class="[active ? 'bg-red-50 text-red-700' : 'text-red-600', 'flex w-full items-center rounded-md px-3 py-2 text-sm']"
+                                    >
+                                        <IconTrash class="mr-2 h-4 w-4" stroke-width="1.5" />
+                                        {{ $t('Delete') }}
+                                    </button>
+                                </MenuItem>
+                            </BaseMenu>
+                        </div>
                     </div>
-                    <div class="w-full flex flex-wrap">
-                        <TagComponent v-if="timeSpanFilterActive"
-                                      :displayed-text="formatDateString(timeSpanFilterStart) + ' - ' + formatDateString(timeSpanFilterEnd)"
-                                      :method="deactivateTimeSpanFilter" property=""/>
-                        <TagComponent v-if="categoryFilters.length > 0"
-                                      v-for="categoryFilter in categoryFilters"
-                                      :displayed-text="this.moneySourceCategories.find((value) => value.id === categoryFilter).name"
-                                      :method="() => deactivateCategoryFilter(categoryFilter)" property=""/>
-                        <TagComponent v-if="openTasksFilter"
-                                      :displayed-text="$t('Sources with open tasks')"
-                                      :method="deactivateOpenTasksFilter" property=""/>
+
+                    <!-- Meta -->
+                    <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600">
+                        <div class="pl-1">
+                            {{ toCurrencyString(moneySource.amount + moneySource.sumOfPositions) }}€ /
+                            {{ toCurrencyString(moneySource.amount) }}€
+                        </div>
+
+                        <div v-if="moneySource.funding_start_date && moneySource.funding_end_date" class="pl-1">
+                            | {{ $t('Period') }}:
+                            {{ formatDateString(moneySource.funding_start_date) }} -
+                            {{ formatDateString(moneySource.funding_end_date) }}
+                        </div>
                     </div>
-                    <ul role="list" class="mt-5 w-full">
-                        <li v-for="(moneySource) in filteredMoneySources"
-                            :key="moneySource.id"
-                        >
-                            <div class="py-5 flex flex-col justify-between border-b-2 border-gray-200 my-2"
-                                 v-if="(moneySources.some(source => source.money_source_id === moneySource.id) || $canAny('view edit add money_sources','can edit and delete money sources')) || hasAdminRole()">
-                                <div class="flex flex-row w-full">
-                                    <div class="flex w-full items-center">
-                                        <div class="flex items-center w-full">
-                                            <img v-if="moneySource.is_group" src="/Svgs/IconSvgs/icon_group_red.svg"
-                                                 class=" h-6 w-6 ml-5" alt="groupIcon"/>
-                                            <Link :class="moneySource.is_group ? 'ml-2' : 'ml-5'" :href="getEditHref(moneySource)"
-                                                  class="sDark my-auto w-full">
-                                                {{ moneySource.name }}
-                                            </Link>
-                                        </div>
-                                        <div v-if="moneySource.group_id !== null"
-                                             class="w-full flex items-center xxsLight subpixel-antialiased ml-14 mt-1">
-                                            {{ $t('Belongs to')}}:
-                                            {{
-                                                this.moneySourceGroups.find(sourceGroup => sourceGroup.id === moneySource.group_id).name
-                                            }}
-                                        </div>
-                                    </div>
-                                    <div
-                                        v-if="moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.auth.user.id)"
-                                        class="flex items-center xxsLight subpixel-antialiased ml-14 mt-1">
-                                        <IconPinned  stroke-width="1.5" class="h-5 w-5 mr-4 text-primary"/>
-                                    </div>
-                                    <div class="flex">
-                                        <BaseMenu>
-                                            <MenuItem class="cursor-pointer" v-slot="{ active }">
-                                                <a :href="getEditHref(moneySource)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                    <IconEdit stroke-width="1.5"
-                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                              aria-hidden="true"/>
-                                                    {{ $t('edit')}}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem class="cursor-pointer" v-slot="{ active }"
-                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.auth.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                                <a @click="duplicateMoneySource(moneySource)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconCopy stroke-width="1.5"
-                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                              aria-hidden="true"/>
-                                                    {{ $t('Duplicate')}}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem class="cursor-pointer" v-slot="{ active }"
-                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.auth.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.auth.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                                <a @click="pinMoneySource(moneySource)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconPin
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                        aria-hidden="true"/>
-                                                    {{moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.auth.user.id) ? $t('Undo pinning') : $t('Pin')}}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem class="cursor-pointer" v-slot="{ active }"
-                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.auth.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.auth.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
-                                                <a @click="openDeleteSourceModal(moneySource)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconTrash stroke-width="1.5"
-                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                               aria-hidden="true"/>
-                                                    {{ $t('Delete')}}
-                                                </a>
-                                            </MenuItem>
-                                        </BaseMenu>
-                                    </div>
-                                </div>
-                                <div class="flex xxsLight items-center subpixel-antialiased">
-                                    <div class="flex items-center pl-5 py-1 pr-1">
-                                        {{ this.toCurrencyString(moneySource.amount + moneySource.sumOfPositions) }}€ /
-                                        {{ this.toCurrencyString(moneySource.amount) }}€
-                                    </div>
-                                    <div class="" v-if="moneySource.funding_start_date && moneySource.funding_end_date">
-                                        |
-                                        Förderzeitraum: {{ formatDateString(moneySource.funding_start_date) }} -
-                                        {{ formatDateString(moneySource.funding_end_date) }}
-                                    </div>
-                                </div>
-                                <div v-if="moneySource.description" class="flex xxsLight items-center pl-5 subpixel-antialiased">
-                                    {{ moneySource.description}}
-                                </div>
-                                <div class="flex items-center xxsLight pl-5 pt-1 subpixel-antialiased" v-if="moneySource.history[0]">
-                                    Letzte Änderung: {{ moneySource.history[0]?.created_at }} von
-                                    <NewUserToolTip class="ml-2" :height="6" :width="6" v-if="moneySource.history[0]?.changes[0]?.changed_by"
-                                                    :user="moneySource.history[0]?.changes[0]?.changed_by" :id="moneySource.history[0]?.changes[0]?.changed_by?.id + moneySource.id"/>
-                                    {{moneySource.history[0]?.changes[0]?.changed_by?.first_name}}
-                                    {{moneySource.history[0]?.changes[0]?.changed_by?.last_name}}
-                                </div>
-                                <div class="ml-5 mt-2 flex flex-wrap">
-                                    <TagComponent v-for="moneySourceCategory in moneySource.categories"
-                                                  :key="moneySourceCategory.id"
-                                                  :displayed-text="moneySourceCategory.name"
-                                                  :hide-x="true"
-                                     property=""/>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+
+                    <!-- Beschreibung -->
+                    <div v-if="moneySource.description" class="mt-1 pl-1 text-xs text-gray-600">
+                        {{ moneySource.description }}
+                    </div>
+
+                    <!-- Letzte Änderung -->
+                    <div v-if="moneySource.history?.[0]" class="mt-1 flex items-center pl-1 text-xs text-gray-500">
+                        {{ $t('Last change') }}: {{ moneySource.history[0]?.created_at }} {{ $t('by') }}
+                        <NewUserToolTip
+                            class="ml-2"
+                            :height="6"
+                            :width="6"
+                            v-if="moneySource.history[0]?.changes?.[0]?.changed_by"
+                            :user="moneySource.history[0]?.changes?.[0]?.changed_by"
+                            :id="(moneySource.history[0]?.changes?.[0]?.changed_by?.id || 0) + (moneySource.id || 0)"
+                        />
+                        <span class="ml-1">
+              {{ moneySource.history[0]?.changes?.[0]?.changed_by?.first_name }}
+              {{ moneySource.history[0]?.changes?.[0]?.changed_by?.last_name }}
+            </span>
+                    </div>
+
+                    <!-- Kategorien -->
+                    <div class="ml-1 mt-2 flex flex-wrap gap-1">
+                        <TagComponent
+                            v-for="cat in moneySource.categories"
+                            :key="cat.id"
+                            :displayed-text="cat.name"
+                            :hide-x="true"
+                            property=""
+                        />
+                    </div>
+                </li>
+            </ul>
         </div>
-    </app-layout>
-    <create-money-source-component
-        v-if="showMoneySourceModal"
-        @closed="onCreateMoneySourceModalClose()"
-        :moneySourceGroups="this.moneySourceGroups"
-    />
-    <confirm-delete-modal
-        v-if="showDeleteSourceModal"
-        :title="$t('Delete funding source/group')"
-        :description="$t('Are you sure you want to delete the funding source/group {0}?', [sourceToDelete.name])"
-        @closed="afterConfirm(false)"
-        @delete="afterConfirm(true)"/>
 
-    <BaseModal @closed="closeTimeSpanFilterModal" v-if="timeSpanFilterModalVisible" modal-image="/Svgs/Overlays/illu_project_edit.svg" >
+        <!-- Create Modal -->
+        <create-money-source-component
+            v-if="showMoneySourceModal"
+            @closed="showMoneySourceModal = false"
+            :moneySourceGroups="moneySourceGroups"
+        />
+
+        <!-- Delete Modal -->
+        <confirm-delete-modal
+            v-if="showDeleteSourceModal"
+            :title="$t('Delete funding source/group')"
+            :description="$t('Are you sure you want to delete the funding source/group {0}?', [sourceToDelete?.name])"
+            @closed="afterConfirm(false)"
+            @delete="afterConfirm(true)"
+        />
+
+        <!-- Zeitraum-Filter Modal -->
+        <BaseModal v-if="timeSpanFilterModalVisible" @closed="closeTimeSpanFilterModal" modal-image="/Svgs/Overlays/illu_project_edit.svg">
             <div class="mx-4">
-                <h1 class="my-1 flex">
-                    <div class="flex-grow headline1">
-                        {{$t('Select period')}}
-                    </div>
-                </h1>
-                <h2 class="xsLight mb-2 mt-8">
-                    {{$t('Please select the time period in which the financial sources should be displayed.')}}
+                <h1 class="headline1 my-1">{{ $t('Select period') }}</h1>
+                <h2 class="xsLight mb-3 mt-4">
+                    {{ $t('Please select the time period in which the financial sources should be displayed.') }}
                 </h2>
-                <div class="flex flex-row justify-between">
-                    <input class="w-1/2" type="date" v-model="timeSpanFilterStart"/>
-                    <input class="w-1/2" type="date" v-model="timeSpanFilterEnd"/>
+                <div class="flex gap-2">
+                    <input class="w-1/2 rounded-lg border border-gray-200 p-2" type="date" v-model="timeSpanFilterStart" />
+                    <input class="w-1/2 rounded-lg border border-gray-200 p-2" type="date" v-model="timeSpanFilterEnd" />
                 </div>
-                <div class="w-full flex justify-center my-3">
-                    <FormButton :disabled="timeSpanFilterStart === null || timeSpanFilterEnd === null"
-                               :text="$t('Filtering')"
-                               @click="activateTimeSpanFilter"/>
+                <div class="my-3 flex w-full justify-center">
+                    <FormButton
+                        :disabled="!timeSpanFilterStart || !timeSpanFilterEnd"
+                        :text="$t('Filtering')"
+                        @click="activateTimeSpanFilter"
+                    />
                 </div>
             </div>
-    </BaseModal>
+        </BaseModal>
 
-    <MoneySourceHistoryComponent
-        @closed="closeMoneySourceHistoryModal"
-        v-if="showMoneySourceHistory"
-        :history="moneySourceToShowHistoryOf.history"
-    ></MoneySourceHistoryComponent>
+        <!-- History Modal -->
+        <MoneySourceHistoryComponent
+            v-if="showMoneySourceHistory"
+            :history="moneySourceToShowHistoryOf?.history"
+            @closed="closeMoneySourceHistoryModal"
+        />
+    </app-layout>
 </template>
 
-<script>
-
-import {defineComponent} from 'vue'
+<script setup>
+import { ref, computed, getCurrentInstance, nextTick } from 'vue'
+import { Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+
 import {
     Disclosure, DisclosureButton, DisclosurePanel,
-    Listbox,
-    ListboxButton,
-    ListboxLabel,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems
-} from "@headlessui/vue";
+    Listbox, ListboxButton, ListboxOption, ListboxOptions,
+    Menu, MenuButton, MenuItem, MenuItems
+} from '@headlessui/vue'
 import {
-    ChevronDownIcon,
-    DotsVerticalIcon,
-    SearchIcon,
-    TrashIcon,
-    XIcon,
-    ArrowNarrowDownIcon,
-    ArrowNarrowUpIcon
-} from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import CreateMoneySourceComponent from "@/Layouts/Components/CreateMoneySourceComponent.vue";
-import {DuplicateIcon, PencilAltIcon} from "@heroicons/vue/outline";
-import {Link} from "@inertiajs/vue3";
-import Permissions from "@/Mixins/Permissions.vue";
-import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import Input from "@/Layouts/Components/InputComponent.vue";
-import {IconPin, IconPlus} from '@tabler/icons-vue';
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import Label from "@/Jetstream/Label.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
-import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+    IconPlus, IconChevronDown, IconCircleCheck, IconSearch, IconX, IconFilter, IconArrowsSort,
+    IconSortAscending, IconSortDescending, IconEdit, IconCopy, IconPin, IconTrash, IconPinned
+} from '@tabler/icons-vue'
 
+import CreateMoneySourceComponent from '@/Layouts/Components/CreateMoneySourceComponent.vue'
+import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
+import TagComponent from '@/Layouts/Components/TagComponent.vue'
+import NewUserToolTip from '@/Layouts/Components/NewUserToolTip.vue'
+import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
+import BaseModal from '@/Components/Modals/BaseModal.vue'
+import BaseMenu from '@/Components/Menu/BaseMenu.vue'
+import GlassyIconButton from '@/Artwork/Buttons/GlassyIconButton.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import {can, is} from "laravel-permission-to-vuejs";
 
-export default defineComponent({
-    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
-    components: {
-        GlassyIconButton,
-        BaseModal,
-        BaseMenu,
-        FormButton,
-        AddButtonSmall,
-        NewUserToolTip,
-        MoneySourceHistoryComponent,
-        JetDialogModal,
-        DisclosurePanel,
-        DisclosureButton,
-        Disclosure,
-        Label,
-        TagComponent,
-        Input,
-        ConfirmDeleteModal,
-        AppLayout,
-        Listbox,
-        ListboxButton,
-        ListboxLabel,
-        ListboxOption,
-        ListboxOptions,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
-        ChevronDownIcon,
-        SvgCollection,
-        SearchIcon,
-        InputComponent,
-        XIcon,
-        CreateMoneySourceComponent,
-        DotsVerticalIcon,
-        PencilAltIcon,
-        Link,
-        DuplicateIcon,
-        TrashIcon,
-        IconPin,
-        ArrowNarrowUpIcon,
-        ArrowNarrowDownIcon,
-    },
-    props: ['moneySourceCategories', 'moneySources', 'moneySourceGroups'],
-    computed: {
-        filteredMoneySources() {
-            const allMoneySources = this.sourcesToShow();
-            let filteredMoneySources = allMoneySources.filter(moneySource => {
-                return moneySource.name.toLowerCase().includes(this.moneySource_query.toLowerCase());
-            });
+defineOptions({ name: 'MoneySourceIndex' })
 
-            if (this.categoryFilters.length > 0) {
-                filteredMoneySources = filteredMoneySources.filter((moneySource) => {
-                    if (moneySource.categories.length === 0) {
-                        return false;
-                    }
-
-                    for (let i = 0; i < this.categoryFilters.length; i++) {
-                        if (
-                            !moneySource.categories
-                                .some(moneySourceCategory => moneySourceCategory.id === this.categoryFilters[i])
-                        ) {
-                            return false;
-                        }
-                    }
-
-                    return true;
-                });
-            }
-
-            if (this.openTasksFilter) {
-                filteredMoneySources = filteredMoneySources.filter((moneySource) => {
-                    if (moneySource.money_source_tasks.length === 0) {
-                        return false;
-                    }
-
-                    let hasMoneySourceTaskNotDone = false;
-                    moneySource.money_source_tasks.forEach((moneySourceTask) => {
-                        if (moneySourceTask.done === 0) {
-                            hasMoneySourceTaskNotDone = true;
-                        }
-                    });
-                    return hasMoneySourceTaskNotDone;
-                });
-            }
-
-            if (this.timeSpanFilterActive) {
-                let filterStartDate = new Date(this.timeSpanFilterStart);
-                let filterEndDate = new Date(this.timeSpanFilterEnd);
-
-                filteredMoneySources = filteredMoneySources.filter((moneySource) => {
-                    if (moneySource.start_date === null || moneySource.end_date === null) {
-                        return true;
-                    }
-
-                    let compareStartDate = new Date(moneySource.start_date),
-                        compareEndDate = new Date(moneySource.end_date);
-
-                    return compareStartDate <= filterEndDate && compareEndDate >= filterStartDate;
-                });
-            }
-            return this.sortMoneySources(filteredMoneySources);
-        },
-    },
-    methods: {
-        IconPlus,
-        formatDateString(dateString) {
-            let date = new Date(dateString),
-                day = date.getDate(),
-                month = date.getMonth() + 1,
-                year = date.getFullYear();
-
-            return (day < 10 ? '0' + day : day) + '.' + (month < 10 ? '0' + month : month) + '.' + year;
-        },
-        openSearchbar(){
-            this.showSearchbar = !this.showSearchbar;
-            this.$nextTick(() => {
-                if (this.showSearchbar) {
-                    this.$refs.searchBarInput.focus();
-                }
-            });
-        },
-        openTimeSpanFilterModal() {
-            this.timeSpanFilterModalVisible = true;
-        },
-        closeTimeSpanFilterModal() {
-            this.timeSpanFilterModalVisible = false;
-        },
-        activateTimeSpanFilter() {
-            this.closeTimeSpanFilterModal();
-            this.timeSpanFilterActive = true;
-        },
-        deactivateTimeSpanFilter() {
-            this.timeSpanFilterActive = false;
-            this.timeSpanFilterStart = null;
-            this.timeSpanFilterEnd = null;
-        },
-        deactivateOpenTasksFilter() {
-            document.getElementById('openTasksFilter').click();
-        },
-        deactivateCategoryFilter(categoryFilter) {
-            document.getElementById('moneySourceCategoryFilterId-' + categoryFilter).click();
-        },
-        getMemberInMoneySource(moneySource) {
-            const returnArray = {
-                competent: [],
-                write_access: []
-            }
-            moneySource.users.forEach((user) => {
-                if (user.pivot.competent) {
-                    returnArray.competent.push(user.id);
-                }
-                if (user.pivot.write_access) {
-                    returnArray.write_access.push(user.id);
-                }
-            })
-            return returnArray;
-        },
-        sourcesToShow() {
-            if (this.moneySourceFilter.type === 'all') {
-                return this.moneySources
-            } else if (this.moneySourceFilter.type === 'single') {
-                return this.moneySources.filter(moneySource => moneySource.is_group === false);
-            } else if (this.moneySourceFilter.type === 'group') {
-                return this.moneySourceGroups;
-            }
-        },
-        closeSearchbar() {
-            this.showSearchbar = !this.showSearchbar;
-            this.moneySource_query = ''
-        },
-        openAddMoneySourceModal() {
-            this.showMoneySourceModal = true;
-        },
-        onCreateMoneySourceModalClose() {
-            this.showMoneySourceModal = false;
-        },
-        getEditHref(moneySource) {
-            return route('money_sources.show', {moneySource: moneySource.id});
-        },
-        duplicateMoneySource(moneySource) {
-            this.$inertia.post(`/money_sources/${moneySource.id}/duplicate`);
-        },
-        pinMoneySource(moneySource) {
-            this.$inertia.post(`/money_sources/${moneySource.id}/pin`);
-        },
-        deleteMoneySource(moneySource) {
-            this.$inertia.delete(`/money_sources/${moneySource.id}`);
-            this.showDeleteSourceModal = false;
-        },
-        openDeleteSourceModal(moneySourceToDelete) {
-            this.sourceToDelete = moneySourceToDelete;
-            this.showDeleteSourceModal = true;
-        },
-        async afterConfirm(bool) {
-            if (!bool) return this.showDeleteSourceModal = false;
-
-            this.deleteMoneySource(this.sourceToDelete)
-        },
-        sortMoneySources(array) {
-            let compareFunction;
-
-            // Grundlegender Vergleich für angepinnte Elemente
-            const pinCompare = (a, b) => {
-                const isAPinned = a.pinned_by_users && a.pinned_by_users.includes(this.$page.props.auth.user.id);
-                const isBPinned = b.pinned_by_users && b.pinned_by_users.includes(this.$page.props.auth.user.id);
-
-                if (isAPinned && !isBPinned) return -1;
-                if (!isAPinned && isBPinned) return 1;
-                return 0; // Beide gleich (entweder beide angepinnt oder keines von beiden)
-            };
-
-            // Sortierfunktionen je nach Sortiertyp
-            switch (this.sortType) {
-                case 'name':
-                    compareFunction = (a, b) => {
-                        let pinComparison = pinCompare(a, b);
-                        if (pinComparison !== 0) return pinComparison;
-                        let nameA = a.name.toLowerCase();
-                        let nameB = b.name.toLowerCase();
-                        return (nameA < nameB ? -1 : 1);
-                    };
-                    break;
-                case 'funding_start_date':
-                case 'funding_end_date':
-                case 'created_at':
-                    compareFunction = (a, b) => {
-                        let pinComparison = pinCompare(a, b);
-                        if (pinComparison !== 0) return pinComparison;
-                        let dateA = new Date(a[this.sortType]);
-                        let dateB = new Date(b[this.sortType]);
-                        return (dateA - dateB);
-                    };
-                    break;
-                default:
-                    compareFunction = (a, b) => {
-                        let pinComparison = pinCompare(a, b);
-                        if (pinComparison !== 0) return pinComparison;
-                        let nameA = a.name.toLowerCase();
-                        let nameB = b.name.toLowerCase();
-                        return (nameA < nameB ? -1 : 1);
-                    };
-            }
-
-            if (this.sortOrder === 'descending') {
-                compareFunction = ((originalCompareFunction) => (a, b) => -1 * originalCompareFunction(a, b))(compareFunction);
-            }
-
-            return array.sort(compareFunction);
-        },
-        changeSortAlgorithm(sortType) {
-            if (this.sortType === sortType) {
-                this.sortOrder = this.sortOrder === 'ascending' ? 'descending' : 'ascending';
-            } else {
-                this.sortType = sortType;
-                this.sortOrder = 'ascending';
-            }
-        },
-        closeMoneySourceHistoryModal(){
-            this.showMoneySourceHistory = false;
-            this.moneySourceToShowHistoryOf = null;
-        },
-        openMoneySourceHistoryModal(moneySource){
-            this.moneySourceToShowHistoryOf = moneySource;
-            this.showMoneySourceHistory = true;
-        }
-
-    },
-    data() {
-        return {
-            moneySourceFilters: [{
-                'name': this.$t('All funding sources & groups'),
-                'type': 'all'
-            }, {'name': this.$t('All sources of funding'), 'type': 'single'}, {
-                'name': this.$t('All funding groups'),
-                'type': 'group'
-            }],
-            moneySourceFilter: {'name': this.$t('All funding sources & groups'), 'type': 'all'},
-            showSearchbar: false,
-            moneySource_query: '',
-            showMoneySourceModal: false,
-            moneySource_search_results: [],
-            showDeleteSourceModal: false,
-            sourceToDelete: null,
-            showMoneySourceFilters: false,
-            categoryFilters: [],
-            openTasksFilter: false,
-            timeSpanFilterModalVisible: false,
-            timeSpanFilterStart: null,
-            timeSpanFilterEnd: null,
-            timeSpanFilterActive: false,
-            sortType: null,
-            sortOrder: null,
-            showMoneySourceHistory: false,
-            moneySourceToShowHistoryOf: null,
-        }
-    }
+/* Props */
+const props = defineProps({
+    moneySourceCategories: { type: Array, default: () => [] },
+    moneySources: { type: Array, default: () => [] },
+    moneySourceGroups: { type: Array, default: () => [] },
 })
+
+/* i18n helper */
+const { proxy } = getCurrentInstance()
+const t = (s) => (proxy?.$t ? proxy.$t(s) : s)
+const page = proxy?.$page
+
+/* Filters: Typ */
+const moneySourceFilters = computed(() => ([
+    { name: t('All funding sources & groups'), type: 'all' },
+    { name: t('All sources of funding'), type: 'single' },
+    { name: t('All funding groups'), type: 'group' },
+]))
+const moneySourceFilter = ref(moneySourceFilters.value[0])
+
+/* UI State */
+const showSearchbar = ref(false)
+const moneySource_query = ref('')
+const searchBarInput = ref(null)
+
+const showMoneySourceModal = ref(false)
+const showDeleteSourceModal = ref(false)
+const sourceToDelete = ref(null)
+
+const showMoneySourceFilters = ref(false)
+const categoryFilters = ref([])           // number[]
+const openTasksFilter = ref(false)
+
+const timeSpanFilterModalVisible = ref(false)
+const timeSpanFilterStart = ref(null)
+const timeSpanFilterEnd = ref(null)
+const timeSpanFilterActive = ref(false)
+
+const sortType = ref(null)                // 'name' | 'funding_start_date' | 'funding_end_date' | 'created_at'
+const sortOrder = ref(null)               // 'ascending' | 'descending'
+
+const showMoneySourceHistory = ref(false)
+const moneySourceToShowHistoryOf = ref(null)
+
+/* Toolbar actions */
+function openSearchbar () {
+    showSearchbar.value = true
+    nextTick(() => searchBarInput.value?.focus?.())
+}
+function closeSearchbar () {
+    showSearchbar.value = false
+    moneySource_query.value = ''
+}
+
+/* Zeitspanne */
+function openTimeSpanFilterModal () { timeSpanFilterModalVisible.value = true }
+function closeTimeSpanFilterModal () { timeSpanFilterModalVisible.value = false }
+function activateTimeSpanFilter () {
+    timeSpanFilterActive.value = !!(timeSpanFilterStart.value && timeSpanFilterEnd.value)
+    closeTimeSpanFilterModal()
+}
+function deactivateTimeSpanFilter () {
+    timeSpanFilterActive.value = false
+    timeSpanFilterStart.value = null
+    timeSpanFilterEnd.value = null
+}
+
+/* Kategorie-Helfer */
+function findCategoryName (id) {
+    return props.moneySourceCategories.find(c => c.id === id)?.name ?? ''
+}
+function removeCategoryFilter (id) {
+    categoryFilters.value = categoryFilters.value.filter(x => x !== id)
+}
+
+/* Datenquellen-Auswahl */
+function sourcesToShow () {
+    const type = moneySourceFilter.value?.type
+    if (type === 'single') return props.moneySources.filter(s => s.is_group === false)
+    if (type === 'group') return props.moneySourceGroups
+    return [...props.moneySources] // all
+}
+
+/* Pinned */
+function isPinned (src) {
+    const uid = page?.props?.auth?.user?.id
+    return Array.isArray(src?.pinned_by_users) && uid ? src.pinned_by_users.includes(uid) : false
+}
+
+/* Rechte-Check */
+function getMemberInMoneySource (src) {
+    const ret = { competent: [], write_access: [] }
+    for (const u of src?.users ?? []) {
+        if (u?.pivot?.competent) ret.competent.push(u.id)
+        if (u?.pivot?.write_access) ret.write_access.push(u.id)
+    }
+    return ret
+}
+function canWriteOrCompetent (src) {
+    const uid = page?.props?.auth?.user?.id
+    const m = getMemberInMoneySource(src)
+    return uid && (m.write_access.includes(uid) || m.competent.includes(uid))
+}
+function hasAdminRole () {
+    // greift auf globale $role/$can im Template zu; hier nur Fallback
+    return false
+}
+
+/* Formatierungen */
+function formatDateString (dateStr) {
+    if (!dateStr) return ''
+    const d = new Date(dateStr)
+    const day = String(d.getDate()).padStart(2, '0')
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const year = d.getFullYear()
+    return `${day}.${month}.${year}`
+}
+
+/* Externe Helper (kommen vermutlich aus Mixin im Projekt) */
+function toCurrencyString (val) {
+    // Simplified Fallback; im Projekt habt ihr ggf. euren Formatter
+    try {
+        return new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val ?? 0)
+    } catch { return String(val ?? 0) }
+}
+
+/* Edit/CRUD Aktionen */
+function getEditHref (src) {
+    return route('money_sources.show', { moneySource: src.id })
+}
+function duplicateMoneySource (src) {
+    router.post(`/money_sources/${src.id}/duplicate`)
+}
+function pinMoneySource (src) {
+    router.post(`/money_sources/${src.id}/pin`)
+}
+function deleteMoneySource (src) {
+    router.delete(`/money_sources/${src.id}`)
+    showDeleteSourceModal.value = false
+}
+function openDeleteSourceModal (src) {
+    sourceToDelete.value = src
+    showDeleteSourceModal.value = true
+}
+function afterConfirm (ok) {
+    if (!ok) { showDeleteSourceModal.value = false; return }
+    if (sourceToDelete.value) deleteMoneySource(sourceToDelete.value)
+}
+function openMoneySourceHistoryModal (src) {
+    moneySourceToShowHistoryOf.value = src
+    showMoneySourceHistory.value = true
+}
+function closeMoneySourceHistoryModal () {
+    showMoneySourceHistory.value = false
+    moneySourceToShowHistoryOf.value = null
+}
+
+/* Sortierung */
+function changeSortAlgorithm (type) {
+    if (sortType.value === type) {
+        sortOrder.value = sortOrder.value === 'ascending' ? 'descending' : 'ascending'
+    } else {
+        sortType.value = type
+        sortOrder.value = 'ascending'
+    }
+}
+function sortMoneySources (arr) {
+    const uid = page?.props?.auth?.user?.id
+    const pinCompare = (a, b) => {
+        const ap = Array.isArray(a?.pinned_by_users) && uid ? a.pinned_by_users.includes(uid) : false
+        const bp = Array.isArray(b?.pinned_by_users) && uid ? b.pinned_by_users.includes(uid) : false
+        if (ap && !bp) return -1
+        if (!ap && bp) return 1
+        return 0
+    }
+
+    let cmp
+    switch (sortType.value) {
+        case 'funding_start_date':
+        case 'funding_end_date':
+        case 'created_at':
+            cmp = (a, b) => {
+                const p = pinCompare(a, b); if (p !== 0) return p
+                const da = new Date(a?.[sortType.value] || 0)
+                const db = new Date(b?.[sortType.value] || 0)
+                return da - db
+            }
+            break
+        case 'name':
+        default:
+            cmp = (a, b) => {
+                const p = pinCompare(a, b); if (p !== 0) return p
+                const na = (a?.name || '').toLowerCase()
+                const nb = (b?.name || '').toLowerCase()
+                return na < nb ? -1 : 1
+            }
+    }
+    if (sortOrder.value === 'descending') {
+        const base = cmp
+        cmp = (a, b) => -1 * base(a, b)
+    }
+    return arr.slice().sort(cmp)
+}
+
+/* Gefilterte Liste */
+const filteredMoneySources = computed(() => {
+    let list = sourcesToShow()
+
+    // Suche
+    const q = moneySource_query.value.toLowerCase().trim()
+    if (q) {
+        list = list.filter(ms => (ms?.name || '').toLowerCase().includes(q))
+    }
+
+    // Kategorien (AND-Logik)
+    if (categoryFilters.value.length > 0) {
+        const wanted = new Set(categoryFilters.value)
+        list = list.filter(ms => {
+            const cats = ms?.categories ?? []
+            if (cats.length === 0) return false
+            const ids = new Set(cats.map(c => c.id))
+            for (const id of wanted) if (!ids.has(id)) return false
+            return true
+        })
+    }
+
+    // Offene Aufgaben
+    if (openTasksFilter.value) {
+        list = list.filter(ms => {
+            const tasks = ms?.money_source_tasks ?? []
+            return tasks.some(t => t?.done === 0)
+        })
+    }
+
+    // Zeitraum-Filter (Überlappung)
+    if (timeSpanFilterActive.value && timeSpanFilterStart.value && timeSpanFilterEnd.value) {
+        const start = new Date(timeSpanFilterStart.value)
+        const end = new Date(timeSpanFilterEnd.value)
+        list = list.filter(ms => {
+            // Wenn keine Daten -> nicht filtern (wie im Original)
+            if (ms?.start_date == null || ms?.end_date == null) return true
+            const s = new Date(ms.start_date)
+            const e = new Date(ms.end_date)
+            return s <= end && e >= start
+        })
+    }
+
+    return sortMoneySources(list)
+})
+
+/* kleine Helfer */
+function findGroupName (groupId) {
+    return props.moneySourceGroups.find(g => g.id === groupId)?.name ?? ''
+}
 </script>
+
+<style scoped>
+.shadow-xs {
+    --tw-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+    --tw-shadow-colored: 0 1px 2px var(--tw-shadow-color);
+    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
+}
+</style>

@@ -3241,5 +3241,7 @@
     "Share context, decisions, and notes with your team.": "Share context, decisions, and notes with your team.",
     "comments": "comments",
     "All Project updates & comments": "All Project updates & comments",
-    "projects in total": "projects in total"
+    "projects in total": "projects in total",
+    "Here you can edit the component {0}.": "Here you can edit the component {0}.",
+    "Here you can create a new component.": "Here you can create a new component."
 }

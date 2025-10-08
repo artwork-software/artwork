@@ -1,5 +1,5 @@
 <template>
-    <div class=" card glassy py-2 sticky top-0 z-50 ">
+    <div class="bg-white border-b border-zinc-200 shadow-sm py-2 sticky top-0 z-50 ">
         <div class="flex justify-between items-center mt-2 mb-2 px-5">
             <div class="inline-flex items-center">
                 <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">

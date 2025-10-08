@@ -9,8 +9,8 @@
                     :class="classes"
                     :disabled="disabled"
                 >
-                    <component
-                        :is="icon"
+                    <PropertyIcon
+                        :name="icon"
                         class="cursor-pointer"
                         :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
                         :stroke-width="stroke"
@@ -25,8 +25,8 @@
                     :class="classes"
                     :disabled="disabled"
                 >
-                    <component
-                        :is="icon"
+                    <PropertyIcon
+                        :name="icon"
                         class="cursor-pointer"
                         :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
                         :stroke-width="stroke"
@@ -40,8 +40,8 @@
                     :class="classes"
                     :disabled="disabled"
                 >
-                    <component
-                        :is="icon"
+                    <PropertyIcon
+                        :name="icon"
                         class="cursor-pointer"
                         :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
                         :stroke-width="stroke"
@@ -55,8 +55,8 @@
                     :class="classes"
                     :disabled="disabled"
                 >
-                    <component
-                        :is="icon"
+                    <PropertyIcon
+                        :name="icon"
                         class="cursor-pointer"
                         :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
                         :stroke-width="stroke"
@@ -73,8 +73,8 @@
             :class="classes"
             :disabled="disabled"
         >
-            <component
-                :is="icon"
+            <PropertyIcon
+                :name="icon"
                 class="cursor-pointer"
                 :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
                 :stroke-width="stroke"
@@ -85,6 +85,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     direction: {

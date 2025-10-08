@@ -1,12 +1,8 @@
 <template>
     <header
         class="sticky top-[71px] z-30 rounded-lg bg-artwork-navigation-background flex items-center gap-0.5 h-16"
-        :style="{
-      '--col-w': zoomColWidth + 'px',
-      '--lead-w': leadWidth + 'px'
-    }"
-        role="row"
-    >
+        :style="{'--col-w': zoomColWidth + 'px','--lead-w': leadWidth + 'px'}"
+        role="row">
         <!-- linker Spacer -->
         <div class="lead shrink-0" aria-hidden="true"></div>
 

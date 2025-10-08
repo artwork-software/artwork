@@ -10,17 +10,22 @@
             :step="type === 'number' ? step : undefined"
             :aria-invalid="String(Boolean(error))"
             :aria-required="String(required)"
+            :aria-describedby="error ? errorId : undefined"
             :class="[
-            inputBaseClass,
-            disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white',
-            inputPaddingClass,
-            type === 'number'? 'appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none': '']"
+        inputBaseClass,
+        density.inputPadding,
+        disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white',
+        hasRightAffordance ? density.rightPadding : '',
+        type === 'number'
+          ? 'appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+          : ''
+      ]"
         />
 
         <!-- Clear Button -->
         <div
             v-if="isClearable"
-            class="absolute right-1 top-0 bottom-0 flex items-center pr-2"
+            :class="['absolute top-0 bottom-0 flex items-center', density.affordanceRight]"
         >
             <button
                 type="button"
@@ -29,17 +34,17 @@
                 class="text-gray-500 hover:text-artwork-messages-error transition duration-200 ease-in-out"
                 :aria-label="$t ? $t('Clear input') : 'Clear input'"
             >
-                <component :is="IconX" class="size-4" />
+                <IconX :class="density.iconSize" />
             </button>
         </div>
 
         <!-- Loading Spinner -->
         <div
             v-if="isLoadingIcon"
-            class="absolute right-1 top-0 bottom-0 flex items-center pr-2"
+            :class="['absolute top-0 bottom-0 flex items-center', density.affordanceRight]"
         >
             <div class="animate-spin">
-                <component :is="IconLoader" class="size-4 text-gray-500" />
+                <IconLoader2 :class="['text-gray-500', density.iconSize]" />
             </div>
         </div>
 
@@ -49,14 +54,17 @@
             :for="id"
             :class="[
         labelBaseClass,
-        isSmall ? labelPosSmall : labelPosDefault
+        density.labelPositionFloated,
+        density.labelTransitions
       ]"
         >
-            {{ withoutTranslation ? label : $t(label) }}
+      <span class="block truncate">
+        {{ withoutTranslation ? label : $t(label) }}
+      </span>
         </label>
 
         <!-- Optional Error-Text -->
-        <p v-if="error" class="mt-1 text-xs text-artwork-messages-error">
+        <p v-if="error" :id="errorId" class="mt-1 text-xs text-artwork-messages-error">
             {{ error }}
         </p>
     </div>
@@ -64,7 +72,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import {IconX} from "@tabler/icons-vue";
+import { IconX, IconLoader2 } from '@tabler/icons-vue'
 
 // v-model (Composition API)
 const model = defineModel({ default: '' })
@@ -73,8 +81,6 @@ const props = defineProps({
     label: { type: String, default: '' },
     type: { type: String, default: 'text' },
     id: { type: String, required: true },
-    // der sichtbare Placeholder-Text (wir rendern ihn NICHT mehr in das input,
-//  damit das Label nicht springt; du kannst ihn optional als title nutzen)
     placeholder: { type: String, default: '' },
 
     disabled: { type: Boolean, default: false },
@@ -85,58 +91,76 @@ const props = defineProps({
     step: { type: Number, default: 1 },
     showLoading: { type: Boolean, default: false },
 
-    // optionaler Fehlertext (neu, für bessere UX)
     error: { type: String, default: '' }
 })
 
-// --- Klassen sauber getrennt
+/**
+ * Dichte-/Größen-System
+ * - MD (default): bequem beschriftet mit größerem Puffer
+ * - SM (isSmall): kompakt, geringere Höhe, feinere Typografie
+ * Beide Varianten:
+ * - reservieren Platz rechts, wenn Icons angezeigt werden (pr-8)
+ * - harmonisierte Label-Animation (Scale + Translate)
+ */
+const density = computed(() => {
+    if (props.isSmall) {
+        return {
+            // kompakte Eingabe (min-h-9 ≈ 36px), kleinere Typo
+            inputPadding: 'px-3 pt-4 pb-1 text-xs leading-5 min-h-9 peer',
+            // Label: default floated (oben/klein), bei leer runter + größer
+            labelPositionFloated: 'left-3 top-1',
+            labelTransitions:
+            // floated: scale-90 + translate-y-0
+            // leer (placeholder-shown): scale-100 + translate-y to center
+                'origin-left text-[10px] ' +
+                'peer-focus:translate-y-0 peer-focus:scale-90 peer-focus:text-artwork-buttons-create ' +
+                'peer-placeholder-shown:translate-y-[10px] peer-placeholder-shown:scale-100 peer-placeholder-shown:text-[11px] peer-placeholder-shown:text-gray-500',
+            // Icon-Block rechts enger anlegen
+            affordanceRight: 'right-1 pr-1',
+            // Platz im Input für Icons
+            rightPadding: 'pr-8',
+            // Icon-Größe klein
+            iconSize: 'size-3.5'
+        }
+    }
+    // Default (mittel)
+    return {
+        inputPadding: 'px-4 pt-6 pb-2 text-sm leading-6 min-h-11 peer',
+        labelPositionFloated: 'left-4 top-1.5',
+        labelTransitions:
+            'origin-left text-[11px] ' +
+            'peer-focus:translate-y-0 peer-focus:scale-90 peer-focus:text-artwork-buttons-create ' +
+            'peer-placeholder-shown:translate-y-[14px] peer-placeholder-shown:scale-100 peer-placeholder-shown:text-xs peer-placeholder-shown:text-gray-500',
+        affordanceRight: 'right-2 pr-2',
+        rightPadding: 'pr-10',
+        iconSize: 'size-4'
+    }
+})
+
 const inputBaseClass = [
-    'peer block w-full shadow-sm',
-    'border border-gray-200 rounded-md',
+    'block w-full rounded-md border border-gray-200 shadow-sm',
     'focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create',
-    // nicer transitions
     'transition-[box-shadow,border-color] duration-150 ease-in-out'
 ].join(' ')
 
-// Padding abhängig davon, ob Label existiert
-const inputPaddingClass = computed(() => {
-    if (!props.label) return 'px-4 py-3 text-sm'
-    return props.isSmall ? 'px-2 pt-3 pb-1 text-xs' : 'px-4 pt-6 pb-2 text-sm'
-})
-
-// Label-Basis: default ist FLOATED (klein/oben).
-// Wenn das input LEER ist (placeholder-shown), fährt es runter und wird größer.
 const labelBaseClass = [
     'absolute pointer-events-none',
-    'text-gray-500 transition-all duration-200',
-    // floated (default)
-    'text-[10px] peer-focus:text-artwork-buttons-create',
-    // wenn leer -> runterfahren & größer
-    'peer-placeholder-shown:text-xs peer-placeholder-shown:text-gray-500'
+    'text-gray-500 transition-all duration-200'
 ].join(' ')
 
-const labelPosDefault = [
-    // floated position
-    'left-4 top-1.5',
-    // wenn leer -> runter
-    'peer-placeholder-shown:top-[19px]'
-].join(' ')
-
-const labelPosSmall = [
-    'left-2 top-0',
-    'peer-placeholder-shown:top-[7px]'
-].join(' ')
-
-// Clear-/Loading-Logik: nur für Texteingaben etc.
+/** Affordances (Clear/Loading) nur bei textbasierten Inputs und wenn nicht disabled */
 const canShowAffordances = computed(() =>
-    !props.disabled && ['text', 'email', 'password', 'search', 'tel', 'url'].includes(props.type)
+    !props.disabled &&
+    ['text', 'email', 'password', 'search', 'tel', 'url'].includes(props.type)
 )
 
 const hasValue = computed(() => {
-    // Template entpackt Refs automatisch, hier sicherheitshalber:
     return !!(typeof model === 'string' ? model : (model?.value ?? '')).toString().length
 })
 
 const isClearable = computed(() => canShowAffordances.value && hasValue.value && !props.showLoading)
 const isLoadingIcon = computed(() => canShowAffordances.value && hasValue.value && props.showLoading)
+const hasRightAffordance = computed(() => isClearable.value || isLoadingIcon.value)
+
+const errorId = computed(() => `${props.id}-error`)
 </script>

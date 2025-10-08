@@ -65,46 +65,21 @@
                         </div>
                     </template>
                     <template #moreButtons>
-                        <Switch @click="changeDailyViewMode" v-model="dailyViewMode" :class="[dailyViewMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                            <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent
-                                        :icon="IconCalendarWeek"
-                                        icon-size="h-4 w-4"
-                                        :tooltip-text="$t('Daily view')"
-                                        direction="left"
-                                    />
-                                </span>
-                                <span :class="[dailyViewMode ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent
-                                        :icon="IconCalendarWeek"
-                                        icon-size="h-4 w-4"
-                                        :tooltip-text="$t('Daily view')"
-                                        direction="left"
-                                    />
-                                </span>
-                            </span>
-                        </Switch>
-                        <Switch @click="toggleMultiEditModeCalendar" v-model="multiEditModeCalendar" :class="[multiEditModeCalendar ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                            <span :class="[multiEditModeCalendar ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                <span :class="[multiEditModeCalendar ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent
-                                        :icon="IconPencil"
-                                        icon-size="h-4 w-4"
-                                        :tooltip-text="$t('Edit')"
-                                        direction="left"
-                                    />
-                                </span>
-                                <span :class="[multiEditModeCalendar ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent
-                                        :icon="IconPencil"
-                                        icon-size="h-4 w-4"
-                                        :tooltip-text="$t('Edit')"
-                                        direction="left"
-                                    />
-                                </span>
-                            </span>
-                        </Switch>
+                        <SwitchIconTooltip
+                            v-model="dailyViewMode"
+                            :tooltip-text="$t('Daily view')"
+                            size="md"
+                            @change="changeDailyViewMode"
+                            :icon="IconCalendarWeek"
+                        />
+
+                        <SwitchIconTooltip
+                            v-model="multiEditModeCalendar"
+                            :tooltip-text="$t('Edit')"
+                            size="md"
+                            @change="toggleMultiEditModeCalendar"
+                            :icon="IconPencil"
+                        />
                     </template>
                 </ShiftPlanFunctionBar>
             </div>
@@ -767,7 +742,7 @@ import {
     IconArrowDown,
     IconArrowUp, IconBulb, IconCalendarWeek,
     IconChevronDown, IconChevronsDown,
-    IconFileText, IconList,
+    IconFileText, IconGeometry, IconList,
     IconPencil, IconPlus,
     IconX
 } from "@tabler/icons-vue";
@@ -794,6 +769,7 @@ import DeleteCalendarRoomShiftEntriesModal from "@/Pages/Shifts/Components/Delet
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
@@ -806,6 +782,7 @@ export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        SwitchIconTooltip,
         ShiftCommitDateSelectModal,
         BaseMenuItem,
         DeleteCalendarRoomShiftEntriesModal,
@@ -1098,6 +1075,7 @@ export default {
         },
     },
     methods: {
+        IconGeometry,
         IconList,
         IconBulb,
         IconChevronsDown,
@@ -1108,7 +1086,6 @@ export default {
         IconAlertSquareRounded,
         usePage,
         changeDailyViewMode(){
-            this.dailyViewMode = !this.dailyViewMode;
             router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
                 daily_view: this.dailyViewMode
             }, {
@@ -1754,7 +1731,6 @@ export default {
         toggleMultiEditModeCalendar() {
             this.highlightMode = false;
             this.dayServiceMode = false;
-            this.multiEditModeCalendar = !this.multiEditModeCalendar;
 
             if (!this.multiEditModeCalendar){
                 this.multiEditCalendarDays = [];

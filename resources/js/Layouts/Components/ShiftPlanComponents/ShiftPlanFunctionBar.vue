@@ -4,35 +4,34 @@
             <div class="inline-flex items-center">
                 <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">
                     <!-- Date Shortcuts - 3 vertical icons -->
-                    <div class="flex flex-col justify-between mr-2 h-10">
+                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue"
+                                           :is_shift_plan="true"></date-picker-component>
+                    <div class="flex gap-x-1 mx-2">
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('Today')"
                             :icon="IconCalendar"
-                            icon-size="w-4 h-4"
+                            icon-size="h-5 w-5"
                             @click="jumpToToday"
-                            class="flex-1 flex items-center justify-center"
+                            classesButton="ui-button"
                         />
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('Current week')"
                             :icon="IconCalendarWeek"
-                            icon-size="w-4 h-4"
+                            icon-size="h-5 w-5"
                             @click="jumpToCurrentWeek"
-                            class="flex-1 flex items-center justify-center"
+                            classesButton="ui-button"
                         />
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('Current month')"
                             :icon="IconCalendarMonth"
-                            icon-size="w-4 h-4"
+                            icon-size="h-5 w-5"
                             @click="jumpToCurrentMonth"
-                            class="flex-1 flex items-center justify-center"
+                            classesButton="ui-button"
                         />
                     </div>
-                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue"
-                                           :is_shift_plan="true"></date-picker-component>
-
                     <div class="flex items-center mx-4 gap-x-1 select-none">
                         <IconChevronLeftPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
                                              @click="previousTimeRange"/>
@@ -111,7 +110,7 @@
                     </div>
                 </div>
 
-                <div v-else class="relative">
+                <div v-else class="relative mr-2">
                     <BaseInput
                         id="shiftPlanProjectSearch"
                         v-model="projectSearch"
@@ -145,27 +144,16 @@
                     </template>
                 </div>
 
-                <Switch
-                    v-model="usePage().props.auth.user.calendar_settings.use_project_time_period"
-                    @update:model-value="handleUseTimePeriodChange"
-                    :class="[isCalendarUsingProjectTimePeriod ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none ml-4 z-50']">
-                    <span class="sr-only">Use project time period toggle</span>
-                    <span
-                        :class="[isCalendarUsingProjectTimePeriod ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                    <span
-                        :class="[isCalendarUsingProjectTimePeriod ? 'opacity-0 duration-100 ease-out pointer-events-none' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                        aria-hidden="true">
-                        <ToolTipComponent icon-size="w-4 h-4" direction="bottom" :icon="IconGeometry"
-                                          :tooltip-text="$t('Project search')" stroke="1.5"/>
-                    </span>
-                    <span
-                        :class="[isCalendarUsingProjectTimePeriod ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out pointer-events-none', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                        aria-hidden="true">
-                        <ToolTipComponent icon-size="w-4 h-4" direction="bottom" :icon="IconGeometry"
-                                          :tooltip-text="$t('Project search')" stroke="1.5"/>
-                    </span>
-                </span>
-                </Switch>
+                <div class=" mr-2">
+                    <SwitchIconTooltip
+                        v-model="usePage().props.auth.user.calendar_settings.use_project_time_period"
+                        :tooltip-text="$t('Project search')"
+                        size="md"
+                        @change="handleUseTimePeriodChange"
+                        :icon="IconGeometry"
+                    />
+                </div>
+
             </div>
             <slot name="multiEditCalendar"/>
 
@@ -194,16 +182,16 @@
                     />
 
                     <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
-                                      :tooltip-text="$t('Lock all shifts')" :icon="IconCalendarCheck" icon-size="h-7 w-7"
+                                      :tooltip-text="$t('Lock all shifts')" :icon="IconCalendarCheck" icon-size="h-5 w-5" classes-button="ui-button"
                                       @click="commitAllShifts()"/>
 
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" :icon="IconHistory"
-                                      icon-size="h-7 w-7" @click="openHistoryModal()"/>
+                                      icon-size="h-5 w-5" classes-button="ui-button" @click="openHistoryModal()"/>
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" :icon="IconArrowsDiagonal"
-                                      icon-size="h-7 w-7" v-if="!isFullscreen" @click="enterFullscreenMode"/>
+                                      icon-size="h-5 w-5" classes-button="ui-button" v-if="!isFullscreen" @click="enterFullscreenMode"/>
 
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" :icon="IconCalendarStar"
-                                      icon-size="h-7 w-7" @click="showCalendarAboSettingModal = true"/>
+                                      icon-size="h-5 w-5" classes-button="ui-button" @click="showCalendarAboSettingModal = true"/>
                     <!--<ShiftPlanFilter
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
@@ -279,6 +267,7 @@ import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 const {hasAdminRole, can} = usePermission(usePage().props);
 
 const props = defineProps({

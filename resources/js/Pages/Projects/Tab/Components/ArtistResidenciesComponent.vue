@@ -2,7 +2,7 @@
     <div class="print:break-before-auto">
         <div class="sm:flex sm:items-center ">
             <div class="sm:flex-auto">
-                <TinyPageHeadline :title="$t('artist management')" :description="$t('Manage the artist management for this project.')"/>
+                <BasePageTitle title="artist management" description="Manage the artist management for this project."/>
             </div>
             <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex items-center gap-x-4 print:hidden">
                 <ToolTipComponent
@@ -90,6 +90,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ExportArtistResidenciesModal
     from "@/Pages/Projects/Components/ArtistResidenciesComponents/ExportArtistResidenciesModal.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const props = defineProps({
     loadedProjectInformation: {

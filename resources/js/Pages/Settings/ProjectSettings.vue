@@ -32,14 +32,11 @@
                     @openEditModal="openEditSectorModal"
                 />
 
-                <div>
+                <div class="card white p-5">
                     <div class="">
-                        <h2 class="headline2 my-2">{{ $t('Project Status') }}</h2>
-                        <div class="xsLight">
-                            {{ $t('Define project statuses to indicate the progress of a project. Users can then adjust their notifications based on these statuses.') }}
-                        </div>
+                        <BasePageTitle :title="$t('Project Status')" :description="$t('Define project statuses to indicate the progress of a project. Users can then adjust their notifications based on these statuses.')" />
                     </div>
-                    <div class="flex flex-wrap w-full max-w-xl mt-2">
+                    <div class="flex flex-wrap w-full max-w-xl my-4">
                         <div class="flex flex-wrap w-full">
                             <ProjectStateTagComponent
                                 v-for="item in states"
@@ -50,11 +47,13 @@
                             />
                         </div>
                     </div>
+
+                    <button class="ui-button-add" @click="openAddStateModal">
+                        <component :is="IconPlus" stroke-width="1" class="size-5" />
+                        {{ $t('Add Status') }}
+                    </button>
                 </div>
-            <button class="ui-button-add" @click="openAddStateModal">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
-                {{ $t('Add Status') }}
-            </button>
+
                 <ProjectSettingsItem
                     :title="$t('Contract Types')"
                     :description="$t('Define contract types that can be assigned to contracts later.')"
@@ -97,7 +96,7 @@
             </div>
 
 
-            <TinyPageHeadline
+            <BasePageTitle
                 :title="$t('Settings for project creation')"
                 :description="$t('Here you have the option of making settings for the creation of projects.')"
             />
@@ -285,10 +284,12 @@ import Permissions from "@/Mixins/Permissions.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 export default {
     mixins: [Permissions],
     components: {
+        BasePageTitle,
         ProjectSettingsHeader,
         BaseCardButton,
         TinyPageHeadline,

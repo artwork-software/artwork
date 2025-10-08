@@ -2,7 +2,7 @@
     <CalendarSettingsHeader :title="$t('Calendar Settings')" :description="$t('Define global settings for the calendar.')">
         <div class="card white p-5">
             <div>
-                <TinyPageHeadline
+                <BasePageTitle
                     :title="$t('Calendar Settings')"
                     :description="$t('Specify the times that are to be displayed in a reduced or compressed form in the daily view. With this setting, you determine which time intervals are highlighted less to improve the clarity of the daily view. Specify the exact time period you want so that the hours in your daily calendar are displayed in a clear and structured way.')" />
             </div>
@@ -43,6 +43,7 @@ import {useForm, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const props = defineProps({
     calendarSettings: {

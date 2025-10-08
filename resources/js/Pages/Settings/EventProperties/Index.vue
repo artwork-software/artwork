@@ -9,7 +9,7 @@
             </template>
             <div class="my-10">
                 <div class="mb-4">
-                    <TinyPageHeadline title="Event Eigenschaften"
+                    <BasePageTitle title="Event Eigenschaften"
                                       description="Hier kannst du die Event Eigenschaften verwalten."/>
                 </div>
                 <ul role="list" class="flex flex-col gap-y-3">
@@ -82,6 +82,7 @@ import IconSelector from "@/Components/Icon/IconSelector.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import {IconPlus} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const props = defineProps({
         event_properties: {

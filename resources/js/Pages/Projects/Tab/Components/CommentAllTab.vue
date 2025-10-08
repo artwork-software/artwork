@@ -4,14 +4,10 @@
         <div class="rounded-2xl border border-gray-200/70 bg-white shadow-sm">
             <!-- Header -->
             <header class="flex items-center justify-between gap-3 border-b border-gray-100 px-6 py-4">
-                <div>
-                    <h2 class="text-base/6 font-semibold text-gray-900">
-                        {{ $t('All Project updates & comments') }}
-                    </h2>
-                    <p class="mt-0.5 text-xs text-gray-500">
-                        {{ $t('Share context, decisions, and notes with your team.') }}
-                    </p>
-                </div>
+                <BasePageTitle
+                    title="All Project updates & comments"
+                    description="Share context, decisions, and notes with your team."
+                />
                 <div class="hidden sm:flex items-center gap-2">
                   <span class="inline-flex items-center rounded-full border border-gray-200 px-2 py-0.5 text-[11px] text-gray-600">
                     {{ newCommentList?.length || 0 }} {{ $t('comments') }}
@@ -137,6 +133,7 @@ import { useCommentListener } from "@/Composeables/Listener/useCommentListener.j
 import { IconCircleCheckFilled, IconCircleXFilled } from "@tabler/icons-vue";
 import { can, is } from "laravel-permission-to-vuejs";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 defineOptions({
     name: "ProjectComments",

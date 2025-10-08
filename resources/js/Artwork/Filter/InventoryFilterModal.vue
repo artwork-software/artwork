@@ -10,7 +10,7 @@
       <!-- Active Filters -->
       <div>
         <div class="flex items-start justify-between">
-          <TinyPageHeadline
+          <BasePageTitle
             :title="$t('Active filters')"
             :description="$t('Your active filters. Click on a filter to remove it.')"
           />
@@ -371,6 +371,7 @@ import { XIcon } from '@heroicons/vue/outline'
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
 import {IconChevronDown} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const emits = defineEmits(['close'])
 const page = usePage()

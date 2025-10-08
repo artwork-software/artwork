@@ -4,7 +4,7 @@
             <div class="border-b border-gray-200 pt-8 pb-5 flex items-center justify-between">
                 <div class="">
                     <div>
-                        <TinyPageHeadline
+                        <BasePageTitle
                             :title="$t('Inventory')"
                             :description="$t('Welcome to the {0} inventory! Here you will find a complete overview of all available products. You can browse through the various items, view details and manage which products are currently in stock.', [usePage().props.name])"
                         />
@@ -139,6 +139,7 @@ import debounce from "lodash.debounce";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import StatusOverview from "@/Pages/Inventory/Components/StatusOverview.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 const props = defineProps({
     categories: {
         type: Object,

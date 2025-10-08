@@ -362,7 +362,7 @@
                         <div class="flex justify-between">
                             <div class="flex items-center gap-x-2">
                                 <IconSelector @update:modelValue="addIconToForm" :current-icon="createProjectForm.icon" />
-                                <TinyPageHeadline
+                                <BasePageTitle
                                     title="Icon"
                                     description="Wähle ein Icon für die Projektgruppe aus."
                                 />
@@ -372,7 +372,7 @@
                                 <div class="">
                                     <ColorPickerComponent @updateColor="addColorToProject" color="#ccc" />
                                 </div>
-                                <TinyPageHeadline
+                                <BasePageTitle
                                     title="Farbe"
                                     description="Wähle eine Farbe für die Projektgruppe aus."
                                     />
@@ -617,6 +617,7 @@ import { usePage } from '@inertiajs/vue3';
 import { usePermission } from '@/Composeables/Permission.js';
 import { useTranslation } from '@/Composeables/Translation.js';
 import {IconCalendarMonth, IconCirclePlus} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 // Define props
 const props = defineProps({

@@ -1,9 +1,8 @@
 <template>
     <div class="select-none border-b border-gray-300" :class="showFilter ? 'pb-4' : ''">
         <div class="flex items-start gap-x-4 cursor-pointer hover:text-artwork-buttons-hover" @click="showFilter = !showFilter">
-            <TinyPageHeadline
+            <BasePageTitle
                 title="Filter"
-                description=""
             />
             <component :is="IconChevronDown" class="size-5 mt-0.5" :class="showFilter ? 'rotate-180 transform' : ''" />
         </div>
@@ -79,6 +78,7 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {isBool} from "@aesoper/normal-utils";
 import {IconChevronDown, IconX} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const props = defineProps({
     filterableProperties: {

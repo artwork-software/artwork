@@ -1,91 +1,159 @@
-<script>
-import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
-import TabComponent from "@/Components/Tabs/TabComponent.vue";
-import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import AddEditDayServiceModal from "@/Pages/Settings/Components/AddEditDayServiceModal.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
-import {IconPlus} from "@tabler/icons-vue";
-import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-
-export default {
-    name: "DayServiceIndex",
-    mixins: [IconLib],
-    components: {
-        ShiftSettingsHeader,
-        PropertyIcon, GlassyIconButton, AddEditDayServiceModal, AddButtonSmall, TabComponent},
-    props: [
-        'dayServices'
-    ],
-    data() {
-        return {
-            iconList: [
-                {iconName: 'IconAbacus'},
-                {iconName: 'IconKey'},
-                {iconName: 'IconSpeakerphone'},
-                {iconName: 'IconTrolley'},
-                {iconName: 'IconCamera'},
-                {iconName: 'IconBuildingWarehouse'},
-                {iconName: 'IconForklift'},
-                {iconName: 'IconTruckDelivery'},
-                {iconName: 'IconHotelService'},
-                {iconName: 'IconServer'},
-                {iconName: 'IconDevices2'},
-                {iconName: 'IconDeviceSpeaker'},
-                {iconName: 'IconDeviceAudioTape'},
-                {iconName: 'IconLiveView'},
-                {iconName: 'IconMicroscope'},
-                {iconName: 'IconGavel'},
-                {iconName: 'IconHelp'},
-                {iconName: 'IconInfoCircle'},
-            ],
-            showAddEditDayServiceModal: false,
-            dayServiceToEdit: null
-        }
-    },
-    methods: {
-        IconPlus,
-        closeModal(){
-            this.showAddEditDayServiceModal = false;
-            this.dayServiceToEdit = null;
-        },
-        editDayService(dayService){
-            this.dayServiceToEdit = dayService;
-            this.showAddEditDayServiceModal = true;
-        }
-    }
-}
-</script>
-
 <template>
     <ShiftSettingsHeader :title="$t('Day Services')">
+        <!-- Actions -->
         <template #actions>
-            <button class="ui-button-add" @click="showAddEditDayServiceModal = true">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
+            <button class="ui-button-add inline-flex items-center gap-2" @click="openNew">
+                <IconPlus class="size-5" stroke-width="1" />
                 {{ $t('New Day Service') }}
             </button>
         </template>
 
-            <div class="my-5 card white p-5" >
-                <div v-for="dayService in dayServices">
-                    <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-8 mb-3">
-                        <div class="col-span-full md:col-span-2 xl:col-span-7">
-                            <div class="flex items-center gap-x-1.5">
-                                <PropertyIcon :name="dayService.icon" stroke-width="1.5" :style="{color: dayService.hex_color}" class="h-8 w-8 cursor-pointer flex items-center text-black" />
-                                <div class="">{{ dayService.name }}</div>
+        <!-- Liste -->
+        <div class="mt-5">
+            <div
+                v-if="dayServices?.length"
+                class="grid grid-cols-1 gap-3"
+            >
+                <div
+                    v-for="ds in dayServices"
+                    :key="ds.id ?? ds.name"
+                    class="group flex items-center justify-between rounded-xl border border-gray-200 bg-white p-3 shadow-xs transition hover:shadow-sm"
+                >
+                    <div class="flex min-w-0 items-center gap-3">
+                        <!-- Icon Badge mit Farb-Tint -->
+                        <span
+                            class="inline-flex size-9 items-center justify-center rounded border"
+                            :style="{ backgroundColor: ds.hex_color + '50', borderColor: ds.hex_color + '70', color: ds.hex_color }"
+                            :title="ds.hex_color"
+                        >
+                          <PropertyIcon :name="ds.icon" stroke-width="1.5" class="size-5" />
+                        </span>
+
+                        <div class="min-w-0">
+                            <div class="truncate text-sm font-medium text-gray-900">
+                                {{ ds.name }}
+                            </div>
+                            <div class="mt-1 flex items-center gap-2">
+                                <span
+                                    class="inline-flex size-2.5 rounded-full"
+                                    :style="{ backgroundColor: ds.hex_color }"
+                                />
+                                <code class="text-[11px] text-gray-500">{{ ds.hex_color }}</code>
                             </div>
                         </div>
-                        <div class="col-span-full md:col-span-1 xl:col-span-1">
-                            <IconEdit class="h-6 w-6 cursor-pointer flex items-center" @click="editDayService(dayService)" />
-                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button
+                            type="button"
+                            class="inline-flex items-center justify-center rounded-full p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-300"
+                            @click="editDayService(ds)"
+                        >
+                            <IconEdit class="size-5" />
+                        </button>
                     </div>
                 </div>
             </div>
 
-        <AddEditDayServiceModal :icon-list="iconList" v-if="showAddEditDayServiceModal" :day-service-to-edit="dayServiceToEdit" @closed="closeModal" />
+            <!-- Empty state -->
+            <div
+                v-else
+                class="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-10 text-center"
+            >
+                <div class="mx-auto max-w-md">
+                    <div
+                        class="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-white text-gray-400 shadow-inner"
+                    >
+                        <IconPlus class="size-5" />
+                    </div>
+                    <h3 class="text-sm font-semibold text-gray-800">
+                        {{ $t('No day services yet') }}
+                    </h3>
+                    <p class="mt-1 text-xs text-gray-500">
+                        {{ $t('Create your first day service to get started.') }}
+                    </p>
+                    <button
+                        class="ui-button-add mt-4 inline-flex items-center gap-2"
+                        @click="openNew"
+                    >
+                        <IconPlus class="size-5" stroke-width="1" />
+                        {{ $t('New Day Service') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <AddEditDayServiceModal
+            v-if="showAddEditDayServiceModal"
+            :day-service-to-edit="dayServiceToEdit"
+            @closed="closeModal"
+        />
     </ShiftSettingsHeader>
 </template>
 
-<style scoped>
+<script setup lang="ts">
+import { ref } from 'vue'
+import ShiftSettingsHeader from '@/Pages/Settings/Components/ShiftSettingsHeader.vue'
+import AddEditDayServiceModal from '@/Pages/Settings/Components/AddEditDayServiceModal.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import { IconPlus, IconEdit } from '@tabler/icons-vue'
 
+defineOptions({ name: 'DayServiceIndex' })
+
+const props = defineProps<{
+    dayServices: Array<{
+        id?: number | string
+        name: string
+        icon?: unknown
+        hex_color: string
+    }>
+}>()
+
+const showAddEditDayServiceModal = ref(false)
+const dayServiceToEdit = ref<typeof props.dayServices[number] | null>(null)
+
+function openNew() {
+    dayServiceToEdit.value = null
+    showAddEditDayServiceModal.value = true
+}
+
+function editDayService(dayService: typeof props.dayServices[number]) {
+    dayServiceToEdit.value = dayService
+    showAddEditDayServiceModal.value = true
+}
+
+function closeModal() {
+    showAddEditDayServiceModal.value = false
+    dayServiceToEdit.value = null
+}
+
+/**
+ * Erzeugt einen transparenten Farb-Tint für das Icon-Badge.
+ * opacity 0..1 → mischt Hex mit Weiß.
+ */
+function hexTint(hex: string, opacity = 0.1): string {
+    // Fallbacks & Normalisierung
+    if (!hex) return 'rgba(0,0,0,0.05)'
+    const h = hex.replace('#', '')
+    const bigint = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16)
+    const r = (bigint >> 16) & 255
+    const g = (bigint >> 8) & 255
+    const b = bigint & 255
+    const r2 = Math.round(255 * opacity + r * (1 - opacity))
+    const g2 = Math.round(255 * opacity + g * (1 - opacity))
+    const b2 = Math.round(255 * opacity + b * (1 - opacity))
+    return `rgb(${r2}, ${g2}, ${b2})`
+}
+</script>
+
+<style scoped>
+/* sanftere Shadow-Variante */
+.shadow-xs {
+    --tw-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+    --tw-shadow-colored: 0 1px 2px var(--tw-shadow-color);
+    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
+}
 </style>

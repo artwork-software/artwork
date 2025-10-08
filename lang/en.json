@@ -1653,7 +1653,7 @@
     "Day Service create": "Day Service create",
     "Day Service edit": "Day Service edit",
     "You can create a new day service here.": "You can create a new day service here.",
-    "Here you can edit the day service \"{0}\".": "Here you can edit the day service \"{0}\".",
+    "Here you can edit the day service {0}.": "Here you can edit the day service \"{0}\".",
     "Name of the day service": "Name of the day service",
     "Color": "Color",
     "The shift starts before the event starts!": "The shift starts before the event starts!",

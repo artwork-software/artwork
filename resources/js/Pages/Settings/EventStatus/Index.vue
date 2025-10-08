@@ -32,7 +32,7 @@
 
             <div class="my-10" v-if="enable_status">
                 <div class="mb-4">
-                    <TinyPageHeadline
+                    <BasePageTitle
                         title="Event Status"
                         description="Hier kannst du die Event Status verwalten."
                     />
@@ -118,6 +118,7 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import AddEditEventStatusModal from "@/Pages/Settings/EventStatus/Components/AddEditEventStatusModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const props = defineProps({
     eventStatuses: {

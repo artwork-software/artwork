@@ -1,10 +1,8 @@
 <template>
     <div>
         <div class="flex items-center gap-x-5">
-            <div class="sLight">
-                {{ $t('Contact persons') }}
-            </div>
-            <div v-if="this.canEditComponent">
+            <BasePageTitle title="Contact persons" :white-text="inSidebar" />
+            <div v-if="this.canEditComponent" class="mt-2">
                 <PencilAltIcon class=" w-5 h-5 rounded-full" :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                                @click="openContactModal"/>
             </div>
@@ -80,9 +78,11 @@ import {defineComponent} from "vue";
 import {PencilAltIcon} from "@heroicons/vue/outline";
 import ShiftContactModal from "@/Layouts/Components/ShiftContactModal.vue";
 import {IconEdit} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 export default defineComponent({
     components: {
+        BasePageTitle,
         IconEdit,
         ShiftContactModal,
         PencilAltIcon

@@ -202,7 +202,7 @@
             <div class="px-6"
                  v-if="articleForm.properties.length > 0 && selectedCategory && !articleForm.is_detailed_quantity">
                 <div>
-                    <TinyPageHeadline
+                    <BasePageTitle
                         :title="$t('Category & subcategory based properties')"
                         :description="$t('These properties are based on the selected category and subcategory, here you can delete unwanted properties for this article and set the values for the others')"
                     />
@@ -368,7 +368,7 @@
             <div class="px-6" v-if="articleForm.is_detailed_quantity">
                 <!-- Neu: zentrale, artikelübergreifende Eigenschaften -->
                 <div v-if="acrossProperties.length" class="mb-6">
-                    <TinyPageHeadline
+                    <BasePageTitle
                         :title="$t('Across-article properties')"
                         :description="$t('These properties are shared across all detailed articles and can be edited here once')"
                     />
@@ -490,7 +490,7 @@
 
 
                 <div class="mb-4">
-                    <TinyPageHeadline
+                    <BasePageTitle
                         :title="$t('Detailed article properties')"
                         :description="$t('These properties apply to each individual article. Select the desired article from the list on the left or add new ones and maintain their individual properties on the right.')"
                     />
@@ -960,6 +960,7 @@ import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Compo
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import {IconClick, IconCopy, IconInfoCircle, IconPhoto, IconPhotoPlus, IconPlus, IconTrash} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const acrossValues = ref({})
 const props = defineProps({article: {type: Object, required: false, default: null}})

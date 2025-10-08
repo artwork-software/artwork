@@ -1,6 +1,9 @@
 <template>
     <AppLayout title="Dashboard">
-        <div class="artwork-container">
+        <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
+            <div class="relative left-[calc(50%-5rem)] aspect-1155/678 w-144.5 -translate-x-1/2 rotate-30 bg-linear-to-tr from-[#ff98f3] to-[#83cdff] opacity-30 sm:left-[calc(50%-10rem)] sm:w-288.75" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)" />
+        </div>
+        <div class="artwork-container ">
             <!-- Welcome Bar mit Profil + Quicklinks -->
             <header class="rounded-2xl border border-gray-100 bg-white shadow-sm px-5 py-4">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -54,7 +57,7 @@
 
             <!-- KPI Row -->
             <section class="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Heutige Termine') }}</p>
@@ -67,7 +70,7 @@
                     <p class="mt-2 text-xs text-gray-500">{{ $t('Alle geplanten Termine heute.') }}</p>
                 </div>
 
-                <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Heutige Schichten') }}</p>
@@ -80,7 +83,7 @@
                     <p class="mt-2 text-xs text-gray-500">{{ $t('Deine Einsätze auf einen Blick.') }}</p>
                 </div>
 
-                <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Meldungen heute') }}</p>
@@ -93,7 +96,7 @@
                     <p class="mt-2 text-xs text-gray-500">{{ $t('Aktuelle Hinweise & News.') }}</p>
                 </div>
 
-                <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Offene Aufgaben') }}</p>
@@ -160,7 +163,7 @@
                     <div class="rounded-2xl border border-gray-100 bg-white shadow-sm">
                         <div class="flex items-center justify-between px-5 py-4">
                             <div>
-                                <h2 class="text-base font-semibold">{{ $t('Shifts today"') }}</h2>
+                                <h2 class="text-base font-semibold">{{ $t('Shifts today') }}</h2>
                                 <p class="text-xs text-gray-500">{{ $t('Deine heutigen Einsätze') }}</p>
                             </div>
                             <a v-if="canViewShifts" :href="route('shifts.plan')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
@@ -307,6 +310,9 @@
                     </div>
                 </section>
             </main>
+        </div>
+        <div class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]" aria-hidden="true">
+            <div class="relative left-[calc(50%+3rem)] aspect-1155/678 w-144.5 -translate-x-1/2 bg-linear-to-tr from-[#ff98f3] to-[#83cdff] opacity-20 sm:left-[calc(50%+36rem)] sm:w-288.75" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)" />
         </div>
     </AppLayout>
 </template>

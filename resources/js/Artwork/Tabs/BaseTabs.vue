@@ -16,7 +16,7 @@
             ]"
                     >
                         <PropertyIcon v-if="tab.icon" :name="tab.icon" class="size-4" />
-                        {{ $t(tab.name) }}
+                        {{ useTranslation ? $t(tab.name) : tab.name }}
                         <span
                             v-if="tab.count"
                             :class="[
@@ -32,14 +32,14 @@
                         @click="$emit('tab-click', tab)"
                         :aria-current="tab.current ? 'page' : undefined"
                         :class="[
-              tab.current
-                ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'
-                : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
-              'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium cursor-pointer'
-            ]"
+                          tab.current
+                            ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'
+                            : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
+                          'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium cursor-pointer'
+                        ]"
                     >
                         <PropertyIcon v-if="tab.icon" :name="tab.icon" class="size-4" />
-                        {{ $t(tab.name) }}
+                        {{ useTranslation ? $t(tab.name) : tab.name }}
                         <span
                             v-if="tab.count"
                             :class="[
@@ -55,14 +55,14 @@
                         @click="$emit('tab-select', tab)"
                         :aria-current="tab.current ? 'page' : undefined"
                         :class="[
-              tab.current
-                ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'
-                : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
-              'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium cursor-pointer'
-            ]"
+                          tab.current
+                            ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'
+                            : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
+                          'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium cursor-pointer'
+                        ]"
                     >
                         <PropertyIcon v-if="tab.icon" :name="tab.icon" class="size-4" />
-                        {{ $t(tab.name) }}
+                        {{ useTranslation ? $t(tab.name) : tab.name }}
                         <span
                             v-if="tab.count"
                             :class="[
@@ -90,6 +90,10 @@ defineProps({
         type: String,
         default: 'links',
         validator: (value) => ['links', 'buttons', 'events'].includes(value),
+    },
+    useTranslation: {
+        type: Boolean,
+        default: true,
     },
 })
 

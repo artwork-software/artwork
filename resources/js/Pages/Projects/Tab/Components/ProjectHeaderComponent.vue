@@ -255,7 +255,7 @@
 
             <!-- STICKY TABS (unverändert) -->
             <div class="artwork-container !pb-0 sticky top-0 z-40 mt-3 bg-white/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur w-full mx-auto scroll-shadow-sm">
-                <BaseTabs :tabs="tabsForBaseTabComponent" />
+                <BaseTabs :tabs="tabsForBaseTabComponent"  :use-translation="false"/>
                 <nav class="relative flex gap-6 px-1 pt-3 pb-2 text-sm tracking-wide hidden" aria-label="Tabs">
                     <Link
                         v-for="tab in headerObject.tabs"

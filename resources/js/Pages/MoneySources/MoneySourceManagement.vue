@@ -1,109 +1,160 @@
 <template>
     <app-layout :title="$t('Sources of funding')">
         <div class="artwork-container">
-            <!-- Page header -->
-            <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-                <h1 class="headline1">{{ $t('Sources of funding') }}</h1>
 
-                <div class="flex items-center gap-2">
-                    <button class="ui-button-add inline-flex items-center gap-2" @click="showMoneySourceModal = true">
-                        <IconPlus class="size-5" stroke-width="1" />
-                        {{ $t('New') }}
-                    </button>
-                </div>
-            </div>
 
-            <!-- Toolbar -->
-            <div
-                class="mb-4 flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-xs md:flex-row md:items-center md:justify-between"
+            <ToolbarHeader
+                :icon="IconCurrencyEuro"
+                :title="$t('Sources of funding')"
+                icon-bg-class="bg-blue-600/10 text-blue-700"
+                :description="filteredMoneySources.length + ' ' + $t('Sources of funding')"
+                v-model="moneySource_query"
+                :search-enabled="true"
+                :search-label="$t('Search for sources')"
+                :search-tooltip="$t('Search')"
             >
-                <!-- Filter: Typ -->
-                <div class="flex items-center gap-3">
-                    <Listbox as="div" v-model="moneySourceFilter">
-                        <div class="relative">
-                            <ListboxButton
-                                class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <span class="text-gray-800">{{ moneySourceFilter.name }}</span>
-                                <IconChevronDown class="h-4 w-4 text-gray-400" />
-                            </ListboxButton>
+                <template #actions>
 
-                            <transition
-                                enter-active-class="transition duration-100 ease-out"
-                                enter-from-class="opacity-0 translate-y-1"
-                                enter-to-class="opacity-100 translate-y-0"
-                                leave-active-class="transition duration-75 ease-in"
-                                leave-from-class="opacity-100 translate-y-0"
-                                leave-to-class="opacity-0 translate-y-1"
-                            >
-                                <ListboxOptions
-                                    class="absolute z-20 mt-2 w-64 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
+                    <div class="flex items-center gap-3">
+                        <Listbox as="div" v-model="moneySourceFilter">
+                            <div class="relative">
+                                <ListboxButton
+                                    class="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
-                                    <ListboxOption
-                                        v-for="filter in moneySourceFilters"
-                                        :key="filter.type"
-                                        :value="filter"
-                                        as="template"
-                                        v-slot="{ active, selected }"
+                                    <span class="text-gray-800">{{ moneySourceFilter.name }}</span>
+                                    <IconChevronDown class="h-4 w-4 text-gray-400" />
+                                </ListboxButton>
+
+                                <transition
+                                    enter-active-class="transition duration-100 ease-out"
+                                    enter-from-class="opacity-0 translate-y-1"
+                                    enter-to-class="opacity-100 translate-y-0"
+                                    leave-active-class="transition duration-75 ease-in"
+                                    leave-from-class="opacity-100 translate-y-0"
+                                    leave-to-class="opacity-0 translate-y-1"
+                                >
+                                    <ListboxOptions
+                                        class="absolute z-100 mt-2 w-full rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
                                     >
-                                        <li
-                                            :class="[
-                        active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800',
-                        'flex cursor-pointer items-center justify-between rounded-md px-3 py-2'
-                      ]"
+                                        <ListboxOption
+                                            v-for="filter in moneySourceFilters"
+                                            :key="filter.type"
+                                            :value="filter"
+                                            as="template"
+                                            v-slot="{ active, selected }"
                                         >
-                                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'truncate']">{{ filter.name }}</span>
-                                            <IconCircleCheck v-if="selected" class="h-4 w-4 text-indigo-600" />
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </transition>
-                        </div>
-                    </Listbox>
+                                            <li
+                                                :class="[
+                                                active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800',
+                                                'flex cursor-pointer items-center justify-between rounded-md w-full px-3 py-2'
+                                              ]"
+                                            >
+                                                <span :class="[selected ? 'font-semibold' : 'font-normal', 'truncate']">{{ filter.name }}</span>
+                                                <IconCircleCheck v-if="selected" class="h-4 w-4 text-indigo-600" />
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </div>
+                        </Listbox>
 
-                    <!-- Toggle: erweiterte Filter -->
-                    <button
-                        type="button"
-                        class="inline-flex size-10 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        @click="showMoneySourceFilters = !showMoneySourceFilters"
-                        :aria-expanded="showMoneySourceFilters"
-                        :aria-controls="'filters-popover'"
-                    >
-                        <IconFilter class="h-5 w-5 text-gray-700" stroke-width="1.5" />
-                    </button>
-                </div>
-
-                <!-- Suche -->
-                <div class="relative w-full max-w-md md:ml-auto">
-                    <div v-if="!showSearchbar" class="flex justify-end">
-                        <button
-                            type="button"
-                            class="inline-flex size-10 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            @click="openSearchbar"
-                        >
-                            <IconSearch class="h-5 w-5 text-gray-700" stroke-width="1.5" />
-                        </button>
-                    </div>
-
-                    <div v-else class="relative">
-                        <input
-                            ref="searchBarInput"
-                            v-model="moneySource_query"
-                            type="text"
-                            :placeholder="$t('Search for sources')"
-                            class="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-8 text-sm text-gray-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                        <BaseUIButton
+                            label=""
+                            use-translation
+                            :icon="IconFilter"
+                            @click="showMoneySourceFilters = !showMoneySourceFilters"
                         />
-                        <IconSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                        <button
-                            type="button"
-                            class="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded hover:bg-gray-100"
-                            @click="closeSearchbar"
-                        >
-                            <IconX class="h-4 w-4 text-gray-500" />
-                        </button>
                     </div>
-                </div>
-            </div>
+
+                    <Menu as="div" class="relative">
+                        <MenuButton
+                            class="ui-button"
+                            :aria-label="$t('Sort')"
+                        >
+                            <IconArrowsSort class="h-5 w-5 text-gray-700" stroke-width="1.5" />
+                        </MenuButton>
+                        <transition
+                            enter-active-class="transition duration-100 ease-out"
+                            enter-from-class="opacity-0 -translate-y-1"
+                            enter-to-class="opacity-100 translate-y-0"
+                            leave-active-class="transition duration-75 ease-in"
+                            leave-from-class="opacity-100 translate-y-0"
+                            leave-to-class="opacity-0 -translate-y-1"
+                        >
+                            <MenuItems
+                                class="absolute right-0 z-20 mt-2 w-60 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
+                            >
+                                <div class="py-1">
+                                    <MenuItem v-slot="{ active }">
+                                        <button
+                                            type="button"
+                                            @click="changeSortAlgorithm('name')"
+                                            :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                        >
+                                            <span>{{ $t('Alphabetical') }}</span>
+                                            <span v-if="sortType === 'name'">
+                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
+                      <IconSortAscending v-else class="h-4 w-4" />
+                    </span>
+                                        </button>
+                                    </MenuItem>
+
+                                    <MenuItem v-slot="{ active }">
+                                        <button
+                                            type="button"
+                                            @click="changeSortAlgorithm('funding_start_date')"
+                                            :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                        >
+                                            <span>{{ $t('Start date') }}</span>
+                                            <span v-if="sortType === 'funding_start_date'">
+                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
+                      <IconSortAscending v-else class="h-4 w-4" />
+                    </span>
+                                        </button>
+                                    </MenuItem>
+
+                                    <MenuItem v-slot="{ active }">
+                                        <button
+                                            type="button"
+                                            @click="changeSortAlgorithm('funding_end_date')"
+                                            :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                        >
+                                            <span>{{ $t('End date') }}</span>
+                                            <span v-if="sortType === 'funding_end_date'">
+                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
+                      <IconSortAscending v-else class="h-4 w-4" />
+                    </span>
+                                        </button>
+                                    </MenuItem>
+
+                                    <MenuItem v-slot="{ active }">
+                                        <button
+                                            type="button"
+                                            @click="changeSortAlgorithm('created_at')"
+                                            :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                        >
+                                            <span>{{ $t('Created on') }}</span>
+                                            <span v-if="sortType === 'created_at'">
+                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
+                      <IconSortAscending v-else class="h-4 w-4" />
+                    </span>
+                                        </button>
+                                    </MenuItem>
+                                </div>
+                            </MenuItems>
+                        </transition>
+                    </Menu>
+
+                    <BaseUIButton
+                        label="New"
+                        use-translation
+                        is-add-button
+                        @click="showMoneySourceModal = true"
+                    />
+
+                </template>
+
+            </ToolbarHeader>
 
             <!-- Erweiterte Filter Popover -->
             <div
@@ -120,7 +171,7 @@
                             class="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 focus:outline-none"
                         >
                             <span>{{ $t('All categories') }}</span>
-                            <ChevronDownIcon class="h-4 w-4 text-gray-500 ui-open:rotate-180 ui-open:transform" />
+                            <IconChevronDown class="h-4 w-4 text-gray-500 ui-open:rotate-180 ui-open:transform" />
                         </DisclosureButton>
                         <DisclosurePanel class="mt-2 px-2">
                             <div v-if="moneySourceCategories?.length" class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
@@ -198,92 +249,6 @@
                 />
             </div>
 
-            <!-- Sort & Create on the right -->
-            <div class="mb-3 flex items-center justify-end gap-2">
-                <Menu as="div" class="relative">
-                    <MenuButton
-                        class="inline-flex size-10 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        :aria-label="$t('Sort')"
-                    >
-                        <IconArrowsSort class="h-5 w-5 text-gray-700" stroke-width="1.5" />
-                    </MenuButton>
-                    <transition
-                        enter-active-class="transition duration-100 ease-out"
-                        enter-from-class="opacity-0 -translate-y-1"
-                        enter-to-class="opacity-100 translate-y-0"
-                        leave-active-class="transition duration-75 ease-in"
-                        leave-from-class="opacity-100 translate-y-0"
-                        leave-to-class="opacity-0 -translate-y-1"
-                    >
-                        <MenuItems
-                            class="absolute right-0 z-20 mt-2 w-60 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
-                        >
-                            <div class="py-1">
-                                <MenuItem v-slot="{ active }">
-                                    <button
-                                        type="button"
-                                        @click="changeSortAlgorithm('name')"
-                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
-                                    >
-                                        <span>{{ $t('Alphabetical') }}</span>
-                                        <span v-if="sortType === 'name'">
-                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
-                      <IconSortAscending v-else class="h-4 w-4" />
-                    </span>
-                                    </button>
-                                </MenuItem>
-
-                                <MenuItem v-slot="{ active }">
-                                    <button
-                                        type="button"
-                                        @click="changeSortAlgorithm('funding_start_date')"
-                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
-                                    >
-                                        <span>{{ $t('Start date') }}</span>
-                                        <span v-if="sortType === 'funding_start_date'">
-                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
-                      <IconSortAscending v-else class="h-4 w-4" />
-                    </span>
-                                    </button>
-                                </MenuItem>
-
-                                <MenuItem v-slot="{ active }">
-                                    <button
-                                        type="button"
-                                        @click="changeSortAlgorithm('funding_end_date')"
-                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
-                                    >
-                                        <span>{{ $t('End date') }}</span>
-                                        <span v-if="sortType === 'funding_end_date'">
-                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
-                      <IconSortAscending v-else class="h-4 w-4" />
-                    </span>
-                                    </button>
-                                </MenuItem>
-
-                                <MenuItem v-slot="{ active }">
-                                    <button
-                                        type="button"
-                                        @click="changeSortAlgorithm('created_at')"
-                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
-                                    >
-                                        <span>{{ $t('Created on') }}</span>
-                                        <span v-if="sortType === 'created_at'">
-                      <IconSortDescending v-if="sortOrder === 'descending'" class="h-4 w-4" />
-                      <IconSortAscending v-else class="h-4 w-4" />
-                    </span>
-                                    </button>
-                                </MenuItem>
-                            </div>
-                        </MenuItems>
-                    </transition>
-                </Menu>
-
-                <!-- Optional zweite "Neu"-Schaltfläche (oben schon vorhanden) -->
-                <GlassyIconButton v-if="is('view edit add money_sources') || is('can edit and delete money sources') || is('artwork admin')"
-                                  text="New" :icon="IconPlus" @click="showMoneySourceModal = true"/>
-            </div>
-
             <!-- Liste -->
             <ul role="list" class="w-full">
                 <li
@@ -293,6 +258,7 @@
                     class="mb-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-xs"
                 >
                     <!-- Kopfzeile -->
+
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
@@ -332,7 +298,7 @@
                                 </MenuItem>
 
                                 <MenuItem
-                                    v-if="canWriteOrCompetent(moneySource) || $can('view edit add money_sources') || can('can edit and delete money sources') || is('artwork admin')"
+                                    v-if="canWriteOrCompetent(moneySource) || can('view edit add money_sources') || can('can edit and delete money sources') || is('artwork admin')"
                                     v-slot="{ active }"
                                 >
                                     <button
@@ -484,7 +450,7 @@ import {
 } from '@headlessui/vue'
 import {
     IconPlus, IconChevronDown, IconCircleCheck, IconSearch, IconX, IconFilter, IconArrowsSort,
-    IconSortAscending, IconSortDescending, IconEdit, IconCopy, IconPin, IconTrash, IconPinned
+    IconSortAscending, IconSortDescending, IconEdit, IconCopy, IconPin, IconTrash, IconPinned, IconCurrencyEuro
 } from '@tabler/icons-vue'
 
 import CreateMoneySourceComponent from '@/Layouts/Components/CreateMoneySourceComponent.vue'
@@ -494,9 +460,10 @@ import NewUserToolTip from '@/Layouts/Components/NewUserToolTip.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
-import GlassyIconButton from '@/Artwork/Buttons/GlassyIconButton.vue'
-import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
 import {can, is} from "laravel-permission-to-vuejs";
+import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 defineOptions({ name: 'MoneySourceIndex' })
 

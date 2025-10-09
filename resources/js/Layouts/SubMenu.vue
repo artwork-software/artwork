@@ -59,116 +59,248 @@
     </TransitionRoot>
 
     <!-- Static sidebar for desktop -->
-    <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col" :class="isFullSideBar ? 'lg:w-72' : 'lg:w-16'">
-        <!-- Sidebar component, swap this element with another sidebar if you like -->
-        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-auto bg-artwork-navigation-background">
+    <!-- Static sidebar for desktop -->
+    <div
+        class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
+        :class="isFullSideBar ? 'lg:w-72' : 'lg:w-16'"
+    >
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-artwork-navigation-background">
+            <!-- Brand -->
             <div class="flex h-16 shrink-0 items-center justify-center">
                 <div :class="isFullSideBar ? 'w-full flex mx-6' : ''" class="mt-5">
                     <div class="group relative">
-                        <div class="cursor-pointer absolute group-hover:block hidden bg-artwork-navigation-background/70 z-10 h-full w-full" @click="isFullSideBar = !isFullSideBar">
-                            <div class="flex items-center justify-center h-full w-full">
-                                <component :is="IconChevronsRight" v-if="!isFullSideBar" class="h-6 w-6 text-white" aria-hidden="true"/>
-                                <component :is="IconChevronsLeft" v-else class="h-6 w-6 text-white" aria-hidden="true"/>
+                        <div
+                            class="absolute inset-0 hidden cursor-pointer bg-artwork-navigation-background/70 group-hover:block z-10"
+                            @click="isFullSideBar = !isFullSideBar"
+                        >
+                            <div class="flex h-full w-full items-center justify-center">
+                                <component :is="IconChevronsRight" v-if="!isFullSideBar" class="h-6 w-6 text-white" />
+                                <component :is="IconChevronsLeft" v-else class="h-6 w-6 text-white" />
                             </div>
                         </div>
-                        <div class="font-bold text-secondaryHover block">
-                            <img :src="usePage().props.small_logo" :class="isFullSideBar ? 'h-12 w-12 min-w-12 min-h-12' : 'h-12 w-12 min-w-12 min-h-12'" class="object-cover" alt="artwork-logo"/>
-                        </div>
+                        <img
+                            :src="usePage().props.small_logo"
+                            class="h-12 w-12 min-w-12 min-h-12 object-cover"
+                            alt="artwork-logo"
+                        />
                     </div>
                     <div v-if="isFullSideBar" class="ml-4">
-                        <img :src="usePage().props.big_logo" :class="isFullSideBar ? 'h-12 w-auto' : 'h-16 w-16'" alt="artwork-logo"/>
+                        <img :src="usePage().props.big_logo" class="h-12 w-auto" alt="artwork-logo" />
                     </div>
                 </div>
             </div>
-            <nav class="flex flex-1 flex-col px-6">
+
+            <!-- Navigation -->
+            <nav :class="['flex flex-1 flex-col', isFullSideBar ? 'px-6' : 'px-1']">
                 <ul role="list" class="flex flex-1 flex-col gap-y-7">
                     <li>
-                        <ul role="list" class="-mx-3 space-y-3">
+                        <!-- Haupt-Navigation -->
+                        <ul role="list" :class="isFullSideBar ? 'space-y-2' : 'space-y-2'">
                             <li v-for="item in navigation" :key="item.name">
-                                <div @mouseover="showToolTipForItem(item)" @mouseleave="hideToolTipForItem(item)">
-                                    <Link v-if="!item.isMenu && item.has_permission" :href="item.href" :class="[item.current ? 'bg-gray-50/10 text-white' : 'text-white hover:bg-gray-50/10 hover:text-artwork-buttons-hover', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
-                                        <PropertyIcon :name="item.icon" :stroke-width="1" :class="[item.current ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover', 'size-6 min-w-6 min-h-6 shrink-0']" aria-hidden="true" />
-                                        <span v-if="isFullSideBar">{{ $t(item.name) }}</span>
-                                    </Link>
-                                    <div v-else>
-                                        <div v-if="item.has_permission" class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 font-semibold p-2">
-                                            <BaseMenu stroke-width="1" text-with-margin-left white-menu-background menu-width="!w-fit"  :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
-                                                <div v-for="subMenu in item.subMenus" :key="subMenu.name">
-                                                    <BaseMenuItem white-menu-background as-link v-if="subMenu.has_permission" :href="subMenu.href" :icon="subMenu.icon" :title="subMenu.name" />
-                                                </div>
-                                            </BaseMenu>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="absolute left-14" :class="item.showToolTipForItem ? 'block' : 'hidden'">
-                                    <div class="p-2 text-xs leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit font-lexend">
-                                        {{ $t(item.name) }}
+                                <!-- Link-Eintrag -->
+                                <Link
+                                    v-if="!item.isMenu && item.has_permission"
+                                    :href="item.href"
+                                    :aria-current="item.current ? 'page' : undefined"
+                                    :class="[
+                                      'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                      isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                      item.current
+                                        ? 'bg-white/10 text-white'
+                                        : 'text-white hover:bg-white/10 hover:text-artwork-buttons-hover'
+                                    ]"
+                                >
+                                    <ToolTipComponent
+                                        v-if="!isFullSideBar"
+                                        :icon="item.icon"
+                                        :tooltip-text="$t(item.name)"
+                                        direction="right"
+                                        classes-button="flex items-center justify-center"
+                                        white-icon
+                                        icon-size="size-6"
+                                    />
+                                    <PropertyIcon
+                                        v-else
+                                        :name="item.icon"
+                                        :stroke-width="1.5"
+                                        class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
+                                        aria-hidden="true"
+                                    />
+                                    <span v-if="isFullSideBar" class="truncate">{{ $t(item.name) }}</span>
+                                </Link>
+
+                                <!-- Menü-Eintrag -->
+                                <div v-else-if="item.has_permission" class="w-full">
+                                    <div
+                                        :class="[
+                                        'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                        isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                        item.current ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/10 hover:text-white'
+                                      ]"
+                                    >
+                                        <BaseMenu
+                                            stroke-width="1.5"
+                                            text-with-margin-left
+                                            :translation-key="item.name"
+                                            menu-width="!w-64"
+                                            :menu-button-text="item.name"
+                                            :show-menu-button-text="isFullSideBar"
+                                            no-relative
+                                            tooltip-direction="right"
+                                            has-no-offset
+                                            show-custom-icon
+                                            :icon="item.icon"
+                                            white-icon
+                                            dots-size="size-6"
+                                            :classes-button="isFullSideBar
+                      ? '!h-10 !px-0 flex items-center gap-3 text-current w-full justify-start'
+                      : '!h-10 !px-0 flex items-center text-current w-full justify-center'"
+                                        >
+                                            <template v-for="subMenu in item.subMenus" :key="subMenu.name">
+                                                <BaseMenuItem
+                                                    v-if="subMenu.has_permission"
+                                                    white-menu-background
+                                                    as-link
+                                                    :href="subMenu.href"
+                                                    :icon="subMenu.icon"
+                                                    :title="subMenu.name"
+                                                />
+                                            </template>
+                                        </BaseMenu>
                                     </div>
                                 </div>
                             </li>
                         </ul>
                     </li>
+
+                    <!-- Footer-Navigation -->
                     <li class="mt-auto">
-                        <ul role="list" class="-mx-3 space-y-2">
+                        <ul role="list" class="space-y-1">
                             <li v-for="item in subNavigation" :key="item.name">
-                                <div @mouseover="showToolTipForItem(item)" @mouseleave="hideToolTipForItem(item)">
-                                    <Link v-if="!item.isMenu" :href="item.href" :class="[item.current ? 'bg-gray-50/10 text-white' : 'text-white hover:bg-gray-50/10 hover:text-artwork-buttons-hover', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
-                                        <PropertyIcon :name="item.icon" :stroke-width="1" :class="[item.current ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover', 'size-6 min-w-6 min-h-6 shrink-0']" aria-hidden="true" />
-                                        <span v-if="isFullSideBar">{{ $t(item.name) }}</span>
-                                    </Link>
-                                    <div v-else class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 p-2 font-semibold">
-                                        <BaseMenu :no-tooltip="true" :stroke-width="1" menu-width="!w-fit" white-menu-background :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
-                                            <div v-for="subMenu in item.subMenus" :key="subMenu.name">
-                                                <BaseMenuItem white-menu-background as-link :href="subMenu.href" :icon="subMenu.icon" :title="subMenu.name" />
-                                            </div>
+                                <Link
+                                    v-if="!item.isMenu && item.has_permission"
+                                    :href="item.href"
+                                    :class="[
+                                      'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                      isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                      item.current
+                                        ? 'bg-gray-50/10 text-white'
+                                        : 'text-white hover:bg-gray-50/10 hover:text-artwork-buttons-hover'
+                                    ]"
+                                >
+                                    <PropertyIcon
+                                        :name="item.icon"
+                                        :stroke-width="1"
+                                        class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
+                                    />
+                                    <span v-if="isFullSideBar" class="truncate">{{ $t(item.name) }}</span>
+                                </Link>
+
+                                <!-- Falls subNavigation Einträge mit Menüs bekommt -->
+                                <div v-else class="w-full">
+                                    <div
+                                        :class="[
+                                        'w-full group flex items-center rounded-lg h-10 select-none transition-colors bg-transparent',
+                                        isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                        'text-white hover:bg-gray-50/10 hover:text-white'
+                                      ]"
+                                    >
+                                        <BaseMenu
+                                            :no-tooltip="true"
+                                            :stroke-width="1"
+                                            menu-width="!w-fit"
+                                            white-menu-background
+                                            :menu-button-text="item.name"
+                                            :show-menu-button-text="isFullSideBar"
+                                            no-relative
+                                            tooltip-direction="right"
+                                            has-no-offset
+                                            show-custom-icon
+                                            :icon="item.icon"
+                                            white-icon
+                                            dots-size="size-6"
+                                            :classes-button="isFullSideBar
+                                              ? '!h-10 !px-0 flex items-center gap-3 text-current w-full justify-start'
+                                              : '!h-10 !px-0 flex items-center text-current w-full justify-center'"
+                                        >
+                                            <template v-for="subMenu in item.subMenus" :key="subMenu.name">
+                                                <BaseMenuItem
+                                                    white-menu-background
+                                                    as-link
+                                                    :href="subMenu.href"
+                                                    :icon="subMenu.icon"
+                                                    :title="subMenu.name"
+                                                />
+                                            </template>
                                         </BaseMenu>
                                     </div>
                                 </div>
-                                <div class="absolute left-14" :class="item.showToolTipForItem ? 'block' : 'hidden'">
-                                    <div class="p-2 text-xs text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit font-lexend">
-                                        {{ $t(item.name) }}
-                                    </div>
-                                </div>
                             </li>
+
+                            <!-- Profil -->
                             <li>
-                                <Popover class="ml-1">
-                                    <Float auto-placement portal :offset="{ mainAxis: 150, crossAxis: 250}">
+                                <Popover class="ml-0">
+                                    <Float auto-placement portal :offset="{ mainAxis: 150, crossAxis: 250 }">
                                         <PopoverButton>
-                                            <div class="flex items-center gap-x-3 py-3 text-sm/6 font-semibold text-white ">
-                                                <img class="size-8 min-w-8 min-h-8 rounded-full object-cover bg-gray-50" :src="usePage().props.auth.user.profile_photo_url" alt="" />
+                                            <div
+                                                :class="[
+                                                    'flex items-center gap-3 text-sm/6 font-semibold text-white',
+                                                    isFullSideBar ? 'px-2 h-12 justify-start' : 'px-3 h-12 justify-center'
+                                                  ]"
+                                            >
+                                                <img
+                                                    class="size-8 min-w-8 min-h-8 rounded-full object-cover bg-gray-50"
+                                                    :src="usePage().props.auth.user.profile_photo_url"
+                                                    alt=""
+                                                />
                                                 <span v-if="isFullSideBar">
-                                                    <span class="sr-only">Your profile</span>
-                                                    <span aria-hidden="true">{{ usePage().props.auth.user.full_name }}</span>
-                                                </span>
+                        <span class="sr-only">Your profile</span>
+                        <span aria-hidden="true">{{ usePage().props.auth.user.full_name }}</span>
+                      </span>
                                             </div>
                                         </PopoverButton>
 
-                                        <transition enter-active-class="transition ease-out duration-200" enter-from-class="opacity-0 translate-y-1" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-150" leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 translate-y-1">
+                                        <transition
+                                            enter-active-class="transition ease-out duration-200"
+                                            enter-from-class="opacity-0 translate-y-1"
+                                            enter-to-class="opacity-100 translate-y-0"
+                                            leave-active-class="transition ease-in duration-150"
+                                            leave-from-class="opacity-100 translate-y-0"
+                                            leave-to-class="opacity-0 translate-y-1"
+                                        >
                                             <PopoverPanel class="absolute left-1/2 z-10 flex w-screen max-w-max card glassy -translate-x-1/2 p-3">
                                                 <div class="w-screen max-w-md flex-auto overflow-hidden card white p-3">
                                                     <div class="flex w-full items-center justify-between space-x-6 p-2">
-                                                        <div class="flex-1 truncate ">
+                                                        <div class="flex-1 truncate">
                                                             <div class="flex items-center space-x-3">
                                                                 <div class="font-bold headline h2">{{ usePage().props.auth.user.full_name }}</div>
-                                                                <span class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset"> {{ usePage().props.auth.user.position }}</span>
+                                                                <span class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                                {{ usePage().props.auth.user.position }}
+                              </span>
                                                             </div>
                                                             <p class="mt-1 truncate text-sm text-gray-500">{{ usePage().props.auth.user.business }}</p>
                                                         </div>
-                                                        <img class="size-14 shrink-0 rounded-full object-cover bg-gray-300" :src="usePage().props.auth.user.profile_photo_url" alt="" />
+                                                        <img
+                                                            class="size-14 shrink-0 rounded-full object-cover bg-gray-300"
+                                                            :src="usePage().props.auth.user.profile_photo_url"
+                                                            alt=""
+                                                        />
                                                     </div>
-                                                    <div>
-                                                        <div class="py-2 divide-x divide-gray-200 divide-dashed border-t border-gray-200 border-dashed flex items-center justify-between">
-                                                            <div class="flex w-0 flex-1">
-                                                                <div @click="logout" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent text-sm font-semibold text-gray-900 group hover:text-red-500 transition ease-in-out duration-200 cursor-pointer">
-                                                                    <PropertyIcon name="IconLogout" class="size-5 text-gray-400 group-hover:text-red-500 transition ease-in-out duration-200" aria-hidden="true" />
-                                                                    {{ $t('Logout') }}
-                                                                </div>
+                                                    <div class="border-t border-dashed border-gray-200">
+                                                        <div class="flex items-center justify-between py-2">
+                                                            <div
+                                                                @click="logout"
+                                                                class="relative -mr-px inline-flex w-1/2 items-center justify-center gap-3 rounded-bl-lg border border-transparent text-sm font-semibold text-gray-900 transition hover:text-red-500 cursor-pointer"
+                                                            >
+                                                                <PropertyIcon name="IconLogout" class="size-5 text-gray-400 transition group-hover:text-red-500" />
+                                                                {{ $t('Logout') }}
                                                             </div>
-                                                            <Link :href="route('user.edit.info', {user: usePage().props.auth.user.id})" class="-ml-px flex w-0 flex-1">
-                                                                <div class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent text-sm font-semibold text-gray-900 group hover:text-artwork-buttons-create transition ease-in-out duration-200 cursor-pointer">
-                                                                    <PropertyIcon name="IconUserCircle" class="size-5 text-gray-400 group-hover:text-artwork-buttons-create transition ease-in-out duration-200" aria-hidden="true" />
-                                                                    {{ $t('Your account') }}
-                                                                </div>
+                                                            <Link
+                                                                :href="route('user.edit.info', { user: usePage().props.auth.user.id })"
+                                                                class="relative inline-flex w-1/2 items-center justify-center gap-3 rounded-br-lg border border-transparent text-sm font-semibold text-gray-900 transition hover:text-artwork-buttons-create"
+                                                            >
+                                                                <PropertyIcon name="IconUserCircle" class="size-5 text-gray-400 transition group-hover:text-artwork-buttons-create" />
+                                                                {{ $t('Your account') }}
                                                             </Link>
                                                         </div>
                                                     </div>
@@ -184,6 +316,7 @@
             </nav>
         </div>
     </div>
+
 
     <div class="sticky top-0 z-40 flex items-center gap-x-6 bg-white px-4 py-4 shadow-xs sm:px-6 lg:hidden">
         <button type="button" class="-m-2.5 p-2.5 text-gray-700 lg:hidden" @click="sidebarOpen = true">
@@ -239,6 +372,7 @@ import {
     IconUsers, IconX
 } from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 const { locale } = useI18n();
 
 const props = defineProps({})

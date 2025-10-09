@@ -1,13 +1,8 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true">
+    <ArtworkBaseModal @close="closeModal" v-if="true" title="Details" description="">
             <div class="mx-4">
                 <div>
-                    <h1 class="my-1 flex">
-                        <div class="flex-grow flex items-center headline1">
-                            Details
-                            <IconLock stroke-width="1.5" class="mr-2 ml-4 flex items-center mt-0.5" v-if="cell.column.is_locked"/>
-                        </div>
-                    </h1>
+                    <IconLock stroke-width="1.5" class="mr-2 ml-4 flex items-center mt-0.5" v-if="cell.column.is_locked"/>
                     <div class="mb-4">
                         <div class="hidden sm:block">
                             <div class="border-gray-200">
@@ -282,7 +277,7 @@
                 </div>
             </div>
 
-    </BaseModal>
+    </ArtworkBaseModal>
 
 </template>
 
@@ -312,11 +307,13 @@ import {nextTick} from "vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     name: 'CellDetailComponent',
     mixins: [Permissions, IconLib],
     components: {
+        ArtworkBaseModal,
         TextareaComponent,
         NumberInputComponent,
         TextInputComponent,

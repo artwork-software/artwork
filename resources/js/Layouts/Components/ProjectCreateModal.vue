@@ -693,7 +693,7 @@ const createProjectForm = useForm({
     state: null,
     assignedUsers: [],
     cost_center: props.project ? props.project?.cost_center?.name : '',
-    icon: props.project ? props.project.icon : 'IconPhotoCircle',
+    icon: props.project ? props.project.icon : '',
     color: props.project ? props.project.color : null,
     marked_as_done: props.project ? props.project.marked_as_done : false,
 });

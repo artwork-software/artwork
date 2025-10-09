@@ -736,7 +736,6 @@
     "No comments yet": "No comments yet",
     "Rename": "Rename",
     "Excel-Export": "Excel-Export",
-    "Excluded items hidden": "Excluded items hidden",
     "Coloring": "Coloring",
     "Lock": "Lock",
     "Unlock": "Unlock",
@@ -3248,5 +3247,6 @@
     "Manage default settings for your events to streamline scheduling and ensure consistency across your organization.": "Manage default settings for your events to streamline scheduling and ensure consistency across your organization.",
     "Default event duration (minutes)": "Default event duration (minutes)",
     "Quick durations": "Quick durations",
-    "Set the end time quickly based on the start time.": "Set the end time quickly based on the start time."
+    "Set the end time quickly based on the start time.": "Set the end time quickly based on the start time.",
+    "Excluded items hidden": "Excluded items hidden"
 }

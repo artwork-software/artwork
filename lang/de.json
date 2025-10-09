@@ -777,7 +777,6 @@
     "No comments yet": "Noch keine Kommentare vorhanden",
     "Rename": "Umbenennen",
     "Excel-Export": "Excel-Export",
-    "Excluded items hidden": "Excluded items hidden",
     "Coloring": "Einfärben",
     "Lock": "Sperren",
     "Unlock": "Entsperren",
@@ -3256,5 +3255,6 @@
     "Manage default settings for your events to streamline scheduling and ensure consistency across your organization.": "Verwalte Standard-Einstellungen für deine Termine, um die Planung zu optimieren und Konsistenz in deiner Organisation zu gewährleisten.",
     "Default event duration (minutes)": "Standard-Terminlänge (Minuten)",
     "Quick durations": "Schnelllängen",
-    "Set the end time quickly based on the start time.": "Setze die Endzeit schnell basierend auf der Startzeit."
+    "Set the end time quickly based on the start time.": "Setze die Endzeit schnell basierend auf der Startzeit.",
+    "Excluded items hidden": "Ausgeschlossene Artikel ausblenden"
 }

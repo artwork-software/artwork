@@ -3251,5 +3251,10 @@
     "All Project updates & comments": "Alle Projekt-Updates & Kommentare",
     "projects in total": "Projekte insgesamt",
     "Here you can edit the component {0}.": "Hier kannst du die Komponente {0} bearbeiten.",
-    "Here you can create a new component.": "Hier kannst du eine neue Komponente erstellen."
+    "Here you can create a new component.": "Hier kannst du eine neue Komponente erstellen.",
+    "Standard values": "Standardwerte",
+    "Manage default settings for your events to streamline scheduling and ensure consistency across your organization.": "Verwalte Standard-Einstellungen für deine Termine, um die Planung zu optimieren und Konsistenz in deiner Organisation zu gewährleisten.",
+    "Default event duration (minutes)": "Standard-Terminlänge (Minuten)",
+    "Quick durations": "Schnelllängen",
+    "Set the end time quickly based on the start time.": "Setze die Endzeit schnell basierend auf der Startzeit."
 }

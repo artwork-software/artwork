@@ -49,6 +49,8 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -141,6 +143,7 @@ class EventController extends Controller
         private readonly ProjectService $projectService,
         private readonly EventPlanningCalendarService $eventPlanningCalendarService,
         protected readonly SingleShiftPresetService $singleShiftPresetService,
+        private readonly GeneralSettingsService $generalSettingsService,
     ) {
     }
 
@@ -3323,5 +3326,14 @@ class EventController extends Controller
         $this->eventService->bulkDeleteEvent($request->collect('eventIds'));
 
 
+    }
+
+    public function standardEventValues(){
+        return Inertia::render('Settings/StandardEventValues');
+    }
+
+    public function saveStandardEventValues(Request $request): void
+    {
+        $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
     }
 }

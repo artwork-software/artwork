@@ -3243,5 +3243,10 @@
     "All Project updates & comments": "All Project updates & comments",
     "projects in total": "projects in total",
     "Here you can edit the component {0}.": "Here you can edit the component {0}.",
-    "Here you can create a new component.": "Here you can create a new component."
+    "Here you can create a new component.": "Here you can create a new component.",
+    "Standard values": "Standard values",
+    "Manage default settings for your events to streamline scheduling and ensure consistency across your organization.": "Manage default settings for your events to streamline scheduling and ensure consistency across your organization.",
+    "Default event duration (minutes)": "Default event duration (minutes)",
+    "Quick durations": "Quick durations",
+    "Set the end time quickly based on the start time.": "Set the end time quickly based on the start time."
 }

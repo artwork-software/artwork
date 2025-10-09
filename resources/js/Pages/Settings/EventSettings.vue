@@ -9,16 +9,10 @@
                    </button>
                </template>
                <div>
-                   <div class="flex items-center justify-between mb-5">
-                       <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
-                       <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                           <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                           <span class="hind ml-1 my-auto">{{$t('Create new Event Types')}}</span>
-                       </div>
-                   </div>
-                   <div class="xsLight mt-2">
-                       {{ $t('Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name.')}}
-                   </div>
+                   <BasePageTitle
+                       title="Event Types"
+                       description="Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name."
+                   />
                </div>
                <ul role="list" class="mt-5">
                    <li v-for="(eventType,index) in event_types" :key="eventType.id" class="flex justify-between">
@@ -109,6 +103,7 @@ import DeleteEventTypeConfirmationModal from "@/Pages/Settings/EventType/Compone
 import DeleteStandardEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/DeleteStandardEventTypeModal.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {IconEdit, IconPlus, IconTrash} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 export default {
     mixins: [Permissions],
     computed: {
@@ -148,6 +143,7 @@ export default {
         }
     },
     components: {
+        BasePageTitle,
         BaseMenuItem,
         GlassyIconButton,
         ColorPicker,

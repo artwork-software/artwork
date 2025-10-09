@@ -48,6 +48,12 @@ export default defineComponent({
                     permission: true
                 },
                 {
+                    name: this.$t('Standard values'),
+                    href: route('event.standard.values'),
+                    current: route().current('event.standard.values'),
+                    permission: true
+                },
+                {
                     name: this.$t('Public holidays & school holidays'),
                     href: route('holiday.management'),
                     current: route().current('holiday.management'),

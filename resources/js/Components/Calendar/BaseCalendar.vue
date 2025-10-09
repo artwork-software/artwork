@@ -1084,10 +1084,10 @@ function scrollToNextEvent(day: DayLike, room: RoomLike) {
 </script>
 
 <style scoped>
+/* bleibt wie gehabt; wirkt jetzt auf den inneren .events-scroll Container, wenn >1 Event */
 .cell {
     overflow: auto;
-    /* Firefox */
-    scrollbar-color: #d4d4d4 #f3f3f3;
+    scrollbar-color: #d4d4d4 #f3f3f3; /* Firefox */
     scrollbar-width: thin;
 }
 /* WebKit */

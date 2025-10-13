@@ -24,9 +24,9 @@ window.Pusher = pusher;
 
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: import.meta.env.VITE_PUSHER_APP_KEY ?? 'app-key',
-    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'eu',
+    key: import.meta.env.VITE_REVERB_APP_KEY ?? 'app-key',
+    cluster: import.meta.env.VITE_REVERB_APP_CLUSTER ?? 'eu',
     forceTLS: false,
-    wsHost: import.meta.env.VITE_PUSHER_HOST ?? 'localhost',
-    wssPort: import.meta.env.VITE_PUSHER_PORT ?? 6001,
+    wsHost: import.meta.env.VITE_REVERB_HOST ?? 'localhost',
+    wssPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
 });

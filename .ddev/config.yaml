@@ -1,7 +1,7 @@
 name: artwork
 type: laravel
 docroot: public
-php_version: "8.2"
+php_version: "8.4"
 webserver_type: nginx-fpm
 xdebug_enabled: false
 additional_hostnames: []
@@ -13,26 +13,26 @@ performance_mode: mutagen
 use_dns_when_possible: true
 composer_version: "2"
 web_environment: []
-nodejs_version: "18"
+nodejs_version: "22"
 corepack_enable: false
 web_extra_exposed_ports:
     - name: node-vite
       container_port: 5173
       http_port: 5172
       https_port: 5173
-    - name: soketi
-      container_port: 6001
+    - name: reverb
+      container_port: 8081
       http_port: 6000
-      https_port: 6001
+      https_port: 8080
 web_extra_daemons:
     - name: queue-1
       command: while true; do /usr/bin/php /var/www/html/artisan queue:work --sleep=3 --tries=3; sleep 1; done
       directory: /var/www/html
-    - name: sockets
-      command: npm run sockets
-      directory: /var/www/html
     - name: vite
       command: npm run dev
+      directory: /var/www/html
+    - name: reverb
+      command: /usr/bin/php /var/www/html/artisan reverb:start --port=8081
       directory: /var/www/html
 ddev_version_constraint: '>=v1.23.0'
 

@@ -794,7 +794,7 @@ readonly class EventService
         ));
     }
 
-    public function fetchFilteredRooms(UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate, UserCalendarSettings $userCalendarSettings = null)
+    public function fetchFilteredRooms(UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate, UserCalendarSettings|null $userCalendarSettings = null)
     {
         $userCalendarFilter = $filter;
 

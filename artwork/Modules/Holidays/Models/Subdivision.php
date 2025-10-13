@@ -35,6 +35,8 @@ class Subdivision extends Model
     public const SACHSEN_ANHALT = 'ST';
     public const THUERINGEN = 'TH';
 
+
+
     protected $table = 'subdivisions';
 
     protected $guarded = [];

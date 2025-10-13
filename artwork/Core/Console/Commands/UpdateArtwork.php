@@ -2,6 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\Holidays\Seeder\SwissCantoneSeeder;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
 use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
@@ -24,6 +25,7 @@ class UpdateArtwork extends Command
     public function __construct(
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
         private readonly CraftItemMigrationService $craftItemMigrationService,
+        private readonly SwissCantoneSeeder $swissCantoneSeeder,
     ) {
         parent::__construct();
     }
@@ -47,6 +49,7 @@ class UpdateArtwork extends Command
         $this->migrateFilterToNewFilterStructure();
         $this->addOrderInInventoryStatus();
         $this->addRoomTypes();
+        $this->addSwissCantons();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -375,6 +378,12 @@ class UpdateArtwork extends Command
                 'name' => $roomType->value,
             ]);
         }
+    }
+
+    private function addSwissCantons(): void
+    {
+        $this->section('Seeding swiss cantons');;
+        $this->swissCantoneSeeder->seed();
     }
 
 }

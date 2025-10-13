@@ -56,7 +56,7 @@ class HolidayService
         return $this->holidayRepository->findAll($paginate, $with);
     }
 
-    public function deleteAllFormApi(): void
+    public function deleteAllFromApi(): void
     {
         $holidays = $this->getAllImported();
 
@@ -72,33 +72,36 @@ class HolidayService
      * @param bool $schoolHolidays
      * @return string[]
      */
-    public function getHolidaysFormAPI(
+    public function getHolidaysFromAPI(
         \Illuminate\Support\Collection $selectedSubdivisions,
         bool $publicHolidays,
         bool $schoolHolidays,
-        string $languageCode = 'DE'
     ): array {
         $responses = [];
         foreach ($selectedSubdivisions as $subdivision) {
             $subdivisionModel = Subdivision::find($subdivision['id']);
             if ($publicHolidays) {
-                $responses[] = $this->holidayApi->holidays()->publicHolidays(
+                $data = $this->holidayApi->holidays()->publicHolidays(
                     $subdivisionModel->country_code,
                     'DE',
                     now()->startOfYear()->format('Y-m-d'),
                     now()->addYears(2)->endOfYear()->format('Y-m-d'),
-                    $subdivisionModel->country_code . '-' . $subdivisionModel->code
+                    $subdivisionModel->country_code . '-' . $subdivisionModel->code,
                 )->array();
+                $data['country'] = $subdivisionModel->country_code;
+                $responses[] = $data;
             }
 
             if ($schoolHolidays) {
-                $responses[] = $this->holidayApi->holidays()->schoolHolidays(
+                $data =  $this->holidayApi->holidays()->schoolHolidays(
                     $subdivisionModel->country_code,
                     'DE',
                     now()->startOfYear()->format('Y-m-d'),
                     now()->addYears(2)->endOfYear()->format('Y-m-d'),
                     $subdivisionModel->country_code . '-' . $subdivisionModel->code
                 )->array();
+                $data['country'] = $subdivisionModel->country_code;
+                $responses[] = $data;
             }
         }
         return $responses;
@@ -117,11 +120,13 @@ class HolidayService
 
         foreach ($responses as $holidays) {
             foreach ($holidays as $holiday) {
+                if(!is_array($holiday)) {
+                    continue; //country information
+                }
                 $name = $holiday['name'][0]['text'];
                 $startDate = $holiday['startDate'];
                 $endDate = $holiday['endDate'];
                 $key = $name . '-' . $startDate . '-' . $endDate;
-
                 if (!isset($mergedHolidays[$key])) {
                     $mergedHolidays[$key] = [
                         'id' => $holiday['id'],
@@ -132,6 +137,7 @@ class HolidayService
                         'regionalScope' => $holiday['regionalScope'],
                         'temporalScope' => $holiday['temporalScope'],
                         'nationwide' => $holiday['nationwide'],
+                        'country' => $holidays['country'],
                         'subdivisions' => [],
                     ];
                 }

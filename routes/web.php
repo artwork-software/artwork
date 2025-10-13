@@ -1569,6 +1569,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('store', [DayServiceController::class, 'store'])->name('day-service.store');
         Route::patch('update/{dayService}', [DayServiceController::class, 'update'])
             ->name('day-service.update');
+        Route::delete('destroy/{dayService}', [DayServiceController::class, 'destroy'])
+            ->name('day-service.destroy');
     });
 
     Route::group(['prefix' => 'settings'], function (): void {

@@ -95,8 +95,8 @@ class HolidayController extends Controller
         $settings->school_holidays = $schoolHolidays;
         $settings->save();
 
-        $this->holidayService->deleteAllFormApi();
-        $responses = $this->holidayService->getHolidaysFormAPI(
+        $this->holidayService->deleteAllFromApi();
+        $responses = $this->holidayService->getHolidaysFromAPI(
             selectedSubdivisions: $selectedSubdivisions,
             publicHolidays: $publicHolidays,
             schoolHolidays: $schoolHolidays

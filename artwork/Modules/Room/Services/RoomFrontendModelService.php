@@ -52,7 +52,10 @@ readonly class RoomFrontendModelService
             startDate: $startDate,
             endDate: $endDate,
             calendarFilter: $user->userFilters()->calendarFilter()->first(),
-            room: $room
+            project: null,
+            room: $room,
+            desiresInventorySchedulingResource: null,
+            user: $user
         );
 
         return ShowDto::newInstance()

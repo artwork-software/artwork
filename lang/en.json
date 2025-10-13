@@ -30,6 +30,7 @@
     "Are you sure you would like to delete this API token?": "Are you sure you would like to delete this API token?",
     "Are you sure you would like to leave this team?": "Are you sure you would like to leave this team?",
     "Are you sure you would like to remove this person from the team?": "Are you sure you would like to remove this person from the team?",
+    "Are you sure you want to delete the selected day service? All assignments to this day service will be removed.": "Are you sure you want to delete the selected day service? All assignments to this day service will be removed.",
     "Bad Gateway": "Bad Gateway",
     "Bad Request": "Bad Request",
     "Bandwidth Limit Exceeded": "Bandwidth Limit Exceeded",

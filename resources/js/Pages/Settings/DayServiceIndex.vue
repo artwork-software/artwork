@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import AddEditDayServiceModal from "@/Pages/Settings/Components/AddEditDayServiceModal.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import {IconPlus} from "@tabler/icons-vue";
@@ -14,7 +15,7 @@ export default {
     mixins: [IconLib],
     components: {
         ShiftSettingTabs,
-        PropertyIcon, GlassyIconButton, AddEditDayServiceModal, AddButtonSmall, TabComponent, AppLayout},
+        PropertyIcon, GlassyIconButton, AddEditDayServiceModal, ConfirmDeleteModal, AddButtonSmall, TabComponent, AppLayout},
     props: [
         'dayServices'
     ],
@@ -71,7 +72,11 @@ export default {
                 {iconName: 'IconInfoCircle'},
             ],
             showAddEditDayServiceModal: false,
-            dayServiceToEdit: null
+            dayServiceToEdit: null,
+            openConfirmDeleteModal: false,
+            dayServiceToDelete: null,
+            confirmDeleteTitle: '',
+            confirmDeleteDescription: ''
         }
     },
     methods: {
@@ -83,6 +88,25 @@ export default {
         editDayService(dayService){
             this.dayServiceToEdit = dayService;
             this.showAddEditDayServiceModal = true;
+        },
+        openDeleteDayServiceModal(dayService){
+            this.dayServiceToDelete = dayService;
+            this.confirmDeleteTitle = this.$t('Delete Day Service');
+            this.confirmDeleteDescription = this.$t('Are you sure you want to delete the selected day service? All assignments to this day service will be removed.');
+            this.openConfirmDeleteModal = true;
+        },
+        closedDeleteDayServiceModal(){
+            this.openConfirmDeleteModal = false;
+            this.dayServiceToDelete = null;
+        },
+        submitDelete(){
+            this.$inertia.delete(route('day-service.destroy', this.dayServiceToDelete.id), {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => {
+                    this.closedDeleteDayServiceModal();
+                }
+            });
         }
     }
 }
@@ -115,7 +139,10 @@ export default {
                             </div>
                         </div>
                         <div class="col-span-full md:col-span-1 xl:col-span-1">
-                            <IconEdit class="h-6 w-6 cursor-pointer flex items-center" @click="editDayService(dayService)" />
+                            <div class="flex items-center gap-x-2">
+                                <IconEdit class="h-6 w-6 cursor-pointer flex items-center" @click="editDayService(dayService)" />
+                                <IconTrash class="h-6 w-6 cursor-pointer flex items-center text-red-500" @click="openDeleteDayServiceModal(dayService)" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -123,6 +150,7 @@ export default {
         </div>
 
         <AddEditDayServiceModal :icon-list="iconList" v-if="showAddEditDayServiceModal" :day-service-to-edit="dayServiceToEdit" @closed="closeModal" />
+        <ConfirmDeleteModal :title="confirmDeleteTitle" :description="confirmDeleteDescription" @closed="closedDeleteDayServiceModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </AppLayout>
 </template>
 

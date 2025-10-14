@@ -1,5 +1,5 @@
 <template>
-    <div class="border-gray-200">
+    <!--<div class="border-gray-200">
         <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
             <Link v-for="tab in tabs" :key="tab?.name"
                   :href="tab.href"
@@ -8,19 +8,21 @@
                 {{ $t(tab.name) }}
             </Link>
         </nav>
-    </div>
+    </div>-->
+    <BaseTabs :tabs="tabs" />
 </template>
 
 <script setup>
 
 import {Link} from "@inertiajs/vue3";
+import BaseTabs from '@/Artwork/Tabs/BaseTabs.vue'
 
 const props = defineProps({})
 
 
 const tabs = [
-    { name: 'Material issue book', href: route('issue-of-material.index'), current: route().current('issue-of-material.index') },
-    { name: 'External Material issue book', href: route('extern-issue-of-material.index'), current: route().current('extern-issue-of-material.index') },
+    { name: 'Material issue book', href: route('issue-of-material.index'), current: route().current('issue-of-material.index'), permission: true, },
+    { name: 'External Material issue book', href: route('extern-issue-of-material.index'), current: route().current('extern-issue-of-material.index'), permission: true, },
 ]
 </script>
 

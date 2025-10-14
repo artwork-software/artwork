@@ -1,9 +1,7 @@
 <template>
     <div>
         <div class="flex items-center gap-x-5">
-            <div class="sLight">
-                {{ $t('Relevant dates for shift planning') }}
-            </div>
+            <BasePageTitle title="Relevant dates for shift planning" :white-text="inSidebar" />
             <div v-if="this.canEditComponent">
                 <PencilAltIcon class=" w-5 h-5 rounded-full" :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                                @click="openShiftRelevantEventTypeModal"/>
@@ -28,9 +26,11 @@ import {defineComponent} from "vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {PencilAltIcon} from "@heroicons/vue/outline";
 import ShiftRelevantEventTypeModal from "@/Layouts/Components/ShiftRelevantEventTypeModal.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 export default defineComponent({
     components: {
+        BasePageTitle,
         ShiftRelevantEventTypeModal,
         PencilAltIcon,
         TagComponent

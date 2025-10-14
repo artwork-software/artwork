@@ -108,8 +108,13 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
 
     public function getProfilePhotoUrlAttribute(): string
     {
+        $isUrl = filter_var($this->profile_image, FILTER_VALIDATE_URL);
+        if ($isUrl) {
+            return $this->profile_image;
+        }
         return $this->profile_image
-            ?: route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
+            ? asset('storage/' . $this->profile_image)
+            : route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
     }
 
     public function getNameAttribute(): string

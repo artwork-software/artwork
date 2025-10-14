@@ -17,8 +17,19 @@ class Artist extends Model
         'position',
     ];
 
+    protected $appends = [
+        'profile_photo_url',
+    ];
+
     public function residencies(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ArtistResidency::class);
+    }
+
+
+    public function getProfilePhotoUrlAttribute(): string
+    {
+
+        return route('generate-avatar-image', ['letters' => $this->name[0] ?? 'A']);
     }
 }

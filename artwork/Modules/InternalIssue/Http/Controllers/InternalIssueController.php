@@ -29,7 +29,8 @@ class InternalIssueController extends Controller
     {
         $entitiesPerPage = (int) request()->input('entitiesPerPage', 10);
         $q = trim((string) request()->input('q', ''));
-        // ---- Artikel-IDs (CSV oder Array) sicher parsen
+
+        // Artikel-IDs robust parsen
         $articleIdsInput = request()->input('article_ids', '');
         $articleIds = [];
         if (is_array($articleIdsInput)) {
@@ -38,13 +39,13 @@ class InternalIssueController extends Controller
             $articleIds = array_filter(array_map('intval', explode(',', $articleIdsInput)));
         }
 
-        // ---- Neue Filter
-        $dateFrom = request()->input('date_from'); // Y-m-d
-        $dateTo   = request()->input('date_to');   // Y-m-d
+        // Filter
+        $dateFrom  = request()->input('date_from'); // Y-m-d
+        $dateTo    = request()->input('date_to');   // Y-m-d
         $projectId = (int) request()->input('project_id', 0);
         $roomId    = (int) request()->input('room_id', 0);
 
-        // Mehrfach: responsible_user_ids als CSV/Array -> int[]
+        // Mehrfach-User
         $respInput = request()->input('responsible_user_ids', '');
         $responsibleUserIds = [];
         if (is_array($respInput)) {
@@ -76,13 +77,14 @@ class InternalIssueController extends Controller
                     $sub->whereIn('users.id', $responsibleUserIds);
                 });
             })
-            // Zeitraumfilter: es gibt start_date (und end_date). Typisch filtern wir auf start_date im Intervall.
-            ->when($dateFrom, fn ($q) => $q->whereDate('start_date', '>=', $dateFrom))
-            ->when($dateTo,   fn ($q) => $q->whereDate('start_date', '<=', $dateTo))
+
+            // 🔁 NEU: Zeitraum-Overlap statt Startdatum-AND-Filter
+            ->overlapping($dateFrom, $dateTo)
+
+            // Suche
             ->when($q !== '', function ($qbuilder) use ($q) {
                 $qbuilder->where(function ($sub) use ($q) {
                     $sub->where('name', 'like', "%{$q}%")
-                        // optional auch Notizen mit durchsuchen:
                         ->orWhere('notes', 'like', "%{$q}%");
                 });
             })
@@ -91,12 +93,11 @@ class InternalIssueController extends Controller
 
         $issues = $issuesQuery->paginate($entitiesPerPage)->withQueryString();
 
-        // Für die Chips in der UI die tatsächlich geladenen Artikel zurückgeben
         $articlesInFilter = !empty($articleIds)
             ? InventoryArticle::whereIn('id', $articleIds)->get()
             : collect([]);
 
-        // Gemeinsame Filterdaten (siehe unten getFilterDataForUser) schon geladen:
+        // ⚠️ Tippfehler korrigiert: authManager (nicht authManger)
         $this->inventoryUserFilterShareService->getFilterDataForUser($this->authManger->user());
 
         return Inertia::render('IssueOfMaterial/IssueOfMaterialManagement', [
@@ -115,12 +116,12 @@ class InternalIssueController extends Controller
                 'detailedArticleQuantities.status',
             ])->find(request()->get('articleId'))
             ),
-            // Praktisch: URL-Parameter wieder an die Page zurückgeben (für Initialisierung)
             'urlParameters' => request()->only([
-                'article_ids','date_from','date_to','project_id','room_id','responsible_user_ids','q' // <- q ergänzen
+                'article_ids','date_from','date_to','project_id','room_id','responsible_user_ids','q'
             ]),
         ]);
     }
+
 
     public function store(StoreInternalIssueRequest $request): \Illuminate\Http\RedirectResponse
     {

@@ -1,14 +1,6 @@
 <template>
-    <app-layout :title="$t('Toolsettings') + ' - ' + title">
-        <div class="artwork-container">
-            <div class="mb-5">
-                <h2 class="headline1 mb-2">{{ $t('Toolsettings') }}</h2>
-                <div class="headline3Light">
-                    {{ $t('Define global settings for your artwork.') }}
-                </div>
-            </div>
-            <ToolSettingsTabs class="mb-5"/>
-            <div>
+    <ToolSettingsHeader :title="$t('Interfaces')">
+        <div>
                 <div class="space-y-6">
                     <div @click="toggleSection(openSections.ARTWORK)"
                          class="cursor-pointer flex items-center justify-between bg-gray-100 p-4 rounded">
@@ -39,14 +31,12 @@
                     </transition>
                 </div>
             </div>
-        </div>
-    </app-layout>
+    </ToolSettingsHeader>
 </template>
 
 <script setup>
 import {onMounted, ref} from 'vue'
-import ToolSettingsTabs from "@/Pages/ToolSettings/ToolSettingsTabs.vue"
-import AppLayout from "@/Layouts/AppLayout.vue"
+import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue"
 import {ChevronDownIcon} from '@heroicons/vue/solid'
 import SageApiSettings from "@/Pages/Interfaces/Sage/SageApiSettings.vue";
 import ArtworkApiSettings from "@/Pages/Interfaces/Artwork/ArtworkApiSettings.vue";

@@ -1,591 +1,595 @@
 <template>
-    <BaseModal v-if="show" @closed="closeModal">
-        <div class="relative z-40 px-4">
-            <ModalHeader :title="isCreateMode() ? $t('Create a new component') : $t('Edit component')"/>
-            <div class="grid grid-cols-1 gap-4">
-                <Listbox v-if="this.isCreateMode()" as="div" v-model="selectedType">
-                    <ListboxLabel class="xsLight">{{$t('Component Layout')}}</ListboxLabel>
-                    <div class="relative mt-2">
-                        <ListboxButton class="menu-button">
-                            <div class="block truncate">{{ $t(selectedType?.name) }}</div>
-                            <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
-                            </span>
-                        </ListboxButton>
-                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                            <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                <ListboxOption as="template" v-for="componentTyp in tabComponentTypes" :key="componentTyp.name" :value="componentTyp" v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                                        <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ $t(componentTyp.name) }}</span>
-                                        <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                            <IconCircleCheck class="h-5 w-5" aria-hidden="true" />
-                                        </span>
-                                    </li>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </transition>
-                    </div>
-                </Listbox>
+    <ArtworkBaseModal
+        v-if="show"
+        @close="closeModal"
+        :title="isCreateMode ? $t('Create a new component') : $t('Edit component')"
+        :description="isCreateMode ? $t('Here you can create a new component.') : $t('Here you can edit the component {0}.', [componentToEdit?.name])"
+    >
+        <div class="">
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Typ-Auswahl (nur im Create) (neu) -->
+                <ArtworkBaseListbox
+                    v-if="isCreateMode"
+                    v-model="selectedType"
+                    :items="typesArray"
+                    :option-label="(o) => `${$t(o.name)}`"
+                    option-key="name"
+                    by="name"
+                    placeholder="Component Layout"
+                    :enable-search="true"
+                    :search-keys="['name']"
+                />
+
+                <!-- Name -->
                 <div>
                     <BaseInput
                         :label="$t('Name of the component')"
                         v-model="componentName"
                         id="componentName"
                     />
-                    <span v-show="helpTexts.name" class="mt-1 text-xs text-red-500">
-                                            {{ helpTexts.name }}
-                                        </span>
+                    <span v-if="helpTexts.name" class="mt-1 text-xs text-red-500">
+            {{ helpTexts.name }}
+          </span>
                 </div>
-                <div v-if="!this.componentToEdit?.special" class="grid grid-cols-1 gap-4">
-                    <div class="headline4">
-                        {{ this.isCreateMode() ? $t('Enter basic data') : $t('Edit basic data') }}
-                    </div>
-                    <div v-for="(text, index) in textData">
-                        <div class="" v-if="index === 'title'">
-                            <BaseInput
-                                :label="$t('Title')"
-                                v-model="textData.title"
-                                :id="index"
-                            />
-                        </div>
-                        <div class="" v-if="index === 'label'">
-                            <BaseInput
-                                :label="$t('label')"
-                                v-model="textData.label"
-                                :id="index"
-                            />
-                        </div>
-                        <div class="" v-if="index === 'text'">
-                            <BaseInput
-                                :label="$t('Text')"
-                                v-model="textData.text"
-                                :id="index"
-                            />
-                        </div>
-                        <div class="" v-if="index === 'placeholder'">
-                            <BaseInput
-                                :label="$t('Placeholder')"
-                                v-model="textData.placeholder"
-                                :id="index"
-                            />
-                        </div>
-                        <div class="" v-if="index === 'height'">
-                            <label :for="index" class="xsLight">{{ $t('Height - ({0} pixels)', [textData.height])}}</label>
-                            <div class="mt-1">
-                                <input type="range" v-model="textData.height" min="0" max="150" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
-                            </div>
-                        </div>
-                        <div class="" v-if="index === 'title_size'">
-                            <label :for="index" class="xsLight">{{ $t('Font Size - ({0} pixels)', [textData.title_size])}}</label>
-                            <div class="mt-1">
-                                <input type="range" v-model="textData.title_size" min="10" max="35" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
-                            </div>
-                        </div>
-                        <div class="relative flex items-start"  v-if="index === 'showLine'">
-                            <div class="flex h-6 items-center">
-                                <input :id="index"  v-model="textData.showLine" :checked="textData.showLine" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
-                            </div>
-                            <div class="ml-3 text-sm leading-6">
-                                <label :for="index" class="xsLight">{{ $t('Show a separator line')}} </label>
-                            </div>
-                        </div>
-                        <div class="relative flex items-start"  v-if="index === 'checked'">
-                            <div class="flex h-6 items-center">
-                                <input :id="index"  v-model="textData.checked" :checked="textData.checked" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
-                            </div>
-                            <div class="ml-3 text-sm leading-6">
-                                <label :for="index" class="xsLight">{{ $t('This checkbox is activated by default')}} </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="textData.options?.length > 0" class="grid grid-cols-1 gap-4">
-                        <div class="" v-for="(field, optionIndex) in textData.options">
-                            <div>
-                                <BaseInput v-model="textData.options[optionIndex].value" :label="'Option (' + (optionIndex + 1) + ')'" :id="'option-' + optionIndex" />
-                                <span v-if="optionIndex !== 0" class="text-xs text-end underline underline-offset-2 text-artwork-buttons-create cursor-pointer" @click="removeOption(optionIndex)">
-                                    Option ({{ optionIndex + 1 }}) {{ $t('Remove') }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-end">
-                            <div class="text-xs underline underline-offset-2 text-artwork-buttons-create cursor-pointer" @click="addMoreOneOption">{{ $t('Add another option')}}</div>
-                        </div>
-                        <div v-if="textData.options[0].value">
-                            <Listbox as="div" v-model="textData.selected">
-                                <div class="relative mt-2">
-                                    <ListboxButton class="menu-button-no-padding relative">
-                                        <div class="truncate">
-                                            <div class="top-2 left-4 absolute text-gray-500 text-xs">
-                                                {{ $t('Standard Option') }}
-                                            </div>
-                                            <div class="pt-6 pb-2 flex items-center gap-x-2">
-                                                <div class="truncate">
-                                                    {{ $t('Standard Option') }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <IconChevronDown class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                    </ListboxButton>
-                                    <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template" v-for="option in textData.options" :key="option.value" :value="option.value" v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                                                    <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ option.value }}</span>
 
-                                                    <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                                <IconCircleCheck class="h-5 w-5" aria-hidden="true" />
-                                                              </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </div>
-                            </Listbox>
-                            <div class="flex items-center justify-end mt-3">
-                                <div class="text-xs underline underline-offset-2 text-artwork-buttons-create cursor-pointer" @click="textData.selected = ''">{{ $t('Remove default option') }}</div>
-                            </div>
-                        </div>
+                <!-- Basisdaten (aus availableFields / data) -->
+                <div v-if="!componentToEdit?.special" class="grid grid-cols-1 gap-5">
+                    <div class="text-sm font-semibold text-gray-900">
+                        {{ isCreateMode ? $t('Enter basic data') : $t('Edit basic data') }}
                     </div>
-                </div>
-            </div>
-            <div v-if="this.isComponentQualifiedForPermissions()" class="mb-4">
-                <div class="mt-3 mb-2 font-bold text-sm">
-                    {{ $t('Configure component permissions') }}
-                </div>
-                <div class="flex flex-col space-y-1">
-                    <div class="flex flex-row items-center space-x-1">
-                        <input id="allSeeAndEdit"
-                               type="radio"
-                               v-model="this.modulePermissions.permission_type"
-                               value="allSeeAndEdit"
-                        />
-                        <label for="allSeeAndEdit" class="xsLight">
-                            {{ $t('Everyone can see and edit') }}
+
+                    <!-- Titel -->
+                    <div v-if="'title' in textData">
+                        <BaseInput :label="$t('Title')" v-model="textData.title" id="title" />
+                    </div>
+
+                    <!-- Label -->
+                    <div v-if="'label' in textData">
+                        <BaseInput :label="$t('label')" v-model="textData.label" id="label" />
+                    </div>
+
+                    <!-- Text -->
+                    <div v-if="'text' in textData">
+                        <BaseInput :label="$t('Text')" v-model="textData.text" id="text" />
+                    </div>
+
+                    <!-- Placeholder -->
+                    <div v-if="'placeholder' in textData">
+                        <BaseInput :label="$t('Placeholder')" v-model="textData.placeholder" id="placeholder" />
+                    </div>
+
+                    <!-- Höhe (Range) -->
+                    <div v-if="'height' in textData">
+                        <label for="height" class="text-xs text-gray-500">
+                            {{ $t('Height - ({0} pixels)', [textData.height]) }}
                         </label>
+                        <input
+                            id="height"
+                            type="range"
+                            v-model.number="textData.height"
+                            min="0"
+                            max="150"
+                            class="mt-2 h-2 w-full rounded-lg accent-indigo-600"
+                        />
                     </div>
-                    <div class="flex flex-col space-y-1 relative">
-                        <div class="flex flex-row space-x-1">
-                            <input id="allSeeSomeEdit" type="radio" v-model="this.modulePermissions.permission_type" value="allSeeSomeEdit"/>
-                            <label for="allSeeSomeEdit" class="xsLight">
-                                {{ $t('Everyone can see, but editing is just allowed for:') }}
-                            </label>
-                        </div>
-                        <div  v-if="this.modulePermissions.permission_type === 'allSeeSomeEdit'">
-                            <div class="mt-4">
+
+                    <!-- Titelgröße (Range) -->
+                    <div v-if="'title_size' in textData">
+                        <label for="title_size" class="text-xs text-gray-500">
+                            {{ $t('Font Size - ({0} pixels)', [textData.title_size]) }}
+                        </label>
+                        <input
+                            id="title_size"
+                            type="range"
+                            v-model.number="textData.title_size"
+                            min="10"
+                            max="35"
+                            class="mt-2 h-2 w-full rounded-lg accent-indigo-600"
+                        />
+                    </div>
+
+                    <!-- Show line -->
+                    <label v-if="'showLine' in textData" class="flex items-center gap-2">
+                        <input v-model="textData.showLine" type="checkbox" class="input-checklist" />
+                        <span class="text-sm text-gray-700">{{ $t('Show a separator line') }}</span>
+                    </label>
+
+                    <!-- Checked (default) -->
+                    <label v-if="'checked' in textData" class="flex items-center gap-2">
+                        <input v-model="textData.checked" type="checkbox" class="input-checklist" />
+                        <span class="text-sm text-gray-700">{{ $t('This checkbox is activated by default') }}</span>
+                    </label>
+
+                    <!-- Optionen -->
+                    <div v-if="Array.isArray(textData.options)">
+                        <div class="grid grid-cols-1 gap-3">
+                            <div
+                                v-for="(opt, idx) in textData.options"
+                                :key="`opt-${idx}`"
+                                class="rounded-lg border border-gray-200 p-3 bg-white"
+                            >
                                 <BaseInput
-                                    :label="$t('Search for teams and/or users')"
-                                    @input="this.searchUsersAndTeams()"
-                                    v-model="this.userAndTeamsQuery"
-                                    id="searchUsersAndTeams"/>
-                            </div>
-                            <div v-if="(this.userAndTeamsSearchResult?.users.length > 0 || this.userAndTeamsSearchResult?.departments.length > 0) && this.userAndTeamsQuery.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg rounded-lg
-                                                            text-base ring-1 ring-black ring-opacity-5
-                                                            overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
-                                    <div v-for="(user, index) in this.userAndTeamsSearchResult.users" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="this.addUser(user)"
-                                               class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
-                                                <img :src="user.profile_photo_url" :alt="user.name"
-                                                     class="rounded-full h-8 w-8 object-cover"/>
-                                                <span class="ml-2 truncate">
-                                                                        {{ user.first_name }} {{ user.last_name }}
-                                                                    </span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div v-for="(department, index) in this.userAndTeamsSearchResult.departments"
-                                         :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="this.addDepartment(department)"
-                                               class="font-bold flex items-center px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                <TeamIconCollection :iconName="department.svg_name"
-                                                                    :alt="department.name"
-                                                                    class="rounded-full h-8 w-8 object-cover"/>
-                                                <span class="ml-2">
-                                                    {{ department.name }}
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <div v-for="user in this.modulePermissions.users"
-                                     class="flex flex-row justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
-                                    <div class="flex items-center">
-                                        <img class="flex h-11 w-11 rounded-full"
-                                             :src="user.profile_photo_url"
-                                             alt=""/>
-                                        <span class="flex ml-4">
-                                                                {{ user.first_name }} {{ user.last_name }}
-                                                            </span>
-                                    </div>
-                                    <button type="button" @click="this.removeUser(user)">
-                                        <XCircleIcon class="text-primary h-5 w-5 hover:text-error"/>
+                                    v-model="textData.options[idx].value"
+                                    :label="'Option (' + (idx + 1) + ')'"
+                                    :id="`option-${idx}`"
+                                />
+                                <div class="mt-1 text-right">
+                                    <button
+                                        v-if="idx !== 0"
+                                        type="button"
+                                        class="text-xs text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
+                                        @click="removeOption(idx)"
+                                    >
+                                        {{ $t('Remove') }}
                                     </button>
                                 </div>
-                                <div v-for="department in this.modulePermissions.departments"
-                                     class="flex flex-row justify-between mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                                    <div class="flex items-center">
-                                        <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
-                                                            class="rounded-full h-11 w-11 object-cover"/>
-                                        <span class="flex ml-4">
-                                                                {{ department.name }}
-                                                            </span>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 flex items-center justify-end">
+                            <button
+                                class="text-xs text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
+                                type="button"
+                                @click="addMoreOneOption"
+                            >
+                                {{ $t('Add another option') }}
+                            </button>
+                        </div>
+
+                        <!-- Default Option Auswahl -->
+                        <div v-if="textData.options[0]?.value" class="mt-3">
+                            <ArtworkBaseListbox
+                                v-model="textData.selected"
+                                :items="textData.options"
+                                :option-label="(o) => `${o.value}`"
+                                option-key="value"
+                                by="value"
+                                placeholder="Standard Option"
+                                :enable-search="true"
+                                :search-keys="['name']"
+                            />
+
+                            <div class="mt-3 text-right">
+                                <button
+                                    class="text-xs text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
+                                    type="button"
+                                    @click="textData.selected = ''"
+                                >
+                                    {{ $t('Remove default option') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Berechtigungen -->
+                <div v-if="isQualifiedForPermissions" class="rounded-xl border border-gray-200 bg-white p-4">
+                    <div class="mb-3 text-sm font-bold text-gray-900">
+                        {{ $t('Configure component permissions') }}
+                    </div>
+
+                    <!-- Everyone can see & edit -->
+                    <label class="flex items-center gap-2">
+                        <input
+                            type="radio"
+                            value="allSeeAndEdit"
+                            v-model="modulePermissions.permission_type"
+                        />
+                        <span class="text-sm text-gray-700">
+              {{ $t('Everyone can see and edit') }}
+            </span>
+                    </label>
+
+                    <!-- Everyone can see, some can edit -->
+                    <div class="mt-3">
+                        <label class="flex items-center gap-2">
+                            <input
+                                type="radio"
+                                value="allSeeSomeEdit"
+                                v-model="modulePermissions.permission_type"
+                            />
+                            <span class="text-sm text-gray-700">
+                {{ $t('Everyone can see, but editing is just allowed for:') }}
+              </span>
+                        </label>
+
+                        <div v-if="modulePermissions.permission_type === 'allSeeSomeEdit'" class="mt-3">
+                            <BaseInput
+                                :label="$t('Search for teams and/or users')"
+                                v-model="userAndTeamsQuery"
+                                id="searchUsersAndTeams_1"
+                                @input="searchUsersAndTeams"
+                            />
+
+                            <!-- Search dropdown -->
+                            <div
+                                v-if="hasSearchResults"
+                                class="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white text-sm shadow-lg"
+                            >
+                                <div class="divide-y divide-gray-100">
+                                    <div
+                                        v-for="(user, idx) in userAndTeamsSearchResult.users"
+                                        :key="'u_' + idx"
+                                        class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+                                        @click="addUser(user)"
+                                    >
+                                        <img :src="user.profile_photo_url" :alt="user.name" class="h-8 w-8 rounded-full object-cover" />
+                                        <span class="truncate">{{ user.first_name }} {{ user.last_name }}</span>
                                     </div>
-                                    <button type="button" @click="this.removeDepartment(department)">
-                                        <XCircleIcon class="text-primary h-5 w-5 hover:text-error"/>
+                                    <div
+                                        v-for="(department, idx) in userAndTeamsSearchResult.departments"
+                                        :key="'d_' + idx"
+                                        class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+                                        @click="addDepartment(department)"
+                                    >
+                                        <TeamIconCollection :iconName="department.svg_name" :alt="department.name" class="h-8 w-8" />
+                                        <span class="truncate">{{ department.name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Auswahl-Liste -->
+                            <div class="mt-4 space-y-2">
+                                <div
+                                    v-for="user in modulePermissions.users"
+                                    :key="'sel_u_' + user.id"
+                                    class="flex items-center justify-between rounded-lg border-b border-gray-100 pb-2"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <img class="h-10 w-10 rounded-full" :src="user.profile_photo_url" alt="" />
+                                        <span class="text-sm font-medium text-gray-800">
+                      {{ user.first_name }} {{ user.last_name }}
+                    </span>
+                                    </div>
+                                    <button type="button" @click="removeUser(user)" class="text-gray-400 hover:text-red-500">
+                                        <IconX class="h-5 w-5" />
+                                    </button>
+                                </div>
+
+                                <div
+                                    v-for="department in modulePermissions.departments"
+                                    :key="'sel_d_' + department.id"
+                                    class="flex items-center justify-between rounded-lg border-b border-gray-100 pb-2"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <TeamIconCollection :iconName="department.svg_name" :alt="department.name" class="h-10 w-10" />
+                                        <span class="text-sm font-medium text-gray-800">{{ department.name }}</span>
+                                    </div>
+                                    <button type="button" @click="removeDepartment(department)" class="text-gray-400 hover:text-red-500">
+                                        <IconX class="h-5 w-5" />
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="flex flex-col">
-                        <div class="flex flex-row items-center space-x-1">
-                            <input id="someSeeSomeEdit" type="radio" v-model="this.modulePermissions.permission_type" value="someSeeSomeEdit"/>
-                            <label for="someSeeSomeEdit" class="xsLight">Sehen darf nur:</label>
-                        </div>
-                        <div class="mt-4 relative" v-if="this.modulePermissions.permission_type === 'someSeeSomeEdit'">
-                            <BaseInput
-                                id="searchUsersAndTeams"
-                                :label="$t('Search for teams and/or users')"
-                                @input="this.searchUsersAndTeams()"
-                                v-model="this.userAndTeamsQuery"
+
+                    <!-- Some see & some edit -->
+                    <div class="mt-4">
+                        <label class="flex items-center gap-2">
+                            <input
+                                type="radio"
+                                value="someSeeSomeEdit"
+                                v-model="modulePermissions.permission_type"
                             />
-                            <div v-if="(this.userAndTeamsSearchResult?.users.length > 0 || this.userAndTeamsSearchResult?.departments.length > 0) && this.userAndTeamsQuery.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg rounded-lg
-                                                            text-base ring-1 ring-black ring-opacity-5
-                                                            overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
-                                    <div v-for="(user, index) in this.userAndTeamsSearchResult.users" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="this.addUser(user)"
-                                               class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
-                                                <img :src="user.profile_photo_url" :alt="user.name"
-                                                     class="rounded-full h-8 w-8 object-cover"/>
-                                                <span class="ml-2 truncate">
-                                                                        {{ user.first_name }} {{ user.last_name }}
-                                                                    </span>
-                                            </p>
-                                        </div>
+                            <span class="text-sm text-gray-700">
+                {{ $t('Sehen darf nur:') }}
+              </span>
+                        </label>
+
+                        <div v-if="modulePermissions.permission_type === 'someSeeSomeEdit'" class="mt-3 relative">
+                            <BaseInput
+                                id="searchUsersAndTeams_2"
+                                :label="$t('Search for teams and/or users')"
+                                v-model="userAndTeamsQuery"
+                                @input="searchUsersAndTeams"
+                            />
+
+                            <!-- Search dropdown -->
+                            <div
+                                v-if="hasSearchResults"
+                                class="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white text-sm shadow-lg"
+                            >
+                                <div class="divide-y divide-gray-100">
+                                    <div
+                                        v-for="(user, idx) in userAndTeamsSearchResult.users"
+                                        :key="'su_' + idx"
+                                        class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+                                        @click="addUser(user)"
+                                    >
+                                        <img :src="user.profile_photo_url" :alt="user.name" class="h-8 w-8 rounded-full object-cover" />
+                                        <span class="truncate">{{ user.first_name }} {{ user.last_name }}</span>
                                     </div>
-                                    <div v-for="(department, index) in this.userAndTeamsSearchResult.departments"
-                                         :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="this.addDepartment(department)"
-                                               class="font-bold flex items-center px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                <TeamIconCollection :iconName="department.svg_name"
-                                                                    :alt="department.name"
-                                                                    class="rounded-full h-8 w-8 object-cover"/>
-                                                <span class="ml-2">
-                                                                        {{ department.name }}
-                                                                    </span>
-                                            </p>
-                                        </div>
+                                    <div
+                                        v-for="(department, idx) in userAndTeamsSearchResult.departments"
+                                        :key="'sd_' + idx"
+                                        class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+                                        @click="addDepartment(department)"
+                                    >
+                                        <TeamIconCollection :iconName="department.svg_name" :alt="department.name" class="h-8 w-8" />
+                                        <span class="truncate">{{ department.name }}</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="mt-4">
-                                <div v-for="user in this.modulePermissions.users"
-                                     class="flex flex-row justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
-                                    <div class="flex flex-row items-center space-x-3">
-                                        <img class="flex h-11 w-11 rounded-full"
-                                             :src="user.profile_photo_url"
-                                             alt=""/>
-                                        <span class="flex ml-4">
-                                            {{ user.first_name }} {{ user.last_name }}
-                                        </span>
-                                        <div class="flex flex-row space-x-1">
-                                            <input v-model="user.pivot.can_write"
-                                                   type="checkbox"
-                                                   class="input-checklist"/>
-                                            <p :class="[user.pivot.can_write ? 'text-primary font-black' : 'text-secondary']"
-                                               class="my-auto text-sm">{{ $t('Write permission') }}</p>
-                                        </div>
+
+                            <!-- Auswahl-Liste mit Write-Checkbox -->
+                            <div class="mt-4 space-y-2">
+                                <div
+                                    v-for="user in modulePermissions.users"
+                                    :key="'ss_u_' + user.id"
+                                    class="flex items-center justify-between border-b border-gray-100 pb-3"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <img class="h-10 w-10 rounded-full" :src="user.profile_photo_url" alt="" />
+                                        <span class="text-sm font-medium text-gray-800">
+                      {{ user.first_name }} {{ user.last_name }}
+                    </span>
+                                        <label class="ml-2 flex items-center gap-2">
+                                            <input v-model="(user.pivot || (user.pivot = { can_write: false })).can_write" type="checkbox" class="input-checklist" />
+                                            <span :class="[user.pivot?.can_write ? 'text-indigo-600 font-semibold' : 'text-gray-500']" class="text-sm">
+                        {{ $t('Write permission') }}
+                      </span>
+                                        </label>
                                     </div>
-                                    <button type="button" @click="this.removeUser(user)">
-                                        <XCircleIcon class="ml-3 text-primary h-5 w-5 hover:text-error "/>
+                                    <button type="button" @click="removeUser(user)" class="text-gray-400 hover:text-red-500">
+                                        <IconX class="h-5 w-5" />
                                     </button>
                                 </div>
-                                <div v-for="department in this.modulePermissions.departments"
-                                     class="flex flex-row justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
-                                    <div class="flex flex-row items-center space-x-3">
-                                        <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
-                                                            class="rounded-full h-11 w-11 object-cover"/>
-                                        <span class="flex ml-4">
-                                            {{ department.name }}
-                                        </span>
-                                        <div class="flex flex-row space-x-1">
-                                            <input v-model="department.pivot.can_write"
-                                                   type="checkbox"
-                                                   class="input-checklist"/>
-                                            <p :class="[department.pivot.can_write ? 'text-primary font-black' : 'text-secondary']"
-                                               class="my-auto text-sm">{{ $t('Write permission') }}</p>
-                                        </div>
+
+                                <div
+                                    v-for="department in modulePermissions.departments"
+                                    :key="'ss_d_' + department.id"
+                                    class="flex items-center justify-between border-b border-gray-100 pb-3"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <TeamIconCollection :iconName="department.svg_name" :alt="department.name" class="h-10 w-10" />
+                                        <span class="text-sm font-medium text-gray-800">{{ department.name }}</span>
+                                        <label class="ml-2 flex items-center gap-2">
+                                            <input v-model="(department.pivot || (department.pivot = { can_write: false })).can_write" type="checkbox" class="input-checklist" />
+                                            <span :class="[department.pivot?.can_write ? 'text-indigo-600 font-semibold' : 'text-gray-500']" class="text-sm">
+                        {{ $t('Write permission') }}
+                      </span>
+                                        </label>
                                     </div>
-                                    <button type="button" @click="this.removeDepartment(department)">
-                                        <XCircleIcon class="text-primary h-5 w-5 hover:text-error"/>
+                                    <button type="button" @click="removeDepartment(department)" class="text-gray-400 hover:text-red-500">
+                                        <IconX class="h-5 w-5" />
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Hinweis, wenn keine Permissions konfigurierbar -->
+                <div
+                    v-else-if="!isQualifiedForPermissions && componentToEdit?.type !== 'Title'"
+                    class="text-xs text-gray-500"
+                >
+                    {{ $t('The permissions for this component are administered via the user settings and the project.') }}
+                </div>
             </div>
-            <div v-else-if="!this.isComponentQualifiedForPermissions() && !(this.componentToEdit?.type === 'Title')"
-                 class="xsLight">
-                {{ $t('The permissions for this component are administered via the user settings and the project.') }}
-            </div>
-            <div class="flex justify-between items-center mt-5">
-                <FormButton
-                    @click="this.updateOrSaveComponent(true)"
-                    :text="this.isCreateMode() ? $t('Create') : $t('Save')" />
-                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="this.closeModal()">
+
+            <!-- Footer -->
+            <div class="mt-6 flex items-center justify-between">
+                <BaseUIButton
+                    @click="updateOrSaveComponent"
+                    :label="isCreateMode ? $t('Create') : $t('Save')" is-add-button
+                />
+                <button class="text-sm text-gray-500 hover:text-gray-700" @click="closeModal">
                     {{ $t('No, not really') }}
-                </p>
+                </button>
             </div>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {defineComponent} from "vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+<script setup>
+import { computed, reactive, ref, watch } from 'vue'
+import { router } from '@inertiajs/vue3'
+import axios from 'axios'
 import {
-    Dialog,
-    DialogPanel,
-    Listbox,
-    ListboxButton,
-    ListboxLabel,
-    ListboxOption,
-    ListboxOptions,
-    TransitionChild,
-    TransitionRoot
-} from "@headlessui/vue";
-import inputComponent from "@/Layouts/Components/InputComponent.vue";
-import Input from "@/Layouts/Components/InputComponent.vue";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {XCircleIcon} from "@heroicons/vue/solid";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+    Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
+} from '@headlessui/vue'
+import { IconChevronDown, IconCircleCheck, IconX } from '@tabler/icons-vue'
 
-export default defineComponent({
-    name: "ComponentModal",
-    mixins: [IconLib],
-    components: {
-        BaseInput,
-        BaseModal,
-        TextInputComponent,
-        ModalHeader,
-        Input,
-        XCircleIcon,
-        TeamIconCollection,
-        Dialog,
-        DialogPanel,
-        TransitionChild,
-        TransitionRoot,
-        Listbox,
-        ListboxOption,
-        ListboxOptions,
-        ListboxButton,
-        ListboxLabel,
-        FormButton,
-        inputComponent
-    },
-    emits: ['close'],
-    props: [
-        'show',
-        'mode',
-        'tabComponentTypes',
-        'componentToEdit'
-    ],
-    data() {
-        return {
-            userAndTeamsQuery: '',
-            userAndTeamsSearchResult: null,
-            modulePermissions: {
-                permission_type: this.isCreateMode() ? 'allSeeAndEdit' : this.componentToEdit.permission_type,
-                users: this.isCreateMode() ? [] : this.componentToEdit.users,
-                departments: this.isCreateMode() ? [] : this.componentToEdit.departments
-            },
-            textData: this.isCreateMode() ?
-                (this.tabComponentTypes ? JSON.parse(JSON.stringify(this.tabComponentTypes['TextField'].availableFields)) : {}) :
-                (this.componentToEdit ? JSON.parse(JSON.stringify(this.componentToEdit.data)) : {}),
-            componentName: this.isCreateMode() ? '' : (this.componentToEdit ? this.componentToEdit.name : ''),
-            selectedType: this.isCreateMode() ? this.tabComponentTypes['TextField'] : null,
-            helpTexts: {
-                name: null
-            }
-        };
-    },
-    methods: {
-        isCreateMode() {
-            return this.mode === 'create';
-        },
-        isComponentQualifiedForPermissions() {
-            if (this.isCreateMode()) {
-                return this.selectedType.name !== 'SeparatorComponent';
-            }
+import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
+import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 
-            return this.componentToEdit.type !== 'Title' &&
-                this.componentToEdit.type !== 'SeparatorComponent' &&
-                this.componentToEdit.type !== 'ShiftTab' &&
-                this.componentToEdit.type !== 'BudgetTab' &&
-                this.componentToEdit.type !== 'CalendarTab';
-        },
-        resetSearch() {
-            this.userAndTeamsQuery = '';
-            this.userAndTeamsSearchResult = null;
-        },
-        findModulePermissionsUserIndex(userId) {
-            return this.modulePermissions.users.findIndex((user) => user.id === userId);
-        },
-        findModulePermissionsDepartmentIndex(departmentId) {
-            return this.modulePermissions.departments.findIndex((department) => department.id === departmentId);
-        },
-        addUser(user) {
-            if (this.findModulePermissionsUserIndex(user.id) < 0) {
-                this.modulePermissions.users.push(user);
-            }
+defineOptions({ name: 'ComponentModal' })
 
-            this.resetSearch();
-        },
-        removeUser(user) {
-            this.modulePermissions.users.splice(
-                this.findModulePermissionsUserIndex(user.id),
-                1
-            );
-        },
-        addDepartment(department) {
-            if (this.findModulePermissionsDepartmentIndex(department.id) < 0) {
-                this.modulePermissions.departments.push(department);
-            }
+/* Props & Emits */
+const props = defineProps({
+    show: { type: Boolean, required: true },
+    mode: { type: String, default: 'create' }, // 'create' | 'edit'
+    tabComponentTypes: { type: Object, default: () => ({}) },
+    componentToEdit: { type: Object, default: null }
+})
+const emit = defineEmits(['close'])
 
-            this.resetSearch();
-        },
-        removeDepartment(department) {
-            this.modulePermissions.departments.splice(
-                this.findModulePermissionsDepartmentIndex(department.id),
-                1
-            );
-        },
-        searchUsersAndTeams() {
-            if (this.userAndTeamsQuery.length > 0) {
-                axios.get(
-                    route('users_departments.search'),
-                    {
-                        params: {
-                            query: this.userAndTeamsQuery
-                        }
-                    }
-                ).then(
-                    response => {
-                        //if permission_type is someSeeSomeEdit append pivot object to search results
-                        //needed as v-model for checkboxes as search results (user and departments) are not obtained
-                        //by a Component-User/Department relation so there is no pivot object
-                        if (this.modulePermissions.permission_type === 'someSeeSomeEdit') {
-                            response.data.users.forEach((user) => {
-                                user.pivot = {
-                                    can_write: false
-                                };
-                            });
+/* Helpers */
+const isCreateMode = computed(() => props.mode === 'create')
+const typesArray = computed(() => {
+    // tabComponentTypes kann Map oder Objekt sein; wir nehmen Objekt -> Array
+    if (!props.tabComponentTypes) return []
+    return Object.values(props.tabComponentTypes)
+})
 
-                            response.data.departments.forEach((department) => {
-                                department.pivot = {
-                                    can_write: false
-                                }
-                            });
-                        }
-                        this.userAndTeamsSearchResult = response.data;
-                    }
-                )
-            }
-        },
-        addMoreOneOption() {
-            this.textData.options.push({value: ''})
-        },
-        removeOption(index) {
-            this.textData.options.splice(index, 1)
-        },
-        closeModal() {
-            this.$emit('close');
-        },
-        updateOrSaveComponent() {
-            this.helpTexts.name = null;
-            if (this.componentName === '') {
-                this.helpTexts.name = this.$t('Please enter a name.')
-                return;
-            }
+/* Auswahl Typ (bei Create) */
+const selectedType = ref(
+    isCreateMode.value ? props.tabComponentTypes?.['TextField'] ?? typesArray.value[0] ?? null : null
+)
 
-            let isComponentQualifiedForPermissions = this.isComponentQualifiedForPermissions(),
-                desiredRoute = this.isCreateMode() ?
-                    route('component.store') :
-                    route('component.update', {component: this.componentToEdit.id}),
-                payload = {
-                    name: this.componentName,
-                    data: this.textData,
-                    permission_type: isComponentQualifiedForPermissions ?
-                        this.modulePermissions.permission_type :
-                        null,
-                    users: [],
-                    departments: [],
-                },
-                options = {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.closeModal();
-                    },
-                };
+/* Name */
+const componentName = ref(isCreateMode.value ? '' : (props.componentToEdit?.name ?? ''))
+const helpTexts = reactive({ name: null })
 
-            if (this.isCreateMode()) {
-                payload.type = this.selectedType.name;
-            }
+/* Text-/Konfig-Daten (Fields) */
+const textData = reactive(
+    isCreateMode.value
+        ? deepClone(selectedType.value?.availableFields ?? {})
+        : deepClone(props.componentToEdit?.data ?? {})
+)
 
-            if (isComponentQualifiedForPermissions) {
-                this.modulePermissions.users.forEach(
-                    (user) => payload.users.push(
-                        {
-                            user_id: user.id,
-                            can_write: user.pivot ? user.pivot.can_write : null
-                        }
-                    )
-                );
-                this.modulePermissions.departments.forEach(
-                    (department) => payload.departments.push(
-                        {
-                            department_id: department.id,
-                            can_write: department.pivot ? department.pivot.can_write : null
-                        }
-                    )
-                );
-            }
+/* Permissions */
+const modulePermissions = reactive({
+    permission_type: isCreateMode.value ? 'allSeeAndEdit' : (props.componentToEdit?.permission_type ?? 'allSeeAndEdit'),
+    users: isCreateMode.value ? [] : deepClone(props.componentToEdit?.users ?? []),
+    departments: isCreateMode.value ? [] : deepClone(props.componentToEdit?.departments ?? [])
+})
 
-            if (this.isCreateMode()) {
-                this.$inertia.post(desiredRoute, payload, options);
-                return;
-            }
+/* Permission-Eignung */
+const isQualifiedForPermissions = computed(() => {
+    // Logik wie vorher, aber defensiv
+    const excluded = ['Title', 'SeparatorComponent', 'ShiftTab', 'BudgetTab', 'CalendarTab']
+    if (isCreateMode.value) {
+        const name = selectedType.value?.name
+        return name ? !excluded.includes(name) : false
+    }
+    const t = props.componentToEdit?.type
+    return t ? !excluded.includes(t) : false
+})
 
-            this.$inertia.patch(desiredRoute, payload, options);
-        },
-    },
-    watch: {
-        selectedType: {
-            handler(){
-                // add the selected type to the textData as copy
-                this.textData = JSON.parse(JSON.stringify(this.selectedType.availableFields))
-            },
-            deep: true
+/* Suche User/Teams */
+const userAndTeamsQuery = ref('')
+const userAndTeamsSearchResult = reactive({ users: [], departments: [] })
+const hasSearchResults = computed(() =>
+    (userAndTeamsSearchResult.users?.length > 0 || userAndTeamsSearchResult.departments?.length > 0) &&
+    userAndTeamsQuery.value.length > 0
+)
+
+function resetSearch() {
+    userAndTeamsQuery.value = ''
+    userAndTeamsSearchResult.users = []
+    userAndTeamsSearchResult.departments = []
+}
+
+function findModulePermissionsUserIndex(id) {
+    return modulePermissions.users.findIndex(u => u.id === id)
+}
+function findModulePermissionsDepartmentIndex(id) {
+    return modulePermissions.departments.findIndex(d => d.id === id)
+}
+
+function addUser(user) {
+    if (findModulePermissionsUserIndex(user.id) < 0) {
+        modulePermissions.users.push(user)
+    }
+    resetSearch()
+}
+function removeUser(user) {
+    const idx = findModulePermissionsUserIndex(user.id)
+    if (idx >= 0) modulePermissions.users.splice(idx, 1)
+}
+function addDepartment(dep) {
+    if (findModulePermissionsDepartmentIndex(dep.id) < 0) {
+        modulePermissions.departments.push(dep)
+    }
+    resetSearch()
+}
+function removeDepartment(dep) {
+    const idx = findModulePermissionsDepartmentIndex(dep.id)
+    if (idx >= 0) modulePermissions.departments.splice(idx, 1)
+}
+
+async function searchUsersAndTeams() {
+    const q = userAndTeamsQuery.value?.trim()
+    if (!q) {
+        resetSearch()
+        return
+    }
+    try {
+        const { data } = await axios.get(route('users_departments.search'), { params: { query: q } })
+        // Pivot für someSeeSomeEdit hinzufügen (booleans für can_write)
+        if (modulePermissions.permission_type === 'someSeeSomeEdit') {
+            for (const u of data.users || []) u.pivot = u.pivot ?? { can_write: false }
+            for (const d of data.departments || []) d.pivot = d.pivot ?? { can_write: false }
+        }
+        userAndTeamsSearchResult.users = data.users ?? []
+        userAndTeamsSearchResult.departments = data.departments ?? []
+    } catch (e) {
+        // optional: Fehlermeldung loggen/anzeigen
+        userAndTeamsSearchResult.users = []
+        userAndTeamsSearchResult.departments = []
+    }
+}
+
+/* Optionen */
+function addMoreOneOption() {
+    if (!Array.isArray(textData.options)) textData.options = []
+    textData.options.push({ value: '' })
+}
+function removeOption(index) {
+    if (Array.isArray(textData.options)) textData.options.splice(index, 1)
+}
+
+/* Watch: Typwechsel -> Fields neu setzen */
+watch(selectedType, (val) => {
+    if (!isCreateMode.value || !val) return
+    textDataResetTo(val?.availableFields ?? {})
+})
+
+/* Actions */
+function closeModal() {
+    emit('close')
+}
+
+function updateOrSaveComponent() {
+    helpTexts.name = null
+    if (!componentName.value?.trim()) {
+        helpTexts.name = (typeof $t === 'function' ? $t('Please enter a name.') : 'Please enter a name.')
+        return
+    }
+
+    const qualified = isQualifiedForPermissions.value
+    const payload = {
+        name: componentName.value,
+        data: deepClone(textData),
+        permission_type: qualified ? modulePermissions.permission_type : null,
+        users: [],
+        departments: []
+    }
+
+    if (isCreateMode.value) {
+        payload.type = selectedType.value?.name
+    }
+
+    if (qualified) {
+        for (const u of modulePermissions.users) {
+            payload.users.push({ user_id: u.id, can_write: u.pivot ? !!u.pivot.can_write : null })
+        }
+        for (const d of modulePermissions.departments) {
+            payload.departments.push({ department_id: d.id, can_write: d.pivot ? !!d.pivot.can_write : null })
         }
     }
-});
+
+    const options = {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => closeModal()
+    }
+
+    if (isCreateMode.value) {
+        router.post(route('component.store'), payload, options)
+    } else {
+        router.patch(route('component.update', { component: props.componentToEdit.id }), payload, options)
+    }
+}
+
+/* Utils */
+function deepClone(obj) {
+    try {
+        return JSON.parse(JSON.stringify(obj ?? {}))
+    } catch {
+        return {}
+    }
+}
+function textDataResetTo(fields) {
+    // hard reset von textData reactive → setze bekannte Properties
+    const next = deepClone(fields)
+    for (const key of Object.keys(textData)) delete textData[key]
+    for (const [k, v] of Object.entries(next)) textData[k] = v
+}
 </script>

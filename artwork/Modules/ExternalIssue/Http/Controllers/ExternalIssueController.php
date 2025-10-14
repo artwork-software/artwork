@@ -39,8 +39,9 @@ class ExternalIssueController extends Controller
         // neue Filter
         $dateFrom = request()?->input('date_from');
         $dateTo   = request()?->input('date_to');
-        $issuedBy = request()?->input('issued_by_id');
-        $receivedBy = request()?->input('received_by_id');
+        $issuedBy    = request()?->filled('issued_by_id')    ? (int) request()->input('issued_by_id')    : null;
+        $receivedBy  = request()?->filled('received_by_id')  ? (int) request()->input('received_by_id')  : null;
+
         $q        = trim((string) request()?->input('q', ''));
 
         $issuesQuery = ExternalIssue::with([
@@ -58,14 +59,12 @@ class ExternalIssueController extends Controller
         }
 
         // Zeitfilter: entweder im Ausgabedatum ODER im Rückgabedatum innerhalb Range
-        $issuesQuery
-            ->when($dateFrom, fn($q) => $q->whereDate('issue_date', '>=', $dateFrom))
-            ->when($dateTo,   fn($q) => $q->whereDate('return_date', '<=', $dateTo));
+        $issuesQuery->overlapping($dateFrom, $dateTo);
 
         // User-Filter
         $issuesQuery
-            ->when($issuedBy,   fn($q) => $q->where('issued_by_id', $issuedBy))
-            ->when($receivedBy, fn($q) => $q->where('received_by_id', $receivedBy));
+            ->when($issuedBy !== null,   fn($q) => $q->where('issued_by_id',   $issuedBy))
+            ->when($receivedBy !== null, fn($q) => $q->where('received_by_id', $receivedBy));
 
         // Name/Extern/Remarks Suche
         if ($q !== '') {

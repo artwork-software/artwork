@@ -2,6 +2,12 @@
     <app-layout :title="$t('Event Settings')">
 
         <EventSettingHeader>
+            <template #actions>
+                <button class="ui-button-add" @click="showCreateEventStatusModal = true">
+                    <component :is="IconPlus" stroke-width="1" class="size-5" />
+                    {{ $t('Add Event Status') }}
+                </button>
+            </template>
 
             <div class="flex items-center gap-x-2">
                 <Switch v-model="settingsForm.enable_status" :class="[settingsForm.enable_status ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
@@ -25,14 +31,11 @@
 
 
             <div class="my-10" v-if="enable_status">
-                <div class="mb-4 flex items-center justify-between gap-x-10">
-                    <TinyPageHeadline
+                <div class="mb-4">
+                    <BasePageTitle
                         title="Event Status"
                         description="Hier kannst du die Event Status verwalten."
                     />
-                    <div>
-                        <AddButtonSmall @click="showCreateEventStatusModal = true" text="Event Status hinzufügen" />
-                    </div>
                 </div>
 
                 <div class="">
@@ -108,13 +111,14 @@ import {MenuItem, Switch} from "@headlessui/vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {ref, watch} from "vue";
-import {IconEdit, IconGripVertical, IconTrash} from "@tabler/icons-vue";
+import {IconEdit, IconGripVertical, IconPlus, IconTrash} from "@tabler/icons-vue";
 import draggable from "vuedraggable";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import AddEditEventStatusModal from "@/Pages/Settings/EventStatus/Components/AddEditEventStatusModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const props = defineProps({
     eventStatuses: {

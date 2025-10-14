@@ -1,37 +1,31 @@
 <template>
-    <app-layout :title="$t('Checklist templates')">
-        <div class="artwork-container">
+    <ChecklistTemplatesHeader :title="$t('Checklist templates')" :description="$t('Create and manage templates for checklists that can be reused across projects.')">
+        <template #actions>
+            <Link :href="route('checklist_templates.create')" class="ui-button-add">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ $t('New template') }}
+            </Link>
+        </template>
 
-            <div>
-                <ChecklistFunctionBar :title="$t('Checklist templates')">
-                    <template v-slot:buttons>
-                        <Link class="-mt-1" :href="route('checklist_templates.create')">
-                            <AddButtonSmall :text="$t('New template')" />
-                        </Link>
-                    </template>
-                </ChecklistFunctionBar>
-            </div>
-
-            <div class="my-10">
-                <div v-if="$page.props.auth.user.checklist_style === 'list'">
-                    <div class="bg-gray-100 px-5 py-2 rounded-lg xxsLight mb-5">
-                        <div class="grid grid-cols-12 grid-rows-1 gap-4">
-                            <div class="col-span-8">{{ $t('Name') }}</div>
-                            <div class="col-span-4 col-start-9">{{ $t('Creator') }}</div>
-                        </div>
+        <div class="my-10">
+            <div v-if="$page.props.auth.user.checklist_style === 'list'">
+                <div class="bg-gray-100 px-5 py-2 rounded-lg xxsLight mb-5">
+                    <div class="grid grid-cols-12 grid-rows-1 gap-4">
+                        <div class="col-span-8">{{ $t('Name') }}</div>
+                        <div class="col-span-4 col-start-9">{{ $t('Creator') }}</div>
                     </div>
-                    <SingleChecklistTemplateListView
+                </div>
+                <SingleChecklistTemplateListView
+                    v-for="(template,index) in checklist_templates"
+                    :checklist_template="template"
+                />
+            </div>
+            <div v-else>
+                <div class="grid grid-cols-1 md:grid-cols-8 gap-4">
+                    <SingleChecklistTemplateGridView
                         v-for="(template,index) in checklist_templates"
                         :checklist_template="template"
                     />
-                </div>
-                <div v-else>
-                    <div class="grid grid-cols-1 md:grid-cols-8 gap-4">
-                        <SingleChecklistTemplateGridView
-                            v-for="(template,index) in checklist_templates"
-                            :checklist_template="template"
-                        />
-                    </div>
                 </div>
             </div>
         </div>
@@ -44,7 +38,7 @@
             :description="this.successText"
             button="Schließen"
         />
-    </app-layout>
+    </ChecklistTemplatesHeader>
 </template>
 
 <script>
@@ -53,20 +47,19 @@ import {Link, router, usePage} from "@inertiajs/vue3";
 import {DotsVerticalIcon, DuplicateIcon, PencilAltIcon, SearchIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {CheckIcon, PlusSmIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ChecklistFunctionBar from "@/Components/Checklist/ChecklistFunctionBar.vue";
+import ChecklistTemplatesHeader from "@/Pages/ChecklistTemplates/Components/ChecklistTemplatesHeader.vue";
 import SingleChecklistTemplateListView from "@/Pages/ChecklistTemplates/Components/SingleChecklistTemplateListView.vue";
 import SingleChecklistTemplateGridView from "@/Pages/ChecklistTemplates/Components/SingleChecklistTemplateGridView.vue";
+import {IconPlus} from "@tabler/icons-vue";
 
 export default {
     mixins: [Permissions, IconLib],
@@ -75,14 +68,12 @@ export default {
     components: {
         SingleChecklistTemplateGridView,
         SingleChecklistTemplateListView,
-        ChecklistFunctionBar,
+        ChecklistTemplatesHeader,
         BaseModal,
         BaseMenu,
-        AddButtonSmall,
         SuccessModal,
         PlusSmIcon,
         SvgCollection,
-        AppLayout,
         SearchIcon,
         Menu,
         MenuButton,

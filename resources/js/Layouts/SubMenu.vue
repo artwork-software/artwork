@@ -28,18 +28,18 @@
                                             <li v-for="item in navigation" :key="item.name">
                                                 <div v-if="item.has_permission">
                                                     <a v-if="!item.isMenu" :href="item.href" :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
-                                                        <component :is="item.icon" :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-6 shrink-0']" aria-hidden="true" />
+                                                        <PropertyIcon :name="item.icon" :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-6 shrink-0']" aria-hidden="true" />
                                                         {{ $t(item.name) }}
                                                     </a>
                                                     <div v-else>
                                                         <div class="text-gray-700 group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold">
-                                                            <component :is="item.icon" class="text-gray-400 size-6 shrink-0" aria-hidden="true" />
+                                                            <PropertyIcon :name="item.icon" class="text-gray-400 size-6 shrink-0" aria-hidden="true" />
                                                             {{ $t(item.name) }}
                                                         </div>
                                                         <ul class="ml-8 space-y-1">
                                                             <li v-for="subMenu in item.subMenus" :key="subMenu.name">
                                                                 <a v-if="subMenu.has_permission" :href="subMenu.href" :class="[subMenu.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6']">
-                                                                    <component :is="subMenu.icon" :class="[subMenu.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-5 shrink-0']" aria-hidden="true" />
+                                                                    <PropertyIcon :name="subMenu.icon" :class="[subMenu.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-5 shrink-0']" aria-hidden="true" />
                                                                     {{ $t(subMenu.name) }}
                                                                 </a>
                                                             </li>
@@ -59,116 +59,248 @@
     </TransitionRoot>
 
     <!-- Static sidebar for desktop -->
-    <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col" :class="isFullSideBar ? 'lg:w-72' : 'lg:w-16'">
-        <!-- Sidebar component, swap this element with another sidebar if you like -->
-        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-auto bg-artwork-navigation-background">
+    <!-- Static sidebar for desktop -->
+    <div
+        class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
+        :class="isFullSideBar ? 'lg:w-72' : 'lg:w-16'"
+    >
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-artwork-navigation-background">
+            <!-- Brand -->
             <div class="flex h-16 shrink-0 items-center justify-center">
                 <div :class="isFullSideBar ? 'w-full flex mx-6' : ''" class="mt-5">
                     <div class="group relative">
-                        <div class="cursor-pointer absolute group-hover:block hidden bg-artwork-navigation-background/70 z-10 h-full w-full" @click="isFullSideBar = !isFullSideBar">
-                            <div class="flex items-center justify-center h-full w-full">
-                                <component :is="IconChevronsRight" v-if="!isFullSideBar" class="h-6 w-6 text-white" aria-hidden="true"/>
-                                <component :is="IconChevronsLeft" v-else class="h-6 w-6 text-white" aria-hidden="true"/>
+                        <div
+                            class="absolute inset-0 hidden cursor-pointer bg-artwork-navigation-background/70 group-hover:block z-10"
+                            @click="isFullSideBar = !isFullSideBar"
+                        >
+                            <div class="flex h-full w-full items-center justify-center">
+                                <component :is="IconChevronsRight" v-if="!isFullSideBar" class="h-6 w-6 text-white" />
+                                <component :is="IconChevronsLeft" v-else class="h-6 w-6 text-white" />
                             </div>
                         </div>
-                        <div class="font-bold text-secondaryHover block">
-                            <img :src="usePage().props.small_logo" :class="isFullSideBar ? 'h-12 w-12 min-w-12 min-h-12' : 'h-12 w-12 min-w-12 min-h-12'" class="object-cover" alt="artwork-logo"/>
-                        </div>
+                        <img
+                            :src="usePage().props.small_logo"
+                            class="h-12 w-12 min-w-12 min-h-12 object-cover"
+                            alt="artwork-logo"
+                        />
                     </div>
                     <div v-if="isFullSideBar" class="ml-4">
-                        <img :src="usePage().props.big_logo" :class="isFullSideBar ? 'h-12 w-auto' : 'h-16 w-16'" alt="artwork-logo"/>
+                        <img :src="usePage().props.big_logo" class="h-12 w-auto" alt="artwork-logo" />
                     </div>
                 </div>
             </div>
-            <nav class="flex flex-1 flex-col px-6">
+
+            <!-- Navigation -->
+            <nav :class="['flex flex-1 flex-col', isFullSideBar ? 'px-6' : 'px-1']">
                 <ul role="list" class="flex flex-1 flex-col gap-y-7">
                     <li>
-                        <ul role="list" class="-mx-3 space-y-3">
+                        <!-- Haupt-Navigation -->
+                        <ul role="list" :class="isFullSideBar ? 'space-y-2' : 'space-y-2'">
                             <li v-for="item in navigation" :key="item.name">
-                                <div @mouseover="showToolTipForItem(item)" @mouseleave="hideToolTipForItem(item)">
-                                    <Link v-if="!item.isMenu && item.has_permission" :href="item.href" :class="[item.current ? 'bg-gray-50/10 text-white' : 'text-white hover:bg-gray-50/10 hover:text-artwork-buttons-hover', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
-                                        <component :stroke-width="1" :is="item.icon" :class="[item.current ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover', 'size-6 min-w-6 min-h-6 shrink-0']" aria-hidden="true" />
-                                        <span v-if="isFullSideBar">{{ $t(item.name) }}</span>
-                                    </Link>
-                                    <div v-else>
-                                        <div v-if="item.has_permission" class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 font-semibold p-2">
-                                            <BaseMenu stroke-width="1" text-with-margin-left white-menu-background menu-width="!w-fit"  :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
-                                                <div v-for="subMenu in item.subMenus" :key="subMenu.name">
-                                                    <BaseMenuItem white-menu-background as-link v-if="subMenu.has_permission" :href="subMenu.href" :icon="subMenu.icon" :title="subMenu.name" />
-                                                </div>
-                                            </BaseMenu>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="absolute left-14" :class="item.showToolTipForItem ? 'block' : 'hidden'">
-                                    <div class="p-2 text-xs leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit font-lexend">
-                                        {{ $t(item.name) }}
+                                <!-- Link-Eintrag -->
+                                <Link
+                                    v-if="!item.isMenu && item.has_permission"
+                                    :href="item.href"
+                                    :aria-current="item.current ? 'page' : undefined"
+                                    :class="[
+                                      'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                      isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                      item.current
+                                        ? 'bg-white/10 text-white'
+                                        : 'text-white hover:bg-white/10 hover:text-artwork-buttons-hover'
+                                    ]"
+                                >
+                                    <ToolTipComponent
+                                        v-if="!isFullSideBar"
+                                        :icon="item.icon"
+                                        :tooltip-text="$t(item.name)"
+                                        direction="right"
+                                        classes-button="flex items-center justify-center"
+                                        white-icon
+                                        icon-size="size-6"
+                                    />
+                                    <PropertyIcon
+                                        v-else
+                                        :name="item.icon"
+                                        :stroke-width="1.5"
+                                        class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
+                                        aria-hidden="true"
+                                    />
+                                    <span v-if="isFullSideBar" class="truncate">{{ $t(item.name) }}</span>
+                                </Link>
+
+                                <!-- Menü-Eintrag -->
+                                <div v-else-if="item.has_permission" class="w-full">
+                                    <div
+                                        :class="[
+                                        'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                        isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                        item.current ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/10 hover:text-white'
+                                      ]"
+                                    >
+                                        <BaseMenu
+                                            stroke-width="1.5"
+                                            text-with-margin-left
+                                            :translation-key="item.name"
+                                            menu-width="!w-64"
+                                            :menu-button-text="item.name"
+                                            :show-menu-button-text="isFullSideBar"
+                                            no-relative
+                                            tooltip-direction="right"
+                                            has-no-offset
+                                            show-custom-icon
+                                            :icon="item.icon"
+                                            white-icon
+                                            dots-size="size-6"
+                                            :classes-button="isFullSideBar
+                      ? '!h-10 !px-0 flex items-center gap-3 text-current w-full justify-start'
+                      : '!h-10 !px-0 flex items-center text-current w-full justify-center'"
+                                        >
+                                            <template v-for="subMenu in item.subMenus" :key="subMenu.name">
+                                                <BaseMenuItem
+                                                    v-if="subMenu.has_permission"
+                                                    white-menu-background
+                                                    as-link
+                                                    :href="subMenu.href"
+                                                    :icon="subMenu.icon"
+                                                    :title="subMenu.name"
+                                                />
+                                            </template>
+                                        </BaseMenu>
                                     </div>
                                 </div>
                             </li>
                         </ul>
                     </li>
+
+                    <!-- Footer-Navigation -->
                     <li class="mt-auto">
-                        <ul role="list" class="-mx-3 space-y-2">
+                        <ul role="list" class="space-y-1">
                             <li v-for="item in subNavigation" :key="item.name">
-                                <div @mouseover="showToolTipForItem(item)" @mouseleave="hideToolTipForItem(item)">
-                                    <Link v-if="!item.isMenu" :href="item.href" :class="[item.current ? 'bg-gray-50/10 text-white' : 'text-white hover:bg-gray-50/10 hover:text-artwork-buttons-hover', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
-                                        <component :stroke-width="1" :is="item.icon" :class="[item.current ? 'text-white' : 'text-white group-hover:text-artwork-buttons-hover', 'size-6 min-w-6 min-h-6 shrink-0']" aria-hidden="true" />
-                                        <span v-if="isFullSideBar">{{ $t(item.name) }}</span>
-                                    </Link>
-                                    <div v-else class="hover:bg-gray-50/10 hover:text-white  group flex gap-x-3 rounded-md text-sm/6 p-2 font-semibold">
-                                        <BaseMenu :no-tooltip="true" :stroke-width="1" menu-width="!w-fit" white-menu-background :menu-button-text="item.name" :show-menu-button-text="isFullSideBar" no-relative tooltip-direction="right" has-no-offset show-custom-icon :icon="item.icon" white-icon dots-size="w-6 h-6 min-h-6 min-w-6">
-                                            <div v-for="subMenu in item.subMenus" :key="subMenu.name">
-                                                <BaseMenuItem white-menu-background as-link :href="subMenu.href" :icon="subMenu.icon" :title="subMenu.name" />
-                                            </div>
+                                <Link
+                                    v-if="!item.isMenu && item.has_permission"
+                                    :href="item.href"
+                                    :class="[
+                                      'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                      isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                      item.current
+                                        ? 'bg-gray-50/10 text-white'
+                                        : 'text-white hover:bg-gray-50/10 hover:text-artwork-buttons-hover'
+                                    ]"
+                                >
+                                    <PropertyIcon
+                                        :name="item.icon"
+                                        :stroke-width="1"
+                                        class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
+                                    />
+                                    <span v-if="isFullSideBar" class="truncate">{{ $t(item.name) }}</span>
+                                </Link>
+
+                                <!-- Falls subNavigation Einträge mit Menüs bekommt -->
+                                <div v-else class="w-full">
+                                    <div
+                                        :class="[
+                                        'w-full group flex items-center rounded-lg h-10 select-none transition-colors bg-transparent',
+                                        isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                        'text-white hover:bg-gray-50/10 hover:text-white'
+                                      ]"
+                                    >
+                                        <BaseMenu
+                                            :no-tooltip="true"
+                                            :stroke-width="1"
+                                            menu-width="!w-fit"
+                                            white-menu-background
+                                            :menu-button-text="item.name"
+                                            :show-menu-button-text="isFullSideBar"
+                                            no-relative
+                                            tooltip-direction="right"
+                                            has-no-offset
+                                            show-custom-icon
+                                            :icon="item.icon"
+                                            white-icon
+                                            dots-size="size-6"
+                                            :classes-button="isFullSideBar
+                                              ? '!h-10 !px-0 flex items-center gap-3 text-current w-full justify-start'
+                                              : '!h-10 !px-0 flex items-center text-current w-full justify-center'"
+                                        >
+                                            <template v-for="subMenu in item.subMenus" :key="subMenu.name">
+                                                <BaseMenuItem
+                                                    white-menu-background
+                                                    as-link
+                                                    :href="subMenu.href"
+                                                    :icon="subMenu.icon"
+                                                    :title="subMenu.name"
+                                                />
+                                            </template>
                                         </BaseMenu>
                                     </div>
                                 </div>
-                                <div class="absolute left-14" :class="item.showToolTipForItem ? 'block' : 'hidden'">
-                                    <div class="p-2 text-xs text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit font-lexend">
-                                        {{ $t(item.name) }}
-                                    </div>
-                                </div>
                             </li>
+
+                            <!-- Profil -->
                             <li>
-                                <Popover class="ml-1">
-                                    <Float auto-placement portal :offset="{ mainAxis: 150, crossAxis: 250}">
+                                <Popover class="ml-0">
+                                    <Float auto-placement portal :offset="{ mainAxis: 150, crossAxis: 250 }">
                                         <PopoverButton>
-                                            <div class="flex items-center gap-x-3 py-3 text-sm/6 font-semibold text-white ">
-                                                <img class="size-8 min-w-8 min-h-8 rounded-full object-cover bg-gray-50" :src="usePage().props.auth.user.profile_photo_url" alt="" />
+                                            <div
+                                                :class="[
+                                                    'flex items-center gap-3 text-sm/6 font-semibold text-white',
+                                                    isFullSideBar ? 'px-2 h-12 justify-start' : 'px-3 h-12 justify-center'
+                                                  ]"
+                                            >
+                                                <img
+                                                    class="size-8 min-w-8 min-h-8 rounded-full object-cover bg-gray-50"
+                                                    :src="usePage().props.auth.user.profile_photo_url"
+                                                    alt=""
+                                                />
                                                 <span v-if="isFullSideBar">
-                                                    <span class="sr-only">Your profile</span>
-                                                    <span aria-hidden="true">{{ usePage().props.auth.user.full_name }}</span>
-                                                </span>
+                        <span class="sr-only">Your profile</span>
+                        <span aria-hidden="true">{{ usePage().props.auth.user.full_name }}</span>
+                      </span>
                                             </div>
                                         </PopoverButton>
 
-                                        <transition enter-active-class="transition ease-out duration-200" enter-from-class="opacity-0 translate-y-1" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-150" leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 translate-y-1">
+                                        <transition
+                                            enter-active-class="transition ease-out duration-200"
+                                            enter-from-class="opacity-0 translate-y-1"
+                                            enter-to-class="opacity-100 translate-y-0"
+                                            leave-active-class="transition ease-in duration-150"
+                                            leave-from-class="opacity-100 translate-y-0"
+                                            leave-to-class="opacity-0 translate-y-1"
+                                        >
                                             <PopoverPanel class="absolute left-1/2 z-10 flex w-screen max-w-max card glassy -translate-x-1/2 p-3">
                                                 <div class="w-screen max-w-md flex-auto overflow-hidden card white p-3">
                                                     <div class="flex w-full items-center justify-between space-x-6 p-2">
-                                                        <div class="flex-1 truncate ">
+                                                        <div class="flex-1 truncate">
                                                             <div class="flex items-center space-x-3">
                                                                 <div class="font-bold headline h2">{{ usePage().props.auth.user.full_name }}</div>
-                                                                <span class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset"> {{ usePage().props.auth.user.position }}</span>
+                                                                <span class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                                {{ usePage().props.auth.user.position }}
+                              </span>
                                                             </div>
                                                             <p class="mt-1 truncate text-sm text-gray-500">{{ usePage().props.auth.user.business }}</p>
                                                         </div>
-                                                        <img class="size-14 shrink-0 rounded-full object-cover bg-gray-300" :src="usePage().props.auth.user.profile_photo_url" alt="" />
+                                                        <img
+                                                            class="size-14 shrink-0 rounded-full object-cover bg-gray-300"
+                                                            :src="usePage().props.auth.user.profile_photo_url"
+                                                            alt=""
+                                                        />
                                                     </div>
-                                                    <div>
-                                                        <div class="py-2 divide-x divide-gray-200 divide-dashed border-t border-gray-200 border-dashed flex items-center justify-between">
-                                                            <div class="flex w-0 flex-1">
-                                                                <div @click="logout" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent text-sm font-semibold text-gray-900 group hover:text-red-500 transition ease-in-out duration-200 cursor-pointer">
-                                                                    <component :is="IconLogout" class="size-5 text-gray-400 group-hover:text-red-500 transition ease-in-out duration-200" aria-hidden="true" />
-                                                                    {{ $t('Logout') }}
-                                                                </div>
+                                                    <div class="border-t border-dashed border-gray-200">
+                                                        <div class="flex items-center justify-between py-2">
+                                                            <div
+                                                                @click="logout"
+                                                                class="relative -mr-px inline-flex w-1/2 items-center justify-center gap-3 rounded-bl-lg border border-transparent text-sm font-semibold text-gray-900 transition hover:text-red-500 cursor-pointer"
+                                                            >
+                                                                <PropertyIcon name="IconLogout" class="size-5 text-gray-400 transition group-hover:text-red-500" />
+                                                                {{ $t('Logout') }}
                                                             </div>
-                                                            <Link :href="route('user.edit.info', {user: usePage().props.auth.user.id})" class="-ml-px flex w-0 flex-1">
-                                                                <div class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent text-sm font-semibold text-gray-900 group hover:text-artwork-buttons-create transition ease-in-out duration-200 cursor-pointer">
-                                                                    <component :is="IconUserCircle" class="size-5 text-gray-400 group-hover:text-artwork-buttons-create transition ease-in-out duration-200" aria-hidden="true" />
-                                                                    {{ $t('Your account') }}
-                                                                </div>
+                                                            <Link
+                                                                :href="route('user.edit.info', { user: usePage().props.auth.user.id })"
+                                                                class="relative inline-flex w-1/2 items-center justify-center gap-3 rounded-br-lg border border-transparent text-sm font-semibold text-gray-900 transition hover:text-artwork-buttons-create"
+                                                            >
+                                                                <PropertyIcon name="IconUserCircle" class="size-5 text-gray-400 transition group-hover:text-artwork-buttons-create" />
+                                                                {{ $t('Your account') }}
                                                             </Link>
                                                         </div>
                                                     </div>
@@ -184,6 +316,7 @@
             </nav>
         </div>
     </div>
+
 
     <div class="sticky top-0 z-40 flex items-center gap-x-6 bg-white px-4 py-4 shadow-xs sm:px-6 lg:hidden">
         <button type="button" class="-m-2.5 p-2.5 text-gray-700 lg:hidden" @click="sidebarOpen = true">
@@ -238,6 +371,8 @@ import {
     IconTimelineEventPlus, IconTrash, IconUserCircle,
     IconUsers, IconX
 } from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 const { locale } = useI18n();
 
 const props = defineProps({})
@@ -260,7 +395,7 @@ const navigation = ref([
     {
         name: 'Dashboard',
         href: route('dashboard'),
-        icon: IconHome,
+        icon: 'IconHome',
         current: route().current('dashboard'),
         isMenu: false,
         showToolTipForItem: false,
@@ -269,7 +404,7 @@ const navigation = ref([
     {
         name: 'Projects',
         href: route('projects'),
-        icon: IconGeometry,
+        icon: 'IconGeometry',
         current: route().current('projects'),
         isMenu: false,
         showToolTipForItem: false,
@@ -278,7 +413,7 @@ const navigation = ref([
     {
         name: 'Calendar',
         href: '#',
-        icon: IconCalendarClock,
+        icon: 'IconCalendarClock',
         current: true,
         isMenu: true,
         showToolTipForItem: false,
@@ -287,21 +422,21 @@ const navigation = ref([
             {
                 name: 'Calendar',
                 href: route('events'),
-                icon: IconCalendarClock,
+                icon: 'IconCalendarClock',
                 current: route().current('events'),
                 has_permission: moduleIsVisible('room_assignment')
             },
             {
                 name: 'Planning Calendar',
                 href: route('planning-event-calendar.index'),
-                icon: IconCalendarCog,
+                icon: 'IconCalendarCog',
                 current: route().current('planning-event-calendar.index'),
                 has_permission: can('can see planning calendar') || is('artwork admin'),
             },
             {
                 name: 'Event Verifications',
                 href: route('event-verifications.index'),
-                icon: IconCalendarCheck,
+                icon: 'IconCalendarCheck',
                 current: route().current('event-verifications.index'),
                 has_permission: can('can see planning calendar | can edit planning calendar') || is('artwork admin'),
             },
@@ -310,7 +445,7 @@ const navigation = ref([
     {
         name: 'Shift plan',
         href: '#',
-        icon: IconCalendarUser,
+        icon: 'IconCalendarUser',
         current: true,
         isMenu: true,
         showToolTipForItem: false,
@@ -319,35 +454,35 @@ const navigation = ref([
             {
                 name: 'Duty rosters',
                 href: route('shifts.plan'),
-                icon: IconCalendarUser,
+                icon: 'IconCalendarUser',
                 current: route().current('shifts.plan'),
                 has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
             },
             {
                 name: 'My Operational plan',
                 href: route('user.operationPlan', usePage().props.auth.user.id),
-                icon: IconCalendarUser,
+                icon: 'IconCalendarUser',
                 current: route().current('user.operationPlan'),
                 has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
             },
             {
                 name: 'Shift templates',
                 href: route('shifts.presets'),
-                icon: IconCalendarTime,
+                icon: 'IconCalendarTime',
                 current: route().current('shifts.presets') || route().current('shifts.timeline-presets.index'),
                 has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
             },
             {
                 name: 'Work time change requests',
                 href: route('work-time-request.index'),
-                icon: IconTimelineEventPlus,
+                icon: 'IconTimelineEventPlus',
                 current: route().current('work-time-request.index'),
                 has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
             },
             {
                 name: 'Shift commitment requests',
                 href: route('shifts.commit-requests.index'),
-                icon: IconLockSquareRounded,
+                icon: 'IconLockSquareRounded',
                 current: route().current('shifts.commit-requests.index'),
                 has_permission: usePage().props.isUserWorkFlowUser && usePage().props.shiftCommitWorkflow || is('artwork admin') && usePage().props.shiftCommitWorkflow,
             },
@@ -356,7 +491,7 @@ const navigation = ref([
     {
         name: 'Inventory System',
         href: '#',
-        icon: IconBuildingWarehouse,
+        icon: 'IconBuildingWarehouse',
         current: true,
         isMenu: true,
         showToolTipForItem: false,
@@ -365,21 +500,21 @@ const navigation = ref([
             {
                 name: 'Inventory',
                 href: route('inventory.index'),
-                icon: IconBuildingWarehouse,
+                icon: 'IconBuildingWarehouse',
                 current: route().current('inventory.index'),
                 has_permission: moduleIsVisible('inventory')
             },
             {
                 name: 'Article Planning',
                 href: route('inventory-management.article.planning'),
-                icon: IconCalendarExclamation,
+                icon: 'IconCalendarExclamation',
                 current: route().current('inventory-management.article.planning'),
                 has_permission: is('artwork admin') || can('inventory.disposition'),
             },
             {
                 name: 'Material Issues',
                 href: route('issue-of-material.index'),
-                icon: IconBrowserShare,
+                icon: 'IconBrowserShare',
                 current: route().current('issue-of-material.index'),
                 has_permission: is('artwork admin') || can('inventory.disposition'),
             },
@@ -388,7 +523,7 @@ const navigation = ref([
     {
         name: 'To-dos',
         href: route('tasks.own'),
-        icon: IconListCheck,
+        icon: 'IconListCheck',
         current: route().current('tasks.own'),
         isMenu: false,
         showToolTipForItem: false,
@@ -397,7 +532,7 @@ const navigation = ref([
     {
         name: 'Sources of funding',
         href: route('money_sources.index'),
-        icon: IconCurrencyEuro,
+        icon: 'IconCurrencyEuro',
         current: route().current('money_sources.index'),
         isMenu: false,
         showToolTipForItem: false,
@@ -406,7 +541,7 @@ const navigation = ref([
     {
         name: 'Users',
         href: route('users'),
-        icon: IconUsers,
+        icon: 'IconUsers',
         current: route().current('users'),
         isMenu: false,
         showToolTipForItem: false,
@@ -415,7 +550,7 @@ const navigation = ref([
     {
         name: 'Contracts',
         href: route('contracts.index'),
-        icon: IconFileText,
+        icon: 'IconFileText',
         current: route().current('contracts.index'),
         isMenu: false,
         showToolTipForItem: false,
@@ -424,7 +559,7 @@ const navigation = ref([
     {
         name: 'System',
         href: '#',
-        icon: IconSettings,
+        icon: 'IconSettings',
         current: true,
         isMenu: true,
         showToolTipForItem: false,
@@ -433,77 +568,77 @@ const navigation = ref([
             {
                 name: 'Tool Settings',
                 href: route('tool.branding'),
-                icon: IconSettings,
+                icon: 'IconSettings',
                 current: route().current('tool.branding'),
                 has_permission: can('change tool settings') || is('artwork admin')
             },
             {
                 name: 'Shift settings',
                 href: route('shift.settings'),
-                icon: IconCalendarUser,
+                icon: 'IconCalendarUser',
                 current: route().current('shift.settings'),
                 has_permission: is('artwork admin') || can('shift.settings_view_edit')
             },
             {
                 name: 'Inventory',
                 href: route('inventory-management.settings.category'),
-                icon: IconBuildingWarehouse,
+                icon: 'IconBuildingWarehouse',
                 current: route().current('inventory-management.settings.category'),
                 has_permission: is('artwork admin')
             },
             {
                 name: 'Material Sets',
                 href: route('material-sets.index'),
-                icon: IconParentheses,
+                icon: 'IconParentheses',
                 current: route().current('material-sets.index'),
                 has_permission: is('artwork admin') || can('set.create_edit | set.delete')
             },
             {
                 name: 'Rooms',
                 href: route('areas.management'),
-                icon: IconDoor,
+                icon: 'IconDoor',
                 current: route().current('areas.management'),
                 has_permission: can('create, delete and update rooms') || is('artwork admin')
             },
             {
                 name: 'Projects',
                 href: route('project.settings'),
-                icon: IconGeometry,
+                icon: 'IconGeometry',
                 current: route().current('project.settings'),
                 has_permission: can('change project settings') || is('artwork admin')
             },
             {
                 name: 'Calendar',
                 href: route('calendar.settings'),
-                icon: IconCalendarMonth,
+                icon: 'IconCalendarMonth',
                 current: route().current('calendar.settings'),
                 has_permission: is('artwork admin')
             },
             {
                 name: 'Events',
                 href: route('event_types.management'),
-                icon: IconTicket,
+                icon: 'IconTicket',
                 current: route().current('event_types.management'),
                 has_permission: can('change event settings') || is('artwork admin')
             },
             {
                 name: 'Checklists',
                 href: route('checklist_templates.management'),
-                icon: IconListCheck,
+                icon: 'IconListCheck',
                 current: route().current('checklist_templates.management'),
                 has_permission: can('admin checklistTemplates') || is('artwork admin')
             },
             {
                 name: 'Sources of funding',
                 href: route('money_sources.settings'),
-                icon: IconCurrencyEuro,
+                icon: 'IconCurrencyEuro',
                 current: route().current('money_sources.settings'),
                 has_permission: is('artwork admin')
             },
             {
                 name: 'Budget',
                 href: computedBudgetRoute,
-                icon: IconMoneybag,
+                icon: 'IconMoneybag',
                 current: route().current('tool.branding'),
                 has_permission: is('artwork admin')
             },
@@ -512,7 +647,7 @@ const navigation = ref([
     {
         name: 'Recycle bin',
         href: route('projects.trashed'),
-        icon: IconTrash,
+        icon: 'IconTrash',
         current: route().current('projects.trashed'),
         isMenu: false,
         showToolTipForItem: false,
@@ -524,7 +659,7 @@ const subNavigation = ref([
     {
         name: 'Notifications',
         href: route('notifications.index'),
-        icon: IconBell,
+        icon: 'IconBell',
         current: route().current('notifications.*'),
         isMenu: false,
         showToolTipForItem: false,

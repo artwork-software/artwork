@@ -1,33 +1,45 @@
-<script>
-
-export default {
-    name: "DropComponentsToolTip",
-    data() {
-        return {
-            show: false
-        }
-    },
-    props: {
-        tooltipText: String,
-        top: Boolean
-    },
-}
-</script>
-
 <template>
     <div class="relative">
-        <div v-if="show && top" class="absolute z-10 -top-3 w-64 p-2 text-sm leading-tight text-center text-white bg-black rounded-md shadow-lg transform -translate-x-1/2 -translate-y-full left-1/2">
-            {{ tooltipText }}
-            <!-- Tooltip Pfeil unten -->
-            <div class="absolute bg-black h-3 w-3 transform rotate-45 left-1/2 -translate-x-1/2 -bottom-1.5"></div>
-        </div>
-        <div @mouseover="show = true" @mouseleave="show = false" class="focus:outline-none">
+        <!-- Tooltip -->
+        <transition
+            enter-active-class="transition duration-150 ease-out"
+            enter-from-class="opacity-0 translate-y-1"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition duration-100 ease-in"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 translate-y-1"
+        >
+            <div
+                v-if="show && top"
+                class="pointer-events-none absolute left-1/2 z-20 -top-2 w-64 -translate-x-1/2 -translate-y-full rounded-md bg-gray-900 px-3 py-2 text-center text-xs font-medium text-white shadow-lg ring-1 ring-black/10"
+            >
+                {{ tooltipText }}
+                <div class="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-gray-900"></div>
+            </div>
+        </transition>
+
+        <!-- Trigger -->
+        <div
+            class="focus:outline-none"
+            @mouseover="show = true"
+            @mouseleave="show = false"
+            @focusin="show = true"
+            @focusout="show = false"
+        >
             <slot />
         </div>
     </div>
-
 </template>
 
-<style scoped>
+<script setup lang="ts">
+import { ref } from 'vue'
 
-</style>
+defineOptions({ name: 'DropComponentsToolTip' })
+
+const props = defineProps<{
+    tooltipText?: string
+    top?: boolean
+}>()
+
+const show = ref(false)
+</script>

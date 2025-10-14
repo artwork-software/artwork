@@ -1,96 +1,122 @@
-<script>
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
-import {reactive, ref} from "vue";
-import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import {Link} from "@inertiajs/vue3";
-import {IconEdit} from "@tabler/icons-vue";
-
-export default {
-    name: "TextField",
-    components: {Link, BaseInput, InfoButtonComponent, TextInputComponent},
-    props: [
-        'data',
-        'projectId',
-        'inSidebar',
-        'canEditComponent',
-        'component',
-    ],
-    data() {
-        return {
-            textData: {
-                text: this.data.project_value ? this.data.project_value.data.text : this.data.data.text
-            },
-            projectData: this.data,
-            text: this.data.project_value ? this.data.project_value.data.text : this.data.data.text,
-            showTextField: false
-        }
-    },
-    mounted() {
-        useProjectDataListener(this.projectData, this.projectId).init();
-    },
-    methods: {
-        IconEdit,
-        updateTextData() {
-            this.$inertia.patch(route('project.tab.component.update', {project: this.projectId, component: this.data.id}), {
-                data: {
-                    text: this.text
-                }
-            }, {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    this.showTextField = false
-                }
-            })
-        },
-    },
-    watch: {
-        // if the data changes, update the text
-        projectData: {
-            handler: function (newVal, oldVal) {
-                this.text = newVal.project_value ? newVal.project_value.data.text : newVal.data.text
-            },
-            deep: true
-        }
-    }
-}
-</script>
-
 <template>
     <div class="my-2 flex items-start gap-x-4">
         <div>
             <div class="flex items-center gap-x-2">
-                <label for="email" class="block text-sm font-bold leading-6" :class="inSidebar ? 'text-white' : ' text-gray-900' ">
+                <label
+                    for="email"
+                    class="block text-sm font-bold leading-6"
+                    :class="inSidebar ? 'text-white' : ' text-gray-900'"
+                >
                     {{ projectData.data.label }}
                 </label>
 
-                <component :is="IconEdit" class="inline size-4 ml-2 cursor-pointer text-gray-400 hover:text-gray-600" v-if="canEditComponent" @click="showTextField = !showTextField" />
+                <component
+                    :is="IconEdit"
+                    class="inline size-4 ml-2 cursor-pointer text-gray-400 hover:text-gray-600"
+                    v-if="canEditComponent"
+                    @click="showTextField = !showTextField"
+                />
             </div>
+
             <div class="mt-2 w-96" v-if="showTextField">
                 <BaseInput
                     :id="projectData.id"
                     type="text"
-                    :disabled="!this.canEditComponent"
+                    :disabled="!canEditComponent"
                     @focusout="updateTextData"
                     v-model="text"
                     :label="projectData.data.placeholder"
                     without-translation
-                    name="email" id="email"
+                    name="email"
+                    id="email"
                     :class="inSidebar ? 'bg-primary text-white' : ''"
                 />
             </div>
+
             <div v-else>
-                <a :href="text" target="_blank" class="text-blue-600 hover:underline" v-if="text && text.length > 0">{{ text }}</a>
+                <a
+                    :href="text"
+                    target="_blank"
+                    class="text-blue-600 hover:underline"
+                    v-if="text && text.length > 0"
+                >
+                    {{ text }}
+                </a>
             </div>
         </div>
-        <InfoButtonComponent :component="component" />
+
+        <InfoButtonComponent :component="component" v-if="component" />
     </div>
-
-
 </template>
 
-<style scoped>
+<script setup>
+import { ref, computed, watch, onMounted } from "vue";
+import { router } from "@inertiajs/vue3";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js";
+import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import { Link } from "@inertiajs/vue3";
+import { IconEdit } from "@tabler/icons-vue";
 
+// Für DevTools
+defineOptions({ name: "TextField" });
+
+const props = defineProps({
+    data: { type: Object, required: true },
+    projectId: { type: [String, Number], required: true },
+    inSidebar: { type: Boolean, default: false },
+    canEditComponent: { type: Boolean, default: true },
+    component: { type: Object, default: null },
+});
+
+// alias/read-only Ansicht der eingehenden Daten
+const projectData = computed(() => props.data);
+
+// initialer Textwert
+const text = ref(
+    props.data.project_value
+        ? props.data.project_value.data.text
+        : props.data.data.text
+);
+
+// Edit-UI toggeln
+const showTextField = ref(false);
+
+// Listener wie zuvor im mounted
+onMounted(() => {
+    useProjectDataListener(props.data, props.projectId).init();
+});
+
+// Server-Update (entspricht updateTextData)
+function updateTextData() {
+    router.patch(
+        route("project.tab.component.update", {
+            project: props.projectId,
+            component: props.data.id,
+        }),
+        { data: { text: text.value } },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                showTextField.value = false;
+            },
+        }
+    );
+}
+
+// Deep-Watch: wenn projectData geändert wird, Text synchronisieren
+watch(
+    () => props.data,
+    (newVal) => {
+        text.value = newVal.project_value
+            ? newVal.project_value.data.text
+            : newVal.data.text;
+    },
+    { deep: true }
+);
+</script>
+
+<style scoped>
 </style>

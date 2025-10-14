@@ -362,7 +362,7 @@
                         <div class="flex justify-between">
                             <div class="flex items-center gap-x-2">
                                 <IconSelector @update:modelValue="addIconToForm" :current-icon="createProjectForm.icon" />
-                                <TinyPageHeadline
+                                <BasePageTitle
                                     title="Icon"
                                     description="Wähle ein Icon für die Projektgruppe aus."
                                 />
@@ -372,7 +372,7 @@
                                 <div class="">
                                     <ColorPickerComponent @updateColor="addColorToProject" color="#ccc" />
                                 </div>
-                                <TinyPageHeadline
+                                <BasePageTitle
                                     title="Farbe"
                                     description="Wähle eine Farbe für die Projektgruppe aus."
                                     />
@@ -603,7 +603,6 @@ import ProjectGroupListbox from "@/Components/Listboxes/ProjectGroupListbox.vue"
 import KeyVisual from "@/Components/Uploads/KeyVisual.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import BaseTabs from "@/Components/Tabs/BaseTabs.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -618,6 +617,7 @@ import { usePage } from '@inertiajs/vue3';
 import { usePermission } from '@/Composeables/Permission.js';
 import { useTranslation } from '@/Composeables/Translation.js';
 import {IconCalendarMonth, IconCirclePlus} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 // Define props
 const props = defineProps({
@@ -693,7 +693,7 @@ const createProjectForm = useForm({
     state: null,
     assignedUsers: [],
     cost_center: props.project ? props.project?.cost_center?.name : '',
-    icon: props.project ? props.project.icon : 'IconPhotoCircle',
+    icon: props.project ? props.project.icon : '',
     color: props.project ? props.project.color : null,
     marked_as_done: props.project ? props.project.marked_as_done : false,
 });

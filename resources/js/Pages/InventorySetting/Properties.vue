@@ -1,22 +1,16 @@
 <template>
-    <InventorySettingsHeader>
+    <InventorySettingsHeader
+        :title="$t('Properties')"
+        :description="$t('Define global settings for inventory planning.')"
+    >
+        <template #actions>
+            <button class="ui-button-add" @click="showAddEditPropertyModal = true">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ $t('Create Property') }}
+            </button>
+        </template>
 
         <div class="card white p-5">
-            <div class="sm:flex sm:items-center">
-                <div class="sm:flex-auto">
-                    <h1 class="text-base font-semibold text-gray-900">
-                        {{ $t('Properties') }}
-                    </h1>
-                    <p class="mt-2 text-sm text-gray-700">
-                        {{ $t('Define global settings for inventory planning.') }}
-                    </p>
-                </div>
-                <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-                    <button @click="showAddEditPropertyModal = true" type="button" class="block rounded-md bg-artwork-buttons-create px-3 py-2 text-center text-sm font-semibold text-white shadow-xs hover:bg-artwork-buttons-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                        {{ $t('Create Property') }}
-                    </button>
-                </div>
-            </div>
             <div class="my-8 flow-root">
                 <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
                     <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -84,6 +78,7 @@ import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import {ref} from "vue";
 import AddEditArticlePropertyModal from "@/Pages/InventorySetting/Components/AddEditArticlePropertyModal.vue";
 import SinglePropertyInSettings from "@/Pages/InventorySetting/Components/SinglePropertyInSettings.vue";
+import {IconPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     properties: {

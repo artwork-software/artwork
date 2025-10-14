@@ -25,6 +25,7 @@
                     :whiteIcon="whiteIcon"
                     :grayIcon="grayIcon"
                     icon-size="size-6"
+                    classes-button="ui-button hover:!bg-artwork-navigation-color/10 text-artwork-buttons-context"
                 />
             </MenuButton>
         </div>

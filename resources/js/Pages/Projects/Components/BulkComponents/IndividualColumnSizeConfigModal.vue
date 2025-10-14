@@ -1,12 +1,5 @@
 <template>
-    <BaseModal @closed="$emit('close')" modal-size="max-w-7xl">
-        <div>
-            <ModalHeader
-                :title="$t('Configure column width')"
-                :description="$t('Configure the width of the columns in the bulk view.')"
-            />
-        </div>
-
+    <ArtworkBaseModal @close="$emit('close')" modal-size="max-w-7xl" title="Configure column width" description="Configure the width of the columns in the bulk view.">
         <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div v-for="(column, index) in columnSizeForm.bulk_column_size">
                 <div>
@@ -24,7 +17,7 @@
         </div>
 
         <div class="my-4">
-            <TinyPageHeadline title="Vorschau" description="" />
+            <BasePageTitle title="Vorschau" description="" />
         </div>
         <form @submit.prevent="submit">
             <div class="my-4 py-4 overflow-x-scroll">
@@ -72,7 +65,7 @@
                 </div>
             </div>
         </form>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -82,6 +75,8 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {useForm, usePage} from "@inertiajs/vue3";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const props = defineProps({})
 

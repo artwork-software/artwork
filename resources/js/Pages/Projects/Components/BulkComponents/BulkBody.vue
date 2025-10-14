@@ -64,6 +64,7 @@
                     @update:multi-edit="UpdateMultiEditEmits"
                     :disabled="!hasCreateEventsPermission"
                 />
+
                 <div class="flex items-center gap-x-2">
                     <PlanningSwitch
                         :planning="isPlanningEvent"

@@ -100,7 +100,7 @@
                                             v-if="headerObject.firstEventInProject && headerObject.lastEventInProject"
                                             class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/70 px-2.5 py-1 text-zinc-700 ring-1 ring-white/40"
                                         >
-                                        <span class="font-medium">{{ $t('Time period/opening hours') }}:</span>
+                                        <span class="font-medium">{{ $t('Time period') }}:</span>
                                         <span class="tabular-nums">{{ headerObject.firstEventInProject?.start_time }}</span>
                                         <span v-if="headerObject.firstEventInProject?.start_time">{{ $t('Clock') }} –</span>
                                         <span class="tabular-nums">{{ headerObject.lastEventInProject?.end_time }}</span>

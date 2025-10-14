@@ -17,10 +17,10 @@
 
                         <div class="min-w-0">
                             <h1 class="text-xl lg:text-2xl font-semibold tracking-tight">
-                                {{ $t('Guten Tag') }}, {{ user.full_name }}
+                                {{ $t('Good day') }}, {{ user.full_name }}
                             </h1>
                             <p class="text-xs lg:text-sm text-gray-500 mt-0.5">
-                                {{ formattedToday }} · {{ $t('Alles Wichtige auf einen Blick') }}
+                                {{ formattedToday }} · {{ $t('Everything important at a glance') }}
                             </p>
                         </div>
 
@@ -36,19 +36,19 @@
                         <nav class="grid grid-cols-2 sm:flex gap-2">
                             <a :href="route('events')" class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/70 px-3 py-2 text-xs text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition">
                                 <component :is="IconCalendarMonth" class="size-4" />
-                                {{ $t('Kalender') }}
+                                {{ $t('Calendar') }}
                             </a>
                             <a v-if="canViewShifts" :href="route('shifts.plan')" class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-xs text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition">
                                 <component :is="IconCalendarUser" class="size-4" />
-                                {{ $t('Schichtplan') }}
+                                {{ $t('Shift plan') }}
                             </a>
                             <a :href="route('tasks.own')" class="inline-flex items-center gap-2 rounded-xl border border-fuchsia-200 bg-fuchsia-50/70 px-3 py-2 text-xs text-fuchsia-700 hover:bg-fuchsia-50 hover:border-fuchsia-300 transition">
                                 <component :is="IconListCheck" class="size-4" />
-                                {{ $t('Aufgaben') }}
+                                {{ $t('Tasks') }}
                             </a>
                             <a :href="route('notifications.index')" class="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2 text-xs text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition">
                                 <component :is="IconBell" class="size-4" />
-                                {{ $t('Meldungen') }}
+                                {{ $t('Notifications') }}
                             </a>
                         </nav>
                     </div>
@@ -60,53 +60,53 @@
                 <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Heutige Termine') }}</p>
+                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Today\'s appointments') }}</p>
                             <p class="mt-1 text-3xl font-semibold">{{ eventsCountToday }}</p>
                         </div>
                         <div class="size-10 rounded-xl bg-gradient-to-br from-indigo-500/15 to-sky-300/15 flex items-center justify-center">
                             <component :is="IconCalendarMonth" class="size-5 text-indigo-600" />
                         </div>
                     </div>
-                    <p class="mt-2 text-xs text-gray-500">{{ $t('Alle geplanten Termine heute.') }}</p>
+                    <p class="mt-2 text-xs text-gray-500">{{ $t('All scheduled appointments today.') }}</p>
                 </div>
 
                 <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Heutige Schichten') }}</p>
+                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Today\'s shifts') }}</p>
                             <p class="mt-1 text-3xl font-semibold">{{ shiftsCountToday }}</p>
                         </div>
                         <div class="size-10 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-300/15 flex items-center justify-center">
                             <component :is="IconCalendarUser" class="size-5 text-emerald-600" />
                         </div>
                     </div>
-                    <p class="mt-2 text-xs text-gray-500">{{ $t('Deine Einsätze auf einen Blick.') }}</p>
+                    <p class="mt-2 text-xs text-gray-500">{{ $t('Your shifts at a glance.') }}</p>
                 </div>
 
                 <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Meldungen heute') }}</p>
+                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Notifications today') }}</p>
                             <p class="mt-1 text-3xl font-semibold">{{ notificationsCountToday }}</p>
                         </div>
                         <div class="size-10 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-300/15 flex items-center justify-center">
                             <component :is="IconBell" class="size-5 text-amber-600" />
                         </div>
                     </div>
-                    <p class="mt-2 text-xs text-gray-500">{{ $t('Aktuelle Hinweise & News.') }}</p>
+                    <p class="mt-2 text-xs text-gray-500">{{ $t('Current notices & news.') }}</p>
                 </div>
 
                 <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Offene Aufgaben') }}</p>
+                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Open tasks') }}</p>
                             <p class="mt-1 text-3xl font-semibold">{{ openTasksCount }}</p>
                         </div>
                         <div class="size-10 rounded-xl bg-gradient-to-br from-fuchsia-500/15 to-pink-300/15 flex items-center justify-center">
                             <component :is="IconListCheck" class="size-5 text-fuchsia-600" />
                         </div>
                     </div>
-                    <p class="mt-2 text-xs text-gray-500">{{ $t('Die nächsten fälligen To-Dos.') }}</p>
+                    <p class="mt-2 text-xs text-gray-500">{{ $t('The next due to-dos.') }}</p>
                 </div>
             </section>
 
@@ -119,7 +119,7 @@
                         <div class="flex items-center justify-between px-5 py-4">
                             <div>
                                 <h2 class="text-base font-semibold">{{ $t("Today's appointments") }}</h2>
-                                <p class="text-xs text-gray-500">{{ $t('Schneller Überblick über alle Termine des Tages') }}</p>
+                                <p class="text-xs text-gray-500">{{ $t('Quick overview of all appointments of the day') }}</p>
                             </div>
                             <a :href="route('events')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
                                 <component :is="IconCalendarMonth" class="size-4" /> {{ $t('to calendar') }}
@@ -164,7 +164,7 @@
                         <div class="flex items-center justify-between px-5 py-4">
                             <div>
                                 <h2 class="text-base font-semibold">{{ $t('Shifts today') }}</h2>
-                                <p class="text-xs text-gray-500">{{ $t('Deine heutigen Einsätze') }}</p>
+                                <p class="text-xs text-gray-500">{{ $t('Your shifts today') }}</p>
                             </div>
                             <a v-if="canViewShifts" :href="route('shifts.plan')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
                                 <component :is="IconCalendarUser" class="size-4" /> {{ $t('to the shift plan') }}
@@ -195,9 +195,9 @@
                 <section class="col-span-6 xl:col-span-3 space-y-6">
                     <!-- Ankündigungen – groß -->
                     <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-                        <div class="px-5 pt-5">
+                        <div class="px-5 py-4">
                             <h2 class="text-base font-semibold">{{ $t('Notifications today') }}</h2>
-                            <p class="text-xs text-gray-500">{{ $t('Wichtige Meldungen & Änderungen') }}</p>
+                            <p class="text-xs text-gray-500">{{ $t('Important messages & changes') }}</p>
                         </div>
 
                         <div v-if="globalNotification?.image_url || globalNotification?.title" class="mt-4">
@@ -257,7 +257,7 @@
                         <div class="flex items-center justify-between px-5 py-4">
                             <div>
                                 <h2 class="text-base font-semibold">{{ $t('Next tasks') }}</h2>
-                                <p class="text-xs text-gray-500">{{ $t('Deine offenen To-Dos') }}</p>
+                                <p class="text-xs text-gray-500">{{ $t('Your open to-dos') }}</p>
                             </div>
                             <a :href="route('tasks.own')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
                                 <component :is="IconListCheck" class="size-4" /> {{ $t('To the task overview') }}
@@ -288,7 +288,7 @@
                                         class="text-[11px] text-right"
                                         :class="task.isDeadlineInFuture ? 'text-gray-500' : 'text-red-600'"
                                     >
-                                        {{ $t('bis') }} {{ task.deadline }}
+                                        {{ $t('until') }} {{ task.deadline }}
                                     </div>
                                 </div>
 

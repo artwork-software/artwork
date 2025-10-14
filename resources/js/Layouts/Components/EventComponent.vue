@@ -62,13 +62,14 @@
                             color-property="color"
                         >
                         </ArtworkBaseListbox>
-
-                        <BaseInput
-                            v-model="eventName"
-                            id="eventTitle"
-                            :label="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
-                            class="ui-input"
-                        />
+                        <div class="mt-5">
+                            <BaseInput
+                                v-model="eventName"
+                                id="eventTitle"
+                                :label="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
+                                class="ui-input"
+                            />
+                        </div>
                     </div>
 
                     <div class="ui-grid-2 mt-0.5">

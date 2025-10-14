@@ -3257,5 +3257,7 @@
     "Default event duration (minutes)": "Standard-Terminlänge (Minuten)",
     "Quick durations": "Schnelllängen",
     "Set the end time quickly based on the start time.": "Setze die Endzeit schnell basierend auf der Startzeit.",
-    "Excluded items hidden": "Ausgeschlossene Artikel ausblenden"
+    "Excluded items hidden": "Ausgeschlossene Artikel ausblenden",
+    "No day services yet": "Noch keine Tagesdienste",
+    "Create your first day service to get started.": "Erstelle deinen ersten Tagesdienst, um zu beginnen."
 }

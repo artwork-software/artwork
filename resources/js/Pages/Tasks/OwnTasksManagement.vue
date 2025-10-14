@@ -11,18 +11,8 @@
             >
                 <template #actions>
                     <nav class="grid grid-cols-2 sm:flex gap-2">
-                        <Link :href="route('tasks.create')" class="inline-flex items-center gap-2 rounded-xl border border-fuchsia-200 bg-fuchsia-50/70 px-3 py-2 text-xs text-fuchsia-700 hover:bg-fuchsia-50 hover:border-fuchsia-300 transition">
-                            <IconListCheck class="size-4" />
-                            {{ $t('Neue Aufgabe') }}
-                        </Link>
-                        <Link :href="route('checklists.create')" class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/70 px-3 py-2 text-xs text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition">
-                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 6h16M4 12h10M4 18h16M16 4v4M14 6h4"/></svg>
-                            {{ $t('Neue Liste') }}
-                        </Link>
-                        <Link :href="route('tasks.own')" class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-xs text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition">
-                            <IconListCheck class="size-4" />
-                            {{ $t('Meine Aufgaben') }}
-                        </Link>
+                        <BaseUIButton label="New checklist" use-translation is-add-button @click="showChecklistEditModal = true" />
+
                     </nav>
                 </template>
             </ToolbarHeader>
@@ -132,18 +122,20 @@
                         </div>
                     </div>
 
-                    <!-- Save notification -->
-                    <transition enter-active-class="duration-300 ease-out" enter-from-class="opacity-0 -translate-y-1" enter-to-class="opacity-100 translate-y-0" leave-active-class="duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0 -translate-y-1">
-                        <div v-show="filterSaved" class="text-xs bg-emerald-600 text-white rounded-lg px-3 py-1.5">
-                            {{ $t('Die Filter-Einstellungen wurden gespeichert.') }}
-                        </div>
-                    </transition>
-                    <transition enter-active-class="duration-300 ease-out" enter-from-class="opacity-0 -translate-y-1" enter-to-class="opacity-100 translate-y-0" leave-active-class="duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0 -translate-y-1">
-                        <div v-show="filterWillSave" class="text-xs bg-orange-600 text-white rounded-lg px-3 py-1.5">
-                            {{ $t('Die Filter werden in 3 Sekunden gespeichert…') }}
-                        </div>
-                    </transition>
+
                 </div>
+
+                <!-- Save notification -->
+                <transition enter-active-class="duration-300 ease-out" enter-from-class="opacity-0 -translate-y-1" enter-to-class="opacity-100 translate-y-0" leave-active-class="duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0 -translate-y-1">
+                    <div v-show="filterSaved" class="text-xs bg-emerald-600 text-white rounded-lg px-3 py-1.5 mt-5">
+                        {{ $t('Die Filter-Einstellungen wurden gespeichert.') }}
+                    </div>
+                </transition>
+                <transition enter-active-class="duration-300 ease-out" enter-from-class="opacity-0 -translate-y-1" enter-to-class="opacity-100 translate-y-0" leave-active-class="duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0 -translate-y-1">
+                    <div v-show="filterWillSave" class="text-xs bg-orange-600 text-white rounded-lg px-3 py-1.5 mt-5">
+                        {{ $t('Die Filter werden in 3 Sekunden gespeichert…') }}
+                    </div>
+                </transition>
             </section>
 
             <!-- Content -->
@@ -172,28 +164,17 @@
                             <div class="min-w-0">
                                 <div class="flex items-center gap-2">
                                     <h2 class="text-base font-semibold leading-tight truncate">{{ cl.name }}</h2>
-                                    <span v-if="cl.private" class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] text-gray-600">
-                    {{ $t('persönlich') }}
-                  </span>
-                                    <span v-if="cl.hasProject && cl.project?.name" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] text-gray-600">
-                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 7h16M4 12h10M4 17h16"/></svg>
-                    {{ cl.project.name }}
-                  </span>
+                                    <span v-if="cl.private" class="inline-flex items-center rounded-md border border-gray-300 px-1.5 py-0.5 text-[11px] text-gray-600">
+                                    {{ $t('Private') }}
+                                  </span>
+                                  <Link v-if="cl.hasProject && cl.project?.name" class="inline-flex items-center gap-1 rounded-md border border-gray-300 px-1.5 py-0.5 text-[11px] text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-500 ease-in-out duration-200" :href="route('projects.tab', { project: cl.project.id, projectTab: first_project_tasks_tab_id })">
+                                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 7h16M4 12h10M4 17h16"/></svg>
+                                    {{ cl.project.name }}
+                                  </Link>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-0.5">
                                     {{ cl.tasks.length }} {{ $t('Aufgaben') }}
                                 </p>
-                            </div>
-
-                            <div class="flex items-center gap-2">
-                                <Link
-                                    v-if="cl.hasProject && cl.project?.id"
-                                    :href="route('projects.tab', { project: cl.project.id, projectTab: first_project_tasks_tab_id })"
-                                    class="text-xs text-indigo-700 hover:text-indigo-800 inline-flex items-center gap-1"
-                                >
-                                    {{ $t('Zum Projekt') }}
-                                    <ChevronRightIcon class="h-3 w-3" />
-                                </Link>
                             </div>
                         </div>
 
@@ -230,14 +211,12 @@
                                             {{ $t('erledigt am') }} {{ task.done_at }}
                                         </div>
                                         <div class="mt-2 flex items-center justify-end gap-2">
-                                            <Link
-                                                :href="route('tasks.update', { task: task.id })"
-                                                method="get"
-                                                as="button"
+                                            <button
+                                                @click="openTaskModal(task, cl)"
                                                 class="rounded-lg border border-gray-200 px-2 py-1 text-[11px] text-gray-700 hover:bg-gray-50"
                                             >
                                                 {{ $t('Bearbeiten') }}
-                                            </Link>
+                                            </button>
                                             <Link
                                                 :href="route('tasks.destroy', { task: task.id })"
                                                 method="delete"
@@ -256,7 +235,10 @@
                             <!-- Empty state for list without visible tasks -->
                             <div v-if="cl.tasks.length===0" class="rounded-xl border border-dashed border-gray-200 bg-white p-6 text-center">
                                 <p class="text-sm text-gray-600">{{ $t('Keine sichtbaren Aufgaben in dieser Liste.') }}</p>
+
                             </div>
+
+                            <BaseUIButton label="Aufgabe hinzufügen" use-translation is-add-button is-small class="mt-4" @click="openTaskModal(null, cl)" />
                         </div>
                     </section>
                 </div>
@@ -309,12 +291,14 @@
                             <div v-if="cl.tasks.length===0" class="rounded-xl border border-dashed border-gray-200 bg-white p-6 text-center">
                                 <p class="text-sm text-gray-600">{{ $t('Keine sichtbaren Aufgaben in dieser Liste.') }}</p>
                             </div>
+
+                            <BaseUIButton label="Aufgabe hinzufügen" use-translation is-add-button is-small class="mt-4" @click="openTaskModal(null, cl)" />
                         </div>
                     </section>
                 </div>
 
                 <!-- Money Source Tasks -->
-                <section class="mt-10">
+                <section class="mt-10" v-if="moneySourceTasks.length > 0">
                     <h2 class="text-lg font-semibold mb-2">{{ $t('Aufgaben zu Fördermitteln') }}</h2>
                     <div v-if="moneySourceTasks.length" class="rounded-2xl border border-gray-100 bg-white shadow-sm divide-y">
                         <div v-for="task in moneySourceTasks" :key="task.id" class="px-5 py-4">
@@ -333,6 +317,26 @@
                 </section>
             </main>
         </div>
+
+        <AddEditChecklistModal
+            :checklist_templates="checklist_templates"
+            :project="null"
+            :checklist-to-edit="checklistToEdit"
+            :tab_id="null"
+            v-if="showChecklistEditModal"
+            @closed="showChecklistEditModal = false"
+        />
+
+
+        <AddEditTaskModal
+            :project="checklistToEdit?.project"
+            :tab_id="null"
+            :checklist="checklistToEdit"
+            :task-to-edit="taskToEdit"
+            v-if="openAddTaskModal"
+            @closed="openAddTaskModal = false"
+            :is-private="checklistToEdit.private"
+        />
     </AppLayout>
 </template>
 
@@ -346,6 +350,9 @@ import { useTranslation } from '@/Composeables/Translation.js'
 import { IconListCheck, IconCheck, IconX, IconChecklist } from '@tabler/icons-vue'
 import { ChevronRightIcon } from '@heroicons/vue/solid'
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import AddEditTaskModal from "@/Components/Checklist/Modals/AddEditTaskModal.vue";
 
 const $t = useTranslation()
 
@@ -365,7 +372,10 @@ const search = ref('')
 const view = ref<'list' | 'kanban'>((user.value?.checklist_style === 'list' ? 'list' : 'kanban') as 'list' | 'kanban')
 const currentSort = ref<number>(page.props.urlParameters?.filter > 0 ? parseInt(page.props.urlParameters?.filter) : 0)
 const sortOpen = ref(false)
-
+const showChecklistEditModal = ref(false)
+const openAddTaskModal = ref(false)
+const checklistToEdit = ref(null)
+const taskToEdit = ref(null)
 const filterSaved = ref(false)
 const filterWillSave = ref(false)
 const saveDelay = ref(3000)
@@ -376,6 +386,14 @@ const today = computed(() => {
     const dt = new Date()
     return dt.toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 })
+
+const openTaskModal = (task: any, checklist: any) => {
+    checklistToEdit.value = checklist
+    taskToEdit.value = task
+    nextTick(() => {
+        openAddTaskModal.value = true
+    })
+}
 
 const sortLabel = computed(() => {
     switch (currentSort.value) {

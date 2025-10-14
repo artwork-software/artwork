@@ -3249,5 +3249,7 @@
     "Default event duration (minutes)": "Default event duration (minutes)",
     "Quick durations": "Quick durations",
     "Set the end time quickly based on the start time.": "Set the end time quickly based on the start time.",
-    "Excluded items hidden": "Excluded items hidden"
+    "Excluded items hidden": "Excluded items hidden",
+    "No day services yet": "No day services yet",
+    "Create your first day service to get started.": "Create your first day service to get started."
 }

@@ -2,10 +2,7 @@
     <ShiftSettingsHeader :title="$t('Day Services')">
         <!-- Actions -->
         <template #actions>
-            <button class="ui-button-add inline-flex items-center gap-2" @click="openNew">
-                <IconPlus class="size-5" stroke-width="1" />
-                {{ $t('New Day Service') }}
-            </button>
+            <BaseUIButton label="New Day Service" use-translation is-add-button  @click="openNew"/>
         </template>
 
         <!-- Liste -->
@@ -72,13 +69,9 @@
                     <p class="mt-1 text-xs text-gray-500">
                         {{ $t('Create your first day service to get started.') }}
                     </p>
-                    <button
-                        class="ui-button-add mt-4 inline-flex items-center gap-2"
-                        @click="openNew"
-                    >
-                        <IconPlus class="size-5" stroke-width="1" />
-                        {{ $t('New Day Service') }}
-                    </button>
+                    <div class="mt-5">
+                        <BaseUIButton label="New Day Service" use-translation is-add-button @click="openNew"/>
+                    </div>
                 </div>
             </div>
         </div>
@@ -90,7 +83,7 @@
             @closed="closeModal"
         />
 
-        <ConfirmDeleteModal :title="confirmDeleteTitle" :description="confirmDeleteDescription" @closed="closedDeleteDayServiceModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
+        <ConfirmDeleteModal :title="$t(confirmDeleteTitle)" :description="$t(confirmDeleteDescription)" @closed="closedDeleteDayServiceModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </ShiftSettingsHeader>
 
 </template>
@@ -102,6 +95,8 @@ import AddEditDayServiceModal from '@/Pages/Settings/Components/AddEditDayServic
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-vue'
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {router} from "@inertiajs/vue3";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 defineOptions({ name: 'DayServiceIndex' })
 
@@ -116,13 +111,6 @@ const props = defineProps<{
 
 const showAddEditDayServiceModal = ref(false)
 const dayServiceToEdit = ref<typeof props.dayServices[number] | null>(null)
-
-/**
- *  openConfirmDeleteModal: false,
- *             dayServiceToDelete: null,
- *             confirmDeleteTitle: '',
- *             confirmDeleteDescription: ''
- */
 
 const openConfirmDeleteModal = ref(false)
 const dayServiceToDelete = ref<typeof props.dayServices[number] | null>(null)
@@ -144,10 +132,6 @@ function closeModal() {
     dayServiceToEdit.value = null
 }
 
-/**
- * Erzeugt einen transparenten Farb-Tint für das Icon-Badge.
- * opacity 0..1 → mischt Hex mit Weiß.
- */
 function hexTint(hex: string, opacity = 0.1): string {
     // Fallbacks & Normalisierung
     if (!hex) return 'rgba(0,0,0,0.05)'
@@ -175,7 +159,7 @@ function closedDeleteDayServiceModal() {
 function submitDelete() {
     if (!dayServiceToDelete.value?.id) return
     // @ts-ignore
-    window.$inertia.delete(route('day-service.destroy', dayServiceToDelete.value.id), {
+    router.delete(route('day-service.destroy', dayServiceToDelete.value.id), {
         preserveScroll: true,
         preserveState: true,
         onFinish: () => {

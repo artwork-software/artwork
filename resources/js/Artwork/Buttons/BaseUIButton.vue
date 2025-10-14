@@ -1,7 +1,7 @@
 <template>
     <button
         type="button"
-        :class="isAddButton ? 'ui-button-add' : 'ui-button'"
+        :class="isAddButton ? isSmall ? 'ui-button-add-small' : 'ui-button-add' : isSmall ? 'ui-button-small' : 'ui-button'"
         :disabled="disabled"
         :aria-disabled="String(!!disabled)"
         @click="onClick"
@@ -9,7 +9,7 @@
     >
         <PropertyIcon
             :name="iconResolved"
-            class="size-5 sm:size-6"
+            :class="isSmall ? 'size-4 sm:size-5' : 'size-5 sm:size-6'"
             :stroke-width="strokeWidthResolved"
         />
         {{ useTranslation ? $t(label) : label }}
@@ -35,6 +35,7 @@ const props = defineProps<{
     /** useTranslation default true */
     useTranslation?: boolean;
     isAddButton?: boolean;
+    isSmall?: boolean;
 }>();
 
 const emit = defineEmits<{

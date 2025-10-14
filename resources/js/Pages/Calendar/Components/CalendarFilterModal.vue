@@ -4,12 +4,12 @@
             <div>
                 <div class="flex items-start justify-between">
                     <div>
-                        <TinyPageHeadline
+                        <BasePageTitle
                             :title="$t('Saved filters')"
                             :description="$t('Your saved filters. Click on a filter to apply it.')"
                             v-if="!saveFilterOption"
                         />
-                        <TinyPageHeadline
+                        <BasePageTitle
                             :title="$t('Save filter')"
                             :description="$t('Save your current filter settings.')"
                             v-else
@@ -54,7 +54,7 @@
             <div>
                 <div class="flex items-start justify-between">
                     <div>
-                        <TinyPageHeadline
+                        <BasePageTitle
                             :title="$t('Active filters')"
                             :description="$t('Your active filters. Click on a filter to remove it.')"
                         />
@@ -163,6 +163,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {IconChevronDown} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const props = defineProps({
     filterOptions: {

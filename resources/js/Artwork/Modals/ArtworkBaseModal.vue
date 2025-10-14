@@ -25,19 +25,19 @@
                                                 </p>
                                             </div>
                                             <div class="flex items-center gap-x-3">
-                                                <div class="ui-button" @click="showBackdrop = !showBackdrop">
+                                                <div class="" @click="showBackdrop = !showBackdrop">
                                                     <div>
-                                                        <ToolTipComponent :icon="IconTexture" :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
+                                                        <ToolTipComponent :icon="IconTexture" :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')" classes-button="ui-button"/>
                                                     </div>
                                                 </div>
-                                                <div ref="dragHandleRef" class="ui-button hover:!bg-yellow-50">
+                                                <div ref="dragHandleRef">
                                                     <div>
-                                                        <ToolTipComponent :icon="IconDragDrop" :tooltip-text="$t('Hold here to move')"/>
+                                                        <ToolTipComponent :icon="IconDragDrop" :tooltip-text="$t('Hold here to move')"  classes-button="ui-button hover:!bg-yellow-50"/>
                                                     </div>
                                                 </div>
-                                                <div class="ui-button hover:!bg-red-50 !text-red-500" @click="$emit('close')">
+                                                <div class="" @click="$emit('close')">
                                                     <div>
-                                                        <ToolTipComponent :icon="IconX" :tooltip-text="$t('Close Window')" classes="!text-red-500"/>
+                                                        <ToolTipComponent :icon="IconX" :tooltip-text="$t('Close Window')" classes="!text-red-500" classes-button="ui-button hover:!bg-red-50 !text-red-500"/>
                                                     </div>
                                                 </div>
                                             </div>

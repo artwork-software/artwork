@@ -2,176 +2,131 @@
     <AppLayout title="Projektübersicht">
         <div class="container mx-auto pt-6 relative">
             <!-- Headbar (neu) -->
-            <div class="-mx-2 sm:mx-0">
-                <div
-                    class="rounded-2xl border border-zinc-200/70 bg-white/85 backdrop-blur px-3 py-3 sm:px-5 sm:py-4 shadow-sm"
-                >
-                    <div class="flex flex-wrap items-center gap-3 sm:gap-4">
-                        <!-- Brand + Titel -->
-                        <div class="flex items-center gap-3 mr-auto">
-                            <div class="size-9 rounded-xl bg-blue-600/10 text-blue-700 flex items-center justify-center">
-                                <!-- kleiner geometrischer Akzent -->
-                                <component :is="IconGeometry" class="size-6" />
-                            </div>
-                            <div>
-                                <div class="text-zinc-900  text-xl sm:text-2xl font-semibold tracking-tight">
-                                    {{ $t('Projects') }}
-                                </div>
-                                <div v-if="projects?.data?.length" class="text-xs text-zinc-500">
-                                    {{ projects.data.length }} {{ $t('Projects') }}
-                                </div>
-                            </div>
-                        </div>
+            <ToolbarHeader
+                :icon="IconGeometry"
+                :title="$t('Projects')"
+                icon-bg-class="bg-blue-600/10 text-blue-700"
+                :description="projects.data.length + ' ' + $t('projects in total')"
+                v-model="project_search"
+                :search-enabled="true"
+                :search-label="$t('Search for Projects')"
+                :search-tooltip="$t('Search')"
+            >
+                <template #actions>
+                    <button
+                        type="button"
+                        @click="toggleMyProjects()"
+                        :aria-pressed="!!showOnlyMyProjects"
+                        class="ui-button flex items-center gap-2"
+                        :class="showOnlyMyProjects ? 'bg-blue-600/10 text-blue-700 border-blue-200/60': 'text-zinc-700 dark:text-zinc-200'">
+                        <span class="size-2 rounded-full" :class="showOnlyMyProjects ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-700'"></span>
+                        {{ $t('Only mine') }}
+                    </button>
 
-                        <!-- Quick-Search (Icon -> Input) -->
-                        <div class="relative flex items-center gap-2">
-                            <button
-                                v-if="!showSearchbar"
-                                @click="openSearchbar"
-                                type="button"
-                                class="inline-flex items-center justify-center rounded-xl border border-zinc-200/80 px-2.5 py-2 hover:bg-zinc-50 transition"
-                                aria-label="Search"
-                            >
-                                <ToolTipComponent :icon="IconSearch" icon-size="h-6 w-6" :tooltip-text="$t('Search')" direction="bottom" />
-                            </button>
-
-                            <div v-else class="w-72 sm:w-96 flex items-center gap-2">
-                                <BaseInput
-                                    type="text"
-                                    is-small
-                                    ref="searchBarInput"
-                                    id="searchBarInput"
-                                    :label="$t('Search for projects')"
-                                    v-model="project_search"
-                                    class="w-full"
-                                />
-                                <button
-                                    type="button"
-                                    class="shrink-0 rounded-xl border border-transparent px-1.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
-                                    @click="closeSearchbar()"
-                                    aria-label="Close search"
-                                >
-                                    <IconX class="h-6 w-6 text-zinc-500" />
+                    <!-- Filter -->
+                    <BaseFilter :only-icon="true" :left="false" white-background>
+                        <div class="w-full px-2 py-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Filters') }}</div>
+                                <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetFilter">
+                                    {{ $t('Deselect all') }}
                                 </button>
                             </div>
-                        </div>
 
-                        <!-- Quick-Pill: nur meine -->
-                        <button
-                            type="button"
-                            @click="toggleMyProjects()"
-                            :aria-pressed="!!showOnlyMyProjects"
-                            class="ui-button flex items-center gap-2"
-                            :class="showOnlyMyProjects ? 'bg-blue-600/10 text-blue-700 border-blue-200/60': 'text-zinc-700 dark:text-zinc-200'">
-                            <span class="size-2 rounded-full" :class="showOnlyMyProjects ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-700'"></span>
-                            {{ $t('Only mine') }}
-                        </button>
+                            <div class="space-y-3">
+                                <!-- Toggles -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                        <input v-model="showProjectGroups" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Project groups') }}</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                        <input v-model="showProjects" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Projects') }}</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                        <input v-model="showExpiredProjects" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show expired projects') }}</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                        <input v-model="showFutureProjects" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show future projects') }}</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                        <input v-model="showProjectsWithoutEvents" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show projects without events') }}</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                        <input v-model="showOnlyProjectsWithoutGroup" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show only projects without group') }}</span>
+                                    </label>
+                                </div>
 
-                        <!-- Filter -->
-                        <BaseFilter :only-icon="true" :left="false" white-background classes="ui-button">
-                            <div class="w-full px-2 py-4">
-                                <div class="flex items-center justify-between mb-2">
-                                    <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Filters') }}</div>
-                                    <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetFilter">
-                                        {{ $t('Deselect all') }}
+                                <!-- States -->
+                                <div class="border-t border-zinc-200 dark:border-zinc-800 pt-2">
+                                    <button
+                                        type="button"
+                                        class="w-full flex items-center justify-between text-sm text-zinc-700 dark:text-zinc-200"
+                                        @click="showProjectStateFilter = !showProjectStateFilter"
+                                    >
+                                        <span>{{ $t('Project status') }}</span>
+                                        <IconChevronDown v-if="!showProjectStateFilter" class="h-5 w-5 text-zinc-500" />
+                                        <IconChevronUp v-else class="h-5 w-5 text-zinc-500" />
+                                    </button>
+                                    <div v-if="showProjectStateFilter" class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <label v-for="state in computedStates" :key="state.id" class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                            <input v-model="state.clicked" type="checkbox" class="size-4 accent-emerald-600" />
+                                            <span class="text-sm text-zinc-700 dark:text-zinc-200 truncate">{{ state.name }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-end">
+                                    <button
+                                        class="text-xs font-semibold text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer transition"
+                                        @click="applyFiltersAndSort()"
+                                        type="button"
+                                    >
+                                        {{ $t('Apply') }}
                                     </button>
                                 </div>
-
-                                <div class="space-y-3">
-                                    <!-- Toggles -->
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
-                                            <input v-model="showProjectGroups" type="checkbox" class="size-4 accent-emerald-600" />
-                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Project groups') }}</span>
-                                        </label>
-                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
-                                            <input v-model="showProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Projects') }}</span>
-                                        </label>
-                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
-                                            <input v-model="showExpiredProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show expired projects') }}</span>
-                                        </label>
-                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
-                                            <input v-model="showFutureProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show future projects') }}</span>
-                                        </label>
-                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
-                                            <input v-model="showProjectsWithoutEvents" type="checkbox" class="size-4 accent-emerald-600" />
-                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show projects without events') }}</span>
-                                        </label>
-                                        <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
-                                            <input v-model="showOnlyProjectsWithoutGroup" type="checkbox" class="size-4 accent-emerald-600" />
-                                            <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show only projects without group') }}</span>
-                                        </label>
-                                    </div>
-
-                                    <!-- States -->
-                                    <div class="border-t border-zinc-200 dark:border-zinc-800 pt-2">
-                                        <button
-                                            type="button"
-                                            class="w-full flex items-center justify-between text-sm text-zinc-700 dark:text-zinc-200"
-                                            @click="showProjectStateFilter = !showProjectStateFilter"
-                                        >
-                                            <span>{{ $t('Project status') }}</span>
-                                            <IconChevronDown v-if="!showProjectStateFilter" class="h-5 w-5 text-zinc-500" />
-                                            <IconChevronUp v-else class="h-5 w-5 text-zinc-500" />
-                                        </button>
-                                        <div v-if="showProjectStateFilter" class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                            <label v-for="state in computedStates" :key="state.id" class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
-                                                <input v-model="state.clicked" type="checkbox" class="size-4 accent-emerald-600" />
-                                                <span class="text-sm text-zinc-700 dark:text-zinc-200 truncate">{{ state.name }}</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-center justify-end">
-                                        <button
-                                            class="text-xs font-semibold text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer transition"
-                                            @click="applyFiltersAndSort()"
-                                            type="button"
-                                        >
-                                            {{ $t('Apply') }}
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
-                        </BaseFilter>
+                        </div>
+                    </BaseFilter>
 
-                        <!-- Sort -->
-                        <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-72" classes="ui-button">
-                            <div class="flex items-center justify-between py-1 px-1">
-                                <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Sort by') }}</div>
-                                <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetSort()">
-                                    {{ $t('Reset') }}
-                                </button>
-                            </div>
-                            <MenuItem v-for="projectSortEnumName in projectSortEnumNames" :key="projectSortEnumName" v-slot="{ active }">
-                                <div
-                                    @click="sortBy = projectSortEnumName; applyFiltersAndSort()"
-                                    :class="[
+                    <!-- Sort -->
+                    <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-72" classes="ui-button">
+                        <div class="flex items-center justify-between py-1 px-1">
+                            <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Sort by') }}</div>
+                            <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetSort()">
+                                {{ $t('Reset') }}
+                            </button>
+                        </div>
+                        <MenuItem v-for="projectSortEnumName in projectSortEnumNames" :key="projectSortEnumName" v-slot="{ active }">
+                            <div
+                                @click="sortBy = projectSortEnumName; applyFiltersAndSort()"
+                                :class="[
                                         active ? 'bg-blue-50 text-artwork-buttons-create ' : 'text-zinc-600 ',
                                         'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm rounded-md'
                                       ]"
-                                >
-                                    {{ getSortEnumTranslation(projectSortEnumName) }}
-                                    <IconCheck v-if="userProjectManagementSetting.sort_by === projectSortEnumName" class="w-5 h-5" />
-                                </div>
-                            </MenuItem>
-                        </BaseMenu>
+                            >
+                                {{ getSortEnumTranslation(projectSortEnumName) }}
+                                <IconCheck v-if="userProjectManagementSetting.sort_by === projectSortEnumName" class="w-5 h-5" />
+                            </div>
+                        </MenuItem>
+                    </BaseMenu>
 
-                        <!-- Export -->
-                        <button type="button" @click="openExportModal" class="ui-button">
-                            <ToolTipComponent :icon="IconFileExport" icon-size="h-6 w-6" :tooltip-text="$t('Export project list')" direction="bottom" />
-                        </button>
+                    <!-- Export -->
+                    <button type="button" @click="openExportModal">
+                        <ToolTipComponent :icon="IconFileExport" icon-size="h-6 w-6" :tooltip-text="$t('Export project list')" direction="bottom" classes-button="ui-button" />
+                    </button>
 
-                        <button class="ui-button" @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')">
-                            <component :is="IconPlus" class="size-6" stroke-width="1"/>
-                            {{ $t('New project') }}
-                        </button>
-                    </div>
-                </div>
-            </div>
+                    <button class="ui-button-add" @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')">
+                        <component :is="IconCirclePlus" class="size-6" stroke-width="1"/>
+                        {{ $t('New project') }}
+                    </button>
+                </template>
+            </ToolbarHeader>
 
             <!-- Last visited -->
             <div class="my-5 flex items-center justify-between">
@@ -190,10 +145,10 @@
             <!-- Header row -->
             <div class="overflow-x-auto">
                 <div class="min-w-fit">
-                    <div class="mb-4">
-                        <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/50 backdrop-blur px-3 py-2">
+                    <div class="">
+                        <div class="border-b border-zinc-200 backdrop-blur px-3 py-2">
                             <div
-                                class="grid items-center text-zinc-600 dark:text-zinc-300 text-xs font-semibold tracking-wide"
+                                class="grid items-center text-sm font-semibold text-gray-900 tracking-wide"
                                 :style="`grid-template-columns: ${gridTemplateColumns}`"
                             >
                                 <div
@@ -223,7 +178,7 @@
                     </div>
 
                     <!-- Pinned -->
-                    <div v-else-if="pinnedProjects?.length" class="mt-3 space-y-4">
+                    <div v-else-if="pinnedProjects?.length" class="divide-y divide-gray-200">
                         <SingleProjectInManagement
                             v-for="project in pinnedProjects"
                             :key="project.id"
@@ -242,7 +197,7 @@
                     </div>
 
                     <!-- List -->
-                    <div v-if="!isLoading" class="mt-2 space-y-2">
+                    <div v-if="!isLoading" class="divide-y divide-gray-200">
                         <SingleProjectInManagement
                             v-for="project in projectComponents"
                             :key="project.id"
@@ -345,7 +300,7 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {
     IconCheck,
     IconChevronDown,
-    IconChevronUp,
+    IconChevronUp, IconCirclePlus,
     IconFileExport,
     IconGeometry,
     IconPlus,
@@ -371,6 +326,7 @@ import { useExportTabEnums } from "@/Layouts/Components/Export/Enums/ExportTabEn
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 
 const { can, role, canSeeComponent } = usePermission(usePage().props);
 const { getSortEnumTranslation } = useSortEnumTranslation();

@@ -6,6 +6,7 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class InventoryArticleRepository
 {
@@ -203,6 +204,7 @@ class InventoryArticleRepository
                 'quantity' => $detailedArticleData['quantity'],
                 'description' => $detailedArticleData['description'],
                 'inventory_article_status_id' => $detailedArticleData['status']['id'] ?? null,
+                'type_number' => Str::uuid()->toString(),
             ]);
 
             if(array_key_exists('properties', $detailedArticleData)) {

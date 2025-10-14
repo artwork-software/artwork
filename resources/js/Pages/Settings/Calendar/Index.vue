@@ -1,59 +1,49 @@
 <template>
-    <AppLayout title="Calendar">
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1 my-6">{{ $t('Calendar Settings') }}</h2>
-                <div class="xsLight">
-                    {{ $t('Define global settings for the calendar.') }}
-                </div>
+    <CalendarSettingsHeader :title="$t('Calendar Settings')" :description="$t('Define global settings for the calendar.')">
+        <div class="card white p-5">
+            <div>
+                <BasePageTitle
+                    :title="$t('Calendar Settings')"
+                    :description="$t('Specify the times that are to be displayed in a reduced or compressed form in the daily view. With this setting, you determine which time intervals are highlighted less to improve the clarity of the daily view. Specify the exact time period you want so that the hours in your daily calendar are displayed in a clear and structured way.')" />
             </div>
 
-            <div class="my-10 card white p-5">
+            <div class="my-5">
+               <VisualFeedback :text="visualFeedbackText" :showSaveSuccess="showVisualFeedback" :background-color="visualFeedbackBackgroundColor" />
 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mt-5">
+                    <div>
+                        <BaseInput type="time"
+                            id="start"
+                            v-model="tinyTimePeriod.start"
+                            :label="$t('Start-Time')"
+                            @focusout="saveTinyCalendarSettings"
 
-                <div>
-                    <TinyPageHeadline
-                        :title="$t('Daily View Calendar Settings')"
-                        :description="$t('Specify the times that are to be displayed in a reduced or compressed form in the daily view. With this setting, you determine which time intervals are highlighted less to improve the clarity of the daily view. Specify the exact time period you want so that the hours in your daily calendar are displayed in a clear and structured way.')" />
-                </div>
-
-                <div class="my-5">
-                   <VisualFeedback :text="visualFeedbackText" :showSaveSuccess="showVisualFeedback" :background-color="visualFeedbackBackgroundColor" />
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mt-5">
-                        <div>
-                            <BaseInput type="time"
-                                id="start"
-                                v-model="tinyTimePeriod.start"
-                                :label="$t('Start-Time')"
-                                @focusout="saveTinyCalendarSettings"
-
-                            />
-                        </div>
-                        <div>
-                            <BaseInput type="time"
-                                id="end"
-                                v-model="tinyTimePeriod.end"
-                                :label="$t('End-Time')"
-                                @focusout="saveTinyCalendarSettings"
-                            />
-                        </div>
+                        />
+                    </div>
+                    <div>
+                        <BaseInput type="time"
+                            id="end"
+                            v-model="tinyTimePeriod.end"
+                            :label="$t('End-Time')"
+                            @focusout="saveTinyCalendarSettings"
+                        />
                     </div>
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </CalendarSettingsHeader>
 </template>
 
 <script setup>
 
-import AppLayout from "@/Layouts/AppLayout.vue";
+import CalendarSettingsHeader from "@/Pages/Settings/Components/CalendarSettingsHeader.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import {useForm, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const props = defineProps({
     calendarSettings: {

@@ -22,7 +22,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <TinyPageHeadline
+                    <BasePageTitle
                         :title="$t('Article properties')"
                         :description="$t('Add properties to the category that the items in this category should have.')"
                     />
@@ -196,7 +196,7 @@
 
                 <div>
                     <div class="flex items-start justify-between">
-                        <TinyPageHeadline
+                        <BasePageTitle
                             :title="$t('Sub-Categories')"
                             :description="$t('Add sub-categories to the category.')"
                         />
@@ -239,7 +239,7 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <TinyPageHeadline
+                                        <BasePageTitle
                                             :title="$t('Article properties')"
                                             :description="$t('Add properties to the category that the items in this category should have.')"
                                         />
@@ -447,6 +447,7 @@ import {
 } from "@tabler/icons-vue";
 
 import draggable from "vuedraggable";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const props = defineProps({
     category: {

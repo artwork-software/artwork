@@ -42,57 +42,20 @@
 
             <!-- Status -->
             <div :style="getColumnSize(1)" v-if="usePage().props.event_status_module">
-                <Listbox
+                <ArtworkBaseListbox
                     v-model="event.status"
+                    :items="eventStatuses"
+                    :search-keys="['name','id']"
+                    :placeholder="$t('Please select a Room')"
                     @update:model-value="updateEventInDatabase"
-                    :id="'status-' + index"
-                    as="div"
-                    class="relative"
-                    :disabled="canEditComponent === false"
-                >
-                    <Float auto-placement :offset="4" class="relative w-fit" floating-as="div">
-                        <ListboxButton
-                            :id="'status-' + index + 'button'"
-                            @click="storeFocus('status-' + index + 'button', 'listbox')"
-                            :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']"
-                            class="print:border-0 rounded-lg"
-                        >
-                            <div class="flex items-center gap-x-2">
-                                <div>
-                                    <div class="block w-5 h-5 rounded-full" :style="{ backgroundColor: event.status?.color }" />
-                                </div>
-                                <div class="truncate print:w-full" :style="getColumnTextSize(1)">
-                                    {{ event.status?.name }}
-                                </div>
-                            </div>
-                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden" aria-hidden="true" />
-                        </ListboxButton>
-
-                        <ListboxOptions
-                            class="w-fit rounded-xl border border-zinc-200/60 dark:border-zinc-800/60
-                     bg-primary/95 backdrop-blur max-h-56 overflow-y-auto text-sm z-50 shadow-lg"
-                        >
-                            <ListboxOption
-                                v-for="status in eventStatuses"
-                                :key="status.name"
-                                :value="status"
-                                v-slot="{ selected }"
-                                class="hover:bg-indigo-800/90 text-secondary cursor-pointer px-3 py-2 flex justify-between"
-                            >
-                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex items-center gap-x-2']">
-                                    <div class="block w-3 h-3 rounded-full" :style="{ backgroundColor: status?.color }" />
-                                    {{ status.name }}
-                                </div>
-                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true" />
-                            </ListboxOption>
-                        </ListboxOptions>
-                    </Float>
-                </Listbox>
+                    :show-color-indicator="true"
+                    color-property="color"
+                />
             </div>
 
             <!-- Type -->
             <div :style="getColumnSize(2)">
-                <BaseCombobox
+                <!--<BaseCombobox
                     v-model="event.type"
                     :items="sortedEventTypes"
                     :return-object="true"
@@ -103,6 +66,15 @@
                     :placeholder="$t('Please select a Event Type')"
                     :search-fields="['name']"
                     coerce="number"
+                />-->
+
+                <ArtworkBaseListbox
+                    v-model="event.type"
+                    :items="sortedEventTypes"
+                    :search-keys="['name','id']"
+                    @update:model-value="updateEventInDatabase"
+                    :show-color-indicator="true"
+                    color-property="hex_code"
                 />
             </div>
 
@@ -125,7 +97,14 @@
 
             <!-- Room -->
             <div :style="getColumnSize(4)">
-                <BaseCombobox
+                <ArtworkBaseListbox
+                    v-model="event.room"
+                    :items="sortedRooms"
+                    :search-keys="['name','id']"
+                    :placeholder="$t('Please select a Room')"
+                    @update:model-value="updateEventInDatabase"
+                />
+                <!--<BaseCombobox
                     v-model="event.room"
                     :items="sortedRooms"
                     :return-object="true"
@@ -136,7 +115,7 @@
                     :placeholder="$t('Please select a Room')"
                     :search-fields="['name']"
                     coerce="number"
-                />
+                />-->
 
             </div>
 
@@ -304,6 +283,7 @@ import {Float} from "@headlessui-float/vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseCombobox from "@/Artwork/Inputs/BaseCombobox.vue";
 import axios from "axios";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 
 const focusRegistry  = inject('focusRegistry');      // { id, type }
 const storeFocus     = inject('storeFocusGlobal');

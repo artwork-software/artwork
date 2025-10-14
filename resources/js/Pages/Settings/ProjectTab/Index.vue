@@ -1,6 +1,6 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
+import ProjectSettingsHeader from "@/Pages/Settings/Components/ProjectSettingsHeader.vue";
 import draggable from "vuedraggable";
 import SingleTabComponent from "@/Pages/Settings/Components/SingleTabComponent.vue";
 import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
@@ -84,27 +84,16 @@ function updateComponentOrder(components) {
 </script>
 
 <template>
-    <AppLayout>
-        <div class="artwork-container">
-            <div>
-                <h2 class="headline1 my-6">{{ t('Tab Settings') }}</h2>
-                <div class="xsLight">
-                    {{ t('Define global settings for projects.') }}
-                </div>
-            </div>
-
-            <ProjectTabs />
-
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <ProjectSettingsHeader :title="t('Tab Settings')" :description="t('Define global settings for projects.')">
+        <template #actions>
+            <button class="ui-button-add" @click="showAddEditModal = true">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ t('Create tab') }}
+            </button>
+        </template>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 <!-- Tab components -->
                 <div class="w-full col-span-1">
-                    <div class="flex justify-end mb-5">
-                        <GlassyIconButton
-                            :icon="IconPlus"
-                            @click="showAddEditModal = true"
-                            :text="t('Create tab')"
-                        />
-                    </div>
 
                     <div class="card white p-5">
                         <draggable
@@ -170,10 +159,8 @@ function updateComponentOrder(components) {
                     </div>
                 </div>
             </div>
-        </div>
-
         <AddEditTabModal v-if="showAddEditModal" @close="showAddEditModal = false" />
-    </AppLayout>
+    </ProjectSettingsHeader>
 </template>
 
 <style scoped>

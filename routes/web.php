@@ -1564,6 +1564,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ]
     );
 
+    Route::get('/event/standard-values', [EventController::class, 'standardEventValues'])
+        ->name('event.standard.values');
+
+    Route::patch('/event/standard-values/update', [EventController::class, 'saveStandardEventValues'])
+        ->name('event.standard.values.update');
+
     Route::group(['prefix' => 'day-service'], function (): void {
         Route::get('index', [DayServiceController::class, 'index'])->name('day-service.index');
         Route::post('store', [DayServiceController::class, 'store'])->name('day-service.store');

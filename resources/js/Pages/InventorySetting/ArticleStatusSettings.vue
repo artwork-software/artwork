@@ -1,7 +1,6 @@
 <script setup>
 
 import InventorySettingsHeader from "@/Pages/InventorySetting/Components/InventorySettingsHeader.vue";
-import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SingleArticleStatus from "@/Pages/InventorySetting/Components/SingleArticleStatus.vue";
@@ -15,16 +14,11 @@ const props = defineProps({
 </script>
 
 <template>
-    <InventorySettingsHeader>
+    <InventorySettingsHeader
+        :title="$t('Status Settings')"
+        :description="$t('Manage your article status settings here.')"
+    >
         <div class="mb-10 card white p-5">
-            <div class="sm:flex sm:items-center">
-                <div class="sm:flex-auto">
-                    <TinyPageHeadline
-                        :title="$t('Status Settings')"
-                        :description="$t('Manage your article status settings here.')"
-                    />
-                </div>
-            </div>
 
 
             <div class="mt-8 flow-root">

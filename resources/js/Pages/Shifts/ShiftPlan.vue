@@ -57,7 +57,7 @@
                                                 multiEditCalendarDays.length === 0 ?
                                                 'bg-gray-600' :
                                                 'cursor-pointer bg-artwork-error hover:bg-artwork-error/90',
-                                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
                                             ]">
                                     {{ $t('Delete') }}
                                 </button>
@@ -65,46 +65,21 @@
                         </div>
                     </template>
                     <template #moreButtons>
-                        <Switch @click="changeDailyViewMode" v-model="dailyViewMode" :class="[dailyViewMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                            <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent
-                                        :icon="IconCalendarWeek"
-                                        icon-size="h-4 w-4"
-                                        :tooltip-text="$t('Daily view')"
-                                        direction="left"
-                                    />
-                                </span>
-                                <span :class="[dailyViewMode ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent
-                                        :icon="IconCalendarWeek"
-                                        icon-size="h-4 w-4"
-                                        :tooltip-text="$t('Daily view')"
-                                        direction="left"
-                                    />
-                                </span>
-                            </span>
-                        </Switch>
-                        <Switch @click="toggleMultiEditModeCalendar" v-model="multiEditModeCalendar" :class="[multiEditModeCalendar ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                            <span :class="[multiEditModeCalendar ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                <span :class="[multiEditModeCalendar ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent
-                                        :icon="IconPencil"
-                                        icon-size="h-4 w-4"
-                                        :tooltip-text="$t('Edit')"
-                                        direction="left"
-                                    />
-                                </span>
-                                <span :class="[multiEditModeCalendar ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <ToolTipComponent
-                                        :icon="IconPencil"
-                                        icon-size="h-4 w-4"
-                                        :tooltip-text="$t('Edit')"
-                                        direction="left"
-                                    />
-                                </span>
-                            </span>
-                        </Switch>
+                        <SwitchIconTooltip
+                            v-model="dailyViewMode"
+                            :tooltip-text="$t('Daily view')"
+                            size="md"
+                            @change="changeDailyViewMode"
+                            :icon="IconCalendarWeek"
+                        />
+
+                        <SwitchIconTooltip
+                            v-model="multiEditModeCalendar"
+                            :tooltip-text="$t('Edit')"
+                            size="md"
+                            @change="toggleMultiEditModeCalendar"
+                            :icon="IconPencil"
+                        />
                     </template>
                 </ShiftPlanFunctionBar>
             </div>
@@ -269,55 +244,21 @@
                          :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
                         <div class="flex items-center justify-between w-full fixed py-3 z-20 bg-artwork-navigation-background px-3" :style="{top: calculateTopPositionOfUserOverView}">
                             <div class="flex items-center justify-end gap-x-3">
-                                <Switch @click="toggleMultiEditMode" v-model="multiEditMode" :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                                    <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                        <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                            <ToolTipComponent
-                                                :icon="IconPencil"
-                                                icon-size="h-4 w-4"
-                                                :tooltip-text="$t('Edit')"
-                                                direction="top"
-                                            />
-                                        </span>
-                                        <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                            <ToolTipComponent
-                                                :icon="IconPencil"
-                                                icon-size="h-4 w-4"
-                                                :tooltip-text="$t('Edit')"
-                                                direction="top"
-                                            />
-                                        </span>
-                                    </span>
-                                </Switch>
+                                <SwitchIconTooltip
+                                    v-model="multiEditMode"
+                                    :tooltip-text="$t('Edit')"
+                                    size="md"
+                                    @change="toggleMultiEditMode"
+                                    :icon="IconPencil"
+                                />
                                 <div class="flex items-center gap-x-2" v-if="dayServices && selectedDayService">
-                                    <Switch @click="toggleDayServiceMode" v-model="dayServiceMode"
-                                            :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative z-20 inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                                        <span class="sr-only">Use setting</span>
-                                        <span :class="[dayServiceMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                        <span
-                                            :class="[dayServiceMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                            aria-hidden="true">
-                                            <ToolTipComponent
-                                                :icon="selectedDayService?.icon"
-                                                icon-size="h-4 w-4"
-                                                :tooltip-text="$t('Day Services')"
-                                                direction="bottom"
-                                                :style="{color: selectedDayService?.hex_color}"
-                                            />
-                                        </span>
-                                        <span
-                                            :class="[dayServiceMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                            aria-hidden="true">
-                                            <ToolTipComponent
-                                                :icon="selectedDayService?.icon"
-                                                icon-size="h-4 w-4"
-                                                :tooltip-text="$t('Day Services')"
-                                                direction="bottom"
-                                                :style="{color: selectedDayService?.hex_color}"
-                                            />
-                                        </span>
-                                    </span>
-                                    </Switch>
+                                    <SwitchIconTooltip
+                                        v-model="dayServiceMode"
+                                        :tooltip-text="$t('Day Services')"
+                                        size="md"
+                                        @change="toggleDayServiceMode"
+                                        :icon="selectedDayService?.icon"
+                                    />
                                     <DayServiceFilter :current-selected-day-service="selectedDayService"
                                                       :day-services="dayServices"
                                                       @update:current-selected-day-service="updateSelectedDayService"/>
@@ -366,60 +307,20 @@
                                 </div>
                             </div>
                             <div class="flex items-center justify-end gap-x-3 pr-24 z-20">
-                                <Switch @click="toggleHighlightMode" v-model="highlightMode"
-                                        :class="[highlightMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                                    <span class="sr-only">Use setting</span>
-                                    <span
-                                        :class="[highlightMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                      <span
-                                          :class="[highlightMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                          aria-hidden="true">
-                                          <ToolTipComponent
-                                              :icon="IconBulb"
-                                              icon-size="h-4 w-4"
-                                              :tooltip-text="$t('Highlight')"
-                                              direction="bottom"
-                                          />
-                                      </span>
-                                      <span
-                                          :class="[highlightMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                          aria-hidden="true">
-                                          <ToolTipComponent
-                                              :icon="IconBulb"
-                                              icon-size="h-4 w-4"
-                                              :tooltip-text="$t('Highlight')"
-                                              direction="bottom"
-                                          />
-                                      </span>
-                                </span>
-                                </Switch>
-                                <Switch @click="toggleCompactMode" v-model="$page.props.auth.user.compact_mode"
-                                        :class="[$page.props.auth.user.compact_mode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                                    <span class="sr-only">Use setting</span>
-                                    <span
-                                        :class="[$page.props.auth.user.compact_mode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                      <span
-                                          :class="[$page.props.auth.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                          aria-hidden="true">
-                                          <ToolTipComponent
-                                              :icon="IconList"
-                                              icon-size="h-4 w-4"
-                                              :tooltip-text="$t('Compact view')"
-                                              direction="bottom"
-                                          />
-                                      </span>
-                                      <span
-                                          :class="[$page.props.auth.user.compact_mode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                          aria-hidden="true">
-                                          <ToolTipComponent
-                                              :icon="IconList"
-                                              icon-size="h-4 w-4"
-                                              :tooltip-text="$t('Compact view')"
-                                              direction="bottom"
-                                          />
-                                      </span>
-                                </span>
-                                </Switch>
+                                <SwitchIconTooltip
+                                    v-model="highlightMode"
+                                    :tooltip-text="$t('Highlight')"
+                                    size="md"
+                                    @change="toggleHighlightMode"
+                                    :icon="IconBulb"
+                                />
+                                <SwitchIconTooltip
+                                    v-model="$page.props.auth.user.compact_mode"
+                                    :tooltip-text="$t('Compact view')"
+                                    size="md"
+                                    @change="toggleCompactMode"
+                                    :icon="!$page.props.auth.user.compact_mode ? 'IconTextDecrease' : 'IconTextIncrease'"
+                                />
                                 <BaseFilter :whiteIcon="true" :onlyIcon="true">
                                     <div class="mx-auto w-full max-w-md max-h-44 rounded-2xl border-none mt-2 pb-3">
                                         <div class="relative flex items-start mb-2">
@@ -456,7 +357,7 @@
                                         </div>
                                     </div>
                                 </BaseFilter>
-                                <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-fit" right white-icon>
+                                <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-fit" right white-icon classesButton="ui-button hover:!bg-artwork-navigation-color/10 text-artwork-buttons-context">
                                     <div class="flex items-center justify-end py-1">
                                     <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="this.resetSort()">
                                         {{ $t('Reset') }}
@@ -493,7 +394,7 @@
                                 </BaseMenu>
                             </div>
                         </div>
-                        <div class="pt-14 z-10">
+                        <div class="pt-20 z-10">
                             <table class="w-full text-white overflow-y-scroll z-10">
                                 <div class="z-10">
                                     <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
@@ -574,7 +475,7 @@
                                                      v-for="(userDayService, position) in userDayServices"
                                                      class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center"
                                                      :class="position > 0 ? '-ml-3' : ''">
-                                                    <component :is="userDayService.icon" class="h-4 w-4"
+                                                    <PropertyIcon :name="userDayService.icon" class="h-4 w-4"
                                                                :style="{color: userDayService.hex_color}"/>
                                                 </div>
                                             </div>
@@ -653,7 +554,7 @@
                                                      v-for="(userDayService, position) in userDayServices"
                                                      class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center"
                                                      :class="position > 0 ? '-ml-3' : ''">
-                                                    <component :is="userDayService.icon" class="h-4 w-4"
+                                                    <PropertyIcon :name="userDayService.icon" class="h-4 w-4"
                                                                :style="{color: userDayService.hex_color}"/>
                                                 </div>
                                             </div>
@@ -767,7 +668,7 @@ import {
     IconArrowDown,
     IconArrowUp, IconBulb, IconCalendarWeek,
     IconChevronDown, IconChevronsDown,
-    IconFileText, IconList,
+    IconFileText, IconGeometry, IconList,
     IconPencil, IconPlus,
     IconX
 } from "@tabler/icons-vue";
@@ -794,6 +695,8 @@ import DeleteCalendarRoomShiftEntriesModal from "@/Pages/Shifts/Components/Delet
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
@@ -806,6 +709,8 @@ export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        PropertyIcon,
+        SwitchIconTooltip,
         ShiftCommitDateSelectModal,
         BaseMenuItem,
         DeleteCalendarRoomShiftEntriesModal,
@@ -1098,6 +1003,7 @@ export default {
         },
     },
     methods: {
+        IconGeometry,
         IconList,
         IconBulb,
         IconChevronsDown,
@@ -1108,7 +1014,6 @@ export default {
         IconAlertSquareRounded,
         usePage,
         changeDailyViewMode(){
-            this.dailyViewMode = !this.dailyViewMode;
             router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
                 daily_view: this.dailyViewMode
             }, {
@@ -1739,12 +1644,10 @@ export default {
             this.typeToHighlight = null;
             this.multiEditMode = false;
             this.dayServiceMode = false;
-            this.highlightMode = !this.highlightMode;
         },
         toggleMultiEditMode() {
             this.highlightMode = false;
             this.dayServiceMode = false;
-            this.multiEditMode = !this.multiEditMode;
 
             if (!this.multiEditMode) {
                 this.userForMultiEdit = null;
@@ -1754,7 +1657,6 @@ export default {
         toggleMultiEditModeCalendar() {
             this.highlightMode = false;
             this.dayServiceMode = false;
-            this.multiEditModeCalendar = !this.multiEditModeCalendar;
 
             if (!this.multiEditModeCalendar){
                 this.multiEditCalendarDays = [];
@@ -1792,11 +1694,10 @@ export default {
         toggleDayServiceMode() {
             this.highlightMode = false;
             this.multiEditMode = false;
-            this.dayServiceMode = !this.dayServiceMode;
         },
         toggleCompactMode() {
             router.post(route('user.compact.mode.toggle', {user: this.$page.props.auth.user.id}), {
-                compact_mode: !this.$page.props.auth.user.compact_mode
+                compact_mode: this.$page.props.auth.user.compact_mode
             }, {
                 preserveScroll: true,
                 preserveState: true

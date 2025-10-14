@@ -1,16 +1,13 @@
 <template>
     <app-layout :title="$t(title)">
         <div class="container mx-auto mt-6">
-            <div class="flex items-start justify-between gap-6">
-                <PageTitle :title="$t(title) ?? $t('Users & teams')" :description="$t(description)" />
-
-            </div>
-            <UserTabs />
-            <div class="mt-6">
+            <div class="my-6">
                 <slot name="tabBar"></slot>
             </div>
-
-            <div class="mt-8">
+            <div>
+                <UserTabs />
+            </div>
+            <div class="mt-6">
                 <slot name="default"></slot>
             </div>
         </div>

@@ -3,27 +3,32 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue'
+import { computed, defineAsyncComponent, unref, type Component } from 'vue'
 import { IconTag } from '@tabler/icons-vue' // Fallback, sofort verfügbar
 
-const props = defineProps<{ name?: string }>()
-const cache = new Map<string, any>()
+// name kann String | Component | Ref davon sein
+const props = defineProps<{ name?: unknown }>()
+const cache = new Map<string, Component>()
+
+/** Ist es (vermutlich) eine Vue-Komponente? */
+function isVueComponent(v: unknown): v is Component {
+    return typeof v === 'object' || typeof v === 'function'
+}
 
 /**
- * Akzeptiert: "home", "home-2", "icon-home-2", "IconHome2"
- * → "IconHome2"
+ * Normalisiert verschiedene Schreibweisen:
+ * "home", "home-2", "icon-home-2", "IconHome2" -> "IconHome2"
  */
-function toTablerExportName(input?: string): string | null {
-    if (!input) return null
+function toTablerExportName(input: string): string {
     let s = input.trim()
 
     // "IconHome2" bleibt so
     if (/^Icon[A-Z0-9]/.test(s)) return s
 
-    // "icon-home-2" → "home-2"
-    s = s.replace(/^icon[-_]*/, '')
+    // "icon-home-2" -> "home-2"
+    s = s.replace(/^icon[-_]*/i, '')
 
-    // "home-2" → "Home2"
+    // "home-2" -> "Home2"
     const pascal = s
         .toLowerCase()
         .replace(/(^\w|[-_]\w)/g, m => m.replace(/[-_]/, '').toUpperCase())
@@ -40,12 +45,20 @@ function loadTablerModule() {
     return tablerModPromise
 }
 
-/** Holt (und cached) die Icon-Komponente nach Name */
-function resolveTablerIcon(name?: string) {
-    const exportName = toTablerExportName(name)
-    if (!exportName) return IconTag
+/** Holt (und cached) die Icon-Komponente nach Name oder gibt direkt die übergebene Komponente zurück */
+function resolveTablerIcon(nameLike: unknown): Component {
+    const n = unref(nameLike) as any
 
-    if (cache.has(exportName)) return cache.get(exportName)
+    if (n == null) return IconTag
+
+    // Wenn bereits eine Komponente übergeben wird: direkt verwenden
+    if (isVueComponent(n)) return n as Component
+
+    // Alles andere sicher in String wandeln
+    const exportName = toTablerExportName(String(n))
+
+    const cached = cache.get(exportName)
+    if (cached) return cached
 
     const Comp = defineAsyncComponent({
         loader: async () => {
@@ -59,7 +72,7 @@ function resolveTablerIcon(name?: string) {
         delay: 0,
         timeout: 8000,
         onError(err, _retry, fail, attempts) {
-            // nach 2 Fehlversuchen nicht weiter stressen
+            // nach 2 Fehlversuchen abbrechen
             if (attempts > 1) fail(err)
         }
     })
@@ -68,5 +81,5 @@ function resolveTablerIcon(name?: string) {
     return Comp
 }
 
-const Comp = computed(() => resolveTablerIcon(props.name))
+const Comp = computed<Component>(() => resolveTablerIcon(props.name))
 </script>

@@ -4,8 +4,10 @@
             direction="bottom"
             :tooltip-text="$t('Filter')"
             :icon="IconFilter"
-            icon-size="h-7 w-7"
-            @click="showCalendarFilterModal = true"/>
+            icon-size="h-5 w-5"
+            @click="showCalendarFilterModal = true"
+            classesButton="ui-button"
+        />
 
         <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="checkIfAnyFilterIsActive">
               <span class="absolute inline-flex h-full w-full motion-safe:animate-ping rounded-full bg-blue-400 opacity-75"></span>

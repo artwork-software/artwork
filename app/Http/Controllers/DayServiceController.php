@@ -69,7 +69,7 @@ class DayServiceController extends Controller
      */
     public function destroy(DayService $dayService): void
     {
-        //
+        $this->dayServicesService->delete($dayService);
     }
 
     /**

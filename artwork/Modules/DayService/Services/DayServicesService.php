@@ -39,6 +39,16 @@ readonly class DayServicesService
         $this->dayServiceRepository->save($dayService);
     }
 
+    public function delete(DayService $dayService): void
+    {
+        // Delete all assignments first to remove relationships
+        $dayService->users()->detach();
+        $dayService->freelancers()->detach();
+        $dayService->serviceProviders()->detach();
+        // Delete the day service itself
+        $this->dayServiceRepository->delete($dayService);
+    }
+
     public function attachDayServiceable(DayService $dayService, $dayServiceable, string $date): void
     {
         $dayServiceable?->dayServices()->attach($dayService->id, ['date' => $date]);

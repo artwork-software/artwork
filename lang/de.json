@@ -30,6 +30,7 @@
     "Are you sure you would like to delete this API token?": "Möchten Sie dieses API-Token wirklich löschen?",
     "Are you sure you would like to leave this team?": "Sind Sie sicher, dass Sie dieses Team verlassen möchten?",
     "Are you sure you would like to remove this person from the team?": "Sind Sie sicher, dass Sie diese Person aus dem Team entfernen möchten?",
+    "Are you sure you want to delete the selected day service? All assignments to this day service will be removed.": "Sind Sie sicher, dass Sie den ausgewählten Tagesdienst löschen möchten? Alle Zuweisungen zu diesem Tagesdienst werden entfernt.",
     "Bad Gateway": "Schlechtes Tor",
     "Bad Request": "Schlechte Anfrage",
     "Bandwidth Limit Exceeded": "Bandbreitengrenze überschritten",

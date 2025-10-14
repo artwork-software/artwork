@@ -21,12 +21,11 @@ class HolidayImport
     public function handle(
         HolidayService $holidayService
     ): void {
-        $holidayService->deleteAllFormApi();
-
+        $holidayService->deleteAllFromApi();
 
         $settings = app(HolidaySettings::class);
         $subdivisions = Subdivision::whereIn('id', $settings->subdivisions)->get();
-        $responses = $holidayService->getHolidaysFormAPI(
+        $responses = $holidayService->getHolidaysFromAPI(
             selectedSubdivisions: $subdivisions,
             publicHolidays: $settings->public_holidays,
             schoolHolidays: $settings->school_holidays,
@@ -43,7 +42,7 @@ class HolidayImport
                 collect($holiday['subdivisions'])->pluck('id')->toArray(),
                 Carbon::parse($holiday['startDate']),
                 Carbon::parse($holiday['endDate']),
-                $holiday['nationwide'] ? 'DE' : 'DE',
+                $holiday['country'],
                 false,
                 0,
                 $holiday['id'],

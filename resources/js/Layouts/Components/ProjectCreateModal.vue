@@ -234,7 +234,7 @@
 
                             <div class="px-11 py-6 -mx-5 bg-lightBackgroundGray" v-if="createSettings.managers">
                                 <div class="font-semibold text-sm pb-2">{{ t('Project management')}}</div>
-                                <UserSearch @user-selected="addUserToProject" only-manager />
+                                <UserSearch @user-selected="addUserToProject" only-manager label="Search for users" />
 
                                 <div v-if="assignedUsers?.length > 0" class="flex items-center gap-4 mt-3">
                                     <div v-for="(user, index) in assignedUsers" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">

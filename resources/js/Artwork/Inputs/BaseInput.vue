@@ -16,14 +16,15 @@
             :aria-required="String(required)"
             :aria-describedby="error ? errorId : undefined"
             :class="[
-        inputBaseClass,
-        density.inputPadding,
-        disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white',
-        hasRightAffordance ? density.rightPadding : '',
-        effectiveType === 'number'
-          ? 'appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
-          : ''
-      ]"
+                inputClasses,
+                inputBaseClass,
+                density.inputPadding,
+                disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white',
+                hasRightAffordance ? density.rightPadding : '',
+                effectiveType === 'number'
+                  ? 'appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+                  : ''
+            ]"
             @input="isTimeProxy ? onTimeProxyInput($event) : undefined"
             @blur="maybeAutofillTime"
             @change="maybeAutofillTime"
@@ -84,7 +85,7 @@ const props = defineProps({
 
     step: { type: Number, default: 1 },
     showLoading: { type: Boolean, default: false },
-
+    inputClasses: { type: [String, Array, Object], default: '' },
     error: { type: String, default: '' },
 
     /** NEW: aktiviert den Text-Proxy für time-Autofill */

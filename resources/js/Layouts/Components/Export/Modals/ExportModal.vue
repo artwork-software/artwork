@@ -1,11 +1,15 @@
 <template>
-    <ArtworkBaseModal @close="close()" title="" description="">
-        <div class="export-modal-container">
+    <ArtworkBaseModal @close="close()" description="" modal-size="max-w-4xl" :title="activeTab">
+        <div class="p-3">
             <ul class="tab-container mb-4">
                 <li v-if="props.enums.length > 1"
                     v-for="(tab) in props.enums"
                     @click="activeTab = tab"
-                    :class="[activeTab === tab ? 'active' : '', 'tab']">
+                    :class="[activeTab === tab
+                ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'
+                : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
+              'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer'
+            ]">
                     {{ $t(tab) }}
                 </li>
             </ul>
@@ -13,7 +17,7 @@
                 <template v-if="tab === exportTabEnums.PDF_CALENDAR_EXPORT">
                     <PdfCalendarExport v-if="activeTab === exportTabEnums.PDF_CALENDAR_EXPORT"
                                        @close="close()"
-                                       :project="configuration[exportTabEnums.PDF_CALENDAR_EXPORT].project"/>
+                                       :project="configuration[exportTabEnums.PDF_CALENDAR_EXPORT]?.project"/>
                 </template>
                 <template v-else-if="tab === exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT">
                     <ExcelBudgetByBudgetDeadlineExport v-if="activeTab === exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT" @close="close()"/>

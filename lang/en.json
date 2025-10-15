@@ -3289,5 +3289,8 @@
     "Assign {count} crafts": "Assign {count} crafts",
     "{count} selected": "{count} selected",
     "No crafts match your search.": "No crafts match your search.",
-    "Select crafts": "Select crafts"
+    "Select crafts": "Select crafts",
+    "Set the width in pixels": "Set the width in pixels",
+    "Suggest": "Suggest",
+    "These widths affect only the bulk view table. You can adjust them anytime.": "These widths affect only the bulk view table. You can adjust them anytime."
 }

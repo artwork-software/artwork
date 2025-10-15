@@ -1,177 +1,238 @@
 <template>
-    <h1 class="headline1 -my-4" style="font-size:18px;">{{ $t(exportTabEnum)}}</h1>
-    <h2 class="text-sm text-gray-500 -mb-2">
-        {{ $t('All Events are exported by given settings') }}
-    </h2>
-    <ExportTypeSlider @on-update="(bool) => exportForm.desiresTimespanExport = bool"/>
-    <hr class="pt-2"/>
-    <div v-if="!exportForm.desiresTimespanExport" class="flex flex-col gap-y-2">
-        <ProjectSearch class="-mt-4"
-                       @project-selected="addConditionalProject"/>
-        <div class="flex flex-row flex-wrap mt-2.5 gap-y-0.5">
-            <TagComponent v-for="conditionalProject in conditionalProjects"
-                          :method="removeConditionalProject"
-                          :property="conditionalProject.id"
-                          :displayed-text="conditionalProject.name"/>
-        </div>
+    <div class="mx-auto w-full max-w-5xl">
+        <div class="flex flex-col space-y-6">
 
-        <LastedProjects
-            :limit="10"
-            @select="addConditionalProject"
-        />
-    </div>
-    <div v-else class="-mt-4 flex flex-row gap-x-2">
-        <BaseInput type="date" id="startDate" v-model="conditionalDateStart" :label="$t('Start date')" class="-mt-4"/>
-        <BaseInput type="date" id="endDate" v-model="conditionalDateEnd" :label="$t('End date')" class="-mt-4"/>
-    </div>
-    <span v-if="datesInvalid()" class="errorText !text-xs">
-        {{ $t('Start date must not be after the end date!') }}
-    </span>
-    <hr class="pt-2"/>
-    <div class="flex flex-row items-center">
-        <h2 class="headline2 !text-sm">{{ $t('Filter') }}</h2>
-        <ChevronDownIcon v-if="!showFilters" class="w-5 h-5 cursor-pointer" @click="showFilters = true"/>
-        <ChevronUpIcon v-if="showFilters" class="w-5 h-5 cursor-pointer" @click="showFilters = false"/>
-    </div>
-    <div v-if="showFilters" class="grid grid-cols-3 gap-5">
-        <template v-for="(filterDefinitions, filterCategory) in receivedFilters">
-            <div v-if="filterCategory === 'roomCategories'" class="flex flex-col gap-y-0.5">
-                <h3 class="headline3 !text-sm">{{ $t('Room categories') }}</h3>
-                <template v-for="filter in filterDefinitions"
-                          :key="filter.id">
-                    <div class="flex flex-row items-center gap-x-1">
-                        <input :id="'cb-' + filterCategory + '-' + filter.id"
-                               v-model="exportForm.filter[filterCategory]"
-                               :value="filter.id"
-                               type="checkbox"
-                               class="input-checklist p-0"/>
-                        <label :for="'cb-' + filterCategory + '-' + filter.id"
-                               :class="[exportForm.filter[filterCategory].includes(filter.id) ? '' : '', 'text-xs']"
-                               class="text-secondary cursor-pointer hover:text-green-500">
-                            {{ filter.name }}
-                        </label>
+            <!-- Kopfbereich -->
+            <section class="">
+                <h1 class="text-lg font-semibold text-zinc-900">
+                    {{ $t(exportTabEnum) }}
+                </h1>
+                <p class="mt-1 text-sm text-zinc-600">
+                    {{ $t('All Events are exported by given settings') }}
+                </p>
+            </section>
+
+            <!-- Export-Typ (Zeitraum / Projekte) -->
+            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+                <ExportTypeSlider @on-update="(bool) => exportForm.desiresTimespanExport = bool" />
+
+                <!-- Projekte -->
+                <div v-if="!exportForm.desiresTimespanExport" class="space-y-3">
+                    <ProjectSearch
+                        class="-mt-2"
+                        @project-selected="addConditionalProject"
+                    />
+                    <div class="flex flex-row flex-wrap gap-1.5">
+                        <TagComponent
+                            v-for="conditionalProject in conditionalProjects"
+                            :key="conditionalProject.id"
+                            :method="removeConditionalProject"
+                            :property="conditionalProject.id"
+                            :displayed-text="conditionalProject.name"
+                        />
                     </div>
-                </template>
-            </div>
-            <div v-if="filterCategory === 'roomAttributes'" class="flex flex-col gap-y-0.5">
-                <h3 class="headline3 !text-sm">{{ $t('Room properties') }}</h3>
-                <template v-for="filter in filterDefinitions"
-                          :key="filter.id">
-                    <div class="flex flex-row items-center gap-x-1">
-                        <input :id="'cb-' + filterCategory + '-' + filter.id"
-                               v-model="exportForm.filter[filterCategory]"
-                               :value="filter.id"
-                               type="checkbox"
-                               class="input-checklist p-0"/>
-                        <label :for="'cb-' + filterCategory + '-' + filter.id"
-                               :class="[exportForm.filter[filterCategory].includes(filter.id) ? '' : '', 'text-xs']"
-                               class="text-secondary cursor-pointer hover:text-green-500">
-                            {{ filter.name }}
-                        </label>
+
+                    <div class="pt-1">
+                        <LastedProjects :limit="10" @select="addConditionalProject" />
                     </div>
-                </template>
-            </div>
-            <div v-if="filterCategory === 'eventTypes'" class="flex flex-col gap-y-0.5">
-                <h3 class="headline3 !text-sm">{{ $t('Event Types') }}</h3>
-                <div class="grid grid-cols-2 gap-y-0.5 gap-x-2">
-                <template v-for="filter in filterDefinitions"
-                          :key="filter.id">
-                    <div class="flex flex-row items-center gap-x-1">
-                        <input :id="'cb-' + filterCategory + '-' + filter.id"
-                               v-model="exportForm.filter[filterCategory]"
-                               :value="filter.id"
-                               type="checkbox"
-                               class="input-checklist p-0"/>
-                        <label :for="'cb-' + filterCategory + '-' + filter.id"
-                               :class="[exportForm.filter[filterCategory].includes(filter.id) ? '' : '', 'text-xs']"
-                               class="text-secondary cursor-pointer hover:text-green-500">
-                            {{ filter.name }}
-                        </label>
-                    </div>
-                </template>
-                <template v-for="(translationKey, key) in receivedFilters['eventAttributes']">
-                    <div class="flex flex-row items-center gap-x-1">
-                        <input :id="'cb-' + translationKey"
-                               v-model="exportForm.filter['eventAttributes']"
-                               :value="key"
-                               type="checkbox"
-                               class="input-checklist p-0"/>
-                        <label :for="'cb-' + translationKey"
-                               :class="[exportForm.filter['eventAttributes'].includes(key) ? '' : '', 'text-xs']"
-                               class="text-secondary cursor-pointer hover:text-green-500">
-                            {{ $t(translationKey) }}
-                        </label>
-                    </div>
-                </template>
                 </div>
-            </div>
-            <div v-if="filterCategory === 'areas'" class="flex flex-col gap-y-0.5">
-                <h3 class="headline3 !text-sm">{{ $t('Areas') }}</h3>
-                <template v-for="filter in filterDefinitions"
-                          :key="filter.id">
-                    <div class="flex flex-row items-center gap-x-1">
-                        <input :id="'cb-' + filterCategory + '-' + filter.id"
-                               v-model="exportForm.filter[filterCategory]"
-                               :value="filter.id"
-                               type="checkbox"
-                               class="input-checklist p-0"/>
-                        <label :for="'cb-' + filterCategory + '-' + filter.id"
-                               :class="[exportForm.filter[filterCategory].includes(filter.id) ? '' : '', 'text-xs']"
-                               class="text-secondary cursor-pointer hover:text-green-500">
-                            {{ filter.name }}
-                        </label>
-                    </div>
-                </template>
-            </div>
-            <div v-if="filterCategory === 'rooms'" class="flex flex-col gap-y-0.5">
-                <h3 class="headline3 !text-sm">{{ $t('Rooms') }}</h3>
-                <template v-for="filter in filterDefinitions"
-                          :key="filter.id">
-                    <div class="flex flex-row items-center gap-x-1">
-                        <input :id="'cb-' + filterCategory + '-' + filter.id"
-                               v-model="exportForm.filter[filterCategory]"
-                               :value="filter.id"
-                               type="checkbox"
-                               class="input-checklist p-0"/>
-                        <label :for="'cb-' + filterCategory + '-' + filter.id"
-                               :class="[exportForm.filter[filterCategory].includes(filter.id) ? '' : '', 'text-xs']"
-                               class="text-secondary cursor-pointer hover:text-green-500">
-                            {{ filter.name }}
-                        </label>
-                    </div>
-                </template>
-            </div>
-        </template>
-    </div>
-    <template v-if="isExcelEventListExport()">
-        <div class="flex flex-row items-center">
-            <h2 class="headline2 !text-sm">{{ $t('Columns') }}</h2>
-            <ChevronDownIcon v-if="!showColumns" class="w-5 h-5 cursor-pointer" @click="showColumns = true"/>
-            <ChevronUpIcon v-if="showColumns" class="w-5 h-5 cursor-pointer" @click="showColumns = false"/>
-        </div>
-        <div v-if="showColumns" class="flex flex-col gap-y-0.5">
-            <template v-for="(translationKey, column) in availableColumns">
-                <div v-if="column !== 'artists' || showArtists" class="flex flex-row items-center gap-x-1">
-                    <input :id="'cb-' + column"
-                           v-model="exportForm.desiredColumns"
-                           :value="column"
-                           type="checkbox"
-                           class="input-checklist p-0"/>
-                    <label :for="'cb-' + column"
-                           :class="[exportForm.desiredColumns.includes(column) ? '' : '', 'text-xs']"
-                           class="text-secondary cursor-pointer hover:text-green-500">
-                        {{ $t(translationKey) }}
-                    </label>
+
+                <!-- Zeitraum -->
+                <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <BaseInput
+                        type="date"
+                        id="startDate"
+                        v-model="conditionalDateStart"
+                        :label="$t('Start date')"
+                    />
+                    <BaseInput
+                        type="date"
+                        id="endDate"
+                        v-model="conditionalDateEnd"
+                        :label="$t('End date')"
+                    />
+                    <p v-if="datesInvalid()" class="col-span-full text-xs text-red-600">
+                        {{ $t('Start date must not be after the end date!') }}
+                    </p>
                 </div>
-            </template>
+            </section>
+
+            <!-- Filter -->
+            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Filter') }}</h2>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900"
+                        @click="showFilters = !showFilters"
+                    >
+                        <span v-if="!showFilters">{{ $t('Show') }}</span>
+                        <span v-else>{{ $t('Hide') }}</span>
+                        <ChevronDownIcon v-if="!showFilters" class="h-5 w-5" />
+                        <ChevronUpIcon v-else class="h-5 w-5" />
+                    </button>
+                </div>
+
+                <div v-if="showFilters" class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    <!-- Room Categories -->
+                    <div v-if="receivedFilters['roomCategories']" class="space-y-2">
+                        <h3 class="text-sm font-medium text-zinc-900">{{ $t('Room categories') }}</h3>
+                        <div class="space-y-1.5">
+                            <template v-for="filter in receivedFilters['roomCategories']" :key="filter.id">
+                                <label class="flex items-center gap-2 text-xs text-zinc-700 cursor-pointer">
+                                    <input
+                                        class="input-checklist"
+                                        type="checkbox"
+                                        :id="`cb-roomCategories-${filter.id}`"
+                                        v-model="exportForm.filter.roomCategories"
+                                        :value="filter.id"
+                                    />
+                                    <span>{{ filter.name }}</span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Room Attributes -->
+                    <div v-if="receivedFilters['roomAttributes']" class="space-y-2">
+                        <h3 class="text-sm font-medium text-zinc-900">{{ $t('Room properties') }}</h3>
+                        <div class="space-y-1.5">
+                            <template v-for="filter in receivedFilters['roomAttributes']" :key="filter.id">
+                                <label class="flex items-center gap-2 text-xs text-zinc-700 cursor-pointer">
+                                    <input
+                                        class="input-checklist"
+                                        type="checkbox"
+                                        :id="`cb-roomAttributes-${filter.id}`"
+                                        v-model="exportForm.filter.roomAttributes"
+                                        :value="filter.id"
+                                    />
+                                    <span>{{ filter.name }}</span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Event Types + Event Attributes -->
+                    <div v-if="receivedFilters['eventTypes']" class="space-y-2">
+                        <h3 class="text-sm font-medium text-zinc-900">{{ $t('Event Types') }}</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-x-3">
+                            <template v-for="filter in receivedFilters['eventTypes']" :key="filter.id">
+                                <label class="flex items-center gap-2 text-xs text-zinc-700 cursor-pointer">
+                                    <input
+                                        class="input-checklist"
+                                        type="checkbox"
+                                        :id="`cb-eventTypes-${filter.id}`"
+                                        v-model="exportForm.filter.eventTypes"
+                                        :value="filter.id"
+                                    />
+                                    <span>{{ filter.name }}</span>
+                                </label>
+                            </template>
+
+                            <template v-for="(translationKey, key) in receivedFilters['eventAttributes']" :key="key">
+                                <label class="flex items-center gap-2 text-xs text-zinc-700 cursor-pointer">
+                                    <input
+                                        class="input-checklist"
+                                        type="checkbox"
+                                        :id="`cb-${translationKey}`"
+                                        v-model="exportForm.filter.eventAttributes"
+                                        :value="key"
+                                    />
+                                    <span>{{ $t(translationKey) }}</span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Areas -->
+                    <div v-if="receivedFilters['areas']" class="space-y-2">
+                        <h3 class="text-sm font-medium text-zinc-900">{{ $t('Areas') }}</h3>
+                        <div class="space-y-1.5">
+                            <template v-for="filter in receivedFilters['areas']" :key="filter.id">
+                                <label class="flex items-center gap-2 text-xs text-zinc-700 cursor-pointer">
+                                    <input
+                                        class="input-checklist"
+                                        type="checkbox"
+                                        :id="`cb-areas-${filter.id}`"
+                                        v-model="exportForm.filter.areas"
+                                        :value="filter.id"
+                                    />
+                                    <span>{{ filter.name }}</span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Rooms -->
+                    <div v-if="receivedFilters['rooms']" class="space-y-2">
+                        <h3 class="text-sm font-medium text-zinc-900">{{ $t('Rooms') }}</h3>
+                        <div class="space-y-1.5">
+                            <template v-for="filter in receivedFilters['rooms']" :key="filter.id">
+                                <label class="flex items-center gap-2 text-xs text-zinc-700 cursor-pointer">
+                                    <input
+                                        class="input-checklist"
+                                        type="checkbox"
+                                        :id="`cb-rooms-${filter.id}`"
+                                        v-model="exportForm.filter.rooms"
+                                        :value="filter.id"
+                                    />
+                                    <span>{{ filter.name }}</span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Spalten (nur Event-List-Export) -->
+            <section v-if="isExcelEventListExport()" class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Columns') }}</h2>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900"
+                        @click="showColumns = !showColumns"
+                    >
+                        <span v-if="!showColumns">{{ $t('Show') }}</span>
+                        <span v-else>{{ $t('Hide') }}</span>
+                        <ChevronDownIcon v-if="!showColumns" class="h-5 w-5" />
+                        <ChevronUpIcon v-else class="h-5 w-5" />
+                    </button>
+                </div>
+
+                <div v-if="showColumns" class="grid grid-cols-1 sm:grid-cols-2 gap-y-2">
+                    <template v-for="(translationKey, column) in availableColumns" :key="column">
+                        <div v-if="column !== 'artists' || showArtists" class="flex items-center gap-2">
+                            <input
+                                :id="`cb-${column}`"
+                                v-model="exportForm.desiredColumns"
+                                :value="column"
+                                type="checkbox"
+                                class="input-checklist"
+                            />
+                            <label
+                                :for="`cb-${column}`"
+                                class="text-xs text-zinc-700 cursor-pointer hover:text-green-600"
+                            >
+                                {{ $t(translationKey) }}
+                            </label>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <section class="flex items-center justify-end">
+                <BaseUIButton
+                    @click="initializeDownload()"
+                    :label="$t('Export')"
+                    icon="IconFileExport"
+                    :disabled="computedValidation"
+                    is-add-button
+                />
+            </section>
+
         </div>
-    </template>
-    <BaseButton :disabled="computedValidation"
-                class="mt-4 w-40 gap-x-2 self-center justify-center"
-                @click="initializeDownload()"
-                :text="$t('Export')">
-        <DocumentReportIcon class="h-4 w-4"/>
-    </BaseButton>
+    </div>
 </template>
 
 <script setup>
@@ -188,6 +249,7 @@ import {useTranslation} from "@/Composeables/Translation.js";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const receivedFilters = ref([]);
 axios.get(route('calendar.filters')).then((response) => receivedFilters.value = response.data);

@@ -1,243 +1,300 @@
 <template>
-    <div class="flex flex-col gap-y-1.5">
-        <BaseInput
-            id="title"
-            v-model="pdf.title"
-            :label="$t('Heading')"/>
-        <div v-if="showModalInformation"
-             class="p-2 bg-blue-50 text-blue-500 rounded-lg border border-blue-200">
-            <div class="flex items-start p-3 gap-x-2">
-                <IconExclamationCircle class="w-6 h-6" stroke-width="2"/>
-                <p class="text-sm w-fit">
-                    {{ $t('If a project is specified, the project period is used for the export. If no project is specified, you can either specify the start and end date yourself or your current calendar start and end date will be used automatically.') }}
-                </p>
-            </div>
-            <div class="text-end px-3 py-2 text-xs underline cursor-pointer" @click="showModalInformation = false">
-                {{ $t('Close note') }}
-            </div>
-        </div>
-        <div :class="pdfSelectedProject ? 'pt-4' : 'pt-8'" class="px-4 pb-4 bg-backgroundGray rounded-lg border border-gray-300">
-            <ProjectSearch v-if="!pdfSelectedProject"
-                           class="-mt-5"
-                           @project-selected="addProjectToPdf"
-                           no-project-groups
-                           get-first-last-event/>
-            <div  v-else class="flex flex-col">
-                <h3 class="font-semibold">{{ pdfSelectedProject.name }}</h3>
-                <div class="text-sm" v-if="pdfSelectedProject?.first_event && pdfSelectedProject?.last_event">
-                    {{ $t('Project period') }}:
-                    <span class="text-blue-500" v-if="pdfSelectedProject.first_event.start_time">{{ pdfSelectedProject.first_event.start_time }}</span>
-                    -
-                    <span class="text-blue-500" v-if="pdfSelectedProject.last_event.end_time">{{ pdfSelectedProject.last_event.end_time }}</span>
+    <div class="mx-auto w-full max-w-4xl"> <!-- zentrieren + begrenzen -->
+        <div class="flex flex-col space-y-6"> <!-- mehr vertikaler Rhythmus -->
+
+            <!-- Titel + Hinweis -->
+            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+                <BaseInput id="title" v-model="pdf.title" :label="$t('Heading')" />
+
+                <div
+                    v-if="showModalInformation"
+                    class="rounded-xl border border-blue-200 bg-blue-50/70 p-4"
+                >
+                    <div class="flex items-start gap-x-3">
+                        <PropertyIcon name="IconExclamationCircle" class="size-5 min-h-5 min-w-5 text-blue-500"/>
+                        <p class="text-sm text-blue-500">
+                            {{
+                                $t(
+                                    'If a project is specified, the project period is used for the export. If no project is specified, you can either specify the start and end date yourself or your current calendar start and end date will be used automatically.'
+                                )
+                            }}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        class="mt-2 block w-fit text-xs text-red-500 underline"
+                        @click="showModalInformation = false"
+                    >
+                        {{ $t('Close note') }}
+                    </button>
                 </div>
-                <div class="text-blue-500 underline text-xs cursor-pointer" @click="pdfSelectedProject = null">
-                    {{ $t('Cancel project selection') }}
-                </div>
-            </div>
-            <LastedProjects
-                :limit="10"
-                @select="addProjectToPdf"
-            />
-        </div>
-        <div class="flex flex-row gap-x-2" v-if="!pdfSelectedProject">
-            <BaseInput type="date"
-                v-model="pdf.start"
-                :label="$t('Start date')"
-                id="start"/>
-            <BaseInput type="date"
-                v-model="pdf.end"
-                :label="$t('End date')"
-                id="end"/>
-        </div>
-        <hr class="mt-2.5"/>
-        <Listbox as="div" v-model="selectedPaperSize">
-            <ListboxLabel class="xsLight">{{$t('Paper size')}}</ListboxLabel>
-            <div class="relative mt-2">
-                <ListboxButton class="menu-button">
-                    <div class="block truncate">{{ selectedPaperSize.name }}</div>
-                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 text-gray-400">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                            </svg>
-                        </span>
-                </ListboxButton>
-                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                    <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                        <ListboxOption as="template" v-for="paperSize in paperSizes" :key="paperSize.id" :value="paperSize" v-slot="{ active, selected }">
-                            <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                                <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ paperSize.name }}</span>
-                                <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                        </svg>
-                                    </span>
-                            </li>
-                        </ListboxOption>
-                    </ListboxOptions>
-                </transition>
-            </div>
-        </Listbox>
-        <div class="flex flex-col mt-1">
-            <label class="xsLight">{{$t('Paper orientation')}}</label>
-            <fieldset class="">
-                <legend class="sr-only">Notification method</legend>
-                <div class="space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
-                    <div v-for="paperOrientation in paperOrientations" :key="paperOrientation.id" class="flex items-center">
-                        <input :id="paperOrientation.id" name="notification-method" type="radio" @change="changePaperOrientation(paperOrientation)" :checked="paperOrientation.id === checkedOrientation" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600" :disabled="orientationDisabled"/>
-                        <label :for="paperOrientation.id" class="ml-2 block text-sm font-medium leading-6 text-gray-900">{{ paperOrientation.title }}</label>
+            </section>
+
+            <!-- Projektwahl / Zeitraum -->
+            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+                <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-4" :class="pdfSelectedProject ? 'pt-3' : 'pt-8'">
+                    <ProjectSearch
+                        v-if="!pdfSelectedProject"
+                        @project-selected="addProjectToPdf"
+                        no-project-groups
+                        get-first-last-event
+                    />
+                    <div v-else class="flex flex-col gap-2">
+                        <h3 class="text-base font-semibold text-zinc-900">
+                            {{ pdfSelectedProject.name }}
+                        </h3>
+                        <p
+                            class="text-sm text-zinc-700"
+                            v-if="pdfSelectedProject?.first_event && pdfSelectedProject?.last_event"
+                        >
+                            {{ $t('Project period') }}:
+                            <span class="text-blue-700" v-if="pdfSelectedProject.first_event.start_time">
+                {{ pdfSelectedProject.first_event.start_time }}
+              </span>
+                            –
+                            <span class="text-blue-700" v-if="pdfSelectedProject.last_event.end_time">
+                {{ pdfSelectedProject.last_event.end_time }}
+              </span>
+                        </p>
+                        <button
+                            type="button"
+                            class="w-fit text-left text-xs text-blue-700 underline"
+                            @click="pdfSelectedProject = null"
+                        >
+                            {{ $t('Cancel project selection') }}
+                        </button>
                     </div>
 
+                    <div class="mt-4">
+                        <LastedProjects :limit="10" @select="addProjectToPdf" />
+                    </div>
                 </div>
-                <span class="text-red-500 text-xs" v-if="orientationDisabled"> {{$t('The A6 format is only possible in landscape format.')}}  </span>
-            </fieldset>
-        </div>
-        <div class="mt-1">
-            <NumberInputComponent
-                id="dpi"
-                v-model="pdf.dpi"
-                :label="$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')"
-            />
-        </div>
-        <div class="flex flex-row justify-center mt-4">
-            <FormButton @click="createPdf()" :text="$t('Export PDF')"/>
+
+                <!-- Zeitraum nur wenn kein Projekt -->
+                <div v-if="!pdfSelectedProject" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <BaseInput type="date" v-model="pdf.start" :label="$t('Start date')" id="start" />
+                    <BaseInput type="date" v-model="pdf.end" :label="$t('End date')" id="end" />
+                </div>
+            </section>
+
+            <!-- Papierformat + Orientierung + DPI -->
+            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <!-- Papierformat -->
+                    <div class="space-y-2">
+                        <Listbox as="div" v-model="selectedPaperSize">
+                            <ListboxLabel class="block text-sm font-medium text-zinc-700">
+                                {{ $t('Paper size') }}
+                            </ListboxLabel>
+                            <div class="relative mt-1">
+                                <ListboxButton
+                                    class="relative w-full cursor-pointer rounded-xl border border-zinc-200 bg-white px-4 py-3 text-left text-sm hover:bg-zinc-50"
+                                >
+                                    <div class="block truncate">{{ selectedPaperSize.name }}</div>
+                                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                    <svg class="h-5 w-5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                    </svg>
+                  </span>
+                                </ListboxButton>
+                                <transition
+                                    leave-active-class="transition ease-in duration-100"
+                                    leave-from-class="opacity-100"
+                                    leave-to-class="opacity-0"
+                                >
+                                    <ListboxOptions
+                                        class="absolute z-10 mt-2 max-h-60 w-full overflow-auto rounded-xl bg-white py-2 text-sm shadow-lg ring-1 ring-black/10 focus:outline-none"
+                                    >
+                                        <ListboxOption
+                                            v-for="paperSize in paperSizes"
+                                            :key="paperSize.id"
+                                            :value="paperSize"
+                                            v-slot="{ active, selected }"
+                                            as="template"
+                                        >
+                                            <li
+                                                :class="[
+                          'relative cursor-pointer select-none py-2 pl-3 pr-9',
+                          active ? 'bg-zinc-900 text-white' : 'text-zinc-900'
+                        ]"
+                                            >
+                        <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
+                          {{ paperSize.name }}
+                        </span>
+                                                <span
+                                                    v-if="selected"
+                                                    :class="[
+                            active ? 'text-white' : 'text-zinc-900',
+                            'absolute inset-y-0 right-0 flex items-center pr-4'
+                          ]"
+                                                >
+                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                  d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                        </span>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </div>
+                        </Listbox>
+                    </div>
+
+                    <!-- Orientierung -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-zinc-700">
+                            {{ $t('Paper orientation') }}
+                        </label>
+                        <fieldset>
+                            <legend class="sr-only">Paper orientation</legend>
+                            <div class="flex gap-3">
+                                <div
+                                    v-for="paperOrientation in paperOrientations"
+                                    :key="paperOrientation.id"
+                                    class="relative flex-1"
+                                >
+                                    <input
+                                        :id="paperOrientation.id"
+                                        name="notification-method"
+                                        type="radio"
+                                        :checked="paperOrientation.id === checkedOrientation"
+                                        class="peer absolute inset-0 h-0 w-0 opacity-0"
+                                        :disabled="orientationDisabled"
+                                        @change="changePaperOrientation(paperOrientation)"
+                                    />
+                                    <label
+                                        :for="paperOrientation.id"
+                                        class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
+                           peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white
+                           border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50"
+                                        :class="orientationDisabled ? 'opacity-60 cursor-not-allowed' : ''"
+                                    >
+                                        {{ paperOrientation.title }}
+                                    </label>
+                                </div>
+                            </div>
+                            <span class="mt-2 block text-xs text-red-500" v-if="orientationDisabled">
+                {{ $t('The A6 format is only possible in landscape format.') }}
+              </span>
+                        </fieldset>
+                    </div>
+
+                    <!-- DPI -->
+                    <div class="">
+                        <BaseInput
+                            id="dpi"
+                            v-model="pdf.dpi"
+                            :label="$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')"
+                        />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Export -->
+            <section class="flex items-center justify-end">
+                <BaseUIButton
+                    @click="createPdf()"
+                    :label="$t('Export PDF')"
+                    icon="IconFileExport"
+                    is-add-button
+                />
+            </section>
+
         </div>
     </div>
 </template>
 
-<script>
-import {
-    Dialog,
-    DialogPanel,
-    DialogTitle,
-    Listbox,
-    ListboxButton,
-    ListboxLabel,
-    ListboxOption,
-    ListboxOptions,
-    Switch,
-    SwitchGroup,
-    SwitchLabel,
-    TransitionChild,
-    TransitionRoot
-} from '@headlessui/vue'
-import {XIcon} from "@heroicons/vue/solid";
-import Permissions from "@/Mixins/Permissions.vue";
-import {useForm} from "@inertiajs/vue3";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
-import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import {DocumentReportIcon} from "@heroicons/vue/outline";
-import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import LastedProjects from "@/Artwork/LastedProjects.vue";
+<script setup lang="ts">
+import { ref, watch } from 'vue'
+import { useForm } from '@inertiajs/vue3'
+import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue'
+import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
+import NumberInputComponent from '@/Components/Inputs/NumberInputComponent.vue'
+import ProjectSearch from '@/Components/SearchBars/ProjectSearch.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import LastedProjects from '@/Artwork/LastedProjects.vue'
+import { useTranslation } from '@/Composeables/Translation.js'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
-export default {
-    name: "PdfCalendarExport",
-    mixins: [Permissions, IconLib],
-    components: {
-        LastedProjects,
-        BaseInput,
-        BaseButton,
-        Switch,
-        SwitchGroup,
-        DocumentReportIcon,
-        SwitchLabel,
-        ProjectSearch,
-        BaseModal,
-        NumberInputComponent,
-        DateInputComponent,
-        ModalHeader,
-        TextInputComponent,
-        FormButton,
-        Dialog,
-        DialogTitle,
-        TransitionChild,
-        TransitionRoot,
-        XIcon,
-        DialogPanel,
-        Listbox,
-        ListboxButton,
-        ListboxLabel,
-        ListboxOption,
-        ListboxOptions
-    },
-    props: ['pdfTitle', 'project'],
-    emits: ['closed'],
-    data(){
-        return {
-            open: true,
-            showModalInformation: true,
-            paperSizes: [
-                { id: 'a4', name: 'A4 (Standard)' },
-                { id: 'a3', name: 'A3' },
-                { id: 'a5', name: 'A5' },
-                { id: 'a6', name: 'A6' },
-            ],
-            paperOrientations: [
-                { id: 'portrait', title: this.$t('Portrait format') },
-                { id: 'landscape', title: this.$t('Landscape format') },
-            ],
-            pdf: useForm({
-                title: this.project ? this.project.name : this.$t('Room assignment'),
-                start: null,
-                end: null,
-                paperSize: null,
-                paperOrientation: null,
-                project: null,
-                dpi: 72,
-            }),
-            pdfSelectedProject: null,
-            selectedPaperSize: { id: 'a4', name: 'A4 (Standard)' },
-            selectedPaperOrientation: { id: 'portrait', title: this.$t('Portrait format') },
-            checkedOrientation: 'portrait',
-            orientationDisabled: false,
-        }
-    },
-    methods: {
-        closeModal(bool){
-            this.$emit('closed', bool)
-        },
-        createPdf() {
-            this.pdf.paperSize = this.selectedPaperSize.id;
-            this.pdf.paperOrientation = this.selectedPaperOrientation.id;
+const $t = useTranslation()
+const emits = defineEmits<{ (e: 'closed', value: boolean): void }>()
+const props = defineProps<{ pdfTitle?: string; project?: any }>()
 
-            if (this.project) {
-                this.pdf.project = this.project.id;
-            }
+const showModalInformation = ref(true)
 
-            if (this.pdfSelectedProject) {
-                this.pdf.project = this.pdfSelectedProject.id;
-            }
+const paperSizes = [
+    { id: 'a4', name: 'A4 (Standard)' },
+    { id: 'a3', name: 'A3' },
+    { id: 'a5', name: 'A5' },
+    { id: 'a6', name: 'A6' }
+]
+const paperOrientations = [
+    { id: 'portrait', title: $t('Portrait format') },
+    { id: 'landscape', title: $t('Landscape format') }
+]
 
-            this.pdf.post(route('calendar.export.pdf'), {
-                preserveScroll: true,
-            });
-            this.closeModal(true);
-        },
-        changePaperOrientation(orientation){
-            this.selectedPaperOrientation = orientation
-        },
-        addProjectToPdf(project){
-            this.pdfSelectedProject = project;
-        }
-    },
-    watch:{
-        selectedPaperSize(){
-            if (this.selectedPaperSize.id === 'a6') {
-                this.checkedOrientation = 'landscape'
-                this.orientationDisabled = true
-                this.changePaperOrientation(this.paperOrientations[1])
-            } else {
-                this.checkedOrientation = 'portrait'
-                this.orientationDisabled = false
-                this.changePaperOrientation(this.paperOrientations[0])
-            }
-        }
+const pdf = useForm({
+    title: props.project ? props.project.name : $t('Room assignment'),
+    start: null as string | null,
+    end: null as string | null,
+    paperSize: null as string | null,
+    paperOrientation: null as string | null,
+    project: null as number | null,
+    dpi: 72
+})
+
+const pdfSelectedProject = ref<any | null>(null)
+const selectedPaperSize = ref<{ id: string; name: string }>({ id: 'a4', name: 'A4 (Standard)' })
+const selectedPaperOrientation = ref<{ id: 'portrait' | 'landscape'; title: string }>({
+    id: 'portrait',
+    title: $t('Portrait format')
+})
+const checkedOrientation = ref<'portrait' | 'landscape'>('portrait')
+const orientationDisabled = ref(false)
+
+const closeModal = (bool: boolean) => emits('closed', bool)
+
+const createPdf = () => {
+    pdf.paperSize = selectedPaperSize.value.id
+    pdf.paperOrientation = selectedPaperOrientation.value.id
+
+    if (props.project) {
+        pdf.project = props.project.id
     }
+    if (pdfSelectedProject.value) {
+        pdf.project = pdfSelectedProject.value.id
+    }
+
+    pdf.post(route('calendar.export.pdf'), { preserveScroll: true })
+    closeModal(true)
 }
+
+const changePaperOrientation = (orientation: { id: 'portrait' | 'landscape'; title: string }) => {
+    selectedPaperOrientation.value = orientation
+    checkedOrientation.value = orientation.id
+}
+
+const addProjectToPdf = (project: any) => {
+    pdfSelectedProject.value = project
+}
+
+// A6 erzwingt Landscape (unveränderte Logik)
+watch(
+    () => selectedPaperSize.value,
+    () => {
+        if (selectedPaperSize.value.id === 'a6') {
+            checkedOrientation.value = 'landscape'
+            orientationDisabled.value = true
+            changePaperOrientation({ id: 'landscape', title: $t('Landscape format') })
+        } else {
+            checkedOrientation.value = 'portrait'
+            orientationDisabled.value = false
+            changePaperOrientation({ id: 'portrait', title: $t('Portrait format') })
+        }
+    },
+    { immediate: true }
+)
 </script>

@@ -2382,6 +2382,7 @@ class ProjectController extends Controller
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
             'createSettings'              => app(ProjectCreateSettings::class),
             'printLayouts'                => $this->projectPrintLayoutService->getAll(),
+            'project'                       => $headerObject->project,
         ]);
     }
 

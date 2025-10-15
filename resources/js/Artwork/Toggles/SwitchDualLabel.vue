@@ -41,6 +41,8 @@
             :icon-size="sizeClasses.icon"
             direction="bottom"
             :stroke="1.5"
+            classes-button=""
+            :no-tooltip="!tooltipText"
         />
       </span>
         </Switch>
@@ -76,7 +78,7 @@ const props = defineProps({
     modelValue: { type: Boolean, required: true },
     leftLabel: { type: String, default: 'Project' },
     rightLabel: { type: String, default: 'Project group' },
-    tooltipText: { type: String, default: 'At a glance' },
+    tooltipText: { type: String, default: '' },
     icon: { type: [Object, Function, String], default: () => IconList },
     size: { type: String, default: 'sm' }, // 'sm' | 'md'
     disabled: { type: Boolean, default: false }

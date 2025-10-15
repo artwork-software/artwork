@@ -17,7 +17,7 @@
                             <DialogPanel class="card glassy draggableModal w-full" :class="[modalSize, showBackdrop ? '' : '!border-gray-200 shadow-glass']"  ref="containerRef">
                                 <div class="p-5">
                                     <div class="card white p-5 relative">
-                                        <div class="flex items-start gap-x-8 justify-between mb-8 bg-zinc-50 p-6 -mx-5 -mt-5 rounded-t-lg">
+                                        <div class="flex items-center gap-x-8 justify-between mb-8 bg-zinc-50 p-6 -mx-5 -mt-5 rounded-t-lg">
                                             <div class="text-left">
                                                 <h3 class="font-medium text-lg subpixel-antialiased">{{ $t(props.title) }}</h3>
                                                 <p class="text-xs text-zinc-500 subpixel-antialiased mt-0.5">

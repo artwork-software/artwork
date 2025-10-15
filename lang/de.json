@@ -3297,5 +3297,8 @@
     "Assign {count} crafts": "{count} Gewerke zuweisen",
     "{count} selected": "{count} ausgewählt",
     "No crafts match your search.": "Keine Gewerke entsprechen deiner Suche.",
-    "Select crafts": "Gewerke auswählen"
+    "Select crafts": "Gewerke auswählen",
+    "Set the width in pixels": "Setze die Breite in Pixeln",
+    "Suggest": "Vorschlag",
+    "These widths affect only the bulk view table. You can adjust them anytime.": "Diese Breiten wirken sich nur auf die Tabellenansicht im Mehrfachmodus aus. Du kannst sie jederzeit anpassen."
 }

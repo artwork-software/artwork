@@ -1,41 +1,17 @@
 <template>
-    <div class="w-full bg-secondaryHover overflow-y-auto" id="myCalendar">
-        <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
-            <CalendarFunctionBar :personal-filters="personalFilters" :filter-options="filterOptions" :roomMode="true" :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
-                                 @change-at-a-glance="changeAtAGlance"
-                                 :at-a-glance="atAGlance" :user_filters="user_filters"
-                                 @previousTimeRange="previousTimeRange"
-                                 @next-time-range="nextTimeRange"
-            ></CalendarFunctionBar>
-            <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48"
-                 @click="openEventsWithoutRoomComponent()"
-                 v-if="filteredEvents?.length > 0">
-
-                <ExclamationIcon class="h-6  mr-2"/>
-                {{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
-            </div>
-            <!-- Calendar -->
-            <table class="w-full flex flex-wrap bg-white">
-                <tbody class="flex w-full flex-wrap">
-                    <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex" v-for="day in days">
-                        <th class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
-                            {{day.day_string}} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-0.5">(KW{{ day.week_number }})</span>
-                        </th>
-                        <td :style="{ height: zoomFactor * 115 + 'px'}" class="cell flex-row w-full  flex overflow-y-auto border-t-2 border-dashed">
-                            <div class="py-0.5 pr-2" v-for="event in calendarData[day.full_day].events">
-                                <SingleCalendarEvent :zoom-factor="zoomFactor"
-                                                     :width="zoomFactor * 204"
-                                                     :event="event"
-                                                     :event-types="eventTypes"
-                                                     @open-edit-event-modal="openEditEventModal"
-                                                     :first_project_tab_id="this.first_project_tab_id"
-                                />
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="w-full bg-white" id="myCalendar">
+        <BaseCalendar
+            :rooms="filteredRooms"
+            :days="days"
+            :calendar-data="filteredCalendarData"
+            :eventsWithoutRoom="eventsWithoutRoom"
+            :eventStatuses="eventStatuses"
+            :project="project"
+            :projectNameUsedForProjectTimePeriod="project?.name || ''"
+            :firstProjectShiftTabId="first_project_calendar_tab_id"
+            :isPlanning="false"
+            :verifierForEventTypIds="[]"
+        />
     </div>
     <event-component
         v-if="createEventComponentIsVisible"
@@ -65,9 +41,7 @@
 </template>
 
 <script>
-import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
-import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
-import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
+import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -79,9 +53,7 @@ export default {
     name: "IndividualCalendarComponent",
     mixins: [Permissions],
     components: {
-        CalendarFunctionBar,
-        SingleCalendarEvent,
-        IndividualCalendarFilterComponent,
+        BaseCalendar,
         EventsWithoutRoomComponent,
         ExclamationIcon,
         EventComponent
@@ -101,6 +73,7 @@ export default {
     props: [
         'calendarData',
         'rooms',
+        'room',
         'days',
         'atAGlance',
         'eventTypes',
@@ -112,16 +85,38 @@ export default {
         'user_filters',
         'first_project_tab_id',
         'first_project_calendar_tab_id',
-        'eventStatuses'
+        'eventStatuses',
+        'months',
+        'areas'
     ],
     emits: ['changeAtAGlance'],
     created() {
+        // Provide all required injected values for FunctionBarCalendar and other components
         provide('event_properties', this.event_properties);
+        provide('eventTypes', this.eventTypes);
+        provide('rooms', this.rooms);
+        provide('areas', this.areas);
+        provide('dateValue', this.dateValue);
+        provide('first_project_tab_id', this.first_project_tab_id);
+        provide('first_project_calendar_tab_id', this.first_project_calendar_tab_id);
+        provide('filterOptions', this.filterOptions);
+        provide('personalFilters', this.personalFilters);
+        provide('user_filters', this.user_filters);
+        provide('months', this.months);
+        provide('eventStatuses', this.eventStatuses);
     },
     mounted(){
         window.addEventListener('resize', this.listenToFullscreen);
     },
     computed: {
+        filteredRooms() {
+            // Return all rooms to show all room names in calendar
+            return this.rooms;
+        },
+        filteredCalendarData() {
+            // Return all calendar data to show events from all rooms
+            return this.calendarData;
+        },
         textStyle() {
             const fontSize = `calc(${this.zoomFactor} * 0.875rem)`;
             const lineHeight = `calc(${this.zoomFactor} * 1.25rem)`;

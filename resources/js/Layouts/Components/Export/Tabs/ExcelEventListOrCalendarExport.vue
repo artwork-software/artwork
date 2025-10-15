@@ -14,6 +14,11 @@
                           :property="conditionalProject.id"
                           :displayed-text="conditionalProject.name"/>
         </div>
+
+        <LastedProjects
+            :limit="10"
+            @select="addConditionalProject"
+        />
     </div>
     <div v-else class="-mt-4 flex flex-row gap-x-2">
         <BaseInput type="date" id="startDate" v-model="conditionalDateStart" :label="$t('Start date')" class="-mt-4"/>
@@ -182,6 +187,7 @@ import Input from "@/Jetstream/Input.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 
 const receivedFilters = ref([]);
 axios.get(route('calendar.filters')).then((response) => receivedFilters.value = response.data);

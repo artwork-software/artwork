@@ -71,6 +71,12 @@
                 <!-- Project -->
                 <div class="px-6 pt-2">
                     <ProjectSearch v-if="!selectedProject" @project-selected="addProject" :get-first-last-event="true" :label="$t('Project assignment (optional)')" />
+                    <LastedProjects
+                        v-if="!selectedProject"
+                        :limit="10"
+                        @select="addProject"
+                    />
+
                     <div v-else class="mt-1">
                         <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
                         <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-1">
@@ -480,6 +486,7 @@ import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/Arti
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import Galleria from "primevue/galleria";
 import { IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconPlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 
 const props = defineProps({
     issueOfMaterial: {

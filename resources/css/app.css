@@ -1079,7 +1079,7 @@
     }
 
     .model-title {
-        @apply font-black font-lexend text-primary mb-2;
+        @apply font-medium font-lexend text-zinc-900;
     }
 
     .modal-description {

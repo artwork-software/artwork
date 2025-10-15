@@ -34,6 +34,10 @@
                     {{ $t('Cancel project selection') }}
                 </div>
             </div>
+            <LastedProjects
+                :limit="10"
+                @select="addProjectToPdf"
+            />
         </div>
         <div class="flex flex-row gap-x-2" v-if="!pdfSelectedProject">
             <BaseInput type="date"
@@ -130,11 +134,13 @@ import IconLib from "@/Mixins/IconLib.vue";
 import {DocumentReportIcon} from "@heroicons/vue/outline";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 
 export default {
     name: "PdfCalendarExport",
     mixins: [Permissions, IconLib],
     components: {
+        LastedProjects,
         BaseInput,
         BaseButton,
         Switch,

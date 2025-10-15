@@ -3280,5 +3280,10 @@
     "Your open to-dos": "Your open to-dos",
     "To the task overview": "To the task overview",
     "until": "until",
-    "This description is displayed in the calendar or when editing the event.": "This description is displayed in the calendar or when editing the event."
+    "This description is displayed in the calendar or when editing the event.": "This description is displayed in the calendar or when editing the event.",
+    "Create a project group to manage multiple related projects together.": "Create a project group to manage multiple related projects together.",
+    "Create a standard project.": "Create a standard project.",
+    "Recently opened projects": "Recently opened projects",
+    "Recently opened individual projects": "Recently opened individual projects",
+    "Recently opened project groups": "Recently opened project groups"
 }

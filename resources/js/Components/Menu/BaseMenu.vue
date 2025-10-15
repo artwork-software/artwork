@@ -138,7 +138,7 @@ const props = withDefaults(defineProps<{
     menuButtonAria?: string
 }>(), {
     dotsColor: 'text-artwork-navigation-text',
-    dotsSize: 'h-6 w-6',
+    dotsSize: 'size-5',
     noRelative: false,
     showSortIcon: false,
     menuWidth: 'w-56',

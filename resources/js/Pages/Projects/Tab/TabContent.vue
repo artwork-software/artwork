@@ -89,7 +89,7 @@
 </template>
 
 <script setup>
-import {provide, ref} from 'vue';
+import {onMounted, provide, ref} from 'vue';
 import {usePage} from "@inertiajs/vue3";
 import ProjectHeaderComponent from "@/Pages/Projects/Tab/Components/ProjectHeaderComponent.vue";
 import TextField from "@/Pages/Projects/Tab/Components/TextField.vue";
@@ -228,4 +228,38 @@ const removeML = (componentType) => {
         return 'artwork-container !pb-0 !mb-0 !mt-0';
     }
 };
+
+onMounted(() => {
+    try {
+        const project = props.headerObject?.project;
+        if (!project?.id || !project?.name) return;
+
+        // Bestehende Liste abrufen oder leeres Array initialisieren
+        const stored = localStorage.getItem('lastedProjects');
+        let lastedProjects = Array.isArray(JSON.parse(stored)) ? JSON.parse(stored) : [];
+
+        // Projekt, falls vorhanden, entfernen
+        lastedProjects = lastedProjects.filter(p => p.id !== project.id);
+
+        // Neues Projekt an den Anfang setzen
+        lastedProjects.unshift({
+            id: project.id,
+            name: project.name,
+            updatedAt: new Date().toISOString(), // optional: für spätere Sortierung
+            key_visual_path: project.key_visual_path,
+            is_group: project.is_group,
+        });
+
+        // Nur die letzten 10 behalten
+        if (lastedProjects.length > 10) {
+            lastedProjects = lastedProjects.slice(0, 10);
+        }
+
+        // In LocalStorage speichern
+        localStorage.setItem('lastedProjects', JSON.stringify(lastedProjects));
+    } catch (error) {
+        console.warn('Fehler beim Aktualisieren der letzten Projekte:', error);
+    }
+});
+
 </script>

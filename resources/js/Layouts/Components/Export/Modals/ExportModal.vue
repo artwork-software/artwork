@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @closed="close()">
+    <ArtworkBaseModal @close="close()" title="" description="">
         <div class="export-modal-container">
             <ul class="tab-container mb-4">
                 <li v-if="props.enums.length > 1"
@@ -36,7 +36,7 @@
                 </template>
             </template>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -44,6 +44,7 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {defineAsyncComponent, ref} from "vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import {useTranslation} from "@/Composeables/Translation.js";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const exportTabEnums = useExportTabEnums(),
     $t = useTranslation(),

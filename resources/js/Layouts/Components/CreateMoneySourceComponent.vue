@@ -1,12 +1,7 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
+    <ArtworkBaseModal @close="closeModal" v-if="true" :title="$t('New source of funding')"
+                      :description="$t('Create a funding source and link projects and items to get an overview of your budget.')">
             <div class="mx-4">
-                <!--   Heading   -->
-                <ModalHeader
-                    :title="$t('New source of funding')"
-                    :description="$t('Create a funding source and link projects and items to get an overview of your budget.')"
-                />
-
                 <div>
                     <div class="mb-8">
                         <div class="hidden sm:block">
@@ -349,7 +344,7 @@
                     </div>
                 </div>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 
 </template>
 
@@ -388,11 +383,13 @@ import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions, IconLib],
     components: {
+        ArtworkBaseModal,
         BaseTextarea,
         BaseInput,
         TextareaComponent,

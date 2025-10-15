@@ -32,6 +32,12 @@
                             </transition>
                         </div>
                     </div>
+
+                    <LastedProjects
+                        :limit="10"
+                        @select="addProjectToArray"
+                    />
+
                     <div class="sDark mt-4" v-if="this.linkedProjectsArray.length > 0">
                         {{$t('Linked projects')}}:
                     </div>
@@ -71,12 +77,14 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 
 
 export default {
     name: 'LinkProjectsToMoneySourcesComponent',
     mixins: [Permissions, IconLib],
     components: {
+        LastedProjects,
         BaseInput,
         TextInputComponent,
         ModalHeader,

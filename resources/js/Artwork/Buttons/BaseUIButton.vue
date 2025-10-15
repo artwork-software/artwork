@@ -9,7 +9,7 @@
     >
         <PropertyIcon
             :name="iconResolved"
-            :class="isSmall ? 'size-4 sm:size-5' : 'size-5 sm:size-6'"
+            :class="isSmall ? 'size-4 sm:size-5' : 'size-5 sm:size-5'"
             :stroke-width="strokeWidthResolved"
         />
         {{ useTranslation ? $t(label) : label }}

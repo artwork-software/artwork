@@ -79,6 +79,11 @@
                     :displayed-text="selectedProject.name"
                     :method="deleteSelectedProject"
                 />
+
+                <LastedProjects
+                    :limit="10"
+                    @select="addProjectToChecklist"
+                />
             </div>
 
             <div class="" v-if="selectedTemplate.name === ''">
@@ -124,6 +129,7 @@ import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 
 const props = defineProps({
     project: {

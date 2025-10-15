@@ -130,6 +130,7 @@ use Artwork\Modules\Timeline\Http\Requests\UpdateTimelineRequest;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelinesRequest;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
@@ -188,6 +189,7 @@ class ProjectController extends Controller
         private readonly UserProjectManagementSettingService $userFilterAndSortSettingService,
         private readonly ProjectPrintLayoutService $projectPrintLayoutService,
         protected readonly SingleShiftPresetService $singleShiftPresetService,
+        private readonly FilterService $filterService,
     ) {
     }
 
@@ -2169,21 +2171,51 @@ class ProjectController extends Controller
                     break;
 
                 case ProjectTabComponentEnum::BULK_EDIT->value:
-                    // Events (ohne „schwere“ Relationen) laden und mit Minimal-Resource anreichern
-                    $eventsUnsorted = $project->events()
+                    $userBulkSortId      = (int) ($authUser?->getAttribute('bulk_sort_id') ?? 0);
+                    $userCalendarFilter  = $authUser?->userFilters()->calendarFilter()->first();
+
+                    // Events-Query mit Filtern
+                    $eventsQuery = $project->events()
                         ->with(['event_type', 'room', 'eventStatus'])
                         ->without(['series', 'subEvents', 'creator'])
-                        ->get()
-                        ->map(
-                        /** @return array<string,mixed> */
-                            fn (Event $event) => array_merge(
-                                $event->toArray(),
-                                MinimalCalendarEventResource::make($event)->resolve()
-                            )
+                        // Eventtypen filtern (nur diese zulassen, wenn gesetzt)
+                        ->when(!empty($userCalendarFilter?->event_type_ids), function ($q) use ($userCalendarFilter) {
+                            $q->whereIn('event_type_id', $userCalendarFilter->event_type_ids);
+                        })
+                        // Raumfilter via whereHas(Room …) anwenden – nutzt deine bestehenden Room-Scopes
+                        ->when(
+                            !empty($userCalendarFilter?->room_ids)
+                            || !empty($userCalendarFilter?->room_attribute_ids)
+                            || !empty($userCalendarFilter?->area_ids)
+                            || !empty($userCalendarFilter?->room_category_ids),
+                            function ($q) use ($userCalendarFilter) {
+                                $q->whereHas('room', function ($rq) use ($userCalendarFilter) {
+                                    $rq->select(['id']) // minimal
+                                    ->unlessRoomIds($userCalendarFilter?->room_ids)
+                                        ->unlessRoomAttributeIds($userCalendarFilter?->room_attribute_ids)
+                                        ->unlessAreaIds($userCalendarFilter?->area_ids)
+                                        ->unlessRoomCategoryIds($userCalendarFilter?->room_category_ids);
+                                });
+                            }
                         );
 
-                    $userBulkSortId = (int) ($authUser?->getAttribute('bulk_sort_id') ?? 0);
+                    // Laden + Minimal-Resource anreichern
+                    $eventsUnsorted = $eventsQuery->get()->map(
+                    /** @return array<string,mixed> */
+                        fn (Event $event) => array_merge(
+                            $event->toArray(),
+                            MinimalCalendarEventResource::make($event)->resolve()
+                        )
+                    );
 
+                    Inertia::share([
+                        'user_filters'    => $userCalendarFilter,
+                        'personalFilters' => fn () => $this->filterService
+                            ->getPersonalFilter($authUser, UserFilterTypes::CALENDAR_FILTER->value),
+                        'filterOptions'   => fn () => $this->filterService->getCalendarFilterDefinitions(),
+                    ]);
+
+                    // Sortierung bleibt wie gehabt
                     $eventsSorted = match ($userBulkSortId) {
                         1       => $eventsUnsorted->sortBy('roomName')->values(),
                         2       => $eventsUnsorted->sortBy('eventTypeName')->values(),
@@ -2191,19 +2223,19 @@ class ProjectController extends Controller
                         default => $eventsUnsorted,
                     };
 
-                $headerObject->project->events = $eventsSorted;
+                    $headerObject->project->events = $eventsSorted;
 
-                // IDs der zuletzt bearbeiteten Events bestimmen
-                $lastUpdatedEvent = $project->events()->orderBy('updated_at', 'DESC')->first();
-                $lastEditEventIds = [];
-                if ($lastUpdatedEvent) {
-                    $lastEditEventIds = $project->events()
-                        ->where('updated_at', $lastUpdatedEvent->updated_at)
-                        ->pluck('id')
-                        ->toArray();
-                }
-                $headerObject->project->lastEditEventIds = $lastEditEventIds;
-                break;
+                    // IDs der zuletzt bearbeiteten Events bestimmen (unverändert)
+                    $lastUpdatedEvent = $project->events()->orderBy('updated_at', 'DESC')->first();
+                    $lastEditEventIds = [];
+                    if ($lastUpdatedEvent) {
+                        $lastEditEventIds = $project->events()
+                            ->where('updated_at', $lastUpdatedEvent->updated_at)
+                            ->pluck('id')
+                            ->toArray();
+                    }
+                    $headerObject->project->lastEditEventIds = $lastEditEventIds;
+                    break;
 
                 case ProjectTabComponentEnum::CALENDAR->value:
                     // bleibt bewusst wie gehabt (atAGlance wird vom Nutzer-Flag gesteuert)
@@ -2211,30 +2243,30 @@ class ProjectController extends Controller
                     $loadedProjectInformation['CalendarTab'] =
                         $authUser?->getAttribute('at_a_glance')
                             ? $eventService->createEventManagementDtoForAtAGlance(
-                            $calendarService,
-                            $roomService,
-                            $userService,
-                            $filterService,
-                            $this->projectTabService,
-                            $eventTypeService,
-                            $areaService,
-                            $projectService,
-                            $projectCreateSettings,
-                            $eventPropertyService,
-                            $project
-                        )
+                                $calendarService,
+                                $roomService,
+                                $userService,
+                                $filterService,
+                                $this->projectTabService,
+                                $eventTypeService,
+                                $areaService,
+                                $projectService,
+                                $projectCreateSettings,
+                                $eventPropertyService,
+                                $project
+                            )
                             : $eventService->createEventManagementDto(
-                            $roomService,
-                            $userService,
-                            $filterService,
-                            $this->projectTabService,
-                            $eventTypeService,
-                            $areaService,
-                            $projectService,
-                            $projectCreateSettings,
-                            $eventPropertyService,
-                            $project
-                        );
+                                $roomService,
+                                $userService,
+                                $filterService,
+                                $this->projectTabService,
+                                $eventTypeService,
+                                $areaService,
+                                $projectService,
+                                $projectCreateSettings,
+                                $eventPropertyService,
+                                $project
+                            );
                     break;
 
                 case ProjectTabComponentEnum::BUDGET->value:
@@ -2376,7 +2408,7 @@ class ProjectController extends Controller
                 'pivot_access_budget'   => (bool) ($user->pivot?->access_budget),
                 'pivot_is_manager'      => (bool) ($user->pivot?->is_manager),
                 'pivot_can_write'       => (bool) ($user->pivot?->can_write),
-                'pivot_delete_permission'=> (bool) ($user->pivot?->delete_permission),
+                'pivot_delete_permission' => (bool) ($user->pivot?->delete_permission),
                 'pivot_roles'           => (array) ($user->pivot?->roles),
             ]
         );
@@ -2407,7 +2439,7 @@ class ProjectController extends Controller
      *
      * @return \Illuminate\Support\Collection<int,array<string,mixed>>
      */
-    private function mapProjectUsers(Project $project)
+    private function mapProjectUsers(Project $project): \Illuminate\Support\Collection
     {
         return $project->users->map(
             fn (User $user) => [
@@ -3837,5 +3869,4 @@ class ProjectController extends Controller
     {
         $this->timelineService->updateTimeline($timeline, collect($request->all()));
     }
-
 }

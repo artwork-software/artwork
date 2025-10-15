@@ -1,10 +1,10 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <ModalHeader
-            :title="$t('Edit Event description')"
-            :description="$t('Edit the event description below.')"
-        />
+    <ArtworkBaseModal @close="$emit('close')"  :title="$t('Edit Event description')" :description="$t('Edit the event description below.')">
 
+        <BaseAlertComponent
+            type="info"
+            :message="$t('This description is displayed in the calendar or when editing the event.')"
+            class="mb-5"   />
 
         <form @submit.prevent class="mt-10">
            <BaseTextarea
@@ -14,7 +14,7 @@
                 <FormButton @click="addEditNote" type="submit" :text="event.description ? $t('Update') : $t('Save')" />
             </div>
         </form>
-    </BaseModal>
+    </ArtworkBaseModal>
 
 </template>
 
@@ -26,6 +26,8 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 
 const props = defineProps({
     event: {

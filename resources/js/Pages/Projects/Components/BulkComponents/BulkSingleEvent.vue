@@ -173,18 +173,21 @@
                         :tooltip-text="$t('Edit the description')"
                         stroke="1.5"
                         @click="openNoteModal = true"
+                        icon-size="size-5"
+                        classes-button="ui-button"
                     />
-                    <ToolTipDefault
+                    <ToolTipComponent
                         v-if="event.start_time && event.end_time && !event.copy && !isInModal"
                         :tooltip-text="$t('Set the event to all-day')"
-                        left
-                        show24-h-icon
-                        icon-classes="w-6 h-6"
+                        icon="IconClock24"
+                        icon-size="size-5"
+                        stroke="1.5"
                         @click="removeTime"
+                        classes-button="ui-button"
                     />
 
                     <!-- Copy Menu -->
-                    <BaseMenu show-custom-icon dots-color="!text-artwork-buttons-context" stroke-width="2"
+                    <BaseMenu show-custom-icon dots-color="!text-artwork-buttons-context" classes-button="ui-button" stroke-width="1.5" dots-size="size-5" classes="mr-3"
                               :icon="IconCopy" translation-key="Copy" menu-width="w-fit" white-menu-background>
                         <div class="flex items-center gap-x-2 p-3">
                             <IconPlus class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context" stroke-width="2" />
@@ -205,14 +208,14 @@
                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true" />
                                 </ListboxButton>
                                 <ListboxOptions
-                                    class="w-44 rounded-xl border border-zinc-200/60 dark:border-zinc-800/60bg-primary/95 backdrop-blur max-h-32 overflow-y-auto text-sm absolute z-30 shadow-lg">
+                                    class="w-44 rounded-xl border border-zinc-200/60 bg-white backdrop-blur max-h-32 overflow-y-auto text-sm absolute z-30 shadow-lg">
                                     <ListboxOption
                                         v-for="copyType in copyTypes"
                                         :key="copyType.name"
                                         :value="copyType"
                                         v-slot="{ selected }"
                                         class="hover:bg-indigo-800/90 text-secondary cursor-pointer px-3 py-2 flex justify-between">
-                                        <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                        <div :class="[selected ? 'text-artwork-buttons-create' : 'text-zinc-800', 'flex']">
                                             {{ copyType.name }}
                                         </div>
                                         <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true" />

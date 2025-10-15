@@ -3285,5 +3285,9 @@
     "Create a standard project.": "Create a standard project.",
     "Recently opened projects": "Recently opened projects",
     "Recently opened individual projects": "Recently opened individual projects",
-    "Recently opened project groups": "Recently opened project groups"
+    "Recently opened project groups": "Recently opened project groups",
+    "Assign {count} crafts": "Assign {count} crafts",
+    "{count} selected": "{count} selected",
+    "No crafts match your search.": "No crafts match your search.",
+    "Select crafts": "Select crafts"
 }

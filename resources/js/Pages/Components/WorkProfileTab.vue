@@ -69,6 +69,8 @@
             </div>
         </section>
 
+
+
         <!-- Crafts -->
         <section class="rounded-3xl border border-zinc-200 bg-white shadow-sm">
             <div class="px-6 py-5 sm:px-8 sm:py-7">
@@ -160,89 +162,105 @@
                     </div>
                 </div>
 
-                <!-- Assign crafts -->
+
                 <div v-if="craftSettingsForm.canBeAssignedToShifts" class="mt-8">
                     <h4 class="text-sm font-medium text-zinc-900">
-                        {{  $t('Can be used in the following crafts') }}
+                        {{ $t('Can be used in the following crafts') }}
                     </h4>
 
-                    <label for="selectedCraftToAdd" class="mt-2 block text-xs text-zinc-500">
-                        {{  $t('Assign new crafts') }}
+                    <label for="selectedCraftsToAdd" class="mt-2 block text-xs text-zinc-500">
+                        {{ $t('Assign new crafts') }}
                     </label>
 
                     <div class="mt-2 flex flex-wrap items-center gap-3">
-                        <Listbox as="div" id="selectedCraftToAdd" class="relative" v-model="selectedCraftToAssign">
+
+                        <!-- Multi-select Listbox -->
+                        <Listbox as="div" id="selectedCraftsToAdd" class="relative" v-model="selectedCraftsToAssign" multiple>
                             <ListboxButton
                                 class="flex w-80 items-center justify-between rounded-xl border border-zinc-300 bg-white px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
                             >
-                <span class="block truncate">
-                  <template v-if="selectedCraftToAssign">
-                    {{ user.assignableCrafts.find(a => a.id === selectedCraftToAssign)?.name }}
-                  </template>
-                  <span v-else class="text-zinc-500">
-                    {{  $t('Select craft') }}
-                  </span>
-                </span>
-                                <ChevronDownIcon class="h-5 w-5 text-zinc-400" aria-hidden="true"/>
+                                <span class="block truncate">
+                                  <template v-if="selectedCraftsToAssign.length">
+                                    {{ $t('{count} selected', { count: selectedCraftsToAssign.length }) }}
+                                  </template>
+                                  <span v-else class="text-zinc-500">{{ $t('Select crafts') }}</span>
+                                </span>
+                                <ChevronDownIcon class="h-5 w-5 text-zinc-400" aria-hidden="true" />
                             </ListboxButton>
 
                             <ListboxOptions
-                                class="absolute z-10 mt-2 max-h-56 w-80 overflow-auto rounded-xl border border-zinc-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
+                                class="absolute z-10 mt-2 max-h-64 w-80 overflow-auto rounded-xl border border-zinc-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
                             >
-                                <ListboxOption
-                                    v-if="user.assignableCrafts.length === 0"
-                                    :key="0"
-                                    :value="null"
-                                    class="cursor-default rounded-lg px-2 py-2 text-zinc-400"
-                                >
-                                    {{ $t('There are no other crafts that can be assigned.') }}
-                                </ListboxOption>
+                                <!-- 1) Empty state -->
+                                <template v-if="filteredAssignableCrafts.length === 0">
+                                    <div
+                                        class="cursor-default rounded-lg px-2 py-2 text-zinc-400"
+                                        aria-disabled="true"
+                                    >
+                                        {{ $t('No crafts match your search.') }}
+                                    </div>
+                                </template>
 
-                                <ListboxOption
-                                    v-else
-                                    v-for="assignableCraft in user.assignableCrafts"
-                                    :key="assignableCraft.id"
-                                    :value="assignableCraft.id"
-                                    v-slot="{ active, selected }"
-                                    :class="[
-                    'flex cursor-pointer items-center justify-between rounded-lg px-2 py-2',
-                    active ? 'bg-blue-600 text-white' : 'text-zinc-900'
-                  ]"
-                                >
-                  <span :class="selected ? 'font-medium' : 'font-normal'">
-                    {{ assignableCraft.name }}
-                  </span>
-                                    <CheckIcon
-                                        v-if="selected"
-                                        class="h-5 w-5"
-                                        :class="active ? 'text-white' : 'text-blue-600'"
-                                        aria-hidden="true"
-                                    />
-                                </ListboxOption>
+                                <!-- 2) Header + Options -->
+                                <template v-else>
+                                    <!-- Sticky header: select all / clear -->
+                                    <div
+                                        class="sticky top-0 z-10 mb-1 flex items-center justify-between rounded-lg bg-zinc-50 px-2 py-1 text-xs"
+                                    >
+                                        <button type="button" class="underline" @click="selectAllFiltered">
+                                            {{ $t('Select all') }}
+                                        </button>
+                                        <button type="button" class="underline" @click="selectedCraftsToAssign = []">
+                                            {{ $t('Clear') }}
+                                        </button>
+                                    </div>
+
+                                    <!-- Options -->
+                                    <ListboxOption
+                                        v-for="assignableCraft in filteredAssignableCrafts"
+                                        :key="assignableCraft.id"
+                                        as="template"
+                                        :value="assignableCraft.id"
+                                        v-slot="{ active, selected, disabled }"
+                                        :class="[
+        'flex cursor-pointer items-center justify-between rounded-lg px-2 py-2'
+      ]"
+                                    >
+                                    <div>
+                                         <span :class="selected ? 'font-medium' : 'font-normal'">
+        {{ assignableCraft.name }}
+      </span>
+                                        <CheckIcon
+                                            v-if="selected"
+                                            class="h-5 w-5"
+                                            :class="active ? 'text-white' : 'text-blue-600'"
+                                            aria-hidden="true"
+                                        />
+                                    </div>
+                                    </ListboxOption>
+                                </template>
                             </ListboxOptions>
                         </Listbox>
 
-                        <AddButtonSmall
-                            :disabled="selectedCraftToAssign === null"
-                            :text="$t('Assign craft')"
-                            @click="assignCraft"
+                        <BaseUIButton
+                            :disabled="selectedCraftsToAssign.length === 0"
+                            :label="$t('Assign {count} crafts', { count: selectedCraftsToAssign.length })"
+                            @click="assignCraftsBulk"
+                            is-add-button
                         />
                     </div>
 
-                    <!-- Assigned crafts list -->
+                    <!-- Assigned crafts list (unchanged) -->
                     <div class="mt-4 flex flex-wrap gap-2">
                         <div
                             v-for="(craft, index) in user.assignedCrafts"
                             :key="craft.id || index"
                             class="group inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 pr-2"
                         >
-              <span
-                  class="ml-1 block size-8 rounded-full border-2"
-                  :style="{
-                  backgroundColor: backgroundColorWithOpacityOld(craft.color, 75),
-                  borderColor: craft.color
-                }"
-              />
+                      <span
+                          class="ml-1 block size-8 rounded-full border-2"
+                          :style="{ backgroundColor: backgroundColorWithOpacityOld(craft.color, 75), borderColor: craft.color }"
+                      />
                             <span class="text-sm text-zinc-800">{{ craft.name }}</span>
                             <button type="button" @click="removeCraft(craft.id)" class="rounded-full p-1 hover:bg-zinc-100">
                                 <XIcon class="h-4 w-4 text-zinc-400 hover:text-red-600" />
@@ -268,6 +286,7 @@ import { ChevronDownIcon, XIcon } from '@heroicons/vue/outline'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import AddButtonSmall from '@/Layouts/Components/General/Buttons/AddButtonSmall.vue'
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     userType: { type: String, required: true },                 // 'user' | 'freelancer' | 'serviceProvider'
@@ -296,6 +315,25 @@ const computedShiftQualifications = computed(() => {
         return { id: sq.id, name: sq.name, toggled: has }
     })
 })
+
+// NEW: Multi-select state + search
+const selectedCraftsToAssign = ref([])
+const craftSearch = ref('')
+const isAssigning = ref(false)
+const filteredAssignableCrafts = computed(() => {
+    const q = (craftSearch.value || '').toLowerCase().trim()
+    let list = props.user.assignableCrafts || []
+    if (q) {
+        list = list.filter(c => (c.name || '').toLowerCase().includes(q))
+    }
+    // Optional: doppelte Sicherheit – entferne bereits ausgewiesene
+    const assignedIds = new Set((props.user.assignedCrafts || []).map(c => c.id))
+    return list.filter(c => !assignedIds.has(c.id))
+})
+
+const selectAllFiltered = () => {
+    selectedCraftsToAssign.value = filteredAssignableCrafts.value.map(c => c.id)
+}
 
 /* Watch craft settings dirty -> patch automatically */
 watch(() => craftSettingsForm.isDirty, (dirty) => {
@@ -443,6 +481,65 @@ const removeCraft = (craftId) => {
     }
 }
 
+const assignCraftsBulk = async () => {
+    if (selectedCraftsToAssign.value.length === 0) return
+
+    // Routen ermitteln
+    let bulkRoute = null
+    let singleRoute = null
+    let routeParameter = {}
+
+    switch (props.userType) {
+        case 'user':
+            bulkRoute = 'user.assign.crafts.bulk'          // <- neuer Bulk-Endpunkt (empfohlen)
+            singleRoute = 'user.assign.craft'              // Fallback
+            routeParameter = { user: props.user.id }
+            break
+        case 'freelancer':
+            bulkRoute = 'freelancer.assign.crafts.bulk'
+            singleRoute = 'freelancer.assign.craft'
+            routeParameter = { freelancer: props.user.id }
+            break
+        case 'serviceProvider':
+            bulkRoute = 'service_provider.assign.crafts.bulk'
+            singleRoute = 'service_provider.assign.craft'
+            routeParameter = { serviceProvider: props.user.id }
+            break
+    }
+
+    const payload = { craftIds: selectedCraftsToAssign.value }
+
+    // 1) Versuche Bulk-Route (ein Request)
+    if (bulkRoute) {
+        try {
+            await router.patch(
+                route(bulkRoute, routeParameter),
+                payload,
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => (selectedCraftsToAssign.value = []),
+                }
+            )
+            return
+        } catch (e) {
+            // Fällt auf Einzel-Requests zurück – z. B. wenn Bulk-Endpunkt (noch) nicht existiert
+            // (Fehler wird absichtlich nicht rethrown, wir probieren Fallback)
+        }
+    }
+
+    // 2) Fallback: mehrere Einzel-Requests (notfalls sequentiell)
+    if (singleRoute) {
+        for (const id of selectedCraftsToAssign.value) {
+            await router.patch(
+                route(singleRoute, routeParameter),
+                { craftId: id },
+                { preserveScroll: true, preserveState: true }
+            )
+        }
+        selectedCraftsToAssign.value = []
+    }
+}
 /* Utils */
 const backgroundColorWithOpacityOld = (color, percent = 15) => {
     if (!color) return `rgba(255, 255, 255, ${percent / 100})`

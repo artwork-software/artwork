@@ -264,7 +264,7 @@
                                             :class="position.type === 'COST' ? 'text-red-600' : 'text-emerald-600'"
                                         >
                                             <span v-if="position.type === 'EARNING'">+</span><span v-else>-</span>
-                                            {{ toCurrency(position.value) }}
+                                            {{ toCurrency(parseFloat(position.value)) }}
                                         </div>
                                     </div>
                                 </div>

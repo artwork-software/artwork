@@ -77,8 +77,7 @@ class UserController extends Controller
 {
     public function __construct(
         protected AuthManager $auth,
-    )
-    {
+    ) {
         $this->authorizeResource(User::class, 'user');
     }
 
@@ -910,6 +909,24 @@ class UserController extends Controller
         }
 
         $user->assignedCrafts()->attach($craftToAssign);
+
+        return Redirect::back();
+    }
+
+    public function assignCraftsBulk(User $user, Request $request)
+    {
+        $this->authorize('updateWorkProfile', User::class);
+
+        $craftIds = $request->get('craftIds', []);
+
+        $validCraftIds = Craft::whereIn('id', $craftIds)->pluck('id')->toArray();
+
+        // Filter out already assigned crafts
+        $newCraftIds = array_diff($validCraftIds, $user->assignedCrafts()->pluck('craft_id')->toArray());
+
+        if (!empty($newCraftIds)) {
+            $user->assignedCrafts()->attach($newCraftIds);
+        }
 
         return Redirect::back();
     }

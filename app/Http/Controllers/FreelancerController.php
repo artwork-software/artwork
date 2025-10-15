@@ -184,6 +184,14 @@ class FreelancerController extends Controller
         return Redirect::back();
     }
 
+    public function assignCraftsBulk(Freelancer $freelancer, Request $request): RedirectResponse
+    {
+        $craftIds = $request->get('craftIds', []);
+        $freelancer->assignedCrafts()->syncWithoutDetaching($craftIds);
+
+        return Redirect::back();
+    }
+
     /**
      * @throws AuthorizationException
      */

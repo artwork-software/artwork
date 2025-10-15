@@ -3293,5 +3293,9 @@
     "Create a standard project.": "Erstelle ein Standardprojekt.",
     "Recently opened projects": "Zuletzt geöffnete Projekte",
     "Recently opened individual projects": "Zuletzt geöffnete Einzelprojekte",
-    "Recently opened project groups": "Zuletzt geöffnete Projektgruppen"
+    "Recently opened project groups": "Zuletzt geöffnete Projektgruppen",
+    "Assign {count} crafts": "{count} Gewerke zuweisen",
+    "{count} selected": "{count} ausgewählt",
+    "No crafts match your search.": "Keine Gewerke entsprechen deiner Suche.",
+    "Select crafts": "Gewerke auswählen"
 }

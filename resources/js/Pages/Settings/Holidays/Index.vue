@@ -1,15 +1,50 @@
 <template>
     <AppLayout :title="$t('Public holidays & school vacations via interface')">
         <EventSettingHeader>
+
+            <!-- Länderwahl -->
+            <fieldset class="my-4 bg-white rounded-2xl border border-gray-200/70 shadow-sm p-5">
+                <label class="block text-sm/6 font-semibold text-gray-900 dark:text-white mb-2">
+                    {{ $t('Choose a country') }}
+                </label>
+
+                <div class="mt-3 flex items-center gap-4">
+                    <div
+                        v-for="c in countries"
+                        :key="c.id"
+                        class="flex items-center gap-2"
+                    >
+                        <input
+                            :id="`country-${c.id}`"
+                            type="radio"
+                            name="country"
+                            class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                            v-model="selectedCountryId"
+                            :value="c.id"
+                            :aria-label="c.name"
+                        />
+                        <label
+                            :for="`country-${c.id}`"
+                            class="inline-flex items-center gap-2 cursor-pointer select-none"
+                        >
+                            <img :src="c.image" :alt="c.name" class="size-12 rounded-full" />
+                            <span class="text-sm text-gray-900 dark:text-white">{{ c.name }}</span>
+                        </label>
+                    </div>
+                </div>
+            </fieldset>
+
+
             <!-- Intro / Hero -->
-            <section class="">
+            <section>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+
                     <!-- API Import Card -->
                     <div class="bg-white rounded-2xl border border-gray-200/70 shadow-sm">
                         <div class="p-6 sm:p-8">
                             <BasePageTitle
-                                title="Public holidays & school vacations via interface"
-                                description="With this interface, you can select the public holidays and school vacations for the federal states that are relevant to you. This means you only receive the data you really need and it is automatically entered into your calendar. You can update your calendar at any time to ensure that it always contains the latest public holidays and school vacations for your selected federal states. This keeps you informed at all times and allows you to plan with ease and precision."
+                                :title="$t('Public holidays & school vacations via interface')"
+                                :description="$t('With this interface, you can select the public holidays and school vacations for the federal states that are relevant to you. This means you only receive the data you really need and it is automatically entered into your calendar. You can update your calendar at any time to ensure that it always contains the latest public holidays and school vacations for your selected federal states. This keeps you informed at all times and allows you to plan with ease and precision.')"
                             />
 
                             <transition
@@ -23,6 +58,7 @@
                                 <div
                                     v-show="showAPIHolidaySaved"
                                     class="mt-4 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg w-full sm:w-2/3"
+                                    aria-live="polite"
                                 >
                                     {{ $t('Saved. The changes have been successfully applied.') }}
                                 </div>
@@ -31,11 +67,12 @@
                             <!-- Auswahl & Farbe -->
                             <div class="mt-8">
                                 <BasePageTitle
-                                    title="Select states & color"
-                                    description="Select the federal states for which you want to import the public holidays and school vacations into your calendar. You can select as many federal states as you like. You can then specify a color in which the public holidays and school vacations should be displayed in your calendar."
+                                    :title="$t('Select states & color')"
+                                    :description="$t('Select the federal states for which you want to import the public holidays and school vacations into your calendar. You can select as many federal states as you like. You can then specify a color in which the public holidays and school vacations should be displayed in your calendar.')"
                                 />
 
                                 <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                                    <!-- Dropdown zeigt dieselben gefilterten Einträge -->
                                     <Listbox as="div" class="relative w-full sm:max-w-md">
                                         <ListboxButton class="menu-button">
                                             <span class="flex items-center justify-between w-full">
@@ -53,7 +90,7 @@
                                             >
                                                 <ListboxOption
                                                     as="template"
-                                                    v-for="subdivision in computedSubDivisions"
+                                                    v-for="subdivision in filteredSubdivisions"
                                                     :key="subdivision.id"
                                                 >
                                                     <li
@@ -73,7 +110,7 @@
                                     />
                                 </div>
 
-                                <!-- Chips -->
+                                <!-- Chips der Auswahl -->
                                 <div class="mt-4" v-if="holidayForm.selectedSubdivisions.length > 0">
                                     <div class="flex items-center flex-wrap gap-2 w-full">
                                         <div
@@ -95,8 +132,8 @@
                             <!-- Was importieren -->
                             <div class="mt-8">
                                 <BasePageTitle
-                                    title="What data would you like to import?"
-                                    description="Select whether you only want to import the public holidays or also the school vacations into your calendar."
+                                    :title="$t('What data would you like to import?')"
+                                    :description="$t('Select whether you only want to import the public holidays or also the school vacations into your calendar.')"
                                 />
 
                                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -147,8 +184,8 @@
                         <div class="p-6 sm:p-8">
                             <div class="mb-2">
                                 <BasePageTitle
-                                    title="Create holidays & school vacations yourself"
-                                    description="Here you have the option of creating public holidays and school vacations yourself. These are then displayed in your calendar and you can edit them individually. For example, you can also create your own public holidays or school vacations that are not included in the official calendars."
+                                    :title="$t('Create holidays & school vacations yourself')"
+                                    :description="$t('Here you have the option of creating public holidays and school vacations yourself. These are then displayed in your calendar and you can edit them individually. For example, you can also create your own public holidays or school vacations that are not included in the official calendars.')"
                                 />
                             </div>
 
@@ -163,6 +200,7 @@
                                 <div
                                     v-show="showCustomHolidaySaved"
                                     class="mt-4 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg"
+                                    aria-live="polite"
                                 >
                                     {{ $t('Saved. The changes have been successfully applied.') }}
                                 </div>
@@ -171,8 +209,8 @@
                             <!-- Auswahl & Farbe -->
                             <div class="mt-6">
                                 <BasePageTitle
-                                    title="Select states & color"
-                                    description="Select the federal states that should apply to this public holiday. You can select as many federal states as you like. You can then specify a color in which the public holiday should be displayed in your calendar. You do not have to select a federal state if the public holiday applies throughout Germany."
+                                    :title="$t('Select states & color')"
+                                    :description="$t('Select the federal states that should apply to this public holiday. You can select as many federal states as you like. You can then specify a color in which the public holiday should be displayed in your calendar. You do not have to select a federal state if the public holiday applies throughout Germany.')"
                                 />
                                 <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-4">
                                     <Listbox
@@ -195,7 +233,7 @@
                                             >
                                                 <ListboxOption
                                                     as="template"
-                                                    v-for="subdivision in subdivisions"
+                                                    v-for="subdivision in filteredSubdivisions"
                                                     :key="subdivision.id"
                                                     :value="subdivision"
                                                     v-slot="{ active, selected }"
@@ -361,6 +399,7 @@
                                 <div
                                     v-show="showHolidayUpdatedSuccess"
                                     class="text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg w-full sm:w-1/2 lg:w-1/3"
+                                    aria-live="polite"
                                 >
                                     {{ $t('Saved. The changes have been successfully applied.') }}
                                 </div>
@@ -535,11 +574,10 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     holidays: { type: Object, required: true },
-    subdivisions: { type: Object, required: true },
+    subdivisions: { type: Array, required: true }, // Array statt Object
     settings: { type: Object, required: true }
 })
 
-const query = ref('')
 const page = ref(route().params.page ?? 1)
 const perPage = ref(route().params.entitiesPerPage ?? 10);
 const showCustomHolidaySaved = ref(false);
@@ -554,12 +592,13 @@ const showHolidayUpdatedSuccess = ref(false);
 const showErrorMessageDate = ref(false);
 const changedHolidays = ref({});
 
+// Formulare
 const holidayForm = useForm({
     color: '#1c77d7',
     public_holidays: props.settings.public_holidays ?? false,
     school_holidays: props.settings.school_holidays ?? false,
     selectedSubdivisions: reactive(
-        props.subdivisions.filter(subdivision => props.settings.subdivisions.includes(subdivision.id))
+        props.subdivisions.filter(subdivision => (props.settings.subdivisions || []).includes(subdivision.id))
     ),
 })
 
@@ -574,20 +613,33 @@ const customHolidayForm = useForm({
     treatAsSpecialDay: false,
 })
 
+// Länderwahl & Suche
+const countries = [
+    { id: "de", name: "Deutschland", image: "/storage/country-flags/germany.png", country_code: "DE"  },
+    { id: "ch", name: "Schweiz",     image: "/storage/country-flags/switzerland.png", country_code: "CH" },
+];
+const selectedCountryId = ref("de");
+const searchQuery = ref("");
+
+// Menge der bereits ausgewählten IDs (für schnelle Exklusion)
+const selectedIds = computed(() => new Set(holidayForm.selectedSubdivisions.map(s => s.id)));
+
+// Gefilterte Subdivisions: nach Land + Query + nicht bereits gewählt
+const filteredSubdivisions = computed(() => {
+    const wanted = countries.find(c => c.id === selectedCountryId.value)?.country_code;
+    const q = searchQuery.value.trim().toLowerCase();
+    return props.subdivisions.filter(s =>
+        s.country_code === wanted &&
+        !selectedIds.value.has(s.id) &&
+        (q === "" || s.name.toLowerCase().includes(q))
+    );
+});
+
+// Farbe
 const updateColor = (color) => { holidayForm.color = color }
 const updateColorCustomHoliday = (color) => { customHolidayForm.color = color }
 
-const submitHolidayForm = () => {
-    holidayForm.post(route('holiday.api.call'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            showAPIHolidaySaved.value = true;
-            setTimeout(() => { showAPIHolidaySaved.value = false }, 5000)
-            applyFiltersAndSort();
-        }
-    })
-}
-
+// Auswahl hinzufügen/entfernen
 const addSubDivisionToForm = (subdivision) => {
     if (holidayForm.selectedSubdivisions.find(sub => sub.id === subdivision.id)) {
         holidayForm.selectedSubdivisions = holidayForm.selectedSubdivisions.filter(sub => sub.id !== subdivision.id)
@@ -601,17 +653,6 @@ const removeSubDivisionFormForm = (id) => {
     subDivisionsToDelete.value = id;
 }
 
-const computedSubDivisions = computed(() => {
-    return props.subdivisions.filter(subdivision => {
-        return !holidayForm.selectedSubdivisions.find(sub => sub.id === subdivision.id) &&
-            subdivision.name.toLowerCase().includes(query.value.toLowerCase())
-    })
-})
-
-const removeSubDivisionFormCustomHoliday = (id) => {
-    customHolidayForm.selectedSubdivisions = customHolidayForm.selectedSubdivisions.filter(sub => sub.id !== id)
-}
-
 const confirmDeleteSubdivision = () => {
     holidayForm.selectedSubdivisions = holidayForm.selectedSubdivisions.filter(sub => sub.id !== subDivisionsToDelete.value)
     showDeleteModal.value = false;
@@ -621,6 +662,22 @@ const confirmDeleteSubdivision = () => {
 const closeDeleteModal = () => {
     showDeleteModal.value = false;
     subDivisionsToDelete.value = null;
+}
+
+const removeSubDivisionFormCustomHoliday = (id) => {
+    customHolidayForm.selectedSubdivisions = customHolidayForm.selectedSubdivisions.filter(sub => sub.id !== id)
+}
+
+// API Calls / Pagination
+const submitHolidayForm = () => {
+    holidayForm.post(route('holiday.api.call'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showAPIHolidaySaved.value = true;
+            setTimeout(() => { showAPIHolidaySaved.value = false }, 5000)
+            applyFiltersAndSort();
+        }
+    })
 }
 
 const updatePage = (pageNumber, entitiesPerPage) => {
@@ -669,9 +726,9 @@ const applyFiltersAndSort = (resetPage = true) => {
 }
 
 const storeCustomHoliday = () => {
-    // add check if date is set
-    showErrorMessageDate.value = customHolidayForm.date === null;
-    if (customHolidayForm.date === null) return;
+    // robustere Prüfung
+    showErrorMessageDate.value = !customHolidayForm.date;
+    if (!customHolidayForm.date) return;
 
     customHolidayForm.post(route('holiday.store'), {
         preserveScroll: true,
@@ -701,7 +758,7 @@ const editHoliday = (holiday) => {
 }
 
 const getHolidayTreatAsSpecialDay = (holiday) => {
-    if (changedHolidays.value.hasOwnProperty(holiday.id)) {
+    if (Object.prototype.hasOwnProperty.call(changedHolidays.value, holiday.id)) {
         return changedHolidays.value[holiday.id];
     }
     return holiday.treatAsSpecialDay;
@@ -730,7 +787,6 @@ const saveChanges = () => {
 </script>
 
 <style scoped>
-/* Optional: kleine optische Verfeinerungen für kompaktere Tabellenabstände auf Mobile */
 @media (max-width: 640px) {
     table thead th { white-space: nowrap; }
 }

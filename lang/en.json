@@ -3301,5 +3301,6 @@
     "The user was successfully added to the shift.": "The user was successfully added to the shift.",
     "The user was successfully removed from the shift.": "The user was successfully removed from the shift.",
     "This user does not have a matching qualification for this shift.": "This user does not have a matching qualification for this shift.",
-    "Something went wrong while saving. Please try again.": "Something went wrong while saving. Please try again."
+    "Something went wrong while saving. Please try again.": "Something went wrong while saving. Please try again.",
+    "Open in calendar": "Open in calendar"
 }

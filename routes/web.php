@@ -577,6 +577,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Event Views
     Route::get('/calendar/view', [EventController::class, 'viewEventIndex'])->name('events');
+    Route::get('/dashboard/redirect/calendar/{event}', [EventController::class, 'redirectToCalendar'])->name('dashboard.redirect-to-calendar');
     Route::get('/response/all/events', [EventController::class, 'allEventsAPI'])->name('events.all');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
         ->name('events.for-rooms-by-days-and-project');

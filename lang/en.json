@@ -3292,5 +3292,14 @@
     "Select crafts": "Select crafts",
     "Set the width in pixels": "Set the width in pixels",
     "Suggest": "Suggest",
-    "These widths affect only the bulk view table. You can adjust them anytime.": "These widths affect only the bulk view table. You can adjust them anytime."
+    "These widths affect only the bulk view table. You can adjust them anytime.": "These widths affect only the bulk view table. You can adjust them anytime.",
+    "Assigned": "Assigned",
+    "Removed": "Removed",
+    "Qualification required": "Qualification required",
+    "Save failed": "Save failed",
+    "No matching qualification for this shift": "No matching qualification for this shift",
+    "The user was successfully added to the shift.": "The user was successfully added to the shift.",
+    "The user was successfully removed from the shift.": "The user was successfully removed from the shift.",
+    "This user does not have a matching qualification for this shift.": "This user does not have a matching qualification for this shift.",
+    "Something went wrong while saving. Please try again.": "Something went wrong while saving. Please try again."
 }

@@ -8,7 +8,7 @@
             @click="handleClickEvent"
         >
             <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
-                <input v-model="userForMultiEdit.shift_ids"
+                <input :checked="userForMultiEdit.shift_ids.includes(shift.id)"
                        @change="(e) => handleShiftAndEventForMultiEdit(e.target.checked, shift, event)"
                        type="checkbox"
                        :value="shift.id"

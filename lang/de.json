@@ -3300,5 +3300,14 @@
     "Select crafts": "Gewerke auswählen",
     "Set the width in pixels": "Setze die Breite in Pixeln",
     "Suggest": "Vorschlag",
-    "These widths affect only the bulk view table. You can adjust them anytime.": "Diese Breiten wirken sich nur auf die Tabellenansicht im Mehrfachmodus aus. Du kannst sie jederzeit anpassen."
+    "These widths affect only the bulk view table. You can adjust them anytime.": "Diese Breiten wirken sich nur auf die Tabellenansicht im Mehrfachmodus aus. Du kannst sie jederzeit anpassen.",
+    "Assigned": "Zugeordnet",
+    "Removed": "Entfernt",
+    "Qualification required": "Qualifikation erforderlich",
+    "Save failed": "Speichern fehlgeschlagen",
+    "No matching qualification for this shift": "Keine passende Qualifikation für diese Schicht",
+    "The user was successfully added to the shift.": "Der Benutzer wurde erfolgreich zur Schicht hinzugefügt.",
+    "The user was successfully removed from the shift.": "Der Benutzer wurde erfolgreich von der Schicht entfernt.",
+    "This user does not have a matching qualification for this shift.": "Dieser Benutzer hat keine passende Qualifikation für diese Schicht.",
+    "Something went wrong while saving. Please try again.": "Beim Speichern ist ein Fehler aufgetreten. Bitte versuche es erneut."
 }

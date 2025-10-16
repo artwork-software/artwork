@@ -131,7 +131,7 @@
                               <div class="relative my-auto w-full ml-8 mr-12">
                                   <input id="name" v-model="form.name" type="text"
                                          class="peer pl-0 h-12 w-full border-b-2 border-gray-300 focus:border-indigo-600 focus:ring-0"
-                                         placeholder="placeholder"/>
+                                         />
                                   <label for="name"
                                          class="absolute left-0 -top-3.5 text-sm text-gray-600 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm">
                                       {{ $t('Name of the team*') }}
@@ -148,7 +148,7 @@
                                   <div class="my-auto w-full">
                                       <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
                                              class="peer pl-0 h-12 w-full border-b-2 border-gray-300 focus:border-indigo-600 focus:ring-0"
-                                             placeholder="placeholder"/>
+                                             />
                                       <label for="userSearch"
                                              class="absolute left-0 -top-3.5 text-sm text-gray-600 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm">
                                           {{ $t('Name') }}
@@ -221,7 +221,7 @@
                       <div class="flex justify-between mt-6">
                           <button class="bg-white inline-flex items-center px-6 py-3 border text-base font-bold shadow-sm text-gray-800"
                                   @click="deleteTeam">
-                              {{ $t('Delete all team members') }}
+                              {{ $t('Delete Team') }}
                           </button>
                           <div class="flex my-auto">
                               <span @click="closeDeleteTeamModal" class="xsLight cursor-pointer">{{ $t('No, not really') }}</span>

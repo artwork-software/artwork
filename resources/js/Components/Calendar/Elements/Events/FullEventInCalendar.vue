@@ -274,8 +274,8 @@
             <!-- Rechte 1/3 Spalte: Properties + Aktionen -->
             <div class="pt-1 flex flex-col justify-start items-end">
                 <!-- Kontext-Menü -->
-                <div class="invisible group-hover/singleEvent:visible">
-                    <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background>
+                <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150">
+                    <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" title="Request verification" />
                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
                         <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
@@ -471,8 +471,8 @@
                                         stroke="1.5"
                                     />
                                 </div>
-                                <div class="invisible group-hover/singleEvent:visible">
-                                    <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background>
+                                <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150">
+                                    <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" title="Request verification" />
                                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
                                         <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />

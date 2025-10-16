@@ -343,7 +343,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/departments/{department}', [DepartmentController::class, 'update'])->name('departments.edit');
     Route::patch('/departments/{department}/remove/members', [DepartmentController::class, 'removeAllMembers'])
         ->name('departments.remove.members');
-    Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
+    Route::delete('/departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
 
     //Projects
     Route::post('/projects/{project}/pin', [ProjectController::class, 'pin'])->name('project.pin');

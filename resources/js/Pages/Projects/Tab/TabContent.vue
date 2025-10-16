@@ -1,17 +1,17 @@
 <template>
-    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id" :print-layouts="printLayouts">
+    <ProjectHeaderComponent :header-object="headerObject" :project="project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id" :print-layouts="printLayouts">
         <div class="my-10 w-full">
             <div v-for="component in currentTab.components" :class="removeML(component.component?.type)">
                 <Component
                     v-if="canSeeComponent(component.component)"
                     :is="componentMapping[component.component?.type]"
                     :can-edit-component="canEditComponent(component.component)"
-                    :project="headerObject.project"
+                    :project="project"
                     :in-sidebar="false"
                     :loadedProjectInformation="loadedProjectInformation"
                     :header-object="headerObject"
                     :data="component.component"
-                    :project-id="headerObject.project.id"
+                    :project-id="project.id"
                     :projectCategories="headerObject.projectCategories"
                     :projectGenres="headerObject.projectGenres"
                     :projectSectors="headerObject.projectSectors"
@@ -61,12 +61,12 @@
                             v-if="canSeeComponent(component.component)"
                             :is="componentMapping[component.component?.type]"
                             :can-edit-component="canEditComponent(component.component)"
-                            :project="headerObject.project"
+                            :project="project"
                             :in-sidebar="true"
                             :loadedProjectInformation="loadedProjectInformation"
                             :header-object="headerObject"
                             :data="component.component"
-                            :project-id="headerObject.project.id"
+                            :project-id="project.id"
                             :projectCategories="headerObject.projectCategories"
                             :projectGenres="headerObject.projectGenres"
                             :projectSectors="headerObject.projectSectors"
@@ -89,7 +89,7 @@
 </template>
 
 <script setup>
-import {provide, ref} from 'vue';
+import {onMounted, provide, ref} from 'vue';
 import {usePage} from "@inertiajs/vue3";
 import ProjectHeaderComponent from "@/Pages/Projects/Tab/Components/ProjectHeaderComponent.vue";
 import TextField from "@/Pages/Projects/Tab/Components/TextField.vue";
@@ -202,6 +202,10 @@ const props = defineProps({
     printLayouts: {
         type: Object,
         required: true
+    },
+    project: {
+        type: Object,
+        required: true
     }
 });
 
@@ -228,4 +232,38 @@ const removeML = (componentType) => {
         return 'artwork-container !pb-0 !mb-0 !mt-0';
     }
 };
+
+onMounted(() => {
+    try {
+        const project = props.headerObject?.project;
+        if (!project?.id || !project?.name) return;
+
+        // Bestehende Liste abrufen oder leeres Array initialisieren
+        const stored = localStorage.getItem('lastedProjects');
+        let lastedProjects = Array.isArray(JSON.parse(stored)) ? JSON.parse(stored) : [];
+
+        // Projekt, falls vorhanden, entfernen
+        lastedProjects = lastedProjects.filter(p => p.id !== project.id);
+
+        // Neues Projekt an den Anfang setzen
+        lastedProjects.unshift({
+            id: project.id,
+            name: project.name,
+            updatedAt: new Date().toISOString(), // optional: für spätere Sortierung
+            key_visual_path: project.key_visual_path,
+            is_group: project.is_group,
+        });
+
+        // Nur die letzten 10 behalten
+        if (lastedProjects.length > 10) {
+            lastedProjects = lastedProjects.slice(0, 10);
+        }
+
+        // In LocalStorage speichern
+        localStorage.setItem('lastedProjects', JSON.stringify(lastedProjects));
+    } catch (error) {
+        console.warn('Fehler beim Aktualisieren der letzten Projekte:', error);
+    }
+});
+
 </script>

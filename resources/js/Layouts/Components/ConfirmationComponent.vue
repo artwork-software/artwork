@@ -1,24 +1,16 @@
 <template>
-    <BaseModal @closed="closeModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_warning.svg">
-            <div class="mx-4">
-                <div class="font-black font-lexend text-primary text-3xl my-2">
-                    {{ titel }}
-                </div>
-                <div class="text-error subpixel-antialiased">
-                    {{ description }}
-                </div>
-                <div class="flex justify-between mt-6">
-                    <FormButton
-                        @click="closeModal(true)"
-                        :text="confirm ?? $t('Yes')"
-                    />
-                    <div class="my-auto xsLight cursor-pointer"
-                        @click="closeModal(false)">
-                        {{ cancel ?? $t('No, not really') }}
-                    </div>
-                </div>
+    <ArtworkBaseModal @close="closeModal(false)" v-if="true" :title="titel" description="">
+        <div class="mt-5">
+            <BaseAlertComponent :message="description" type="error"/>
+        </div>
+        <div class="">
+            <div class="flex justify-between mt-6">
+                <BaseUIButton label="Delete" use-translation is-delete-button @click="closeModal(true)"/>
+
+                <BaseUIButton label="No, not really" use-translation @click="closeModal(false)" icon="IconCancel"/>
             </div>
-    </BaseModal>
+        </div>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -29,11 +21,17 @@ import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 
 export default {
     name: 'ConfirmationComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseAlertComponent,
+        BaseUIButton,
+        ArtworkBaseModal,
         BaseModal,
         FormButton,
         JetDialogModal,

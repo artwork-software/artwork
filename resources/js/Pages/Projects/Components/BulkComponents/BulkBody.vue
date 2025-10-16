@@ -73,30 +73,40 @@
                     />
                 </div>
 
+                <FunctionBarFilter
+                    :user_filters="usePage().props.user_filters"
+                    :personal-filters="usePage().props.personalFilters"
+                    :filter-options="usePage().props.filterOptions"
+                    :filter-type="'calendar_filter'"
+                />
+
                 <ToolTipComponent
                     :icon="IconCircuitCapacitorPolarized"
-                    icon-size="h-7 w-7"
+                    icon-size="size-5"
                     :tooltip-text="$t('Customize column size')"
                     direction="bottom"
                     @click="hasCreateEventsPermission ? showIndividualColumnSizeConfigModal = true : null"
                     :class="!hasCreateEventsPermission ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
+                    classes-button="ui-button"
                 />
                 <ToolTipComponent
                     :icon="IconFileExport"
-                    icon-size="h-7 w-7"
+                    icon-size="size-5"
                     :tooltip-text="$t('Export project list')"
                     direction="bottom"
                     @click="showExportModal = true"
+                    classes-button="ui-button"
                 />
                 <ToolTipComponent
                     :icon="IconCalendarMonth"
-                    icon-size="h-7 w-7"
+                    icon-size="size-5"
                     :tooltip-text="$t('Show project period in calendar')"
                     direction="bottom"
                     @click="useProjectTimePeriodAndRedirect()"
+                    classes-button="ui-button"
                 />
 
-                <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72" class="!w-fit" :disabled="!hasCreateEventsPermission">
+                <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" class="!w-fit ui-button" :disabled="!hasCreateEventsPermission">
                     <MenuItem v-slot="{ active }">
                         <div @click="hasCreateEventsPermission ? updateUserSortId(1) : null"
                              :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
@@ -277,6 +287,7 @@
     <export-modal v-if="showExportModal"
                   @close="showExportModal = false"
                   :enums="[
+                      exportTabEnums.PDF_CALENDAR_EXPORT,
                       exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
                       exportTabEnums.EXCEL_CALENDAR_EXPORT,
                       exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
@@ -336,6 +347,7 @@ import IndividualColumnSizeConfigModal from "@/Pages/Projects/Components/BulkCom
 import DividerChip from "@/Artwork/Divider/DividerChip.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import { useBulkEventsBroadcastUpdater } from '@/Composeables/Listener/useBulkEventsBroadcastUpdater.js';
+import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 
 const exportTabEnums = useExportTabEnums();
 const {hasAdminRole, can} = usePermission(usePage().props);

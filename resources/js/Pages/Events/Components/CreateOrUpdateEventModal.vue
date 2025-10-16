@@ -352,6 +352,7 @@
                                        {{ project.name }}
                                    </div>
                                </div>
+
                            </div>
 
                        </div>

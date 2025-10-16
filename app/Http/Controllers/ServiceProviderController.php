@@ -154,6 +154,19 @@ class ServiceProviderController extends Controller
         return Redirect::back();
     }
 
+    public function assignCraftsBulk(ServiceProvider $serviceProvider, Request $request): RedirectResponse
+    {
+        $craftsToAssign = Craft::whereIn('id', $request->get('craftIds'))->get();
+
+        foreach ($craftsToAssign as $craft) {
+            if (!$serviceProvider->assignedCrafts->contains($craft)) {
+                $serviceProvider->assignedCrafts()->attach($craft);
+            }
+        }
+
+        return Redirect::back();
+    }
+
     /**
      * @throws AuthorizationException
      */

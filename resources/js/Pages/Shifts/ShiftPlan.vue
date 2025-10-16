@@ -1,7 +1,50 @@
 <template>
     <div class="w-full flex flex-col">
         <ShiftHeader>
-
+            <div aria-live="assertive" class="pointer-events-none fixed z-100 inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6">
+                <div class="flex w-full flex-col items-center space-y-4 sm:items-end">
+                    <transition
+                        enter-active-class="transform ease-out duration-300 transition"
+                        enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+                        enter-to-class="translate-y-0 sm:translate-x-0"
+                        leave-active-class="transition ease-in duration-100"
+                        leave-from-class=""
+                        leave-to-class="opacity-0"
+                    >
+                        <div
+                            v-if="notice.show"
+                            class="pointer-events-auto w-full max-w-sm rounded-lg bg-white shadow-lg outline-1 outline-black/5 dark:bg-gray-800 dark:-outline-offset-1 dark:outline-white/10"
+                            role="status"
+                        >
+                            <div class="p-4">
+                                <div class="flex items-start">
+                                    <div class="shrink-0">
+                                        <PropertyIcon :name="noticeIcon" class="size-6" :class="noticeIconClass" aria-hidden="true" />
+                                    </div>
+                                    <div class="ml-3 w-0 flex-1 pt-0.5">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                            {{ notice.title }}
+                                        </p>
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                            {{ notice.message }}
+                                        </p>
+                                    </div>
+                                    <div class="ml-4 flex shrink-0">
+                                        <button
+                                            type="button"
+                                            @click="hideNotice"
+                                            class="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 dark:hover:text-white dark:focus:outline-indigo-500"
+                                        >
+                                            <span class="sr-only">Close</span>
+                                            <IconX class="size-5" aria-hidden="true" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </transition>
+                </div>
+            </div>
             <transition name="fade" appear>
                 <div class="pointer-events-none fixed z-100 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
                     <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
@@ -265,7 +308,7 @@
                                 </div>
                             </div>
                             <div class="pointer-events-none -mt-1" v-if="multiEditMode">
-                                <div v-if="Object.keys(multiEditCellByDayAndUser).length === 0">
+                                <!--<div v-if="">
                                     <button type="button"
                                             @click="initializeMultiEditSave"
                                             :disabled="this.userForMultiEdit === null"
@@ -278,8 +321,8 @@
                                             ]">
                                         {{ $t('Save') }}
                                     </button>
-                                </div>
-                                <div v-else class="flex items-center justify-center gap-3">
+                                </div>-->
+                                <div v-if="Object.keys(multiEditCellByDayAndUser).length !== 0" class="flex items-center justify-center gap-3">
                                     <button type="button"
                                             @click="showCellMultiEditModal = true"
                                             :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
@@ -811,8 +854,6 @@ export default {
                 assignToShift: [],
                 removeFromShift: []
             },
-            showShiftsQualificationsAssignmentModal: false,
-            showShiftsQualificationsAssignmentModalShifts: [],
             firstDayPosition: this.days ? this.days[this.days.findIndex((day) => !day.isExtraRow)] : null,
             currentDayOnView:  this.days ? this.days[this.days.findIndex((day) => !day.isExtraRow)] : null,
             currentDaysInView: new Set(),
@@ -823,8 +864,6 @@ export default {
             showCellMultiEditModal: false,
             openCellMultiEditDelete: false,
             preventNextNavigation: false,
-            resolveModalClose: null,
-            waitForModalClose: false,
             navigationGuardActive: true,
             originalVisit: null,
             showShiftQualificationFilter: false,
@@ -841,7 +880,27 @@ export default {
             _heightRatio: 0.4,        // Verhältnis topPane/available (initialer Guess)
             _resizingHandler: null,
             _stopHandler: null,
-            _resizeObs: null
+            _resizeObs: null,
+            saveQueue: Promise.resolve(),
+            savingShiftIds: new Set(),
+            showShiftsQualificationsAssignmentModal: false,
+            showShiftsQualificationsAssignmentModalShifts: [],
+            waitForModalClose: false,
+            resolveModalClose: null,
+
+            // Single-Pick (Variante A oder B)
+            _singlePickResolve: null,
+            _singlePickShiftId: null,
+
+            // Session-Abgrenzung gegen Stale-Tasks
+            multiEditSessionId: 0,
+            notice: {
+                show: false,
+                kind: 'success', // 'success' | 'error' | 'info'
+                title: '',
+                message: '',
+                _timeoutId: null,
+            },
         }
     },
     mounted() {
@@ -905,6 +964,21 @@ export default {
         window.addEventListener("resize", this.updateHeight);
     },
     computed: {
+        noticeIcon() {
+            // Namen der Heroicons/Lucide-Komponenten anpassen, wenn du andere nutzt
+            switch (this.notice.kind) {
+                case 'error': return 'IconExclamationCircle';
+                case 'info':  return 'IconInfoCircle';
+                default:      return 'IconCircleCheck';
+            }
+        },
+        noticeIconClass() {
+            return {
+                'text-green-400': this.notice.kind === 'success',
+                'text-red-400':   this.notice.kind === 'error',
+                'text-blue-400':  this.notice.kind === 'info',
+            };
+        },
         craftsToDisplay() {
             const crafts = this.crafts
                 .map(
@@ -1708,11 +1782,48 @@ export default {
             this.typeToHighlight = type;
         },
         addUserToMultiEdit(item) {
+            // 1) Bestehende UI-Interaktionen sauber schließen
+            this._cancelOpenPickersAndModals();
+
+            // 2) Neue Session starten -> alle alten Saves ignorieren
+            this.multiEditSessionId++;
+            this.saveQueue = Promise.resolve();
+
+            // 3) UI-State leeren
             this.userToMultiEditCheckedShiftsAndEvents = [];
+            this.savingShiftIds = new Set();
+            this.showShiftsQualificationsAssignmentModalShifts = [];
+            this.showShiftsQualificationsAssignmentModal = false;
+            this.waitForModalClose = false;
+
+            // 4) User setzen (und Arrays KOPIEREN, nicht referenzteilen!)
             this.userForMultiEdit = item;
-            if (item !== null) {
-                this.userToMultiEditCurrentShifts = this.userForMultiEdit.shift_ids;
+            const ids = Array.isArray(item?.shift_ids) ? [...item.shift_ids] : [];
+            this.userForMultiEdit.shift_ids = ids;               // editierbarer, eigener Array
+            this.userToMultiEditCurrentShifts = [...ids];        // Snapshot für removeFromShift etc.
+
+            // optional: Qualifikationen defensiv kopieren
+            if (Array.isArray(item?.shift_qualifications)) {
+                this.userForMultiEdit.shift_qualifications = [...item.shift_qualifications];
             }
+        },
+
+        _cancelOpenPickersAndModals() {
+            // Bulk-Modal Resolver beenden
+            if (this.resolveModalClose) {
+                try { this.resolveModalClose(); } catch(_) {}
+                this.resolveModalClose = null;
+            }
+            // Single-Picker Resolver beenden
+            if (this._singlePickResolve) {
+                try { this._singlePickResolve(null); } catch(_) {}
+                this._singlePickResolve = null;
+                this._singlePickShiftId = null;
+            }
+            // Sichtbarkeiten & Flags zurücksetzen
+            this.showShiftsQualificationsAssignmentModal = false;
+            this.showShiftsQualificationsAssignmentModalShifts = [];
+            this.waitForModalClose = false;
         },
         async initializeMultiEditSave() {
             this.shiftsToHandleOnMultiEdit.removeFromShift = this.userToMultiEditCurrentShifts.filter(
@@ -1780,31 +1891,50 @@ export default {
         },
         async closeShiftsQualificationsAssignmentModal(closedForAssignment, assignedShifts) {
             this.showShiftsQualificationsAssignmentModal = false;
+            const resolver = this.resolveModalClose;     // Bulk-Resolver (falls gesetzt)
+            const singleResolver = this._singlePickResolve; // Single-Resolver (Checkbox)
+            const singleShiftId = this._singlePickShiftId;
+
+            // immer resetten
+            this.resolveModalClose = null;
+            this._singlePickResolve = null;
+            this._singlePickShiftId = null;
+
             this.showShiftsQualificationsAssignmentModalShifts = [];
 
-            if (!closedForAssignment) {
-                if (this.resolveModalClose) {
-                    this.resolveModalClose();
-                    this.resolveModalClose = null;
+            try {
+                if (!closedForAssignment) {
+                    // Abbruch
+                    if (singleResolver) {
+                        // Single-Pick: User hat abgebrochen → null
+                        singleResolver(null);
+                        return;
+                    }
+                    // Bulk-Fall: nur Promise auflösen
+                    resolver?.();
+                    return;
                 }
-                this.waitForModalClose = false;
-                return;
-            }
 
-            assignedShifts.forEach((shiftToBeAssigned) => {
-                this.shiftsToHandleOnMultiEdit.assignToShift.push({
-                    shiftId: shiftToBeAssigned.shiftId,
-                    shiftQualificationId: shiftToBeAssigned.shiftQualificationId
+                if (singleResolver) {
+                    // SINGLE-PICK: wir erwarten exakt 1 Auswahl für unseren Shift
+                    const picked = (assignedShifts ?? []).find(s => s.shiftId === singleShiftId);
+                    singleResolver(picked ? { id: picked.shiftQualificationId } : null);
+                    return;
+                }
+
+                // BULK-FALL: wie gehabt speichern
+                (assignedShifts ?? []).forEach((s) => {
+                    this.shiftsToHandleOnMultiEdit.assignToShift.push({
+                        shiftId: s.shiftId,
+                        shiftQualificationId: s.shiftQualificationId
+                    });
                 });
-            });
 
-            await this.saveMultiEdit();
-
-            if (this.resolveModalClose) {
-                this.resolveModalClose();
-                this.resolveModalClose = null;
+                await this.saveMultiEdit();
+            } finally {
+                this.waitForModalClose = false;
+                resolver?.(); // Bulk-Fall abschließen
             }
-            this.waitForModalClose = false;
         },
         async saveMultiEdit() {
             if (
@@ -1931,7 +2061,9 @@ export default {
             );
         },
         handleShiftAndEventForMultiEdit(checked, shift, event) {
-            if (checked && this.userToMultiEditCurrentShifts.includes(shift.id)) {
+
+            this.onToggleShift(checked, shift, event);
+            /*if (checked && this.userToMultiEditCurrentShifts.includes(shift.id)) {
                 //return as the shift is already assigned to user and checkbox was unchecked and checked again
                 return;
             }
@@ -1952,7 +2084,224 @@ export default {
             this.userToMultiEditCheckedShiftsAndEvents.push({
                 shift: shift,
                 event: event
+            });*/
+        },
+        onToggleShift(checked, shift, event) {
+            if (!this.userForMultiEdit) return;
+            if (this.isSaving(shift.id)) return;
+
+            const oldIds = new Set(this.userForMultiEdit.shift_ids ?? []);
+            const alreadyAssigned = oldIds.has(shift.id);
+
+            if ((checked && alreadyAssigned) || (!checked && !alreadyAssigned)) {
+                return;
+            }
+
+            this.savingShiftIds.add(shift.id);
+
+            if (checked) {
+                // Optimistic add
+                const optimistic = new Set(oldIds);
+                optimistic.add(shift.id);
+                this.userForMultiEdit.shift_ids = Array.from(optimistic);
+
+                this.enqueueSave(async () => {
+                    // Qualifikation nur prüfen, wenn der Shift welche verlangt
+                    const needsQuali = (shift.shifts_qualifications ?? []).length > 0;
+                    let qualificationId = null;
+
+                    if (needsQuali) {
+                        qualificationId = await this.resolveQualificationFor(shift);
+                        if (!qualificationId) {
+                            // harter Rollback auf Snapshot
+                            this.userForMultiEdit.shift_ids = Array.from(oldIds);
+
+                            // existierender Toast
+                            const msg = this.$t?.('No matching qualification for this shift') ?? 'No matching qualification for this shift';
+                            if (this.$toast?.error) this.$toast.error(msg);
+
+                            // 👉 NEW: Notice in EN
+                            this.showNotice(
+                                'error',
+                                'Qualification required',
+                                'This user does not have a matching qualification for this shift.'
+                            );
+
+                            throw new Error('no_qualification');
+                        }
+                    }
+
+                    await this.persistAssign(shift.id, qualificationId);
+
+                    // 👉 NEW: Success Notice in EN
+                    this.showNotice(
+                        'success',
+                        'Assigned',
+                        'The user was successfully added to the shift.'
+                    );
+                })
+                    .catch(err => {
+                        // Rollback auf Snapshot
+                        this.userForMultiEdit.shift_ids = Array.from(oldIds);
+
+                        if (err?.message !== 'no_qualification') {
+                            if (this.$toast?.error) this.$toast.error(this.$t?.('Saving failed') ?? 'Saving failed');
+
+                            // 👉 NEW: Error Notice in EN
+                            this.showNotice(
+                                'error',
+                                'Save failed',
+                                'Something went wrong while saving. Please try again.'
+                            );
+                            console.error(err);
+                        }
+                    })
+                    .finally(() => {
+                        this.savingShiftIds.delete(shift.id);
+                    });
+
+            } else {
+                // Optimistic remove
+                const optimistic = new Set(oldIds);
+                optimistic.delete(shift.id);
+                this.userForMultiEdit.shift_ids = Array.from(optimistic);
+
+                this.enqueueSave(async () => {
+                    await this.persistRemove(shift.id);
+
+                    // 👉 NEW: Success Notice in EN
+                    this.showNotice(
+                        'success',
+                        'Removed',
+                        'The user was successfully removed from the shift.'
+                    );
+                })
+                    .catch(err => {
+                        // Rollback auf Snapshot
+                        this.userForMultiEdit.shift_ids = Array.from(oldIds);
+                        if (this.$toast?.error) this.$toast.error(this.$t?.('Saving failed') ?? 'Saving failed');
+
+                        // 👉 NEW: Error Notice in EN
+                        this.showNotice(
+                            'error',
+                            'Save failed',
+                            'Something went wrong while saving. Please try again.'
+                        );
+
+                        console.error(err);
+                    })
+                    .finally(() => {
+                        this.savingShiftIds.delete(shift.id);
+                    });
+            }
+        },
+        async resolveQualificationFor(desiredShift) {
+            const userQualis = this.userForMultiEdit?.shift_qualifications ?? [];
+            const required = (desiredShift.shifts_qualifications ?? []);
+
+            // Kein Bedarf → keine ID nötig
+            if (required.length === 0) return null;
+
+            const available = userQualis.filter(uq =>
+                required.some(req => req.shift_qualification_id === uq.id)
+            );
+
+            if (available.length === 0) return null;
+            if (available.length === 1) return available[0].id;
+
+            // Mehrere Optionen → Picker (falls vorhanden)
+            if (this.openQualificationPicker) {
+                const picked = await this.openQualificationPicker(desiredShift, available);
+                return picked?.id ?? null;
+            }
+
+            // Fallback
+            return available[0].id;
+        },
+        openQualificationPicker(desiredShift, options) {
+            // Wir verwenden deinen bestehenden Modal-Mechanismus:
+            // - showShiftsQualificationsAssignmentModalShifts: Array aus { shift, availableSlots }
+            // - closeShiftsQualificationsAssignmentModal(closedForAssignment, assignedShifts)
+            //   -> assignedShifts: Array aus { shiftId, shiftQualificationId }
+
+            // Schutz: falls schon ein Modal offen ist, warten wir bis es zu ist
+            if (this.waitForModalClose) {
+                // optional: du könntest hier eine Queue einbauen – für jetzt lösen wir ab
+                return Promise.resolve(null);
+            }
+
+            return new Promise((resolve) => {
+                // Markiere, dass wir im "Single-Pick"-Modus sind
+                this._singlePickResolve = resolve;          // interner Resolver nur für 1-Shift
+                this._singlePickShiftId = desiredShift.id;  // merken, welchen Shift wir fragen
+
+                // Modal-Daten auf einen einzigen Eintrag setzen
+                this.showShiftsQualificationsAssignmentModalShifts = [{
+                    shift: desiredShift,
+                    availableSlots: options
+                }];
+
+                this.showShiftsQualificationsAssignmentModal = true;
+                this.waitForModalClose = true;
             });
+        },
+        async persistAssign(shiftId, shiftQualificationId) {
+            const payload = {
+                userType: this.userForMultiEdit.type,
+                userTypeId: this.userForMultiEdit.id,
+                craft_abbreviation: this.userForMultiEdit.craft_abbreviation,
+                shiftsToHandle: {
+                    assignToShift: [
+                        ...(shiftQualificationId != null
+                            ? [{ shiftId, shiftQualificationId }]
+                            : [{ shiftId }]), // ohne Quali-Key
+                    ],
+                    removeFromShift: [],
+                },
+            };
+            return axios.post(route('shift.multi.edit.save'), payload);
+        },
+
+        async persistRemove(shiftId) {
+            return axios.post(route('shift.multi.edit.save'), {
+                userType: this.userForMultiEdit.type,
+                userTypeId: this.userForMultiEdit.id,
+                craft_abbreviation: this.userForMultiEdit.craft_abbreviation,
+                shiftsToHandle: {
+                    assignToShift: [],
+                    removeFromShift: [shiftId],
+                },
+            });
+        },
+        enqueueSave(taskFn) {
+            const session = this.multiEditSessionId;
+            this.saveQueue = this.saveQueue
+                .then(() => {
+                    if (session !== this.multiEditSessionId) return; // User gewechselt -> Task verwerfen
+                    return taskFn();
+                })
+                .catch((e) => {
+                    if (session !== this.multiEditSessionId) return; // verwerfen
+                    return taskFn(); // alten Fehler nicht blockieren lassen
+                });
+            return this.saveQueue;
+        },
+        isSaving(shiftId) {
+            return this.savingShiftIds.has(shiftId);
+        },
+        showNotice(kind, title, message, { timeout = 3500 } = {}) {
+            // evtl. i18n Keys direkt durchreichen: this.$t?.(title) ?? title
+            if (this.notice._timeoutId) clearTimeout(this.notice._timeoutId);
+            this.notice.kind = kind;
+            this.notice.title = this.$t?.(title) ?? title;
+            this.notice.message = this.$t?.(message) ?? message;
+            this.notice.show = true;
+            this.notice._timeoutId = setTimeout(() => { this.notice.show = false; }, timeout);
+        },
+        hideNotice() {
+            if (this.notice._timeoutId) clearTimeout(this.notice._timeoutId);
+            this.notice.show = false;
+            this.notice._timeoutId = null;
         },
         saveShiftQualificationFilter(event) {
             let isChecked = event.target.checked,

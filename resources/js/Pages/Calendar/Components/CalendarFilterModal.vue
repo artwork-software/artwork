@@ -1,6 +1,6 @@
 <template>
     <ArtworkBaseModal modal-size="max-w-4xl" title="Calendar Filter" description="Allows you to show and hide specific calendar contents, ideal for quickly finding the relevant information." @close="$emit('close')" full-modal>
-        <div class="p-5">
+        <div class="">
             <div>
                 <div class="flex items-start justify-between">
                     <div>
@@ -43,9 +43,7 @@
                                 v-model="saveFilterForm.name"
                                 label="Filter name"
                             />
-                            <ArtworkBaseModalButton @click="saveFilter" type="button">
-                                {{ $t('Save') }}
-                            </ArtworkBaseModalButton>
+                            <BaseUIButton @click="saveFilter" type="button" label="Save" use-translation is-add-button/>
                         </div>
                     </div>
                 </div>
@@ -136,15 +134,13 @@
             </div>
         </div>
 
-        <div class="px-5 py-4">
+        <div class="py-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <div @click="resetFilter" class="underline text-artwork-buttons-create text-xs underline-offset-2 cursor-pointer hover:text-artwork-buttons-hover duration-200 ease-in-out">{{ $t('Reset') }}</div>
+                    <BaseUIButton @click="resetFilter" type="button" label="Reset" use-translation icon="IconRestore"/>
                 </div>
                 <div class="flex items-center gap-4">
-                    <ArtworkBaseModalButton variant="primary" @click="applyFilter">
-                        {{ $t('Apply') }}
-                    </ArtworkBaseModalButton>
+                    <BaseUIButton @click="applyFilter" type="button" label="Apply" use-translation is-add-button icon="IconCircleCheck"/>
 
                 </div>
             </div>
@@ -164,6 +160,7 @@ import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {IconChevronDown} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     filterOptions: {

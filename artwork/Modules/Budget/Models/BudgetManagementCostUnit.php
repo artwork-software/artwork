@@ -21,8 +21,12 @@ class BudgetManagementCostUnit extends Model
 
     public function scopeByCostUnitNumberOrTitle(Builder $builder, string $search): Builder
     {
-        return $builder
-            ->where('cost_unit_number', 'like', $search . '%')
-            ->orWhere('title', 'like', $search . '%');
+        $search = trim($search);
+        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
+
+        return $builder->where(function (Builder $query) use ($escaped): void {
+            $query->whereRaw('LOWER(cost_unit_number) LIKE ?', ['%' . strtolower($escaped) . '%'])
+                ->orWhereRaw('LOWER(title) LIKE ?', ['%' . strtolower($escaped) . '%']);
+        });
     }
 }

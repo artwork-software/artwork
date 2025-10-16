@@ -252,7 +252,10 @@
                                :placeholder="creatingProject ? $t('New project name') : $t('Search project')"
                                v-model="projectName"
                                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-
+                        <LastedProjects
+                            :limit="10"
+                            @select="chooseProject"
+                        />
                         <div v-if="projectSearchResults.length > 0 && !creatingProject"
                              class="absolute bg-primary truncate sm:text-sm w-10/12">
                             <div v-for="(project, index) in projectSearchResults"
@@ -445,11 +448,13 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
 import Permissions from "@/Mixins/Permissions.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions],
     components: {
+        LastedProjects,
         BaseModal,
         NewUserToolTip,
         ListboxLabel,

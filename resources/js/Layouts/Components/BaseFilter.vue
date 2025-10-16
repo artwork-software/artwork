@@ -11,7 +11,7 @@
                 <span class="float-left text-sm font-medium text-zinc-800 dark:text-zinc-100">Filter</span>
                 <IconChevronDown
                     stroke-width="1.5"
-                    class="ml-2 -mr-1 h-5 w-5 text-zinc-500 dark:text-zinc-400 float-right"
+                    class="h-5 w-5 text-zinc-500 dark:text-zinc-400 float-right"
                     aria-hidden="true"
                 />
             </MenuButton>
@@ -24,7 +24,7 @@
                     :icon="IconFilter"
                     :whiteIcon="whiteIcon"
                     :grayIcon="grayIcon"
-                    icon-size="size-6"
+                    icon-size="size-5"
                     classes-button="ui-button hover:!bg-artwork-navigation-color/10 text-artwork-buttons-context"
                 />
             </MenuButton>

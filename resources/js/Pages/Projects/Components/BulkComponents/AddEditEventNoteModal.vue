@@ -1,20 +1,21 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <ModalHeader
-            :title="$t('Edit Event description')"
-            :description="$t('Edit the event description below.')"
-        />
+    <ArtworkBaseModal @close="$emit('close')" :title="$t('Edit Event description')" :description="$t('Edit the event description below.')">
 
+        <BaseAlertComponent
+            type="info"
+            :message="$t('This description is displayed in the calendar or when editing the event.')"
+            class="mb-5"   />
 
-        <form @submit.prevent class="mt-10">
+        <form @submit.prevent>
            <BaseTextarea
                id="description" v-model="eventNoteForm.description" label="Description"/>
 
-            <div class="my-5 flex items-center justify-center">
-                <FormButton @click="addEditNote" type="submit" :text="event.description ? $t('Update') : $t('Save')" />
+            <div class="mt-5 flex items-center justify-between">
+                <BaseUIButton @click="$emit('close')" label="No, not really" use-translation icon="IconCancel" />
+                <BaseUIButton @click="addEditNote" type="submit" :label="event.description ? $t('Update') : $t('Save')" is-add-button />
             </div>
         </form>
-    </BaseModal>
+    </ArtworkBaseModal>
 
 </template>
 
@@ -26,6 +27,9 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     event: {

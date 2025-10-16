@@ -1,25 +1,16 @@
 <template>
-    <BaseModal @closed="$emit('closeCreateProjectModal')" full-modal modal-size="max-w-3xl">
+    <ArtworkBaseModal @close="$emit('closeCreateProjectModal')" :title="project ? t('Edit basic data') : createProjectGroup ? t('New project group') : t('New project')" :description="t('Please fill in the following fields to create a new project.')" modal-size="max-w-3xl">
             <div class="">
 
                 <div class="px-6 mt-5 modal-header"  v-if="!project">
-                    <SwitchGroup as="div" class="flex items-center">
-                        <SwitchLabel as="span" class="mr-3 model-title cursor-pointer" :class="!createProjectGroup ? '' : '!text-gray-300'">
-                            {{ t('Project') }}
-                        </SwitchLabel>
-                        <Switch v-model="createProjectGroup" :class="[createProjectGroup ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-5 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
-                            <span aria-hidden="true" :class="[createProjectGroup  ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
-                        </Switch>
-                        <SwitchLabel as="span" class="ml-3 model-title cursor-pointer" :class="createProjectGroup ? '' : '!text-gray-300'">
-                            {{ t('Project group') }}
-                        </SwitchLabel>
-                    </SwitchGroup>
-                </div>
-                <div v-else>
-                    <ModalHeader
-                        :title="project ? t('Edit basic data') : isCreateProjectTab ? t('New project') : t('New project group')"
-                        :description="t('Please fill in the following fields to create a new project.')"
-                        full-modal
+                    <SwitchDualLabel
+                        v-model="createProjectGroup"
+                        :left-label="t('Project')"
+                        :right-label="t('Project group')"
+                        size="md"
+                        :tooltip-text="createProjectGroup ? $t('Create a standard project.') : $t('Create a project group to manage multiple related projects together.')"
+                        icon="IconGeometry"
+                        :disabled="false"
                     />
                 </div>
                 <div v-if="!createProjectGroup">
@@ -243,7 +234,7 @@
 
                             <div class="px-11 py-6 -mx-5 bg-lightBackgroundGray" v-if="createSettings.managers">
                                 <div class="font-semibold text-sm pb-2">{{ t('Project management')}}</div>
-                                <UserSearch @user-selected="addUserToProject" only-manager />
+                                <UserSearch @user-selected="addUserToProject" only-manager label="Search for users" />
 
                                 <div v-if="assignedUsers?.length > 0" class="flex items-center gap-4 mt-3">
                                     <div v-for="(user, index) in assignedUsers" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">
@@ -313,6 +304,13 @@
                                             Projektgruppenauswahl aufheben
                                         </div>
                                     </div>
+
+                                    <LastedProjects
+                                        :limit="10"
+                                        @select="createProjectForm.selectedGroup = $event"
+                                        v-if="!createProjectForm.selectedGroup"
+                                        only-groups
+                                    />
                                 </div>
                             </div>
 
@@ -336,24 +334,21 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="w-full flex items-center justify-end gap-x-4 pb-6 px-6">
-                            <BaseButton
+                        <div class="w-full flex items-center justify-end gap-x-4 mt-5 px-6">
+                            <BaseUIButton
+                                label="Set up events"
+                                is-add-button
+                                use-translation
+                                icon="IconCalendarMonth"
                                 v-if="!project && can('can create events when creating a project')"
                                 @click="addProject(true)"
-                                :text="t('Set up events')"
-                                class="mt-8 inline-flex items-center"
-                                classes="!w-fit gap-x-2 h-12 bg-artwork-buttons-create">
-                                <component :is="IconCalendarMonth" class="w-5 h-5" />
-                            </BaseButton>
-                            <BaseButton
-                                type="submit"
+                            />
+                            <BaseUIButton
+                                :label="project ? t('Save') : t('Create')"
+                                is-add-button
+                                use-translation
                                 @click="addProject(false)"
-                                :text="project ? t('Save') : t('Create')"
-                                class="mt-8 inline-flex items-center "
-                                classes="!w-fit gap-x-2 h-12"
-                            >
-                                <component :is="IconCirclePlus" class="w-5 h-5" />
-                            </BaseButton>
+                            />
                         </div>
                     </div>
                 </div>
@@ -543,37 +538,29 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="w-full flex items-center justify-end gap-x-4 pb-6">
-                            <BaseButton
-                                v-if="!project"
-                                @click="addProject(true)"
-                                :text="t('Set up events')"
-                                class="mt-8 inline-flex items-center"
-                                classes="!w-fit gap-x-2 h-12 bg-artwork-buttons-create">
-                                <component :is="IconCalendarMonth" class="w-5 h-5" />
-                            </BaseButton>
-                            <BaseButton
-                                type="submit"
-                                @click="addProject(false)"
-                                :text="project ? t('Save') : t('Create')"
-                                class="mt-8 inline-flex items-center "
-                                classes="!w-fit gap-x-2 h-12"
-                            >
-                                <component :is="IconCirclePlus" class="w-5 h-5" />
-                            </BaseButton>
+
+                        <LastedProjects
+                            :limit="10"
+                            @select="handleOpenProject"
+                            without-group
+                        />
+
+                        <div class="w-full flex items-center justify-end gap-x-4 mt-5">
+
+                            <BaseUIButton label="Set up events" is-add-button use-translation icon="IconCalendarMonth" v-if="!project" @click="addProject(true)"/>
+                            <BaseUIButton :label="project ? t('Save') : t('Create')" is-add-button use-translation @click="addProject(false)"/>
                         </div>
 
                     </div>
                 </div>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
 import Input from "@/Layouts/Components/InputComponent.vue";
 import Button from "@/Jetstream/Button.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/vue3";
@@ -588,36 +575,24 @@ import {
     Menu,
     MenuButton,
     MenuItems,
-    Switch,
-    SwitchGroup,
-    SwitchLabel
 } from "@headlessui/vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import ColorHelper from "@/Mixins/ColorHelper.vue";
-import JetInputError from "@/Jetstream/InputError.vue";
-import ProjectGroupListbox from "@/Components/Listboxes/ProjectGroupListbox.vue";
 import KeyVisual from "@/Components/Uploads/KeyVisual.vue";
-import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
-import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import ProjectStateChangeModal from "@/Layouts/Components/ProjectStateChangeModal.vue";
 import { ref, reactive, computed, defineProps, defineEmits } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { usePermission } from '@/Composeables/Permission.js';
 import { useTranslation } from '@/Composeables/Translation.js';
 import {IconCalendarMonth, IconCirclePlus} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 // Define props
 const props = defineProps({
@@ -799,6 +774,13 @@ const addProject = (bool) => {
         );
     }
 };
+
+function handleOpenProject(p) {
+    // hier deine gewünschte Funktionalität
+    // z.B. Inertia besuchen:
+    // router.visit(route('projects.show', p.id))
+    addProjectToProjectGroup(p)
+}
 
 const addProjectToProjectGroup = (project) => {
     if (!projectGroupProjects.value.includes(project)) {

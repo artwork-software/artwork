@@ -71,6 +71,12 @@
                 <!-- Project -->
                 <div class="px-6 pt-2">
                     <ProjectSearch v-if="!selectedProject" @project-selected="addProject" :get-first-last-event="true" :label="$t('Project assignment (optional)')" />
+                    <LastedProjects
+                        v-if="!selectedProject"
+                        :limit="10"
+                        @select="addProject"
+                    />
+
                     <div v-else class="mt-1">
                         <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
                         <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-1">
@@ -286,7 +292,7 @@
 
                                                 <div class="flex items-center gap-4 md:gap-6">
                                                     <div class="w-28">
-                                                        <BaseInput :id="'article-quantity-' + article.originalIndex" type="number" v-model="internMaterialIssue.articles[article.originalIndex].quantity" :label="$t('Menge')" />
+                                                        <BaseInput :id="'article-quantity-' + article.originalIndex" type="number" v-model="internMaterialIssue.articles[article.originalIndex].quantity" :label="$t('Menge')" :input-classes="article.quantity > (article.availableStock?.available ?? 0) && internMaterialIssue.start_date && internMaterialIssue.end_date ? '!border-red-500 !bg-red-50' : ''" />
                                                     </div>
                                                     <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeArticle(article.originalIndex)">
                                                         <component :is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
@@ -480,6 +486,7 @@ import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/Arti
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import Galleria from "primevue/galleria";
 import { IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconPlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 
 const props = defineProps({
     issueOfMaterial: {

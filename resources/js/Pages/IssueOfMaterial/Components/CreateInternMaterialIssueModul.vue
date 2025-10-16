@@ -292,7 +292,7 @@
 
                                                 <div class="flex items-center gap-4 md:gap-6">
                                                     <div class="w-28">
-                                                        <BaseInput :id="'article-quantity-' + article.originalIndex" type="number" v-model="internMaterialIssue.articles[article.originalIndex].quantity" :label="$t('Menge')" :input-classes="article.quantity > (article.availableStock?.available ?? 0) && internMaterialIssue.start_date && internMaterialIssue.end_date ? '!border-red-500' : ''" />
+                                                        <BaseInput :id="'article-quantity-' + article.originalIndex" type="number" v-model="internMaterialIssue.articles[article.originalIndex].quantity" :label="$t('Menge')" :input-classes="article.quantity > (article.availableStock?.available ?? 0) && internMaterialIssue.start_date && internMaterialIssue.end_date ? '!border-red-500 !bg-red-50' : ''" />
                                                     </div>
                                                     <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeArticle(article.originalIndex)">
                                                         <component :is="IconTrash" class="h-5 w-5" stroke-width="1.5" />

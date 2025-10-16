@@ -605,6 +605,7 @@ const setupEchoListeners = () => {
 };
 
 onMounted(() => {
+    setupEchoListeners()
     // Only set up user status listener on mount
     // Chat loading and chat-related Echo listeners will be set up when chat is opened
     window.Echo.channel('users.status')

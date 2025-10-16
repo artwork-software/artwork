@@ -61,9 +61,10 @@ readonly class CalendarDataService
         } else {
             // Get filtered rooms based on calendar filter
             $filteredRooms = $this->roomRepository->getFilteredRoomsBy(
-                $calendarFilter,
-                $startDate,
-                $endDate
+                $calendarFilter->room_ids,
+                $calendarFilter->room_attribute_ids,
+                $calendarFilter->area_ids,
+                $calendarFilter->room_category_ids
             );
             $rooms = $filteredRooms->all();
         }
@@ -83,6 +84,10 @@ readonly class CalendarDataService
         // Get filter options and personal filters
         $filterOptions = $this->filterService->getCalendarFilterDefinitions();
         $personalFilters = $this->filterService->getPersonalFilter();
+
+        // convert  $period dto to array
+        $period = array_map(fn($d) => is_array($d) ? $d : (array)$d, $period);
+
 
         return [
             'days' => $period,

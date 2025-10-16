@@ -44,6 +44,7 @@ import {defineAsyncComponent, onBeforeMount, onMounted, onUnmounted, ref, watchE
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
 import {IconX} from "@tabler/icons-vue";
+import PopupChat from "@/Components/Chat/PopupChat.vue";
 const { locale } = useI18n();
 
 const props = defineProps({
@@ -97,12 +98,6 @@ onMounted(() => {
         });
 
 
-})
-
-const PopupChat = defineAsyncComponent({
-    loader: () => import('@/Components/Chat/PopupChat.vue'),
-    delay: 0,
-    timeout: 3000,
 })
 
 </script>

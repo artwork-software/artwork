@@ -2948,7 +2948,7 @@
     "Shows the required or existing qualifications of a shift in the calendar, helpful for precise shift planning.": "Zeigt die erforderlichen oder vorhandenen Qualifikationen einer Schicht im Kalender an, hilfreich für eine präzise Schichtplanung.",
     "Shows stored notes on appointments in the calendar, handy for having additional information directly in view.": "Zeigt gespeicherte Notizen zu Terminen im Kalender an, praktisch, um zusätzliche Informationen direkt im Blick zu haben.",
     "Allows you to show and hide specific calendar contents, ideal for quickly finding the relevant information.": "Erlaubt es dir, bestimmte Kalenderinhalte anzuzeigen und auszublenden, ideal um schnell die relevanten Informationen zu finden.",
-    "Artist Name Display Component": "Künstler*innen-Anzeige-Komponente",
+    "Artist Name Display Component": "Künstler*innen",
     "Project Artist": "Projektkünstler*in",
     "Article": "Artikel",
     "Inventory Article Planning": "Artikel Inventarplanung",
@@ -3288,6 +3288,7 @@
     "Your open to-dos": "Deine offenen To-Dos",
     "To the task overview": "Zur Aufgabenübersicht",
     "until": "bis",
+    "ArtistNameDisplayComponent": "Künstler*innen-Komponente",
     "This description is displayed in the calendar or when editing the event.": "Diese Beschreibung wird im Kalender oder beim Bearbeiten des Termins angezeigt.",
     "Create a project group to manage multiple related projects together.": "Erstelle eine Projektgruppe, um mehrere verwandte Projekte gemeinsam zu verwalten.",
     "Create a standard project.": "Erstelle ein Standardprojekt.",
@@ -3313,5 +3314,6 @@
     "Open in calendar": "Im Kalender öffnen",
     "The event description can be displayed in the calendar and can be viewed by all users after clicking on the event.": "Die Terminbeschreibung kann im Kalender angezeigt werden und ist für alle Nutzer*innen nach einem Klick auf den Termin einsehbar.",
     "Multiple projects can be assigned to a project group. If the content in the KTO and KST columns in subprojects and the project group in the project budget is the same, the data for the subprojects is then displayed in a separate column in the project group.": "Mehrere Projekte können einer Projektgruppe zugewiesen werden. Wenn die Inhalte in den KTO- und KST-Spalten in den Unterprojekten und der Projektgruppe im Projektbudget identisch sind, werden die Daten für die Unterprojekte dann in einer separaten Spalte in der Projektgruppe angezeigt.",
-    "Period picker": "Zeitraum-Picker"
+    "Period picker": "Zeitraum-Picker",
+    "Choose a country": "Wähle ein Land"
 }

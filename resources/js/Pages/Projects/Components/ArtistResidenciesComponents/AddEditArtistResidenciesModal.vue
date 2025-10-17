@@ -173,7 +173,7 @@
                                         <template #trigger>
                                             <ToolTipComponent
                                                 direction="right"
-                                                :tooltip-text="$t('Select time')"
+                                                :tooltip-text="$t('Period picker')"
                                                 :icon="IconCalendar"
                                                 icon-size="h-5 w-5"
                                                 classesButton="ui-button"

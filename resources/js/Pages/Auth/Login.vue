@@ -1,150 +1,194 @@
 <template>
+    <div>
+        <Head>
+            <link rel="icon" type="image/png" :href="$page.props.small_logo" />
+            <title>{{ $t('Login') }} - {{ $page.props.page_title }}</title>
+        </Head>
 
-    <Head>
-        <link rel="icon" type="image/png" :href="$page.props.small_logo" />
-        <title>{{ $t('Login') }} - {{ $page.props.page_title }}</title>
-    </Head>
-    <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2">
-        <div class="flex flex-col items-center justify-center h-screen">
-            <div class="min-h-96">
-                <div class="">
-                    <div class="my-10">
-                        <div class="text-2xl font-bold text-black font-lexend flex items-center gap-x-4">
-                            <img :src="$page.props.big_logo" class="max-w-lg h-fit" alt="Big artwork logo"/>
-                            <span>
-                                {{ $t('Login') }}
-                            </span>
-                        </div>
+        <!-- Zarte Akzentleiste oben -->
+        <div class="h-1 w-full bg-gradient-to-r from-blue-500/30 via-sky-400/25 to-cyan-400/30"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
+            <!-- Left: Form -->
+            <section class="flex items-center justify-center py-10">
+                <div class="w-full max-w-md px-6">
+                    <!-- Branding + Titel -->
+                    <div class="flex items-center gap-4 mb-8">
+                        <img :src="$page.props.big_logo" class="h-10 w-auto" alt="Artwork Logo" />
+                        <h1 class="font-lexend text-2xl font-bold text-zinc-900 tracking-tight">
+                            {{ $t('Login') }}
+                        </h1>
                     </div>
-                    <form class="space-y-10 my-4 card white px-4 py-6" @submit.prevent="submit">
-                        <div class="space-y-4">
-                            <BaseInput id="email" v-model="form.email" :label="$t('Email') + '*'" required/>
-                            <BaseInput id="password" type="password" v-model="form.password" :label="$t('Password') + '*'" required/>
-                        </div>
-                        <jet-input-error :message="errors.email" class="mt-2"/>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <Checkbox class="justify-between text-sm" :item="rememberCheckbox"/>
+
+                    <!-- Status (z. B. „Passwort zurückgesetzt“) -->
+                    <p v-if="status" class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+                        {{ status }}
+                    </p>
+
+                    <!-- Card -->
+                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                        <form class="p-6 space-y-6" @submit.prevent="submit">
+                            <div class="space-y-4">
+                                <BaseInput
+                                    id="email"
+                                    v-model="form.email"
+                                    :label="$t('Email') + '*'"
+                                    autocomplete="email"
+                                    required
+                                />
+
+                                <!-- Passwort mit Toggle -->
+                                <div>
+                                    <div class="flex items-center justify-end">
+                                        <button
+                                            type="button"
+                                            @click="showPassword = !showPassword"
+                                            class="text-xs font-medium text-blue-600 hover:text-blue-700 focus:outline-none focus:underline"
+                                        >
+                                            {{ showPassword ? $t('Hide password') : $t('Show password') }}
+                                        </button>
+                                    </div>
+
+                                    <div class="mt-1">
+                                        <BaseInput
+                                            id="password"
+                                            :type="showPassword ? 'text' : 'password'"
+                                            v-model="form.password"
+                                            autocomplete="current-password"
+                                            required
+                                            :label="$t('Password') + '*'"
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-sm">
-                                <Link v-if="canResetPassword" :href="route('password.request')"
-                                      class="!text-xs subpixel-antialiased hover:font-semibold hover:text-primary">
+
+                            <!-- Fehler -->
+                            <div class="space-y-2">
+                                <JetInputError :message="errors.email" />
+                                <JetInputError :message="errors.password" />
+                                <JetInputError :message="form.error" />
+                            </div>
+
+                            <!-- Remember + Passwort vergessen -->
+                            <div class="flex items-center justify-between">
+                                <Checkbox class="justify-between text-sm" :item="rememberCheckbox" />
+                                <Link
+                                    v-if="canResetPassword"
+                                    :href="route('password.request')"
+                                    class="text-xs text-blue-600 hover:text-blue-700 hover:font-semibold"
+                                >
                                     {{ $t('Forgot your password?') }}
                                 </Link>
                             </div>
-                        </div>
-                        <div>
-                            <ArtworkBaseModalButton :disabled="this.form.email === '' || this.form.password === ''" class="!px-44" vertical-padding="py-4" variant="primary" type="submit">
-                                {{ $t('Login') }}
-                            </ArtworkBaseModalButton>
-                        </div>
-                    </form>
-                </div>
 
-            </div>
-            <div class="flex gap-x-4 mt-5 subpixel-antialiased text-sm tracking-wide">
-                <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
-                    {{ $t('Imprint') }}
-                </a>
-                <a target="_blank" v-else :href="this.$page.props.impressumLink">
-                    {{ $t('Imprint') }}
-                </a>
-                |
-                <a target="_blank" v-if="this.$page.props.privacyLink !== ''" :href="this.$page.props.privacyLink">
-                    {{ $t('Privacy Policy') }}
-                </a>
-                <a target="_blank" v-else :href="this.$page.props.privacyLink">
-                    {{ $t('Privacy Policy') }}
-                </a>
-                |
-                <a target="_blank" href="https://artwork.software/">
-                    {{ $t('About the tool') }}
-                </a>
-            </div>
-        </div>
-        <div class="h-screen w-full items-center justify-end hidden lg:flex">
-            <img class="h-screen w-full object-cover" :src="$page.props.banner" alt=""/>
+                            <!-- Submit -->
+                            <div class="pt-2">
+                                <BaseUIButton
+                                    :label="$t('Login')"
+                                    use-translation
+                                    is-add-button
+                                    icon="IconLogin"
+                                    type="submit"
+                                    :disabled="isDisabled"
+                                />
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Footer Links -->
+                    <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-zinc-600">
+                        <template v-if="$page.props.impressumLink">
+                            <a :href="$page.props.impressumLink" target="_blank" class="hover:text-blue-700 hover:underline">
+                                {{ $t('Imprint') }}
+                            </a>
+                            <span class="text-zinc-300">|</span>
+                        </template>
+
+                        <template v-if="$page.props.privacyLink">
+                            <a :href="$page.props.privacyLink" target="_blank" class="hover:text-blue-700 hover:underline">
+                                {{ $t('Privacy Policy') }}
+                            </a>
+                            <span class="text-zinc-300">|</span>
+                        </template>
+
+                        <a href="https://artwork.software/" target="_blank" class="hover:text-blue-700 hover:underline">
+                            {{ $t('About the tool') }}
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right: Banner -->
+            <section class="relative hidden lg:flex">
+                <img
+                    class="absolute inset-0 h-full w-full object-cover"
+                    :src="$page.props.banner"
+                    alt="Banner"
+                />
+            </section>
         </div>
     </div>
 </template>
 
-<script>
-import {defineComponent} from 'vue'
-import JetAuthenticationCard from '@/Jetstream/AuthenticationCard.vue'
-import JetAuthenticationCardLogo from '@/Jetstream/AuthenticationCardLogo.vue'
-import JetButton from '@/Jetstream/Button.vue'
-import JetInput from '@/Jetstream/Input.vue'
-import JetCheckbox from '@/Jetstream/Checkbox.vue'
-import JetLabel from '@/Jetstream/Label.vue'
-import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
-import {Head, Link} from '@inertiajs/vue3';
-import Checkbox from "@/Layouts/Components/Checkbox.vue";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import JetInputError from "@/Jetstream/InputError.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
+import Checkbox from "@/Layouts/Components/Checkbox.vue"
+import JetInputError from "@/Jetstream/InputError.vue"
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue"
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue"
 import { reloadRolesAndPermissions } from 'laravel-permission-to-vuejs'
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import ArtworkBaseButton from "@/Artwork/Buttons/ArtworkBaseButton.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 
-export default defineComponent({
-    mixins: [Permissions],
-    components: {
-        ArtworkBaseModalButton,
-        ArtworkBaseButton,
-        BaseInput,
-        TextInputComponent,
-        BaseButton,
-        SvgCollection,
-        Head,
-        JetAuthenticationCard,
-        JetAuthenticationCardLogo,
-        JetButton,
-        JetInput,
-        JetInputError,
-        JetCheckbox,
-        JetLabel,
-        JetValidationErrors,
-        Link,
-        Checkbox
-    },
-    props: {
-        canResetPassword: Boolean,
-        status: String
-    },
-    computed: {
-        errors() {
-            return this.$page.props.errors;
-        }
-    },
-    data() {
-        return {
-            form: this.$inertia.form({
-                email: '',
-                password: '',
-                remember: false,
-                error: '',
-            }),
-            rememberCheckbox: {name: this.$t('Remember me'), checked: false, showIcon: false}
-        }
-    },
+defineProps<{
+    canResetPassword: boolean
+    status?: string
+}>()
 
-    methods: {
-        submit() {
-            this.form
-                .transform(data => ({
-                    ...data,
-                    remember: this.rememberCheckbox.checked ? 'on' : ''
-                }))
-                .post(this.route('login'), {
-                    onFinish: () => {
-                        reloadRolesAndPermissions();
-                        this.form.reset('password')
-                    },
-                })
-        }
-    },
+const page = usePage()
+const errors = computed(() => page.props.errors as Record<string, string>)
+
+const form = useForm({
+    email: '',
+    password: '',
+    remember: false,
+    error: '',
 })
+
+const rememberCheckbox = ref({
+    name: page.props.localization?.['Remember me'] ?? 'Remember me',
+    checked: false,
+    showIcon: false,
+})
+
+const showPassword = ref(false)
+
+const isDisabled = computed(() =>
+    !form.email?.trim() || !form.password?.trim()
+)
+
+function submit() {
+    form.transform((data) => ({
+        ...data,
+        remember: rememberCheckbox.value.checked ? 'on' : ''
+    }))
+        .post(route('login'), {
+            onFinish: () => {
+                reloadRolesAndPermissions()
+                form.reset('password')
+            },
+        })
+}
 </script>
+
+<style scoped>
+/* Dezente Focus-Optimierung für Inputs innerhalb der Card (fallback, falls BaseInput es nicht schon setzt) */
+:deep(input[type="text"]),
+:deep(input[type="email"]),
+:deep(input[type="password"]) {
+    transition: box-shadow .15s ease, border-color .15s ease;
+}
+:deep(input:focus) {
+    box-shadow: 0 0 0 4px rgba(14, 165, 233, .15); /* sky-500 als weicher Ring */
+    border-color: rgb(56, 189, 248);
+}
+</style>

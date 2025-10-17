@@ -38,8 +38,9 @@
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <FormButton
-                                    :text="$t('Add')"
+                                <BaseUIButton
+                                    is-add-button
+                                    :label="$t('Add')"
                                     @click="addUsers"
                                 />
                             </div>
@@ -66,10 +67,12 @@ import {
     TransitionRoot
 } from "@headlessui/vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default defineComponent({
     name: "AddUsersModal",
     components: {
+        BaseUIButton,
         FormButton,
         ConfirmationModal,
         CheckIcon, ChevronDownIcon,

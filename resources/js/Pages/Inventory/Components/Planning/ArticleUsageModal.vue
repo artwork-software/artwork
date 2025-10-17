@@ -181,9 +181,7 @@
 
             <!-- Footer -->
             <div class="flex justify-end">
-                <ArtworkBaseModalButton type="button" variant="danger" @click="$emit('close')">
-                    {{ $t('Close') }}
-                </ArtworkBaseModalButton>
+                <BaseUIButton is-cancel-button @click="$emit('close')" :label="$t('Close')"/>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -195,6 +193,7 @@ import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue
 import {TabGroup, TabList, Tab, TabPanels, TabPanel} from '@headlessui/vue'
 import UsageTable from './UsageTable.vue'
 import {ref} from 'vue'
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     detailsForModal: {

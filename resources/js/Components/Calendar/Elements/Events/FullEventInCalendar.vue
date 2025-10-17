@@ -118,7 +118,7 @@
                         </div>
 
                         <!-- Zeit/Optionen Zeile -->
-                        <div class="mt-1.5 flex flex-wrap items-center gap-1.5 text-[0.95em]">
+                        <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs/5">
                             <component
                                 :is="IconClock"
                                 v-if="!event.allDay && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
@@ -126,7 +126,7 @@
                                 stroke-width="2"
                             />
                             <div
-                                class="font-medium subpixel-antialiased"
+                                class="subpixel-antialiased"
                                 :style="{
                                       color: getTextColorBasedOnBackground(
                                         backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent)
@@ -168,7 +168,7 @@
                             </div>
 
                             <!-- Options -->
-                            <div v-if="event.option_string && usePage().props.auth.user.calendar_settings.options" class="text-[0.95em]">
+                            <div v-if="event.option_string && usePage().props.auth.user.calendar_settings.options" class=" text-xs/5">
                                 <span
                                     v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
                                     class="eventTime font-medium subpixel-antialiased"
@@ -185,7 +185,7 @@
                         <!-- Wiederkehrend -->
                         <div
                             v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
-                            class="mt-1 inline-flex items-center gap-1 rounded-full bg-black/5 px-1.5 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wide"
+                            class="mt-1 inline-flex items-center gap-1 rounded-full bg-black/5 px-1.5 py-0.5  text-xs/5 font-semibold uppercase tracking-wide"
                             :style="{ lineHeight: lineHeight, fontSize: fontSize * 0.5 }"
                             :class="[zoom_factor === 1 ? 'eventText' : '']"
                         >

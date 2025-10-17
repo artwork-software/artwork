@@ -1,183 +1,198 @@
 <template>
-    <div  :id="task.id" class="py-2.5 cursor-grab bg-transparent" draggable="true" @dragstart="onDragStart" @dragend="onDragEnd" :key="task.id">
-        <div >
-            <div class="grid grid-cols-12 grid-rows-1 gap-x-4 py-1 group items-center">
-                <div class="col-span-6">
-                    <div class="flex items-start">
-                        <div class="mr-3">
-                            <input @change="updateTaskStatus"
-                                   v-model="task.done"
-                                   name="task"
-                                   type="checkbox"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300 rounded-full"/>
-                        </div>
-                        <div :class="task.done  ? 'text-secondary line-through' : ''">
-                            <div class="xsDark mb-1">
-                                {{ task.name }}
-                            </div>
-                            <div class="xxsLight">
-                                {{ task.description }}
-                            </div>
-                        </div>
-                    </div>
+    <article
+        :id="String(task.id)"
+        class="group my-3 cursor-grab rounded-xl border border-zinc-200 bg-white p-3 transition hover:shadow-xs focus-within:ring-2 focus-within:ring-blue-600 print:border print:shadow-none"
+        draggable="true"
+        @dragstart="onDragStart"
+        @dragend="onDragEnd"
+    >
+        <div class="flex items-start justify-between gap-4">
+            <!-- Left: checkbox + title/desc -->
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+                <div class="pt-0.5">
+                    <input
+                        :id="checkboxId"
+                        name="task"
+                        type="checkbox"
+                        v-model="localTaskDone"
+                        @change="updateTaskStatus"
+                        class="h-5 w-5 cursor-pointer rounded-full border-2 border-zinc-300 text-emerald-600 ring-0 focus:ring-0 focus:outline-none"
+                        :aria-labelledby="titleId"
+                    />
                 </div>
-                <div class="col-span-3 col-start-7 flex items-start">
-                    <div v-if="!task.done" class="flex items-center justify-end">
-                        <IconCalendar class="h-4 w-4 mr-1 text-gray-400"  :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-red-500' : ''"/>
-                        <div class="text-[9px]" :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'bg-red-500 px-1 py-0.5 rounded-lg text-white subpixel-antialiased' : ''">{{ task.formatted_dates.deadline }}</div>
-                    </div>
-                    <span v-if="task.done && task.done_by_user" class="flex text-sm text-secondary">
-                        <span class="mr-2">
-                            <UserPopoverTooltip v-if="task.done_by_user" height="7" width="7" :user="task.done_by_user" :id="task.id"/>
-                        </span>
-                        <span class="flex items-center">
-                            {{ task.formatted_dates?.done_at_with_day }}
-                        </span>
-                </span>
-                </div>
-                <div class="col-span-3 col-start-10 flex justify-between items-center">
-                    <div class="mx-3 flex">
-                        <div class="">
-                            <div class="flex">
-                                <span class="flex -mr-3" v-for="(user, index) in task.users">
-                                    <UserPopoverTooltip :id="task.id + 'user' + user.id" :user="user" height="8" width="8" :classes="index > 0 ? '!ring-1 !ring-white' : ''"/>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <BaseMenu has-no-offset class="ml-3" v-if="(canEditComponent && (projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds?.includes($page.props.auth.user.id) || isAdmin)) || isInOwnTaskManagement">
-                        <MenuItem v-slot="{ active }">
-                            <div @click="openEditTaskModal = true"
-                                 :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <IconEdit stroke-width="1.5"
-                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                          aria-hidden="true"/>
-                                {{ $t('Edit') }}
-                            </div>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <a @click="openDeleteTaskModal = true"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <IconTrash stroke-width="1.5"
-                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                           aria-hidden="true"/>
-                                {{ $t('Delete') }}
-                            </a>
-                        </MenuItem>
-                    </BaseMenu>
+                <div class="min-w-0">
+                    <h3 :id="titleId" class="xsDark mb-0.5 break-words" :class="localTaskDone ? 'text-zinc-400 line-through' : 'text-zinc-900'">
+                        {{ task.name }}
+                    </h3>
+                    <p class="xxsLight break-words" :class="localTaskDone ? 'text-zinc-400 line-through' : 'text-zinc-600'">
+                        {{ task.description }}
+                    </p>
                 </div>
             </div>
 
-        </div>
-    </div>
+            <!-- Middle: dates / done info -->
+            <div class="hidden shrink-0 md:flex md:min-w-[14rem] md:items-center md:justify-end">
+                <template v-if="!localTaskDone">
+                    <IconCalendar class="h-4 w-4 mr-2" :class="isOverdue ? 'text-rose-500' : 'text-zinc-400'" />
+                    <span
+                        class="text-[10px] rounded-md px-1.5 py-0.5"
+                        :class="isOverdue ? 'bg-rose-500 text-white' : 'bg-zinc-100 text-zinc-700'"
+                    >
+            {{ task.formatted_dates?.deadline }}
+          </span>
+                </template>
+                <template v-else>
+          <span class="flex items-center text-xs text-zinc-600">
+            <span class="mr-2">
+              <UserPopoverTooltip
+                  v-if="task.done_by_user"
+                  :user="task.done_by_user"
+                  :id="`${task.id}-doneby`"
+                  height="6"
+                  width="6"
+              />
+            </span>
+            {{ task.formatted_dates?.done_at_with_day }}
+          </span>
+                </template>
+            </div>
 
-    <AddEditTaskModal
-        :project="project"
-        :tab_id="tab_id"
-        :checklist="checklist"
-        :task-to-edit="task"
-        v-if="openEditTaskModal"
-        @closed="openEditTaskModal = false"
-        :is-private="checklist.private"
-    />
-    <ConfirmDeleteModal
-        :title="$t('Delete task')"
-        :description="$t('Are you sure you want to delete this task?')"
-        v-if="openDeleteTaskModal"
-        @closed="openDeleteTaskModal = false"
-        @delete="deleteTask"
-    />
+            <!-- Right: assignees + actions -->
+            <div class="flex shrink-0 items-center gap-3">
+                <ul class="flex -space-x-3">
+                    <li v-for="(user, index) in task.users" :key="user.id">
+                        <UserPopoverTooltip
+                            :id="`${task.id}-user-${user.id}`"
+                            :user="user"
+                            height="8"
+                            width="8"
+                            :classes="index > 0 ? '!ring-1 !ring-white' : ''"
+                        />
+                    </li>
+                </ul>
+                <BaseMenu white-menu-background v-if="canManage" class="ml-1">
+                    <BaseMenuItem white-menu-background icon="IconEdit" title="Edit" @click="openEditTaskModal = true" />
+                    <BaseMenuItem white-menu-background icon="IconTrash" title="Delete" @click="openDeleteTaskModal = true" />
+                </BaseMenu>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <AddEditTaskModal
+            v-if="openEditTaskModal"
+            :project="project"
+            :tab_id="tab_id"
+            :checklist="checklist"
+            :task-to-edit="task"
+            :is-private="checklist?.private"
+            @closed="openEditTaskModal = false"
+        />
+
+        <ConfirmDeleteModal
+            v-if="openDeleteTaskModal"
+            :title="$t('Delete task')"
+            :description="$t('Are you sure you want to delete this task?')"
+            @closed="openDeleteTaskModal = false"
+            @delete="deleteTask"
+        />
+    </article>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
+import { IconCalendar, IconEdit, IconTrash } from '@tabler/icons-vue'
+import BaseMenu from '@/Components/Menu/BaseMenu.vue'
+import { MenuItem } from '@headlessui/vue'
+import AddEditTaskModal from '@/Components/Checklist/Modals/AddEditTaskModal.vue'
+import { computed, ref } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
+import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
+import { EventListenerForDragging } from '@/Composeables/EventListenerForDragging.js'
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
-import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import {IconCalendar, IconEdit, IconTrash} from "@tabler/icons-vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {MenuItem} from "@headlessui/vue";
-import AddEditTaskModal from "@/Components/Checklist/Modals/AddEditTaskModal.vue";
-import {computed, onMounted, ref} from "vue";
-import {router, usePage} from "@inertiajs/vue3";
-import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import { EventListenerForDragging } from "@/Composeables/EventListenerForDragging.js";
-const { dispatchEventStart, dispatchEventEnd } = EventListenerForDragging();
+const { dispatchEventStart, dispatchEventEnd } = EventListenerForDragging()
 
-const props = defineProps({
-    task: {
-        type: Object,
-        required: true
-    },
-    canEditComponent: {
-        type: Boolean,
-        required: false,
-        default: false
-    },
-    projectCanWriteIds: {
-        type: Array,
-        required: false,
-        default: []
-    },
-    projectManagerIds: {
-        type: Array,
-        required: false,
-        default: []
-    },
-    isAdmin: {
-        type: Boolean,
-        required: false,
-        default: false
-    },
-    project: {
-        type: Object,
-        required: false,
-        default: null
-    },
-    tab_id: {
-        type: Number,
-        required: false
-    },
-    checklist: {
-        type: Object,
-        required: false
-    },
-    isInOwnTaskManagement: {
-        type: Boolean,
-        required: false,
-        default: false
-    }
-})
+interface User { id: number }
+interface DatesFmt { deadline?: string; done_at_with_day?: string }
+interface Task {
+    id: number | string
+    name: string
+    description?: string
+    users: User[]
+    done: boolean
+    done_by_user?: User | null
+    deadline_dt_local?: string | null
+    formatted_dates?: DatesFmt
+}
+
+const props = defineProps<{
+    task: Task
+    canEditComponent?: boolean
+    projectCanWriteIds?: Array<number>
+    projectManagerIds?: Array<number>
+    isAdmin?: boolean
+    project?: Record<string, any> | null
+    tab_id?: number
+    checklist?: Record<string, any> | null
+    isInOwnTaskManagement?: boolean
+}>()
 
 const openEditTaskModal = ref(false)
 const openDeleteTaskModal = ref(false)
+
+// local mirror for snappy checkbox UX
+const localTaskDone = ref<boolean>(!!props.task.done)
+
+const page = usePage()
+const authId = computed<number | null>(() => page.props?.auth?.user?.id ?? null)
+
+const canManage = computed(() => {
+    const canEdit = !!props.canEditComponent
+    const isWriter = props.projectCanWriteIds?.includes(authId.value as number)
+    const isManager = props.projectManagerIds?.includes(authId.value as number)
+    return (canEdit && (isWriter || isManager || !!props.isAdmin)) || !!props.isInOwnTaskManagement
+})
+
+const titleId = `task-title-${props.task.id}`
+const checkboxId = `task-checkbox-${props.task.id}`
+
+const isOverdue = computed(() => {
+    if (localTaskDone.value) return false
+    const ts = props.task?.deadline_dt_local ? Date.parse(props.task.deadline_dt_local) : NaN
+    return Number.isFinite(ts) && ts < Date.now()
+})
+
 const updateTaskStatus = () => {
-    router.patch(route('tasks.done', {task: props.task.id}), {
-    }, {
-        preserveScroll: true,
-        preserveState: false
-    });
+    router.patch(
+        route('tasks.done', { task: props.task.id }),
+        {},
+        {
+            preserveScroll: true,
+            preserveState: false,
+            onError: () => { localTaskDone.value = !!props.task.done },
+            onSuccess: () => { localTaskDone.value = !!props.task.done },
+        }
+    )
 }
 
-const onDragStart = (event) => {
-    event.dataTransfer.setData('task', JSON.stringify(props.task));
-    dispatchEventStart(props.task)
-};
+const onDragStart = (event: DragEvent) => {
+    try { event.dataTransfer?.setData('task', JSON.stringify(props.task)) } catch {}
+    // Behalte dein bestehendes API-Design bei
+    try { /* @ts-ignore */ dispatchEventStart?.(props.task) } catch {}
+}
 
 const onDragEnd = () => {
-    // Dispatch ein globales Event zum Beenden
     dispatchEventEnd()
-};
-
-const deleteTask = () => {
-    router.delete(route('tasks.destroy', {task: props.task.id}), {
-        preserveScroll: true,
-        onSuccess: () => {
-            openDeleteTaskModal.value = false;
-        }
-    });
 }
 
+const deleteTask = () => {
+    router.delete(route('tasks.destroy', { task: props.task.id }), {
+        preserveScroll: true,
+        onSuccess: () => { openDeleteTaskModal.value = false },
+    })
+}
 </script>
 
 <style scoped>
-
+:host, article:focus-within { outline: none; }
 </style>

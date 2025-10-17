@@ -65,7 +65,7 @@ const textColor = computed(() => {
         case 'dashboard':
             return 'text-gray-500';
         case 'plus':
-            return 'text-artwork-info cursor-pointer !items-center';
+            return 'text-artwork-info cursor-pointer !items-center hover:text-artwork-buttons-create duration-150 ease-in-out';
         default:
             return 'text-artwork-buttons-create';
     }

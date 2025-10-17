@@ -183,7 +183,7 @@
             </div>
 
             <div class="mt-6 flex items-center justify-between">
-                <FormButton :text="$t('Delete')" @click="deleteUser" />
+                <BaseUIButton :label="$t('Delete')" is-delete-button @click="deleteUser" />
                 <button @click="closeDeleteUserModal" class="text-sm text-zinc-500 hover:text-zinc-800">
                     {{ $t('No, not really') }}
                 </button>
@@ -350,6 +350,7 @@ watch(user_query, () => {
 })
 
 import BaseTable, { type TableColumn } from '@/Artwork/Table/BaseTable.vue'
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const cols = ref<TableColumn[]>([
     { key: 'name',  label: 'Name',  sortable: false },

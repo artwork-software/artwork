@@ -164,8 +164,9 @@
                 </div>
             </div>
             <div class="flex justify-center mt-5">
-                <FormButton
-                    :text="$t('Save')"
+                <BaseUIButton
+                    :label="$t('Save')"
+                    is-add-button
                     @click="checkVacation"
                 />
             </div>
@@ -215,10 +216,12 @@ import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTim
 import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
 import SingleShiftInShiftOverviewUser from "@/Pages/Shifts/Components/SingleShiftInShiftOverviewUser.vue";
 import {IconCirclePlus, IconTrash} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default defineComponent({
     name: "showUserShiftsModal",
     components: {
+        BaseUIButton,
         SingleShiftInShiftOverviewUser,
         SingleEntityInShift,
         RequestWorkTimeChangeModal,

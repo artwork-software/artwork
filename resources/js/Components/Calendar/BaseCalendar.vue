@@ -69,7 +69,7 @@
                     'border-t border-gray-300',
 
                     // -> Hervorhebung bei >2 Terminen (nur wenn nicht expand_days):
-                    (!settings.expand_days && eventsCount(day, room) > 2)
+                    (!settings.expand_days && eventsCount(day, room) > 1)
                       ? 'ring-2 ring-blue-300'                  // klarer, ohne Schatten
                       : ''
                   ]"
@@ -80,8 +80,8 @@
                                                 <div
                                                     class="events-scroll h-full"
                                                     :class="[
-                        (!settings.expand_days && eventsCount(day, room) > 1) ? 'overflow-auto cell' : 'overflow-hidden'
-                      ]"
+                                                        (!settings.expand_days && eventsCount(day, room) > 1) ? 'overflow-auto cell' : zoom_factor === 0.8 ? 'overflow-x-hidden overflow-y-auto' : 'overflow-hidden',
+                                                      ]"
                                                     :style="cellStyle"
                                                 >
                                                     <!-- Nur rendern, wenn Cell (Tag×Raum) in/nahe Viewport -->
@@ -419,7 +419,7 @@ const atAGlance = computed(() => !!user.value.at_a_glance);
 // Maße/Styles
 const cellWidthPx = computed(() => `${zoom_factor.value * 212}px`);
 const cardWidthNum = computed(() => zoom_factor.value * 196);
-const rowHeightPx = computed(() => `${zoom_factor.value * 115}px`);
+const rowHeightPx = computed(() => `${zoom_factor.value * 212}px`);
 const dayRowStyle = computed(() => ({
     height: settings.value.expand_days ? "" : rowHeightPx.value,
     minHeight: settings.value.expand_days ? rowHeightPx.value : ""

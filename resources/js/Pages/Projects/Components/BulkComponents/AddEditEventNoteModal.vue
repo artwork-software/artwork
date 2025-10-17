@@ -3,7 +3,7 @@
 
         <BaseAlertComponent
             type="info"
-            :message="$t('This description is displayed in the calendar or when editing the event.')"
+            :message="$t('The event description can be displayed in the calendar and can be viewed by all users after clicking on the event.')"
             class="mb-5"   />
 
         <form @submit.prevent>

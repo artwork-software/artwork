@@ -161,10 +161,7 @@
                         <div class="flex w-full justify-between mt-6">
                             <div class="flex">
                                 <div>
-                                    <ArtworkBaseModalButton @click="openAddAreaModal()">{{
-                                            $t('Add area')
-                                        }}
-                                    </ArtworkBaseModalButton>
+                                    <BaseUIButton @click="openAddAreaModal()" :label="$t('Add area')" is-add-button />
                                 </div>
                             </div>
                         </div>
@@ -177,7 +174,7 @@
                         >
                             <div class="flex items-center justify-between gap-3 pl-5 pr-4 py-4">
                                 <button
-                                    class="text-blue-500 bg-blue-100 border-blue-200 hover:bg-blue-200 hover:text-blue-500 disabled:bg-gray-100 hover:border-blue-300 inline-flex items-center justify-center rounded-md font-medium transition duration-200 ease-in-out font-lexend border shadow-glass backdrop-blur-md disabled:opacity-50 p-2 text-xs"
+                                    class="ui-button-add"
                                     @click="changeAreaStatus(area)"
                                     :aria-expanded="this.opened_areas.includes(area.id)"
                                     :aria-controls="`area-panel-${area.id}`"
@@ -275,10 +272,7 @@
                                 >
                                     <!-- Add Room + Hint -->
                                     <div class="flex items-center gap-3">
-                                        <ArtworkBaseModalButton @click="openAddRoomModal(area)">{{
-                                                $t('Add room')
-                                            }}
-                                        </ArtworkBaseModalButton>
+                                        <BaseUIButton @click="openAddRoomModal(area)" :label="$t('Add room')" is-add-button />
                                         <div v-if="this.$page.props.show_hints"
                                              class="flex items-center text-secondary">
                                             <SvgCollection svgName="arrowLeft" class="ml-1 h-4 w-4 opacity-70"/>
@@ -527,11 +521,8 @@
     </RoomSettingsHeader>
     <!-- Areal Hinzufügen-->
 
-    <BaseModal @closed="closeAddAreaModal" v-if="showAddAreaModal">
+    <ArtworkBaseModal @close="closeAddAreaModal" v-if="showAddAreaModal" :title="$t('New area')" description="">
         <div class="mx-3">
-            <ModalHeader
-                :title="$t('New area')"
-            />
             <form @submit.prevent="addArea" class="">
                 <div>
                     <BaseInput
@@ -544,22 +535,20 @@
                 </div>
 
                 <div class="w-full items-center flex justify-center text-center mt-4">
-                    <FormButton
+                    <BaseUIButton
+                        is-add-button
                         :disabled="newAreaForm.processing || newAreaForm.name === ''"
-                        :text="$t('Create')"
+                        :label="$t('Create')"
                         class="mt-8"
                         type="submit"
                     />
                 </div>
             </form>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
     <!-- Areal Bearbeiten-->
-    <BaseModal @closed="closeEditAreaModal" v-if="showEditAreaModal">
+    <ArtworkBaseModal @close="closeEditAreaModal" v-if="showEditAreaModal" :title="$t('Edit area')" description="">
         <div class="mx-3">
-            <ModalHeader
-                :title="$t('Edit area')"
-            />
             <form @submit.prevent="editArea" class="">
                 <div>
                     <BaseInput
@@ -571,23 +560,19 @@
                 </div>
 
                 <div class="w-full items-center flex justify-center text-center">
-                    <FormButton
+                    <BaseUIButton
                         :disabled="editAreaForm.processing || editAreaForm.name === ''"
-                        :text="$t('Save')"
+                        :label="$t('Save')"
                         type="submit"
-                        class="mt-8 inline-flex items-center"
+                        is-add-button
                     />
                 </div>
             </form>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
     <!-- Raum Hinzufügen-->
-    <BaseModal @closed="closeAddRoomModal" v-if="showAddRoomModal">
+    <ArtworkBaseModal @close="closeAddRoomModal" v-if="showAddRoomModal"  :title="$t('New room')" :description="$t('Create a new room.')">
         <div class="mx-3">
-            <ModalHeader
-                :title="$t('New room')"
-                :description="$t('Create a new room.')"
-            />
             <form @submit.prevent="addRoom" class="grid grid-cols-1 gap-4">
                 <div class="">
                     <BaseInput
@@ -806,21 +791,20 @@
                     </div>
                 </div>
                 <div class="w-full items-center text-center">
-                    <FormButton
+                    <BaseUIButton
                         type="submit"
                         :disabled="newRoomForm.processing || newRoomForm.name === ''"
-                        :text="$t('Create')"
-                        class="inline-flex items-center mt-4"
+                        :label="$t('Create')"
+                        is-add-button
                     />
                 </div>
             </form>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 
     <!-- Raum Bearbeiten-->
-    <BaseModal @closed="closeEditRoomModal" v-if="showEditRoomModal">
+    <ArtworkBaseModal @close="closeEditRoomModal" v-if="showEditRoomModal" :title="$t('Edit room')" description="">
         <div class="mx-3">
-            <ModalHeader :title="$t('Edit room')"/>
             <form @submit.prevent="editRoom" class="grid grid-cols-1 gap-4">
                 <div class="">
                     <BaseInput
@@ -1051,17 +1035,17 @@
                 </div>
 
                 <div class="w-full items-center text-center">
-                    <FormButton
+                    <BaseUIButton
                         type="submit"
                         :disabled="editRoomForm.name.length === 0 || editRoomForm.processing"
-                        :text="$t('Save')"
-                        class="inline-flex items-center mt-8"
+                        :label="$t('Save')"
+                        is-add-button
                     />
                 </div>
 
             </form>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
     <!-- Success Modal -->
     <SuccessModal
         :show="showSuccessModal"
@@ -1144,10 +1128,14 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {IconClock, IconCopy, IconEdit, IconLayoutGrid, IconRecycle, IconTrash} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
+        ArtworkBaseModal,
+        BaseUIButton,
         ArtworkBaseModalButton,
         BaseMenuItem,
         BaseTextarea,

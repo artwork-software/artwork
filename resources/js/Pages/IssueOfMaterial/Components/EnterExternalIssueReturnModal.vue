@@ -3,12 +3,8 @@
         <BaseTextarea id="return_remarks" label="Defects after return" v-model="externalIssueForm.return_remarks" placeholder="Enter return remarks" />
 
         <div class="flex items-center justify-between mt-4">
-            <ArtworkBaseModalButton type="button" variant="danger" class="mr-2" @click="$emit('close')">
-                {{ $t('Cancel') }}
-            </ArtworkBaseModalButton>
-            <ArtworkBaseModalButton type="submit" variant="primary" @click="submit">
-                {{ $t('Save') }}
-            </ArtworkBaseModalButton>
+            <BaseUIButton is-cancel-button :label="$t('Cancel')" @click="$emit('close')"/>
+            <BaseUIButton is-add-button @click="submit" :label="$t('Save')"/>
 
         </div>
     </ArtworkBaseModal>
@@ -21,6 +17,7 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     externalIssue: {

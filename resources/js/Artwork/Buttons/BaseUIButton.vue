@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { IconCirclePlus, IconTrash } from '@tabler/icons-vue';
+import {IconCancel, IconCirclePlus, IconTrash} from '@tabler/icons-vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 
 defineOptions({ name: 'BaseUIButton' });
@@ -50,6 +50,7 @@ const props = withDefaults(defineProps<{
     isAddButton?: boolean;
     /** Delete-Button-Variante */
     isDeleteButton?: boolean;
+    isCancelButton?: boolean;
     /** Kleine Variante */
     isSmall?: boolean;
     type?: string;
@@ -61,6 +62,7 @@ const props = withDefaults(defineProps<{
     useTranslation: true,
     isAddButton: false,
     isDeleteButton: false,
+    isCancelButton: false,
     isSmall: false,
     type: 'button',
 });
@@ -76,6 +78,8 @@ const iconResolved = computed(() => {
     if (props.icon) return props.icon;
     if (props.isAddButton) return IconCirclePlus;
     if (props.isDeleteButton) return IconTrash;
+    if (props.isDeleteButton) return IconTrash;
+    if (props.isCancelButton) return IconCancel;
     return IconCirclePlus;
 });
 

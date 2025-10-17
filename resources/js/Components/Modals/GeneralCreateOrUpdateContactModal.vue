@@ -65,12 +65,8 @@
             </div>
 
             <div class="flex items-center justify-between mt-5">
-                <ArtworkBaseModalButton size="md" variant="primary" type="submit">
-                    {{ props.contact.id ? $t('Update') : $t('Create') }}
-                </ArtworkBaseModalButton>
-                <ArtworkBaseModalButton size="md" variant="danger" type="button" @click="$emit('close')">
-                    {{ $t('Cancel') }}
-                </ArtworkBaseModalButton>
+                <BaseUIButton is-add-button type="submit" :label="props.contact.id ? $t('Update') : $t('Create')" />
+                <BaseUIButton is-cancel-button :label="$t('Cancel')" type="button" @click="$emit('close')" />
             </div>
         </form>
     </ArtworkBaseModal>
@@ -84,6 +80,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseButton from "@/Artwork/Buttons/ArtworkBaseButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     title: {

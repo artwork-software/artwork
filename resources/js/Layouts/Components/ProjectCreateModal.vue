@@ -2,7 +2,7 @@
     <ArtworkBaseModal @close="$emit('closeCreateProjectModal')" :title="project ? t('Edit basic data') : createProjectGroup ? t('New project group') : t('New project')" :description="t('Please fill in the following fields to create a new project.')" modal-size="max-w-3xl">
             <div class="">
 
-                <div class="px-6 mt-5 modal-header"  v-if="!project">
+                <div class="px-6 my-5 flex items-center justify-between"  v-if="!project">
                     <SwitchDualLabel
                         v-model="createProjectGroup"
                         :left-label="t('Project')"
@@ -11,6 +11,13 @@
                         :tooltip-text="createProjectGroup ? $t('Create a standard project.') : $t('Create a project group to manage multiple related projects together.')"
                         icon="IconGeometry"
                         :disabled="false"
+                    />
+
+                    <ToolTipComponent
+                        :tooltip-text="$t('Multiple projects can be assigned to a project group. If the content in the KTO and KST columns in subprojects and the project group in the project budget is the same, the data for the subprojects is then displayed in a separate column in the project group.')"
+                        direction="bottom"
+                        use-translation
+                        icon="IconInfoCircle"
                     />
                 </div>
                 <div v-if="!createProjectGroup">
@@ -593,6 +600,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 // Define props
 const props = defineProps({

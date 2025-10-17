@@ -387,7 +387,7 @@
                 </div>
 
                 <div class="w-full items-center text-center">
-                    <FormButton @click="saveNewTeams" :text="$t('Save')" :disabled="userForm.processing" />
+                    <BaseUIButton @click="saveNewTeams" :label="$t('Save')" is-add-button :disabled="userForm.processing" />
                 </div>
             </div>
         </BaseModal>
@@ -470,6 +470,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import { IconEdit, IconTrash } from '@tabler/icons-vue'
 import {is, can} from "laravel-permission-to-vuejs";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     user_to_edit: { type: Object, required: true },

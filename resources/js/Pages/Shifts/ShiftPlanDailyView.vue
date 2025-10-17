@@ -125,7 +125,7 @@
                                             <div class="text-gray-300 text-center">{{ $t('No events for this day') }}</div>
                                         </div>
                                         <div class="mt-5">
-                                            <GlassyIconButton :text="$t('Add Event')" :icon="IconCalendarPlus" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)" />
+                                            <BaseUIButton :label="$t('Add Event')" is-add-button :icon="IconCalendarPlus" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)" />
                                         </div>
                                     </div>
                                     <div class="card white p-5 text-xs font-lexend col-span-2">
@@ -138,7 +138,7 @@
                                             <div class="text-gray-300 text-center">{{ $t('No shifts for this day') }}</div>
                                         </div>
                                         <div class="mt-5">
-                                            <GlassyIconButton :text="$t('Add Shift')" :icon="IconCalendarUser" @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)" />
+                                            <BaseUIButton :label="$t('Add Shift')" is-add-button :icon="IconCalendarUser" @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)" />
                                         </div>
                                     </div>
                                 </div>
@@ -216,6 +216,7 @@ import {
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     days: {

@@ -1,5 +1,5 @@
 <template>
-    <div class="-mx-5 py-10 px-20">
+    <div class="py-10 px-20">
         <ChecklistFunctionBar
             :project-manager-ids="projectManagerIds"
             :project-can-write-ids="projectCanWriteIds"
@@ -10,10 +10,10 @@
             :checklist_templates="checklist_templates"
         >
             <template #search>
-                <div v-if="!showSearch" @click="openSearchBar">
-                    <IconSearch class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" />
+                <div v-if="!showSearch" @click="openSearchBar" class="ui-button">
+                    <IconSearch class="h-5 w-5 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" />
                 </div>
-                <div v-if="showSearch">
+                <div v-if="showSearch" class="flex items-center gap-x-2">
                     <div class="relative w-72">
                         <BaseInput
                             id="userSearch"
@@ -24,11 +24,14 @@
                             is-small
                         />
                     </div>
+
+                    <div @click="removeSearch" class="ui-button">
+                        <IconX class="h-5 w-5 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" />
+                    </div>
                 </div>
             </template>
             <template #sort>
-                <div class="flex items-center z-10">
-                <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
+                <BaseMenu show-sort-icon dots-size="h-5 w-5" menu-width="w-72" classes-button="ui-button">
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 1"
                              :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
@@ -44,7 +47,6 @@
                         </div>
                     </MenuItem>
                 </BaseMenu>
-                </div>
             </template>
         </ChecklistFunctionBar>
 
@@ -116,7 +118,15 @@ const projectCanWriteIds = computed(() => {
 });
 
 const allChecklists = computed(() => {
-    return props.project.public_checklists.concat(props.project.private_checklists);
+    const publicLists = Array.isArray(props?.project?.public_checklists.data)
+        ? props.project.public_checklists.data
+        : [];
+
+    const privateLists = Array.isArray(props?.project?.private_checklists.data)
+        ? props.project.private_checklists.data
+        : [];
+
+    return publicLists.concat(privateLists);
 });
 
 

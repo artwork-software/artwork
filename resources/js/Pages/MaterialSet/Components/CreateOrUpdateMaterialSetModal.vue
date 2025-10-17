@@ -300,9 +300,7 @@
             <!-- Sticky Actions -->
             <div class="sticky bottom-2 z-10 flex justify-end">
                 <div>
-                    <ArtworkBaseModalButton variant="primary" type="submit" :disabled="!canSubmit">
-                        {{ materialSet?.id ? $t('Update Material Set') : $t('Create Material Set') }}
-                    </ArtworkBaseModalButton>
+                    <BaseUIButton is-add-button :label="materialSet?.id ? $t('Update Material Set') : $t('Create Material Set')" type="submit" :disabled="!canSubmit"/>
                 </div>
             </div>
         </form>
@@ -322,6 +320,7 @@ import axios from "axios";
 import Galleria from "primevue/galleria";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import { IconTrash, IconStackForward, IconList, IconWindowMaximize } from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 type Article = {
     id: number | string;

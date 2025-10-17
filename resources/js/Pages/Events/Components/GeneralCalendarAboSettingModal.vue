@@ -14,12 +14,14 @@ import {
 } from "@headlessui/vue";
 import {useForm} from "@inertiajs/vue3";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: "GeneralCalendarAboSettingModal",
     mixins: [IconLib],
     props: ['eventTypes', 'rooms', 'areas'],
     components: {
+        BaseUIButton,
         ArtworkBaseModal,
         FormButton,
         BaseModal, SwitchGroup, Switch, SwitchLabel,
@@ -293,7 +295,7 @@ export default {
                         <span class="ml-1">{{ $t('Show instructions') }}</span>
                     </div>
                 </div>
-                <FormButton @click="create(true)" :text="aboForm.id ? $t('Save') : $t('Subscribe')" :disabled="aboForm.processing" />
+                <BaseUIButton @click="create(true)" :label="aboForm.id ? $t('Save') : $t('Subscribe')" is-add-button :disabled="aboForm.processing" />
             </div>
 
             <div v-if="aboForm.id" class="mt-2 text-artwork-buttons-create bg-artwork-buttons-create/10 rounded-lg p-3" >

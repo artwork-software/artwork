@@ -212,13 +212,13 @@
                 <div v-if="invalidEvents.length > 0" class="text-artwork-messages-error text-xs">
                     {{ $t('The name is not given for {0} event(s)', [invalidEvents.length]) }}
                 </div>
-                <BaseButton
+                <BaseUIButton
                     v-if="isInModal"
                     @click="submit"
-                    :class="['h-12 pointer-events-auto', hasCreateEventsPermission ? 'bg-artwork-buttons-create text-white' : 'bg-gray-400 text-white cursor-not-allowed']"
-                    :text="$t('Create')">
-                    <IconCirclePlus class="w-5 h-5 text-white mr-2"/>
-                </BaseButton>
+                    :disabled="!hasCreateEventsPermission"
+                    :label="$t('Create')"
+                    is-add-button
+                />
             </div>
         </div>
 
@@ -246,18 +246,14 @@
 
                         <!-- right: actions -->
                         <div class="flex items-center gap-2 sm:gap-3">
-                            <ArtworkBaseModalButton variant="primary"
+                            <BaseUIButton :label="$t('Edit')" is-add-button
                                 @click="hasCreateEventsPermission ? openMultiEditModal() : null"
                                 :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
-                            >
-                                {{ $t('Edit') }}
-                            </ArtworkBaseModalButton>
-                            <ArtworkBaseModalButton variant="danger"
+                            />
+                            <BaseUIButton :label="$t('Delete')" is-delete-button
                                 @click="hasCreateEventsPermission ? (showConfirmDeleteModal = true) : null"
                                 :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
-                            >
-                                {{ $t('Delete') }}
-                            </ArtworkBaseModalButton>
+                            />
                         </div>
                     </div>
                 </div>
@@ -347,6 +343,7 @@ import DividerChip from "@/Artwork/Divider/DividerChip.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import { useBulkEventsBroadcastUpdater } from '@/Composeables/Listener/useBulkEventsBroadcastUpdater.js';
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const exportTabEnums = useExportTabEnums();
 const {hasAdminRole, can} = usePermission(usePage().props);

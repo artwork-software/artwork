@@ -6,6 +6,7 @@ import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 import { ChevronUpIcon } from '@heroicons/vue/solid'
 import {IconChevronDown, IconCircleCheck, IconInfoCircle} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 // Props / Emits
 const props = defineProps({
@@ -220,7 +221,7 @@ const instructions = computed(() => ([
                     </div>
                 </div>
 
-                <FormButton @click="closeModal(true)" :text="$t('Close')" />
+                <BaseUIButton @click="closeModal(true)" :label="$t('Close')" is-delete-button icon="IconX" />
             </section>
         </div>
     </ArtworkBaseModal>

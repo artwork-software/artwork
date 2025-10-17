@@ -88,13 +88,12 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button
+                                            <BaseUIButton
                                                 type="button"
                                                 @click="removeRoomType(roomType.id)"
-                                                class="text-red-600 hover:text-red-900"
-                                            >
-                                                {{ $t('Remove') }}
-                                            </button>
+                                                is-delete-button
+                                                :label="$t('Remove')"
+                                            />
                                         </td>
                                     </tr>
                                 </tbody>
@@ -105,14 +104,12 @@
                     <!-- Add Room Type Section -->
                     <div class="mt-4">
                         <div v-if="!showAddRoomType" class="flex justify-start">
-                            <button
+                            <BaseUIButton
                                 type="button"
                                 @click="showAddRoomType = true"
-                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-artwork-buttons-create bg-artwork-buttons-create/10 hover:bg-artwork-buttons-create/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create"
-                            >
-                                <component :is="IconPlus" class="h-4 w-4 mr-2" />
-                                {{ $t('Add room type') }}
-                            </button>
+                                is-add-button
+                                :label="$t('Add room type')"
+                            />
                         </div>
 
                         <!-- Add Room Type Dropdown -->
@@ -128,21 +125,19 @@
                                     />
                                 </div>
                                 <div class="flex items-end gap-2">
-                                    <button
+                                    <BaseUIButton
                                         type="button"
                                         @click="addRoomType"
                                         :disabled="!selectedNewRoomType"
-                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create disabled:bg-gray-400"
-                                    >
-                                        {{ $t('Add') }}
-                                    </button>
-                                    <button
+                                        is-add-button
+                                        :label="$t('Add')"
+                                    />
+                                    <BaseUIButton
                                         type="button"
                                         @click="showAddRoomType = false; selectedNewRoomType = null"
-                                        class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create"
-                                    >
-                                        {{ $t('Cancel') }}
-                                    </button>
+                                        is-cancel-button
+                                        :label="$t('Cancel')"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -154,14 +149,12 @@
                         <h3 class="mt-2 text-sm font-medium text-gray-900">{{ $t('No room types') }}</h3>
                         <p class="mt-1 text-sm text-gray-500">{{ $t('Get started by adding a room type to this accommodation.') }}</p>
                         <div class="mt-6">
-                            <button
+                            <BaseUIButton
+                                :label="$t('Add room type') "
+                                is-cancel-button
                                 type="button"
                                 @click="showAddRoomType = true"
-                                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create"
-                            >
-                                <component :is="IconPlus" class="h-4 w-4 mr-2" />
-                                {{ $t('Add room type') }}
-                            </button>
+                                />
                         </div>
                     </div>
                 </div>
@@ -170,9 +163,7 @@
                     <div>
                         <div class="flex items-center justify-between mb-5">
                             <PageTitle :title="$t('Contacts')" :description="$t('You can view and edit all accommodation contacts here')" />
-                            <ArtworkBaseModalButton size="sm" variant="primary" type="button" @click="showCreateOrUpdateContactModal = true">
-                                {{ $t('Add Contact') }}
-                            </ArtworkBaseModalButton>
+                            <BaseUIButton is-add-button :label="$t('Add Contact')" type="button" @click="showCreateOrUpdateContactModal = true" />
                         </div>
 
 
@@ -221,6 +212,7 @@ import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {IconArrowLeft, IconHome, IconInfoCircle, IconPlus} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     accommodation: {

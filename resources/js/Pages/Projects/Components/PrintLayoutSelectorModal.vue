@@ -34,9 +34,10 @@
             </Listbox>
 
             <div class="flex items-center justify-center mt-10">
-                <FormButton
+                <BaseUIButton
                     @click="openPrintDialog"
-                    :text="$t('Print')"
+                    :label="$t('Print')"
+                    is-add-button
                 />
             </div>
         </div>
@@ -65,6 +66,7 @@ import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} fro
 import {ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {IconCheck, IconChevronDown, IconExclamationCircle} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     project: {

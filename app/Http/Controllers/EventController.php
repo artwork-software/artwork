@@ -3364,4 +3364,20 @@ class EventController extends Controller
     {
         $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
     }
+
+    public function convertToPlanning(Event $event): RedirectResponse
+    {
+        // Set the event as a planning event
+        $event->update(['is_planning' => true]);
+
+        // Broadcast the event update
+        $freshEvent = $event->fresh();
+        broadcast(new EventUpdated(
+            $freshEvent->room_id,
+            $freshEvent->start_time,
+            $freshEvent->is_series ? $freshEvent->series->end_date : $freshEvent->end_time
+        ));
+
+        return Redirect::back();
+    }
 }

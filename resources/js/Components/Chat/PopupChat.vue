@@ -77,7 +77,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-zinc-100/60 min-h-[600px]">
+                    <div class="bg-zinc-100/60 min-h-[300px] sm:min-h-[400px] md:min-h-[500px] lg:min-h-[600px]">
                         <div class="">
                             <div v-if="!checkIfChatIsSelected" class="px-3 py-1">
                                 <div class="grid grid-cols-1">
@@ -156,7 +156,7 @@
                         </div>
                         <div v-else class="px-3">
                             <div
-                                class="rounded-b-lg max-h-[600px] overflow-y-auto max-w-96"
+                                class="rounded-b-lg max-h-[300px] sm:max-h-[400px] md:max-h-[500px] lg:max-h-[600px] overflow-y-auto max-w-96"
                                 ref="scrollContainer"
                                 :key="chatPartner?.id || 'chat-list'"
                                 @scroll="handleScroll"

@@ -589,6 +589,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::patch('/events/{event}/description', [EventController::class, 'updateDescription'])
         ->name('event.update.description');
+    Route::post('/events/{event}/convert-to-planning', [EventController::class, 'convertToPlanning'])
+        ->name('events.convertToPlanning');
     Route::patch('/events/{event}/single/bulk', [EventController::class, 'updateSingleBulkEvent'])
         ->name('event.update.single.bulk');
     Route::post('/events/{project}/single/bulk/create', [EventController::class, 'createSingleBulkEvent'])

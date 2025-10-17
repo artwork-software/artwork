@@ -306,15 +306,13 @@
                             </p>
 
                             <div class="my-6 flex w-full items-center justify-center">
-                                <ArtworkBaseModalButton
+                                <BaseUIButton
                                     type="submit"
                                     :loading="artistResidency.processing"
-                                    class="w-full"
                                     :disabled="artistResidency.processing"
-                                    variant="primary"
-                                >
-                                    {{ artistResidency.id ? $t('Save') : $t('Create') }}
-                                </ArtworkBaseModalButton>
+                                    :label="artistResidency.id ? $t('Save') : $t('Create')"
+                                    is-add-button
+                                />
                             </div>
 
                         </div>
@@ -357,6 +355,7 @@ import CountUp from "@/Artwork/Visual/CountUp.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {IconCheck, IconInfoCircle} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 
 const props = defineProps({

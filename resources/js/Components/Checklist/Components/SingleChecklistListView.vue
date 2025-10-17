@@ -1,74 +1,33 @@
 <template>
-    <div class="card glassy" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'border-artwork-buttons-create' : 'border-gray-400'">
-        <div class="card glassy p-5">
-            <div class="flex items-center justify-between w-fit">
-                <div class="flex items-center gap-x-3 cursor-pointer" @click="changeChecklistStatus(checklist)">
-                    <span v-if="checklist.private">
-                        <IconLock stroke-width="1.5" class="h-6 w-6" />
-                    </span>
-                    <div class="font-bold">
-                        {{ checklist?.name }}
-                    </div>
-                    <div>
-                        <component :is="IconChevronDown" class="h-6 w-6" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
+    <div class="" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'border-artwork-buttons-create' : 'border-gray-400'">
+        <div class="p-5">
+            <div class="flex items-center justify-between mb-4 bg-blue-50 rounded-lg px-4 py-3 cursor-pointer" @click="changeChecklistStatus(checklist)">
+                <div class="flex items-center gap-x-1">
+                        <span v-if="checklist.private">
+                            <IconLock stroke-width="1.5" class="h-6 w-6" />
+                        </span>
+                    <div class="truncate print:headline3 text-xs font-semibold">
+                        {{ checklist.name }}
                     </div>
                 </div>
-
-                <BaseMenu has-no-offset v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement" >
-                    <MenuItem as="div" v-slot="{ active }" v-if="!checklist.private">
-                        <a @click="openEditChecklistTeamsModal = true"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
-                            <IconUserPlus stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
-                            {{ $t('Assign users') }}
-                        </a>
-                    </MenuItem>
-                    <MenuItem as="div" v-slot="{ active }">
-                        <a @click="showChecklistEditModal = true" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
-                            <IconEdit stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
-                            {{ $t('Edit') }}
-                        </a>
-                    </MenuItem>
-                    <MenuItem as="div" v-slot="{ active }"
-                              v-if="!checkIfAllTasksChecked && checklist.tasks.length > 0">
-                        <a @click="doneOrUndoneAllTasks(true)"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
-                            <IconListCheck stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
-                            {{ $t('Mark all tasks as completed') }}
-                        </a>
-                    </MenuItem>
-                    <MenuItem as="div" v-slot="{ active }" v-if="checkIfAllTasksChecked && checklist.tasks.length > 0">
-                        <a @click="doneOrUndoneAllTasks(false)"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
-                            <IconListDetails stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
-                            {{ $t('Mark all tasks as unfinished') }}
-                        </a>
-                    </MenuItem>
-                    <MenuItem as="div"
-                              v-slot="{ active }">
-                        <a @click="createTemplateFromChecklist "
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
-                            <IconFilePlus stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
-                            {{ $t('Save as template') }}
-                        </a>
-                    </MenuItem>
-                    <MenuItem as="div" v-slot="{ active }">
-                        <div
-                            @click="duplicateChecklist"
-                            :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
-                            <IconCopy stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
-                            {{ $t('Duplicate') }}
-                        </div>
-                    </MenuItem>
-                    <MenuItem as="div" v-slot="{ active }" v-if="can('can use checklists') && checklist.user_id === usePage().props.auth.user.id || can('can edit checklist') || isAdmin || checklist.user_id === usePage().props.auth.user.id">
-                        <a @click="showDeleteChecklistModal = true"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'base-menu-link']">
-                            <IconTrash stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
-                            {{ $t('Delete') }}
-                        </a>
-                    </MenuItem>
-                </BaseMenu>
+                <div class="flex items-center gap-x-2 print:hidden">
+                        <span class="bg-blue-50 border border-blue-200 text-blue-500 text-xs px-2 py-0.5 rounded print:border print:bg-gray-200 print:text-gray-500 print:border-gray-200 print:rounded-lg">
+                            {{ checklist.tasks.length }}
+                        </span>
+                    <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-5 w-5 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out print:hidden" @click="openAddTaskModal = true"/>
+                    <BaseMenu has-no-offset white-menu-background v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement">
+                        <BaseMenuItem icon="IconUserPlus" title="Assign users" white-menu-background v-if="!checklist.private" @click="openEditChecklistTeamsModal = true"/>
+                        <BaseMenuItem icon="IconEdit" title="Edit" white-menu-background v-if="checklist" @click="showChecklistEditModal = true"/>
+                        <BaseMenuItem icon="IconListCheck" title="Mark all tasks as completed" white-menu-background v-if="!checkIfAllTasksChecked && checklist.tasks.length > 0" @click="doneOrUndoneAllTasks(true)"/>
+                        <BaseMenuItem icon="IconListDetails" title="Mark all tasks as unfinished" white-menu-background v-if="checkIfAllTasksChecked && checklist.tasks.length > 0" @click="doneOrUndoneAllTasks(false)"/>
+                        <BaseMenuItem icon="IconFilePlus" title="Save as template" white-menu-background  @click="createTemplateFromChecklist"/>
+                        <BaseMenuItem icon="IconCopy" title="Duplicate" white-menu-background  @click="duplicateChecklist"/>
+                        <BaseMenuItem icon="IconTrash" title="Delete" white-menu-background  @click="showDeleteChecklistModal = true" v-if="can('can use checklists') && checklist.user_id === usePage().props.auth.user.id || can('can edit checklist') || isAdmin || checklist.user_id === usePage().props.auth.user.id"/>
+                    </BaseMenu>
+                    <component :is="IconChevronDown" class="h-6 w-6" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
+                </div>
             </div>
-            <div class="my-4 border-b border-dashed pb-3" v-if="$page.props.auth.user.opened_checklists.includes(checklist?.id)">
+            <div class="my-4 border-b border-dashed border-gray-200 pb-3" v-if="$page.props.auth.user.opened_checklists.includes(checklist?.id)">
                 <div class="text-xs" v-if="checklist.hasProject">
                     <div class="flex gap-x-1">
                         {{ $t('Project') }}:
@@ -84,7 +43,7 @@
                     </div>
                 </div>
                 <div class="">
-                    <div class="card white my-2 p-4" v-for="element in orderTasksByDeadline" :key="element.id">
+                    <div class="" v-for="element in orderTasksByDeadline" :key="element.id">
                         <SingleTaskInListView
                             :can-edit-component="canEditComponent"
                             :project-manager-ids="projectManagerIds"
@@ -152,7 +111,7 @@ import {
     IconFilePlus, IconListCheck,
     IconListDetails,
     IconLock,
-    IconTrash, IconUserPlus, IconChevronRight
+    IconTrash, IconUserPlus, IconChevronRight, IconCirclePlus
 } from "@tabler/icons-vue";
 import {Link, router, useForm, usePage} from "@inertiajs/vue3";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
@@ -168,6 +127,7 @@ import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserM
 import { usePermission } from "@/Composeables/Permission.js";
 import DropTaskInKanbanView from "@/Components/Checklist/Components/DropTaskInKanbanView.vue";
 import DropTaskInListView from "@/Components/Checklist/Components/DropTaskInListView.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 const {can} = usePermission(usePage().props)
 const props = defineProps({
     checklist: {

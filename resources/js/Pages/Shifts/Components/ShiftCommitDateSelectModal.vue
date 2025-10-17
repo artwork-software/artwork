@@ -28,15 +28,9 @@
         </div>
 
         <div class="mt-5 flex items-center justify-between">
-            <ArtworkBaseModalButton variant="danger" @click="$emit('close')">
-                {{ $t('Cancel') }}
-            </ArtworkBaseModalButton>
-            <ArtworkBaseModalButton variant="primary" @click="requestShiftCommitForm" v-if="isShiftCommitWorkFlowActive">
-                {{ $t('Request a firm commitment') }}
-            </ArtworkBaseModalButton>
-            <ArtworkBaseModalButton variant="primary" @click="commentShiftCommitForm" v-else>
-                {{ $t('Lock all shifts') }}
-            </ArtworkBaseModalButton>
+            <BaseUIButton is-cancel-button @click="$emit('close')" :label="$t('Cancel')" />
+            <BaseUIButton :label="$t('Request a firm commitment')" is-add-button @click="requestShiftCommitForm" v-if="isShiftCommitWorkFlowActive" />
+            <BaseUIButton :label="$t('Lock all shifts')" @click="commentShiftCommitForm" v-else is-add-button />
         </div>
     </ArtworkBaseModal>
 </template>
@@ -49,6 +43,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {ref} from "vue";
 import {useForm, usePage} from "@inertiajs/vue3";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     dateArray : {

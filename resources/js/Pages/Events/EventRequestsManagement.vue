@@ -271,10 +271,11 @@
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <FormButton
+                        <BaseUIButton
                             @click="declineRequest"
-                            :text="$t('Cancellations')"
-                            class="inline-flex items-center"
+                            is-delete-button
+                            icon="IconProgressX"
+                            :label="$t('Cancellations')"
                             :disabled="answerRequestForm.processing"
                             />
                         <div class="flex my-auto">
@@ -322,11 +323,13 @@ import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        BaseUIButton,
         BaseModal,
         FormButton,
         UserPopoverTooltip,

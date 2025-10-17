@@ -19,7 +19,7 @@
                 </div>
             </div>
             <div class="flex items-center justify-end gap-2">
-                <GlassyIconButton text="Select Work Time Pattern" :icon="IconClockSearch" @click.stop="showSelectWorkTimePatternModal = true"/>
+                <BaseUIButton label="Select Work Time Pattern" use-translation is-add-button :icon="IconClockSearch" @click.stop="showSelectWorkTimePatternModal = true"/>
             </div>
         </div>
 
@@ -121,10 +121,7 @@
 
                 <div class="flex items-center justify-between mt-5">
                     <div>
-                        <ArtworkBaseModalButton type="submit">
-                            <span v-if="!workTimeForm.processing">{{ $t('Save') }}</span>
-                            <span v-else>{{ $t('Saving...') }}</span>
-                        </ArtworkBaseModalButton>
+                        <BaseUIButton type="submit" :label="!workTimeForm.processing ? $t('Save') : $t('Saving...')" is-add-button />
                     </div>
                 </div>
             </form>
@@ -225,6 +222,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import NextWorkTimeCountdown from "@/Pages/Users/Components/NextWorkTimeCountdown.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import {IconClockSearch, IconRepeat} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     userToEdit: {

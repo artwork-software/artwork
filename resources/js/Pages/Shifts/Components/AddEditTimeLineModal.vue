@@ -75,10 +75,11 @@
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <FormButton
-                                    :text="$t('Save')"
+                                <BaseUIButton
+                                    :label="$t('Save')"
                                     @click="saveTimeLines"
                                     :disabled="addTimeLineForm.processing"
+                                    is-add-button
                                     />
                             </div>
                         </DialogPanel>
@@ -97,10 +98,12 @@ import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
 import Input from "@/Jetstream/Input.vue";
 import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default defineComponent({
     name: "AddEditTimeLineModal",
     components: {
+        BaseUIButton,
         FormButton,
         SingleTimeLine,
         Input,

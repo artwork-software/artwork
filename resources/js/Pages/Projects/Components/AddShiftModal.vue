@@ -14,6 +14,7 @@ import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 
 // Icons (Tabler)
 import { IconSearch, IconX } from '@tabler/icons-vue'
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const { t: $t } = useI18n()
 
@@ -972,25 +973,22 @@ const lockOrUnlockShift = (commit = false) => {
 
             <!-- Sticky Footer -->
             <div class="sticky bottom-0 left-0 right-0 z-50 mt-5">
-                <div class="px-4 sm:px-6 py-3 bg-white/90 backdrop-blur flex items-center" :class="!props.shift?.roomId ? 'justify-center' : 'justify-between'">
+                <div class="py-3 bg-white/90 backdrop-blur flex items-center" :class="!props.shift?.roomId ? 'justify-center' : 'justify-between'">
 
-                    <ArtworkBaseModalButton
-                        variant="primary"
+                    <BaseUIButton
+                        :label="$t('Save')"
                         type="submit"
-                        class="shadow-sm hover:shadow transition-shadow"
+                        is-add-button
                         :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft"
-                    >
-                        {{ $t('Save') }}
-                    </ArtworkBaseModalButton>
+                    />
 
-                    <button
+                    <BaseUIButton
                         v-if="props.shift?.roomId"
                         type="button"
                         @click="showComfirmDeleteModal = true"
-                        class="text-sm underline text-gray-600 hover:text-red-600 transition-colors"
-                    >
-                        {{ $t('Delete shift without Event') }}
-                    </button>
+                        is-delete-button
+                        :label="$t('Delete shift without Event')"
+                    />
                 </div>
             </div>
         </form>

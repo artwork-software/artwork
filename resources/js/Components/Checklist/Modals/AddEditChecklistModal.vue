@@ -102,12 +102,12 @@
                     icon-size="h-6 w-6"
                 />
             </div>
-            <div class="px-8 py-4 mb-4">
-                <div class="flex items-center justify-center">
-                    <FormButton
+            <div class="mt-4">
+                <div class="flex items-center justify-end">
+                    <BaseUIButton
                         type="submit"
                         :disabled="checklistForm.name.length === 0 && !selectedTemplate.id"
-                        :text="checklistToEdit ? $t('Save') : $t('Create')"
+                        :label="checklistToEdit ? $t('Save') : $t('Create')"
                     />
                 </div>
             </div>
@@ -130,6 +130,7 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     project: {

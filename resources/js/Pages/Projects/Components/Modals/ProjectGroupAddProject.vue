@@ -38,7 +38,7 @@
             </div>
 
             <div class="flex items-center justify-center">
-                <FormButton :text="$t('Add projects to group')" @click="addProjectsToGroup" />
+                <BaseUIButton :label="$t('Add projects to group')" is-add-button @click="addProjectsToGroup" />
             </div>
         </div>
     </ArtworkBaseModal>
@@ -57,6 +57,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     project: {

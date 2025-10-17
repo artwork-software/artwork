@@ -73,9 +73,8 @@
             </div>
         </div>
         <!-- Raum Bearbeiten-->
-        <BaseModal @closed="closeEditRoomModal" v-if="showEditRoomModal" modal-image="/Svgs/Overlays/illu_room_edit.svg">
+        <ArtworkBaseModal @close="closeEditRoomModal" v-if="showEditRoomModal" :title="$t('Edit room')" description="">
                 <div class="mx-3">
-                    <ModalHeader :title="$t('Edit room')"/>
                     <form @submit.prevent="editRoom" class="grid grid-cols-1 gap-4">
                         <div>
                             <BaseInput
@@ -142,16 +141,17 @@
                         </div>
 
                         <div class="flex justify-center pt-8">
-                            <FormButton
+                            <BaseUIButton
                                 :disabled="editRoomForm.name.length === 0 || editRoomForm.processing"
                                 type="submit"
-                                :text="$t('Save')"
+                                is-add-button
+                                :label="$t('Save')"
                             />
                         </div>
 
                     </form>
                 </div>
-        </BaseModal>
+        </ArtworkBaseModal>
         <!-- Success Modal -->
         <SuccessModal
             :title="successHeading"
@@ -160,12 +160,10 @@
             @closed="closeSuccessModal"
         />
         <!-- Approve Request Modal -->
-        <BaseModal @closed="closeApproveRequestModal" v-if="showApproveRequestModal">
+        <ArtworkBaseModal @close="closeApproveRequestModal" v-if="showApproveRequestModal"  :title="$t('Confirm room occupancy')"
+                          :description="$t('Bist du sicher, dass du die Raumbelegung zusagen möchtest?')">
                 <div class="mx-4">
-                    <ModalHeader
-                        :title="$t('Confirm room occupancy')"
-                        :description="$t('Bist du sicher, dass du die Raumbelegung zusagen möchtest?')"
-                    />
+
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
 
@@ -249,14 +247,12 @@
                         </div>
                     </div>
                 </div>
-        </BaseModal>
+        </ArtworkBaseModal>
         <!-- Decline Request Modal -->
-        <BaseModal @closed="closeDeclineRequestModal" v-if="showDeclineRequestModal" >
+        <ArtworkBaseModal @close="closeDeclineRequestModal" v-if="showDeclineRequestModal"  :title="$t('Cancel room reservation')"
+                          :description="$t('Are you sure you want to cancel the room reservation?')">
                 <div class="mx-4">
-                    <ModalHeader
-                        :title="$t('Cancel room reservation')"
-                        :description="$t('Are you sure you want to cancel the room reservation?')"
-                    />
+
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
 
@@ -329,10 +325,11 @@
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <FormButton
+                        <BaseUIButton
                             @click="declineRequest"
-                            :text="$t('Cancellations')"
-                            class="inline-flex items-center"
+                            :label="$t('Cancellations')"
+                            is-delete-button
+                            icon="IconProgressX"
                             :disabled="approveRequestForm.processing"
                         />
                         <div class="flex my-auto">
@@ -341,7 +338,7 @@
                         </div>
                     </div>
                 </div>
-        </BaseModal>
+        </ArtworkBaseModal>
     </app-layout>
 
     <BaseSidenav :show="showSidenav" @toggle="this.showSidenav =! this.showSidenav">
@@ -429,6 +426,8 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     mixins: [Permissions, IconLib],
@@ -447,6 +446,8 @@ export default {
         'adjoiningRooms',
     ],
     components: {
+        ArtworkBaseModal,
+        BaseUIButton,
         BaseTextarea,
         DateInputComponent,
         TextareaComponent,

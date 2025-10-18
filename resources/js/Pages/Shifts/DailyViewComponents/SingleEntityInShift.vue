@@ -29,7 +29,7 @@
                                 id="start" type="time" class="max-w-28 text-xs"
                                 v-model="person.pivot.end_time"
                             />
-                            <GlassyIconButton text="Save" :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
+                            <BaseUIButton label="Save" use-translation :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
                         </div>
                     </div>
                 </PopoverPanel>
@@ -90,7 +90,7 @@
                                         id="start" label="Short Description" type="text" class="max-w-56 text-xs"
                                         v-model="person.pivot.short_description"
                                     />
-                                    <GlassyIconButton text="Save" :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveShortDescription(close)"/>
+                                    <BaseUIButton label="Save" use-translation :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveShortDescription(close)"/>
                                 </div>
                             </div>
                         </PopoverPanel>
@@ -126,6 +126,7 @@ import {computed, ref} from "vue";
 import {IconDeviceFloppy, IconNote, IconX} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     person: {

@@ -1,16 +1,8 @@
 <template>
-    <BaseModal @closed="closeModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
+    <ArtworkBaseModal @close="closeModal(false)" v-if="true" :title="$t('New column')" :description="$t('Create a new, empty column. Alternatively, you can also create a function column (sum/difference).')">
             <div class="mx-4">
                 <!--   Heading   -->
                 <div>
-                    <h1 class="my-1 flex">
-                        <div class="flex-grow headline1">
-                            {{ $t('New column') }}
-                        </div>
-                    </h1>
-                    <h2 class="xsLight mb-2 mt-8">
-                        {{ $t('Create a new, empty column. Alternatively, you can also create a function column (sum/difference).') }}
-                    </h2>
                     <radio-group v-model="selectedType" class="mt-4">
                         <legend class="sr-only">{{ $t('Column type') }}</legend>
                         <div class="space-y-3">
@@ -133,7 +125,7 @@
                     </div>
                 </div>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -155,11 +147,13 @@ import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     name: 'AddColumnComponent',
     mixins: [Permissions, IconLib],
     components: {
+        ArtworkBaseModal,
         BaseModal,
         FormButton,
         ListboxOptions,

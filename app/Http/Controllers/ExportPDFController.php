@@ -86,7 +86,10 @@ class ExportPDFController extends Controller
             startDate: $startDate,
             endDate: $endDate,
             calendarFilter: $userService->getAuthUser()->userFilters()->calendarFilter()->first(),
-            project: $projectId ? $projectService->findById($projectId) : null
+            project: $projectId ? $projectService->findById($projectId) : null,
+            room: null,
+            desiresInventorySchedulingResource: null,
+            user: $userService->getAuthUser(),
         );
 
         $pdf = $domPdf->loadView(
@@ -110,7 +113,7 @@ class ExportPDFController extends Controller
                 'events' => CalendarEventDto::newInstance()
                     ->setAreas($showCalendar['filterOptions']['area_ids'])
                     ->setEventTypes($showCalendar['filterOptions']['event_type_ids'])
-                    ->setRoomCategories($showCalendar['filterOptions']['room_attribute_ids'])
+                    ->setRoomCategories($showCalendar['filterOptions']['room_category_ids'])
                     ->setRoomAttributes($showCalendar['filterOptions']['room_attribute_ids'])
                     ->setProjects(new Collection())
                     ->setEvents(new Collection())

@@ -1,16 +1,11 @@
 <template>
-    <AppLayout :title="$t('Project Role Settings')">
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1 my-6">{{$t('Project Role Settings')}}</h2>
-                <div class="xsLight">
-                    {{$t('Define global settings for projects.')}}
-                </div>
-            </div>
-            <ProjectTabs />
-            <div class="flex items-center justify-end mb-5">
-                <GlassyIconButton @click="showAddProjectRoleModal = true" :icon="IconPlus" :text="$t('Add Project Role')"/>
-            </div>
+    <ProjectSettingsHeader :title="$t('Project Role Settings')">
+        <template #actions>
+            <button class="ui-button-add" @click="showAddProjectRoleModal = true">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ $t('Add Project Role') }}
+            </button>
+        </template>
             <div v-for="role in projectRoles">
                 <div class="rounded-lg bg-gray-50 px-4 py-5 mb-3">
                     <div class="flex items-center justify-between">
@@ -26,7 +21,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+
         <BaseModal  modal-image="/Svgs/Overlays/illu_project_edit.svg" v-if="showAddProjectRoleModal" @closed="closeAddProjectRoleModal">
             <ModalHeader
                 :title="$t('Add Project Role')"
@@ -37,12 +32,11 @@
                 <FormButton :text="$t('Save')" :disabled="projectRoleForm.name.length < 1" @click="addProjectRole"/>
             </div>
         </BaseModal>
-    </AppLayout>
+    </ProjectSettingsHeader>
 </template>
 
 <script>
-import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import ProjectSettingsHeader from "@/Pages/Settings/Components/ProjectSettingsHeader.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -58,9 +52,10 @@ import {IconPlus} from "@tabler/icons-vue";
 export default {
     name: "ProjectRoles",
     components: {
+        ProjectSettingsHeader,
         GlassyIconButton,
         BaseInput,
-        TextInputComponent, ModalHeader, FormButton, Input, BaseModal, PlusButton, AppLayout, ProjectTabs},
+        TextInputComponent, ModalHeader, FormButton, Input, BaseModal, PlusButton},
     mixins: [IconLib],
     props: {
         projectRoles: {

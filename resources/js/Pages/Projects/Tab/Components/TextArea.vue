@@ -1,95 +1,153 @@
 <template>
-    <div class="my-2 flex items-start gap-x-4 w-full">
+    <div class="my-2 flex items-start w-full">
         <div>
-            <label for="email" class="xsDark font-bold" :class="inSidebar ? 'xsLight' : 'xsDark'">
+            <label :for="'component-' + data.id" class="font-medium block subpixel-antialiased mb-1">
                 {{ data.data.label }}
             </label>
-            <div v-if="descriptionClicked === false"
-                  class="mt-2 subpixel-antialiased xsDark"
-                  @click="handleDescriptionClick()"
-                  v-html="projectData.project_value?.data?.text ? projectData.project_value.data.text : (this.canEditComponent ? $t('Click here to add text') : '')">
+
+            <!-- Anzeige (HTML) bis geklickt wird -->
+            <div v-if="descriptionClicked === false" @click="handleDescriptionClick()" class="flex items-center gap-x-1">
+                <component v-if="!projectData.project_value?.data?.text" :is="IconBlockquote" class="size-4 text-gray-400" />
+                <div
+                    class="subpixel-antialiased"
+                    :class="[projectData.project_value?.data?.text ? inSidebar ? 'text-gray-400 text-sm' : 'text-gray-800 text-sm' : 'text-gray-400 text-sm italic', ]"
+                    v-html="projectData.project_value?.data?.text ? projectData.project_value.data.text : (canEditComponent ? t('Click here to add text') : '')">
+                </div>
+            </div>
+
+            <!-- Editor -->
+            <div v-else class="w-full">
+                <BaseTextarea
+                    :disabled="!canEditComponent"
+                    :label="data.data.placeholder"
+                    :ref="descriptionRef"
+                    :rows="5"
+                    :bg-color="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !w-80' : '!w-96'"
+                    :id="'component-' + data.id"
+                    :show-label="false"
+                    no-margin-top
+                    @focusout="updateTextData()"
+                    v-model="text"
+                    :maxlength="2000"
+                />
+            </div>
         </div>
 
-            <TextareaComponent
-                v-else
-                :disabled="!this.canEditComponent"
-                :label="data.data.placeholder"
-                :ref="`description-${this.projectId}`"
-                :class="inSidebar ? 'bg-primary text-white' : ''"
-                :id="data.id"
-                :show-label="false"
-                no-margin-top
-                @focusout="updateTextData()"
-                v-model="text"
-                :maxlength="2000"
-            >
-            </TextareaComponent>
-        </div>
-        <InfoButtonComponent :component="component" />
+        <InfoButtonComponent :component="component" v-if="component" />
     </div>
 </template>
 
-<script>
-import {nextTick, ref} from "vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+<script setup>
+import { ref, computed, watch, onMounted, nextTick, getCurrentInstance } from "vue";
+import { router } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js";
-import {Popover, PopoverButton, PopoverPanel} from "@headlessui/vue";
+
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import {IconBlockquote} from "@tabler/icons-vue";
 
-export default {
-    name: "TextArea",
-    components: {InfoButtonComponent, PopoverPanel, PopoverButton, Popover, TextareaComponent},
-    mixins: [Permissions],
-    props: ['data', 'projectId', 'inSidebar', 'canEditComponent', 'projectWriteIds', 'project', 'projectManagerIds', 'component'],
-    data() {
-        return {
-            textData: {
-                text: this.data.project_value ? this.data.project_value.text_without_html : this.data.data.text,
-            },
-            descriptionClicked: false,
-            projectData: this.data,
-            text: this.data.project_value?.text_without_html ? this.data.project_value.text_without_html : this.data.data.text,
+defineOptions({ name: "TextArea" });
+
+// Props
+const props = defineProps({
+    data: { type: Object, required: true },
+    projectId: { type: [String, Number], required: true },
+    inSidebar: { type: Boolean, default: false },
+    canEditComponent: { type: Boolean, default: true },
+    projectWriteIds: { type: Array, default: () => [] },
+    project: { type: Object, default: () => ({}) },
+    projectManagerIds: { type: Array, default: () => [] },
+    component: { type: Object, default: null },
+});
+
+// i18n
+const { t } = useI18n();
+
+// Zugriff auf globale Helfer ($can, $role, route) aus Mixins/Plugins
+const { proxy } = getCurrentInstance();
+
+// Ableitungen/State
+const projectData = computed(() => props.data);
+
+// Editor-Text (Plain, ohne HTML) – identisch zur Options-API
+const text = ref(
+    props.data.project_value?.text_without_html
+        ? props.data.project_value.text_without_html
+        : props.data.data.text
+);
+
+// Toggle zwischen Anzeige und Bearbeitung
+const descriptionClicked = ref(false);
+
+// Ref auf das Textarea (falls du Fokus/Selection wieder aktivieren willst)
+const descriptionRef = ref(null);
+
+// Listener initialisieren (wie zuvor im mounted)
+onMounted(() => {
+    useProjectDataListener(props.data, props.projectId).init();
+});
+
+// Deep-Watch: wenn sich eingehende Daten ändern, Editor-Inhalt synchronisieren
+watch(
+    () => props.data,
+    (newVal) => {
+        text.value = newVal.project_value?.text_without_html
+            ? newVal.project_value.text_without_html
+            : newVal.data.text;
+    },
+    { deep: true }
+);
+
+// Patch-Aufruf an Inertia (wie zuvor)
+function updateTextData() {
+    router.patch(
+        route("project.tab.component.update", {
+            project: props.projectId,
+            component: props.data.id,
+        }),
+        { data: { text: text.value } },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onFinish: () => (descriptionClicked.value = false),
         }
-    },
-    mounted() {
-        useProjectDataListener(this.projectData, this.projectId).init();
-    },
-    watch: {
-        // if the data changes, update the text
-        projectData: {
-            handler: function (newVal, oldVal) {
-                this.text = newVal.project_value.text_without_html ? newVal.project_value.text_without_html : newVal.data.text
-            },
-            deep: true
-        }
-    },
-    methods: {
-        updateTextData() {
-            this.$inertia.patch(route('project.tab.component.update', {project: this.projectId, component: this.data.id}), {
-                data: {
-                    text: this.text
-                }
-            }, {
-                preserveScroll: true,
-                preserveState: true,
-                onFinish: () => this.descriptionClicked = false
-            })
-        },
-        handleDescriptionClick() {
-            if (!this.canEditComponent) {
-                return;
-            }
+    );
+}
 
-            if (this.canEditComponent || this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.auth.user.id) || this.projectManagerIds.includes(this.$page.props.auth.user.id) || this.project.isMemberOfADepartment){
-                this.descriptionClicked = true;
+// Klick-Handler: nur bei Berechtigung in den Edit-Modus
+function handleDescriptionClick() {
+    if (!props.canEditComponent) return;
 
-                nextTick(() => {
-                    //this.$refs[`description-${this.projectId}`].select();
-                })
+    const canWriteGlobally =
+        proxy?.$can?.("write projects") ||
+        proxy?.$role?.("artwork admin") ||
+        proxy?.$can?.("admin projects");
 
-            }
-        },
-    },
+    const userId = proxy?.$page?.props?.auth?.user?.id;
+    const hasProjectWrite =
+        Array.isArray(props.projectWriteIds) && userId
+            ? props.projectWriteIds.includes(userId)
+            : false;
+
+    const isProjectManager =
+        Array.isArray(props.projectManagerIds) && userId
+            ? props.projectManagerIds.includes(userId)
+            : false;
+
+    const isDeptMember = !!props.project?.isMemberOfADepartment;
+
+    if (props.canEditComponent || canWriteGlobally || hasProjectWrite || isProjectManager || isDeptMember) {
+        descriptionClicked.value = true;
+
+        nextTick(() => {
+            // Beispiel: Fokus wieder aktivieren (wenn gewünscht)
+            // descriptionRef.value?.focus?.();
+            // descriptionRef.value?.select?.();
+        });
+    }
 }
 </script>
+
+<style scoped>
+</style>

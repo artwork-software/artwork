@@ -68,12 +68,8 @@
             </div>
 
             <div class="mt-4 flex justify-between gap-4">
-                <ArtworkBaseModalButton type="button" @click="$emit('close')" variant="danger">
-                    {{ $t('Cancel') }}
-                </ArtworkBaseModalButton>
-                <ArtworkBaseModalButton type="submit">
-                    {{ $t('Submit Request') }}
-                </ArtworkBaseModalButton>
+                <BaseUIButton type="button" @click="$emit('close')" :label="$t('Cancel')" is-cancel-button />
+                <BaseUIButton type="submit" is-add-button :label="$t('Submit Request')" />
             </div>
         </form>
     </ArtworkBaseModal>
@@ -86,6 +82,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {useForm, usePage} from "@inertiajs/vue3";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     shift: {

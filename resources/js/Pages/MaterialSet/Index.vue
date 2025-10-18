@@ -1,33 +1,19 @@
 <template>
-    <AppLayout :title="$t('Material Sets')">
-        <div class="artwork-container space-y-6">
-            <!-- Header -->
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h1 class="text-xl font-semibold text-gray-900">
-                    {{ $t('Material Sets') }}
-                </h1>
-
-                <div class="flex items-center gap-2">
-                    <div class="hidden sm:block">
-                        <GlassyIconButton
-                            :icon="IconCopyPlus"
-                            v-if="can('set.create_edit') || is('artwork admin')"
-                            :text="$t('New Material Set')"
-                            @click="openCreate()"
-                        />
-                    </div>
-                    <!-- mobile create -->
-                    <button
-                        v-if="can('set.create_edit') || is('artwork admin')"
-                        type="button"
-                        class="sm:hidden inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white"
-                        @click="openCreate()"
-                    >
-                        <IconCopyPlus class="h-4 w-4" />
-                        {{ $t('New Material Set') }}
-                    </button>
-                </div>
-            </div>
+    <MaterialSetSettingsHeader
+        :title="$t('Material Sets')"
+        :description="$t('Manage material sets for inventory planning.')"
+    >
+        <template #actions>
+            <button
+                v-if="can('set.create_edit') || is('artwork admin')"
+                class="ui-button-add"
+                type="button"
+                @click="openCreate()"
+            >
+                <component :is="IconCopyPlus" stroke-width="1" class="size-5" />
+                <span>{{ $t('New Material Set') }}</span>
+            </button>
+        </template>
 
             <!-- Toolbar -->
             <div class="rounded-2xl border border-zinc-200 bg-white/80 p-4 shadow-sm backdrop-blur">
@@ -168,7 +154,6 @@
                     </div>
                 </div>
             </div>
-        </div>
 
         <!-- Modal -->
         <CreateOrUpdateMaterialSetModal
@@ -176,12 +161,12 @@
             :material-set="selectedSet"
             @close="closeModal"
         />
-    </AppLayout>
+    </MaterialSetSettingsHeader>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import MaterialSetSettingsHeader from '@/Pages/MaterialSet/Components/MaterialSetSettingsHeader.vue'
 import SingleMaterialSet from '@/Pages/MaterialSet/Components/SingleMaterialSet.vue'
 import CreateOrUpdateMaterialSetModal from '@/Pages/MaterialSet/Components/CreateOrUpdateMaterialSetModal.vue'
 import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'

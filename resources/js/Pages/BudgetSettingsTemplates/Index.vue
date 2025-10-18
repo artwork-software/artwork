@@ -1,5 +1,5 @@
 <template>
-    <BudgetSettingsHeader>
+    <BudgetSettingsHeader :title="$t('Budget templates')" :description="$t('Define settings for your budget.')">
         <div class="flex justify-between">
             <div></div>
             <div class="flex items-center">

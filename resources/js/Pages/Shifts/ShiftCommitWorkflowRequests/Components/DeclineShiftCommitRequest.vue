@@ -11,13 +11,9 @@
             </div>
 
             <div class="flex items-center justify-between mt-5">
-                <ArtworkBaseModalButton type="submit" class="mt-4" variant="secondary" @click="$emit('close')">
-                    {{ $t('Cancel') }}
-                </ArtworkBaseModalButton>
+                <BaseUIButton is-cancel-button type="submit" class="mt-4" @click="$emit('close')" :label="$t('Cancel')"/>
 
-                <ArtworkBaseModalButton type="button" variant="danger" class="mt-4" @click="declineRequest">
-                    {{ $t('Decline') }}
-                </ArtworkBaseModalButton>
+                <BaseUIButton is-delete-button icon="IconCancel" type="button" :label="$t('Decline')" class="mt-4" @click="declineRequest"/>
             </div>
         </form>
 
@@ -30,6 +26,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {router, useForm} from "@inertiajs/vue3";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     requestId: {

@@ -5,11 +5,13 @@ import {XIcon} from "@heroicons/vue/solid";
 import IconLib from "@/Mixins/IconLib.vue";
 import {router} from "@inertiajs/vue3";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: "SageDropMultipleDataSelectModal",
     mixins: [IconLib, CurrencyFloatToStringFormatter],
     components: {
+        BaseUIButton,
         FormButton,
         Dialog,
         DialogTitle,
@@ -167,9 +169,10 @@ export default {
                                 </div>
                             </div>
                             <div class="flex justify-between mt-5 items-center pr-4">
-                                <FormButton
+                                <BaseUIButton
                                     @click="moveRow(true)"
-                                    text="Verschieben"
+                                    label="Verschieben"
+                                    is-add-button
                                 />
 
                                 <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">

@@ -11,6 +11,7 @@ import { useProjectDocumentListener } from '@/Composeables/Listener/useProjectDo
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
 import FilePreview from "@/Artwork/Files/FilePreview.vue";
 import { IconFileUpload, IconFileText } from '@tabler/icons-vue'
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 interface ProjectFile {
     id?: number | string
@@ -200,7 +201,7 @@ function closePreview() {
     <div class="my-6 space-y-4">
         <!-- Header -->
         <div class="flex items-center justify-between">
-            <TinyPageHeadline :title="$t('Documents')" :description="$t('Here you can upload and download documents for the project.')" />
+            <BasePageTitle title="Documents" description="Here you can upload and download documents for the project." />
             <InfoButtonComponent :component="component" />
         </div>
 

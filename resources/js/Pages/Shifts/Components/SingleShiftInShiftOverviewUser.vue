@@ -42,7 +42,7 @@
                                             id="start" type="time" class="max-w-28 text-xs"
                                             v-model="shift.endPivot"
                                         />
-                                        <GlassyIconButton text="Save" :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
+                                        <BaseUIButton label="Save" use-translation :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
                                     </div>
                                 </div>
                             </PopoverPanel>
@@ -105,6 +105,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {Float} from "@headlessui-float/vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import {IconClockEdit, IconDeviceFloppy, IconLock, IconSquareRoundedXFilled} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     user: {

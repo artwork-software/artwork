@@ -30,9 +30,80 @@ use Illuminate\Support\Facades\DB;
 readonly class CalendarDataService
 {
     public function __construct(
+        private RoomRepository $roomRepository,
+        private EventCollectionService $eventCollectionService,
+        private FilterService $filterService,
         private UserService $userService,
         private ProjectService $projectService,
     ) {}
+
+    public function createCalendarData(
+        $startDate,
+        $endDate,
+        $calendarFilter,
+        $project = null,
+        $room = null,
+        $desiresInventorySchedulingResource = null,
+        User $user
+    ): array {
+
+        // Create the calendar period
+        $period = $this->createCalendarPeriodDto($startDate, $endDate, $user, true);
+
+        // Create calendar period for event collection
+        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+
+        // Get filtered rooms
+        $rooms = [];
+        if ($room) {
+            // If specific room is provided, use only that room
+            $rooms = [$room];
+        } else {
+            // Get filtered rooms based on calendar filter
+            $filteredRooms = $this->roomRepository->getFilteredRoomsBy(
+                $calendarFilter->room_ids,
+                $calendarFilter->room_attribute_ids,
+                $calendarFilter->area_ids,
+                $calendarFilter->room_category_ids
+            );
+            $rooms = $filteredRooms->all();
+        }
+
+        // Collect events for rooms
+        $roomsWithEvents = $this->eventCollectionService->collectEventsForRooms(
+            $rooms,
+            $calendarPeriod,
+            $calendarFilter
+        )->toArray();
+
+        // Get events without room
+        $eventsWithoutRoom = $this->eventCollectionService->getEventsWithoutRoom(
+            $project
+        )->toArray();
+
+        // Get filter options and personal filters
+        $filterOptions = $this->filterService->getCalendarFilterDefinitions();
+        $personalFilters = $this->filterService->getPersonalFilter();
+
+        // convert  $period dto to array
+        $period = array_map(fn($d) => is_array($d) ? $d : (array)$d, $period);
+
+
+        return [
+            'days' => $period,
+            'dateValue' => [
+                'start' => $startDate->format('Y-m-d'),
+                'end' => $endDate->format('Y-m-d')
+            ],
+            'calendarType' => $room ? 'room' : 'calendar',
+            'selectedDate' => $startDate->format('Y-m-d'),
+            'roomsWithEvents' => $roomsWithEvents,
+            'eventsWithoutRoom' => $eventsWithoutRoom,
+            'filterOptions' => $filterOptions,
+            'personalFilters' => $personalFilters,
+            'user_filters' => $calendarFilter
+        ];
+    }
 
     public function createCalendarPeriodDto($startDate, $endDate, User $user, bool $extraRow = true): array
     {

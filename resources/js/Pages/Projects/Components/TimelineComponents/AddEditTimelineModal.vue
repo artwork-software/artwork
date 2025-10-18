@@ -1,11 +1,5 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div>
-            <ModalHeader
-                :title="timelineToEdit ? $t('Edit timeline') : $t('Add timeline')"
-                :description="$t('Define the shift-relevant times. You can create shifts along this timeline.')"
-            />
-        </div>
+    <ArtworkBaseModal @close="$emit('close')"  :title="timelineToEdit ? $t('Edit timeline') : $t('Add timeline')" :description="$t('Define the shift-relevant times. You can create shifts along this timeline.')">
         <form @submit.prevent="updateOrCreate" class="w-full">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="col-span-full">
@@ -40,7 +34,7 @@
                 </span>
             </div>
 
-            <TinyPageHeadline
+            <BasePageTitle
                 :title="$t('Preview')"
                 :description="$t('This is how your entries will look like')"
             />
@@ -64,7 +58,7 @@
                 <FormButton :text="$t('Create')" type="submit"/>
             </div>
         </form>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -77,6 +71,8 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const props = defineProps({
     timelineToEdit: {

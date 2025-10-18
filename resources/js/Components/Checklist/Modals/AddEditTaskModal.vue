@@ -1,15 +1,9 @@
 <template>
-    <BaseModal @closed="$emit('closed', true)" v-if="true" modal-image="/Svgs/Overlays/illu_task_new.svg">
-        <form @submit.prevent="submit" class="mx-4">
-            <div class="font-black font-lexend text-primary tracking-wide text-3xl my-2">
-                {{ taskToEdit ? $t('Edit task') : $t('New task') }}
-            </div>
-            <div class="text-secondary tracking-tight leading-6 sub">
-                {{ taskToEdit ? '' : $t('Create a new task. You can also add a deadline and a comment.') }}
-            </div>
+    <ArtworkBaseModal @close="$emit('closed', true)" v-if="true" :title="taskToEdit ? $t('Edit task') : $t('New task')" :description="taskToEdit ? '' : $t('Create a new task. You can also add a deadline and a comment.')">
+        <form @submit.prevent="submit" class="">
             <div class="mt-6">
                 <div class="flex">
-                    <div class="mt-1 w-full mr-4">
+                    <div class="mt-1 w-full">
                         <BaseInput
                             id="taskName"
                             v-model="taskForm.name"
@@ -18,7 +12,7 @@
                         />
                     </div>
                 </div>
-                <div class="flex mt-3 mr-4">
+                <div class="flex mt-3">
                     <BaseInput
                         id="deadlineDate"
                         v-model="taskForm.deadlineDate"
@@ -26,9 +20,9 @@
                         type="date"
                     />
                 </div>
-                <div class="mb-2 mr-4 mt-2" v-if="!checklist.private">
+                <div class="mb-2 mt-2" v-if="!checklist.private">
                     <UserSearch :only-team="isInOwnTaskManagement" :team-member="project?.users?.map((user) => user.id) ?? checklist?.project?.users?.map((user) => user.id)"
-                                @user-selected="addUserToTask"
+                                @user-selected="addUserToTask" label="Search for users"
                     />
                     <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
                             <span v-for="(user,index) in usersToAdd"
@@ -49,7 +43,7 @@
                             </span>
                     </div>
                 </div>
-                <div class="mt-4 mr-4">
+                <div class="mt-4">
                         <BaseTextarea
                             id="taskDescription"
                             v-model="taskForm.description"
@@ -57,17 +51,18 @@
                             :rows="3"
                         />
                 </div>
-                <div class="w-full flex items-center justify-center text-center">
-                    <FormButton
+                <div class="w-full flex items-center justify-end text-center">
+                    <BaseUIButton
                         type="submit"
                         class="mt-4"
                         :disabled="taskForm.name === ''"
-                        :text="taskToEdit ? $t('Save') : $t('Add')"
+                        :label="taskToEdit ? $t('Save') : $t('Add')"
+                        is-add-button
                     />
                 </div>
             </div>
         </form>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -80,6 +75,8 @@ import {useForm} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import {ref} from "vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     project: {

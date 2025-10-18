@@ -49,6 +49,8 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -141,9 +143,38 @@ class EventController extends Controller
         private readonly ProjectService $projectService,
         private readonly EventPlanningCalendarService $eventPlanningCalendarService,
         protected readonly SingleShiftPresetService $singleShiftPresetService,
+        private readonly GeneralSettingsService $generalSettingsService,
     ) {
     }
 
+
+    public function redirectToCalendar(Event $event): \Illuminate\Http\RedirectResponse
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        // get full calendar week of event
+        $startOfWeek = Carbon::parse($event->start_time)->startOfWeek(Carbon::MONDAY);
+        $endOfWeek = Carbon::parse($event->end_time)->endOfWeek(Carbon::SUNDAY);
+
+
+
+        $user->userFilters()->calendarFilter()->first()->update([
+            'start_date' => $startOfWeek->format('Y-m-d'),
+            'end_date' => $endOfWeek->format('Y-m-d'),
+            'event_type_ids' => null,
+            'room_ids' => null,
+            'area_ids' => null,
+            'room_attribute_ids' => null,
+            'room_category_ids' => null,
+            'event_property_ids' => null,
+            'craft_ids' => null,
+        ]);
+
+        return redirect()->route('events', [
+            'highlightEventId' => $event->id
+        ]);
+    }
     public function getEventsForRoomsByDaysAndProject(
         Request $request,
         ProjectService $projectService
@@ -3323,5 +3354,30 @@ class EventController extends Controller
         $this->eventService->bulkDeleteEvent($request->collect('eventIds'));
 
 
+    }
+
+    public function standardEventValues(){
+        return Inertia::render('Settings/StandardEventValues');
+    }
+
+    public function saveStandardEventValues(Request $request): void
+    {
+        $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
+    }
+
+    public function convertToPlanning(Event $event): RedirectResponse
+    {
+        // Set the event as a planning event
+        $event->update(['is_planning' => true]);
+
+        // Broadcast the event update
+        $freshEvent = $event->fresh();
+        broadcast(new EventUpdated(
+            $freshEvent->room_id,
+            $freshEvent->start_time,
+            $freshEvent->is_series ? $freshEvent->series->end_date : $freshEvent->end_time
+        ));
+
+        return Redirect::back();
     }
 }

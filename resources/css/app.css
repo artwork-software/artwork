@@ -741,13 +741,22 @@
     .ui-card-header { @apply flex items-center gap-2 mb-2; }
     .ui-card-title { @apply text-[13.5px] font-semibold text-zinc-900; }
     .ui-dot { @apply inline-block size-2.5 rounded-full; }
-    .ui-button { @apply inline-flex items-center gap-x-2 justify-center rounded-xl border border-zinc-200/80 px-2.5 py-2.5 cursor-pointer hover:bg-zinc-50 transition text-sm;}
+    .ui-button { @apply inline-flex items-center gap-x-2 justify-center rounded-xl border border-zinc-200/80 px-2.5 py-2.5 cursor-pointer hover:bg-zinc-50  duration-200 ease-in-out transition disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed text-sm;}
+    .ui-button-small { @apply inline-flex items-center gap-x-2 justify-center rounded-md border border-zinc-200/80 px-2.5 bg-white py-0.5 cursor-pointer hover:bg-zinc-50  duration-200 ease-in-out transition disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed text-xs;}
+    .ui-button-add { @apply inline-flex items-center gap-x-2 justify-center rounded-xl bg-blue-50 text-blue-500 border border-blue-200/80 px-4 py-2.5 cursor-pointer hover:bg-blue-100 duration-200 ease-in-out transition text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
+    .ui-button-delete { @apply inline-flex items-center gap-x-2 justify-center rounded-xl bg-red-50 text-red-500 border border-red-200/80 px-4 py-2.5 cursor-pointer hover:bg-red-100 duration-200 ease-in-out transition text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
+    .ui-button-add-small { @apply inline-flex items-center gap-x-2 justify-center rounded-md bg-blue-50 text-blue-500 border border-blue-200/80 px-4 py-0.5 cursor-pointer hover:bg-blue-100 duration-200 ease-in-out transition text-xs disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
+    .ui-button-delete-small { @apply inline-flex items-center gap-x-2 justify-center rounded-md bg-red-50 text-red-500 border border-red-200/80 px-4 py-0.5 cursor-pointer hover:bg-red-100 duration-200 ease-in-out transition text-xs disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
     /* Listbox Trigger (kompakt) */
     .ui-lb-trigger { @apply flex w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 h-10 shadow-sm; }
     .ui-lb-trigger-text { @apply min-w-0; }
     .ui-lb-label { @apply text-[11px] text-zinc-500 leading-none mb-0.5; }
     .ui-lb-value { @apply flex items-center gap-2 text-[13px] text-zinc-900 min-w-0; }
     .ui-lb-icon { @apply size-4 text-zinc-400; }
+
+    .dashboard-chip {
+        @apply flex items-center justify-center gap-2 rounded-xl border px-2.5 py-2 text-xs hover:bg-gray-50;
+    }
 
     /* Inputs kompakt */
     .ui-input :deep(input),
@@ -1072,7 +1081,7 @@
     }
 
     .model-title {
-        @apply font-black font-lexend text-primary mb-2;
+        @apply font-medium font-lexend text-zinc-900;
     }
 
     .modal-description {
@@ -1131,21 +1140,6 @@
 }
 
 
-.export-modal-container {
-    @apply flex flex-col gap-y-4;
-
-    .tab-container {
-        @apply flex flex-row gap-x-1 mt-4;
-
-        .tab {
-            @apply px-1 py-1.5 text-xs border-b-2 cursor-pointer hover:text-blue-500 hover:border-blue-500;
-        }
-
-        .active {
-            @apply text-blue-500 border-blue-500 hover:text-gray-500 hover:border-gray-500;
-        }
-    }
-}
 
 .dp__btn {
     @apply !font-lexend !text-xs;

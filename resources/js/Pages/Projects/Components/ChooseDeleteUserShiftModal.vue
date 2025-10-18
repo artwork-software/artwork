@@ -35,7 +35,7 @@
                                     </SwitchLabel>
                                 </SwitchGroup>
                                 <div class="flex items-center justify-center">
-                                    <FormButton :text="$t('Save')" @click="returnBuffer" class="mt-4"  :disabled="removeFromSingleShift.processing"/>
+                                    <BaseUIButton :label="$t('Save')" @click="returnBuffer" class="mt-4" is-add-button :disabled="removeFromSingleShift.processing"/>
                                 </div>
                             </div>
                         </DialogPanel>
@@ -60,11 +60,13 @@ import {
 import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: "ChooseDeleteUserShiftModal",
     mixins: [Permissions],
     components: {
+        BaseUIButton,
         FormButton,
         DialogPanel,
         Dialog,

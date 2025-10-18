@@ -3,12 +3,197 @@
         title="Freelancers & Service Providers"
         description="Manage your freelancers and service providers"
     >
-        <div class="my-8">
-            <!-- Top controls -->
+
+        <template #tabBar>
+            <ToolbarHeader
+                :icon="IconAddressBook"
+                title="Freelancers & Service Providers"
+                icon-bg-class="bg-purple-600/10 text-purple-700"
+                v-model="user_query"
+                :description="userObjectsToShow?.length ? `${userObjectsToShow.length} ${$t('Freelancers & Service Providers')}` : ''"
+                :search-enabled="true"
+                :search-label="$t('Search for Users')"
+                :search-tooltip="$t('Search')"
+            >
+                <template #actions>
+                    <Listbox v-model="selectedFilter" as="div" class="relative">
+                        <ListboxButton
+                            class="ui-button"
+                        >
+                            <span>{{ $t(selectedFilter.name) }}</span>
+                            <ChevronDownIcon class="size-5 text-zinc-500" />
+                        </ListboxButton>
+
+                        <transition
+                            enter-active-class="transition duration-100 ease-out"
+                            enter-from-class="opacity-0 translate-y-1"
+                            enter-to-class="opacity-100 translate-y-0"
+                            leave-active-class="transition duration-75 ease-in"
+                            leave-from-class="opacity-100 translate-y-0"
+                            leave-to-class="opacity-0 translate-y-1"
+                        >
+                            <ListboxOptions
+                                class="absolute z-40 mt-2 w-64 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg focus:outline-none"
+                            >
+                                <ListboxOption
+                                    v-for="filter in displayFilters"
+                                    :key="filter.name"
+                                    :value="filter"
+                                    v-slot="{ active, selected }"
+                                >
+                                    <li
+                                        :class="[
+                                          active ? 'bg-zinc-100' : '',
+                                          'flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm text-zinc-800'
+                                        ]"
+                                    >
+                                        <span :class="[selected ? 'font-semibold' : 'font-normal']">
+                                          {{ $t(filter.name) }}
+                                        </span>
+                                    </li>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </transition>
+                    </Listbox>
+                    <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" classes="ui-button">
+                        <div class="flex items-center justify-between px-4 py-2">
+                            <button
+                                class="text-xs text-zinc-500 hover:text-zinc-900"
+                                @click="resetSort()"
+                                type="button"
+                            >
+                                {{ $t('Reset') }}
+                            </button>
+                        </div>
+                        <MenuItem
+                            v-for="memberSortEnum in memberSortEnums"
+                            :key="memberSortEnum"
+                            v-slot="{ active }"
+                        >
+                            <div
+                                @click="sortBy = memberSortEnum; applyFiltersAndSort()"
+                                :class="[
+                                  active ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600',
+                                  'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm rounded-lg'
+                                ]"
+                            >
+                                {{ getSortEnumTranslation(memberSortEnum) }}
+                                <IconCheck
+                                    v-if="getUserSortBySetting() === memberSortEnum"
+                                    class="size-5 text-blue-600"
+                                />
+                            </div>
+                        </MenuItem>
+                    </BaseMenu>
+
+                    <button class="ui-button-add" v-if="can('can manage workers') || is('artwork admin')" @click="openSelectAddUsersModal = true">
+                        <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
+                        {{ $t('Add new Address') }}
+                    </button>
+                </template>
+            </ToolbarHeader>
+        </template>
+        <template #default>
+
+            <BaseTable
+                :rows="userObjectsToShow"
+                :columns="cols"
+                row-key="email"
+                v-model:page="page"
+                empty-title="Keine Adressen"
+                empty-message="Derzeit sind keine Einträge vorhanden."
+            >
+
+                <!-- Name (Avatar + Name + Email) -->
+                <template #cell-name="{ row }">
+                    <Link class="flex items-center" :href="checkLink(row)">
+                        <div class="size-11 shrink-0">
+                            <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
+                        </div>
+                        <div class="ml-4">
+                            <div class="font-medium text-gray-900">{{ row.name }}</div>
+                            <div class="mt-1 text-gray-500">{{ row.email }}</div>
+                        </div>
+                    </Link>
+                </template>
+
+                <!-- Title + Department -->
+                <template #cell-type="{ row }">
+                    <div>
+                        {{ row.type === 'freelancer' ? $t('Freelancer') : '' }}
+                        {{ row.type === 'service_provider' ? $t('Service Provider') : '' }}
+                    </div>
+                </template>
+
+
+                <template #row-actions="{ row }">
+                    <!-- Right: Actions -->
+                    <BaseMenu v-if="is('artwork admin')" has-no-offset white-menu-background>
+                        <BaseMenuItem :icon="IconEdit" title="Edit Profile" white-menu-background as-link :link="checkLink(row)" />
+                        <BaseMenuItem :icon="IconTrash" v-if="row.type === 'user'" title="Delete user" white-menu-background @click="openDeleteUserModal(row)" />
+                        <BaseMenuItem :icon="IconTrash" v-if="row.type === 'freelancer'" title="Delete freelancer" white-menu-background @click="openDeleteUserModal(row)" />
+                        <BaseMenuItem :icon="IconTrash" v-if="row.type === 'service_provider'" title="Delete provider" white-menu-background @click="openDeleteUserModal(row)" />
+                    </BaseMenu>
+                </template>
+            </BaseTable>
+
+
+            <!-- Delete Modal -->
+            <BaseModal
+                v-if="deletingUser"
+                @closed="closeDeleteUserModal"
+                modal-image="/Svgs/Overlays/illu_warning.svg"
+            >
+                <div class="mx-4">
+                    <div class="my-2 text-2xl font-bold text-zinc-900">
+                        <span v-if="userToDelete?.type === 'user'">{{ $t('Delete user') }}</span>
+                        <span v-else-if="userToDelete?.type === 'freelancer'">{{ $t('Delete freelancer') }}</span>
+                        <span v-else-if="userToDelete?.type === 'service_provider'">{{ $t('Delete service provider') }}</span>
+                    </div>
+
+                    <div class="text-sm text-red-600">
+          <span v-if="userToDelete?.type === 'user' || userToDelete?.type === 'freelancer'">
+            {{
+                  $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
+                      last_name: userToDelete?.last_name,
+                      first_name: userToDelete?.first_name
+                  })
+              }}
+          </span>
+                        <span v-else-if="userToDelete?.type === 'service_provider'">
+            {{
+                                $t('Are you sure you want to delete { serviceProvider } from the system?', {
+                                    serviceProvider: userToDelete?.provider_name
+                                })
+                            }}
+          </span>
+                    </div>
+
+                    <div class="mt-6 flex items-center justify-between">
+                        <BaseUIButton :label="$t('Delete')" is-delete-button @click="deleteUser" />
+                        <button @click="closeDeleteUserModal" class="text-sm text-zinc-500 hover:text-zinc-800">
+                            {{ $t('No, not really') }}
+                        </button>
+                    </div>
+                </div>
+            </BaseModal>
+
+            <!-- Success Modal -->
+            <SuccessModal
+                :open="showSuccessModal"
+                @closed="closeSuccessModal"
+                :title="$t('Users invited')"
+                :description="$t('The users have received an invitation email.')"
+                button="Okay"
+            />
+        </template>
+
+        <!--<div class="my-8">
+
             <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
-                <!-- Left: Filter + Invite -->
+
                 <div class="flex items-center gap-3">
-                    <!-- Filter -->
+
                     <Listbox v-model="selectedFilter" as="div" class="relative">
                         <ListboxButton
                             class="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
@@ -52,9 +237,7 @@
 
                 </div>
 
-                <!-- Right: Sort + Search -->
                 <div class="flex items-center gap-3">
-                    <!-- Invite button (permission gated) -->
                     <button
                         v-if="can('can manage workers') || is('artwork admin')"
                         @click="openSelectAddUsersModal = true"
@@ -63,7 +246,6 @@
                     >
                         <PlusIcon class="size-5" />
                     </button>
-                    <!-- Sort -->
                     <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" classes="ui-button">
                         <div class="flex items-center justify-between px-4 py-2">
                             <button
@@ -95,7 +277,6 @@
                         </MenuItem>
                     </BaseMenu>
 
-                    <!-- Search -->
                     <button
                         v-if="!showSearchbar"
                         @click="openSearchbar"
@@ -121,10 +302,8 @@
                 </div>
             </div>
 
-            <!-- List -->
             <div class="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
                 <ul role="list" class="divide-y divide-zinc-100">
-                    <!-- No separate search results array used -> keep compatibility -->
                     <li
                         v-if="user_search_results.length < 1"
                         v-for="user in userObjectsToShow"
@@ -132,7 +311,6 @@
                         class="py-4"
                     >
                         <div class="flex items-center justify-between gap-4">
-                            <!-- Left: Avatar + Name -->
                             <div class="flex min-w-0 flex-1 items-center gap-3">
                                 <img
                                     class="size-12 rounded-full object-cover ring-2 ring-zinc-200"
@@ -156,7 +334,6 @@
                                 </div>
                             </div>
 
-                            <!-- Middle: Departments (only when relevant; kept for parity) -->
                             <div
                                 class="flex items-center gap-3"
                                 v-if="selectedFilter.type === 'users'"
@@ -209,7 +386,6 @@
                                 </div>
                             </div>
 
-                            <!-- Right: Actions -->
                             <BaseMenu v-if="is('artwork admin')" has-no-offset>
                                 <MenuItem v-slot="{ active }">
                                     <a
@@ -243,7 +419,6 @@
                         </div>
                     </li>
 
-                    <!-- (Optional) separate results list kept for compatibility -->
                     <li
                         v-else
                         v-for="user in user_search_results"
@@ -350,56 +525,9 @@
                     </li>
                 </ul>
             </div>
-        </div>
+        </div>-->
 
-        <!-- Delete Modal -->
-        <BaseModal
-            v-if="deletingUser"
-            @closed="closeDeleteUserModal"
-            modal-image="/Svgs/Overlays/illu_warning.svg"
-        >
-            <div class="mx-4">
-                <div class="my-2 text-2xl font-bold text-zinc-900">
-                    <span v-if="userToDelete?.type === 'user'">{{ $t('Delete user') }}</span>
-                    <span v-else-if="userToDelete?.type === 'freelancer'">{{ $t('Delete freelancer') }}</span>
-                    <span v-else-if="userToDelete?.type === 'service_provider'">{{ $t('Delete service provider') }}</span>
-                </div>
 
-                <div class="text-sm text-red-600">
-          <span v-if="userToDelete?.type === 'user' || userToDelete?.type === 'freelancer'">
-            {{
-                  $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
-                      last_name: userToDelete?.last_name,
-                      first_name: userToDelete?.first_name
-                  })
-              }}
-          </span>
-                    <span v-else-if="userToDelete?.type === 'service_provider'">
-            {{
-                            $t('Are you sure you want to delete { serviceProvider } from the system?', {
-                                serviceProvider: userToDelete?.provider_name
-                            })
-                        }}
-          </span>
-                </div>
-
-                <div class="mt-6 flex items-center justify-between">
-                    <FormButton :text="$t('Delete')" @click="deleteUser" />
-                    <button @click="closeDeleteUserModal" class="text-sm text-zinc-500 hover:text-zinc-800">
-                        {{ $t('No, not really') }}
-                    </button>
-                </div>
-            </div>
-        </BaseModal>
-
-        <!-- Success Modal -->
-        <SuccessModal
-            :open="showSuccessModal"
-            @closed="closeSuccessModal"
-            :title="$t('Users invited')"
-            :description="$t('The users have received an invitation email.')"
-            button="Okay"
-        />
     </UserHeader>
 
     <!-- Invite users -->
@@ -422,23 +550,21 @@
     />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, nextTick, watch } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
 import {
-    Listbox, ListboxButton, ListboxOption, ListboxOptions,
-    Menu, MenuButton, MenuItem, MenuItems,
+    Listbox, ListboxButton, ListboxOption, ListboxOptions,MenuItem
 } from '@headlessui/vue'
 import {
-    SearchIcon, TrashIcon, XIcon, PencilAltIcon, ChevronDownIcon, PlusIcon,
+    ChevronDownIcon,
 } from '@heroicons/vue/outline'
-import { IconCheck } from '@tabler/icons-vue'
+import {IconCheck, IconCirclePlus, IconEdit, IconTrash, IconAddressBook} from '@tabler/icons-vue'
 import InviteUsersModal from '@/Layouts/Components/InviteUsersModal.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
-import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import UserHeader from '@/Pages/Users/UserHeader.vue'
 import AddUsersModal from '@/Pages/Users/Components/AddUsersModal.vue'
 import { is, can } from 'laravel-permission-to-vuejs'
@@ -460,6 +586,19 @@ const props = defineProps({
 
 /* i18n helper */
 const { getSortEnumTranslation } = useSortEnumTranslation()
+
+import BaseTable, { type TableColumn } from '@/Artwork/Table/BaseTable.vue'
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+
+const cols = ref<TableColumn[]>([
+    { key: 'name',  label: 'Name',  sortable: false },
+    { key: 'position', label: 'Position', sortable: false },
+    { key: 'type', label: 'Type', sortable: false },
+])
+
+const page = ref(1)
 
 /* UI state */
 const addingUser = ref(false)

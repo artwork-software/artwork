@@ -333,6 +333,10 @@
                                         class="block w-full rounded-md border border-zinc-200 px-3 py-4 text-sm text-zinc-900 placeholder-zinc-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                         :placeholder="$t('Type to search projects...')"
                                     />
+                                    <LastedProjects
+                                        :limit="10"
+                                        @select="onLinkingProject"
+                                    />
                                     <div
                                         v-if="projectSearchResults.length > 0 && !event.creatingProject && event.showProjectSearchResults"
                                         class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
@@ -550,6 +554,7 @@ import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {computed, inject, onMounted, ref, watch} from "vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 
 // Props definition
 const props = defineProps([

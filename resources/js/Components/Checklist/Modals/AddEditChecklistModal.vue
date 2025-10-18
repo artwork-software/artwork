@@ -1,15 +1,7 @@
 <template>
-    <BaseModal @closed="$emit('closed')" full-modal v-if="true" :modal-image="checklistToEdit ? '/Svgs/Overlays/illu_checklist_edit.svg' : '/Svgs/Overlays/illu_checklist_new.svg'">
-        <form @submit.prevent="submit">
-            <div class="px-8 py-3 mb-4">
-                <div class="font-bold font-lexend text-primary text-3xl my-2">
-                    {{ checklistToEdit ? $t('Edit checklist') : $t('New checklist') }}
-                </div>
-                <div class="xsLight">
-                    {{ checklistToEdit ? $t('Edit your checklist') : $t('Create a new checklist. To save time, you can choose a template and customize it customize it afterwards.') }}
-                </div>
-            </div>
-            <div class="px-8 py-2" v-if="!checklistToEdit">
+    <ArtworkBaseModal @close="$emit('closed')" full-modal v-if="true" :title="checklistToEdit ? $t('Edit checklist') : $t('New checklist')" :description="checklistToEdit ? $t('Edit your checklist') : $t('Create a new checklist. To save time, you can choose a template and customize it customize it afterwards.')">
+        <form @submit.prevent="submit" class="space-y-5">
+            <div class="" v-if="!checklistToEdit">
                 <Listbox class="w-full" v-model="selectedTemplate">
                     <div class="relative">
                         <ListboxButton class="menu-button">
@@ -63,7 +55,7 @@
                     </div>
                 </Listbox>
             </div>
-            <div class="px-8 py-2 mb-6">
+            <div class="">
                 <div class="flex">
                     <BaseInput
                         id="checklistName"
@@ -74,7 +66,7 @@
                 </div>
             </div>
 
-            <div class="bg-artwork-project-background px-8 py-4 mb-5" v-if="!project">
+            <div class="" v-if="!project">
                 <div >
                     <ProjectSearch @project-selected="addProjectToChecklist" />
                 </div>
@@ -87,9 +79,14 @@
                     :displayed-text="selectedProject.name"
                     :method="deleteSelectedProject"
                 />
+
+                <LastedProjects
+                    :limit="10"
+                    @select="addProjectToChecklist"
+                />
             </div>
 
-            <div class="bg-artwork-project-background px-8 py-4 mb-5" v-if="selectedTemplate.name === ''">
+            <div class="" v-if="selectedTemplate.name === ''">
                 <div class="flex items-center my-2" >
                     <Switch @click="checklistForm.private = !checklistForm.private" :class="[checklistForm.private ? 'bg-success' : 'bg-gray-300', 'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
                         <span aria-hidden="true" :class="[checklistForm.private ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
@@ -105,17 +102,17 @@
                     icon-size="h-6 w-6"
                 />
             </div>
-            <div class="px-8 py-4 mb-4">
-                <div class="flex items-center justify-center">
-                    <FormButton
+            <div class="mt-4">
+                <div class="flex items-center justify-end">
+                    <BaseUIButton
                         type="submit"
                         :disabled="checklistForm.name.length === 0 && !selectedTemplate.id"
-                        :text="checklistToEdit ? $t('Save') : $t('Create')"
+                        :label="checklistToEdit ? $t('Save') : $t('Create')"
                     />
                 </div>
             </div>
         </form>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -131,6 +128,9 @@ import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     project: {

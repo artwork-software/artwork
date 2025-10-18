@@ -1,16 +1,8 @@
 <template>
-    <AppLayout :title="$t('Project overview builder')">
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1 my-6">{{$t('Project overview builder')}}</h2>
-                <div class="xsLight">
-                    {{$t('Define global settings for projects.')}}
-                </div>
-            </div>
-            <ProjectTabs />
+    <ProjectSettingsHeader :title="$t('Project overview builder')" :description="$t('Define global settings for projects.')">
 
             <div>
-                <TinyPageHeadline
+                <BasePageTitle
                     :title="$t('Project overview builder')"
                     :description="$t('Set up the project overview for your artwork. To do this, drag and drop the components from the lower area into the project overview. You can also adjust the order of the components using drag & drop.')"
                 />
@@ -54,7 +46,7 @@
                 </div>
 
                 <div>
-                    <TinyPageHeadline :title="$t('Components')" :description="$t('Available components')" />
+                    <BasePageTitle :title="$t('Components')" :description="$t('Available components')" />
 
                     <div v-if="availableComponents.length" class="flex flex-wrap gap-4 mt-4">
                         <div v-for="availableComponent in computedAvailableComponents" :key="availableComponent.id">
@@ -63,16 +55,12 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-
-    </AppLayout>
+    </ProjectSettingsHeader>
 </template>
 
 <script setup>
 
-import AppLayout from "@/Layouts/AppLayout.vue";
-import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
+import ProjectSettingsHeader from "@/Pages/Settings/Components/ProjectSettingsHeader.vue";
 import SearchInput from "@/Components/Form/SearchInput.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {computed, ref} from "vue";
@@ -83,6 +71,7 @@ import DropComponentInGrid from "@/Pages/Settings/ProjectManagementBuilder/Compo
 import {IconCircleX, IconSearch} from "@tabler/icons-vue";
 import { useI18n } from 'vue-i18n';
 import SingleComponentInGrid from "@/Pages/Settings/ProjectManagementBuilder/Components/SingleComponentInGrid.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 const props = defineProps({
     componentsInGrid: {
         type: Object,

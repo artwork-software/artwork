@@ -1,122 +1,181 @@
 <script setup>
-
 import JetInputError from "@/Jetstream/InputError.vue";
-import Button from "@/Jetstream/Button.vue";
-import Input from "@/Layouts/Components/InputComponent.vue";
-import {IconDownload, IconEdit, IconX} from "@tabler/icons-vue";
-import {router, useForm} from "@inertiajs/vue3";
-import {ref} from "vue";
+import { IconDownload, IconEdit, IconX } from "@tabler/icons-vue";
+import { router, useForm, usePage } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
 
 const props = defineProps({
     project: {
         type: Object,
-        required: true
-    }
+        required: true,
+    },
 });
-const keyVisualForm = useForm({
-    keyVisual: null
-});
-const uploadKeyVisualFeedback = ref('')
+
+const keyVisualForm = useForm({ keyVisual: null });
+const uploadKeyVisualFeedback = ref("");
 const keyVisual = ref(null);
 
-const selectNewKeyVisual = () => {
-    keyVisual.value.click();
-}
+// Cache-Buster, triggert <img>-Reload trotz identischem Dateinamen
+const cacheBuster = ref(0);
+
+// Robust prüfen (null, '', undefined)
+const hasKeyVisual = computed(() => !!props.project?.key_visual_path);
+
+// Bildquelle inkl. Cache-Buster
+const imageSrc = computed(() => {
+    if (!hasKeyVisual.value) return usePage().props.big_logo;
+    // WICHTIG: Cache-Buster anhängen
+    return `/storage/keyVisual/${props.project.key_visual_path}`;
+});
+
+const selectNewKeyVisual = () => keyVisual.value?.click();
+
 const updateKeyVisual = () => {
-    validateTypeAndUploadKeyVisual(keyVisual.value.files[0]);
-}
+    const file = keyVisual.value?.files?.[0];
+    if (!file) return;
+    validateTypeAndUploadKeyVisual(file);
+    // Input zurücksetzen, damit derselbe Dateiname erneut gewählt werden kann
+    keyVisual.value.value = null;
+};
+
 const uploadDraggedKeyVisual = (event) => {
-    validateTypeAndUploadKeyVisual(event.dataTransfer.files[0]);
-}
+    const file = event?.dataTransfer?.files?.[0];
+    if (!file) return;
+    validateTypeAndUploadKeyVisual(file);
+};
+
 const validateTypeAndUploadKeyVisual = (file) => {
     uploadKeyVisualFeedback.value = "";
-    const allowedTypes = [
-        "image/jpeg",
-        "image/svg+xml",
-        "image/png",
-        "image/gif"
-    ]
+    const allowedTypes = ["image/jpeg", "image/svg+xml", "image/png", "image/gif", "image/svg+xml"];
 
-    if (allowedTypes.includes(file.type)) {
-        keyVisualForm.keyVisual = file;
-        keyVisualForm.post(
-            route('projects_key_visual.update', {project: props.project.id}),
-            {
-                onError: error => {
-                    uploadKeyVisualFeedback.value = error.keyVisual;
-                }
-            }
-        );
-    } else {
+    if (!allowedTypes.includes(file.type)) {
         uploadKeyVisualFeedback.value = $t(
-            'Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.'
+            "Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted."
         );
+        return;
     }
-}
+
+    keyVisualForm.keyVisual = file;
+
+    keyVisualForm.post(route("projects_key_visual.update", { project: props.project.id }), {
+        preserveState: true, // Modal bleibt offen
+        onSuccess: () => {
+            // 1) Sofort neuen Cache-Key setzen, damit das <img> neu lädt
+            cacheBuster.value = Date.now();
+            // 2) Nur die 'project'-Prop vom Server neu laden
+            router.reload({
+                only: ["project"],
+                preserveScroll: true,
+                preserveState: true,
+                // 3) Nach dem Refresh den Cache-Buster nochmal bumpen, falls Browser doch cached
+                onSuccess: () => (cacheBuster.value = Date.now()),
+            });
+        },
+        onError: (error) => {
+            uploadKeyVisualFeedback.value = error?.keyVisual ?? $t("Upload failed.");
+        },
+    });
+};
+
 const downloadKeyVisual = () => {
-    let link = document.createElement('a');
-    link.href = route('project.download.keyVisual', props.project.id);
-    link.target = '_blank';
+    const link = document.createElement("a");
+    link.href = route("project.download.keyVisual", props.project.id);
+    link.target = "_blank";
     link.click();
-}
+};
+
 const deleteKeyVisual = () => {
-    router.delete(route('project.delete.keyVisual', props.project.id))
-}
+    router.delete(route("project.delete.keyVisual", props.project.id), {
+        preserveState: true, // Modal bleibt offen
+        onSuccess: () => {
+            cacheBuster.value = Date.now();
+            router.reload({
+                only: ["project"],
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => (cacheBuster.value = Date.now()),
+            });
+        },
+        onError: (error) => {
+            uploadKeyVisualFeedback.value = error?.keyVisual ?? $t("Deletion failed.");
+        },
+    });
+};
 </script>
 
 <template>
+    <!-- Debug falls nötig -->
+    <!-- <pre class="text-xs text-gray-400">{{ project.key_visual_path }}</pre> -->
+
     <div class="group">
+        <!-- Dropzone, wenn kein Key-Visual vorhanden -->
         <div
-            class=" flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+            v-if="!hasKeyVisual"
+            class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
             @dragover.prevent
             @drop.stop.prevent="uploadDraggedKeyVisual($event)"
             @click="selectNewKeyVisual"
-            v-if="project.key_visual_path === null">
+        >
             <div class="space-y-1 text-center">
-                <div class="xsLight flex my-auto h-40 items-center"
-                     v-if="project.key_visual_path === null">
+                <div class="xsLight flex my-auto h-40 items-center">
                     <span v-html="$t('Drag your key visual here')"></span>
-                    <input id="keyVisual-upload" ref="keyVisual"
-                           name="file-upload" type="file" class="sr-only"
-                           @change="updateKeyVisual"/>
+                    <input
+                        id="keyVisual-upload"
+                        ref="keyVisual"
+                        name="file-upload"
+                        type="file"
+                        class="sr-only"
+                        accept=".jpg,.jpeg,.png,.gif,.svg"
+                        @change="updateKeyVisual"
+                    />
                 </div>
             </div>
         </div>
+
+        <!-- Bild + Aktionen, wenn vorhanden -->
         <div v-else class="flex items-center justify-center relative w-full">
-            <div
-                class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
-                <button @click="downloadKeyVisual" type="button"
-                        class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                    <IconDownload class="h-5 w-5" aria-hidden="true"/>
+            <div class="absolute w-full text-center flex items-center justify-center hidden group-hover:block space-x-4">
+                <button
+                    v-if="project.key_visual_path !== 'default_keyVisual.png'"
+                    @click="downloadKeyVisual"
+                    type="button"
+                    class="ui-button bg-white hover:text-orange-500"
+                >
+                    <IconDownload class="h-5 w-5" aria-hidden="true" />
                 </button>
-                <button @click="selectNewKeyVisual" type="button"
-                        class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                    <IconEdit
-                        class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                        aria-hidden="true"/>
+                <button @click="selectNewKeyVisual" type="button" class="ui-button bg-white hover:text-blue-500">
+                    <IconEdit class="h-5 w-5" aria-hidden="true" />
                 </button>
-                <button @click="deleteKeyVisual" type="button"
-                        class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                    <IconX class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                           aria-hidden="true"/>
+                <button @click="deleteKeyVisual" type="button" class="ui-button bg-white hover:text-red-500">
+                    <IconX class="h-5 w-5" aria-hidden="true" />
                 </button>
             </div>
+
             <div class="text-center">
                 <div class="cursor-pointer">
-                    <img src="">
-                    <img :src="'/storage/keyVisual/' + project.key_visual_path"
-                         alt="Aktuelles Key-Visual"
-                         class="rounded-md w-full h-48">
-                    <input id="keyVisual-upload" ref="keyVisual"
-                           name="file-upload" type="file" class="sr-only"
-                           @change="updateKeyVisual"/>
+                    <img
+                        :key="cacheBuster"
+                    :src="imageSrc"
+                    alt="Aktuelles Key-Visual"
+                    @error="(e) => (e.target.src = usePage().props.big_logo)"
+                    class="rounded-md w-full h-48 object-cover"
+                    />
+                    <input
+                        id="keyVisual-upload"
+                        ref="keyVisual"
+                        name="file-upload"
+                        type="file"
+                        class="sr-only"
+                        accept=".jpg,.jpeg,.png,.gif,.svg"
+                        @change="updateKeyVisual"
+                    />
                 </div>
             </div>
         </div>
-        <jet-input-error :message="uploadKeyVisualFeedback"/>
+
+        <JetInputError :message="uploadKeyVisualFeedback" />
     </div>
 </template>
 
 <style scoped>
-
 </style>

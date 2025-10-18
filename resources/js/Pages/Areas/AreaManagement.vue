@@ -1,16 +1,8 @@
 <template>
-    <app-layout :title="$t('Rooms & areas')">
-        <div class="artwork-container">
-            <div class="w-full flex my-auto justify-between">
-                <div class="flex flex-wrap w-full">
-                    <div class="flex flex-wrap w-full">
-                        <h2 class="headline1 flex w-full">{{ $t('Rooms & areas') }}</h2>
-                        <div class="xsLight flex mt-4 w-full">
-                            {{
-                                $t('Create areas and rooms and assign side rooms to individual rooms. Also define global properties for rooms.')
-                            }}
-                        </div>
-                        <Tabs/>
+    <RoomSettingsHeader
+        :title="$t('Rooms & areas')"
+        :description="$t('Create areas and rooms and assign side rooms to individual rooms. Also define global properties for rooms.')"
+    >
                         <h2 class="headline2 w-full">{{ $t('Room properties') }}</h2>
                         <div class="xsLight flex mt-4 w-full">
                             {{
@@ -169,14 +161,10 @@
                         <div class="flex w-full justify-between mt-6">
                             <div class="flex">
                                 <div>
-                                    <ArtworkBaseModalButton @click="openAddAreaModal()">{{
-                                            $t('Add area')
-                                        }}
-                                    </ArtworkBaseModalButton>
+                                    <BaseUIButton @click="openAddAreaModal()" :label="$t('Add area')" is-add-button />
                                 </div>
                             </div>
                         </div>
-                    </div>
                     <div class="flex w-full flex-wrap mt-8">
                         <!-- Modernisierte Liste: Bereiche & Räume -->
                         <div
@@ -186,7 +174,7 @@
                         >
                             <div class="flex items-center justify-between gap-3 pl-5 pr-4 py-4">
                                 <button
-                                    class="text-blue-500 bg-blue-100 border-blue-200 hover:bg-blue-200 hover:text-blue-500 disabled:bg-gray-100 hover:border-blue-300 inline-flex items-center justify-center rounded-md font-medium transition duration-200 ease-in-out font-lexend border shadow-glass backdrop-blur-md disabled:opacity-50 p-2 text-xs"
+                                    class="ui-button-add"
                                     @click="changeAreaStatus(area)"
                                     :aria-expanded="this.opened_areas.includes(area.id)"
                                     :aria-controls="`area-panel-${area.id}`"
@@ -284,10 +272,7 @@
                                 >
                                     <!-- Add Room + Hint -->
                                     <div class="flex items-center gap-3">
-                                        <ArtworkBaseModalButton @click="openAddRoomModal(area)">{{
-                                                $t('Add room')
-                                            }}
-                                        </ArtworkBaseModalButton>
+                                        <BaseUIButton @click="openAddRoomModal(area)" :label="$t('Add room')" is-add-button />
                                         <div v-if="this.$page.props.show_hints"
                                              class="flex items-center text-secondary">
                                             <SvgCollection svgName="arrowLeft" class="ml-1 h-4 w-4 opacity-70"/>
@@ -533,17 +518,11 @@
                         </div>
 
                     </div>
-                </div>
-            </div>
-        </div>
-    </app-layout>
+    </RoomSettingsHeader>
     <!-- Areal Hinzufügen-->
 
-    <BaseModal @closed="closeAddAreaModal" v-if="showAddAreaModal">
+    <ArtworkBaseModal @close="closeAddAreaModal" v-if="showAddAreaModal" :title="$t('New area')" description="">
         <div class="mx-3">
-            <ModalHeader
-                :title="$t('New area')"
-            />
             <form @submit.prevent="addArea" class="">
                 <div>
                     <BaseInput
@@ -556,22 +535,20 @@
                 </div>
 
                 <div class="w-full items-center flex justify-center text-center mt-4">
-                    <FormButton
+                    <BaseUIButton
+                        is-add-button
                         :disabled="newAreaForm.processing || newAreaForm.name === ''"
-                        :text="$t('Create')"
+                        :label="$t('Create')"
                         class="mt-8"
                         type="submit"
                     />
                 </div>
             </form>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
     <!-- Areal Bearbeiten-->
-    <BaseModal @closed="closeEditAreaModal" v-if="showEditAreaModal">
+    <ArtworkBaseModal @close="closeEditAreaModal" v-if="showEditAreaModal" :title="$t('Edit area')" description="">
         <div class="mx-3">
-            <ModalHeader
-                :title="$t('Edit area')"
-            />
             <form @submit.prevent="editArea" class="">
                 <div>
                     <BaseInput
@@ -583,23 +560,19 @@
                 </div>
 
                 <div class="w-full items-center flex justify-center text-center">
-                    <FormButton
+                    <BaseUIButton
                         :disabled="editAreaForm.processing || editAreaForm.name === ''"
-                        :text="$t('Save')"
+                        :label="$t('Save')"
                         type="submit"
-                        class="mt-8 inline-flex items-center"
+                        is-add-button
                     />
                 </div>
             </form>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
     <!-- Raum Hinzufügen-->
-    <BaseModal @closed="closeAddRoomModal" v-if="showAddRoomModal">
+    <ArtworkBaseModal @close="closeAddRoomModal" v-if="showAddRoomModal"  :title="$t('New room')" :description="$t('Create a new room.')">
         <div class="mx-3">
-            <ModalHeader
-                :title="$t('New room')"
-                :description="$t('Create a new room.')"
-            />
             <form @submit.prevent="addRoom" class="grid grid-cols-1 gap-4">
                 <div class="">
                     <BaseInput
@@ -818,21 +791,20 @@
                     </div>
                 </div>
                 <div class="w-full items-center text-center">
-                    <FormButton
+                    <BaseUIButton
                         type="submit"
                         :disabled="newRoomForm.processing || newRoomForm.name === ''"
-                        :text="$t('Create')"
-                        class="inline-flex items-center mt-4"
+                        :label="$t('Create')"
+                        is-add-button
                     />
                 </div>
             </form>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 
     <!-- Raum Bearbeiten-->
-    <BaseModal @closed="closeEditRoomModal" v-if="showEditRoomModal">
+    <ArtworkBaseModal @close="closeEditRoomModal" v-if="showEditRoomModal" :title="$t('Edit room')" description="">
         <div class="mx-3">
-            <ModalHeader :title="$t('Edit room')"/>
             <form @submit.prevent="editRoom" class="grid grid-cols-1 gap-4">
                 <div class="">
                     <BaseInput
@@ -1063,17 +1035,17 @@
                 </div>
 
                 <div class="w-full items-center text-center">
-                    <FormButton
+                    <BaseUIButton
                         type="submit"
                         :disabled="editRoomForm.name.length === 0 || editRoomForm.processing"
-                        :text="$t('Save')"
-                        class="inline-flex items-center mt-8"
+                        :label="$t('Save')"
+                        is-add-button
                     />
                 </div>
 
             </form>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
     <!-- Success Modal -->
     <SuccessModal
         :show="showSuccessModal"
@@ -1115,7 +1087,7 @@
 
 <script>
 
-import AppLayout from '@/Layouts/AppLayout.vue'
+import RoomSettingsHeader from '@/Pages/Areas/Components/RoomSettingsHeader.vue'
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Button from "@/Jetstream/Button.vue";
 import JetButton from "@/Jetstream/Button.vue";
@@ -1145,7 +1117,6 @@ import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
-import Tabs from "@/Pages/Areas/Components/Tabs.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -1157,10 +1128,14 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {IconClock, IconCopy, IconEdit, IconLayoutGrid, IconRecycle, IconTrash} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
+        ArtworkBaseModal,
+        BaseUIButton,
         ArtworkBaseModalButton,
         BaseMenuItem,
         BaseTextarea,
@@ -1171,7 +1146,6 @@ export default defineComponent({
         TextInputComponent,
         BaseModal,
         BaseMenu,
-        Tabs,
         FormButton,
         AddButtonBig,
         SuccessModal,
@@ -1180,7 +1154,7 @@ export default defineComponent({
         UserTooltip,
         SvgCollection,
         Button,
-        AppLayout,
+        RoomSettingsHeader,
         DotsVerticalIcon,
         PlusSmIcon,
         SearchIcon,

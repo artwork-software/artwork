@@ -1,19 +1,16 @@
 <template>
-    <InventorySettingsHeader>
+    <InventorySettingsHeader
+        :title="$t('Categories')"
+        :description="$t('Edit and create categories for your inventory.')"
+    >
+        <template #actions>
+            <button class="ui-button-add" @click="showAddEditCategoryModal = true">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ $t('Create Category') }}
+            </button>
+        </template>
+
         <div class="mb-10 card white p-5">
-            <div class="sm:flex sm:items-center">
-                <div class="sm:flex-auto">
-                    <TinyPageHeadline
-                        :title="$t('Categories')"
-                        :description="$t('Edit and create categories for your inventory.')"
-                    />
-                </div>
-                <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-                    <button @click="showAddEditCategoryModal = true" type="button" class="block rounded-md bg-artwork-buttons-create px-3 py-2 text-center text-sm font-semibold text-white shadow-xs hover:bg-artwork-buttons-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                        {{ $t('Create Category') }}
-                    </button>
-                </div>
-            </div>
 
             <div class="my-8 flow-root">
                 <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
@@ -79,11 +76,11 @@
 <script setup>
 
 import InventorySettingsHeader from "@/Pages/InventorySetting/Components/InventorySettingsHeader.vue";
-import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import AddEditCategoryModal from "@/Pages/InventorySetting/Components/AddEditCategoryModal.vue";
 import {ref} from "vue";
 import SingleCategoryInSettings from "@/Pages/InventorySetting/Components/SingleCategoryInSettings.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
+import {IconPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     categories: {

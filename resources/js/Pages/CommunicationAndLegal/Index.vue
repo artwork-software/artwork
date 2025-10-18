@@ -4,10 +4,6 @@
              class="w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
             {{ this.$page.props.flash.success }}
         </div>
-        <h2 class="headline2">{{ $t('Communication & Legal') }}</h2>
-        <div class="xsLight mt-4">
-            {{ $t("Define the footer text for all system emails here, and provide the links to your company's legal notice and privacy policy pages. Additionally, you can specify an email address to be used for sending emails.") }}
-        </div>
         <div class="grid grid-cols-1 gap-4 mt-10 max-w-lg">
             <div class="">
                 <div class="sm:col-span-3">

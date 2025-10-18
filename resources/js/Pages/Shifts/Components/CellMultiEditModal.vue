@@ -62,7 +62,7 @@
         </section>
 
         <div class="flex justify-center mt-5">
-            <FormButton :text="$t('Save')" @click="submitForm" :disabled="multiEditCellForm.processing" />
+            <BaseUIButton :label="$t('Save')" is-add-button @click="submitForm" :disabled="multiEditCellForm.processing" />
         </div>
     </BaseModal>
 </template>
@@ -81,6 +81,7 @@ import { CheckIcon, ChevronDownIcon } from "@heroicons/vue/solid";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import {IconCirclePlus, IconTrash} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     multiEditCellByDayAndUser: {

@@ -19,7 +19,7 @@ class GeneralSettingsService
 
         $this->generalSettings->save();
     }
-    
+
     public function updateAllowedFileMimeTypesFromRequest(
         Request $request
     ): void {
@@ -30,35 +30,35 @@ class GeneralSettingsService
         $this->generalSettings->$fileSizeProperty = $request->input('data')['fileSize'];
         $this->generalSettings->save();
     }
-    
+
     private function extractFileTypes(Request $request): array
     {
         $fileTypes = [];
         foreach ($request->input('data')['fileTypes'] as $fileType) {
             $fileTypes[] = $fileType['name'];
         }
-        
+
         return $fileTypes;
     }
-    
+
     private function assembleMimetypePropertyName($name): string
     {
         return sprintf("allowed_%s_file_mimetypes", $name);
     }
-        
+
     private function assembleFilesizePropertyName($name): string
     {
         return sprintf("allowed_%s_file_size", $name);
     }
-    
+
     public function getAllowedProjectFileMimeTypes(): array
     {
         return [
-            'mime_types' => $this->generalSettings->allowed_project_file_mimetypes, 
+            'mime_types' => $this->generalSettings->allowed_project_file_mimetypes,
             'file_size' => $this->generalSettings->allowed_project_file_size
         ];
     }
-    
+
     public function getAllowedRoomFileMimeTypes(): array
     {
         return [
@@ -66,7 +66,7 @@ class GeneralSettingsService
             'file_size' => $this->generalSettings->allowed_room_file_size
         ];
     }
-    
+
     public function getAllowedBrandingFileMimeTypes(): array
     {
         return [
@@ -80,5 +80,13 @@ class GeneralSettingsService
             'mime_types' => $this->generalSettings->allowed_contract_file_mimetypes,
             'file_size' => $this->generalSettings->allowed_contract_file_size
         ];
+    }
+
+
+    /* Update $event_time_length_minutes in GeneralSettings from Request */
+    public function updateEventTimeLengthMinutesFromRequest(Request $request): void
+    {
+        $this->generalSettings->event_time_length_minutes = $request->get('event_time_length_minutes');
+        $this->generalSettings->save();
     }
 }

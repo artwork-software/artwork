@@ -92,19 +92,18 @@
             </div>
 
             <div class="flex items-center justify-between mt-10">
-                <ArtworkBaseModalButton
+                <BaseUIButton
                     type="button"
                     @click="$emit('close')"
-                    variant="danger">
-                    {{ $t('Cancel') }}
-                </ArtworkBaseModalButton>
+                    :label="$t('Cancel')"
+                    is-cancel-button/>
 
 
-                <ArtworkBaseModalButton
+                <BaseUIButton
                     type="submit"
-                    variant="primary">
-                    {{ $t('Save') }}
-                </ArtworkBaseModalButton>
+                    is-add-button
+                    :label="$t('Save')"
+                />
             </div>
         </form>
 
@@ -120,6 +119,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import {useForm} from "@inertiajs/vue3";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     userContract: {

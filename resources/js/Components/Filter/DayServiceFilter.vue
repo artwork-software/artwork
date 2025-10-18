@@ -2,6 +2,7 @@
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {IconChevronDown} from "@tabler/icons-vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "DayServiceFilter",
@@ -29,7 +30,7 @@ export default {
         }
     },
 
-    components: {Menu, MenuItems, IconChevronDown, MenuButton, MenuItem}
+    components: {PropertyIcon, Menu, MenuItems, IconChevronDown, MenuButton, MenuItem}
 }
 </script>
 
@@ -51,7 +52,7 @@ export default {
                 <MenuItem v-slot="{ active }" v-for="dayService in dayServices">
                     <div @click="updateDayService(dayService)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']" class="cursor-pointer">
                         <div class="flex items-center">
-                            <component :is="dayService.icon" class="h-5 w-5" :style="{color: dayService.hex_color}"/>
+                            <PropertyIcon :name="dayService.icon" class="h-5 w-5" :style="{color: dayService.hex_color}"/>
                             <span class="ml-2">{{ dayService.name }}</span>
                         </div>
                     </div>

@@ -77,8 +77,7 @@ class UserController extends Controller
 {
     public function __construct(
         protected AuthManager $auth,
-    )
-    {
+    ) {
         $this->authorizeResource(User::class, 'user');
     }
 
@@ -914,6 +913,24 @@ class UserController extends Controller
         return Redirect::back();
     }
 
+    public function assignCraftsBulk(User $user, Request $request)
+    {
+        $this->authorize('updateWorkProfile', User::class);
+
+        $craftIds = $request->get('craftIds', []);
+
+        $validCraftIds = Craft::whereIn('id', $craftIds)->pluck('id')->toArray();
+
+        // Filter out already assigned crafts
+        $newCraftIds = array_diff($validCraftIds, $user->assignedCrafts()->pluck('craft_id')->toArray());
+
+        if (!empty($newCraftIds)) {
+            $user->assignedCrafts()->attach($newCraftIds);
+        }
+
+        return Redirect::back();
+    }
+
     /**
      * @throws AuthorizationException
      */
@@ -1311,7 +1328,7 @@ class UserController extends Controller
         $letters = strtoupper(substr($letters, 0, 2));
 
         // Hintergrundfarbe über Parameter oder Standardwert setzen
-        $bgColor = request()?->query('bg', '#eb7a3d'); // Standard: Blau
+        $bgColor = request()?->query('bg', '#00a3ff'); // Standard: Blau
         $textColor = request()?->query('color', '#ffffff'); // Standard: Weiß
 
         // SVG in Blade rendern

@@ -79,13 +79,47 @@ class InternalIssue extends Model
         return $this->belongsToMany(User::class, 'internal_issue_responsible_users', 'internal_issue_id', 'user_id');
     }
 
+
+    public function scopeOverlapping($query, ?string $from, ?string $to)
+    {
+        return $query
+            // beide Grenzen vorhanden
+            ->when($from && $to, function ($q) use ($from, $to) {
+                $q->where(function ($qq) use ($from, $to) {
+                    $qq->whereDate('start_date', '<=', $to)
+                        ->where(function ($qqq) use ($from) {
+                            $qqq->whereNull('end_date')
+                                ->orWhereDate('end_date', '>=', $from);
+                        });
+                });
+            })
+            // nur FROM: alles, das ab FROM noch läuft/endet
+            ->when($from && !$to, function ($q) use ($from) {
+                $q->where(function ($qq) use ($from) {
+                    $qq->whereNull('end_date')
+                        ->orWhereDate('end_date', '>=', $from);
+                });
+            })
+            // nur TO: alles, das bis TO begonnen hat
+            ->when(!$from && $to, function ($q) use ($to) {
+                $q->whereDate('start_date', '<=', $to);
+            });
+    }
+
     public function getStartDateTimeAttribute(): string
     {
-        return Carbon::parse($this->start_date)->translatedFormat('d. F Y') . ' ' . Carbon::parse($this->start_time)->format('H:i');
+        $date = $this->start_date ? Carbon::parse($this->start_date)->translatedFormat('d. F Y') : '';
+        $time = $this->start_time ? Carbon::parse($this->start_time)->format('H:i') : '';
+        return trim("$date $time");
     }
 
     public function getEndDateTimeAttribute(): string
     {
-        return Carbon::parse($this->end_date)->translatedFormat('d. F Y') . ' ' . Carbon::parse($this->end_time)->format('H:i');
+        if (!$this->end_date) {
+            return '';
+        }
+        $date = Carbon::parse($this->end_date)->translatedFormat('d. F Y');
+        $time = $this->end_time ? Carbon::parse($this->end_time)->format('H:i') : '';
+        return trim("$date $time");
     }
 }

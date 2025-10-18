@@ -62,13 +62,14 @@
                             color-property="color"
                         >
                         </ArtworkBaseListbox>
-
-                        <BaseInput
-                            v-model="eventName"
-                            id="eventTitle"
-                            :label="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
-                            class="ui-input"
-                        />
+                        <div class="mt-5">
+                            <BaseInput
+                                v-model="eventName"
+                                id="eventTitle"
+                                :label="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
+                                class="ui-input"
+                            />
+                        </div>
                     </div>
 
                     <div class="ui-grid-2 mt-0.5">
@@ -104,7 +105,7 @@
                                 id="startTime"
                                 v-model="startTime"
                                 :label="$t('Start time')"
-                                @change="checkChanges"
+                                @change="() => { endAutoFilled = !endTime; checkChanges() }"
                                 class="ui-input"
                             />
                         </div>
@@ -116,9 +117,44 @@
                                 id="endTime"
                                 v-model="endTime"
                                 :label="$t('End time')"
-                                @change="checkChanges"
+                                @change="() => { endAutoFilled = false; checkChanges() }"
                                 class="ui-input"
                             />
+                        </div>
+                    </div>
+
+                    <!-- Quick duration buttons -->
+                    <div class="mt-4">
+                        <BasePageTitle
+                            title="Quick durations"
+                            description="Set the end time quickly based on the start time."
+                        />
+                        <div class="flex flex-wrap items-center gap-2 mt-2">
+                            <button
+                                v-for="m in quickDurations"
+                                :key="m"
+                                type="button"
+                                class="px-2.5 py-1.5 text-xs rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="!startDate || allDayEvent || !startTime"
+                                @click="applyQuickDuration(m)"
+                                :aria-label="$t('Set end to {0} minutes after start', [m])"
+                                :title="$t('Set end to {0} minutes after start', [m])"
+                            >
+                                {{ m }} {{ $t('min') }}
+                            </button>
+
+                            <!-- optional: Button mit Standarddauer aus PageProps -->
+                            <button
+                                v-if="defaultDurationMin > 0 && ![...quickDurations].includes(defaultDurationMin)"
+                                type="button"
+                                class="px-2.5 py-1.5 text-xs rounded-md border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="!startDate || allDayEvent || !startTime"
+                                @click="applyQuickDuration(defaultDurationMin)"
+                                :aria-label="$t('Set end to {0} minutes after start', [defaultDurationMin])"
+                                :title="$t('Set end to {0} minutes after start', [defaultDurationMin])"
+                            >
+                                Standard: {{ defaultDurationMin }} {{ $t('min') }}
+                            </button>
                         </div>
                     </div>
 
@@ -275,6 +311,12 @@
                                 v-model="projectName"
                                 class="ui-input"
                                 :placeholder="$t('e.g. Kitchen Miller – Renovation')"
+                            />
+
+                            <LastedProjects
+                                v-if="!creatingProject && !selectedProject?.id"
+                                :limit="10"
+                                @select="chooseProjectFromPicker"
                             />
                         </div>
 
@@ -517,6 +559,8 @@ import { useEvent } from '@/Composeables/Event.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useI18n} from "vue-i18n";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 const { t } = useI18n(), $t = t;
 const props = defineProps({
     showHints: { type: Boolean, default: false },
@@ -592,11 +636,25 @@ const helpTextLengthRoom = ref('')
 const initialRoomId = ref(null)
 const showRejections = ref(false)
 const isLoading = ref(false)
+const quickDurations = [30, 60, 90]
 
 const bookingOptions = [{ name: 'Option 1' }, { name: 'Option 2' }, { name: 'Option 3' }, { name: 'Option 4' }]
 
 const answerRequestForm = useForm({ accepted: false })
+const endAutoFilled = ref(false) // darf anfänglich auto-füllen
+const defaultDurationMin = computed(() => {
+    const raw = Number(page.props.event_time_length_minutes)
+    return Number.isFinite(raw) && raw > 0 ? raw : 60
+})
 
+function setEndFromDuration() {
+    if (!startDate.value || !startTime.value || allDayEvent.value) return
+    const startDT = dayjs(`${startDate.value}T${startTime.value}`)
+    const endDT = startDT.add(defaultDurationMin.value, 'minute')
+    endDate.value = endDT.format('YYYY-MM-DD')
+    endTime.value  = endDT.format('HH:mm')
+    endAutoFilled.value = true
+}
 // --- Computeds
 const isRoomAdmin = computed(() => {
     return props.rooms.find(r => r.id === props.event?.roomId)?.admins?.some(a => a.id === page.props.auth.user.id) || false
@@ -662,8 +720,7 @@ onMounted(() => {
     if (props.wantedDate) {
         startDate.value = props.wantedDate
         startTime.value = '09:00'
-        endDate.value = props.wantedDate
-        endTime.value = '10:00'
+        setEndFromDuration()
     }
     if (props.wantedRoomId) {
         selectedRoom.value = props.rooms.find(r => r.id === Number(props.wantedRoomId)) || null
@@ -792,9 +849,20 @@ function closeModal(closedOnPurpose = false) {
     ;(event_properties ?? []).forEach(p => (p.checked = false))
     initialRoomId.value = null
 }
-function formatDate(date, time) {
+function formatDate(date, time, toUTC = true) {
+    // fehlende Werte abfangen
     if (!date || !time) return null
-    return new Date(`${date} ${time}`).toISOString()
+
+    // ISO-8601-kompatibel: "YYYY-MM-DDTHH:mm"
+    const isoLocal = `${date}T${time}`
+
+    // sicher parsen (alle Browser)
+    const d = new Date(isoLocal)
+    if (Number.isNaN(d.getTime())) return null
+
+    // Wenn dein Backend UTC erwartet -> toUTC=true
+    // Wenn lokales ISO ohne Z erwartet wird -> return isoLocal
+    return toUTC ? d.toISOString() : isoLocal
 }
 async function checkCollisions() {
     if ((startTime.value && startDate.value && endTime.value && endDate.value) || (allDayEvent.value && startDate.value && endDate.value)) {
@@ -820,24 +888,42 @@ function validateStartBeforeEndTime() {
         // optional server-side validation hook
     }
 }
-function updateTimes() {
-    if (startDate.value) {
-        if (!endDate.value && checkYear(startDate.value)) endDate.value = startDate.value
-        if (startTime.value && !endTime.value) {
-            if (startTime.value === '23:00') endTime.value = '23:59'
-            else {
-                const startHours = startTime.value.slice(0, 2)
-                if (startHours === '23') {
-                    endTime.value = `00:${startTime.value.slice(3, 5)}`
-                    const d = new Date(endDate.value)
-                    endDate.value = new Date(d.setDate(new Date(endDate.value).getDate() + 1)).toISOString().slice(0, 10)
-                } else endTime.value = getNextHourString(startTime.value)
-            }
-        }
-    }
+
+// Liste der Schnell-Intervalle (anpassbar)
+
+
+// Endzeit/Datum aus Start + Minuten setzen
+function applyQuickDuration(minutes) {
+    if (!startDate.value || allDayEvent.value) return
+    if (!startTime.value) return
+
+    const startDT = dayjs(`${startDate.value}T${startTime.value}`)
+    const endDT = startDT.add(minutes, 'minute')
+
+    endDate.value = endDT.format('YYYY-MM-DD')
+    endTime.value  = endDT.format('HH:mm')
+
+    // Kennzeichnen: automatisch gesetzt (manuelle Änderungen sollen danach Vorrang haben)
+    endAutoFilled.value = true
+
     validateStartBeforeEndTime()
     checkCollisions()
 }
+
+function updateTimes() {
+    if (startDate.value && startTime.value) {
+        // Endzeit nur setzen, wenn leer ODER zuletzt auto-gefüllt
+        if (!endTime.value || endAutoFilled.value) {
+            setEndFromDuration()
+        }
+        // Falls Enddatum noch leer ist (z. B. initial), auf Startdatum setzen
+        if (!endDate.value) endDate.value = startDate.value
+    }
+
+    validateStartBeforeEndTime()
+    checkCollisions()
+}
+
 function checkChanges() {
     if (selectedRoom.value?.temporary) {
         const startFull = formatDate(startDate.value, startTime.value)
@@ -1060,6 +1146,11 @@ function removeProject() {
     // bleib in bestehendem Modus? Dann zeig Suche; oder wechsel optional zu "Neu":
     // creatingProject.value = true
 }
+
+watch([startDate, startTime, allDayEvent], () => {
+    // Endzeit ggf. automatisch anpassen, wenn Start sich ändert
+    if (!endTime.value || endAutoFilled.value) updateTimes()
+})
 
 // Auswahl aus Suche
 function chooseProjectFromPicker(project) {

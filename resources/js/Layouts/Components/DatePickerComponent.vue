@@ -20,8 +20,8 @@
                         direction="right"
                         :tooltip-text="$t('Select time')"
                         :icon="IconCalendar"
-                        icon-size="h-5 w-5 mr-3"
-                        class="cursor-pointer"
+                        icon-size="h-5 w-5"
+                        classesButton="ui-button"
                     />
                 </template>
                 <template #preset-date-range-button="{ label, value }">

@@ -71,6 +71,12 @@
                 <!-- Project -->
                 <div class="px-6 pt-2">
                     <ProjectSearch v-if="!selectedProject" @project-selected="addProject" :get-first-last-event="true" :label="$t('Project assignment (optional)')" />
+                    <LastedProjects
+                        v-if="!selectedProject"
+                        :limit="10"
+                        @select="addProject"
+                    />
+
                     <div v-else class="mt-1">
                         <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
                         <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-1">
@@ -286,7 +292,7 @@
 
                                                 <div class="flex items-center gap-4 md:gap-6">
                                                     <div class="w-28">
-                                                        <BaseInput :id="'article-quantity-' + article.originalIndex" type="number" v-model="internMaterialIssue.articles[article.originalIndex].quantity" :label="$t('Menge')" />
+                                                        <BaseInput :id="'article-quantity-' + article.originalIndex" type="number" v-model="internMaterialIssue.articles[article.originalIndex].quantity" :label="$t('Menge')" :input-classes="article.quantity > (article.availableStock?.available ?? 0) && internMaterialIssue.start_date && internMaterialIssue.end_date ? '!border-red-500 !bg-red-50' : ''" />
                                                     </div>
                                                     <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeArticle(article.originalIndex)">
                                                         <component :is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
@@ -480,6 +486,7 @@ import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/Arti
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import Galleria from "primevue/galleria";
 import { IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconPlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 
 const props = defineProps({
     issueOfMaterial: {
@@ -977,7 +984,6 @@ const submit = () => {
             (file) => file.id
         );
     }
-console.log(internMaterialIssue.articles)
     if (props.issueOfMaterial?.id) {
         // Use post instead of patch for better file upload handling
         internMaterialIssue._method = "PATCH";
@@ -1023,23 +1029,37 @@ const checkAvailableStock = async () => {
 
     const ids = internMaterialIssue.articles.map((a) => a.id).filter(Boolean);
 
-    // Set loading für alle
+    // Ladezustand setzen
     for (const article of internMaterialIssue.articles) {
         article.availableStockRequestIsLoading = true;
         article.availableStock = null;
         article.overbooked = false;
     }
 
+    // Nur Uhrzeiten mitsenden, wenn sie wirklich gesetzt wurden (nicht Default-Ganztag)
+    const hasExplicitTimes =
+        !!internMaterialIssue.start_time &&
+        !!internMaterialIssue.end_time &&
+        internMaterialIssue.start_time !== "00:00" &&
+        internMaterialIssue.end_time !== "23:59";
+
     try {
+        const payload = {
+            article_ids: ids,
+            type: 'intern',
+            issue_id: internMaterialIssue?.id || null,
+            start_date: internMaterialIssue.start_date,
+            end_date: internMaterialIssue.end_date,
+        };
+
+        if (hasExplicitTimes) {
+            payload.start_time = internMaterialIssue.start_time;
+            payload.end_time = internMaterialIssue.end_time;
+        }
+
         const response = await axios.post(
             route("inventory.articles.available-stock.batch"),
-            {
-                article_ids: ids,
-                type: 'intern',
-                issue_id: internMaterialIssue?.id || null,
-                start_date: internMaterialIssue.start_date,
-                end_date: internMaterialIssue.end_date,
-            }
+            payload
         );
 
         const resultMap = response.data.data;
@@ -1066,6 +1086,7 @@ const checkAvailableStock = async () => {
         }
     }
 };
+
 
 const checkFoundArticlesAvailability = async () => {
     if (
@@ -1135,7 +1156,7 @@ const removeFile = (id) => {
 };
 
 watch(
-    () => [internMaterialIssue.start_date, internMaterialIssue.end_date],
+    () => [internMaterialIssue.start_date, internMaterialIssue.end_date, internMaterialIssue.start_time, internMaterialIssue.end_time],
     debounce(() => {
         checkAvailableStock();
         checkFoundArticlesAvailability(); // Check availability for found articles

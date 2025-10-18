@@ -19,7 +19,7 @@
                 <MenuButton
                     :id="buttonId"
                     type="button"
-                    class="flex items-center justify-center rounded-lg h-full outline-none ring-inset transition focus-visible:ring-2"
+                    class="flex items-center justify-center rounded-lg h-full outline-none ring-inset transition focus-visible:ring-2 cursor-pointer"
                     :class="[
                         whiteIcon
                           ? 'focus-visible:ring-white/70'
@@ -138,7 +138,7 @@ const props = withDefaults(defineProps<{
     menuButtonAria?: string
 }>(), {
     dotsColor: 'text-artwork-navigation-text',
-    dotsSize: 'h-6 w-6',
+    dotsSize: 'size-5',
     noRelative: false,
     showSortIcon: false,
     menuWidth: 'w-56',

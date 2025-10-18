@@ -31,20 +31,20 @@
     </div>
 
     <div class="flex justify-end gap-3">
-        <ArtworkBaseModalButton
-            variant="success"
+        <BaseUIButton
+            is-add-button
             @click="approveRequest"
             :disabled="request.status !== 'pending'"
-        >
-            {{ $t('Approve') }}
-        </ArtworkBaseModalButton>
-        <ArtworkBaseModalButton
-            variant="danger"
+            :label="$t('Approve')"
+            icon="IconCheckCircle"
+        />
+        <BaseUIButton
+            is-delete-button
             @click="showDeclineShiftCommitRequestModal = true"
             :disabled="request.status !== 'pending'"
-        >
-            Ablehnen
-        </ArtworkBaseModalButton>
+            :label="$t('Decline')"
+            icon="IconX"
+        />
     </div>
 
     <DeclineShiftCommitRequest
@@ -62,6 +62,7 @@ import {router} from "@inertiajs/vue3";
 import DeclineShiftCommitRequest
     from "@/Pages/Shifts/ShiftCommitWorkflowRequests/Components/DeclineShiftCommitRequest.vue";
 import {ref} from "vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     request: {

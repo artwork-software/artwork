@@ -22,12 +22,8 @@
             </div>
 
             <div class="flex items-center justify-between mt-5">
-                <ArtworkBaseModalButton size="md" variant="primary" type="submit">
-                    {{ artist ? $t('Update') : $t('Create') }}
-                </ArtworkBaseModalButton>
-                <ArtworkBaseModalButton size="md" variant="danger" type="button" @click="$emit('close')">
-                    {{ $t('Cancel') }}
-                </ArtworkBaseModalButton>
+                <BaseUIButton :label="artist ? $t('Update') : $t('Create')" is-add-button type="submit"/>
+                <BaseUIButton :label="$t('Cancel')" is-cancel-button @click="$emit('close')"/>
 
             </div>
         </form>
@@ -39,6 +35,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 interface artist {
     id: number;

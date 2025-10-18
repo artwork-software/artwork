@@ -352,9 +352,7 @@
           </div>
         </div>
         <div class="flex items-center gap-4">
-          <ArtworkBaseModalButton variant="primary" @click="applyFilter">
-            {{ $t('Apply') }}
-          </ArtworkBaseModalButton>
+          <BaseUIButton :label="$t('Apply')" @click="applyFilter" is-add-button />
         </div>
       </div>
     </div>
@@ -372,6 +370,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
 import {IconChevronDown} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const emits = defineEmits(['close'])
 const page = usePage()

@@ -1,12 +1,5 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div>
-            <ModalHeader
-                :title="$t('Add projects to group')"
-                :description="$t('Select a project to add to this group.')"
-                />
-        </div>
-
+    <ArtworkBaseModal @close="$emit('close')" :title="$t('Add projects to group')" :description="$t('Select a project to add to this group.')">
         <div>
 
             <div>
@@ -31,15 +24,24 @@
                 </div>
             </div>
 
+            <div class="my-4">
+                <LastedProjects
+                    :limit="10"
+                    @select="handleOpenProject"
+                    without-group
+                />
+            </div>
+
+
             <div class="mb-4">
                 <AlertComponent type="error" :text="$t('Please note: If you remove and save a project here, the project will be removed from the group')" />
             </div>
 
             <div class="flex items-center justify-center">
-                <FormButton :text="$t('Add projects to group')" @click="addProjectsToGroup" />
+                <BaseUIButton :label="$t('Add projects to group')" is-add-button @click="addProjectsToGroup" />
             </div>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -53,6 +55,9 @@ import {XIcon} from "@heroicons/vue/outline";
 import Button from "@/Jetstream/Button.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     project: {
@@ -94,6 +99,10 @@ const addProjectsToGroup = () => {
             emits('close');
         }
     });
+}
+
+const handleOpenProject = (project) => {
+    addProjectToGroup(project);
 }
 </script>
 

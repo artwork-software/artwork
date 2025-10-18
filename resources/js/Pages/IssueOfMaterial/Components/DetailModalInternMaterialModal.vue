@@ -144,9 +144,7 @@
 
             <!-- Footer Buttons -->
             <div class="flex justify-end">
-                <ArtworkBaseModalButton type="button" variant="danger" @click="$emit('close')">
-                    {{ $t('Close') }}
-                </ArtworkBaseModalButton>
+                <BaseUIButton is-cancel-button @click="$emit('close')" :label="$t('Close')"/>
             </div>
 
             <ArticleDetailModal
@@ -166,6 +164,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import { defineAsyncComponent, ref } from "vue";
 import { router } from '@inertiajs/vue3';
 import {IconAlertTriangle, IconSearch} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     issue: { type: Object, required: true },

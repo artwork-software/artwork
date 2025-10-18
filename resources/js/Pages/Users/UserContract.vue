@@ -19,7 +19,7 @@
                 </div>
             </div>
             <div class="flex items-center justify-end gap-2">
-                <GlassyIconButton text="Select employment contract" :icon="IconFileSearch" @click.stop="showSelectUserContractModal = true"/>
+                <BaseUIButton label="Select employment contract" is-add-button :icon="IconFileSearch" @click.stop="showSelectUserContractModal = true"/>
             </div>
         </div>
 
@@ -91,12 +91,12 @@
 
 
                 <div>
-                    <ArtworkBaseModalButton
+                    <BaseUIButton
                         type="submit"
                         class="mt-4"
-                        :disabled="userContractForm.processing">
-                        {{ $t('Save') }}
-                    </ArtworkBaseModalButton>
+                        :label="$t('Save')"
+                        is-add-button
+                        :disabled="userContractForm.processing"/>
                 </div>
             </form>
         </div>
@@ -155,6 +155,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import SelectUserContractModal from "@/Pages/Users/Components/SelectUserContractModal.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import {IconFileSearch, IconRepeat} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     userToEdit: {

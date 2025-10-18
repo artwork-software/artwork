@@ -118,7 +118,7 @@
                         </div>
 
                         <!-- Zeit/Optionen Zeile -->
-                        <div class="mt-1.5 flex flex-wrap items-center gap-1.5 text-[0.95em]">
+                        <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs/5">
                             <component
                                 :is="IconClock"
                                 v-if="!event.allDay && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
@@ -126,7 +126,7 @@
                                 stroke-width="2"
                             />
                             <div
-                                class="font-medium subpixel-antialiased"
+                                class="subpixel-antialiased"
                                 :style="{
                                       color: getTextColorBasedOnBackground(
                                         backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent)
@@ -168,7 +168,7 @@
                             </div>
 
                             <!-- Options -->
-                            <div v-if="event.option_string && usePage().props.auth.user.calendar_settings.options" class="text-[0.95em]">
+                            <div v-if="event.option_string && usePage().props.auth.user.calendar_settings.options" class=" text-xs/5">
                                 <span
                                     v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
                                     class="eventTime font-medium subpixel-antialiased"
@@ -185,7 +185,7 @@
                         <!-- Wiederkehrend -->
                         <div
                             v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
-                            class="mt-1 inline-flex items-center gap-1 rounded-full bg-black/5 px-1.5 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wide"
+                            class="mt-1 inline-flex items-center gap-1 rounded-full bg-black/5 px-1.5 py-0.5  text-xs/5 font-semibold uppercase tracking-wide"
                             :style="{ lineHeight: lineHeight, fontSize: fontSize * 0.5 }"
                             :class="[zoom_factor === 1 ? 'eventText' : '']"
                         >
@@ -274,8 +274,8 @@
             <!-- Rechte 1/3 Spalte: Properties + Aktionen -->
             <div class="pt-1 flex flex-col justify-start items-end">
                 <!-- Kontext-Menü -->
-                <div class="invisible group-hover/singleEvent:visible">
-                    <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background>
+                <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150">
+                    <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" title="Request verification" />
                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
                         <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
@@ -290,6 +290,7 @@
                             title="Add Sub-Event"
                         />
                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('showDeclineEventModal', event)" :icon="IconX" title="Decline event" />
+                        <BaseMenuItem white-menu-background v-if="(can('can edit planning calendar') || hasAdminRole) && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="In geplanten Termin umwandeln" />
                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
                     </BaseMenu>
                 </div>
@@ -471,8 +472,8 @@
                                         stroke="1.5"
                                     />
                                 </div>
-                                <div class="invisible group-hover/singleEvent:visible">
-                                    <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background>
+                                <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150">
+                                    <BaseMenu has-no-offset menuWidth="w-fit" :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" title="Request verification" />
                                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
                                         <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
@@ -480,7 +481,8 @@
 
                                         <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" :icon="IconEdit" title="edit" />
                                         <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" @click="$emit('openAddSubEventModal', event, 'create', null)" :icon="IconCirclePlus" title="Add Sub-Event" />
-                                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" :icon="IconX" title="Decline event" />
+                                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('showDeclineEventModal', event)" :icon="IconX" title="Decline event" />
+                                        <BaseMenuItem white-menu-background v-if="can('can edit planning calendar') && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="In geplanten Termin umwandeln" />
                                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
                                     </BaseMenu>
                                 </div>
@@ -627,6 +629,13 @@
             @close="showRejectEventVerificationModal = false"
             :event="event"
         />
+
+        <!-- Convert to Planning Modal -->
+        <ConvertToPlanningModal
+            v-if="showConvertToPlanningModal"
+            @close="showConvertToPlanningModal = false"
+            @convert="convertToPlanning"
+        />
     </div>
 </template>
 
@@ -634,6 +643,7 @@
 import { computed, defineAsyncComponent, onMounted, ref } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import {
+    IconCalendarPlus,
     IconChecks,
     IconCirclePlus,
     IconCircleX,
@@ -652,7 +662,9 @@ import { Menu, MenuButton, MenuItem, MenuItems, Popover, PopoverButton, PopoverP
 import VueMathjax from "vue-mathjax-next";
 import { useI18n } from "vue-i18n";
 import { useColorHelper } from "@/Composeables/UseColorHelper.js";
+import { can } from "laravel-permission-to-vuejs";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import ConvertToPlanningModal from "@/Components/Modals/ConvertToPlanningModal.vue";
 import EventNoteComponent from "@/Layouts/Components/EventNoteComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import { Float } from "@headlessui-float/vue";
@@ -664,6 +676,7 @@ const { t } = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
 const showRejectEventVerificationModal = ref(false);
+const showConvertToPlanningModal = ref(false);
 
 const emits = defineEmits([
     "editEvent",
@@ -787,6 +800,16 @@ const cancelVerification = () => {
 
 const approveRequest = () => {
     router.post(route("event-verifications.approved-by-event", props.event.id), {}, { preserveScroll: true, preserveState: true });
+};
+
+const convertToPlanning = () => {
+    router.post(route("events.convertToPlanning", props.event.id), {}, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            showConvertToPlanningModal.value = false;
+        },
+    });
 };
 </script>
 

@@ -9,6 +9,7 @@ import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ArtworkBaseToggle from "@/Artwork/Toggles/ArtworkBaseToggle.vue";
 import {IconInfoCircle} from "@tabler/icons-vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 // Props & Emits
 const props = defineProps({
@@ -197,10 +198,11 @@ const selectedEventTypesLabel = computed(() =>
                 </button>
             </div>
 
-            <FormButton
+            <BaseUIButton
                 @click="create"
-                :text="aboForm.id ? $t('Save') : $t('Subscribe')"
+                :label="aboForm.id ? $t('Save') : $t('Subscribe')"
                 :disabled="aboForm.processing"
+                is-add-button
             />
         </div>
 

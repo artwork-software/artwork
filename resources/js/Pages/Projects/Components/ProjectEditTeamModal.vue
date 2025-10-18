@@ -176,8 +176,8 @@
                     </span>
                 </div>
                 <div class="w-full items-center text-center">
-                    <FormButton @click="editProjectTeam" :disabled="form.processing"
-                               :text="$t('Save')"
+                    <BaseUIButton @click="editProjectTeam" :disabled="form.processing"
+                               :label="$t('Save')" is-add-button
                     />
                 </div>
             </div>
@@ -195,11 +195,13 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: "ProjectEditTeamModal",
     components: {
+        BaseUIButton,
         BaseInput,
         BaseModal,
         FormButton,

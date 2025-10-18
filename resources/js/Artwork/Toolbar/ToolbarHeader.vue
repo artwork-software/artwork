@@ -30,7 +30,7 @@
                         type="button"
                         aria-label="Search"
                     >
-                        <ToolTipComponent :icon="IconSearch" icon-size="h-6 w-6" :tooltip-text="searchTooltip" direction="bottom" classes-button="ui-button"/>
+                        <ToolTipComponent :icon="IconSearch" icon-size="size-5" :tooltip-text="searchTooltip" direction="bottom" classes-button="ui-button"/>
                     </button>
 
                     <div v-else class="w-72 sm:w-96 flex items-center justify-end gap-2">
@@ -48,7 +48,7 @@
                             @click="closeSearchbar"
                             aria-label="Close search"
                         >
-                            <IconX class="h-6 w-6 text-zinc-500" />
+                            <IconX class="size-5 text-zinc-500" />
                         </button>
                     </div>
                 </div>

@@ -157,9 +157,7 @@
 
         <!-- Footer -->
         <div class="mt-4 flex items-center justify-end">
-            <ArtworkBaseModalButton @click="$emit('close')">
-                {{ $t('Close') }}
-            </ArtworkBaseModalButton>
+            <BaseUIButton is-cancel-button :label="$t('Close')" @click="$emit('close')"/>
         </div>
     </ArtworkBaseModal>
 </template>
@@ -170,6 +168,7 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue'
 import ToolTipWithTextComponent from '@/Components/ToolTips/ToolTipWithTextComponent.vue'
 import {useTranslation} from "@/Composeables/Translation.js";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const emit = defineEmits(['close', 'add-material-set'])
 

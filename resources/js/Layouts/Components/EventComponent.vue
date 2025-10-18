@@ -312,6 +312,12 @@
                                 class="ui-input"
                                 :placeholder="$t('e.g. Kitchen Miller – Renovation')"
                             />
+
+                            <LastedProjects
+                                v-if="!creatingProject && !selectedProject?.id"
+                                :limit="10"
+                                @select="chooseProjectFromPicker"
+                            />
                         </div>
 
                         <!-- Hinweise/Fehler -->
@@ -554,6 +560,7 @@ import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useI18n} from "vue-i18n";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 const { t } = useI18n(), $t = t;
 const props = defineProps({
     showHints: { type: Boolean, default: false },

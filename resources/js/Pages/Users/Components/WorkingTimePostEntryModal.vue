@@ -58,9 +58,7 @@
             </div>
 
             <div class="mt-5 flex justify-center">
-                <ArtworkBaseModalButton type="submit" variant="primary">
-                    {{ $t('Save') }}
-                </ArtworkBaseModalButton>
+                <BaseUIButton :label="$t('Save')" is-add-button type="submit"/>
             </div>
         </form>
 
@@ -78,6 +76,7 @@ import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {IconChevronDown} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     user: {

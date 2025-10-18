@@ -1,14 +1,6 @@
 <template>
 
-    <BaseModal @closed="closeModal(false)">
-        <div class="relative">
-            <div class="font-black font-lexend text-primary text-3xl my-2 mb-6">
-                {{ title }}
-            </div>
-
-
-            <BaseAlertComponent :message="description" type="error" />
-        </div>
+    <ArtworkBaseModal @close="closeModal(false)" :title="title" :description="description">
         <div>
             <div class="flex justify-between mt-5 items-center pr-4" v-if="!is_budget && !isSeriesDelete">
                 <FormButton class="bg-red-500 hover:bg-red-600"
@@ -38,7 +30,7 @@
 
             </div>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -49,11 +41,13 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     name: "ConfirmDeleteModal",
     mixins: [Permissions, IconLib],
     components: {
+        ArtworkBaseModal,
         BaseAlertComponent,
         BaseModal,
         FormButton,

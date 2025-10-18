@@ -149,12 +149,50 @@
 
                         <!-- Travel & costs -->
                         <section class="rounded-xl border border-zinc-200 bg-white shadow-sm">
-                            <header class="px-4 pt-4">
-                                <h3 class="text-sm font-semibold text-zinc-900 pl-3 border-l-4 border-artwork-buttons-hover">
-                                    {{ $t('Travel & costs') }}
-                                </h3>
-                            </header>
-
+                            <div class="flex items-center justify-between px-4 pt-4">
+                                <header class="">
+                                    <h3 class="text-sm font-semibold text-zinc-900 pl-3 border-l-4 border-artwork-buttons-hover">
+                                        {{ $t('Travel & costs') }}
+                                    </h3>
+                                </header>
+                                <div>
+                                    <VueDatePicker
+                                        v-model="dateValuePicker"
+                                        model-auto
+                                        range
+                                        multi-calendars
+                                        :preset-dates="customShortcuts"
+                                        :enable-time-picker="false"
+                                        :teleport="true"
+                                        auto-position="bottom"
+                                        :format="format"
+                                        :preview-format="'dd.MM.yyyy'"
+                                        :cancelText="$t('Cancel')" :selectText="$t('Apply')"
+                                        :locale="usePage().props.auth.user.language"
+                                    >
+                                        <template #trigger>
+                                            <ToolTipComponent
+                                                direction="right"
+                                                :tooltip-text="$t('Period picker')"
+                                                :icon="IconCalendar"
+                                                icon-size="h-5 w-5"
+                                                classesButton="ui-button"
+                                            />
+                                        </template>
+                                        <template #preset-date-range-button="{ label, value }">
+                                      <span
+                                          role="button"
+                                          :tabindex="0"
+                                          @click="() => handleShortcut(value)"
+                                          @keyup.enter.prevent="() => handleShortcut(value)"
+                                          @keyup.space.prevent="() => handleShortcut(value)"
+                                      >
+                                        {{ label }}
+                                      </span>
+                                        </template>
+                                    </VueDatePicker>
+                                </div>
+                            </div>
                             <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <!-- Arrival -->
                                 <div class="flex items-end gap-4">
@@ -306,15 +344,13 @@
                             </p>
 
                             <div class="my-6 flex w-full items-center justify-center">
-                                <ArtworkBaseModalButton
+                                <BaseUIButton
                                     type="submit"
                                     :loading="artistResidency.processing"
-                                    class="w-full"
                                     :disabled="artistResidency.processing"
-                                    variant="primary"
-                                >
-                                    {{ artistResidency.id ? $t('Save') : $t('Create') }}
-                                </ArtworkBaseModalButton>
+                                    :label="artistResidency.id ? $t('Save') : $t('Create')"
+                                    is-add-button
+                                />
                             </div>
 
                         </div>
@@ -345,19 +381,19 @@
 <script setup>
 
 import {useForm, usePage} from "@inertiajs/vue3";
-import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import {computed, ref, watch} from "vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import CountUp from "@/Artwork/Visual/CountUp.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
-import {IconCheck, IconInfoCircle} from "@tabler/icons-vue";
-
+import {IconCalendar, IconCheck, IconInfoCircle} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import VueDatePicker from "@vuepic/vue-datepicker";
+import {useTranslation} from "@/Composeables/Translation.js";
+const $t = useTranslation()
 
 const props = defineProps({
     project: {
@@ -514,7 +550,177 @@ watch(
     { deep: true }
 )
 
+function format(date) {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
+// Refs & State
+const dateValue = ref(props.dateValueArray ? [...props.dateValueArray] : []);
+const dateValuePicker = ref(props.dateValueArray ? [...props.dateValueArray] : []);
+
+
+// Formatter
+const formatter = ref({
+    date: 'YYYY-MM-DD',
+    month: 'MMM'
+});
+
+// Shortcuts
+const customShortcuts = [
+    {
+        label: $t('Today'),
+        value: () => {
+            const today = new Date();
+            today.setHours(12, 0, 0, 0);
+            return [new Date(today), new Date(today)];
+        }
+    },
+    {
+        label: $t('Current week'),
+        value: () => {
+            const today = new Date();
+            const first = new Date(today);
+            const last = new Date(today);
+            const day = today.getDay();
+            const offset = day === 0 ? -6 : 1;
+            first.setDate(today.getDate() - day + offset);
+            last.setDate(first.getDate() + 6);
+            first.setHours(12, 0, 0, 0);
+            last.setHours(12, 0, 0, 0);
+            return [first, last];
+        }
+    },
+    {
+        label: $t('Current month'),
+        value: () => {
+            const today = new Date();
+            const first = new Date(today.getFullYear(), today.getMonth(), 1, 12, 0, 0, 0);
+            const last = new Date(today.getFullYear(), today.getMonth() + 1, 0, 12, 0, 0, 0);
+            return [first, last];
+        }
+    },
+    {
+        label: $t('Current year'),
+        value: () => {
+            const today = new Date();
+            const first = new Date(today.getFullYear(), 0, 1, 12, 0, 0, 0);
+            const last = new Date(today.getFullYear(), 11, 31, 12, 0, 0, 0);
+            return [first, last];
+        }
+    },
+    {
+        label: $t('Next 7 days'),
+        value: () => {
+            const start = new Date();
+            const end = new Date();
+            start.setDate(start.getDate() + 1);
+            end.setDate(end.getDate() + 7);
+            start.setHours(12, 0, 0, 0);
+            end.setHours(12, 0, 0, 0);
+            return [start, end];
+        }
+    },
+    {
+        label: $t('Next 14 days'),
+        value: () => {
+            const start = new Date();
+            const end = new Date();
+            start.setDate(start.getDate() + 1);
+            end.setDate(end.getDate() + 14);
+            start.setHours(12, 0, 0, 0);
+            end.setHours(12, 0, 0, 0);
+            return [start, end];
+        }
+    },
+    {
+        label: $t('Next 30 days'),
+        value: () => {
+            const start = new Date();
+            const end = new Date();
+            start.setDate(start.getDate() + 1);
+            end.setDate(end.getDate() + 30);
+            start.setHours(12, 0, 0, 0);
+            end.setHours(12, 0, 0, 0);
+            return [start, end];
+        }
+    },
+    {
+        label: $t('Next 90 days'),
+        value: () => {
+            const start = new Date();
+            const end = new Date();
+            start.setDate(start.getDate() + 1);
+            end.setDate(end.getDate() + 90);
+            start.setHours(12, 0, 0, 0);
+            end.setHours(12, 0, 0, 0);
+            return [start, end];
+        }
+    },
+    {
+        label: $t('Next 12 months'),
+        value: () => {
+            const start = new Date();
+            const end = new Date();
+            start.setDate(start.getDate() + 1);
+            end.setFullYear(end.getFullYear() + 1);
+            end.setDate(end.getDate() - 1);
+            start.setHours(12, 0, 0, 0);
+            end.setHours(12, 0, 0, 0);
+            return [start, end];
+        }
+    },
+];
+
+// Computed
+const formattedStartDate = computed({
+    get() {
+        return dateValue.value.length > 0 && dateValue.value[0] instanceof Date
+            ? dateValue.value[0].toISOString().slice(0, 10)
+            : '';
+    },
+    set(value) {
+        const date = value ? new Date(value + 'T12:00:00') : null;
+        if (dateValue.value.length > 0) {
+            dateValue.value[0] = date;
+        } else {
+            dateValue.value[0] = date;
+            dateValue.value.push(null);
+        }
+    }
+});
+const formattedEndDate = computed({
+    get() {
+        return dateValue.value.length > 1 && dateValue.value[1] instanceof Date
+            ? dateValue.value[1].toISOString().slice(0, 10)
+            : '';
+    },
+    set(value) {
+        const date = value ? new Date(value + 'T12:00:00') : null;
+        if (dateValue.value.length > 1) {
+            dateValue.value[1] = date;
+        } else {
+            if (dateValue.value.length === 0) dateValue.value.push(null);
+            dateValue.value[1] = date;
+        }
+    }
+});
+
+
+const handleShortcut = (value) => {
+    dateValue.value = value();
+};
+
+// watch dateValuePicker and update it to start and end date of artistResidency
+watch(dateValuePicker, (newValue) => {
+    if (newValue.length === 2) {
+        artistResidency.arrival_date = newValue[0] ? newValue[0].toISOString().slice(0, 10) : '';
+        artistResidency.departure_date = newValue[1] ? newValue[1].toISOString().slice(0, 10) : '';
+    }
+}, { immediate: true });
 </script>
 
 <style scoped>

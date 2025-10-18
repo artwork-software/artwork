@@ -140,7 +140,7 @@
             </div>
         </div>
         <div class="flex justify-center">
-            <FormButton :text="$t('Save')" type="submit" :disabled="shiftForm.processing" />
+            <BaseUIButton :label="$t('Save')" is-add-button type="submit" :disabled="shiftForm.processing" />
         </div>
     </form>
 
@@ -173,11 +173,13 @@ import SelectComponent from "@/Components/Inputs/SelectComponent.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default defineComponent({
     name: "AddEditShiftPresetModal",
     mixins: [Permissions],
     components: {
+        BaseUIButton,
         TextareaComponent,
         ModalHeader,
         BaseModal,

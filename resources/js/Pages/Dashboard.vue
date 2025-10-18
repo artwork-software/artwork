@@ -130,25 +130,34 @@
                             <div v-for="event in eventsSorted" :key="event.id" class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
                                 <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
                                     <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event?.event_type.hex_code}"></div>
-                                    <div class="w-full">
-                                        <p class="text-sm font-semibold text-gray-900" :style="{color: event?.event_type.hex_code}">
-                                            {{ event?.event_type.abbreviation }}: {{ event?.eventName ?? event?.project?.name }}
-                                        </p>
-                                        <div class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
-                                            <p v-if="!event.allDay" class="flex items-center gap-x-1">
-                                                <span class="font-bold">{{ $t('Start') }}:</span>
-                                                <span class="">{{ event?.start_time }}</span>
-                                                <span class="font-bold">{{ $t('End') }}:</span>
-                                                <span class="">{{ event?.end_time }}</span>
+                                    <div class="flex items-start justify-between w-full">
+                                        <div class="">
+                                            <p class="text-sm font-semibold text-gray-900" :style="{color: event?.event_type.hex_code}">
+                                                {{ event?.event_type.abbreviation }}: {{ event?.eventName ?? event?.project?.name }}
                                             </p>
-                                            <p v-else>
-                                                <span class="font-bold">{{ $t('All day') }}</span>
+                                            <div class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                                                <p v-if="!event.allDay" class="flex items-center gap-x-1">
+                                                    <span class="font-bold">{{ $t('Start') }}:</span>
+                                                    <span class="">{{ event?.start_time }}</span>
+                                                    <span class="font-bold">{{ $t('End') }}:</span>
+                                                    <span class="">{{ event?.end_time }}</span>
+                                                </p>
+                                                <p v-else>
+                                                    <span class="font-bold">{{ $t('All day') }}</span>
+                                                </p>
+                                            </div>
+                                            <p class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                                                <span class="font-bold">{{ $t('Room') }}:</span>
+                                                <span class="">{{ event?.room?.name }}</span>
                                             </p>
+
                                         </div>
-                                        <p class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
-                                            <span class="font-bold">{{ $t('Room') }}:</span>
-                                            <span class="">{{ event?.room?.name }}</span>
-                                        </p>
+                                        <div class="break-keep">
+                                            <button @click="openCalendarWithEventId(event)" class="inline-flex items-center gap-1 text-xs text-indigo-700 hover:text-indigo-800 break-keep">
+                                                {{ $t('Open in calendar') }}
+                                                <ChevronRightIcon class="h-3 w-3" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -330,6 +339,7 @@ import { is, can } from 'laravel-permission-to-vuejs'
 // Icons
 import { ChevronRightIcon } from '@heroicons/vue/solid'
 import { IconBell, IconCalendarMonth, IconCalendarUser, IconListCheck } from '@tabler/icons-vue'
+import calendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 
 defineOptions({ mixins: [Permissions] })
 
@@ -413,6 +423,12 @@ onBeforeUnmount(() => {
         Echo?.leave?.('events')
     } catch {}
 })
+
+const openCalendarWithEventId = (eventForCalendar) => {
+
+    router.get(route('dashboard.redirect-to-calendar', eventForCalendar.id))
+
+};
 </script>
 
 <style scoped>

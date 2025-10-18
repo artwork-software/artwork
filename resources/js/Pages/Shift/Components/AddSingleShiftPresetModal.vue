@@ -10,6 +10,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import SelectComponent from '@/Components/Inputs/SelectComponent.vue'
 import AlertComponent from '@/Components/Alerts/AlertComponent.vue'
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 // i18n
 const { t: $t } = useI18n()
@@ -264,12 +265,8 @@ function closeModal() {
 
             <!-- Aktionen -->
             <div class="flex justify-end gap-2">
-                <ArtworkBaseModalButton type="button" @click="closeModal" class="bg-gray-100 text-gray-800">
-                    {{ $t('Cancel') }}
-                </ArtworkBaseModalButton>
-                <ArtworkBaseModalButton type="submit" class="bg-blue-600 text-white">
-                    {{ props.edit ? $t('Save') : $t('Create') }}
-                </ArtworkBaseModalButton>
+                <BaseUIButton type="button" :label="$t('Cancel')" @click="closeModal" is-cancel-button/>
+                <BaseUIButton type="submit" :label="props.edit ? $t('Save') : $t('Create')"  is-add-button/>
             </div>
         </form>
 

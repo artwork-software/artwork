@@ -510,9 +510,7 @@
         </div>
 
         <div class="flex justify-end px-5 pb-5">
-            <ArtworkBaseModalButton @click="saveUserCalendarSettings">
-                {{ $t('Save') }}
-            </ArtworkBaseModalButton>
+            <BaseUIButton :label="$t('Save')" is-add-button @click="saveUserCalendarSettings"/>
         </div>
     </ArtworkBaseModal>
 </template>
@@ -523,6 +521,7 @@ import { router, useForm, usePage } from "@inertiajs/vue3";
 // Button/Input nicht genutzt – bewusst entfernt, um Bundle clean zu halten
 import { can, is } from "laravel-permission-to-vuejs";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     isPlanning: { type: Boolean, default: false },

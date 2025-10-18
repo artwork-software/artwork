@@ -324,6 +324,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
         ->name('user.update.workProfile');
     Route::patch('/users/{user}/assignCraft', [UserController::class, 'assignCraft'])->name('user.assign.craft');
+    Route::patch('/users/{user}/assignCraft/bulk', [UserController::class, 'assignCraftsBulk'])->name('user.assign.crafts.bulk');
     Route::delete('/users/{user}/removeCraft/{craft}', [UserController::class, 'removeCraft'])
         ->name('user.remove.craft');
     //user.sidebar.update
@@ -342,7 +343,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/departments/{department}', [DepartmentController::class, 'update'])->name('departments.edit');
     Route::patch('/departments/{department}/remove/members', [DepartmentController::class, 'removeAllMembers'])
         ->name('departments.remove.members');
-    Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
+    Route::delete('/departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
 
     //Projects
     Route::post('/projects/{project}/pin', [ProjectController::class, 'pin'])->name('project.pin');
@@ -576,6 +577,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Event Views
     Route::get('/calendar/view', [EventController::class, 'viewEventIndex'])->name('events');
+    Route::get('/dashboard/redirect/calendar/{event}', [EventController::class, 'redirectToCalendar'])->name('dashboard.redirect-to-calendar');
     Route::get('/response/all/events', [EventController::class, 'allEventsAPI'])->name('events.all');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
         ->name('events.for-rooms-by-days-and-project');
@@ -587,6 +589,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::patch('/events/{event}/description', [EventController::class, 'updateDescription'])
         ->name('event.update.description');
+    Route::post('/events/{event}/convert-to-planning', [EventController::class, 'convertToPlanning'])
+        ->name('events.convertToPlanning');
     Route::patch('/events/{event}/single/bulk', [EventController::class, 'updateSingleBulkEvent'])
         ->name('event.update.single.bulk');
     Route::post('/events/{project}/single/bulk/create', [EventController::class, 'createSingleBulkEvent'])
@@ -1380,6 +1384,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/freelancer/{freelancer}/assignCraft',
         [FreelancerController::class, 'assignCraft']
     )->name('freelancer.assign.craft');
+    Route::patch(
+        '/freelancer/{freelancer}/assignCraft/bulk',
+        [FreelancerController::class, 'assignCraftsBulk']
+    )->name('freelancer.assign.crafts.bulk');
     Route::delete(
         '/freelancer/{freelancer}/removeCraft/{craft}',
         [FreelancerController::class, 'removeCraft']
@@ -1449,6 +1457,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/service-provider/{serviceProvider}/assignCraft',
         [ServiceProviderController::class, 'assignCraft']
     )->name('service_provider.assign.craft');
+    Route::patch(
+        '/service-provider/{serviceProvider}/assignCraft/bulk',
+        [ServiceProviderController::class, 'assignCraftsBulk']
+    )->name('service_provider.assign.crafts.bulk');
     Route::delete(
         '/service-provider/{serviceProvider}/removeCraft/{craft}',
         [ServiceProviderController::class, 'removeCraft']

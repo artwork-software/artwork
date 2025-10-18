@@ -72,52 +72,9 @@
                 </div>
             </div>
         </div>
-        <div class="my-12" v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
-            <div class="flex mt-6 items-center mb-2 ml-14">
-                <h3 class="headline2"> {{$t('Room assignment')}} </h3>
-            </div>
-            <div>
-                <div v-if="calendarType && calendarType === 'daily'">
-                    <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                        <CalendarComponent initial-view="day"
-                                           :project="null"
-                                           :atAGlance="false"
-                                           :room="this.room"
-                                           :personal-filters="personalFilters"
-                                           :filter-options="filterOptions"
-                                           :eventsWithoutRoom="eventsWithoutRoom"
-                                           :events="this.calendar[this.formatSelectedDate(this.selectedDate)]?.events?.data ?? []"
-                                           :dateValue="dateValue"
-                                           :eventTypes=this.event_types
-                                           :rooms="rooms"
-                                           :user_filters="user_filters"
-                                           :selected-date="selectedDate"
-                                           :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
-                                           :event-statuses="eventStatuses"
-                        />
-                    </div>
-                </div>
-                <div v-else>
-                    <SingleRoomCalendarComponent :personal-filters="personalFilters"
-                                                 :filter-options="filterOptions"
-                                                 :eventsWithoutRoom="eventsWithoutRoom"
-                                                 :dateValue="dateValue"
-                                                 :eventTypes=this.event_types
-                                                 :calendarData="calendar"
-                                                 :days="days"
-                                                 :rooms="rooms"
-                                                 :user_filters="user_filters"
-                                                 :first_project_tab_id="this.first_project_tab_id"
-                                                 :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
-                                                 :event-statuses="eventStatuses"
-                    />
-                </div>
-            </div>
-        </div>
         <!-- Raum Bearbeiten-->
-        <BaseModal @closed="closeEditRoomModal" v-if="showEditRoomModal" modal-image="/Svgs/Overlays/illu_room_edit.svg">
+        <ArtworkBaseModal @close="closeEditRoomModal" v-if="showEditRoomModal" :title="$t('Edit room')" description="">
                 <div class="mx-3">
-                    <ModalHeader :title="$t('Edit room')"/>
                     <form @submit.prevent="editRoom" class="grid grid-cols-1 gap-4">
                         <div>
                             <BaseInput
@@ -184,16 +141,17 @@
                         </div>
 
                         <div class="flex justify-center pt-8">
-                            <FormButton
+                            <BaseUIButton
                                 :disabled="editRoomForm.name.length === 0 || editRoomForm.processing"
                                 type="submit"
-                                :text="$t('Save')"
+                                is-add-button
+                                :label="$t('Save')"
                             />
                         </div>
 
                     </form>
                 </div>
-        </BaseModal>
+        </ArtworkBaseModal>
         <!-- Success Modal -->
         <SuccessModal
             :title="successHeading"
@@ -202,12 +160,10 @@
             @closed="closeSuccessModal"
         />
         <!-- Approve Request Modal -->
-        <BaseModal @closed="closeApproveRequestModal" v-if="showApproveRequestModal">
+        <ArtworkBaseModal @close="closeApproveRequestModal" v-if="showApproveRequestModal"  :title="$t('Confirm room occupancy')"
+                          :description="$t('Bist du sicher, dass du die Raumbelegung zusagen möchtest?')">
                 <div class="mx-4">
-                    <ModalHeader
-                        :title="$t('Confirm room occupancy')"
-                        :description="$t('Bist du sicher, dass du die Raumbelegung zusagen möchtest?')"
-                    />
+
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
 
@@ -291,14 +247,12 @@
                         </div>
                     </div>
                 </div>
-        </BaseModal>
+        </ArtworkBaseModal>
         <!-- Decline Request Modal -->
-        <BaseModal @closed="closeDeclineRequestModal" v-if="showDeclineRequestModal" >
+        <ArtworkBaseModal @close="closeDeclineRequestModal" v-if="showDeclineRequestModal"  :title="$t('Cancel room reservation')"
+                          :description="$t('Are you sure you want to cancel the room reservation?')">
                 <div class="mx-4">
-                    <ModalHeader
-                        :title="$t('Cancel room reservation')"
-                        :description="$t('Are you sure you want to cancel the room reservation?')"
-                    />
+
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
 
@@ -371,10 +325,11 @@
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <FormButton
+                        <BaseUIButton
                             @click="declineRequest"
-                            :text="$t('Cancellations')"
-                            class="inline-flex items-center"
+                            :label="$t('Cancellations')"
+                            is-delete-button
+                            icon="IconProgressX"
                             :disabled="approveRequestForm.processing"
                         />
                         <div class="flex my-auto">
@@ -383,7 +338,7 @@
                         </div>
                     </div>
                 </div>
-        </BaseModal>
+        </ArtworkBaseModal>
     </app-layout>
 
     <BaseSidenav :show="showSidenav" @toggle="this.showSidenav =! this.showSidenav">
@@ -453,13 +408,10 @@ import JetInputError from "@/Jetstream/InputError.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Link, useForm} from "@inertiajs/vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import RoomSidenav from "@/Layouts/Components/RoomSidenav.vue";
-import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
-import SingleRoomCalendarComponent from "@/Layouts/Components/SingleRoomCalendarComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
@@ -472,18 +424,16 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
-import {provide} from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: "Show",
     props: [
         'room',
-        'rooms',
-        'event_types',
-        'projects',
         'is_room_admin',
         'available_categories',
         'roomCategoryIds',
@@ -494,21 +444,10 @@ export default {
         'available_rooms',
         'adjoiningRoomIds',
         'adjoiningRooms',
-        'calendarType',
-        'selectedDate',
-        'dateValue',
-        'calendar',
-        'days',
-        'eventsWithoutRoom',
-        'filterOptions',
-        'personalFilters',
-        'user_filters',
-        'first_project_tab_id',
-        'first_project_calendar_tab_id',
-        'eventStatuses',
-        'event_properties'
     ],
     components: {
+        ArtworkBaseModal,
+        BaseUIButton,
         BaseTextarea,
         DateInputComponent,
         TextareaComponent,
@@ -520,7 +459,6 @@ export default {
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,
-        IndividualCalendarComponent,
         RoomSidenav,
         BaseSidenav,
         NewUserToolTip,
@@ -556,20 +494,11 @@ export default {
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        CalendarComponent,
         ChevronRightIcon,
         RoomHistoryComponent,
-        SingleRoomCalendarComponent,
         BaseInput
     },
     computed: {
-        eventTypeFilters: function () {
-            let filters = [];
-            this.event_types.forEach((eventType) => {
-                filters.push({eventTypeId: eventType.id, name: eventType.name});
-            })
-            return filters;
-        },
         requestsToShow: function () {
             let requestsToShow;
             if (this.hasAdminRole() || this.is_room_admin || this.$canAny(['create, delete and update rooms'])) {
@@ -580,9 +509,6 @@ export default {
         roomDeleteDescriptionText() {
             return this.$t('Are you sure you want to put the room {0} in the trash?', [this.roomToSoftDelete.name]);
         },
-    },
-    created() {
-        provide('event_properties', this.event_properties);
     },
     mounted() {
         setTimeout(() => {
@@ -665,28 +591,6 @@ export default {
         }
     },
     methods: {
-        formatSelectedDate(selectedDate) {
-            let parts = selectedDate.split('-');
-            return parts[2] + '.' + parts[1] + '.' + parts[0];
-        },
-        getGermanWeekdayAbbreviation(englishWeekday) {
-            switch (englishWeekday) {
-                case 'Monday':
-                    return 'Mo';
-                case 'Tuesday':
-                    return 'Di';
-                case 'Wednesday':
-                    return 'Mi';
-                case 'Thursday':
-                    return 'Do';
-                case 'Friday':
-                    return 'Fr';
-                case 'Saturday':
-                    return 'Sa';
-                case 'Sunday':
-                    return 'So';
-            }
-        },
         afterSoftDeleteRoomConfirm(confirmed) {
             if (confirmed) {
                 this.softDeleteRoom()

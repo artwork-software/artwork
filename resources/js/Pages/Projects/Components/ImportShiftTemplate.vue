@@ -69,7 +69,7 @@
             </div>
         </div>
         <div class="flex justify-center">
-            <FormButton :text="$t('Import template')" @click="importTemplate" :disabled="presetForm.processing"/>
+            <BaseUIButton :label="$t('Import template')" is-add-button @click="importTemplate" :disabled="presetForm.processing"/>
         </div>
     </BaseModal>
 </template>
@@ -105,10 +105,12 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default defineComponent({
     name: "ImportShiftTemplate",
     components: {
+        BaseUIButton,
         BaseInput,
         TextInputComponent,
         BaseModal,

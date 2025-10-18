@@ -11,9 +11,7 @@
                     direction="bottom"
                     @click="openExportArtistResidenciesModal = true"
                 />
-                <ArtworkBaseModalButton @click="showAddEditArtistResidenciesModal = true" variant="primary">
-                    {{ $t('Add artist residency') }}
-                </ArtworkBaseModalButton>
+                <BaseUIButton @click="showAddEditArtistResidenciesModal = true" :label="$t('Add artist residency')" is-add-button/>
             </div>
         </div>
         <div class="max-w-lg">
@@ -91,6 +89,7 @@ import ExportArtistResidenciesModal
     from "@/Pages/Projects/Components/ArtistResidenciesComponents/ExportArtistResidenciesModal.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     loadedProjectInformation: {

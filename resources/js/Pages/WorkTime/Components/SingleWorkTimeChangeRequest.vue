@@ -70,12 +70,8 @@
             </div>
             <div v-else>
                 <div class="flex justify-end space-x-4">
-                    <ArtworkBaseModalButton v-if="request.status === 'pending'" variant="danger" @click="showDeclineWorkTimeRequestModal = true">
-                        {{ $t('Decline') }}
-                    </ArtworkBaseModalButton>
-                    <ArtworkBaseModalButton v-if="request.status === 'pending'" @click="approveRequest">
-                        {{ $t('Approve') }}
-                    </ArtworkBaseModalButton>
+                    <BaseUIButton v-if="request.status === 'pending'" variant="danger" @click="showDeclineWorkTimeRequestModal = true" icon="IconX" :label="$t('Decline')" is-delete-button />
+                    <BaseUIButton icon="IconCheck" is-add-button :label="$t('Approve')" v-if="request.status === 'pending'" @click="approveRequest" />
 
                 </div>
             </div>
@@ -96,6 +92,7 @@ import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue
 import {router} from "@inertiajs/vue3";
 import DeclineWorkTimeRequest from "@/Pages/WorkTime/Components/DeclineWorkTimeRequest.vue";
 import {ref} from "vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     request: {

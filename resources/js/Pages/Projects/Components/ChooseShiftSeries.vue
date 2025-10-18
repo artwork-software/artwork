@@ -59,7 +59,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center justify-center">
-                                    <FormButton :text="$t('Save')" @click="returnBuffer" class="mt-4"/>
+                                    <BaseUIButton :label="$t('Save')" is-add-button @click="returnBuffer" class="mt-4"/>
                                 </div>
                             </div>
                         </DialogPanel>
@@ -85,11 +85,13 @@ import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: "ChooseShiftSeries",
     mixins: [Permissions, IconLib],
     components: {
+        BaseUIButton,
         FormButton,
         DialogPanel,
         Dialog,

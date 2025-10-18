@@ -24,7 +24,7 @@
                     </button>
 
                     <!-- Filter -->
-                    <BaseFilter :only-icon="true" :left="false" white-background>
+                    <BaseFilter :only-icon="true" :left="false" white-background dots-size="size-5">
                         <div class="w-full px-2 py-4">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Filters') }}</div>
@@ -95,7 +95,7 @@
                     </BaseFilter>
 
                     <!-- Sort -->
-                    <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-72" classes="ui-button">
+                    <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" classes="ui-button">
                         <div class="flex items-center justify-between py-1 px-1">
                             <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Sort by') }}</div>
                             <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetSort()">
@@ -118,13 +118,10 @@
 
                     <!-- Export -->
                     <button type="button" @click="openExportModal">
-                        <ToolTipComponent :icon="IconFileExport" icon-size="h-6 w-6" :tooltip-text="$t('Export project list')" direction="bottom" classes-button="ui-button" />
+                        <ToolTipComponent :icon="IconFileExport" icon-size="size-5" :tooltip-text="$t('Export project list')" direction="bottom" classes-button="ui-button" />
                     </button>
 
-                    <button class="ui-button-add" @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')">
-                        <component :is="IconCirclePlus" class="size-6" stroke-width="1"/>
-                        {{ $t('New project') }}
-                    </button>
+                    <BaseUIButton label="New project" use-translation is-add-button @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')" />
                 </template>
             </ToolbarHeader>
 
@@ -327,6 +324,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const { can, role, canSeeComponent } = usePermission(usePage().props);
 const { getSortEnumTranslation } = useSortEnumTranslation();

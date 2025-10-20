@@ -90,7 +90,6 @@ import { MenuItem } from "@headlessui/vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import InventoryGroupFolder from "@/Pages/Inventory/InventoryManagement/InventoryGroupFolder.vue";
-import {presets} from "@soketi/soketi/babel.config.js";
 import {usePermission} from "@/Composeables/Permission.js";
 import {usePage} from "@inertiajs/vue3";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props);

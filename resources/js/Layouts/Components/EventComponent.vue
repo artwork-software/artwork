@@ -41,9 +41,7 @@
                             option-label="name"
                             option-key="id"
                             label="Event type"
-                            :use-translations="false"
-                            :button-class="uiLbBtn"
-                            :options-class="uiLbOpts"
+                            :use-translations="true"
                             :show-color-indicator="true"
                             color-property="hex_code"
                         />
@@ -56,8 +54,6 @@
                             option-key="id"
                             label="Event Status"
                             :use-translations="false"
-                            :button-class="uiLbBtn"
-                            :options-class="uiLbOpts"
                             :show-color-indicator="true"
                             color-property="color"
                         >

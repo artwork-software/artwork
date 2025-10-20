@@ -1,13 +1,28 @@
 export function usePermission(pageProps) {
 
-    const permissions = pageProps.permissionsArray;
-    const rolesArray = pageProps.rolesArray;
+    const permissions = pageProps?.permissionsArray;
+    const rolesArray = pageProps?.rolesArray;
+
+    // Resolve current user from common locations in page props
+    const currentUser = (
+        pageProps?.user ??
+        pageProps?.auth?.user ??
+        pageProps?.authUser ??
+        null
+    );
+    const currentUserId = currentUser?.id ?? null;
+
+    // Normalize ID comparison to handle number vs string cases
+    function idsEqual(a, b) {
+        if (a === undefined || a === null || b === undefined || b === null) return false;
+        return String(a) === String(b);
+    }
 
     function isCurrentUserInComponentUsers(users) {
         if (!users || !Array.isArray(users)) {
             return false;
         }
-        return users.findIndex((user) => user && pageProps.user && pageProps.user.id === user.id) >= 0;
+        return users.findIndex((user) => user && currentUserId != null && idsEqual(currentUserId, user.id)) >= 0;
     }
 
     function isCurrentUserInComponentDepartments(departments) {
@@ -20,7 +35,7 @@ export function usePermission(pageProps) {
         departments.forEach((department) => {
             if (department && department.users && Array.isArray(department.users)) {
                 department.users.forEach((user) => {
-                    if (user && pageProps.user && user.id === pageProps.user.id) {
+                    if (user && currentUserId != null && idsEqual(user.id, currentUserId)) {
                         foundUserInDepartment = true;
                     }
                 });
@@ -77,7 +92,7 @@ export function usePermission(pageProps) {
 
             if (component.users && Array.isArray(component.users)) {
                 foundUserIndex = component.users.findIndex(
-                    (user) => user && pageProps.user && pageProps.user.id === user.id
+                    (user) => user && currentUserId != null && idsEqual(currentUserId, user.id)
                 );
 
                 if (foundUserIndex > -1 && component.users[foundUserIndex] && component.users[foundUserIndex].pivot) {
@@ -90,7 +105,7 @@ export function usePermission(pageProps) {
                 component.departments.forEach((department) => {
                     if (department && department.users && Array.isArray(department.users) && department.pivot) {
                         department.users.forEach((user) => {
-                            if (!foundUserInDepartmentAndCanWrite && user && pageProps.user && user.id === pageProps.user.id) {
+                            if (!foundUserInDepartmentAndCanWrite && user && currentUserId != null && idsEqual(user.id, currentUserId)) {
                                 foundUserInDepartmentAndCanWrite = department.pivot.can_write;
                             }
                         });
@@ -105,11 +120,11 @@ export function usePermission(pageProps) {
     }
 
     function can(permissionName) {
-        return permissions.includes(permissionName);
+        return Array.isArray(permissions) && permissions.includes(permissionName);
     }
 
     function role(roleName) {
-        return rolesArray.includes(roleName);
+        return Array.isArray(rolesArray) && rolesArray.includes(roleName);
     }
 
     function canAny(permissionNames) {
@@ -122,8 +137,8 @@ export function usePermission(pageProps) {
     }
 
     function roleAny(roleNames) {
-        for (const role of roleNames) {
-            if (role(role)) {
+        for (const roleName of roleNames) {
+            if (role(roleName)) {
                 return true;
             }
         }

@@ -2089,18 +2089,31 @@ class ProjectController extends Controller
 
         // Tab + benötigte Relationen laden (inkl. Sortierung)
         $projectTab->load([
+            // Hauptkomponenten inkl. ProjectValue
             'components.component.projectValue' => function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
             },
             'components' => function ($query): void {
                 $query->orderBy('order');
             },
+            // WICHTIG: Berechtigungsdaten der Hauptkomponenten
+            'components.component.users',
+            'components.component.departments.users',
+
+            // Sidebar-Komponenten inkl. ProjectValue
             'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
             },
+            // WICHTIG: Berechtigungsdaten der Sidebar-Komponenten
+            'sidebarTabs.componentsInSidebar.component.users',
+            'sidebarTabs.componentsInSidebar.component.departments.users',
+
+            // Disclosure-Komponenten (falls angezeigt)
             'components.disclosureComponents.component.projectValue' => function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
             },
+            'components.disclosureComponents.component.users',
+            'components.disclosureComponents.component.departments.users',
         ]);
 
         // Alle Komponenten des Tabs inkl. Sidebar (unique, Reihenfolge beibehalten)

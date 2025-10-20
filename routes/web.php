@@ -1594,8 +1594,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'settings'], function (): void {
         Route::group(['prefix' => 'tab'], function (): void {
             Route::get('index', [ProjectTabController::class, 'index'])
-                ->name('tab.index')
-                ->middleware('role:artwork admin');
+                ->name('tab.index');
             Route::post('/{projectTab}/update/component/order', [ProjectTabController::class,
                 'updateComponentOrder'])
                 ->name('tab.update.component.order');
@@ -1652,8 +1651,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'component'], function (): void {
             // index
             Route::get('index', [ComponentController::class, 'index'])
-                ->name('component.index')
-                ->middleware('role:artwork admin');
+                ->name('component.index');
             // project.tab.component.update
             Route::patch('/{project}/{component}/update', [ProjectComponentValueController::class,
                 'update'])
@@ -1774,8 +1772,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::resource('project-roles', ProjectRoleController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->middleware('role:artwork admin');
+        ->only(['index', 'store', 'update', 'destroy']);
 
     // route for shift time preset
     Route::group(['prefix' => 'shift-time-preset'], function (): void {

@@ -165,7 +165,7 @@ function updateDefaultTab() {
                             <template #item="{ element }">
                                 <div v-show="!element.temporary" @mouseover="showMenu = element.id"
                                      @mouseout="showMenu = null" :key="element.id" class="rounded-lg">
-                                    <SingleComponent :element="element" :tab="tab"/>
+                                    <SingleComponent :element="element" :tab="tab" :all-tabs="allTabs"/>
                                     <DropNewComponent
                                         :is-sidebar="false"
                                         :all-tabs="allTabs"

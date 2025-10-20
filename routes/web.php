@@ -1644,6 +1644,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'addComponentWithScopes'
             ])->name('tab.add.component.with.scopes');
 
+            // tab.update.component.scope
+            Route::patch('/component-in-tab/{componentInTab}/update-scope', [
+                ProjectTabController::class,
+                'updateComponentScope'
+            ])->name('tab.update.component.scope');
+
             // patch tab.update.default
             Route::patch('/{projectTab}/update/default', [ProjectTabController::class, 'updateDefault'])
                 ->name('tab.update.default');

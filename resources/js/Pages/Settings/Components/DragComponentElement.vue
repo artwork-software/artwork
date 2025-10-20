@@ -46,6 +46,16 @@ function onDragEnd() {
     dispatchEventEnd();
 }
 
+// Sofort sichtbarer Drag-State beim Drücken (ohne auf DragStart warten)
+function onMouseDown() {
+    isDragging.value = true;
+    dispatchEventStart();
+}
+function onMouseUp() {
+    isDragging.value = false;
+    dispatchEventEnd();
+}
+
 // Meta-Infos sicher prüfen
 const hasHeight = computed(() => props.component?.data?.height !== undefined);
 const hasTitleSize = computed(
@@ -62,6 +72,8 @@ const displayName = computed(() => t(props.component.name));
         <div
             class="group relative w-full select-none"
             draggable="true"
+            @mousedown="onMouseDown"
+            @mouseup="onMouseUp"
             @dragstart="onDragStart"
             @dragend="onDragEnd"
             :aria-grabbed="isDragging"

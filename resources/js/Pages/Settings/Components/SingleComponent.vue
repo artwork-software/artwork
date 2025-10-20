@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import { Disclosure, DisclosureButton, DisclosurePanel, MenuItem } from "@headlessui/vue";
 
@@ -7,15 +7,32 @@ import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DropComponentInDisclosureComponentElement from "@/Pages/Settings/Components/DropComponentInDisclosureComponentElement.vue";
+import EditComponentScopeModal from "@/Pages/Settings/Components/EditComponentScopeModal.vue";
 
 import { IconDragDrop, IconTrash, IconDotsVertical, IconChevronDown, IconRadiusBottomLeft } from "@tabler/icons-vue";
 
 const props = defineProps({
     element: { type: Object, required: true },
     tab: { type: Object, required: true },
+    allTabs: { type: Array, required: false, default: () => [] },
 });
 
 const dragging = ref(false);
+
+const showEditScope = ref(false);
+const isDocuments = computed(() => props.element?.component?.type === 'ProjectDocumentsComponent');
+const scopeTabNames = computed(() => {
+    const scopeIds = Array.isArray(props.element?.scope) ? props.element.scope : [];
+    const tabsArr = props.allTabs || [];
+    if ((!scopeIds || scopeIds.length === 0) && props.tab) {
+        return [props.tab.name];
+    }
+    if (!tabsArr.length) return [];
+    const map = new Map(tabsArr.map((t) => [t.id, t.name]));
+    return scopeIds.map((id) => map.get(id)).filter(Boolean);
+});
+function openEditScopeModal() { showEditScope.value = true }
+function closeEditScopeModal() { showEditScope.value = false }
 
 // Aktionen
 function removeComponentFromTab() {
@@ -102,6 +119,20 @@ function requestDeleteComponentInDisclosure(componentId) {
                         <!-- Typ -->
                         <div class="text-[11px] text-zinc-500 mt-0.5">
                             {{ $t(element.component.type) }}
+                        </div>
+
+                        <!-- Documents Scope Info + Edit -->
+                        <div v-if="isDocuments" class="mt-2 text-[12px] text-zinc-600 flex items-center gap-2">
+                            <span>
+                                zeigt Dokumente von Tabs: {{ scopeTabNames.join(', ') }}
+                            </span>
+                            <button
+                                type="button"
+                                class="rounded-md px-2 py-0.5 text-xs ring-1 ring-inset ring-zinc-300 hover:bg-zinc-50"
+                                @click="openEditScopeModal"
+                            >
+                                Edit
+                            </button>
                         </div>
 
                         <!-- Note -->
@@ -204,6 +235,16 @@ function requestDeleteComponentInDisclosure(componentId) {
             </div>
         </div>
     </div>
+
+    <!-- Edit Scope Modal -->
+    <EditComponentScopeModal
+        v-if="showEditScope && isDocuments"
+        :all-tabs="allTabs"
+        :component-in-tab-id="element.id"
+        :initial-selection="Array.isArray(element.scope) ? element.scope : []"
+        :current-tab="tab"
+        @close="closeEditScopeModal"
+    />
 </template>
 
 <style scoped>

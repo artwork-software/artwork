@@ -47,6 +47,7 @@
                     :items="eventStatuses"
                     :search-keys="['name','id']"
                     :placeholder="$t('Please select a Room')"
+                    :disabled="canEditComponent === false || !hasPermission"
                     @update:model-value="updateEventInDatabase"
                     :show-color-indicator="true"
                     color-property="color"
@@ -72,6 +73,7 @@
                     v-model="event.type"
                     :items="sortedEventTypes"
                     :search-keys="['name','id']"
+                    :disabled="canEditComponent === false || !hasPermission"
                     @update:model-value="updateEventInDatabase"
                     :show-color-indicator="true"
                     color-property="hex_code"
@@ -102,6 +104,7 @@
                     :items="sortedRooms"
                     :search-keys="['name','id']"
                     :placeholder="$t('Please select a Room')"
+                    :disabled="canEditComponent === false || !hasPermission"
                     @update:model-value="updateEventInDatabase"
                 />
                 <!--<BaseCombobox

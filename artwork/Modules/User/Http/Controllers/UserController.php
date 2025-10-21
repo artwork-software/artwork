@@ -995,6 +995,7 @@ class UserController extends Controller
             Project::where('user_id', $user->id)->update(['user_id' => $authUserId]);
             $user->eventVerifications()->delete();
             $user->workTimeBookings()->delete();
+            $user->productBasket()->delete();
 
             // Handle hasOne relationships - delete
             if ($user->calendarAbo) {

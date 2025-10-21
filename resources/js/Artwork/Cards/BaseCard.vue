@@ -1,5 +1,5 @@
 <template>
-    <div class="card glassy">
+    <div class="">
         <slot></slot>
     </div>
 

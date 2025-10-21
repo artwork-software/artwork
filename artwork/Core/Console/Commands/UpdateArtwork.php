@@ -50,6 +50,7 @@ class UpdateArtwork extends Command
         $this->addOrderInInventoryStatus();
         $this->addRoomTypes();
         $this->addSwissCantons();
+        $this->createBasicProductBaskets();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -384,6 +385,22 @@ class UpdateArtwork extends Command
     {
         $this->section('Seeding swiss cantons');;
         $this->swissCantoneSeeder->seed();
+    }
+
+    private function createBasicProductBaskets(): void
+    {
+        $this->section('Creating Basic Product Baskets');
+
+        $users = User::all();
+
+        foreach ($users as $user) {
+            $user->productBasket()->updateOrCreate([
+                'name' => 'Standard',
+            ], [
+                'name' => 'Standard',
+            ]);
+        }
+
     }
 
 }

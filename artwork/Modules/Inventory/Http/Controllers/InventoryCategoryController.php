@@ -13,6 +13,7 @@ use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Repositories\InventoryPropertyRepository;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Inventory\Services\InventoryCategoryService;
+use Artwork\Modules\Inventory\Services\ProductBasketService;
 use Artwork\Modules\Manufacturer\Models\Manufacturer;
 use Artwork\Modules\Room\Models\Room;
 use Inertia\Inertia;
@@ -23,7 +24,8 @@ class InventoryCategoryController extends Controller
         protected InventoryCategoryService $categoryService,
         protected InventoryArticleService $articleService,
         protected InventoryPropertyRepository $propertyRepository,
-        protected InventoryArticleService $inventoryArticleService
+        protected InventoryArticleService $inventoryArticleService,
+        protected ProductBasketService $productBasketService,
     ) {
     }
 
@@ -98,6 +100,7 @@ class InventoryCategoryController extends Controller
             'manufacturers' => Manufacturer::select('id', 'name')->orderBy('name')->get(),
             'statuses' => InventoryArticleStatus::select('id', 'name', 'color')->orderBy('order')->get(),
             'countsByStatus' => $this->articleService->getCountsByStatus($articles),
+            'productBaskets' => $this->productBasketService->getUserBasket(),
         ]);
     }
 

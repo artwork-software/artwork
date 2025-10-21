@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\Inventory\Services\ProductBasketService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -25,7 +26,8 @@ class AuthUserSeeder extends Seeder
     public function __construct(
         private readonly UserShiftQualificationRepository $userShiftQualificationRepository,
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
-        private readonly UserUserManagementSettingService $userUserManagementSettingService
+        private readonly UserUserManagementSettingService $userUserManagementSettingService,
+        protected ProductBasketService $productBasketService,
     ) {
     }
 
@@ -72,6 +74,7 @@ class AuthUserSeeder extends Seeder
             $user,
             $this->userUserManagementSettingService->getDefaults()
         );
+        $this->productBasketService->createBasisBasket($user);
 
         $workerShiftQualificationId = ShiftQualification::workerQualification()->first()->id;
         $this->userShiftQualificationRepository->save(
@@ -150,6 +153,7 @@ class AuthUserSeeder extends Seeder
                 'shift_qualification_id' => $masterShiftQualificationId
             ])
         );
+        $this->productBasketService->createBasisBasket($user);
         $user->calendar_settings()->create();
         $user->userFilters()->create([
             'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,
@@ -250,7 +254,7 @@ class AuthUserSeeder extends Seeder
             ]);
         }
 
-
+        $this->productBasketService->createBasisBasket($user);
         $settings = app(GeneralSettings::class);
         $settings->setup_finished = true;
         $settings->save();

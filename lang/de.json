@@ -3320,5 +3320,10 @@
     "The event description can be displayed in the calendar and can be viewed by all users after clicking on the event.": "Die Terminbeschreibung kann im Kalender angezeigt werden und ist für alle Nutzer*innen nach einem Klick auf den Termin einsehbar.",
     "Multiple projects can be assigned to a project group. If the content in the KTO and KST columns in subprojects and the project group in the project budget is the same, the data for the subprojects is then displayed in a separate column in the project group.": "Mehrere Projekte können einer Projektgruppe zugewiesen werden. Wenn die Inhalte in den KTO- und KST-Spalten in den Unterprojekten und der Projektgruppe im Projektbudget identisch sind, werden die Daten für die Unterprojekte dann in einer separaten Spalte in der Projektgruppe angezeigt.",
     "Period picker": "Zeitraum-Picker",
-    "Choose a country": "Wähle ein Land"
+    "Choose a country": "Wähle ein Land",
+    "Add to Basket": "In den Warenkorb",
+    "Product Basket": "Produkt-Warenkorb",
+    "Enable adding articles to a temporary product basket": "Aktivieren, um Artikel zu einem temporären Produkt-Warenkorb hinzuzufügen",
+    "Product basket for quick use in material issue": "Produkt-Warenkorb für die schnelle Verwendung in der Materialausgabe",
+    "Create Material Issue": "Materialausgabe erstellen"
 }

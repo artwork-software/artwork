@@ -479,6 +479,11 @@ const props = defineProps({
             issued_by_id: null
         })
     },
+    loadArticleFormBasket: {
+        type: Boolean,
+        required: false,
+        default: false,
+    },
 })
 
 
@@ -527,6 +532,10 @@ const paginationPage = ref(1)
 const articleForDetailModal = ref(null);
 const articleForUsageModal = ref(null);
 const articleSearchFilter = ref("");
+
+const baskets = ref([]);
+const isLoadingBaskets = ref(true);
+const currentBasket = ref(1);
 
 const isReturnDateBeforeIssueDate = computed(() => {
     if (!externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date) {
@@ -898,7 +907,100 @@ onMounted(() => {
         checkAvailableStock()
     }
     loadMoreArticles()
+
+    if (props.loadArticleFormBasket){
+        loadBaskets();
+    }
 })
+
+const loadBaskets = async () => {
+    try {
+        const response = await axios
+            .get(route("inventory.product_basket.get_baskets"))
+            .then((res) => res.data);
+
+        baskets.value = response?.baskets ?? [];
+
+        // Fallback für currentBasket, falls nötig
+        if (!baskets.value.find(b => b.id === currentBasket.value) && baskets.value.length) {
+            currentBasket.value = baskets.value[0].id;
+        }
+
+        // >>> NEU: Automatisch Basket 1 übernehmen
+        const basketOne = baskets.value.find(b => b.id === 1);
+        if (basketOne) {
+            addBasketArticlesToIssue(basketOne);
+        }
+    } catch (e) {
+        console.error(e);
+        baskets.value = [];
+    } finally {
+        isLoadingBaskets.value = false;
+    }
+};
+
+function mapBasketArticleToIssueArticle(ba) {
+    const art = ba?.article ?? {};
+    return {
+        id: art.id,
+        name: art.name,
+        description: art.description,
+        quantity: Number(ba?.quantity ?? 1),                 // Menge aus dem Basket
+        total_quantity: art.quantity,                        // Gesamtbestand für Detailmodal
+        is_detailed_quantity: art.is_detailed_quantity,
+        availableStock: 0,
+        availableStockRequestIsLoading: true,
+        detailed_article_quantities: art.detailed_article_quantities ?? [],
+        category: art.category ?? null,
+        subCategory: art.sub_category ?? null,               // camelCase
+        sub_category: art.sub_category ?? null,              // snake_case Kompatibilität
+        images: art.images ?? [],
+        properties: art.properties ?? [],
+        room: art.room ?? null,
+        manufacturer: art.manufacturer ?? null,
+        status_values: art.status_values ?? [],
+    };
+}
+
+function addBasketArticlesToIssue(basket) {
+    if (!basket?.basket_articles?.length) return;
+
+    for (const ba of basket.basket_articles) {
+        const art = ba?.article;
+        if (!art?.id) continue;
+
+        const idx = externMaterialIssueForm.articles.findIndex(a => a.id === art.id);
+
+        if (idx === -1) {
+            // Neu aufnehmen mit der in Basket hinterlegten Menge
+            externMaterialIssueForm.articles.push(mapBasketArticleToIssueArticle(ba));
+        } else {
+            // Bereits vorhanden → Menge aufsummieren
+            const addQty = Number(ba?.quantity ?? 1);
+            externMaterialIssueForm.articles[idx].quantity = Number(externMaterialIssueForm.articles[idx].quantity ?? 0) + addQty;
+
+            // Falls Felder bisher minimal waren, fehlende Felder nachziehen
+            const enriched = mapBasketArticleToIssueArticle(ba);
+            externMaterialIssueForm.articles[idx] = {
+                ...enriched,
+                // eigene Menge behalten (bereits gemerged)
+                quantity: externMaterialIssueForm.articles[idx].quantity,
+                // bereits ggf. geladene availableStock-Flags respektieren
+                availableStock: externMaterialIssueForm.articles[idx].availableStock ?? enriched.availableStock,
+                availableStockRequestIsLoading: true,
+            };
+        }
+    }
+
+    // Verfügbarkeiten nachziehen
+    checkAvailableStock();
+
+    // remove articles from basket after adding to issue
+    router.post(route("inventory.product_basket.remove_articles", {productBasket: basket.id}), {
+        basket_id: basket.id
+    });
+}
+
 </script>
 
 <style scoped>

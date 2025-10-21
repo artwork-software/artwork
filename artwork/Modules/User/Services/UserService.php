@@ -7,6 +7,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\Inventory\Services\ProductBasketService;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -51,7 +52,7 @@ class UserService
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly CarbonService $carbonService,
         private readonly ProjectTabService $projectTabService,
-        private readonly WorkingHourService $workingHourService,
+        protected ProductBasketService $productBasketService,
     ) {
     }
 
@@ -116,6 +117,9 @@ class UserService
             $user,
             $this->userProjectManagementSettingService->getDefaults()
         );
+
+        $this->productBasketService->createBasisBasket($user);
+
         return $user;
     }
 

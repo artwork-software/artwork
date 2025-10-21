@@ -4,9 +4,8 @@
         @dragover="onDragOver"
         @drop="onDrop"
         :class="[
-            isDragging
-                ? 'my-2 h-14 min-h-14 border-2 border-dashed rounded-xl transition'
-                : 'flex items-center h-4 min-h-4 rounded cursor-pointer',
+            'flex items-center h-4 min-h-4 rounded cursor-pointer transition',
+            isDragging ? 'border-2 border-dashed' : '',
             isDragging && dropOver
                 ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-400/30'
                 : (isDragging ? 'border-zinc-300 bg-zinc-50/40' : '')

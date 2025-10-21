@@ -370,18 +370,42 @@ const formatProperty = (article, property) => {
     }
 
     if (property.type === 'date') {
-        if(!property.pivot.value) return $t('No date set');
-        return new Date(property.pivot.value).toLocaleDateString();
+        const v = property.pivot.value;
+        if (!v) return $t('No date set');
+        let d = new Date(v);
+        if (isNaN(d.getTime()) && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+            d = new Date(`${v}T00:00:00`);
+        }
+        return isNaN(d.getTime()) ? v : d.toLocaleDateString();
     }
 
     if (property.type === 'time') {
-        if(!property.pivot.value) return $t('No time set');
-        return new Date(property.pivot.value).toLocaleTimeString();
+        const v = property.pivot.value;
+        if (!v) return $t('No time set');
+
+        // Zeit-Only (z. B. "12:12" oder "12:12:30") direkt und stabil anzeigen
+        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(v)) {
+            const parts = v.split(':');
+            const h = String(parts[0]).padStart(2, '0');
+            const m = String(parts[1]).padStart(2, '0');
+            return `${h}:${m}`;
+        }
+
+        // Falls doch ein kompletter ISO-/Datetime-String kommt, nur die Zeit formatiert ausgeben
+        const d = new Date(v);
+        if (!isNaN(d.getTime())) {
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Fallback: Rohwert anzeigen statt "Invalid Date"
+        return v;
     }
 
     if (property.type === 'datetime') {
-        if(!property.pivot.value) return $t('No date set');
-        return new Date(property.pivot.value).toLocaleString();
+        const v = property.pivot.value;
+        if (!v) return $t('No date set');
+        const d = new Date(v);
+        return isNaN(d.getTime()) ? v : d.toLocaleString();
     }
 
     if (property.type === 'checkbox') {

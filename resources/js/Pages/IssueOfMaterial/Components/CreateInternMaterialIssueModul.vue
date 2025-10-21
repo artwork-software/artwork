@@ -488,6 +488,32 @@ import Galleria from "primevue/galleria";
 import { IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconPlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 
+// Ensure time values are always in HH:mm format (strip seconds if present)
+function normalizeTime(value) {
+    if (!value) return value;
+    if (typeof value !== 'string') return value;
+    let t = value.trim();
+    // If a datetime string like "YYYY-MM-DD HH:mm:ss" is provided, extract time
+    if (t.includes(' ')) {
+        const parts = t.split(' ');
+        t = parts[parts.length - 1];
+    }
+    // If matches HH:mm:ss -> return HH:mm
+    if (/^\d{2}:\d{2}:\d{2}$/.test(t)) {
+        return t.slice(0, 5);
+    }
+    // If matches H:mm or HH:mm -> pad hour
+    if (/^\d{1,2}:\d{2}$/.test(t)) {
+        const [h, m] = t.split(':');
+        return `${h.padStart(2, '0')}:${m}`;
+    }
+    // Fallback: try to coerce by taking first 5 chars if they look like time
+    if (t.length >= 5 && /^\d{2}:\d{2}/.test(t)) {
+        return t.slice(0, 5);
+    }
+    return t;
+}
+
 const props = defineProps({
     issueOfMaterial: {
         type: Object,
@@ -533,9 +559,9 @@ const internMaterialIssue = useForm({
     project_id: props.issueOfMaterial?.project_id || null,
     project: props.issueOfMaterial?.project || null,
     start_date: props.issueOfMaterial?.start_date || "",
-    start_time: props.issueOfMaterial?.start_time || "00:00",
+    start_time: normalizeTime(props.issueOfMaterial?.start_time) || "00:00",
     end_date: props.issueOfMaterial?.end_date || "",
-    end_time: props.issueOfMaterial?.end_time || "23:59",
+    end_time: normalizeTime(props.issueOfMaterial?.end_time) || "23:59",
     room_id: props.issueOfMaterial?.room_id || null,
     notes: props.issueOfMaterial?.notes || "",
     responsible_user_ids: props.issueOfMaterial?.responsible_user_ids || [],
@@ -564,6 +590,16 @@ const internMaterialIssue = useForm({
     })), // [{ id, quantity }]
     special_items: props.issueOfMaterial?.special_items || [], // [{...}]
     isInProjectComponent: props.isInProjectComponent || false
+});
+
+// Keep start_time and end_time normalized if user agent or prefill introduces seconds
+watch(() => internMaterialIssue.start_time, (val) => {
+    const nt = normalizeTime(val);
+    if (nt !== val) internMaterialIssue.start_time = nt || "";
+});
+watch(() => internMaterialIssue.end_time, (val) => {
+    const nt = normalizeTime(val);
+    if (nt !== val) internMaterialIssue.end_time = nt || "";
 });
 
 const selectedProject = ref(null);
@@ -967,6 +1003,9 @@ const removeArticle = (index) => {
 const emits = defineEmits(["close", "saved"]);
 
 const submit = () => {
+    // Ensure times are in HH:mm before submitting
+    internMaterialIssue.start_time = normalizeTime(internMaterialIssue.start_time) || "";
+    internMaterialIssue.end_time = normalizeTime(internMaterialIssue.end_time) || "";
     if (selectedProject.value) {
         internMaterialIssue.project_id = selectedProject.value.id;
     } else {

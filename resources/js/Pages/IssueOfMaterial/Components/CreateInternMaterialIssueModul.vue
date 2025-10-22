@@ -184,7 +184,7 @@
                                                 <div v-if="status.name === 'Ready for use' || status.name === 'Einsatzbereit'" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
                                                     <span class="inline-block size-1.5 rounded-full" :style="{ backgroundColor: status.color }"></span>
                                                     <span class="tabular-nums">{{ status.name }}</span>
-                                                    <span class="tabular-nums">{{ article.availableStock?.ready ?? status.pivot.value ?? 0 }}</span>
+                                                    <span class="tabular-nums">{{ readyForUseCount(article) }}</span>
                                                 </div>
                                             </template>
 
@@ -1071,6 +1071,7 @@ const checkAvailableStock = async () => {
         !internMaterialIssue.end_date ||
         internMaterialIssue.articles.length === 0
     ) {
+        console.log('Missing dates or no articles to check availability for.');
         return;
     }
 
@@ -1266,6 +1267,29 @@ const filePreviewUrl = (file) => {
         return null;
     }
 };
+
+// Helper: Compute "Ready for use / Einsatzbereit" count for Found Articles list
+// - For detailed-quantity articles: sum quantities of detailed items with status name in ['Einsatzbereit', 'Ready for use']
+// - Otherwise: use the article's status_values pivot value for that status
+const READY_STATUS_NAMES = ['Einsatzbereit', 'Ready for use'];
+function readyForUseCount(article: any): number {
+    if (!article) return 0;
+    const isReadyName = (name?: string) => !!name && READY_STATUS_NAMES.includes(name);
+    try {
+        if (article.is_detailed_quantity && Array.isArray(article.detailed_article_quantities) && article.detailed_article_quantities.length) {
+            return article.detailed_article_quantities.reduce((sum: number, dq: any) => {
+                const name = dq?.status?.name as string | undefined;
+                const qty = Number(dq?.quantity ?? 0);
+                return sum + (isReadyName(name) && !Number.isNaN(qty) ? qty : 0);
+            }, 0);
+        }
+        const readyStatus = (article.status_values || []).find((s: any) => isReadyName(s?.name));
+        const val = Number(readyStatus?.pivot?.value ?? 0);
+        return Number.isNaN(val) ? 0 : val;
+    } catch (e) {
+        return 0;
+    }
+}
 
 
 const openArticleDetailModal = async (article) => {

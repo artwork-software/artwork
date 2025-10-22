@@ -1,8 +1,8 @@
 <template>
-    <aside class="h-full font-lexend">
+    <aside class="h-full">
         <h2 class="sr-only">Filters</h2>
         <BaseCard>
-            <div class="p-5">
+            <div class="">
                 <div class="">
                     <div class="space-y-4">
                         <WhiteInnerCard>

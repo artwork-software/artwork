@@ -1852,6 +1852,29 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
 
+    Route::group(['prefix' => 'basket'], function (): void {
+        // inventory.basket.add
+        Route::post('/add', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'store'])
+            ->name('inventory.basket.add');
+
+        // inventory.product_basket.get_baskets
+        Route::get('/get_baskets', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketController::class, 'index'])
+            ->name('inventory.product_basket.get_baskets');
+
+        // inventory.product_basket.update_quantity
+        Route::post('/update_quantity/{basketArticle}', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'updateQuantity'])
+            ->name('inventory.product_basket.update_quantity');
+        Route::post('/update_quantity/{basketArticle}/single', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'updateQuantitySingle'])
+            ->name('inventory.product_basket.update_quantity.single');
+
+        Route::delete('/{basketArticle}', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'destroy'])
+            ->name('inventory.product_basket.remove');
+
+        // inventory.product_basket.remove_articles
+        Route::post('/remove_articles/{productBasket}', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'removeArticles'])
+            ->name('inventory.product_basket.remove_articles');
+    });
+
 
 
     Route::resource('manufacturers', ManufacturerController::class)->only(

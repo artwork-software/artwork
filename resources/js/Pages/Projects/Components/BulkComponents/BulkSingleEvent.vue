@@ -47,6 +47,7 @@
                     :items="eventStatuses"
                     :search-keys="['name','id']"
                     :placeholder="$t('Please select a Room')"
+                    :disabled="canEditComponent === false || !hasPermission"
                     @update:model-value="updateEventInDatabase"
                     :show-color-indicator="true"
                     color-property="color"
@@ -72,6 +73,7 @@
                     v-model="event.type"
                     :items="sortedEventTypes"
                     :search-keys="['name','id']"
+                    :disabled="canEditComponent === false || !hasPermission"
                     @update:model-value="updateEventInDatabase"
                     :show-color-indicator="true"
                     color-property="hex_code"
@@ -102,6 +104,7 @@
                     :items="sortedRooms"
                     :search-keys="['name','id']"
                     :placeholder="$t('Please select a Room')"
+                    :disabled="canEditComponent === false || !hasPermission"
                     @update:model-value="updateEventInDatabase"
                 />
                 <!--<BaseCombobox
@@ -174,7 +177,7 @@
                         stroke="1.5"
                         @click="openNoteModal = true"
                         icon-size="size-5"
-                        classes-button="ui-button"
+                        :classes-button="(event?.description && event.description.toString().trim().length > 0) ? 'ui-button !border-black border-2' : 'ui-button'"
                     />
                     <ToolTipComponent
                         v-if="event.start_time && event.end_time && !event.copy && !isInModal"
@@ -232,7 +235,7 @@
 
                     <!-- Edit/Delete Menu -->
                     <BaseMenu has-no-offset white-menu-background menu-width="!w-fit" v-if="!isInModal">
-                        <BaseMenuItem white-menu-background :icon="IconEdit" title="Edit" @click="openEventComponent(event.id)" />
+                        <BaseMenuItem white-menu-background :icon="IconEdit" title="Edit" @click="$emit('editEvent', event)" />
                         <BaseMenuItem
                             v-if="(index > 0 && !event.copy) || !isInModal"
                             white-menu-background
@@ -306,8 +309,8 @@ const props = defineProps({
     lastEditEventIds: { type: Array, required: false, default: () => [] }
 });
 
-const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent']);
-const openEventComponent = (eventId) => emit('openEventComponent', eventId);
+const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent', 'editEvent']);
+const openEventComponent = (payload) => emit('openEventComponent', payload);
 
 const showMenu = ref(false);
 const dayString = ref(null);

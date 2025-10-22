@@ -166,6 +166,7 @@
                                     :index="eventIndex"
                                     :is-in-modal="isInModal"
                                     @open-event-component="onOpenEventComponent"
+                                    @edit-event="onOpenEventComponent"
                                     @delete-current-event="deleteCurrentEvent"
                                     @create-copy-by-event-with-data="createCopyByEventWithData"
                                     :event-statuses="eventStatuses"
@@ -266,7 +267,7 @@
 
     <!-- Modals -->
     <event-component
-        v-if="eventComponentIsVisible"
+        v-if="eventComponentIsVisible && eventToEdit"
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
@@ -344,6 +345,7 @@ import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue
 import { useBulkEventsBroadcastUpdater } from '@/Composeables/Listener/useBulkEventsBroadcastUpdater.js';
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import axios from 'axios';
 
 const exportTabEnums = useExportTabEnums();
 const {hasAdminRole, can} = usePermission(usePage().props);
@@ -530,9 +532,63 @@ const getEventIdsWhereSelectedForMultiEdit = () =>
 // --- Actions
 const UpdateMultiEditEmits = (value) => { multiEdit.value = value; };
 
-const onOpenEventComponent = (eventId) => {
-    eventComponentIsVisible.value = true;
-    eventToEdit.value = events.value.find(e => e.id === eventId) ?? null;
+const mapBulkEventToModalEvent = (e) => {
+    if (!e || typeof e !== 'object') return null;
+    const day = e.day ?? null;
+    const startTime = e.start_time ?? null;
+    const endTime = e.end_time ?? null;
+    const hasTimes = Boolean(startTime && endTime);
+    const start = day ? `${day}T${hasTimes ? startTime : '00:00'}` : null;
+    const end = day ? `${day}T${hasTimes ? endTime : '23:59'}` : null;
+
+    return {
+        id: e.id,
+        title: e.name ?? '',
+        eventName: e.name ?? '',
+        start,
+        end,
+        allDay: !hasTimes,
+        eventType: e.type ?? e.eventType ?? null,
+        eventTypeId: e.type?.id ?? e.eventTypeId ?? e.eventType?.id ?? null,
+        eventStatus: e.status ?? e.eventStatus ?? null,
+        eventStatusId: e.status?.id ?? e.eventStatusId ?? e.eventStatus?.id ?? null,
+        roomId: e.room?.id ?? e.roomId ?? null,
+        isPlanning: e.is_planning ?? e.isPlanning ?? false,
+        project: e.project ?? props.project ?? null,
+        description: e.description ?? null,
+        created_by: e.created_by ?? e.creator ?? null,
+        eventProperties: e.eventProperties ?? e.event_properties ?? [],
+    };
+};
+
+const onOpenEventComponent = async (payload) => {
+    // Resolve the event id first
+    const id = (payload && typeof payload === 'object') ? payload.id : payload;
+    const fallbackModel = () => {
+        if (payload && typeof payload === 'object') {
+            return (payload.start || payload.end) ? payload : mapBulkEventToModalEvent(payload);
+        }
+        const found = events.value.find(e => e.id == id) ?? null; // loose equality to handle string/number
+        return found ? ((found.start || found.end) ? found : mapBulkEventToModalEvent(found)) : null;
+    };
+
+    try {
+        isLoading.value = true;
+        if (!id) throw new Error('Missing event id');
+        const { data } = await axios.get(route('events.show.json', { event: id }));
+        // Laravel JSON Resource may wrap payload under data
+        const payloadData = data?.data ?? data;
+        if (props.project) payloadData.project = props.project;
+        eventToEdit.value = payloadData;
+        eventComponentIsVisible.value = true;
+    } catch (e) {
+        const model = fallbackModel();
+        if (model && props.project) model.project = props.project;
+        eventToEdit.value = model;
+        eventComponentIsVisible.value = !!model;
+    } finally {
+        isLoading.value = false;
+    }
 };
 
 const onEventComponentClosed = () => {

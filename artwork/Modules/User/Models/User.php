@@ -17,6 +17,7 @@ use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
+use Artwork\Modules\Inventory\Models\ProductBasket;
 use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Models\MoneySourceTask;
@@ -301,6 +302,11 @@ class User extends Model implements
     public function getTypeAttribute(): string
     {
         return 'user';
+    }
+
+    public function productBasket(): HasMany
+    {
+        return $this->hasMany(ProductBasket::class, 'user_id', 'id');
     }
 
     public function shiftCalendarAbo(): hasOne

@@ -184,7 +184,7 @@
                                                 <div v-if="status.name === 'Ready for use' || status.name === 'Einsatzbereit'" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
                                                     <span class="inline-block size-1.5 rounded-full" :style="{ backgroundColor: status.color }"></span>
                                                     <span class="tabular-nums">{{ status.name }}</span>
-                                                    <span class="tabular-nums">{{ article.availableStock?.ready ?? status.pivot.value ?? 0 }}</span>
+                                                    <span class="tabular-nums">{{ readyForUseCount(article) }}</span>
                                                 </div>
                                             </template>
 
@@ -488,6 +488,32 @@ import Galleria from "primevue/galleria";
 import { IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconPlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 
+// Ensure time values are always in HH:mm format (strip seconds if present)
+function normalizeTime(value) {
+    if (!value) return value;
+    if (typeof value !== 'string') return value;
+    let t = value.trim();
+    // If a datetime string like "YYYY-MM-DD HH:mm:ss" is provided, extract time
+    if (t.includes(' ')) {
+        const parts = t.split(' ');
+        t = parts[parts.length - 1];
+    }
+    // If matches HH:mm:ss -> return HH:mm
+    if (/^\d{2}:\d{2}:\d{2}$/.test(t)) {
+        return t.slice(0, 5);
+    }
+    // If matches H:mm or HH:mm -> pad hour
+    if (/^\d{1,2}:\d{2}$/.test(t)) {
+        const [h, m] = t.split(':');
+        return `${h.padStart(2, '0')}:${m}`;
+    }
+    // Fallback: try to coerce by taking first 5 chars if they look like time
+    if (t.length >= 5 && /^\d{2}:\d{2}/.test(t)) {
+        return t.slice(0, 5);
+    }
+    return t;
+}
+
 const props = defineProps({
     issueOfMaterial: {
         type: Object,
@@ -519,7 +545,12 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: false,
-    }
+    },
+    loadArticleFormBasket: {
+        type: Boolean,
+        required: false,
+        default: false,
+    },
 });
 
 const internMaterialIssue = useForm({
@@ -528,9 +559,9 @@ const internMaterialIssue = useForm({
     project_id: props.issueOfMaterial?.project_id || null,
     project: props.issueOfMaterial?.project || null,
     start_date: props.issueOfMaterial?.start_date || "",
-    start_time: props.issueOfMaterial?.start_time || "00:00",
+    start_time: normalizeTime(props.issueOfMaterial?.start_time) || "00:00",
     end_date: props.issueOfMaterial?.end_date || "",
-    end_time: props.issueOfMaterial?.end_time || "23:59",
+    end_time: normalizeTime(props.issueOfMaterial?.end_time) || "23:59",
     room_id: props.issueOfMaterial?.room_id || null,
     notes: props.issueOfMaterial?.notes || "",
     responsible_user_ids: props.issueOfMaterial?.responsible_user_ids || [],
@@ -561,6 +592,16 @@ const internMaterialIssue = useForm({
     isInProjectComponent: props.isInProjectComponent || false
 });
 
+// Keep start_time and end_time normalized if user agent or prefill introduces seconds
+watch(() => internMaterialIssue.start_time, (val) => {
+    const nt = normalizeTime(val);
+    if (nt !== val) internMaterialIssue.start_time = nt || "";
+});
+watch(() => internMaterialIssue.end_time, (val) => {
+    const nt = normalizeTime(val);
+    if (nt !== val) internMaterialIssue.end_time = nt || "";
+});
+
 const selectedProject = ref(null);
 const selectedRoom = ref(props.issueOfMaterial?.room || null);
 const selectedResponsibleUsers = ref(
@@ -577,6 +618,9 @@ const articleForDetailModal = ref(null);
 const articleForUsageModal = ref(null);
 const hasMoreArticles = ref(true);
 const paginationPage = ref(1);
+const baskets = ref([]);
+const isLoadingBaskets = ref(true);
+const currentBasket = ref(1);
 const isEndDateBeforeStartDate = computed(() => {
     if (!internMaterialIssue.start_date || !internMaterialIssue.end_date) {
         return false;
@@ -959,6 +1003,9 @@ const removeArticle = (index) => {
 const emits = defineEmits(["close", "saved"]);
 
 const submit = () => {
+    // Ensure times are in HH:mm before submitting
+    internMaterialIssue.start_time = normalizeTime(internMaterialIssue.start_time) || "";
+    internMaterialIssue.end_time = normalizeTime(internMaterialIssue.end_time) || "";
     if (selectedProject.value) {
         internMaterialIssue.project_id = selectedProject.value.id;
     } else {
@@ -1024,6 +1071,7 @@ const checkAvailableStock = async () => {
         !internMaterialIssue.end_date ||
         internMaterialIssue.articles.length === 0
     ) {
+        console.log('Missing dates or no articles to check availability for.');
         return;
     }
 
@@ -1180,6 +1228,9 @@ onMounted(() => {
     }
 
     loadMoreArticles();
+    if (props.loadArticleFormBasket){
+        loadBaskets();
+    }
 });
 
 // Anpassung der Artikelsuche
@@ -1216,6 +1267,29 @@ const filePreviewUrl = (file) => {
         return null;
     }
 };
+
+// Helper: Compute "Ready for use / Einsatzbereit" count for Found Articles list
+// - For detailed-quantity articles: sum quantities of detailed items with status name in ['Einsatzbereit', 'Ready for use']
+// - Otherwise: use the article's status_values pivot value for that status
+const READY_STATUS_NAMES = ['Einsatzbereit', 'Ready for use'];
+function readyForUseCount(article: any): number {
+    if (!article) return 0;
+    const isReadyName = (name?: string) => !!name && READY_STATUS_NAMES.includes(name);
+    try {
+        if (article.is_detailed_quantity && Array.isArray(article.detailed_article_quantities) && article.detailed_article_quantities.length) {
+            return article.detailed_article_quantities.reduce((sum: number, dq: any) => {
+                const name = dq?.status?.name as string | undefined;
+                const qty = Number(dq?.quantity ?? 0);
+                return sum + (isReadyName(name) && !Number.isNaN(qty) ? qty : 0);
+            }, 0);
+        }
+        const readyStatus = (article.status_values || []).find((s: any) => isReadyName(s?.name));
+        const val = Number(readyStatus?.pivot?.value ?? 0);
+        return Number.isNaN(val) ? 0 : val;
+    } catch (e) {
+        return 0;
+    }
+}
 
 
 const openArticleDetailModal = async (article) => {
@@ -1254,6 +1328,95 @@ const openArticleDetailModal = async (article) => {
         articleForDetailModal.value = article;
     }
 };
+
+const loadBaskets = async () => {
+    try {
+        const response = await axios
+            .get(route("inventory.product_basket.get_baskets"))
+            .then((res) => res.data);
+
+        baskets.value = response?.baskets ?? [];
+
+        // Fallback für currentBasket, falls nötig
+        if (!baskets.value.find(b => b.id === currentBasket.value) && baskets.value.length) {
+            currentBasket.value = baskets.value[0].id;
+        }
+
+        // >>> NEU: Automatisch Basket 1 übernehmen
+        const basketOne = baskets.value.find(b => b.id === 1);
+        if (basketOne) {
+            addBasketArticlesToIssue(basketOne);
+        }
+    } catch (e) {
+        console.error(e);
+        baskets.value = [];
+    } finally {
+        isLoadingBaskets.value = false;
+    }
+};
+
+function mapBasketArticleToIssueArticle(ba) {
+    const art = ba?.article ?? {};
+    return {
+        id: art.id,
+        name: art.name,
+        description: art.description,
+        quantity: Number(ba?.quantity ?? 1),                 // Menge aus dem Basket
+        total_quantity: art.quantity,                        // Gesamtbestand für Detailmodal
+        is_detailed_quantity: art.is_detailed_quantity,
+        availableStock: 0,
+        availableStockRequestIsLoading: true,
+        detailed_article_quantities: art.detailed_article_quantities ?? [],
+        category: art.category ?? null,
+        subCategory: art.sub_category ?? null,               // camelCase
+        sub_category: art.sub_category ?? null,              // snake_case Kompatibilität
+        images: art.images ?? [],
+        properties: art.properties ?? [],
+        room: art.room ?? null,
+        manufacturer: art.manufacturer ?? null,
+        status_values: art.status_values ?? [],
+    };
+}
+
+function addBasketArticlesToIssue(basket) {
+    if (!basket?.basket_articles?.length) return;
+
+    for (const ba of basket.basket_articles) {
+        const art = ba?.article;
+        if (!art?.id) continue;
+
+        const idx = internMaterialIssue.articles.findIndex(a => a.id === art.id);
+
+        if (idx === -1) {
+            // Neu aufnehmen mit der in Basket hinterlegten Menge
+            internMaterialIssue.articles.push(mapBasketArticleToIssueArticle(ba));
+        } else {
+            // Bereits vorhanden → Menge aufsummieren
+            const addQty = Number(ba?.quantity ?? 1);
+            internMaterialIssue.articles[idx].quantity = Number(internMaterialIssue.articles[idx].quantity ?? 0) + addQty;
+
+            // Falls Felder bisher minimal waren, fehlende Felder nachziehen
+            const enriched = mapBasketArticleToIssueArticle(ba);
+            internMaterialIssue.articles[idx] = {
+                ...enriched,
+                // eigene Menge behalten (bereits gemerged)
+                quantity: internMaterialIssue.articles[idx].quantity,
+                // bereits ggf. geladene availableStock-Flags respektieren
+                availableStock: internMaterialIssue.articles[idx].availableStock ?? enriched.availableStock,
+                availableStockRequestIsLoading: true,
+            };
+        }
+    }
+
+    // Verfügbarkeiten nachziehen
+    checkAvailableStock();
+
+    // remove articles from basket after adding to issue
+    router.post(route("inventory.product_basket.remove_articles", {productBasket: basket.id}), {
+        basket_id: basket.id
+    });
+}
+
 </script>
 
 <style scoped></style>

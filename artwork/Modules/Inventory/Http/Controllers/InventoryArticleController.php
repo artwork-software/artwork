@@ -167,8 +167,9 @@ class InventoryArticleController extends Controller
         $tsInternalStart = DB::raw("TIMESTAMP(start_date, COALESCE(start_time,'00:00:00'))");
         $tsInternalEnd   = DB::raw("TIMESTAMP(COALESCE(end_date,start_date), COALESCE(end_time,'23:59:59'))");
 
-        $tsExternalStart = DB::raw("TIMESTAMP(issue_date, COALESCE(issue_time,'00:00:00'))");
-        $tsExternalEnd   = DB::raw("TIMESTAMP(COALESCE(return_date, issue_date), COALESCE(return_time,'23:59:59'))");
+        // External issues have dates only (no separate time columns). Use full-day bounds for overlap checks.
+        $tsExternalStart = DB::raw("TIMESTAMP(issue_date, '00:00:00')");
+        $tsExternalEnd   = DB::raw("TIMESTAMP(COALESCE(return_date, issue_date), '23:59:59')");
 
         $articles = InventoryArticle::whereIn('id', $articleIds)
             ->with([

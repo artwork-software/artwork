@@ -24,12 +24,12 @@
                 floating-as="div"
                 class="relative w-fit"
             >
-            <ListboxButton :class="buttonClass">
+            <ListboxButton :class="finalButtonClass">
                 <slot name="button" :selected="internalValue" :placeholder="placeholder">
                     <div class="col-start-1 row-start-1 truncate pr-6 flex items-center gap-2">
                         <span
                             v-if="showColorIndicator && getColor(internalValue as Option)"
-                            class="inline-block size-3 rounded-full flex-shrink-0"
+                            :class="['inline-block size-3 rounded-full flex-shrink-0', disabled ? 'opacity-60' : '']"
                             :style="{ backgroundColor: getColor(internalValue as Option) }"
                         ></span>
                         <span class="truncate">{{ displayText }}</span>
@@ -455,6 +455,16 @@ const prettyKey = (key: string) => {
 }
 const finalOptionsClass = computed(() => `${props.optionsClass} z-[99999]`);
 
+// Disabled visual style similar to BaseInput: gray background and no pointer cursor
+const finalButtonClass = computed(() => {
+    const base = props.buttonClass;
+    if (props.disabled) {
+        // Append Tailwind classes so they take precedence over earlier bg utilities
+        return [base, 'bg-gray-300 cursor-not-allowed'].join(' ');
+    }
+    return base;
+});
+
 const onDropdownClose = () => {
     if (!props.resetOnClose) return
 
@@ -530,3 +540,4 @@ const OpenSync = defineComponent({
     },
 })
 </script>
+

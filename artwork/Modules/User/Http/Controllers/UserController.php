@@ -118,7 +118,11 @@ class UserController extends Controller
     {
         $wantedUserArray = [];
 
-        $wantedUsers = User::search($request->input('query'))->get();
+        $wantedUsers = User::search($request->input('query'))
+            ->query(function ($query): void {
+                $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+            })
+            ->get();
         foreach ($wantedUsers as $user) {
             $wantedUserArray[] = $user;
         }
@@ -182,6 +186,8 @@ class UserController extends Controller
                 ? User::search($searchQuery)
                 ->query(function ($query) use ($sortEnum): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo']);
+                    // Exclude the placeholder "Deleted user"
+                    $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
 
                     // Sortierung nur anwenden, wenn $sortEnum vorhanden ist
                     if (!is_null($sortEnum)) {
@@ -203,6 +209,8 @@ class UserController extends Controller
                 ->get()
                 : User::query()
                 ->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                // Exclude the placeholder "Deleted user"
+                ->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'))
                 ->when(!is_null($sortEnum), function ($query) use ($sortEnum): void {
                     switch ($sortEnum) {
                         case UserSortEnum::ALPHABETICALLY_ASCENDING:
@@ -1420,7 +1428,17 @@ class UserController extends Controller
             'password' => Hash::make(Str::random(40)),
             'email_verified_at' => now(),
             'language' => config('app.fallback_locale', 'en'),
-        ])->save();
+            // Required JSON columns without DB defaults must be set explicitly
+            'opened_checklists' => json_encode([]),
+            'opened_areas' => json_encode([]),
+        ]);
+        $user->save();
+        // Ensure the placeholder is not present in Meilisearch index
+        try {
+            $user->unsearchable();
+        } catch (\Throwable $e) {
+            // ignore indexing issues
+        }
 
         return (int) $user->id;
     }

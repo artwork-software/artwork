@@ -135,6 +135,9 @@ class UserRepository extends BaseRepository
     public function searchUsers(string $search): SupportCollection
     {
         return User::search($search)
+            ->query(function ($query): void {
+                $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+            })
             ->get()
             ->map(fn(User $user) => [
                 'id' => $user->getAttribute('id'),

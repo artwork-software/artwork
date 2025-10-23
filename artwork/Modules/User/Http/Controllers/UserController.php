@@ -32,6 +32,7 @@ use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\UserShiftQualificationService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\User\Enums\MemberSortEnum;
 use Artwork\Modules\User\Enums\UserSortEnum;
 use Artwork\Modules\User\Events\UserUpdated;
@@ -63,6 +64,8 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -951,38 +954,26 @@ class UserController extends Controller
         EventService $eventService,
         UserService $userService,
     ): RedirectResponse {
-        // Determine a safe user ID to reassign ownership to
+        // Prevent self-deletion to avoid authentication/session inconsistencies
         $authUserId = null;
         try {
             $authUserId = $userService->getAuthUserId();
         } catch (\Throwable $e) {
-            // No authenticated user available
             $authUserId = null;
         }
-
-        // Prevent self-deletion to avoid authentication/session inconsistencies
         if ($authUserId !== null && $authUserId === $user->id) {
             return Redirect::back()->withErrors([
                 'user' => __('You cannot delete your own account.')
             ]);
         }
 
-        $reassignUserId = $authUserId;
-        // If there is no auth user, try to find another suitable user (prefer an artwork admin)
-        if ($reassignUserId === null) {
-            $reassignUserId = User::role(RoleEnum::ARTWORK_ADMIN->value)
-                ->where('id', '<>', $user->id)
-                ->value('id');
+        // Use a dedicated placeholder user for all mandatory FK reassignments
+        $reassignUserId = $this->getOrCreateDeletedPlaceholderUserId();
 
-            if ($reassignUserId === null) {
-                $reassignUserId = User::where('id', '<>', $user->id)->value('id');
-            }
-        }
-
-        // If still no candidate found, abort gracefully to avoid 500 due to FK constraints
-        if ($reassignUserId === null) {
+        // Disallow deleting the placeholder itself
+        if ($user->id === $reassignUserId) {
             return Redirect::back()->withErrors([
-                'user' => __('Unable to delete this user because no other user exists to reassign related data. Please create another admin user first.')
+                'user' => __('The placeholder user cannot be deleted.')
             ]);
         }
 
@@ -999,7 +990,24 @@ class UserController extends Controller
             $user->chats()->detach();
             $user->verifiableEventTypes()->detach();
             $user->accessMoneySources()->detach();
-            $user->shifts()->detach();
+            // Reassign all shift_user entries to the placeholder user to satisfy FK constraints and preserve data
+            try {
+                ShiftUser::withTrashed()
+                    ->where('user_id', $user->id)
+                    ->update(['user_id' => $reassignUserId, 'deleted_at' => null]);
+            } catch (\Throwable $e) {
+                if (function_exists('report')) {
+                    report($e);
+                }
+                // Fallback: ensure no blocking FK remains
+                try {
+                    ShiftUser::withTrashed()->where('user_id', $user->id)->forceDelete();
+                } catch (\Throwable $e2) {
+                    if (function_exists('report')) {
+                        report($e2);
+                    }
+                }
+            }
 
             // Handle hasMany relationships - reassign or delete
             // Reassign created rooms to replacement user
@@ -1393,5 +1401,27 @@ class UserController extends Controller
         // SVG in Blade rendern
         return response()->view('avatar', compact('letters', 'bgColor', 'textColor'))
             ->header('Content-Type', 'image/svg+xml');
+        }
+
+    private function getOrCreateDeletedPlaceholderUserId(): int
+    {
+        $email = config('artwork.deleted_user_email', 'deleted-user@artwork.local');
+
+        $placeholder = User::where('email', $email)->first();
+        if ($placeholder) {
+            return (int) $placeholder->id;
+        }
+
+        $user = new User();
+        $user->forceFill([
+            'first_name' => 'Deleted',
+            'last_name' => 'user',
+            'email' => $email,
+            'password' => Hash::make(Str::random(40)),
+            'email_verified_at' => now(),
+            'language' => config('app.fallback_locale', 'en'),
+        ])->save();
+
+        return (int) $user->id;
     }
 }

@@ -949,8 +949,40 @@ class UserController extends Controller
         EventService $eventService,
         UserService $userService,
     ): RedirectResponse {
-        // Get the authenticated user ID for reassigning ownership
-        $authUserId = $userService->getAuthUserId();
+        // Determine a safe user ID to reassign ownership to
+        $authUserId = null;
+        try {
+            $authUserId = $userService->getAuthUserId();
+        } catch (\Throwable $e) {
+            // No authenticated user available
+            $authUserId = null;
+        }
+
+        // Prevent self-deletion to avoid authentication/session inconsistencies
+        if ($authUserId !== null && $authUserId === $user->id) {
+            return Redirect::back()->withErrors([
+                'user' => __('You cannot delete your own account.')
+            ]);
+        }
+
+        $reassignUserId = $authUserId;
+        // If there is no auth user, try to find another suitable user (prefer an artwork admin)
+        if ($reassignUserId === null) {
+            $reassignUserId = User::role(RoleEnum::ARTWORK_ADMIN->value)
+                ->where('id', '<>', $user->id)
+                ->value('id');
+
+            if ($reassignUserId === null) {
+                $reassignUserId = User::where('id', '<>', $user->id)->value('id');
+            }
+        }
+
+        // If still no candidate found, abort gracefully to avoid 500 due to FK constraints
+        if ($reassignUserId === null) {
+            return Redirect::back()->withErrors([
+                'user' => __('Unable to delete this user because no other user exists to reassign related data. Please create another admin user first.')
+            ]);
+        }
 
         // Handle belongsToMany relationships - detach the user
         DB::beginTransaction();
@@ -967,32 +999,42 @@ class UserController extends Controller
             $user->accessMoneySources()->detach();
 
             // Handle hasMany relationships - reassign or delete
-            // Reassign created rooms to authenticated user
+            // Reassign created rooms to replacement user
             $user->createdRooms()->withTrashed()->each(
                 fn(Room $room) => $roomService->update(
                     $room,
-                    ['user_id' => $authUserId]
+                    ['user_id' => $reassignUserId]
                 )
             );
 
-            // Reassign events to authenticated user
+            // Reassign events to replacement user
             $user->events()->withTrashed()->each(
                 fn(Event $event) => $eventService->update(
                     $event,
-                    ['user_id' => $authUserId]
+                    ['user_id' => $reassignUserId]
                 )
             );
 
             // Delete or reassign other hasMany relationships
             $user->notificationSettings()->delete();
-            $user->comments()->update(['user_id' => $authUserId]);
-            $user->private_checklists()->update(['user_id' => $authUserId]);
-            $user->doneTasks()->update(['user_id' => $authUserId]);
-            $user->project_files()->update(['user_id' => $authUserId]);
+            $user->comments()->update(['user_id' => $reassignUserId]);
+            $user->private_checklists()->update(['user_id' => $reassignUserId]);
+            $user->doneTasks()->update(['user_id' => $reassignUserId]);
+            // Some installations may not have a user_id column on project_files.
+            // In that case, attempting to update the relation would throw a SQL error.
+            // We gracefully skip this step so the page does not crash and simply omit this element.
+            try {
+                $user->project_files()->update(['user_id' => $reassignUserId]);
+            } catch (\Throwable $e) {
+                // Log at a low level and continue without failing the whole request
+                if (function_exists('report')) {
+                    report($e);
+                }
+            }
             $user->globalNotification()->delete();
-            $user->money_sources()->update(['creator_id' => $authUserId]);
-            $user->tasks()->update(['user_id' => $authUserId]);
-            Project::where('user_id', $user->id)->update(['user_id' => $authUserId]);
+            $user->money_sources()->update(['creator_id' => $reassignUserId]);
+            $user->tasks()->update(['user_id' => $reassignUserId]);
+            Project::where('user_id', $user->id)->update(['user_id' => $reassignUserId]);
             $user->eventVerifications()->delete();
             $user->workTimeBookings()->delete();
             $user->productBasket()->delete();
@@ -1051,16 +1093,16 @@ class UserController extends Controller
                         ->orWhere('changes', 'LIKE', '"changed_by": {"id": ' . $user->id . '%');
                 })
                 ->whereIn('changer_type', [User::class, LaravelUser::class])
-                ->each(function ($change) use ($user, $authUserId): void {
-                    $change->changer_id = $authUserId;
+                ->each(function ($change) use ($user, $reassignUserId): void {
+                    $change->changer_id = $reassignUserId;
                     $change->changes = str_replace(
                         ' "changed_by": {"id": ' . $user->id,
-                        ' "changed_by": {"id": ' . $authUserId,
+                        ' "changed_by": {"id": ' . $reassignUserId,
                         $change->changes
                     );
                     $change->save();
                 });
-            SubEvent::where('user_id', $user->id)->update(['user_id' => $authUserId]);
+            SubEvent::where('user_id', $user->id)->update(['user_id' => $reassignUserId]);
             // Now delete the user
             $user->delete();
             DB::commit();

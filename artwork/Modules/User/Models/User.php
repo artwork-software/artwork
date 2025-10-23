@@ -725,4 +725,20 @@ class User extends Model implements
         return sprintf('%02d:%02d', $hours, $minutes);
     }
 
+    /**
+     * Exclude the placeholder "Deleted user" from Scout indexing
+     */
+    public function shouldBeSearchable(): bool
+    {
+        return $this->email !== config('artwork.deleted_user_email', 'deleted-user@artwork.local');
+    }
+
+    /**
+     * Convenience scope to hide the placeholder user in queries
+     */
+    public function scopeExcludeDeletedPlaceholder(Builder $builder): Builder
+    {
+        return $builder->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+    }
+
 }

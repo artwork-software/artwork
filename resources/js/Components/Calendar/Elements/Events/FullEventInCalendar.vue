@@ -73,12 +73,12 @@
                                 <!-- Projekt-Status Punkt -->
                                 <div
                                     v-if="usePage().props.auth.user.calendar_settings.project_status && event.project?.status"
-                                    class="group size-3.5 rounded-full border"
+                                    class="group relative shrink-0 flex-none size-3.5 min-w-3.5 min-h-3.5 rounded-full border"
                                     :style="{ backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color }"
                                     title=""
                                 >
-                                    <div class="absolute hidden group-hover:block top-5">
-                                        <div class="rounded-full bg-artwork-navigation-background px-2 py-0.5 text-[10px] text-white">
+                                    <div class="absolute hidden group-hover:block top-5 z-99">
+                                        <div class="rounded-full bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white">
                                             {{ event?.project?.status?.name }}
                                         </div>
                                     </div>
@@ -88,11 +88,16 @@
                                 <a
                                     v-if="event.project?.name && event.project?.id"
                                     :href="getEditHref(event.project?.id)"
-                                    class="truncate hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200"
+                                    class="relative group flex-1 min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200"
                                 >
-                                  <span class="truncate inline-block max-w-[12rem] md:max-w-[16rem] text-sm lg:max-w-[20rem] font-semibold ">
+                                  <span ref="projectNameSpan" :class="['block w-full font-semibold', isProjectNameLong ? 'text-[13px] leading-4 two-line-clamp' : 'truncate text-sm']">
                                     {{ event.project?.name }}
                                   </span>
+                                  <div v-if="isNameTruncated" class="absolute hidden group-hover:block top-5 left-0 z-50 w-42">
+                                    <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white">
+                                      {{ event.project?.name }}
+                                    </div>
+                                  </div>
                                 </a>
                             </div>
 
@@ -341,7 +346,7 @@
                                 <div class="flex items-center gap-1.5 min-w-0">
                                     <div
                                         v-if="usePage().props.auth.user.calendar_settings.project_status && event.project?.status"
-                                        class="size-3.5 rounded-full border"
+                                        class="relative shrink-0 flex-none size-3.5 min-w-3.5 min-h-3.5 rounded-full border"
                                         :style="{ backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color }"
                                     ></div>
                                     <a
@@ -640,7 +645,7 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onMounted, ref } from "vue";
+import { computed, defineAsyncComponent, onMounted, onBeforeUnmount, ref, watch, nextTick } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import {
     IconCalendarPlus,
@@ -714,6 +719,34 @@ const isHighlighted = computed(() => {
     const highlightEventId = usePage().props.urlParameters.highlightEventId;
     return highlightEventId && parseInt(highlightEventId) === parseInt(props.event.id);
 });
+
+// Consider project name long when it exceeds a reasonable character threshold
+const isProjectNameLong = computed(() => {
+    const name = props.event?.project?.name ?? '';
+    return name.length > 24; // threshold can be adjusted if desired
+});
+
+// Runtime detection: show tooltip only when text is actually truncated
+const projectNameSpan = ref(null);
+const isNameTruncated = ref(false);
+const checkTruncation = () => {
+    const el = projectNameSpan.value;
+    if (!el) { isNameTruncated.value = false; return; }
+    const truncated = el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight;
+    isNameTruncated.value = truncated;
+};
+
+onMounted(() => {
+    nextTick(checkTruncation);
+    window.addEventListener('resize', checkTruncation);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', checkTruncation);
+});
+
+// Re-check when name or width/zoom changes
+watch(() => [props.event?.project?.name, props.width, zoom_factor.value], () => nextTick(checkTruncation));
 
 const element = ref(null);
 const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
@@ -824,6 +857,15 @@ button:focus-visible {
 /* Mini-Fix: verhindert zu harte Text-Überläufe in sehr schmalen Kacheln */
 .eventTime,
 .eventHeader {
+    word-break: break-word;
+}
+.two-line-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2; /* future-proof */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
     word-break: break-word;
 }
 </style>

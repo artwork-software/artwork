@@ -988,7 +988,17 @@ class UserController extends Controller
             $user->comments()->update(['user_id' => $authUserId]);
             $user->private_checklists()->update(['user_id' => $authUserId]);
             $user->doneTasks()->update(['user_id' => $authUserId]);
-            $user->project_files()->update(['user_id' => $authUserId]);
+            // Some installations may not have a user_id column on project_files.
+            // In that case, attempting to update the relation would throw a SQL error.
+            // We gracefully skip this step so the page does not crash and simply omit this element.
+            try {
+                $user->project_files()->update(['user_id' => $authUserId]);
+            } catch (\Throwable $e) {
+                // Log at a low level and continue without failing the whole request
+                if (function_exists('report')) {
+                    report($e);
+                }
+            }
             $user->globalNotification()->delete();
             $user->money_sources()->update(['creator_id' => $authUserId]);
             $user->tasks()->update(['user_id' => $authUserId]);

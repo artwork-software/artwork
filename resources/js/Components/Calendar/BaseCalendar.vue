@@ -86,30 +86,34 @@
                                                 >
                                                     <!-- Nur rendern, wenn Cell (Tag×Raum) in/nahe Viewport -->
                                                     <template v-if="isCellVisible(cellKey(day, room))">
-                                                        <AsyncSingleEventInCalendar
+                                                        <div
                                                             v-for="(evt, idx) in eventsInCell(day, room)"
                                                             :key="evt.id"
-                                                            v-memo="[evt.id, evt.updated_at, multiEdit, textStyle.fontSize, textStyle.lineHeight, cardWidthNum]"
                                                             class="py-0.5"
                                                             :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
-                                                            :event="evt"
-                                                            :multi-edit="multiEdit"
-                                                            :font-size="textStyle.fontSize"
-                                                            :line-height="textStyle.lineHeight"
-                                                            :rooms="rooms"
-                                                            :has-admin-role="hasAdminRole()"
-                                                            :width="cardWidthNum"
-                                                            :first_project_tab_id="first_project_tab_id"
-                                                            :firstProjectShiftTabId="firstProjectShiftTabId"
-                                                            :verifierForEventTypIds="verifierForEventTypIds"
-                                                            :is-planning="isPlanning"
-                                                            @edit-event="showEditEventModel"
-                                                            @edit-sub-event="openAddSubEventModal"
-                                                            @open-add-sub-event-modal="openAddSubEventModal"
-                                                            @open-confirm-modal="openDeleteEventModal"
-                                                            @show-decline-event-modal="openDeclineEventModal"
-                                                            @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                                                        />
+                                                            @click="onEventClick(evt, $event)"
+                                                        >
+                                                            <AsyncSingleEventInCalendar
+                                                                v-memo="[evt.id, evt.updated_at, multiEdit, textStyle.fontSize, textStyle.lineHeight, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
+                                                                :event="evt"
+                                                                :multi-edit="multiEdit"
+                                                                :font-size="textStyle.fontSize"
+                                                                :line-height="textStyle.lineHeight"
+                                                                :rooms="rooms"
+                                                                :has-admin-role="hasAdminRole()"
+                                                                :width="cardWidthNum"
+                                                                :first_project_tab_id="first_project_tab_id"
+                                                                :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                                :verifierForEventTypIds="verifierForEventTypIds"
+                                                                :is-planning="isPlanning"
+                                                                @edit-event="showEditEventModel"
+                                                                @edit-sub-event="openAddSubEventModal"
+                                                                @open-add-sub-event-modal="openAddSubEventModal"
+                                                                @open-confirm-modal="openDeleteEventModal"
+                                                                @show-decline-event-modal="openDeclineEventModal"
+                                                                @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                                            />
+                                                        </div>
                                                     </template>
 
                                                     <!-- Platzhalter: weicher Abschluss, wenn wenig Inhalt -->
@@ -190,7 +194,7 @@
                     <div v-for="room in newCalendarData">
                         <div v-for="events in room.content" :key="events" class="flex flex-col">
                             <div v-for="(event, index) in events.events" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="mb-0.5" :id="'scroll_container-' + events.date">
-                                <div class="py-0.5" :key="event.id">
+                                <div class="py-0.5" :key="event.id" @click="onEventClick(event, $event)">
                                     <AsyncSingleEventInCalendar
                                         :event="event"
                                         :multi-edit="multiEdit"
@@ -1081,6 +1085,14 @@ function scrollToNextEvent(day: DayLike, room: RoomLike) {
 
     container.scrollTo({ top: targetTop, behavior: 'smooth' });
 }
+
+// When multi-edit is enabled, clicking an event toggles its selection
+const onEventClick = (evt: any, e?: MouseEvent) => {
+    if (!multiEdit.value) return;
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    const nextState = !(evt?.considerOnMultiEdit === true);
+    handleMultiEditEventCheckboxChange(evt.id, nextState, (evt?.room_id ?? evt?.roomId ?? null));
+};
 </script>
 
 <style scoped>

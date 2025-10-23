@@ -31,6 +31,7 @@ use Artwork\Modules\Shift\Http\Requests\UpdateUserShiftQualificationRequest;
 use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\UserShiftQualificationService;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Enums\MemberSortEnum;
 use Artwork\Modules\User\Enums\UserSortEnum;
 use Artwork\Modules\User\Events\UserUpdated;
@@ -61,6 +62,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -997,6 +999,7 @@ class UserController extends Controller
             $user->chats()->detach();
             $user->verifiableEventTypes()->detach();
             $user->accessMoneySources()->detach();
+            $user->shifts()->detach();
 
             // Handle hasMany relationships - reassign or delete
             // Reassign created rooms to replacement user
@@ -1015,6 +1018,17 @@ class UserController extends Controller
                 )
             );
 
+            // Reassign shifts committed by this user, if applicable
+            try {
+                if (Schema::hasColumn('shifts', 'committing_user_id')) {
+                    Shift::where('committing_user_id', $user->id)->update(['committing_user_id' => $reassignUserId]);
+                }
+            } catch (\Throwable $e) {
+                if (function_exists('report')) {
+                    report($e);
+                }
+            }
+
             // Delete or reassign other hasMany relationships
             $user->notificationSettings()->delete();
             $user->comments()->update(['user_id' => $reassignUserId]);
@@ -1022,9 +1036,11 @@ class UserController extends Controller
             $user->doneTasks()->update(['user_id' => $reassignUserId]);
             // Some installations may not have a user_id column on project_files.
             // In that case, attempting to update the relation would throw a SQL error.
-            // We gracefully skip this step so the page does not crash and simply omit this element.
+            // We first check the schema and only attempt an update if the column exists.
             try {
-                $user->project_files()->update(['user_id' => $reassignUserId]);
+                if (Schema::hasColumn('project_files', 'user_id')) {
+                    $user->project_files()->update(['user_id' => $reassignUserId]);
+                }
             } catch (\Throwable $e) {
                 // Log at a low level and continue without failing the whole request
                 if (function_exists('report')) {

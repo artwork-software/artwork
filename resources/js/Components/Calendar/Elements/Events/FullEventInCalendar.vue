@@ -46,6 +46,47 @@
             {{ $t('Verification requested') }}
         </div>
 
+        <!-- Projektname: eigener Balken oberhalb des Events -->
+        <div v-if="event.project?.name && event.project?.id" class="w-full px-2 py-1 border-b border-black/15">
+            <div
+                class="flex items-center gap-1.5 min-w-0"
+                :style="{
+                  color: getTextColorBasedOnBackground(
+                    backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
+                  )
+                }"
+            >
+                <!-- Projekt-Status Punkt (fixe Größe) -->
+                <div
+                    v-if="usePage().props.auth.user.calendar_settings.project_status && event.project?.status"
+                    class="group relative shrink-0 flex-none size-3.5 min-w-3.5 min-h-3.5 rounded-full border"
+                    :style="{ backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color }"
+                    title=""
+                >
+                    <div class="absolute hidden group-hover:block top-5 z-99">
+                        <div class="rounded-full bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white">
+                            {{ event?.project?.status?.name }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projektname als Link, einzeilig mit Tooltip bei Trunkierung -->
+                <a
+                    :href="getEditHref(event.project?.id)"
+                    class="relative group flex-1 min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200"
+                >
+                    <span ref="projectNameSpan" class="block w-full truncate font-semibold text-xs">
+                        {{ event.project?.name }}
+                    </span>
+                    <div v-if="isNameTruncated" class="absolute hidden group-hover:block top-5 left-0 z-50 w-42">
+                        <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white">
+                            {{ event.project?.name }}
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
         <!-- CONTENT: Detailliert ab mittlerem Zoom -->
         <div v-if="zoom_factor > 0.6" class="grid grid-cols-1 md:grid-cols-3 gap-x-3 px-2.5 py-2">
             <!-- Linke 2/3 Spalte -->
@@ -69,7 +110,7 @@
                     >
                         <!-- Kopfzeile -->
                         <div class="relative space-y-0.5">
-                            <div class="flex items-center gap-1.5 min-w-0">
+                            <div v-if="false" class="flex items-center gap-1.5 min-w-0">
                                 <!-- Projekt-Status Punkt -->
                                 <div
                                     v-if="usePage().props.auth.user.calendar_settings.project_status && event.project?.status"

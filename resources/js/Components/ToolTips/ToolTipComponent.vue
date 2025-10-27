@@ -14,6 +14,7 @@
                         class="cursor-pointer"
                         :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
                         :stroke-width="stroke"
+                        :style="iconStyle"
                     />
                 </button>
             </div>
@@ -30,6 +31,7 @@
                         class="cursor-pointer"
                         :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
                         :stroke-width="stroke"
+                        :style="iconStyle"
                     />
                 </button>
             </div>
@@ -45,6 +47,7 @@
                         class="cursor-pointer"
                         :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
                         :stroke-width="stroke"
+                        :style="iconStyle"
                     />
                 </button>
             </div>
@@ -60,6 +63,7 @@
                         class="cursor-pointer"
                         :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
                         :stroke-width="stroke"
+                        :style="iconStyle"
                     />
                 </button>
             </div>
@@ -78,6 +82,7 @@
                 class="cursor-pointer"
                 :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
                 :stroke-width="stroke"
+                :style="iconStyle"
             />
         </button>
     </div>
@@ -102,6 +107,7 @@ const props = defineProps({
         default: null,
     },
     iconSize: { type: String, default: 'w-6 h-6' },
+    iconStyle: { type: [String, Object], default: null },
     disabled: { type: Boolean, default: false },
     stroke: { type: [String, Number], default: '1' },
     whiteIcon: { type: Boolean, default: false },

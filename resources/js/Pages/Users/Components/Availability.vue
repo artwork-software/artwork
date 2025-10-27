@@ -23,7 +23,7 @@
 
         </div>
         <div class="col-span-4 mt-12">
-            <UserVacations :availabilities="availabilities" :vacationSelectCalendar="vacationSelectCalendar" :createShowDate="createShowDate" :type="type" :user="user" :vacations="vacations" />
+            <UserVacations :availabilities="availabilities" :vacationSelectCalendar="vacationSelectCalendar" :createShowDate="createShowDate" :type="type" :user="user" :vacations="vacations" :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate" />
         </div>
     </div>
 </template>

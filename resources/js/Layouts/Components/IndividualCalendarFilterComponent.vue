@@ -484,7 +484,12 @@ export default {
             }
         },
         initFilter() {
-            this.filterArray.rooms = this.filterOptions.room_ids;
+            // Filter out rooms not relevant for disposition from the Rooms list
+            const roomList = this.filterOptions.room_ids || [];
+            this.filterArray.rooms = roomList.filter((item) => {
+                const rel = item?.relevant_for_disposition;
+                return !(rel === false || rel === 0 || rel === '0');
+            });
             this.filterArray.areas = this.filterOptions.area_ids;
             this.filterArray.roomCategories = this.filterOptions.room_category_ids;
             this.filterArray.roomAttributes = this.filterOptions.room_attribute_ids;

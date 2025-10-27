@@ -364,7 +364,7 @@
                                     @change="toggleCompactMode"
                                     :icon="!$page.props.auth.user.compact_mode ? 'IconTextDecrease' : 'IconTextIncrease'"
                                 />
-                                <BaseFilter :whiteIcon="true" :onlyIcon="true">
+                                <BaseFilter :whiteIcon="false" :onlyIcon="true">
                                     <div class="mx-auto w-full max-w-md max-h-44 rounded-2xl border-none mt-2 pb-3">
                                         <div class="relative flex items-start mb-2">
                                             <div class="flex h-6 items-center">
@@ -400,7 +400,7 @@
                                         </div>
                                     </div>
                                 </BaseFilter>
-                                <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-fit" right white-icon classesButton="ui-button hover:!bg-artwork-navigation-color/10 text-artwork-buttons-context">
+                                <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-fit" right classesButton="ui-button hover:!bg-artwork-navigation-color/10 text-artwork-buttons-context">
                                     <div class="flex items-center justify-end py-1">
                                     <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="this.resetSort()">
                                         {{ $t('Reset') }}
@@ -518,8 +518,13 @@
                                                      v-for="(userDayService, position) in userDayServices"
                                                      class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center"
                                                      :class="position > 0 ? '-ml-3' : ''">
-                                                    <PropertyIcon :name="userDayService.icon" class="h-4 w-4"
-                                                               :style="{color: userDayService.hex_color}"/>
+                                                    <ToolTipComponent
+                                                        :tooltip-text="userDayService.name"
+                                                        :icon="userDayService.icon"
+                                                        icon-size="h-4 w-4"
+                                                        :icon-style="{ color: userDayService.hex_color }"
+                                                        :classes-button="'mt-0'"
+                                                    />
                                                 </div>
                                             </div>
                                         </td>
@@ -597,8 +602,13 @@
                                                      v-for="(userDayService, position) in userDayServices"
                                                      class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center"
                                                      :class="position > 0 ? '-ml-3' : ''">
-                                                    <PropertyIcon :name="userDayService.icon" class="h-4 w-4"
-                                                               :style="{color: userDayService.hex_color}"/>
+                                                    <ToolTipComponent
+                                                        :tooltip-text="userDayService.name"
+                                                        :icon="userDayService.icon"
+                                                        icon-size="h-4 w-4"
+                                                        :icon-style="{ color: userDayService.hex_color }"
+                                                        :classes-button="'mt-0'"
+                                                    />
                                                 </div>
                                             </div>
                                         </td>

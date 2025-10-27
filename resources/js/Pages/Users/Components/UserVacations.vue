@@ -62,6 +62,7 @@
         :type="type"
         :user="user"
         :vacationSelectCalendar="vacationSelectCalendar"
+        :selectedDate="showVacationsAndAvailabilitiesDate"
         @closed="showAddEditVacationsModal = false"
     />
 </template>
@@ -82,6 +83,7 @@ const props = defineProps({
     dateToShow: { type: Array, default: () => [] },
     createShowDate: { type: Array, default: [] },
     availabilities: { type: Array, default: () => [] },
+    showVacationsAndAvailabilitiesDate: { type: String, default: '' },
 })
 
 const showAddEditVacationsModal = ref(false)

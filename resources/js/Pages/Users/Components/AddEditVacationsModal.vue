@@ -305,6 +305,7 @@ const props = defineProps({
     vacationSelectCalendar: { type: Array, default: () => [] },
     dateToShow: { type: Array, default: () => [] },
     createShowDate: { type: Array, default: () => [] },
+    selectedDate: { type: String, default: '' },
 })
 const emit = defineEmits(['closed'])
 const { proxy } = getCurrentInstance()
@@ -315,11 +316,13 @@ const vacation = useForm({
     id: props.editVacation ? props.editVacation.id : null,
     start_time: props.editVacation ? props.editVacation.start_time : null,
     end_time: props.editVacation ? props.editVacation.end_time : null,
-    date: props.editVacation ? props.editVacation.date : null,
+    date: props.editVacation ? props.editVacation.date : (props.selectedDate || null),
     type: props.editVacation ? props.editVacation.type : 'available',
     full_day: props.editVacation ? props.editVacation.full_day : false,
     is_series: props.editVacation ? props.editVacation.is_series : false,
-    series_repeat: props.editVacation?.series ? props.editVacation?.series.frequency : {id: 'weekly', name: proxy.$t('Weekly')},
+    series_repeat: props.editVacation?.series
+        ? { id: props.editVacation?.series.frequency, name: props.editVacation?.series.frequency === 'daily' ? proxy.$t('Daily') : proxy.$t('Weekly') }
+        : { id: 'weekly', name: proxy.$t('Weekly') },
     series_repeat_until: props.editVacation?.series ? props.editVacation?.series.end_date : null,
     comment: props.editVacation ? props.editVacation.comment : null,
     type_before_update: props.editVacation ? props.editVacation.type : null,
@@ -409,14 +412,29 @@ const saveOrUpdateVacation = (withNewModal = false) => {
     } else helpText.comment = ''
 
     // Create or Update
+    const applyTransform = () => {
+        vacation.transform((data) => ({
+            ...data,
+            // Ensure backend receives primitives
+            series_repeat: data.is_series
+                ? (typeof data.series_repeat === 'string' ? data.series_repeat : data.series_repeat?.id ?? null)
+                : null,
+            series_repeat_until: data.is_series ? data.series_repeat_until : null,
+            start_time: data.full_day ? null : data.start_time,
+            end_time: data.full_day ? null : data.end_time,
+        }))
+    }
+
     if (vacation.id === null) {
         if (props.type === 'freelancer') {
+            applyTransform()
             vacation.post(route('freelancer.vacation.add', props.user.id), {
                 preserveScroll: true,
                 preserveState: true,
                 onFinish: () => { withNewModal ? resetForm() : closeModal(true) }
             })
         } else {
+            applyTransform()
             vacation.post(route('user.vacation.add', props.user.id), {
                 preserveScroll: true,
                 preserveState: true,
@@ -425,6 +443,7 @@ const saveOrUpdateVacation = (withNewModal = false) => {
         }
     } else {
         if (vacation.type_before_update === 'available') {
+            applyTransform()
             vacation.patch(route('update.availability', vacation.id), {
                 preserveScroll: true,
                 preserveState: true,
@@ -432,6 +451,7 @@ const saveOrUpdateVacation = (withNewModal = false) => {
             })
         }
         if (vacation.type_before_update === 'vacation') {
+            applyTransform()
             vacation.patch(route('update.vacation', vacation.id), {
                 preserveScroll: true,
                 preserveState: true,
@@ -445,7 +465,7 @@ const resetForm = () => {
     vacation.id = null
     vacation.start_time = null
     vacation.end_time = null
-    vacation.date = null
+    vacation.date = props.selectedDate || null
     vacation.type = 'available'
     vacation.full_day = false
     vacation.is_series = false

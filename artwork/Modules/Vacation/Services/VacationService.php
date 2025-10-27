@@ -45,7 +45,7 @@ readonly class VacationService
             'date' => $request->date,
             'full_day' =>  $request->full_day,
             'comment' => $request->comment,
-            'is_serie' => $request->is_series,
+            'is_series' => $request->is_series,
             'type' => $vacationTypeEnum
         ]);
 
@@ -63,7 +63,8 @@ readonly class VacationService
                 $request->get('series_repeat_until')
             );
             $firstVacation->update([
-                'series_id' => $vacationSeries->id
+                'series_id' => $vacationSeries->id,
+                'is_series' => true
             ]);
 
             $this->createSeries(
@@ -73,6 +74,7 @@ readonly class VacationService
                 $request->date,
                 $vacationer,
                 $request,
+                $vacationTypeEnum,
                 $vacationConflictService,
                 $notificationService
             );
@@ -91,6 +93,7 @@ readonly class VacationService
         string $date,
         Vacationer $vacationer,
         Request $data,
+        \Artwork\Modules\Vacation\Enums\Vacation $vacationTypeEnum,
         VacationConflictService $vacationConflictService,
         NotificationService $notificationService
     ): void {
@@ -107,7 +110,8 @@ readonly class VacationService
                     'full_day' =>  $data->full_day,
                     'comment' => $data->comment,
                     'is_series' => true,
-                    'series_id' => $seriesId
+                    'series_id' => $seriesId,
+                    'type' => $vacationTypeEnum
                 ]);
                 $vacationConflictService->checkVacationConflictsOnDay(
                     $newVacation->date,
@@ -128,7 +132,8 @@ readonly class VacationService
                     'full_day' =>  $data->full_day,
                     'comment' => $data->comment,
                     'is_series' => true,
-                    'series_id' => $seriesId
+                    'series_id' => $seriesId,
+                    'type' => $vacationTypeEnum
                 ]);
                 $vacationConflictService->checkVacationConflictsOnDay(
                     $weekly->date,

@@ -327,12 +327,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, defineOptions } from 'vue'
+import {computed, onMounted, onBeforeUnmount, defineOptions, defineAsyncComponent} from 'vue'
 import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
-import NotificationBlock from '@/Layouts/Components/NotificationComponents/NotificationBlock.vue'
-import SingleUserEventShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'
 import Permissions from '@/Mixins/Permissions.vue'
 import { is, can } from 'laravel-permission-to-vuejs'
 
@@ -374,6 +371,10 @@ const eventsCountToday = computed(() => props.eventsOfDay?.length ?? 0)
 const shiftsCountToday = computed(() => props.shiftsOfDay?.length ?? 0)
 const notificationsCountToday = computed(() => props.notificationOfToday?.length ?? 0)
 const openTasksCount = computed(() => (props.tasks?.filter(t => !t.done).length) ?? 0)
+
+const BaseAlertComponent = defineAsyncComponent(() => import('@/Components/Alerts/BaseAlertComponent.vue'));
+const NotificationBlock = defineAsyncComponent(() => import('@/Layouts/Components/NotificationComponents/NotificationBlock.vue'));
+const SingleUserEventShift = defineAsyncComponent(() => import('@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'));
 
 const formattedToday = computed(() => {
     try {

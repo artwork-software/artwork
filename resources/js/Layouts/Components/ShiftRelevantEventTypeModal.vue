@@ -1,9 +1,6 @@
 <template>
-    <BaseModal @closed="$emit('closeModal')" v-if="show" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
-        <ModalHeader
-            :title="$t('Shift-relevant events')"
-            :description="$t('Define the appointment types for which shifts are to be assigned in this project.')"
-        />
+    <ArtworkBaseModal @close="$emit('closeModal')" v-if="show" :title="$t('Shift-relevant events')"
+                      :description="$t('Define the appointment types for which shifts are to be assigned in this project.')">
         <Menu as="div" class="inline-block text-left relative w-full">
             <div>
                 <MenuButton
@@ -53,10 +50,10 @@
                 </div>
             </div>
         </div>
-        <div class="flex justify-center mt-2">
-            <FormButton :text="$t('Save')" @click="changeShiftRelevantEventTypes"/>
+        <div class="flex justify-end mt-2">
+            <BaseUIButton :label="$t('Save')" is-add-button @click="changeShiftRelevantEventTypes"/>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -70,6 +67,8 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     mixins: [Permissions],
@@ -80,6 +79,8 @@ export default {
         eventTypes: Array
     },
     components: {
+        BaseUIButton,
+        ArtworkBaseModal,
         ModalHeader,
         BaseModal,
         FormButton,

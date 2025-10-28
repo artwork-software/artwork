@@ -1,10 +1,7 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
-            <div class="mx-4">
-                <ModalHeader
-                    :title="$t('Upload document')"
-                    :description="$t('Upload documents that relate exclusively to the budget. These can only be viewed by users with the appropriate authorization.')"
-                />
+    <ArtworkBaseModal @close="closeModal" v-if="show"  :title="$t('Upload document')"
+                      :description="$t('Upload documents that relate exclusively to the budget. These can only be viewed by users with the appropriate authorization.')">
+            <div class="">
                 <form @submit.prevent="storeFiles" class="grid grid-cols-1 gap-4">
                     <div>
                         <input
@@ -26,7 +23,7 @@
                         <div v-for="file of files">{{ file.name }}</div>
                     </div>
                     <div class="">
-                        <TextareaComponent
+                        <BaseTextarea
                             :label="$t('Comment / Note')"
                             id="description"
                             v-model="comment"
@@ -57,16 +54,17 @@
                         </div>
                     </div>
 
-                    <div class="justify-center flex w-full my-6">
-                        <FormButton
-                            :text="$t('Upload document')"
+                    <div class="justify-end flex w-full my-6">
+                        <BaseUIButton
+                            :label="$t('Upload document')"
                             :disabled="files.length < 1"
                             type="submit"
+                            is-add-button
                         />
                     </div>
                 </form>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -80,6 +78,9 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: "ProjectFileUploadModal",
@@ -91,6 +92,9 @@ export default {
         budgetAccess: Array
     },
     components: {
+        BaseUIButton,
+        BaseTextarea,
+        ArtworkBaseModal,
         ModalHeader,
         UserSearch,
         TextareaComponent,

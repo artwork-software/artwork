@@ -11,22 +11,30 @@ import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import Tooltip from 'primevue/tooltip'
 
-import en from '../../lang/en.json'
-import de from '../../lang/de.json'
+async function loadLocaleMessages(locale) {
+    // Vite macht daraus separate Chunks pro Sprache
+    const messages = await import(`../../lang/${locale}.json`)
+    return messages.default || messages
+}
 
+const initialLocale =
+    localStorage.getItem('locale') ||
+    document.documentElement.lang ||
+    'de'
 
 const i18n = createI18n({
     legacy: false,
     globalInjection: true,
-    locale: localStorage.getItem('locale') || document.documentElement.lang || 'de',
+    locale: initialLocale,
     fallbackLocale: 'en',
-    messages: { en, de },
+    messages: {}, // erstmal leer
     missingWarn: false,
     fallbackWarn: false,
     missing: (_l, key) => key,
 })
 
 const pages = import.meta.glob('./Pages/**/*.vue')
+
 
 createInertiaApp({
     title: (title) => `${title}`,
@@ -35,10 +43,23 @@ createInertiaApp({
         if (!page) throw new Error(`Page not found: ${name}`)
         return page()
     },
-    setup({el, App: InertiaRoot, props, plugin}) {
+    async setup({el, App: InertiaRoot, props, plugin}) {
         const app = createApp({render: () => h(InertiaRoot, props)})
         app.use(plugin)
-        if (typeof route !== 'undefined') app.mixin({methods: {route}})
+
+        if(typeof route !== 'undefined')
+        {
+            app.mixin({methods: {route}})
+        }
+
+        // Sprache dynamisch laden, bevor wir i18n registrieren
+        const initialLocale =
+            localStorage.getItem('locale') ||
+            document.documentElement.lang ||
+            'de'
+
+        const messages = await import(`../../lang/${initialLocale}.json`)
+        i18n.global.setLocaleMessage(initialLocale, messages.default || messages)
 
         app.use(i18n)
         app.use(PrimeVue, {

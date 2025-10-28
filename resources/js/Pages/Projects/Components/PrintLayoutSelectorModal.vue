@@ -1,11 +1,6 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div>
-            <ModalHeader
-                :title="$t('Select print layout')"
-                :description="$t('Select a print layout to print the project')"
-            />
-        </div>
+    <ArtworkBaseModal @close="$emit('close')"  :title="$t('Select print layout')"
+                      :description="$t('Select a print layout to print the project')">
 
 
         <div v-if="printLayouts.length > 0">
@@ -55,7 +50,7 @@
                 </div>
             </div>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -67,6 +62,7 @@ import {ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {IconCheck, IconChevronDown, IconExclamationCircle} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const props = defineProps({
     project: {

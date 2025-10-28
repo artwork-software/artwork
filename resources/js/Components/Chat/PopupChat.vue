@@ -336,16 +336,10 @@
 </template>
 
 <script setup>
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from "vue";
-import AddNewChat from "@/Components/Chat/AddNewChat.vue";
+import {computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
-import SingleChatInOverview from "@/Components/Chat/Components/SingleChatInOverview.vue";
-import SingleMessageInChat from "@/Components/Chat/Components/SingleMessageInChat.vue";
-import ChatToastNotification from "@/Components/Chat/Components/ChatToastNotification.vue";
 import {useUserStatus} from "@/Composeables/useUserStatus.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import RenameGroupChatModal from "@/Components/Chat/Modals/RenameGroupChatModal.vue";
-import DeleteGroupChatModal from "@/Components/Chat/Modals/DeleteGroupChatModal.vue";
 import {
     IconArrowsMove, IconBrandTelegram, IconBubbleText, IconBell, IconBellOff,
     IconChevronLeft,
@@ -356,8 +350,15 @@ import {
     IconTrash, IconUsersGroup,
     IconX
 } from "@tabler/icons-vue";
-import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const { getUserStatus } = useUserStatus()
+
+
+const AddNewChat = defineAsyncComponent(() => import('@/Components/Chat/AddNewChat.vue'));
+const SingleChatInOverview = defineAsyncComponent(() => import('@/Components/Chat/Components/SingleChatInOverview.vue'));
+const SingleMessageInChat = defineAsyncComponent(() => import('@/Components/Chat/Components/SingleMessageInChat.vue'));
+const ChatToastNotification = defineAsyncComponent(() => import('@/Components/Chat/Components/ChatToastNotification.vue'));
+const RenameGroupChatModal = defineAsyncComponent(() => import('@/Components/Chat/Modals/RenameGroupChatModal.vue'));
+const DeleteGroupChatModal = defineAsyncComponent(() => import('@/Components/Chat/Modals/DeleteGroupChatModal.vue'));
 
 const props = defineProps({})
 const chats = ref([])

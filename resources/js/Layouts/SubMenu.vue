@@ -465,6 +465,7 @@ const navigation = ref([
                 current: route().current('user.operationPlan'),
                 has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
             },
+            /* routes to old page, now we have new shift templates in shift-admin-settings, maybe build in link to new page in admin settings or just leave it out
             {
                 name: 'Shift templates',
                 href: route('shifts.presets'),
@@ -472,6 +473,7 @@ const navigation = ref([
                 current: route().current('shifts.presets') || route().current('shifts.timeline-presets.index'),
                 has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
             },
+            */
             {
                 name: 'Work time change requests',
                 href: route('work-time-request.index'),

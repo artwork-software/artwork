@@ -12,6 +12,29 @@ class ArtworkPruneCommand extends PruneCommand
 {
     protected $description = 'Prune (artwork) models that are no longer needed';
 
+    /**
+     * Determine if the given class is a prunable Eloquent model.
+     */
+    protected function isPrunable(string $model): bool
+    {
+        if (! class_exists($model)) {
+            return false;
+        }
+
+        if (! is_subclass_of($model, \Illuminate\Database\Eloquent\Model::class)) {
+            return false;
+        }
+
+        // Check if the model uses the Prunable trait
+        $uses = class_uses_recursive($model);
+        if (! in_array(\Illuminate\Database\Eloquent\Prunable::class, $uses, true)) {
+            return false;
+        }
+
+        // Ensure the model defines the prunable() query method
+        return method_exists($model, 'prunable');
+    }
+
     final protected function models(): Collection
     {
         if (! empty($models = $this->option('model'))) {

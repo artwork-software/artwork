@@ -1,9 +1,6 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
-            <div class="mx-4">
-                <div class="headline1 my-2">
-                    {{ $t('Project properties') }}
-                </div>
+    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Project properties')" description="">
+            <div class="">
                 <Menu class="relative">
                     <div>
                     <MenuButton @click="attributesOpened = true" class="w-full">
@@ -111,11 +108,11 @@
                     </div>
                 </div>
             </div>
-            <div class="justify-center flex w-full my-6">
-                <FormButton :text="$t('Save')"
+            <div class="justify-end flex w-full my-6">
+                <BaseUIButton :label="$t('Save')" is-add-button
                            @click="updateProjectData"/>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -128,6 +125,8 @@ import {Menu, MenuButton, MenuItems} from "@headlessui/vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     mixins: [Permissions],
@@ -143,6 +142,8 @@ export default {
         projectSectorIdArray: Array,
     },
     components: {
+        BaseUIButton,
+        ArtworkBaseModal,
         BaseModal,
         FormButton,
         Menu,

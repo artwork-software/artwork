@@ -1,12 +1,9 @@
 <template>
-    <BaseModal @closed="$emit('closeModal')" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
-            <div class="mx-4">
-                <ModalHeader
-                    :title="$t('Cost units & copyright')"
-                    :description="$t('Define a cost unit and copyright regulations for your project.')"
-                />
-                <TextInputComponent
-                    :label="projectRightForm.cost_center_name ? projectRightForm.cost_center_name : $t('Name of the cost unit')"
+    <ArtworkBaseModal @close="$emit('closeModal')" v-if="show" :title="$t('Cost units & copyright')"
+                      :description="$t('Define a cost unit and copyright regulations for your project.')">
+            <div class="mt-5">
+                <BaseInput
+                    :label="$t('Name of the cost unit')"
                     id="title"
                     v-model="projectRightForm.cost_center_name"
                 />
@@ -38,7 +35,7 @@
                             </div>
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
-                        <ListboxOptions class="w-full rounded-lg bg-primary overflow-y-auto text-sm absolute">
+                        <ListboxOptions class="w-full rounded-lg bg-primary overflow-y-auto text-sm absolute z-100">
                             <ListboxOption v-for="society in collectingSocieties"
                                            class="hover:bg-artwork-buttons-create text-secondary cursor-pointer p-3 flex justify-between "
                                            :key="society.name"
@@ -63,21 +60,22 @@
                         </fieldset>
                     </div>
 
-                    <TextareaComponent :label="$t('Comment / Note')"
+                    <BaseTextarea :label="$t('Comment / Note')"
                               id="description"
                               v-model="projectRightForm.description"
                               rows="4"
                     />
 
                 </div>
-                <div class="w-full flex justify-center my-6">
-                    <FormButton
-                        :text="$t('Save')"
+                <div class="w-full flex justify-end my-6">
+                    <BaseUIButton
+                        :label="$t('Save')"
                         @click="updateData"
+                        is-add-button
                     />
                 </div>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -97,6 +95,10 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     mixins: [Permissions],
@@ -105,6 +107,10 @@ export default {
         'show', 'project', 'collectingSocieties'
     ],
     components: {
+        BaseUIButton,
+        BaseTextarea,
+        BaseInput,
+        ArtworkBaseModal,
         TextareaComponent,
         ModalHeader,
         TextInputComponent,

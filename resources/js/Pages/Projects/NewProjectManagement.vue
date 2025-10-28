@@ -281,10 +281,10 @@
             v-if="showExportModal"
             @close="showExportModal = false"
             :enums="[
-        exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
-        exportTabEnums.EXCEL_CALENDAR_EXPORT,
-        exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
-      ]"
+                exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+                exportTabEnums.EXCEL_CALENDAR_EXPORT,
+                exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
+              ]"
             :configuration="getExportModalConfiguration()"
         />
     </AppLayout>

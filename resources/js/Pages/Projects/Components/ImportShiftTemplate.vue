@@ -1,13 +1,7 @@
 <template>
-    <BaseModal @closed="closeModal">
+    <ArtworkBaseModal @close="closeModal" :title="$t('Import shift template')" :description="$t('Would you like to apply the template to all appointments of this type in this project?')">
         <div>
-            <div class="font-black font-lexend text-primary text-3xl my-2">
-                {{ $t('Import shift template') }}
-            </div>
-            <p class="xsLight subpixel-antialiased">
-                {{ $t('Would you like to apply the template to all appointments of this type in this project?') }}
-            </p>
-            <div class="mt-10">
+            <div class="mt-5">
                 <SwitchGroup as="div" class="flex items-center font-bold mb-8">
                     <SwitchLabel as="span" class="mr-3 text-sm">
                         <span :class="presetForm.all === false ? 'font-bold text-gray-900' : 'font-normal text-gray-500'">
@@ -71,7 +65,7 @@
         <div class="flex justify-center">
             <BaseUIButton :label="$t('Import template')" is-add-button @click="importTemplate" :disabled="presetForm.processing"/>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -106,10 +100,12 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default defineComponent({
     name: "ImportShiftTemplate",
     components: {
+        ArtworkBaseModal,
         BaseUIButton,
         BaseInput,
         TextInputComponent,

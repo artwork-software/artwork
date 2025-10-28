@@ -702,7 +702,7 @@ const lockOrUnlockShift = (commit = false) => {
                     >
                         <div v-if="showTimePresetBox" class="px-4 sm:px-5 pb-4">
                             <div v-if="filteredShiftTimePresets?.length > 0" class="max-h-[240px] md:max-h-[280px] overflow-y-auto pr-1">
-                                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5">
                                     <div
                                         v-for="preset in filteredShiftTimePresets"
                                         :key="'time-preset-'+preset.id"

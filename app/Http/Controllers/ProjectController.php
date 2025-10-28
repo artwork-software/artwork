@@ -2010,15 +2010,29 @@ class ProjectController extends Controller
 
     public function updateProjectState(Request $request, Project $project): void
     {
-        $oldState = $project->state()->first();
-        $project->update(['state' => $request->state_id]);
-        $newState = $project->state()->first();
+        // Hole alte State-ID bevor wir updaten
+        $oldStateId = optional($project->state);
 
-        if (
-            (!empty($newState) && $oldState !== $newState) ||
-            (empty($oldState) && !empty($newState)) ||
-            (!empty($oldState) && empty($newState))
-        ) {
+
+
+        // Aktualisiere nur, wenn wirklich eine neue State-ID kommt
+        // (kleine Absicherung, damit wir nicht sinnlos speichern)
+        $newStateId = $request->input('state');
+
+        if ($newStateId !== null && (int) $project->state !== (int) $newStateId) {
+            $project->update([
+                'state' => $newStateId,
+            ]);
+        }
+
+        // Hole neuen State nach dem Update aus der Relation
+        $newStateIdAfterSave = optional($project->state);
+
+        // Hat sich der Status wirklich geändert?
+        $stateChanged = $oldStateId !== $newStateIdAfterSave;
+
+
+        if ($stateChanged) {
             $this->changeService->saveFromBuilder(
                 $this->changeService
                     ->createBuilder()
@@ -2027,10 +2041,12 @@ class ProjectController extends Controller
                     ->setModelId($project->id)
                     ->setTranslationKey('Project status has changed')
             );
-        }
 
-        $this->setPublicChangesNotification($project->id);
+            // Nur wenn sich was geändert hat, verschicken wir auch die Notification
+            $this->setPublicChangesNotification($project->id);
+        }
     }
+
 
     /**
      * @throws Throwable
@@ -2611,12 +2627,13 @@ class ProjectController extends Controller
 
         $oldProjectName = $project->name;
         $oldProjectBudgetDeadline = $project->budget_deadline;
+        $oldArtistName = $project->artists;
 
         $this->projectService->updateProject($project, [
             'name' => $request->string('name'),
             'artists' => $request->string('artists'),
             'budget_deadline' => $request->get('budget_deadline'),
-            'state' => $request->integer('state'),
+            //'state' => $request->integer('state'),
             'cost_center_id' => $request->string('cost_center') !== null ?
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null,
             'icon' => $request->get('icon'),
@@ -2633,12 +2650,16 @@ class ProjectController extends Controller
         $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'));
         $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'));
 
+        $this->updateProjectState($request, $project);
+
         $newProjectName = $project->name;
         $newProjectBudgetDeadline = $project->budget_deadline;
+        $newArtistName = $project->artists;
 
         // history functions
         $this->checkProjectNameChanges($project->id, $oldProjectName, $newProjectName);
         $this->checkProjectBudgetDeadlineChanges($project->id, $oldProjectBudgetDeadline, $newProjectBudgetDeadline);
+        $this->checkProjectArtistChanges($project->id, $oldArtistName, $newArtistName);
 
         $projectId = $project->id;
         foreach ($project->users->all() as $user) {
@@ -2646,6 +2667,8 @@ class ProjectController extends Controller
         }
         return Redirect::back();
     }
+
+
 
     public function updateTeam(Request $request, Project $project): JsonResponse|RedirectResponse
     {
@@ -2891,6 +2914,10 @@ class ProjectController extends Controller
 
     private function checkProjectNameChanges($projectId, $oldName, $newName): void
     {
+        $oldName = Str::lower($oldName);
+        $newName = Str::lower($newName);
+
+
         if ($oldName !== $newName) {
             $this->changeService->saveFromBuilder(
                 $this->changeService
@@ -2899,6 +2926,25 @@ class ProjectController extends Controller
                     ->setModelClass(Project::class)
                     ->setModelId($projectId)
                     ->setTranslationKey('Project name changed')
+            );
+            $this->setPublicChangesNotification($projectId);
+        }
+    }
+
+    private function checkProjectArtistChanges($projectId, $oldArtist, $newArtist): void
+    {
+        $oldArtist = Str::lower($oldArtist);
+        $newArtist = Str::lower($newArtist);
+
+
+        if ($newArtist !== $oldArtist) {
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('public_changes')
+                    ->setModelClass(Project::class)
+                    ->setModelId($projectId)
+                    ->setTranslationKey('Project artists changed')
             );
             $this->setPublicChangesNotification($projectId);
         }

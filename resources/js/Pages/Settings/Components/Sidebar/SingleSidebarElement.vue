@@ -93,16 +93,20 @@ function removeTab() {
         >
             <button
                 type="button"
-                class="group/button inline-flex items-center gap-2 px-2 py-1.5 transition focus:outline-none focus:ring-2 focus:ring-indigo-400/30 focus:ring-offset-0"
+                class="group/button inline-flex items-start gap-2 px-2 py-1.5 transition focus:outline-none focus:ring-2 focus:ring-indigo-400/30 focus:ring-offset-0"
                 @click="tabClosed = !tabClosed"
                 :aria-expanded="!tabClosed"
                 :aria-controls="`sidebar-panel-${sidebarTab.id}`">
-                <h3
-                    class="text-xs font-medium text-zinc-800 truncate max-w-[12rem]"
-                    :title="sidebarTab.name">
-                    {{ sidebarTab.name }}
-                </h3>
-
+               <div class="text-start flex flex-col items-start gap-1 min-w-0">
+                   <h3
+                       class="text-xs font-medium text-zinc-800 truncate"
+                       :title="sidebarTab.name">
+                       {{ sidebarTab.name }}
+                   </h3>
+                   <p class="inline-flex whitespace-nowrap items-center rounded-full border px-1.5 py-0.5 text-[8px] leading-4 border-zinc-200 bg-white/80 text-zinc-600">
+                        {{ componentCount }} {{ $t('Components') }}
+                    </p>
+               </div>
                 <!-- Ein Icon, rotiert je nach State -->
                 <IconChevronDown
                     class="h-4 w-4 text-zinc-600 transition-transform duration-200"
@@ -111,9 +115,7 @@ function removeTab() {
                 />
 
                 <!-- Counter-Badge (extra kompakt) -->
-                <span class="ml-1 inline-flex whitespace-nowrap items-center rounded-full border px-1.5 py-0.5 text-[8px] leading-4 border-zinc-200 bg-white/80 text-zinc-600">
-                    {{ componentCount }} {{ $t('items') }}
-                </span>
+
             </button>
 
             <BaseMenu has-no-offset white-menu-background>

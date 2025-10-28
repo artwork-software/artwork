@@ -1,10 +1,5 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div>
-            <ModalHeader :title="$t('Create new Chat')" :description="$t('Select users to start a chat. When multiple users are selected, a group chat will be created and you will automatically be included as a member.')" />
-
-        </div>
-
+    <ArtworkBaseModal @close="$emit('close')" :title="$t('Create new Chat')" :description="$t('Select users to start a chat. When multiple users are selected, a group chat will be created and you will automatically be included as a member.')">
         <div class="">
             <UserSearch
                 @userSelected="addUserToChat"
@@ -58,14 +53,14 @@
 
         <div>
             <div class="flex justify-end mt-4">
-                <FormButton type="submit" @click="createChat" :text="$t('Create')" class="w-full sm:w-auto" />
+                <BaseUIButton type="submit" @click="createChat" :label="$t('Create')" is-add-button />
             </div>
         </div>
 
 
 
 
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -80,6 +75,8 @@ import Button from "@/Jetstream/Button.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {ref} from "vue";
 import {IconInfoSquareRoundedFilled} from "@tabler/icons-vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const props = defineProps({
 
 })

@@ -20,57 +20,44 @@
                 <div class="flex items-center pr-5 gap-x-5 justify-between">
                     <div class="flex items-center gap-x-4">
                         <!-- Date Shortcuts - 3 vertical icons -->
-                        <div class="flex flex-col justify-between mr-2 h-10">
+                        <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
+
+                        <div class="flex gap-x-1 mx-2">
                             <ToolTipComponent
                                 direction="right"
                                 :tooltip-text="$t('Today')"
                                 :icon="IconCalendar"
-                                icon-size="w-4 h-4"
+                                icon-size="h-5 w-5"
                                 @click="jumpToToday"
-                                class="flex-1 flex items-center justify-center"
+                                classesButton="ui-button"
                             />
                             <ToolTipComponent
                                 direction="right"
                                 :tooltip-text="$t('Current week')"
                                 :icon="IconCalendarWeek"
-                                icon-size="w-4 h-4"
+                                icon-size="h-5 w-5"
                                 @click="jumpToCurrentWeek"
-                                class="flex-1 flex items-center justify-center"
+                                classesButton="ui-button"
                             />
                             <ToolTipComponent
                                 direction="right"
                                 :tooltip-text="$t('Current month')"
                                 :icon="IconCalendarMonth"
-                                icon-size="w-4 h-4"
+                                icon-size="h-5 w-5"
                                 @click="jumpToCurrentMonth"
-                                class="flex-1 flex items-center justify-center"
+                                classesButton="ui-button"
                             />
                         </div>
-                        <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
                     </div>
 
                     <div class="flex items-center gap-x-5 ">
-                        <Switch @click="changeDailyViewMode" v-model="dailyViewMode" :class="[dailyViewMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                        <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                            <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                <ToolTipComponent
-                                    :icon="IconCalendarWeek"
-                                    icon-size="h-4 w-4"
-                                    :tooltip-text="$t('Daily view')"
-                                    direction="bottom"
-                                />
-                            </span>
-                            <span :class="[dailyViewMode ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                <ToolTipComponent
-                                    :icon="IconCalendarWeek"
-                                    icon-size="h-4 w-4"
-                                    :tooltip-text="$t('Daily view')"
-                                    direction="bottom"
-                                />
-                            </span>
-                        </span>
-                        </Switch>
-
+                        <SwitchIconTooltip
+                            v-model="dailyViewMode"
+                            :tooltip-text="$t('Daily view')"
+                            size="md"
+                            @change="changeDailyViewMode"
+                            :icon="IconCalendarWeek"
+                        />
                         <!--<ShiftPlanFilter
                             :filter-options="filterOptions"
                             :personal-filters="personalFilters"
@@ -217,6 +204,7 @@ import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalend
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 
 const props = defineProps({
     days: {
@@ -330,7 +318,6 @@ const eventComponentClosed = () => {
 };
 
 const  changeDailyViewMode = () => {
-    dailyViewMode.value = !dailyViewMode.value;
     router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
         daily_view: dailyViewMode.value
     }, {

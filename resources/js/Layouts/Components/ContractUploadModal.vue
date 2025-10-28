@@ -1,12 +1,6 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
-            <div class="mx-4">
-                <div class="headline1 my-2">
-                    {{ $t('Contract upload')}}
-                </div>
-                <div class="text-secondary text-sm my-6">
-                    {{ $t('Upload documents that relate exclusively to the budget. These can only be viewed by users with the appropriate authorization.') }}
-                </div>
+    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Contract upload')" :description="$t('Upload documents that relate exclusively to the budget. These can only be viewed by users with the appropriate authorization.')">
+            <div class="">
                 <div>
                     <input
                         @change="validateType"
@@ -217,9 +211,9 @@
                         />
                     </div>
 
-                    <div class="-mx-10 bg-lightBackgroundGray px-10 py-5 col-span-full border-b border-dashed border-gray-300">
+                    <div class="-mx-5 bg-lightBackgroundGray px-5 py-5 col-span-full border-b border-dashed border-gray-300">
                         <div class="relative w-full">
-                            <UserSearch v-model="user_query" @userSelected="addUserToContractUserArray"/>
+                            <UserSearch v-model="user_query" @userSelected="addUserToContractUserArray" :label="$t('Document access for') + '*'"/>
                         </div>
                         <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center">
                             <div v-for="(user,index) in usersWithAccess" class="flex mr-5 rounded-full items-center font-bold text-primary">
@@ -260,35 +254,31 @@
 
                             <ContractTaskForm :show="creatingNewTask" :users="budgetAccess" ref="task_form"
                                               @add-task="addTask" @showError="showError"/>
-                            <div class="flex justify-between">
-                                <button v-if="!creatingNewTask" type="button"
-                                        @click="[creatingNewTask = !creatingNewTask]"
-                                        class="flex py-3 px-8 items-center  border-2 mt-6 border-artwork-buttons-create bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-artwork-buttons-create hover:shadow-artwork-buttons-create focus:outline-none">
-                                    <IconCirclePlus stroke-width="1.5" class="h-6 w-6 mr-2" aria-hidden="true"/>
-                                    <p class="text-sm">{{ tasks.length === 0 ? $t('New task') : $t('Further task') }}</p>
-                                </button>
+                            <div class="flex justify-between mt-5">
+                                <BaseUIButton v-if="!creatingNewTask" type="button"
+                                        @click="[creatingNewTask = !creatingNewTask]" is-add-button
+                                        :label="tasks.length === 0 ? $t('New task') : $t('Further task')"
+                                />
 
-                                <button
-                                    class="flex text-sm py-3 px-8 items-center border-2 mt-6 border-success bg-backgroundGray hover:bg-green-50 rounded-full shadow-sm text-success hover:shadow-v-if focus:outline-none"
+                                <BaseUIButton
+                                    :label="$t('Save task in contract')"
+                                    is-add-button
                                     v-if="creatingNewTask"
-                                    @click="$refs.task_form.saveTask(); this.errorText === null ? creatingNewTask = false : null">
-                                    {{$t('Save task in contract')}}
-                                </button>
+                                    @click="$refs.task_form.saveTask(); this.errorText === null ? creatingNewTask = false : null" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="justify-center flex w-full my-6">
-                    <button
-                        class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm  focus:outline-none"
-                        :class="(file === null || contractForm.amount === '' || contractForm.contract_partner === '') || (!this.projectId && this.selectedProject === null)? 'bg-secondary text-white' : 'text-white bg-artwork-buttons-create hover:shadow-artwork-buttons-create hover:bg-artwork-buttons-hover'"
+                <div class="justify-end flex w-full my-6">
+                    <BaseUIButton
+                        :label="$t('Upload contract')"
+                        is-add-button
                         :disabled="file === null || contractForm.amount === '' || contractForm.contract_partner === '' || (!this.projectId && this.selectedProject === null)"
-                        @click="storeContract">{{ $t('Upload contract')}}
-                    </button>
+                        @click="storeContract" />
                 </div>
             </div>
-        </BaseModal>
+        </ArtworkBaseModal>
 </template>
 
 <script>
@@ -312,6 +302,8 @@ import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: "ContractUploadModal",
@@ -327,6 +319,8 @@ export default {
         'first_project_calendar_tab_id'
     ],
     components: {
+        BaseUIButton,
+        ArtworkBaseModal,
         BaseTextarea,
         BaseInput,
         MultiAlertComponent,

@@ -1,15 +1,9 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
+    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Edit document')" :description="$t('Replace document')">
             <div class="mx-4">
-                <div class="headline1 my-2">
-                    {{$t('Edit document')}}
-                </div>
                 <div class="flex items-center cursor-pointer" @click="downloadProjectFile(file)">
                     <DownloadIcon class="w-4 h-4 mr-2 text-artwork-buttons-create"/>
                     <div class="text-artwork-buttons-create text-sm my-6">{{ file.name }}</div>
-                </div>
-                <div class="text-secondary text-sm my-2">
-                    {{$t('Replace document')}}
                 </div>
                 <div>
                     <input
@@ -103,7 +97,7 @@
                     </div>
                 </div>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -114,6 +108,7 @@ import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     name: "ProjectFileEditModal",
@@ -125,6 +120,7 @@ export default {
         file: Object
     },
     components: {
+        ArtworkBaseModal,
         BaseModal,
         FormButton,
         JetDialogModal,

@@ -26,7 +26,8 @@ readonly class VacationSeriesService
     public function deleteSeries(VacationSeries $vacationSeries): void
     {
         $vacationSeries->vacations()->each(function ($vacation): void {
-            $vacation->each(function ($vacationConflict): void {
+            // Delete conflicts of each vacation, then the vacation itself
+            $vacation->conflicts()->each(function ($vacationConflict): void {
                 $vacationConflict->delete();
             });
             $vacation->delete();

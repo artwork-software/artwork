@@ -39,7 +39,6 @@
 
 <script setup>
 import {Head, router, usePage} from "@inertiajs/vue3"
-import SubMenu from "@/Layouts/SubMenu.vue";
 import {defineAsyncComponent, onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
@@ -53,6 +52,8 @@ const props = defineProps({
         default: 'Dashboard'
     },
 })
+
+const SubMenu = defineAsyncComponent(() => import('@/Layouts/SubMenu.vue'));
 
 watchEffect(() => {
     window.Laravel = window.Laravel || {}

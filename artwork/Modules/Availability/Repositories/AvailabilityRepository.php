@@ -23,8 +23,20 @@ class AvailabilityRepository
 
     public function delete(Collection|Availability $availability): void
     {
-        $availability->each(function ($availabilityConflict): void {
-            $availabilityConflict->delete();
+        if ($availability instanceof \Illuminate\Support\Collection) {
+            $availability->each(function (Availability $item): void {
+                // Delete related conflicts first, then the availability itself
+                $item->conflicts()->each(function ($conflict): void {
+                    $conflict->delete();
+                });
+                $item->delete();
+            });
+            return;
+        }
+
+        // Single model instance: delete its conflicts, then the model
+        $availability->conflicts()->each(function ($conflict): void {
+            $conflict->delete();
         });
         $availability->delete();
     }

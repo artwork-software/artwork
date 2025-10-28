@@ -24,7 +24,13 @@ class AvailabilitySeriesService
     public function deleteSeries(AvailabilitySeries $availabilitySeries): void
     {
         $availabilitySeries->availabilities()->each(function ($availability): void {
+            // Delete conflicts of each availability, then the availability itself
+            $availability->conflicts()->each(function ($conflict): void {
+                $conflict->delete();
+            });
             $availability->delete();
         });
+        // Finally, delete the series record itself
+        $availabilitySeries->delete();
     }
 }

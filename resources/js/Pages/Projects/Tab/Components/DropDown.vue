@@ -20,8 +20,8 @@
                 >
                     <div class="block truncate">{{ selected }}</div>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-            <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
-          </span>
+                    <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </span>
                 </ListboxButton>
 
                 <transition
@@ -30,7 +30,7 @@
                     leave-to-class="opacity-0"
                 >
                     <ListboxOptions
-                        class="absolute z-10 mt-1 max-h-60 w-full overflow-auto py-1 text-base ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
+                        class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm"
                         :class="inSidebar ? 'bg-primary text-white border border-gray-300' : 'bg-white'"
                     >
                         <ListboxOption
@@ -43,13 +43,13 @@
                             <li
                                 @click="updateTextData(item.value)"
                                 :class="[
-                  active ? 'bg-indigo-600 text-white' : inSidebar ? 'text-white' : 'text-gray-900',
-                  'relative cursor-default select-none py-2 pl-3 pr-9'
-                ]"
-                            >
-                <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate']">
-                  {{ item.value }}
-                </span>
+                              active ? 'bg-indigo-600 text-white' : inSidebar ? 'text-white' : 'text-gray-900',
+                              'relative cursor-default select-none py-2 pl-3 pr-9'
+                            ]"
+                                        >
+                            <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate']">
+                              {{ item.value }}
+                            </span>
 
                                 <span
                                     v-if="isSelected"
@@ -70,10 +70,6 @@
 
 <script setup>
 import {
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems,
     Listbox,
     ListboxButton,
     ListboxLabel,
@@ -84,8 +80,9 @@ import { computed, onMounted, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import {IconChevronDown , IconCircleCheck} from "@tabler/icons-vue";
+import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
 
-// Für DevTools + Mixins (Icon-Komponenten wie IconChevronDown, IconCircleCheck)
+
 defineOptions({
     name: "DropDown",
 });
@@ -98,20 +95,19 @@ const props = defineProps({
     component: { type: Object, required: true },
 });
 
-// Alias / reactive View auf eingehende Daten
+
 const projectData = computed(() => props.data);
 
-// Ausgewählter Wert (wie zuvor)
+
 const selected = ref(
     props.data.project_value ? props.data.project_value.data.selected : props.data.data.selected
 );
 
-// Listener initialisieren (wie vorher in mounted)
 onMounted(() => {
     useProjectDataListener(projectData.value, props.projectId).init();
 });
 
-// Wenn sich die eingehenden Daten ändern, Selected synchronisieren
+
 watch(
     () => props.data,
     (newVal) => {
@@ -120,7 +116,6 @@ watch(
     { deep: true }
 );
 
-// Server-Update (entspricht updateTextData)
 function updateTextData(value) {
     router.patch(
         route("project.tab.component.update", {

@@ -9,6 +9,8 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const emit = defineEmits(['closed'])
 
@@ -43,12 +45,8 @@ const saveTimePreset = () => {
 </script>
 
 <template>
-    <BaseModal v-if="true" @closed="$emit('closed')">
+    <ArtworkBaseModal v-if="true" @close="$emit('closed')" :title="newTimePreset.id ? $t('Edit Time Preset') : $t('Create Time Preset')" description="">
         <form @submit.prevent="saveTimePreset">
-
-            <ModalHeader
-                :title="newTimePreset.id ? $t('Edit Time Preset') : $t('Create Time Preset')"
-            />
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="col-span-2">
                     <BaseInput
@@ -87,14 +85,14 @@ const saveTimePreset = () => {
             </div>
             <div class="flex items-center justify-between mt-10">
                 <div>
-                    <button type="button" @click="$emit('closed')" class="text-secondary underline cursor-pointer text-xs">{{ $t('No, not really') }}</button>
+                    <BaseUIButton type="button" @click="$emit('closed')" is-cancel-button  :label="$t('No, not really')" />
                 </div>
                 <div>
-                    <AddButtonSmall type="submit" :text="props.timePreset ? $t('Edit') : $t('Create')" />
+                    <BaseUIButton type="submit" :label="props.timePreset ? $t('Edit') : $t('Create')" is-add-button />
                 </div>
             </div>
         </form>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <style scoped>

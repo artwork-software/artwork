@@ -53,9 +53,9 @@
 
         <!-- Floating Label -->
         <label v-if="label" :for="id" :class="[labelBaseClass, density.labelPositionFloated, density.labelTransitions]">
-      <span class="block truncate">
-        {{ withoutTranslation ? label : $t(label) }}
-      </span>
+              <span class="block truncate">
+                {{ withoutTranslation ? label : $t(label) }}
+              </span>
         </label>
 
         <!-- Error -->

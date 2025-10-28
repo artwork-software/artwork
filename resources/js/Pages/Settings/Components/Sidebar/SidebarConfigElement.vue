@@ -50,7 +50,7 @@ function updateComponentOrder(components) {
                     class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4
                  border-zinc-200 bg-white/70 text-zinc-600"
                 >
-          {{ sidebarCount }} {{ t('items') }}
+          {{ sidebarCount }} {{ t('Tab') }}
         </span>
             </div>
 

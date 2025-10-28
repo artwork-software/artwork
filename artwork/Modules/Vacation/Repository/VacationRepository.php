@@ -22,16 +22,22 @@ class VacationRepository
     // TODO: fix type matching
     public function delete(Collection|Vacation $vacations): void
     {
-        if ($vacations->count() > 1) {
-            $vacations->each(function ($vacation): void {
-                $vacation->each(function ($vacationConflict): void {
+        if ($vacations instanceof \Illuminate\Support\Collection) {
+            $vacations->each(function (Vacation $vacation): void {
+                // Delete related conflicts first
+                $vacation->conflicts()->each(function ($vacationConflict): void {
                     $vacationConflict->delete();
                 });
                 $vacation->delete();
             });
             return;
         }
-        $vacations->first()?->delete();
+
+        // Single model instance: delete its conflicts, then the model
+        $vacations->conflicts()->each(function ($vacationConflict): void {
+            $vacationConflict->delete();
+        });
+        $vacations->delete();
     }
 
     public function save(Vacation $vacation): Vacation

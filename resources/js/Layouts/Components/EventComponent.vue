@@ -121,11 +121,9 @@
 
                     <!-- Quick duration buttons -->
                     <div class="mt-4">
-                        <BasePageTitle
-                            title="Quick durations"
-                            description="Set the end time quickly based on the start time."
-                        />
-                        <div class="flex flex-wrap items-center gap-2 mt-2">
+
+                        <div class="flex flex-wrap items-center gap-2 mt-2" v-if="startDate && endDate && startTime">
+                            <div class="ui-card-title">{{ $t('Duration Shortcuts:')}}</div>
                             <button
                                 v-for="m in quickDurations"
                                 :key="m"

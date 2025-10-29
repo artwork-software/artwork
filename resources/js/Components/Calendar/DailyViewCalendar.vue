@@ -184,28 +184,55 @@ const timeToMinutes = (t) => {
     return h * 60 + m;
 };
 
-const extractEndMinutes = (event) => {
-    // Prefer formattedDates if available
-    const endTime = event?.formattedDates?.endTime || null;
-    if (endTime && endTime.includes(':')) {
-        const [eh, em] = endTime.split(':');
-        return (parseInt(eh, 10) || 0) * 60 + (parseInt(em, 10) || 0);
+const extractEndMinutes = (event, pos, startMin) => {
+    // For single-day segments prefer using duration to avoid timezone drift
+    const durationMinutes = Math.max(0, Math.round((parseFloat(event?.eventLengthInHours) || 0) * 60));
+
+    if (pos === 'single') {
+        if (durationMinutes > 0 && Number.isFinite(startMin)) {
+            return Math.min(24 * 60, startMin + durationMinutes);
+        }
+        // Fallback to parsing event.end in local timezone
+        const endStr = event?.end ? String(event.end) : null;
+        if (!endStr) return null;
+        const d = new Date(endStr);
+        if (!isNaN(d.getTime())) {
+            return d.getHours() * 60 + d.getMinutes();
+        }
+        const timePart = endStr.split(' ')[1] || endStr.split('T')[1];
+        if (timePart && timePart.includes(':')) {
+            const [eh, em] = timePart.split(':');
+            return (parseInt(eh, 10) || 0) * 60 + (parseInt(em, 10) || 0);
+        }
+        return null;
     }
-    const eventEnd = event?.end ? String(event.end) : null;
-    if (!eventEnd) return null;
-    const timePart = eventEnd.split(' ')[1] || eventEnd.split('T')[1];
-    if (timePart && timePart.includes(':')) {
-        const [eh, em] = timePart.split(':');
-        return (parseInt(eh, 10) || 0) * 60 + (parseInt(em, 10) || 0);
+
+    if (pos === 'end') {
+        // End day of a multi-day event: use the actual end clock time in local TZ
+        const endStr = event?.end ? String(event.end) : null;
+        if (!endStr) return null;
+        const d = new Date(endStr);
+        if (!isNaN(d.getTime())) {
+            return d.getHours() * 60 + d.getMinutes();
+        }
+        const timePart = endStr.split(' ')[1] || endStr.split('T')[1];
+        if (timePart && timePart.includes(':')) {
+            const [eh, em] = timePart.split(':');
+            return (parseInt(eh, 10) || 0) * 60 + (parseInt(em, 10) || 0);
+        }
+        return null;
     }
+
     return null;
 };
 
 const hasEventOverlapWithHiddenHours = (day, calendarData, calendarHours) => {
     if (!Array.isArray(calendarHours) || calendarHours.length === 0) return false;
 
-    // Precompute hidden hour intervals [start, end) in minutes
-    const hiddenIntervals = calendarHours.map(h => [timeToMinutes(h), timeToMinutes(h) + 60]);
+    // Hidden window defined by the first and last hidden hour, end is exclusive
+    const hiddenStart = timeToMinutes(calendarHours[0]);
+    const hiddenLast = calendarHours[calendarHours.length - 1];
+    const hiddenEndExclusive = timeToMinutes(hiddenLast) + 60;
 
     const eventStartMinutes = (event) => {
         const h = parseInt(event?.startHour, 10) || 0;
@@ -226,39 +253,20 @@ const hasEventOverlapWithHiddenHours = (day, calendarData, calendarHours) => {
     for (const room of calendarData) {
         const events = room.content[day.fullDay]?.events || [];
         for (const event of events) {
-            if (event?.allDay) return true;
-
             const pos = dayPos(event, day.fullDay);
-            if (pos === 'none') continue;
+            if (pos !== 'single' && pos !== 'start') continue; // Only consider starts on this day
 
+            // All-day events only affect the start day at 00:00
             let startMin = 0;
-            if (pos === 'start' || pos === 'single') {
+            if (event?.allDay) {
+                startMin = 0;
+            } else {
                 startMin = eventStartMinutes(event);
             }
 
-            let endMin;
-            if (pos === 'single' || pos === 'end') {
-                endMin = extractEndMinutes(event);
-                if (endMin == null) {
-                    const durMin = Math.max(0, (parseFloat(event?.eventLengthInHours) || 0) * 60);
-                    endMin = (pos === 'start' || pos === 'single')
-                        ? Math.min(24 * 60, startMin + (durMin || 60))
-                        : (durMin || 60);
-                }
-            } else {
-                // middle or start day without end -> goes to end of day
-                endMin = 24 * 60;
-            }
-
-            if (endMin < startMin) {
-                // Guard against malformed data
-                endMin = Math.min(24 * 60, startMin + ((parseFloat(event?.eventLengthInHours) || 1) * 60));
-            }
-
-            for (const [hs, he] of hiddenIntervals) {
-                if (startMin < he && endMin > hs) {
-                    return true;
-                }
+            // Unhide only if the start time is inside [hiddenStart, hiddenEndExclusive)
+            if (startMin >= hiddenStart && startMin < hiddenEndExclusive) {
+                return true;
             }
         }
     }
@@ -358,21 +366,28 @@ const shouldRenderEvent = (event, day, hour) => {
         day.fullDay !== event.daysOfEvent[0] &&
         day.fullDay !== event.daysOfEvent[event.daysOfEvent.length - 1];
 
-    if(event.startHour === parseInt(hour, 10) && event.formattedDates.start === day.fullDay) {
-        return true;
-    }
+    // Normalize hour values to numeric hours (0-23) for robust comparison
+    const toHourNumber = (h) => {
+        if (typeof h === 'number') return h;
+        const s = String(h);
+        const hh = s.includes(':') ? s.split(':')[0] : s;
+        return parseInt(hh, 10) || 0;
+    };
+
+    const hourNum = toHourNumber(hour);
+    const eventStartHourNum = parseInt(event.startHour, 10) || 0;
 
     if (event.allDay) {
-        return hour === '00:00';
+        return hourNum === 0;
     }
     if (isStartDay) {
-        return hour === event.startHour;
+        return hourNum === eventStartHourNum;
     }
     if (isMiddleDay) {
-        return hour === '00:00';
+        return hourNum === 0;
     }
     if (isEndDay) {
-        return hour === '00:00';
+        return hourNum === 0;
     }
 
     return false;
@@ -385,73 +400,72 @@ const getEventStyle = (event, day, hour, zoom_factor) => {
         day.fullDay !== event.daysOfEvent[0] &&
         day.fullDay !== event.daysOfEvent[event.daysOfEvent.length - 1];
 
+    const perHourPx = zoom_factor * 115; // exact pixels per hour (matches cell height)
+    const minutesFromHour = parseInt(event?.minutesFormStartHourToStart, 10) || 0;
+    const minuteOffsetPx = -(minutesFromHour / 60) * perHourPx; // positive moves event down within its hour
+
     let height = '';
     let marginTop = '0px';
     let opacity = 1;
-    if (event.allDay) {
-        height = (24 * (zoom_factor * 115)) + 25 + 'px';
-    } else if (isStartDay) {
-        const startHour = parseInt(event.startHour, 10);
-        // Fix: Extract minutes from the actual time string, not from startHour
-        const startMinute = event.startHour.toString().includes(':')
-            ? parseInt(event.startHour.toString().split(':')[1], 10) || 0
-            : 0;
 
-        // Use eventLengthInHours as primary source, with better fallback logic
+    if (event.allDay) {
+        height = (24 * perHourPx) + 25 + 'px';
+    } else if (isStartDay) {
+        const startHour = parseInt(event.startHour, 10) || 0;
+
+        // Determine displayed height in hours for this visible segment
         let totalHours;
-        if (event.eventLengthInHours > 0) {
-            totalHours = event.eventLengthInHours;
+        const lenHours = parseFloat(event?.eventLengthInHours);
+        if (!isNaN(lenHours) && lenHours > 0 && event.daysOfEvent.length === 1) {
+            // Single-day event: use computed duration
+            totalHours = lenHours;
         } else if (event.end && event.daysOfEvent.length === 1) {
-            // For single-day events, calculate duration from start to end
+            // Single-day but length missing: compute from end time
             const eventEnd = event.end ? String(event.end) : null;
             if (eventEnd) {
                 const timePart = eventEnd.split(' ')[1] || eventEnd.split('T')[1];
                 if (timePart && timePart.includes(':')) {
-                    const endTime = timePart.split(':');
-                    const endHour = parseInt(endTime[0], 10) || 0;
-                    const endMinute = parseInt(endTime[1], 10) || 0;
+                    const [eh, em] = timePart.split(':');
+                    const endHour = parseInt(eh, 10) || 0;
+                    const endMinute = parseInt(em, 10) || 0;
                     const endTimeInHours = endHour + endMinute / 60;
-                    const startTimeInHours = startHour + startMinute / 60;
-                    totalHours = Math.max(0.5, endTimeInHours - startTimeInHours); // Minimum 30 minutes
+                    const startTimeInHours = startHour + minutesFromHour / 60;
+                    totalHours = Math.max(0.5, endTimeInHours - startTimeInHours);
                 } else {
-                    totalHours = 1; // Default to 1 hour if end time format is unclear
+                    totalHours = 1;
                 }
             } else {
-                totalHours = 1; // Default to 1 hour if no end time
+                totalHours = 1;
             }
         } else {
-            // For multi-day events or when no end time, calculate remaining hours in day
-            totalHours = Math.min(
-                24 - startHour - startMinute / 60,
-                24
-            );
+            // Multi-day start or missing end: span until end of day
+            totalHours = Math.min(24 - (startHour + minutesFromHour / 60), 24);
         }
 
-        const minusHeight = event.daysOfEvent.length > 1 ? event.minutesFormStartHourToStart * (zoom_factor * 1.91) - 40 : 0;
-        height = ((totalHours * (zoom_factor * 115)) - minusHeight) + 'px';
-        marginTop = event.minutesFormStartHourToStart * (zoom_factor * 1.91) + 'px';
-
+        height = (totalHours * perHourPx) + 'px';
+        marginTop = minuteOffsetPx + 'px';
     } else if (isMiddleDay) {
-        height = (24 * (zoom_factor * 115)) + 25 + 'px';
+        height = (24 * perHourPx) + 25 + 'px';
     } else if (isEndDay) {
         const eventEnd = event?.end ? String(event.end) : null;
         if (eventEnd) {
             const timePart = eventEnd.split(' ')[1] || eventEnd.split('T')[1];
             if (timePart && timePart.includes(':')) {
-                const endTime = timePart.split(':');
-                const endHour = parseInt(endTime[0], 10) || 0;
-                const endMinute = parseInt(endTime[1], 10) || 0;
+                const [eh, em] = timePart.split(':');
+                const endHour = parseInt(eh, 10) || 0;
+                const endMinute = parseInt(em, 10) || 0;
                 const endTimeInHours = endHour + endMinute / 60;
-                height = (endTimeInHours * zoom_factor * 115) + 'px';
+                height = (endTimeInHours * perHourPx) + 'px';
             } else {
-                height = (event.eventLengthInHours * zoom_factor * 115) + 'px';
+                height = ((parseFloat(event?.eventLengthInHours) || 1) * perHourPx) + 'px';
             }
         } else {
-            height = (event.eventLengthInHours * zoom_factor * 115) + 'px';
+            height = ((parseFloat(event?.eventLengthInHours) || 1) * perHourPx) + 'px';
         }
     } else {
-        height = event.eventLengthInHours * (zoom_factor * 115) + 'px';
+        height = ((parseFloat(event?.eventLengthInHours) || 1) * perHourPx) + 'px';
     }
+
     opacity = event.daysOfEvent.length > 1 ? 0.6 : 1;
 
     return {

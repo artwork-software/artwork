@@ -175,31 +175,136 @@ const emits = defineEmits([
 
 const daysWithoutEventsToDisplayHiddenHours = ref([]);
 
+const timeToMinutes = (t) => {
+    if (typeof t === 'number') return t * 60;
+    if (!t) return 0;
+    const parts = String(t).split(':');
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    return h * 60 + m;
+};
+
+const extractEndMinutes = (event) => {
+    // Prefer formattedDates if available
+    const endTime = event?.formattedDates?.endTime || null;
+    if (endTime && endTime.includes(':')) {
+        const [eh, em] = endTime.split(':');
+        return (parseInt(eh, 10) || 0) * 60 + (parseInt(em, 10) || 0);
+    }
+    const eventEnd = event?.end ? String(event.end) : null;
+    if (!eventEnd) return null;
+    const timePart = eventEnd.split(' ')[1] || eventEnd.split('T')[1];
+    if (timePart && timePart.includes(':')) {
+        const [eh, em] = timePart.split(':');
+        return (parseInt(eh, 10) || 0) * 60 + (parseInt(em, 10) || 0);
+    }
+    return null;
+};
+
+const hasEventOverlapWithHiddenHours = (day, calendarData, calendarHours) => {
+    if (!Array.isArray(calendarHours) || calendarHours.length === 0) return false;
+
+    // Precompute hidden hour intervals [start, end) in minutes
+    const hiddenIntervals = calendarHours.map(h => [timeToMinutes(h), timeToMinutes(h) + 60]);
+
+    const eventStartMinutes = (event) => {
+        const h = parseInt(event?.startHour, 10) || 0;
+        const m = parseInt(event?.minutesFormStartHourToStart, 10) || 0;
+        return h * 60 + m;
+    };
+
+    const dayPos = (event, fullDay) => {
+        const days = Array.isArray(event?.daysOfEvent) ? event.daysOfEvent : [];
+        const idx = days.indexOf(fullDay);
+        if (idx === -1) return 'none';
+        if (days.length === 1) return 'single';
+        if (idx === 0) return 'start';
+        if (idx === days.length - 1) return 'end';
+        return 'middle';
+    };
+
+    for (const room of calendarData) {
+        const events = room.content[day.fullDay]?.events || [];
+        for (const event of events) {
+            if (event?.allDay) return true;
+
+            const pos = dayPos(event, day.fullDay);
+            if (pos === 'none') continue;
+
+            let startMin = 0;
+            if (pos === 'start' || pos === 'single') {
+                startMin = eventStartMinutes(event);
+            }
+
+            let endMin;
+            if (pos === 'single' || pos === 'end') {
+                endMin = extractEndMinutes(event);
+                if (endMin == null) {
+                    const durMin = Math.max(0, (parseFloat(event?.eventLengthInHours) || 0) * 60);
+                    endMin = (pos === 'start' || pos === 'single')
+                        ? Math.min(24 * 60, startMin + (durMin || 60))
+                        : (durMin || 60);
+                }
+            } else {
+                // middle or start day without end -> goes to end of day
+                endMin = 24 * 60;
+            }
+
+            if (endMin < startMin) {
+                // Guard against malformed data
+                endMin = Math.min(24 * 60, startMin + ((parseFloat(event?.eventLengthInHours) || 1) * 60));
+            }
+
+            for (const [hs, he] of hiddenIntervals) {
+                if (startMin < he && endMin > hs) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+};
+
 const shouldShowHour = (hour, calendarData, day) => {
     const calendarHours = usePage().props.calendarHours;
 
-    // Prüft, ob an diesem Tag überhaupt Events vorhanden sind
+    if (!Array.isArray(calendarHours) || calendarHours.length === 0) {
+        return true;
+    }
+
     const hasEventsToday = calendarData.some(room =>
         (room.content[day.fullDay]?.events || []).length > 0
     );
 
-    // Wenn keine Events vorhanden sind, blende NUR die calendarHours aus
-    if (!hasEventsToday) {
-        // Tag zu daysWithoutEventsToDisplayHiddenHours hinzufügen, wenn noch nicht vorhanden
+    const overlapsHidden = hasEventsToday && hasEventOverlapWithHiddenHours(day, calendarData, calendarHours);
+
+    // Build normalized set for hidden hours (strings like 'HH:00')
+    const hiddenSet = new Set((calendarHours || []).map(h => {
+        const [hh] = String(h).split(':');
+        return `${String(hh).padStart(2, '0')}:00`;
+    }));
+    const hourKey = (() => {
+        if (typeof hour === 'string') {
+            const [hh] = hour.split(':');
+            return `${String(hh).padStart(2, '0')}:00`;
+        }
+        if (typeof hour === 'number') {
+            return `${String(hour).padStart(2, '0')}:00`;
+        }
+        return String(hour);
+    })();
+
+    if (!hasEventsToday || !overlapsHidden) {
         if (!daysWithoutEventsToDisplayHiddenHours.value.includes(day.fullDay)) {
             daysWithoutEventsToDisplayHiddenHours.value.push(day.fullDay);
         }
-
-        return !calendarHours.includes(hour);
+        return !hiddenSet.has(hourKey);
     }
 
-    // Wenn Events vorhanden sind, entferne den Tag aus dem Array (falls vorhanden)
     const index = daysWithoutEventsToDisplayHiddenHours.value.indexOf(day.fullDay);
     if (index !== -1) {
         daysWithoutEventsToDisplayHiddenHours.value.splice(index, 1);
     }
-
-    // Wenn Events vorhanden sind, zeige alle Stunden (auch aus calendarHours)
     return true;
 };
 

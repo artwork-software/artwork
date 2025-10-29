@@ -41,7 +41,7 @@
                             option-label="name"
                             option-key="id"
                             label="Event type"
-                            :use-translations="true"
+                            :use-translations="false"
                             :show-color-indicator="true"
                             color-property="hex_code"
                         />

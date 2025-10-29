@@ -1,7 +1,7 @@
 <template>
     <div
         :style="{
-      minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px',
+      minHeight: isHeightFull ? '100%' : (totalHeight - heightSubtraction(event)) * zoom_factor + 'px',
       backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent),
       fontsize: fontSize,
       lineHeight: lineHeight

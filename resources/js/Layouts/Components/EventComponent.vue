@@ -58,7 +58,7 @@
                             color-property="color"
                         >
                         </ArtworkBaseListbox>
-                        <div class="mt-5">
+                        <div>
                             <BaseInput
                                 v-model="eventName"
                                 id="eventTitle"
@@ -122,7 +122,7 @@
                     <!-- Quick duration buttons -->
                     <div class="mt-4">
 
-                        <div class="flex flex-wrap items-center gap-2 mt-2" v-if="startDate && endDate && startTime">
+                        <div class="flex flex-wrap items-center gap-2 mt-6" v-if="startDate && endDate && startTime">
                             <div class="ui-card-title">{{ $t('Duration Shortcuts:')}}</div>
                             <button
                                 v-for="m in quickDurations"

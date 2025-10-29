@@ -13,7 +13,7 @@
                   v-bind="$attrs"
         />
 
-        <PlaceholderLabel :is-dark="isDark" :for="this.id" :label="this.label" v-if="showLabel" :is-small="isSmall"/>
+        <PlaceholderLabel :is-dark="isDark" :for="this.id" :label="this.label" v-if="showLabel && hasLabel" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>
 </template>
 
@@ -34,7 +34,8 @@ export default defineComponent({
         },
         label: {
             type: String,
-            required: true
+            default: '',
+            required: false
         },
         modelValue: {
             type: [String, null],
@@ -76,6 +77,11 @@ export default defineComponent({
     },
     emits: [
         'update:modelValue'
-    ]
+    ],
+    computed: {
+        hasLabel() {
+            return typeof this.label === 'string' && this.label.trim().length > 0;
+        }
+    }
 });
 </script>

@@ -81,6 +81,7 @@
                                                     class="events-scroll h-full"
                                                     :class="[
                                                         (!settings.expand_days && eventsCount(day, room) > 1) ? 'overflow-auto cell' : zoom_factor === 0.8 ? 'overflow-x-hidden overflow-y-auto' : 'overflow-hidden',
+                                                        settings.expand_days ? 'flex flex-col' : ''
                                                       ]"
                                                     :style="cellStyle"
                                                 >
@@ -89,7 +90,10 @@
                                                         <div
                                                             v-for="(evt, idx) in eventsInCell(day, room)"
                                                             :key="evt.id"
-                                                            class="py-0.5"
+                                                            :class="[
+                                                                'py-0.5',
+                                                                (settings.expand_days && !!evt.allDay) ? 'flex-1 min-h-0' : ''
+                                                            ]"
                                                             :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
                                                             @click="onEventClick(evt, $event)"
                                                         >
@@ -106,6 +110,7 @@
                                                                 :firstProjectShiftTabId="firstProjectShiftTabId"
                                                                 :verifierForEventTypIds="verifierForEventTypIds"
                                                                 :is-planning="isPlanning"
+                                                                :is-height-full="settings.expand_days && !!evt.allDay"
                                                                 @edit-event="showEditEventModel"
                                                                 @edit-sub-event="openAddSubEventModal"
                                                                 @open-add-sub-event-modal="openAddSubEventModal"

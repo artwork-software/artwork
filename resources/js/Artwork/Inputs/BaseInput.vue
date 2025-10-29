@@ -5,7 +5,7 @@
             :id="id"
             :type="effectiveType"
             v-model="model"
-            :placeholder="' '"
+            :placeholder="effectivePlaceholder"
             :disabled="disabled"
             :required="required"
             :step="effectiveType === 'number' ? step : undefined"
@@ -18,7 +18,7 @@
             :class="[
                 inputClasses,
                 inputBaseClass,
-                density.inputPadding,
+                label ? density.inputPadding : density.inputPaddingNoLabel,
                 disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white',
                 hasRightAffordance ? density.rightPadding : '',
                 effectiveType === 'number'
@@ -100,6 +100,7 @@ const density = computed(() => {
     if (props.isSmall) {
         return {
             inputPadding: 'px-3 pt-4 pb-1 text-xs leading-5 min-h-9 peer',
+            inputPaddingNoLabel: 'px-3 py-2 text-xs leading-5 min-h-9 peer',
             labelPositionFloated: 'left-3 top-1',
             labelTransitions:
                 'origin-left text-[10px] peer-focus:translate-y-0 peer-focus:scale-90 peer-focus:text-artwork-buttons-create ' +
@@ -111,6 +112,7 @@ const density = computed(() => {
     }
     return {
         inputPadding: 'px-4 pt-6 pb-2 text-sm leading-6 min-h-11 peer',
+        inputPaddingNoLabel: 'px-4 py-3 text-sm leading-6 min-h-11 peer',
         labelPositionFloated: 'left-4 top-1.5',
         labelTransitions:
             'origin-left text-[11px] peer-focus:translate-y-0 peer-focus:scale-90 peer-focus:text-artwork-buttons-create ' +
@@ -137,6 +139,9 @@ const labelBaseClass = [
 const isTime = computed(() => props.type === 'time')
 const isTimeProxy = computed(() => isTime.value && props.enableTimeAutofill)
 const effectiveType = computed(() => (isTimeProxy.value ? 'text' : props.type))
+
+/** Placeholder: Leerzeichen nur wenn Label vorhanden, sonst echter Placeholder */
+const effectivePlaceholder = computed(() => (props.label ? ' ' : (props.placeholder || '')))
 
 /** Clear/Loading nur für textartige Eingaben ODER Time-Proxy */
 const isTextLike = computed(() =>

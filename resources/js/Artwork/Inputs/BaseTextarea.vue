@@ -3,7 +3,7 @@
         <textarea
             :id="id"
             :value="modelValue"
-            :placeholder="focused ? placeholder : ' '"
+            :placeholder="focused ? placeholder : (hasLabel ? ' ' : placeholder)"
             @input="$emit('update:modelValue', $event.target.value)"
             @focus="focused = true"
             @blur="focused = !!modelValue"
@@ -13,18 +13,18 @@
             class="peer block w-full shadow-sm border border-gray-200 rounded-md px-4 pt-6 pb-2 text-sm placeholder-transparent font-lexend focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create resize-none"
             :class="disabled ? 'bg-gray-100 cursor-not-allowed' : bgColor"
         />
-        <label :for="id" class="absolute left-4 top-1.5 text-gray-500 text-xs transition-all duration-300 peer-placeholder-shown:top-[18px] font-lexend peer-placeholder-shown:text-xs peer-placeholder-shown:text-gray-500 peer-focus:top-1.5 peer-focus:text-xs peer-focus:text-artwork-buttons-create">
+        <label v-if="hasLabel" :for="id" class="absolute left-4 top-1.5 text-gray-500 text-xs transition-all duration-300 peer-placeholder-shown:top-[18px] font-lexend peer-placeholder-shown:text-xs peer-placeholder-shown:text-gray-500 peer-focus:top-1.5 peer-focus:text-xs peer-focus:text-artwork-buttons-create">
             {{ $t(label) }}
         </label>
     </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 
 const props = defineProps({
     modelValue: String,
-    label: String,
+    label: { type: String, default: '' },
     id: {
         type: String,
         required: true
@@ -54,6 +54,8 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const focused = ref(false)
+
+const hasLabel = computed(() => typeof props.label === 'string' && props.label.trim().length > 0)
 
 watch(
     () => props.modelValue,

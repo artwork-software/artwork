@@ -274,6 +274,7 @@
         <ConfirmDeleteModal
             :title="$t('Delete article')"
             :description="$t('Are you sure you want to delete this article?')"
+            z-index="999999"
             @closed="showConfirmDelete = false"
             v-if="showConfirmDelete"
             @delete="confirmDelete"

@@ -273,20 +273,16 @@ class InventoryArticleRepository
             if ($image->image && Storage::disk('public')->exists($image->image)) {
                 Storage::disk('public')->delete($image->image);
             }
+            // permanently delete image record
+            $image->forceDelete();
         }
-
-        // delete images
-        $images->forceDelete();
 
         // delete detailed articles
         $detailedArticles = $article->detailedArticleQuantities()->withTrashed()->get();
         foreach ($detailedArticles as $detailedArticle) {
             $detailedArticle->properties()->detach();
+            $detailedArticle->forceDelete();
         }
-
-
-        // delete detailed articles
-        $detailedArticles->forceDelete();
 
         // delete article
         $article->properties()->detach();

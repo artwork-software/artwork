@@ -226,46 +226,139 @@ const extractEndMinutes = (event, pos, startMin) => {
     return null;
 };
 
-const hasEventOverlapWithHiddenHours = (day, calendarData, calendarHours) => {
-    if (!Array.isArray(calendarHours) || calendarHours.length === 0) return false;
+// --- Helpers für Hidden-Hours-Logik ---
+const toHHMMMinutes = (t) => {
+    if (t == null) return 0;
+    if (typeof t === 'number') return t * 60;
+    const s = String(t);
+    const [hh, mm = '0'] = s.includes(':') ? s.split(':') : [s, '0'];
+    return (parseInt(hh, 10) || 0) * 60 + (parseInt(mm, 10) || 0);
+};
 
-    // Hidden window defined by the first and last hidden hour, end is exclusive
-    const hiddenStart = timeToMinutes(calendarHours[0]);
-    const hiddenLast = calendarHours[calendarHours.length - 1];
-    const hiddenEndExclusive = timeToMinutes(hiddenLast) + 60;
+const clampMinute = (n) => Math.max(0, Math.min(1439, Number.isFinite(n) ? n : 0));
 
-    const eventStartMinutes = (event) => {
-        const h = parseInt(event?.startHour, 10) || 0;
-        const m = parseInt(event?.minutesFormStartHourToStart, 10) || 0;
-        return h * 60 + m;
+const eventStartMinutesLocal = (event) => {
+    const h = parseInt(event?.startHour, 10) || 0;
+    const m = parseInt(event?.minutesFormStartHourToStart, 10) || 0;
+    return clampMinute(h * 60 + m);
+};
+
+const eventEndMinutesLocal = (event) => {
+    // PRIORITY 1: Explizite Felder, falls ihr sie habt (analog zu startHour/minutesFormStart...)
+    if (event?.endHour != null) {
+        const h = parseInt(event.endHour, 10) || 0;
+        const m = parseInt(event?.minutesFormEndHourToEnd, 10) || 0;
+        return clampMinute(h * 60 + m);
+    }
+
+    // PRIORITY 2: Endzeit aus event.end (Date/ISO/„YYYY-MM-DD HH:MM:SS“)
+    const endStr = event?.end ? String(event.end) : null;
+    if (!endStr) return null;
+
+    // Versuch 1: Native Date (lokal)
+    const d = new Date(endStr);
+    if (!isNaN(d.getTime())) {
+        return clampMinute(d.getHours() * 60 + d.getMinutes());
+    }
+
+    // Versuch 2: Reines Herausparsen des Zeitteils
+    const timePart = endStr.split(' ')[1] || endStr.split('T')[1] || '';
+    if (timePart && timePart.includes(':')) {
+        const [eh, em = '0'] = timePart.split(':');
+        const hh = parseInt(eh, 10); const mm = parseInt(em, 10) || 0;
+        if (Number.isFinite(hh)) return clampMinute(hh * 60 + mm);
+    }
+
+    // Letzter Fallback: null (damit wir den Fall gezielt behandeln können)
+    return null;
+};
+
+
+const dayPosOf = (event, fullDay) => {
+    const days = Array.isArray(event?.daysOfEvent) ? event.daysOfEvent : [];
+    const idx = days.indexOf(fullDay);
+    if (idx === -1) return 'none';
+    if (days.length === 1) return 'single';
+    if (idx === 0) return 'start';
+    if (idx === days.length - 1) return 'end';
+    return 'middle';
+};
+
+// EXKLUSIVES Hidden-Fenster: letzte Stunde ist NICHT versteckt
+// Beispiel: calendarHours = [0,1,...,14] -> versteckt ist [00:00 .. 13:59], 14:00 ist sichtbar
+const getHiddenWindow = (calendarHours) => {
+    if (!Array.isArray(calendarHours) || calendarHours.length === 0) return null;
+    const start = toHHMMMinutes(calendarHours[0]);
+    const lastBoundary = toHHMMMinutes(calendarHours[calendarHours.length - 1]);
+    return {
+        start: Math.max(0, Math.min(1439, start)),
+        endExclusive: Math.max(0, Math.min(1440, lastBoundary)),
     };
+};
 
-    const dayPos = (event, fullDay) => {
-        const days = Array.isArray(event?.daysOfEvent) ? event.daysOfEvent : [];
-        const idx = days.indexOf(fullDay);
-        if (idx === -1) return 'none';
-        if (days.length === 1) return 'single';
-        if (idx === 0) return 'start';
-        if (idx === days.length - 1) return 'end';
-        return 'middle';
-    };
+// Belegung im Hidden-Fenster? -> aufklappen
+// Hilfsfunktionen für Intervalle
+const overlapMinutes = (aStart, aEnd, bStart, bEnd) => {
+    // prüft, ob [aStart, aEnd) irgendeine Überlappung mit [bStart, bEnd) hat
+    return aStart < bEnd && bStart < aEnd;
+};
+
+const eventIntervalOnThisDay = (ev, day) => {
+    // Liefert das belegte Intervall [fromMin, toMin) in Minuten (0..1440) für GENAU diesen Tag
+    // oder null, wenn an diesem Tag kein Intervall dargestellt werden sollte.
+    const pos = dayPosOf(ev, day.fullDay);
+
+    // All-day belegt den ganzen Tag
+    if (ev?.allDay) return [0, 1440];
+
+    const startMin = eventStartMinutesLocal(ev); // 0..1439
+    const endMin   = eventEndMinutesLocal(ev);   // 0..1439 oder null bei fehlendem End
+
+    switch (pos) {
+        case 'middle':
+            return [0, 1440];
+
+        case 'start': {
+            // Start-Tag eines mehrtägigen Events: von Start bis 24:00
+            return [startMin, 1440];
+        }
+
+        case 'end': {
+            // End-Tag eines mehrtägigen Events: 00:00 bis Endzeit
+            const to = Number.isFinite(endMin) ? Math.max(0, Math.min(1440, endMin)) : 0;
+            return [0, to];
+        }
+
+        case 'single': {
+            // Single-Day: [start, end); robust gegen fehlendes endMin
+            if (Number.isFinite(endMin)) {
+                if (endMin === startMin) return null;      // Null-Länge → ignorieren
+                if (endMin > startMin)   return [startMin, endMin];
+                // Falls doch „über Mitternacht“ geliefert wäre (sollte bei single nicht passieren),
+                // nehmen wir konservativ nur den sichtbaren Teil am Tag: [startMin, 1440)
+                return [startMin, 1440];
+            }
+            // Kein End → konservativ ab Start bis Tagesende
+            return [startMin, 1440];
+        }
+
+        default:
+            return null;
+    }
+};
+
+// Belegung im Hidden-Fenster? -> aufklappen
+const hasAnyOccupancyInHidden = (day, calendarData, window) => {
+    const { start, endExclusive } = window;
 
     for (const room of calendarData) {
         const events = room.content[day.fullDay]?.events || [];
-        for (const event of events) {
-            const pos = dayPos(event, day.fullDay);
-            if (pos !== 'single' && pos !== 'start') continue; // Only consider starts on this day
+        for (const ev of events) {
+            const interval = eventIntervalOnThisDay(ev, day);
+            if (!interval) continue;
 
-            // All-day events only affect the start day at 00:00
-            let startMin = 0;
-            if (event?.allDay) {
-                startMin = 0;
-            } else {
-                startMin = eventStartMinutes(event);
-            }
-
-            // Unhide only if the start time is inside [hiddenStart, hiddenEndExclusive)
-            if (startMin >= hiddenStart && startMin < hiddenEndExclusive) {
+            const [from, to] = interval; // [from, to)
+            if (overlapMinutes(from, to, start, endExclusive)) {
                 return true;
             }
         }
@@ -273,24 +366,39 @@ const hasEventOverlapWithHiddenHours = (day, calendarData, calendarHours) => {
     return false;
 };
 
+
+// Sollen Hidden Hours an diesem Tag "aufgeklappt" werden?
+const shouldUnhideHiddenHoursForDay = (day, calendarData, calendarHours) => {
+    const win = getHiddenWindow(calendarHours);
+    if (!win) return false;
+
+    // Einziges Kriterium: gibt es eine ECHTE Überlappung des belegten Tagesintervalls
+    // mit dem Hidden-Fenster? (Start, Middle, End, Single inkl. Minuten).
+    return hasAnyOccupancyInHidden(day, calendarData, win);
+};
+
+
+
+
 const shouldShowHour = (hour, calendarData, day) => {
     const calendarHours = usePage().props.calendarHours;
 
-    if (!Array.isArray(calendarHours) || calendarHours.length === 0) {
-        return true;
+    // Keine Hidden-Konfig -> alles zeigen
+    if (!Array.isArray(calendarHours) || calendarHours.length === 0) return true;
+
+    const unhide = shouldUnhideHiddenHoursForDay(day, calendarData, calendarHours);
+
+    const win = getHiddenWindow(calendarHours);
+    const hiddenSet = new Set();
+    if (win) {
+        const firstHour = Math.floor(win.start / 60);
+        const lastVisibleHour = Math.floor((win.endExclusive - 1) / 60); // exklusiv
+        for (let H = firstHour; H <= lastVisibleHour; H++) {
+            hiddenSet.add(`${String(H).padStart(2, '0')}:00`);
+        }
     }
 
-    const hasEventsToday = calendarData.some(room =>
-        (room.content[day.fullDay]?.events || []).length > 0
-    );
-
-    const overlapsHidden = hasEventsToday && hasEventOverlapWithHiddenHours(day, calendarData, calendarHours);
-
-    // Build normalized set for hidden hours (strings like 'HH:00')
-    const hiddenSet = new Set((calendarHours || []).map(h => {
-        const [hh] = String(h).split(':');
-        return `${String(hh).padStart(2, '0')}:00`;
-    }));
+    // hour -> 'HH:00'
     const hourKey = (() => {
         if (typeof hour === 'string') {
             const [hh] = hour.split(':');
@@ -302,19 +410,21 @@ const shouldShowHour = (hour, calendarData, day) => {
         return String(hour);
     })();
 
-    if (!hasEventsToday || !overlapsHidden) {
-        if (!daysWithoutEventsToDisplayHiddenHours.value.includes(day.fullDay)) {
-            daysWithoutEventsToDisplayHiddenHours.value.push(day.fullDay);
-        }
-        return !hiddenSet.has(hourKey);
+    if (unhide) {
+        // Tag aus der "hidden"-Merkliste entfernen, alles zeigen
+        const idx = daysWithoutEventsToDisplayHiddenHours.value.indexOf(day.fullDay);
+        if (idx !== -1) daysWithoutEventsToDisplayHiddenHours.value.splice(idx, 1);
+        return true;
     }
 
-    const index = daysWithoutEventsToDisplayHiddenHours.value.indexOf(day.fullDay);
-    if (index !== -1) {
-        daysWithoutEventsToDisplayHiddenHours.value.splice(index, 1);
+    // Hidden anwenden (ohne letzte Stunde)
+    if (!daysWithoutEventsToDisplayHiddenHours.value.includes(day.fullDay)) {
+        daysWithoutEventsToDisplayHiddenHours.value.push(day.fullDay);
     }
-    return true;
+    return !hiddenSet.has(hourKey);
 };
+
+
 
 const getAllProjectGroupsInAllRoomsAndEventsByDay = (day) => {
     let projectGroups = new Map();
@@ -393,85 +503,130 @@ const shouldRenderEvent = (event, day, hour) => {
     return false;
 };
 
+// Helfer: Uhrzeit (HH oder HH:MM) zu Minuten
+const toClockMinutes = (h, m = null) => {
+    if (h == null) return 0;
+    if (typeof h === 'number' && m === null) return h * 60;
+    if (typeof h === 'number' && m !== null) return h * 60 + (parseInt(m, 10) || 0);
+
+    const s = String(h);
+    if (s.includes(':')) {
+        const [hh, mm='0'] = s.split(':');
+        return (parseInt(hh, 10) || 0) * 60 + (parseInt(mm, 10) || 0);
+    }
+    return (parseInt(s, 10) || 0) * 60;
+};
+
+// Helfer: extrahiert lokale Uhrzeit-Minuten aus ISO/Datum-String
+const minutesFromDateString = (dateStr) => {
+    if (!dateStr) return 0;
+    const d = new Date(String(dateStr));
+    if (!isNaN(d.getTime())) return d.getHours() * 60 + d.getMinutes();
+
+    // Fallback auf "THH:MM" / " HH:MM"
+    const timePart = String(dateStr).split(' ')[1] || String(dateStr).split('T')[1];
+    if (timePart && timePart.includes(':')) {
+        const [hh, mm='0'] = timePart.split(':');
+        return (parseInt(hh, 10) || 0) * 60 + (parseInt(mm, 10) || 0);
+    }
+    return 0;
+};
+
 const getEventStyle = (event, day, hour, zoom_factor) => {
-    const isStartDay = day.fullDay === event.daysOfEvent[0];
-    const isEndDay = day.fullDay === event.daysOfEvent[event.daysOfEvent.length - 1];
+    const perHourPx = zoom_factor * 115;
+    const perMinutePx = perHourPx / 60;
+
+    const startStr = event?.start ?? null;
+    const endStr   = event?.end ?? null;
+
+    // Datumskomponente (YYYY-MM-DD) herausziehen
+    const dateOnly = (s) => {
+        if (!s) return null;
+        const t = String(s);
+        if (t.includes('T')) return t.split('T')[0];
+        if (t.includes(' ')) return t.split(' ')[0];
+        return t.substring(0, 10);
+    };
+
+    const startDate = dateOnly(startStr);
+    const endDate   = dateOnly(endStr);
+
+    const startClockMin = event?.allDay ? 0 : (toClockMinutes(event?.startHour) + (parseInt(event?.minutesFormStartHourToStart, 10) || 0));
+    const endClockMin   = minutesFromDateString(endStr); // reale Enduhrzeit (lokal)
+
+    const isStartDay = day.fullDay === event.daysOfEvent?.[0];
+    const isEndDay   = day.fullDay === event.daysOfEvent?.[event.daysOfEvent.length - 1];
     const isMiddleDay =
-        day.fullDay !== event.daysOfEvent[0] &&
-        day.fullDay !== event.daysOfEvent[event.daysOfEvent.length - 1];
+        day.fullDay !== event.daysOfEvent?.[0] &&
+        day.fullDay !== event.daysOfEvent?.[event.daysOfEvent.length - 1];
 
-    const perHourPx = zoom_factor * 115; // exact pixels per hour (matches cell height)
-    const minutesFromHour = parseInt(event?.minutesFormStartHourToStart, 10) || 0;
-    const minuteOffsetPx = -(minutesFromHour / 60) * perHourPx; // positive moves event down within its hour
+    const isMultiDay = Boolean(startDate && endDate && startDate !== endDate);
 
-    let height = '';
-    let marginTop = '0px';
-    let opacity = 1;
+    // Gegen das "Endzeit < Startzeit"-Problem:
+    // Wenn multi-day UND man irgendwo mit reiner Zeitdifferenz rechnen würde,
+    // darf die Segmenthöhe nie minimal werden.
+    // Strategie:
+    //  - Starttag: von Startuhrzeit bis 24:00
+    //  - Zwischentage: volle 24h
+    //  - Endtag: von 00:00 bis Enduhrzeit
+    //  - Single-Day (inkl. über Mitternacht in der gleichen UI-Zelle):
+    //    Höhe = (End >= Start) ? (End - Start) : (24h - (Start - End))
 
+    // All-Day: einfach volle Höhe + kleiner Zuschlag für Layout-Kappen
     if (event.allDay) {
-        height = (24 * perHourPx) + 25 + 'px';
-    } else if (isStartDay) {
-        const startHour = parseInt(event.startHour, 10) || 0;
-
-        // Determine displayed height in hours for this visible segment
-        let totalHours;
-        const lenHours = parseFloat(event?.eventLengthInHours);
-        if (!isNaN(lenHours) && lenHours > 0 && event.daysOfEvent.length === 1) {
-            // Single-day event: use computed duration
-            totalHours = lenHours;
-        } else if (event.end && event.daysOfEvent.length === 1) {
-            // Single-day but length missing: compute from end time
-            const eventEnd = event.end ? String(event.end) : null;
-            if (eventEnd) {
-                const timePart = eventEnd.split(' ')[1] || eventEnd.split('T')[1];
-                if (timePart && timePart.includes(':')) {
-                    const [eh, em] = timePart.split(':');
-                    const endHour = parseInt(eh, 10) || 0;
-                    const endMinute = parseInt(em, 10) || 0;
-                    const endTimeInHours = endHour + endMinute / 60;
-                    const startTimeInHours = startHour + minutesFromHour / 60;
-                    totalHours = Math.max(0.5, endTimeInHours - startTimeInHours);
-                } else {
-                    totalHours = 1;
-                }
-            } else {
-                totalHours = 1;
-            }
-        } else {
-            // Multi-day start or missing end: span until end of day
-            totalHours = Math.min(24 - (startHour + minutesFromHour / 60), 24);
-        }
-
-        height = (totalHours * perHourPx) + 'px';
-        marginTop = minuteOffsetPx + 'px';
-    } else if (isMiddleDay) {
-        height = (24 * perHourPx) + 25 + 'px';
-    } else if (isEndDay) {
-        const eventEnd = event?.end ? String(event.end) : null;
-        if (eventEnd) {
-            const timePart = eventEnd.split(' ')[1] || eventEnd.split('T')[1];
-            if (timePart && timePart.includes(':')) {
-                const [eh, em] = timePart.split(':');
-                const endHour = parseInt(eh, 10) || 0;
-                const endMinute = parseInt(em, 10) || 0;
-                const endTimeInHours = endHour + endMinute / 60;
-                height = (endTimeInHours * perHourPx) + 'px';
-            } else {
-                height = ((parseFloat(event?.eventLengthInHours) || 1) * perHourPx) + 'px';
-            }
-        } else {
-            height = ((parseFloat(event?.eventLengthInHours) || 1) * perHourPx) + 'px';
-        }
-    } else {
-        height = ((parseFloat(event?.eventLengthInHours) || 1) * perHourPx) + 'px';
+        const heightPx = (24 * perHourPx) + 25;
+        return { height: `${heightPx}px`, minHeight: `${heightPx}px`, marginTop: '0px', opacity: 1 };
     }
 
-    opacity = event.daysOfEvent.length > 1 ? 0.6 : 1;
+    let heightMinutes = 0;
+    let marginTopPx = 0;
+    let opacity = event.daysOfEvent?.length > 1 ? 0.6 : 1;
+
+    if (isMultiDay) {
+        if (isStartDay) {
+            // Starttag: von Start bis 24:00
+            heightMinutes = Math.max(0, (24 * 60) - startClockMin);
+            marginTopPx = -(parseInt(event?.minutesFormStartHourToStart, 10) || 0) * perMinutePx; // korrekte Verschiebung innerhalb der Startstunde
+        } else if (isMiddleDay) {
+            // Zwischentage: volle 24h
+            heightMinutes = (24 * 60) + 25; // +25 wie bisher für Layout
+        } else if (isEndDay) {
+            // Endtag: von 00:00 bis Enduhrzeit
+            const endMin = endClockMin; // 0..1439
+            heightMinutes = Math.max(0, endMin);
+        } else {
+            // Falls der Tag nicht in daysOfEvent steckt, gar nichts rendern (Fallback)
+            heightMinutes = 0;
+        }
+    } else {
+        // Single-Day Event
+        // Nimm bevorzugt eventLengthInHours; wenn nicht vorhanden, nutze reale Zeiten
+        const lenHours = parseFloat(event?.eventLengthInHours);
+        if (!isNaN(lenHours) && lenHours > 0) {
+            heightMinutes = Math.round(lenHours * 60);
+        } else {
+            // Reale Zeitdifferenz — robust gegen Endzeit < Startzeit (über Mitternacht)
+            const startMin = startClockMin;
+            const endMin   = endClockMin;
+
+            if (endMin >= startMin) {
+                heightMinutes = endMin - startMin;
+            } else {
+                // über Mitternacht (nur Zeit betrachtet): 24h - (Start - Ende)
+                heightMinutes = (24 * 60) - (startMin - endMin);
+            }
+        }
+        // Visuelle Feinheiten:
+        marginTopPx = -(parseInt(event?.minutesFormStartHourToStart, 10) || 0) * perMinutePx;
+    }
+
+    // Sicherheitsnetze: mindestens 1px und niemals mehr als etwas über 24h für Tageszellen
+    const heightPx = Math.max(1, Math.min(heightMinutes * perMinutePx, (24 * perHourPx) + 25));
 
     return {
-        height,
-        minHeight: height,
-        marginTop,
+        height: `${heightPx}px`,
+        minHeight: `${heightPx}px`,
+        marginTop: `${marginTopPx}px`,
         opacity,
     };
 };

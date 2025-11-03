@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
-use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Calendar\Services\EventCalendarService;
 use Artwork\Modules\Event\DTOs\CalendarEventDto;
-use Artwork\Modules\EventType\Services\EventTypeService;
-use Artwork\Modules\Filter\Services\FilterService;
+use Artwork\Modules\Event\Models\EventProperty;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Http\Resources\RoomPdfResource;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\Room\Services\RoomAttributeService;
-use Artwork\Modules\Room\Services\RoomCategoryService;
+use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
 use Barryvdh\DomPDF\PDF;
 use Illuminate\Auth\AuthManager;
@@ -31,120 +32,201 @@ use Throwable;
 class ExportPDFController extends Controller
 {
     public function __construct(
-        private readonly CalendarDataService $calendarDataService
+        private readonly CalendarDataService $calendarDataService,
+        protected ProjectService $projectService,
+        protected RoomService $roomService,
+        protected UserService $userService,
+        protected FilesystemManager $filesystemManager,
+        protected InertiaResponseFactory $inertiaResponseFactory,
+        protected UrlGenerator $urlGenerator,
+        protected PDF $domPdf,
+        protected AuthManager $authManager,
+        protected EventCalendarService $eventCalendarService,
     ) {
     }
-    /**
-     * @throws Throwable
-     */
-    public function createPDF(
-        Request $request,
-        ProjectService $projectService,
-        RoomService $roomService,
-        UserService $userService,
-        FilesystemManager $filesystemManager,
-        InertiaResponseFactory $inertiaResponseFactory,
-        UrlGenerator $urlGenerator,
-        PDF $domPdf,
-        Carbon $carbon
-    ): Response {
+
+    public function createPDF(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->authManager->guard()->user();
+        $userFilter = $user->userFilters()->calendarFilter()->first();
+
         $projectId = $request->get('project');
-        $startDate = $request->get('start');
-        $endDate = $request->get('end');
-        $userCalendarFilter = $userService->getAuthUser()->userFilters()->calendarFilter()->first();
 
-        if (!$startDate && $projectId) {
-            $startDate = $carbon->create($projectService->getFirstEventInProject($projectId)
-                ->getAttribute('start_time'))->startOfDay();
+        $startDate = $request->get('start') ?
+            Carbon::parse($request->get('start'))->startOfDay() :
+            $userFilter->start_date;
+
+        $endDate = $request->get('end') ?
+            Carbon::parse($request->get('end'))->endOfDay() :
+            $userFilter->end_date;
+
+
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        $filterData   = $request->filter;
+
+        $userCalendarFilter = new UserFilter($filterData);
+        $userCalendarFilter->exists = false;
+        //dd($userCalendarFilter);
+
+        // Falls nur Projekt angegeben -> Zeitspanne aus dem Projekt ableiten
+        if ($projectId) {
+            $today = \Carbon\Carbon::now();
+            $project = $this->projectService->findById($projectId);
+
+            [$startDate, $endDate] = $this->calendarDataService->getProjectDateRange($project, $today);
         }
 
-        if (!$endDate && $projectId) {
-            $endDate = $carbon->create(
-                $projectService->getLastEventInProject($projectId)->getAttribute('end_time')
-            )->endOfDay();
-        }
 
-        if (!$startDate && !$endDate && !$projectId) {
-            if ($userCalendarFilter->start_date && $userCalendarFilter->end_date) {
-                $startDate = $carbon->create($userCalendarFilter->start_date)->startOfDay();
-                $endDate = $carbon->create($userCalendarFilter->end_date)->endOfDay();
-            } else {
-                $startDate = Carbon::now()->startOfMonth()->startOfDay();
-                $endDate = Carbon::now()->endOfMonth()->endOfDay();
-            }
-        }
+        $filteredEventTypes = EventType::whereIn('id', $userCalendarFilter->event_type_ids ?? [])
+            ->get()->pluck('name')->toArray();
 
-        if ($request->get('start') && $request->get('end') && $projectId) {
-            $startDate = $carbon->create($request->get('start'))->startOfDay();
-            $endDate = $carbon->create($request->get('end'))->endOfDay();
-        }
+        $filteredRooms = Room::whereIn('id', $userCalendarFilter->room_ids ?? [])
+            ->get()->pluck('name')->toArray();
 
-        $startDate = Carbon::parse($startDate)->startOfDay();
-        $endDate = Carbon::parse($endDate)->endOfDay();
+        $filteredEventProperties = EventProperty::whereIn('id', $userCalendarFilter->event_property_ids ?? [])
+            ->get()->pluck('name')->toArray();
 
-        $showCalendar = $this->calendarDataService->createCalendarData(
-            startDate: $startDate,
-            endDate: $endDate,
-            calendarFilter: $userService->getAuthUser()->userFilters()->calendarFilter()->first(),
-            project: $projectId ? $projectService->findById($projectId) : null,
-            room: null,
-            desiresInventorySchedulingResource: null,
-            user: $userService->getAuthUser(),
+        $filteredRoomAttributes = RoomAttribute::whereIn('id', $userCalendarFilter->room_attribute_ids ?? [])
+            ->get()->pluck('name')->toArray();
+
+        $filteredAreas = Area::whereIn('id', $userCalendarFilter->area_ids ?? [])
+            ->get()->pluck('name')->toArray();
+
+        $startDate = \Carbon\Carbon::parse($startDate)->startOfDay();
+        $endDate   = \Carbon\Carbon::parse($endDate)->endOfDay();
+
+        // Räume anhand Filter
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
         );
 
-        $pdf = $domPdf->loadView(
+        // Calendar DTO (rooms[]= ['roomId'=>..,'content'=>['29.10.2025'=>['events'=>[...]]]])
+        $calendar = $this->eventCalendarService->mapRoomsToContentForCalendar(
+            $this->eventCalendarService->filterRoomsEvents(
+                $rooms,
+                $userCalendarFilter,
+                $startDate,
+                $endDate,
+                $userCalendarSettings
+            ),
+            $startDate,
+            $endDate
+        );
+
+        // Liste der Tage bauen
+        $days = [];
+        $cursor = $startDate->copy();
+        while ($cursor->lte($endDate)) {
+            $days[] = [
+                'fullDay'    => $cursor->format('d.m.Y'),           // "29.10.2025"
+                'dayString'  => $cursor->translatedFormat('D.'),    // "Mi."
+                'weekNumber' => $cursor->isoWeek(),
+                'isWeekend'  => $cursor->isWeekend(),
+            ];
+            $cursor->addDay();
+        }
+
+        // Horizontaler Chunk: wie viele Tage pro Seite sichtbar sein sollen
+        $DAYS_PER_PAGE = $request->integer('daysPerPage') ?: 5;
+        $dayChunks = array_chunk($days, $DAYS_PER_PAGE);
+
+        // Vertikaler Chunk: wie viele Räume pro Seite
+        $roomsPerPage = $request->integer('roomsPerPage') ?: 8;
+        $roomChunks   = $rooms->chunk($roomsPerPage)->values();
+
+        // Für den Header
+        $project = $projectId ? $this->projectService->findById($projectId) : null;
+
+        // PDF rendern
+        $pdf = $this->domPdf->loadView(
             'pdf.calendar',
             [
-                'title' => $request->get('title'),
-                'rooms' => $roomService->getFilteredRooms(
-                    $carbon->parse($request->input('start')),
-                    $carbon->parse($request->input('end')),
-                    $userService->getAuthUser()->userFilters()->calendarFilter()->first()
-                ),
-                'filterRooms' => RoomPdfResource::collection(Room::all()),
-                'calendar' => $showCalendar['roomsWithEvents'],
-                'dateValue' => $showCalendar['dateValue'],
-                'days' => $showCalendar['days'],
-                'selectedDate' => $showCalendar['selectedDate'],
-                'filterOptions' => $showCalendar["filterOptions"],
-                'personalFilters' => $showCalendar['personalFilters'],
-                'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
-                'user_filters' => $showCalendar['user_filters'],
-                'events' => CalendarEventDto::newInstance()
-                    ->setAreas($showCalendar['filterOptions']['area_ids'])
-                    ->setEventTypes($showCalendar['filterOptions']['event_type_ids'])
-                    ->setRoomCategories($showCalendar['filterOptions']['room_category_ids'])
-                    ->setRoomAttributes($showCalendar['filterOptions']['room_attribute_ids'])
-                    ->setProjects(new Collection())
-                    ->setEvents(new Collection())
+                'title'          => $request->get('title') ?? 'Raumbelegung',
+                'project'        => $project,
+                'user_filters'   => $userCalendarFilter,
+                'created_by'     => $user->full_name,
+                'calendar'       => $calendar,     // CalendarFrontendDataDTO
+                'roomChunks'     => $roomChunks,   // Collection pro vertikaler Seite
+                'dayChunks'      => $dayChunks,    // Array pro horizontaler Seite
+                'activeFilter'  => [
+                    'event_types'      => $filteredEventTypes,
+                    'rooms'            => $filteredRooms,
+                    'event_properties' => $filteredEventProperties,
+                    'room_attributes'  => $filteredRoomAttributes,
+                    'areas'            => $filteredAreas,
+                ],
+                'DAYS_PER_PAGE'  => $DAYS_PER_PAGE,
             ]
-        )->setPaper(
-            $request->string('paperSize'),
-            $request->string('paperOrientation')
-        )->setOptions(
-            [
-                'dpi' => $request->float('dpi'),
+        )
+            ->setPaper(
+                $request->string('paperSize'),
+                $request->string('paperOrientation')
+            )
+            ->setOptions([
+                'dpi'         => $request->float('dpi'),
                 'defaultFont' => 'sans-serif'
-            ]
-        );
+            ]);
 
         $filename = $this->createFilename(
-            $carbon,
             $request->string('paperOrientation', ''),
             $request->string('title', ''),
             $request->float('dpi', '')
         );
 
-        if ($filesystemManager->directoryMissing('pdf')) {
-            $filesystemManager->makeDirectory('pdf');
+        if ($this->filesystemManager->directoryMissing('pdf')) {
+            $this->filesystemManager->makeDirectory('pdf');
         }
 
-        $pdf->save($this->createStoragePath($filesystemManager, $filename));
+        $pdf->save($this->createStoragePath($this->filesystemManager, $filename));
 
-        return $inertiaResponseFactory->location(
-            $urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+        return $this->inertiaResponseFactory->location(
+            $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
         );
     }
+
+
+    public static function eventOverlapsSlot($event, string $dayDisplay, string $slot): bool
+    {
+        // Ganztägig -> in allen Slots anzeigen
+        if (!empty($event->allDay)) {
+            return true;
+        }
+
+        if (empty($event->start) || empty($event->end)) {
+            return false;
+        }
+
+        $eventStart = \Carbon\Carbon::parse($event->start);
+        $eventEnd   = \Carbon\Carbon::parse($event->end);
+
+        $day = \Carbon\Carbon::createFromFormat('d.m.Y', $dayDisplay);
+
+        switch ($slot) {
+            case 'morning': // 00:00 - 12:00
+                $slotStart = $day->copy()->startOfDay();           // 00:00
+                $slotEnd   = $day->copy()->setTime(12, 0, 0);      // 12:00
+                break;
+
+            case 'noon': // 12:00 - 18:00
+                $slotStart = $day->copy()->setTime(12, 0, 0);      // 12:00
+                $slotEnd   = $day->copy()->setTime(18, 0, 0);      // 18:00
+                break;
+
+            case 'evening': // 18:00 - 24:00
+            default:
+                $slotStart = $day->copy()->setTime(18, 0, 0);      // 18:00
+                $slotEnd   = $day->copy()->endOfDay()->setTime(23, 59, 59); // 23:59
+                break;
+        }
+
+        // Overlap wenn: Start < SlotEnd && Ende > SlotStart
+        return $eventStart < $slotEnd && $eventEnd > $slotStart;
+    }
+
 
     public function download(
         string $filename,
@@ -162,14 +244,13 @@ class ExportPDFController extends Controller
     }
 
     private function createFilename(
-        Carbon $carbon,
         string $paperOrientation,
         string $title,
         string $dpi
     ): string {
         return sprintf(
             '%s_%s_%s_dpi_%s.pdf',
-            $carbon->now()->format('d.m.Y-H:i:s'),
+            Carbon::now()->format('d.m.Y-H:i:s'),
             $paperOrientation,
             str_replace(' ', '_', $title),
             $dpi

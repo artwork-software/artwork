@@ -65,6 +65,22 @@ function qualQuantity(q: any) {
     return 1
 }
 
+// Normalize any time-like value to 'HH:MM' (trims seconds, handles ISO strings)
+function toHHMM(val: any): string | null {
+    if (val === null || typeof val === 'undefined') return null
+    let s = String(val).trim()
+    if (!s) return null
+    const tIndex = s.indexOf('T')
+    if (tIndex !== -1) s = s.slice(tIndex + 1)
+    const m = s.match(/(\d{1,2}):(\d{2})/)
+    if (m) {
+        const hh = m[1].padStart(2, '0')
+        const mm = m[2]
+        return `${hh}:${mm}`
+    }
+    return null
+}
+
 // Farbakzent zyklisch
 const accentSet = [
     { bar: 'bg-blue-500', chip: 'bg-blue-50 text-blue-700 border-blue-200' },
@@ -228,7 +244,7 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
                         <div class="px-6 py-4">
               <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs"
                     :class="accentByIndex(i).chip">
-                {{ preset.start_time }}
+                {{ toHHMM(preset.start_time) }}
               </span>
                         </div>
 
@@ -236,7 +252,7 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
                         <div class="px-6 py-4">
               <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs"
                     :class="accentByIndex(i).chip">
-                {{ preset.end_time }}
+                {{ toHHMM(preset.end_time) }}
               </span>
                         </div>
 
@@ -303,11 +319,11 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
                                 <div class="text-xs text-gray-500">{{ $t('Time') }}</div>
                                 <div class="mt-1 flex items-center gap-1">
                   <span class="rounded-full border px-2 py-0.5 text-xs" :class="accentByIndex(i).chip">
-                    {{ preset.start_time }}
+                    {{ toHHMM(preset.start_time) }}
                   </span>
                                     <span class="text-gray-400">→</span>
                                     <span class="rounded-full border px-2 py-0.5 text-xs" :class="accentByIndex(i).chip">
-                    {{ preset.end_time }}
+                    {{ toHHMM(preset.end_time) }}
                   </span>
                                 </div>
                             </div>

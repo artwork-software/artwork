@@ -231,7 +231,7 @@ readonly class CalendarDataService
         return $this->getProjectDateRange($project, $today);
     }
 
-    protected function getProjectDateRange($project, Carbon $today): array
+    public function getProjectDateRange($project, Carbon $today): array
     {
         if (!$project) {
             return [$today->startOfDay(), $today->endOfDay()];

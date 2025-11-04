@@ -295,7 +295,7 @@ const extractCheckedIds = (filterGroup) => {
     const result = {};
     Object.entries(filteredOptionsByCategories.value[filterGroup]).forEach(([key, list]) => {
         const checked = list.filter(item => item.checked).map(item => item.id);
-        result[key] = checked.length > 0 ? checked : null;
+        result[key] = checked.length > 0 ? checked : [];
     });
     return result;
 };
@@ -400,8 +400,8 @@ const props = defineProps({
     },
     initializeDownload = () => {
         if (exportForm.desiresTimespanExport) {
-            exportForm.conditional.dateStart = conditionalDateStart;
-            exportForm.conditional.dateEnd = conditionalDateEnd;
+            exportForm.conditional.dateStart = conditionalDateStart.value;
+            exportForm.conditional.dateEnd = conditionalDateEnd.value;
 
             delete exportForm.conditional.projects;
         } else {
@@ -421,6 +421,38 @@ const props = defineProps({
         Object.assign(data, extractCheckedIds('roomFilters'));
         Object.assign(data, extractCheckedIds('areaFilters'));
         Object.assign(data, extractCheckedIds('eventFilters'));
+
+        // Normalize: accept room_ids alias by merging into rooms and removing alias
+        if (Array.isArray(data.room_ids)) {
+            const existingRooms = Array.isArray(data.rooms) ? data.rooms : [];
+            data.rooms = Array.from(new Set([...existingRooms, ...data.room_ids]));
+            delete data.room_ids;
+        } else {
+            // Ensure rooms key exists as an array for backend expectations
+            data.rooms = Array.isArray(data.rooms) ? data.rooms : [];
+        }
+
+        // Map alias *_ids keys coming from FilterService to backend-expected keys
+        const aliasMap = {
+            room_ids: 'rooms',
+            area_ids: 'areas',
+            room_category_ids: 'roomCategories',
+            room_attribute_ids: 'roomAttributes',
+            event_type_ids: 'eventTypes',
+            event_property_ids: 'eventProperties',
+        };
+        Object.entries(aliasMap).forEach(([alias, target]) => {
+            if (Array.isArray(data[alias])) {
+                const existing = Array.isArray(data[target]) ? data[target] : [];
+                data[target] = Array.from(new Set([...(existing), ...data[alias]]));
+                delete data[alias];
+            }
+        });
+
+        // Ensure expected filter keys exist as arrays to avoid undefined indexes on backend
+        ['rooms', 'areas', 'roomCategories', 'roomAttributes', 'eventTypes', 'eventProperties'].forEach((k) => {
+            if (!Array.isArray(data[k])) data[k] = [];
+        });
 
         exportForm.filter = data;
 

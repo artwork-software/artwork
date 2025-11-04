@@ -25,15 +25,15 @@ web_extra_exposed_ports:
       http_port: 6000
       https_port: 8080
 web_extra_daemons:
-    - name: queue-1
-      command: while true; do /usr/bin/php /var/www/html/artisan queue:work --sleep=3 --tries=3; sleep 1; done
-      directory: /var/www/html
+    #- name: queue-1
+    #  command: while true; do /usr/bin/php /var/www/html/artisan queue:work --sleep=3 --tries=3; sleep 1; done
+    #  directory: /var/www/html
     - name: vite
       command: npm run dev
       directory: /var/www/html
-    - name: reverb
-      command: /usr/bin/php /var/www/html/artisan reverb:start --port=8081
-      directory: /var/www/html
+    #- name: reverb
+    #  command: /usr/bin/php /var/www/html/artisan reverb:start --port=8081
+    #  directory: /var/www/html
 ddev_version_constraint: '>=v1.23.0'
 
 # Key features of DDEV's config.yaml:

@@ -2352,7 +2352,6 @@ class ProjectController extends Controller
 
         // Gruppenausgabe, Historie & weitere Metadaten füllen
         $groupOutput = $this->getGroupOutput($project);
-        $this->addHistoryToHeaderObject($headerObject, $project);
 
         $headerObject->firstEventInProject = $firstEvent;
         $headerObject->lastEventInProject  = $lastEvent;
@@ -2372,11 +2371,10 @@ class ProjectController extends Controller
         $headerObject->projectGenres       = $project->genres;
 
         $headerObject->sectors             = $this->sectorService->getAll();
-        $headerObject->rooms               = $this->roomService->getAllWithoutTrashed();
+        $headerObject->rooms               = $this->roomService->getAllWithoutTrashed(); //Scheint wohl nicht gebraucht zu sein
         $headerObject->projectSectors      = $project->sectors;
 
         $headerObject->projectState        = $project->state;
-        $headerObject->access_budget       = $project->access_budget;
 
         $headerObject->tabs                = ProjectTab::orderBy('order')->get();
         $headerObject->currentTabId        = $projectTab->id;
@@ -2399,6 +2397,21 @@ class ProjectController extends Controller
             : [];
 
         $headerObject->event_properties = $eventPropertyService->getAll();
+        $latestChange = array_map(
+            static function ($history) {
+                return [
+                    'changes'    => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
+                    'created_at' => $history->created_at->diffInHours() < 24
+                        ? $history->created_at->diffForHumans()
+                        : $history->created_at->format('d.m.Y, H:i'),
+                    'changer'    => $history->changer()
+                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                        ->first(),
+                ];
+            },
+            [$project->historyChanges()->first()]
+        );
+        $headerObject->project_history = $latestChange;
 
         return inertia('Projects/Tab/TabContent', [
             'currentTab'                  => $projectTab,
@@ -2412,6 +2425,32 @@ class ProjectController extends Controller
             'createSettings'              => app(ProjectCreateSettings::class),
             'printLayouts'                => $this->projectPrintLayoutService->getAll(),
             'project'                       => $headerObject->project,
+        ]);
+    }
+
+    public function history(Project $project): JsonResponse
+    {
+        $historyComplete = $project->historyChanges()->all();
+        $history = array_map(
+            static function ($history) {
+                return [
+                    'changes'    => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
+                    'created_at' => $history->created_at->diffInHours() < 24
+                        ? $history->created_at->diffForHumans()
+                        : $history->created_at->format('d.m.Y, H:i'),
+                    'changer'    => $history->changer()
+                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                        ->first(),
+                ];
+            },
+            $historyComplete
+        );
+
+         $access_budget = $project->access_budget;
+
+        return response()->json([
+            'history' => $history,
+            'access_budget' => $access_budget,
         ]);
     }
 
@@ -2503,31 +2542,6 @@ class ProjectController extends Controller
 
         return $groupLink ? Project::find($groupLink->group_id) : null;
     }
-
-    /**
-     * Historie für den Header befüllen (Formatierung beibehalten).
-     */
-    private function addHistoryToHeaderObject(stdClass &$headerObject, Project $project): void
-    {
-        $historyComplete = $project->historyChanges()->all();
-
-        $headerObject->project_history = array_map(
-            static function ($history) {
-                return [
-                    'changes'    => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
-                    'created_at' => $history->created_at->diffInHours() < 24
-                        ? $history->created_at->diffForHumans()
-                        : $history->created_at->format('d.m.Y, H:i'),
-                    'changer'    => $history->changer()
-                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                        ->first(),
-                ];
-            },
-            $historyComplete
-        );
-    }
-
-
 
     public function addTimeLineRow(Event $event): void
     {

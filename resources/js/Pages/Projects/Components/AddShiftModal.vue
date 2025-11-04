@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, toRef } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
-
+import { useLegalBreak} from "@/Composeables/useLegalBreak";
 // Artwork / UI
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue'
@@ -17,6 +17,8 @@ import { IconSearch, IconX } from '@tabler/icons-vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const { t: $t } = useI18n()
+
+
 
 // Helper: normalize time strings to 'HH:MM' (trim seconds or parse from datetime)
 function toHHMM(val: any): string | null {
@@ -84,7 +86,7 @@ const shiftForm = useForm({
     end_date: props.shift ? props.shift.formatted_dates.frontend_end : null,
     start: props.shift ? toHHMM(props.shift.start) : null,
     end: props.shift ? toHHMM(props.shift.end) : null,
-    break_minutes: props.shift ? props.shift.break_minutes : 30,
+    break_minutes: props.shift ? props.shift.break_minutes : null,
     craft_id: props.shift ? props.shift.craft?.id : null,
     description: props.shift ? props.shift.description : '',
     event_id: props.event ? props.event.id : null,
@@ -108,6 +110,15 @@ const initialShiftSnapshot = ref<null | {
     description: string,
     qualifications: Array<{ id: number, value: number | '' }>
 }>(null)
+
+const { breakMinutes } = useLegalBreak(
+    toRef(shiftForm, 'start'),
+    toRef(shiftForm, 'end'),
+    {
+        allowCrossMidnight: true,
+        roundToMinutes: 1,
+    }
+)
 
 // ----- computedShiftQualifications als ref (stabil für v-model) -----
 const computedShiftQualifications = ref([])
@@ -157,6 +168,13 @@ watch(
     () => initComputedShiftQualifications(),
     { immediate: true }
 )
+
+watch(breakMinutes, (v) => {
+    // nur überschreiben, wenn Start/Ende gefüllt sind
+    if (shiftForm.start && shiftForm.end) {
+        shiftForm.break_minutes = v
+    }
+}, { immediate: true })
 
 onMounted(() => {
     if (props.edit) validate()
@@ -432,6 +450,11 @@ function saveShift() {
             shiftForm.changes_start = props.buffer?.start
             shiftForm.changes_end = props.buffer?.end
         }
+    }
+
+    // if Break null or '' set it to 0
+    if (shiftForm.break_minutes === null || shiftForm.break_minutes === '') {
+        shiftForm.break_minutes = 0
     }
 
     shiftForm.craft_id = selectedCraft.value?.id

@@ -164,7 +164,13 @@
                         </div>
 
                         <!-- Zeit/Optionen Zeile -->
-                        <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs/5">
+                        <div class="mt-0.5 flex items-center gap-1.5 text-xs/5" :class="[(new Date(event.start).toDateString() === new Date(event.end).toDateString()) && !project && !atAGlance ? 'flex-nowrap' : 'flex-wrap']">
+                            <component
+                                :is="IconRepeat"
+                                v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
+                                class="size-3.5 shrink-0"
+                                stroke-width="2"
+                            />
                             <component
                                 :is="IconClock"
                                 v-if="!event.allDay && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
@@ -173,12 +179,12 @@
                             />
                             <div
                                 class="subpixel-antialiased"
+                                :class="[zoom_factor === 1 ? 'eventTime' : '', (new Date(event.start).toDateString() === new Date(event.end).toDateString()) && !project && !atAGlance ? 'whitespace-nowrap' : '']"
                                 :style="{
                                       color: getTextColorBasedOnBackground(
                                         backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent)
                                       )
                                     }"
-                                :class="[zoom_factor === 1 ? 'eventTime' : '']"
                             >
                                 <!-- gleicher Tag -->
                                 <template v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance">
@@ -228,16 +234,6 @@
                             </div>
                         </div>
 
-                        <!-- Wiederkehrend -->
-                        <div
-                            v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
-                            class="mt-1 inline-flex items-center gap-1 rounded-full bg-black/5 px-1.5 py-0.5  text-xs/5 font-semibold uppercase tracking-wide"
-                            :style="{ lineHeight: lineHeight, fontSize: fontSize * 0.5 }"
-                            :class="[zoom_factor === 1 ? 'eventText' : '']"
-                        >
-                            <component :is="IconRepeat" class="min-h-3 min-w-3" stroke-width="2" />
-                            {{ $t('Repeat event') }}
-                        </div>
 
                         <!-- Projektleiter -->
                         <div

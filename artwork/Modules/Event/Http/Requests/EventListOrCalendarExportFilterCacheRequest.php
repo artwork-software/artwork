@@ -32,7 +32,10 @@ class EventListOrCalendarExportFilterCacheRequest extends FormRequest
             'filter.roomAttributes' => 'array',
             'filter.eventTypes' => 'array',
             'filter.eventTypes.*' => 'exists:event_types,id',
-            //@todo:jgl eventProperties
+            // Event properties (custom properties from event_properties table)
+            'filter.eventProperties' => 'array',
+            'filter.eventProperties.*' => 'exists:event_properties,id',
+            // Optional: event attributes (fixed flags) — kept for future use if frontend sends them
 //            'filter.eventAttributes' => 'array',
 //            'filter.eventAttributes.*' => Rule::in(
 //                [

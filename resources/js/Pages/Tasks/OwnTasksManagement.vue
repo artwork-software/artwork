@@ -4,9 +4,9 @@
 
             <ToolbarHeader
                 :icon="IconChecklist"
-                :title="$t('Meine ToDo-Listen')"
+                :title="$t('My ToDo-Lists')"
                 icon-bg-class="bg-green-600/10 text-green-700"
-                :description="$t('Organisiere, filtere und bearbeite deine Aufgaben')"
+                :description="$t('Organize, filter and edit your tasks')"
                 :search-enabled="false"
             >
                 <template #actions>
@@ -25,7 +25,7 @@
                         <input
                             v-model="search"
                             type="search"
-                            :placeholder="$t('Listen & Aufgaben durchsuchen…')"
+                            :placeholder="$t('Search lists & tasks...')"
                             class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 transition"
                         />
                         <span v-if="search" class="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -38,60 +38,75 @@
                     <!-- Chips + Sort + View -->
                     <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end w-full">
                         <!-- Filter Chips -->
-                        <div class="flex flex-wrap gap-2">
-                            <button
-                                @click="toggleFlag('checklist_has_projects')"
-                                :class="chipClass(user.checklist_has_projects)"
-                                class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs"
-                                type="button"
-                            >
-                                <span class="size-2 rounded-full bg-emerald-500"></span>{{ $t('mit Projekt') }}
-                            </button>
-                            <button
-                                @click="toggleFlag('checklist_no_projects')"
-                                :class="chipClass(user.checklist_no_projects)"
-                                class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs"
-                                type="button"
-                            >
-                                <span class="size-2 rounded-full bg-amber-500"></span>{{ $t('ohne Projekt') }}
-                            </button>
-                            <button
-                                @click="toggleFlag('checklist_private_checklists')"
-                                :class="chipClass(user.checklist_private_checklists)"
-                                class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs"
-                                type="button"
-                            >
-                                <span class="size-2 rounded-full bg-indigo-500"></span>{{ $t('persönlich') }}
-                            </button>
-                            <button
-                                @click="toggleFlag('checklist_no_private_checklists')"
-                                :class="chipClass(user.checklist_no_private_checklists)"
-                                class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs"
-                                type="button"
-                            >
-                                <span class="size-2 rounded-full bg-pink-500"></span>{{ $t('geteilt') }}
-                            </button>
-                            <button
-                                @click="toggleFlag('checklist_completed_tasks')"
-                                :class="chipClass(user.checklist_completed_tasks)"
-                                class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs"
-                                type="button"
-                            >
-                                <span class="size-2 rounded-full bg-slate-500"></span>{{ $t('Erledigtes anzeigen') }}
-                            </button>
-                            <button
-                                @click="toggleFlag('checklist_show_without_tasks')"
-                                :class="chipClass(user.checklist_show_without_tasks)"
-                                class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs"
-                                type="button"
-                            >
-                                <span class="size-2 rounded-full bg-cyan-500"></span>{{ $t('Leere Listen zeigen') }}
-                            </button>
+                        <div class="flex flex-col gap-2">
+                            <!-- Row 1: Mutually-exclusive groups + Reset -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <!-- Project group: with/without project -->
+                                <div class="inline-flex items-center gap-1 rounded-xl border border-gray-200 p-1" role="group" :aria-label="$t('Project filter')">
+                                    <button
+                                        @click="toggleFlag('checklist_has_projects')"
+                                        :class="groupedChipClass(user.checklist_has_projects)"
+                                        class="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs"
+                                        type="button"
+                                    >
+                                        <span class="size-2 rounded-full bg-emerald-500"></span>{{ $t('with project') }}
+                                    </button>
+                                    <button
+                                        @click="toggleFlag('checklist_no_projects')"
+                                        :class="groupedChipClass(user.checklist_no_projects)"
+                                        class="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs"
+                                        type="button"
+                                    >
+                                        <span class="size-2 rounded-full bg-amber-500"></span>{{ $t('without project') }}
+                                    </button>
+                                </div>
 
-                            <button @click="resetFilters" type="button" class="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
-                                <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 4h16M4 12h16M4 20h16"/></svg>
-                                {{ $t('Zurücksetzen') }}
-                            </button>
+                                <!-- Privacy group: personal/shared -->
+                                <div class="inline-flex items-center gap-1 rounded-xl border border-gray-200 p-1" role="group" :aria-label="$t('Privacy filter')">
+                                    <button
+                                        @click="toggleFlag('checklist_private_checklists')"
+                                        :class="groupedChipClass(user.checklist_private_checklists)"
+                                        class="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs"
+                                        type="button"
+                                    >
+                                        <span class="size-2 rounded-full bg-indigo-500"></span>{{ $t('private') }}
+                                    </button>
+                                    <button
+                                        @click="toggleFlag('checklist_no_private_checklists')"
+                                        :class="groupedChipClass(user.checklist_no_private_checklists)"
+                                        class="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs"
+                                        type="button"
+                                    >
+                                        <span class="size-2 rounded-full bg-pink-500"></span>{{ $t('shared') }}
+                                    </button>
+                                </div>
+
+                                <!-- Reset button -->
+                                <button @click="resetFilters" type="button" class="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+                                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 4h16M4 12h16M4 20h16"/></svg>
+                                    {{ $t('Reset') }}
+                                </button>
+                            </div>
+
+                            <!-- Row 2: Display options (separate line) -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button
+                                    @click="toggleFlag('checklist_completed_tasks')"
+                                    :class="chipClass(user.checklist_completed_tasks)"
+                                    class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs"
+                                    type="button"
+                                >
+                                    <span class="size-2 rounded-full bg-slate-500"></span>{{ $t('Show completed') }}
+                                </button>
+                                <button
+                                    @click="toggleFlag('checklist_show_without_tasks')"
+                                    :class="chipClass(user.checklist_show_without_tasks)"
+                                    class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs"
+                                    type="button"
+                                >
+                                    <span class="size-2 rounded-full bg-cyan-500"></span>{{ $t('Show empty lists') }}
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Sort + View -->
@@ -103,17 +118,17 @@
                                     {{ sortLabel }}
                                 </button>
                                 <div v-if="sortOpen" @click.outside="sortOpen=false" class="absolute right-0 mt-2 w-64 rounded-xl border border-gray-100 bg-white shadow-lg p-1 z-10">
-                                    <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="sortTo(1)">{{ $t('Projektzeitraum aufsteigend') }} <IconCheck v-if="currentSort===1" class="inline size-4 ml-1" /></button>
-                                    <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="sortTo(2)">{{ $t('Projektzeitraum absteigend') }} <IconCheck v-if="currentSort===2" class="inline size-4 ml-1" /></button>
-                                    <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="currentSort=3; sortOpen=false">{{ $t('Listenname aufsteigend') }} <IconCheck v-if="currentSort===3" class="inline size-4 ml-1" /></button>
-                                    <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="currentSort=4; sortOpen=false">{{ $t('Listenname absteigend') }} <IconCheck v-if="currentSort===4" class="inline size-4 ml-1" /></button>
+                                    <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="sortTo(1)">{{ $t('Project timeframe ascending') }} <IconCheck v-if="currentSort===1" class="inline size-4 ml-1" /></button>
+                                    <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="sortTo(2)">{{ $t('Project timeframe descending') }} <IconCheck v-if="currentSort===2" class="inline size-4 ml-1" /></button>
+                                    <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="currentSort=3; sortOpen=false">{{ $t('List name ascending') }} <IconCheck v-if="currentSort===3" class="inline size-4 ml-1" /></button>
+                                    <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="currentSort=4; sortOpen=false">{{ $t('List name descending') }} <IconCheck v-if="currentSort===4" class="inline size-4 ml-1" /></button>
                                 </div>
                             </div>
 
                             <!-- View switch -->
                             <div class="inline-flex rounded-xl border border-gray-200 p-1">
                                 <button @click="view='list'" :class="view==='list' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'" class="px-3 py-1.5 rounded-lg text-xs font-medium">
-                                    {{ $t('Liste') }}
+                                    {{ $t('List') }}
                                 </button>
                                 <button @click="view='kanban'" :class="view==='kanban' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'" class="px-3 py-1.5 rounded-lg text-xs font-medium">
                                     {{ $t('Kanban') }}
@@ -128,12 +143,7 @@
                 <!-- Save notification -->
                 <transition enter-active-class="duration-300 ease-out" enter-from-class="opacity-0 -translate-y-1" enter-to-class="opacity-100 translate-y-0" leave-active-class="duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0 -translate-y-1">
                     <div v-show="filterSaved" class="text-xs bg-emerald-600 text-white rounded-lg px-3 py-1.5 mt-5">
-                        {{ $t('Die Filter-Einstellungen wurden gespeichert.') }}
-                    </div>
-                </transition>
-                <transition enter-active-class="duration-300 ease-out" enter-from-class="opacity-0 -translate-y-1" enter-to-class="opacity-100 translate-y-0" leave-active-class="duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0 -translate-y-1">
-                    <div v-show="filterWillSave" class="text-xs bg-orange-600 text-white rounded-lg px-3 py-1.5 mt-5">
-                        {{ $t('Die Filter werden in 3 Sekunden gespeichert…') }}
+                        {{ $t('Filter was saved') }}
                     </div>
                 </transition>
             </section>
@@ -142,15 +152,7 @@
             <main class="mt-6">
                 <!-- Empty state -->
                 <div v-if="checklistsComputed.length===0" class="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center">
-                    <p class="text-sm text-gray-600">{{ $t('Keine passenden Listen gefunden.') }}</p>
-                    <div class="mt-4 flex items-center justify-center gap-2">
-                        <Link :href="route('checklists.create')" class="rounded-xl border border-indigo-200 bg-indigo-50/70 px-3 py-2 text-xs text-indigo-700 hover:bg-indigo-50">
-                            {{ $t('Neue Liste erstellen') }}
-                        </Link>
-                        <Link :href="route('tasks.create')" class="rounded-xl border border-fuchsia-200 bg-fuchsia-50/70 px-3 py-2 text-xs text-fuchsia-700 hover:bg-fuchsia-50">
-                            {{ $t('Neue Aufgabe anlegen') }}
-                        </Link>
-                    </div>
+                    <p class="text-sm text-gray-600">{{ $t('No fitting checklists found') }}</p>
                 </div>
 
                 <!-- List view -->
@@ -173,7 +175,7 @@
                                   </Link>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-0.5">
-                                    {{ cl.tasks.length }} {{ $t('Aufgaben') }}
+                                    {{ cl.tasks.length }} {{ $t('Tasks') }}
                                 </p>
                             </div>
                         </div>
@@ -215,7 +217,7 @@
                                                 @click="openTaskModal(task, cl)"
                                                 class="rounded-lg border border-gray-200 px-2 py-1 text-[11px] text-gray-700 hover:bg-gray-50"
                                             >
-                                                {{ $t('Bearbeiten') }}
+                                                {{ $t('Edit') }}
                                             </button>
                                             <Link
                                                 :href="route('tasks.destroy', { task: task.id })"
@@ -225,7 +227,7 @@
                                                 preserve-scroll
                                                 preserve-state
                                             >
-                                                {{ $t('Löschen') }}
+                                                {{ $t('Delete') }}
                                             </Link>
                                         </div>
                                     </div>
@@ -234,7 +236,7 @@
 
                             <!-- Empty state for list without visible tasks -->
                             <div v-if="cl.tasks.length===0" class="rounded-xl border border-dashed border-gray-200 bg-white p-6 text-center">
-                                <p class="text-sm text-gray-600">{{ $t('Keine sichtbaren Aufgaben in dieser Liste.') }}</p>
+                                <p class="text-sm text-gray-600">{{ $t('No tasks to show in this list') }}</p>
 
                             </div>
 
@@ -254,11 +256,13 @@
                             <div class="flex items-center justify-between gap-3">
                                 <div class="min-w-0">
                                     <h3 class="text-sm font-semibold leading-tight truncate">{{ cl.name }}</h3>
-                                    <p class="text-[11px] text-gray-500 mt-0.5">{{ cl.tasks.length }} {{ $t('Aufgaben') }}</p>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">{{ cl.tasks.length }} {{ $t('Tasks') }}</p>
                                 </div>
                                 <span v-if="cl.hasProject && cl.project?.name" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] text-gray-600">
                   <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 7h16M4 12h10M4 17h16"/></svg>
-                  {{ cl.project.name }}
+                  <Link :href="route('projects.tab', { project: cl.project.id, projectTab: cl?.project?.checklist_tab_id ?? 1 })">
+                    {{ cl.project.name }}
+                  </Link>
                 </span>
                             </div>
                         </div>
@@ -282,14 +286,14 @@
                                             {{ task.deadline }}
                                         </p>
                                         <p v-else-if="task.done && task.done_at" class="text-[11px] text-emerald-600">
-                                            {{ $t('erledigt am') }} {{ task.done_at }}
+                                            {{ $t('done at') }} {{ task.done_at }}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
                             <div v-if="cl.tasks.length===0" class="rounded-xl border border-dashed border-gray-200 bg-white p-6 text-center">
-                                <p class="text-sm text-gray-600">{{ $t('Keine sichtbaren Aufgaben in dieser Liste.') }}</p>
+                                <p class="text-sm text-gray-600">{{ $t('No tasks to show in this list') }}</p>
                             </div>
 
                             <BaseUIButton label="Aufgabe hinzufügen" use-translation is-add-button is-small class="mt-4" @click="openTaskModal(null, cl)" />
@@ -299,7 +303,7 @@
 
                 <!-- Money Source Tasks -->
                 <section class="mt-10" v-if="moneySourceTasks.length > 0">
-                    <h2 class="text-lg font-semibold mb-2">{{ $t('Aufgaben zu Fördermitteln') }}</h2>
+                    <h2 class="text-lg font-semibold mb-2">{{ $t('Money Source Tasks') }}</h2>
                     <div v-if="moneySourceTasks.length" class="rounded-2xl border border-gray-100 bg-white shadow-sm divide-y">
                         <div v-for="task in moneySourceTasks" :key="task.id" class="px-5 py-4">
                             <SingleMoneySourceTask :task="task" />
@@ -308,7 +312,7 @@
                     <div v-else class="rounded-2xl border border-dashed border-gray-200 bg-white p-6 text-center">
                         <AlertComponent
                             type="info"
-                            :text="$t('Es gibt keine Aufgaben zu Fördermitteln.')"
+                            :text="$t('There are no money Source Tasks')"
                             show-icon
                             icon-size="h-6 w-6"
                             text-size="text-base"
@@ -377,8 +381,6 @@ const openAddTaskModal = ref(false)
 const checklistToEdit = ref(null)
 const taskToEdit = ref(null)
 const filterSaved = ref(false)
-const filterWillSave = ref(false)
-const saveDelay = ref(3000)
 
 const doneForm = useForm({ done: false })
 
@@ -467,8 +469,8 @@ function resetFilters() {
     user.value.checklist_private_checklists = false
     user.value.checklist_no_private_checklists = false
     user.value.checklist_completed_tasks = false
-    user.value.checklist_show_without_tasks = true
-    scheduleSaveFilters()
+    user.value.checklist_show_without_tasks = false
+    saveFiltersNow()
 }
 
 function chipClass(active: boolean) {
@@ -477,38 +479,54 @@ function chipClass(active: boolean) {
         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
 }
 
+// Variant for chips inside an outlined group (no inner border, clearer active state)
+function groupedChipClass(active: boolean) {
+    return active
+        ? 'bg-indigo-50/80 text-indigo-700 ring-1 ring-inset ring-indigo-200'
+        : 'text-gray-600 hover:bg-gray-50'
+}
+
 function toggleFlag(key: string) {
     // @ts-ignore
     user.value[key] = !user.value[key]
-    scheduleSaveFilters()
+
+    // Make project-related filters mutually exclusive like a slider
+    if (key === 'checklist_has_projects' && user.value.checklist_has_projects) {
+        user.value.checklist_no_projects = false
+    } else if (key === 'checklist_no_projects' && user.value.checklist_no_projects) {
+        user.value.checklist_has_projects = false
+    }
+
+    // Make privacy-related filters (personal/shared) mutually exclusive like a slider
+    if (key === 'checklist_private_checklists' && user.value.checklist_private_checklists) {
+        user.value.checklist_no_private_checklists = false
+    } else if (key === 'checklist_no_private_checklists' && user.value.checklist_no_private_checklists) {
+        user.value.checklist_private_checklists = false
+    }
+
+    saveFiltersNow()
 }
 
-let saveTimer: number | undefined
-function scheduleSaveFilters() {
-    filterWillSave.value = true
-    if (saveTimer) clearTimeout(saveTimer)
-    saveTimer = window.setTimeout(() => {
-        filterWillSave.value = false
-        router.patch(
-            route('user.update.checklist.filter', user.value.id),
-            {
-                checklist_has_projects: user.value.checklist_has_projects,
-                checklist_no_projects: user.value.checklist_no_projects,
-                checklist_private_checklists: user.value.checklist_private_checklists,
-                checklist_no_private_checklists: user.value.checklist_no_private_checklists,
-                checklist_completed_tasks: user.value.checklist_completed_tasks,
-                checklist_show_without_tasks: user.value.checklist_show_without_tasks
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    filterSaved.value = true
-                    setTimeout(() => (filterSaved.value = false), 3000)
-                }
+function saveFiltersNow() {
+    router.patch(
+        route('user.update.checklist.filter', user.value.id),
+        {
+            checklist_has_projects: user.value.checklist_has_projects,
+            checklist_no_projects: user.value.checklist_no_projects,
+            checklist_private_checklists: user.value.checklist_private_checklists,
+            checklist_no_private_checklists: user.value.checklist_no_private_checklists,
+            checklist_completed_tasks: user.value.checklist_completed_tasks,
+            checklist_show_without_tasks: user.value.checklist_show_without_tasks
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                filterSaved.value = true
+                setTimeout(() => (filterSaved.value = false), 3000)
             }
-        )
-    }, saveDelay.value)
+        }
+    )
 }
 
 function toggleDone(task: any) {

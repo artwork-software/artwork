@@ -233,6 +233,7 @@ class EventRepository extends BaseRepository
             ->with(
                 [
                     'eventStatus',
+                    'room',
                     'project',
                     'project.users',
                     'project.categories',
@@ -249,8 +250,10 @@ class EventRepository extends BaseRepository
                         $this->carbonService->create($conditional['dateEnd'])->endOfDay(),
                     ];
 
-                    $query->whereBetween('start_time', $startAndEndTime);
-                    $query->orWhereBetween('end_time', $startAndEndTime);
+                    $query->where(function (Builder $inner) use ($startAndEndTime): void {
+                        $inner->whereBetween('start_time', $startAndEndTime)
+                              ->orWhereBetween('end_time', $startAndEndTime);
+                    });
                 }
             )
             ->when(
@@ -261,14 +264,14 @@ class EventRepository extends BaseRepository
             )
             //handle rooms
             ->when(
-                count(($rooms = $filter['rooms'])) > 0,
+                count(($rooms = ($filter['rooms'] ?? []))) > 0,
                 function (Builder $query) use ($rooms): void {
                     $query->whereIn('room_id', $rooms);
                 }
             )
             //handle room categories
             ->when(
-                count(($roomCategories = $filter['roomCategories'])) > 0,
+                count(($roomCategories = ($filter['roomCategories'] ?? []))) > 0,
                 function (Builder $query) use ($roomCategories): void {
                     $query->whereRelation(
                         'room.categories',
@@ -280,7 +283,7 @@ class EventRepository extends BaseRepository
             )
             //handle room attributes
             ->when(
-                count(($roomAttributes = $filter['roomAttributes'])) > 0,
+                count(($roomAttributes = ($filter['roomAttributes'] ?? []))) > 0,
                 function (Builder $query) use ($roomAttributes): void {
                     $query->whereRelation(
                         'room.attributes',
@@ -292,7 +295,7 @@ class EventRepository extends BaseRepository
             )
             //handle areas
             ->when(
-                count(($areas = $filter['areas'])) > 0,
+                count(($areas = ($filter['areas'] ?? []))) > 0,
                 function (Builder $query) use ($areas): void {
                     $query->whereRelation(
                         'room',
@@ -304,33 +307,24 @@ class EventRepository extends BaseRepository
             )
             //handle event types
             ->when(
-                count(($eventTypes = $filter['eventTypes'])) > 0,
+                count(($eventTypes = ($filter['eventTypes'] ?? []))) > 0,
                 function (Builder $query) use ($eventTypes): void {
                     $query->whereIn('event_type_id', $eventTypes);
                 }
             )
-            //@todo: bei exportanpassung berücksichtigen jgl
-//            ->when(
-//                count(($eventAttributes = $filter['eventAttributes'])) > 0,
-//                function (Builder $query) use ($eventAttributes): void {
-//                    foreach ($eventAttributes as $eventAttribute) {
-//                        $query->when(
-//                            $eventAttribute === FilterService::LOUD ||
-//                            $eventAttribute === FilterService::NOT_LOUD,
-//                            function (Builder $query) use ($eventAttribute): void {
-//                                $query->where('is_loud', ($eventAttribute === FilterService::LOUD));
-//                            }
-//                        );
-//                        $query->when(
-//                            $eventAttribute === FilterService::WITH_AUDIENCE ||
-//                            $eventAttribute === FilterService::WITHOUT_AUDIENCE,
-//                            function (Builder $query) use ($eventAttribute): void {
-//                                $query->where('audience', ($eventAttribute === FilterService::WITH_AUDIENCE));
-//                            }
-//                        );
-//                    }
-//                }
-//            )
+            // handle custom event properties (any of the selected properties)
+            ->when(
+                count(($eventProperties = ($filter['eventProperties'] ?? []))) > 0,
+                function (Builder $query) use ($eventProperties): void {
+                    $query->whereHas(
+                        'eventProperties',
+                        function (Builder $relation) use ($eventProperties): void {
+                            $relation->whereIn('event_property_id', $eventProperties);
+                        }
+                    );
+                }
+            )
+            //@todo: optional: fixed event attributes (is_loud/audience) can be added here when frontend sends them
                 ->where('deleted_at', null)
             ->orderBy('start_time');
 

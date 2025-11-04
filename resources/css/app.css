@@ -1173,3 +1173,32 @@
 .badge {
     @apply inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-0.5 text-[11px] text-zinc-700 ring-1 ring-zinc-200;
 }
+
+
+/* === PrimeVue Tooltip: global width/word-wrap + visuals (aw-tooltip) ===
+   Ensures tooltips don't collapse to 1-char width after horizontal scroll.
+   Applied to any tooltip created with directive option { class: 'aw-tooltip' }.
+*/
+.aw-tooltip {
+    /* Tunable via CSS var if needed per scope */
+    --aw-tooltip-min-width: 12ch;   /* ensures ~10–14 chars fit per line */
+    --aw-tooltip-max-width: 24rem;  /* ≈ Tailwind max-w-sm */
+}
+.aw-tooltip .p-tooltip-text {
+    display: inline-block;
+    min-width: var(--aw-tooltip-min-width);
+    max-width: var(--aw-tooltip-max-width);
+    white-space: normal;
+    overflow-wrap: anywhere; /* modern, allows breaking long tokens */
+    word-break: break-word;  /* fallback for older browsers */
+
+    /* Visuals aligned with previous Tailwind classes */
+    background-color: var(--color-primary, #222);
+    color: #fff; /* contrast text */
+    font-weight: 500; /* ~font-medium */
+    font-size: 0.75rem; /* ~text-xs */
+    padding: 0.25rem 0.5rem; /* ~px-2 py-1 */
+    border: 1px solid #1f2937; /* ~border-gray-800 */
+    border-radius: 0.5rem; /* rounded-md/lg */
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1); /* ~shadow-lg */
+}

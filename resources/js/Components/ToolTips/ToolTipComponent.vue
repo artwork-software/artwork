@@ -127,8 +127,7 @@ const tooltipBinding = computed(() => ({
     disabled: props.noTooltip,
     useTranslation: props.useTranslation,
     position: props.direction, // Fallback, wenn kein Modifier genutzt wird
-    pt: {
-        text: '!bg-primary !text-primary-contrast !font-medium !text-xs !px-2 !py-1 !border !border-gray-800 !rounded-lg !shadow-lg !rounded-md !w-auto !max-w-xs',
-    },
+    appendTo: 'body', // sicherstellen, dass Overlay am Body hängt
+    class: 'aw-tooltip',
 }))
 </script>

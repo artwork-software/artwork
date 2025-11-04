@@ -18,6 +18,22 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const { t: $t } = useI18n()
 
+// Helper: normalize time strings to 'HH:MM' (trim seconds or parse from datetime)
+function toHHMM(val: any): string | null {
+    if (val === null || typeof val === 'undefined') return null
+    let s = String(val).trim()
+    if (!s) return null
+    const tIndex = s.indexOf('T')
+    if (tIndex !== -1) s = s.slice(tIndex + 1)
+    const m = s.match(/(\d{1,2}):(\d{2})/)
+    if (m) {
+        const hh = m[1].padStart(2, '0')
+        const mm = m[2]
+        return `${hh}:${mm}`
+    }
+    return null
+}
+
 // Props
 const props = defineProps({
     event: Object,
@@ -66,8 +82,8 @@ const shiftForm = useForm({
     id: props.shift ? props.shift.id : null,
     start_date: props.shift ? props.shift.formatted_dates.frontend_start : null,
     end_date: props.shift ? props.shift.formatted_dates.frontend_end : null,
-    start: props.shift ? props.shift.start : null,
-    end: props.shift ? props.shift.end : null,
+    start: props.shift ? toHHMM(props.shift.start) : null,
+    end: props.shift ? toHHMM(props.shift.end) : null,
     break_minutes: props.shift ? props.shift.break_minutes : 30,
     craft_id: props.shift ? props.shift.craft?.id : null,
     description: props.shift ? props.shift.description : '',
@@ -210,9 +226,11 @@ function qualStats(preset: any) {
 function takeShiftPreset(preset: any) {
     if (!preset) return
 
-    // Zeiten + Pause
-    shiftForm.start = preset.start_time ?? shiftForm.start
-    shiftForm.end = preset.end_time ?? shiftForm.end
+    // Zeiten + Pause (trim seconds to HH:MM)
+    const st = toHHMM(preset.start_time)
+    const et = toHHMM(preset.end_time)
+    shiftForm.start = st ?? shiftForm.start
+    shiftForm.end = et ?? shiftForm.end
     shiftForm.break_minutes = typeof preset.break_duration === 'number'
         ? preset.break_duration
         : (shiftForm.break_minutes ?? 0)
@@ -267,8 +285,8 @@ function resetShiftPresetSelection({ alsoFields = false }: { alsoFields?: boolea
 
 
 function takeTimePreset(preset) {
-    shiftForm.start = preset.start_time
-    shiftForm.end = preset.end_time
+    shiftForm.start = toHHMM(preset.start_time)
+    shiftForm.end = toHHMM(preset.end_time)
     shiftForm.break_minutes = preset.break_time
     ;(props.shiftTimePresets || []).forEach((p) => { p.active = p.id === preset.id })
 }
@@ -612,9 +630,9 @@ const lockOrUnlockShift = (commit = false) => {
 
                                             <!-- Zeiten + Pause (Badges) -->
                                             <div class="mt-1 flex items-center gap-1.5 text-[12px] text-gray-700">
-                                                <span class="shrink-0 rounded border border-gray-200 px-1.5 py-0.5">{{ preset.start_time }}</span>
+                                                <span class="shrink-0 rounded border border-gray-200 px-1.5 py-0.5">{{ toHHMM(preset.start_time) }}</span>
                                                 <span class="shrink-0 text-gray-400">→</span>
-                                                <span class="shrink-0 rounded border border-gray-200 px-1.5 py-0.5">{{ preset.end_time }}</span>
+                                                <span class="shrink-0 rounded border border-gray-200 px-1.5 py-0.5">{{ toHHMM(preset.end_time) }}</span>
                                                 <span class="ml-auto shrink-0 rounded bg-gray-50 px-1.5 py-0.5">
                                                   {{ preset.break_duration ?? 0 }} {{ $t('min') }}
                                                 </span>
@@ -717,9 +735,9 @@ const lockOrUnlockShift = (commit = false) => {
                                                 {{ preset.name }}
                                             </div>
                                             <div class="mt-1 text-[11px] text-gray-600 flex items-center gap-1.5">
-                                                <span class="rounded border border-gray-200 px-1.5 py-0.5">{{ preset.start_time }}</span>
+                                                <span class="rounded border border-gray-200 px-1.5 py-0.5">{{ toHHMM(preset.start_time) }}</span>
                                                 <span class="text-gray-400">→</span>
-                                                <span class="rounded border border-gray-200 px-1.5 py-0.5">{{ preset.end_time }}</span>
+                                                <span class="rounded border border-gray-200 px-1.5 py-0.5">{{ toHHMM(preset.end_time) }}</span>
                                                 <span class="ml-auto rounded bg-gray-50 px-1.5 py-0.5">
                                                   {{ preset.break_time }} {{ $t('min') }}
                                                 </span>

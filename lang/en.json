@@ -3324,5 +3324,20 @@
     "Rename sidebar tab": "Rename sidebar tab",
     "Create sidebar tab": "Create sidebar tab",
     "Project artists changed": "Project artists changed",
-    "Duration Shortcuts:": "Duration Shortcuts:"
+    "Duration Shortcuts:": "Duration Shortcuts:",
+    "Organize, filter and edit your tasks": "Organize, filter and edit your tasks",
+    "with project": "with project",
+    "without project": "without project",
+    "private": "private",
+    "shared": "shared",
+    "Show completed": "Show completed",
+    "Show empty lists": "Show empty lists",
+    "List name ascending": "List name ascending",
+    "List name descending": "List name descending",
+    "Project timeframe ascending": "Project timeframe ascending",
+    "Project timeframe descending": "Project timeframe descending",
+    "Filter was saved": "Filter was saved",
+    "No fitting checklists found": "No fitting checklists found",
+    "Search lists & tasks...": "Search lists & tasks...",
+    "Hide": "Hide"
 }

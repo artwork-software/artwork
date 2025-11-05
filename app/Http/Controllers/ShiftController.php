@@ -210,7 +210,7 @@ class ShiftController extends Controller
         ShiftsQualificationsService $shiftsQualificationsService,
         ProjectTabService $projectTabService
     ): RedirectResponse {
-        $projectId = $shift->event()->first()?->project()?->first()->id;
+        $projectId = $shift?->project_id;
         if ($shift->is_committed) {
             $event = $shift?->event;
 
@@ -309,6 +309,7 @@ class ShiftController extends Controller
             'number_employees',
             'number_masters',
             'description',
+            'project_id',
         ]));
 
         $this->shiftService->save($shift);
@@ -1482,6 +1483,7 @@ class ShiftController extends Controller
                 'break_minutes' => $request->get('break_minutes'),
                 'description' => $request->get('description'),
                 'room_id' => $roomAndDate['roomId'],
+                'project_id' => $request->get('project_id'),
             ];
 
             $shift = $this->shiftService->createShiftWithoutEventAutomatic(

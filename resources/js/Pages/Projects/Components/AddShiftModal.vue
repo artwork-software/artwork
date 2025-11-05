@@ -15,6 +15,8 @@ import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 // Icons (Tabler)
 import { IconSearch, IconX } from '@tabler/icons-vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 
 const { t: $t } = useI18n()
 
@@ -73,6 +75,8 @@ const showShiftPresetBox = ref(false)
 const showShiftSearchbar = ref(false)
 const searchShiftPreset = ref('')
 
+const selectedProject = ref(props.shift?.project ? props.shift?.project : null);
+
 const selectedCraft = ref(props.shift ? props.shift.craft : null)
 
 const validationMessages = reactive({
@@ -99,7 +103,8 @@ const shiftForm = useForm({
     room_id: props.room ? props.room : null,
     day: props.day ? props.day : null,
     roomsAndDatesForMultiEdit: props.roomsAndDatesForMultiEdit ? props.roomsAndDatesForMultiEdit : null,
-    updateOrCreateInShiftPlan: props.shiftPlanModal
+    updateOrCreateInShiftPlan: props.shiftPlanModal,
+    project_id: props.shift && props.shift.project ? props.shift.project.id : (props.event && props.event.project ? props.event.project.id : null),
 })
 
 const initialShiftSnapshot = ref<null | {
@@ -457,6 +462,13 @@ function saveShift() {
         shiftForm.break_minutes = 0
     }
 
+    // if selected Project add id to shiftForm
+    if (selectedProject.value) {
+        shiftForm.project_id = selectedProject.value.id
+    } else {
+        shiftForm.project_id = null
+    }
+
     shiftForm.craft_id = selectedCraft.value?.id
     shiftForm.shiftsQualifications = []
     appendComputedShiftQualificationsToShiftForm()
@@ -565,8 +577,6 @@ const lockOrUnlockShift = (commit = false) => {
         @close="closeModal"
     >
         <form @submit.prevent="saveShift" class="relative z-40 artwork">
-
-
 
             <div class="space-y-6">
                 <!-- REPLACE: Sektion Schichtvorlagen -->
@@ -901,6 +911,35 @@ const lockOrUnlockShift = (commit = false) => {
                                 selected-property-to-display="name"
                                 :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
                             />
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <div v-if="!selectedProject">
+
+                                <ProjectSearch id="2" label="Search project"  @project-selected="selectedProject = $event" />
+
+                                <LastedProjects
+                                    :limit="10"
+                                    @select="selectedProject = $event"/>
+                            </div>
+
+                            <div v-else>
+                                <div class="flex items-center justify-between gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
+                                    <div class="min-w-0 flex items-center gap-3">
+                                        <div class="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-semibold">
+                                            {{ selectedProject.name.charAt(0).toUpperCase() }}
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-medium text-gray-900 truncate">
+                                                {{ selectedProject.name }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="ui-button !text-xs" @click="selectedProject = null">
+                                        {{ $t('Change') }}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Break/Craft Hinweise -->

@@ -5,6 +5,9 @@
             <div class="bg-gray-500 py-1.5 px-2 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}90` }">
                 {{ shift.start }} - {{ shift.end }}
             </div>
+            <Link class="text-blue-500 font-semibold underline" v-if="shift?.project" :href="route('projects.tab', { project: shift?.project?.id, projectTab: first_project_calendar_tab_id })">
+                {{ shift.project.name }}
+            </Link>
             <div class="text-gray-700 font-semibold">
                 [{{ shift.craft.abbreviation }}] {{ shift.craft.name }}
             </div>
@@ -139,7 +142,7 @@ import {ref, computed, watch, defineAsyncComponent, onMounted} from "vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {router, usePage} from "@inertiajs/vue3";
+import {Link, router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
 import {can, is} from "laravel-permission-to-vuejs";
@@ -157,7 +160,8 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const props = defineProps({
     shift: Object,
     shiftQualifications: Array,
-    crafts: Object
+    crafts: Object,
+    first_project_calendar_tab_id: Number | String | null,
 });
 
 // Initialize i18n

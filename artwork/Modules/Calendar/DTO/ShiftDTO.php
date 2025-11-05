@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Calendar\DTO;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Support\Collection;
@@ -30,6 +31,7 @@ class ShiftDTO extends Data
         public ?array $formatted_dates,
         public ?string $startOfShift,
         public ?bool $isCommitted = false,
+        public ?Project $project = null,
         //public EventDTO $event
     ){
     }
@@ -57,6 +59,7 @@ class ShiftDTO extends Data
             formatted_dates: $shift->getAttribute('formatted_dates'),
             startOfShift: $shift->getAttribute('start_date')->format('d.m.Y'),
             isCommitted: $shift->is_committed,
+            project: $shift?->project,
             //event: EventDTO::fromModel($shift->event)
         );
     }

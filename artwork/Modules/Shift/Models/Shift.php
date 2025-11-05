@@ -9,6 +9,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
@@ -75,7 +76,8 @@ class Shift extends Model
         'event_start_day',
         'event_end_day',
         'committing_user_id',
-        'room_id'
+        'room_id',
+        'project_id'
     ];
 
     protected $casts = [
@@ -135,6 +137,17 @@ class Shift extends Model
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class, 'room_id', 'id', 'rooms');
+    }
+
+    /** project */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(
+            Project::class,
+            'project_id',
+            'id',
+            'projects'
+        )->without(['components', 'users']);
     }
 
     public function users(): BelongsToMany

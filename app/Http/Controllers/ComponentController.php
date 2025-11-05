@@ -61,24 +61,15 @@ class ComponentController extends Controller
 
     public function destroy(Component $component): void
     {
+        $component->users()->detach();
+        $component->departments()->detach();
+        $component->componentInDisclosures()->delete();
+
         // first check if the component has projectValues attached
-        if ($component->projectValue()->exists()) {
-            foreach ($component->projectValue()->get() as $projectValue) {
-                $projectValue->delete();
-            }
-        }
+        $component->projectValue()->delete();
 
-        if ($component->componentInPrintLayouts()->exists()) {
-            foreach ($component->componentInPrintLayouts()->get() as $printLayout) {
-                $printLayout->delete();
-            }
-        }
+        $component->componentInPrintLayouts()->delete();
 
-        if ($component->componentInDisclosures()->exists()) {
-            foreach ($component->componentInDisclosures()->get() as $disclosure) {
-                $disclosure->delete();
-            }
-        }
 
         // now check if the component is in the sidebar or in a tab
         if ($component->sidebarTabComponent()->exists()) {

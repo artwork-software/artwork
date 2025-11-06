@@ -55,21 +55,34 @@ class IndividualTimeController extends Controller
         $individualTimes = $request->get('individualTimes');
 
         foreach ($individualTimes as $individualTime) {
-            if ($individualTime['id']) {
-                $this->individualTimeService->updateForModel(
-                    $modelInstance,
-                    IndividualTime::find($individualTime['id']),
-                    $individualTime['title'],
-                    $individualTime['start_time'],
-                    $individualTime['end_time'],
-                    $individualTime['start_date'],
-                );
+            if (!empty($individualTime['id'])) {
+                // Ensure the individual time belongs to the given model; if not found, create a new one
+                $existing = $modelInstance->individualTimes()->find($individualTime['id']);
+
+                if ($existing) {
+                    $this->individualTimeService->updateForModel(
+                        $modelInstance,
+                        $existing,
+                        $individualTime['title'] ?? null,
+                        $individualTime['start_time'] ?? null,
+                        $individualTime['end_time'] ?? null,
+                        $individualTime['start_date'],
+                    );
+                } else {
+                    $this->individualTimeService->createForModel(
+                        $modelInstance,
+                        $individualTime['title'] ?? null,
+                        $individualTime['start_time'] ?? null,
+                        $individualTime['end_time'] ?? null,
+                        $individualTime['start_date'],
+                    );
+                }
             } else {
                 $this->individualTimeService->createForModel(
                     $modelInstance,
-                    $individualTime['title'],
-                    $individualTime['start_time'],
-                    $individualTime['end_time'],
+                    $individualTime['title'] ?? null,
+                    $individualTime['start_time'] ?? null,
+                    $individualTime['end_time'] ?? null,
                     $individualTime['start_date'],
                 );
             }

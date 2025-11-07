@@ -132,6 +132,7 @@ import BuilderGeneralShiftInformationComponent from "@/Pages/Projects/BuilderCom
 import BuilderProjectBudgetDeadlineComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectBudgetDeadlineComponent.vue";
 import BuilderProjectAttributesComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectAttributesComponent.vue";
 import BuilderBudgetInformations from "@/Pages/Projects/BuilderComponents/BuilderBudgetInformation.vue";
+import BuilderArtistNameDisplayComponent from "@/Pages/Projects/BuilderComponents/BuilderArtistNameDisplayComponent.vue";
 import { computed, nextTick, ref } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import BuilderTextField from "@/Pages/Projects/BuilderComponents/BuilderTextField.vue";
@@ -163,6 +164,7 @@ const deletingProject = ref(false);
 const componentMapping = {
     BuilderProjectTitleComponent,
     BuilderProjectTeamComponent,
+    BuilderArtistNameDisplayComponent,
     BuilderActionsComponent,
     BuilderTextArea,
     BuilderProjectStateComponent,
